@@ -10,7 +10,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -830,7 +830,6 @@ class DataFiles(object):
     Routine to write test data files for MSS using extracted
     variable ranges from ECMWF data
     Jens-Uwe Grooss, IEK-7, Forschungszentrum Juelich, Nov 2016
-
     """
 
     dimensions = {
@@ -865,7 +864,7 @@ class DataFiles(object):
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -905,7 +904,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -943,6 +942,7 @@ import sys
 import mslib.mswms.dataaccess
 from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
+from mslib.mswms import mpl_lsec_styles
 import mslib.mswms
 
 
@@ -1030,6 +1030,29 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
     ]
+
+
+#
+# Registration of linear layers.
+#
+# The same as above, but for linear sections.
+register_linear_layers = None
+if mpl_lsec_styles is not None:
+    register_linear_layers = [
+        (mpl_lsec_styles.LS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "mole_fraction_of_ozone_in_air", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "air_potential_temperature", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "geopotential_height", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "specific_humidity", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "cloud_area_fraction_in_atmosphere_layer", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "specific_cloud_ice_water_content", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "specific_cloud_liquid_water_content", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_DefaultStyle, "ertel_potential_vorticity", ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_HorizontalVelocityStyle_01, ["ecmwf_EUR_LL015"]),
+        (mpl_lsec_styles.LS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"])
+    ]
 '''
             simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)
         else:
@@ -1037,7 +1060,7 @@ if mpl_vsec_styles is not None:
 simple server config for demodata
 """
 from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
-                                  register_horizontal_layers, register_vertical_layers)
+                                  register_horizontal_layers, register_vertical_layers, register_linear_layers)
 '''
 
         if not self.server_config_fs.exists(self.server_config_file):

@@ -304,6 +304,19 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayout">
                <item>
+                <widget class="QPushButton" name="linearview">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Linear View</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
                 <widget class="QPushButton" name="tableview">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -553,6 +566,38 @@
     <hint type="destinationlabel">
      <x>236</x>
      <y>248</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>password</sender>
+   <signal>returnPressed()</signal>
+   <receiver>loginButton</receiver>
+   <slot>click()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>292</x>
+     <y>134</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>429</x>
+     <y>134</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>emailid</sender>
+   <signal>returnPressed()</signal>
+   <receiver>password</receiver>
+   <slot>setFocus()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>104</x>
+     <y>134</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>292</x>
+     <y>134</y>
     </hint>
    </hints>
   </connection>

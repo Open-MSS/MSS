@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,10 +30,9 @@ from functools import partial
 import requests
 import json
 import sys
-import time
 import pytest
 
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.conf import mscolab_settings
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
@@ -50,7 +49,7 @@ class Test_Sockets(object):
 
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -129,7 +128,7 @@ class Test_Sockets(object):
         sio1.emit('start', response1)
         sio2.emit('start', response2)
         sio3.emit('start', response3)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         sio1.emit('chat-message', {
             "p_id": 1,
             "token": response1['token'],

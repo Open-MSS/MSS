@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,7 +115,7 @@ class Targets(object):
         "number_concentration_of_ice_crystals_in_air": ("1/cm³", 1),
         "mean_mass_radius_of_cloud_ice_crystals": ("µm", 1),
         "maximum_pressure_on_backtrajectory": ("hPa", 1),
-        "maximum_relative_humidity_wrt_ice_on_backtrajectory": ("%", 1),
+        "maximum_relative_humidity_wrt_ice_on_backtrajectory": ("percent", 1),
     }
 
     # The THRESHOLDS are used to determine a single colourmap suitable for all plotting purposes (that is vertical
@@ -137,7 +137,7 @@ class Targets(object):
 
     for standard_name in _TARGETS:
         if standard_name.startswith("surface_origin_tracer_from_"):
-            UNITS[standard_name] = ("%", 1)
+            UNITS[standard_name] = ("percent", 1)
 
     for standard_name in [
             "mole_fraction_of_carbon_dioxide_in_air",
@@ -145,7 +145,7 @@ class Targets(object):
             "mole_fraction_of_ozone_in_air",
             "mole_fraction_of_water_vapor_in_air",
     ]:
-        UNITS[standard_name] = ("µmol/mol", 1e6)
+        UNITS[standard_name] = ("µmol/mol", 1)
 
     for standard_name in [
             "mole_fraction_of_active_chlorine_in_air",
@@ -155,7 +155,7 @@ class Targets(object):
             "mole_fraction_of_nitric_acid_in_air",
             "mole_fraction_of_nitrous_oxide_in_air",
     ]:
-        UNITS[standard_name] = ("nmol/mol", 1e9)
+        UNITS[standard_name] = ("nmol/mol", 1)
 
     for standard_name in [
             "mole_fraction_of_bromine_nitrate_in_air",
@@ -176,13 +176,13 @@ class Targets(object):
             "mole_fraction_of_peroxyacetyl_nitrate_in_air",
             "mole_fraction_of_sulfur_dioxide_in_air",
     ]:
-        UNITS[standard_name] = ("pmol/mol", 1e12)
+        UNITS[standard_name] = ("pmol/mol", 1)
 
     for standard_name in [
             "fraction_below_6months_of_age_of_air_spectrum",
             "fraction_above_24months_of_age_of_air_spectrum",
     ]:
-        UNITS[standard_name] = ("%", 100)
+        UNITS[standard_name] = ("percent", 1)
 
     TITLES = {
         "ertel_potential_vorticity": "PV",
@@ -273,7 +273,8 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
     Returns:
         numpy array of values
     """
-    assert cmin < cmax
+    if cmin >= cmax:
+        cmin, cmax = cmin - 0.5, cmax + 0.5
     if cmin >= 0:
         if cmin == 0:
             cmin = 0.001 * cmax
@@ -476,3 +477,14 @@ def get_cbar_label_format(style, maxvalue):
     if style == 'log_ice_cloud':
         format = "%.0E"
     return format
+
+
+def make_cbar_labels_readable(fig, axs):
+    """
+    Adjust font size of the colorbar labels and put a white background behind them
+    such that they are readable in front of any background.
+    """
+    fontsize = fig.bbox.height * 0.024
+    for x in axs.yaxis.majorTicks:
+        x.label1.set_path_effects([matplotlib.patheffects.withStroke(linewidth=4, foreground='w')])
+        x.label1.set_fontsize(fontsize)

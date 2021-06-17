@@ -16,7 +16,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,20 +48,23 @@ from mslib.msui import mpl_pathinteractor as mpl_pi
 
 
 class MapCanvas(basemap.Basemap):
-    """Derivative of mpl_toolkits.basemap, providing additional methods to
-       automatically draw a graticule and to redraw specific map elements.
+    """
+    Derivative of mpl_toolkits.basemap, providing additional methods to
+    automatically draw a graticule and to redraw specific map elements.
     """
 
-    def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None,
+    def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None, PROJECT_NAME=None,
                  appearance=None, **kwargs):
-        """New constructor automatically adds coastlines, continents, and
-           a graticule to the map.
+        """
+        New constructor automatically adds coastlines, continents, and
+        a graticule to the map.
 
         Keyword arguments are the same as for mpl_toolkits.basemap.
 
         Additional arguments:
         CRS -- string describing the coordinate reference system of the map.
         BBOX_UNITS -- string describing the units of the map coordinates.
+        PROJECT_NAME -- string with project name
 
         """
         # Coordinate reference system identifier and coordinate system units.
@@ -70,6 +73,9 @@ class MapCanvas(basemap.Basemap):
             self.bbox_units = BBOX_UNITS
         else:
             self.bbox_units = getattr(self, "bbox_units", None)
+
+        self.project_name = PROJECT_NAME if PROJECT_NAME is not None else self.project_name \
+            if hasattr(self, "project_name") else None
 
         # Dictionary containing map appearance settings.
         if appearance is not None:
@@ -85,7 +91,6 @@ class MapCanvas(basemap.Basemap):
                               "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
         default_appearance.update(param_appearance)
         self.appearance = default_appearance
-
         # Identifier of this map canvas (used to query data structures that
         # are observed by different views).
         if identifier is not None:
@@ -127,18 +132,20 @@ class MapCanvas(basemap.Basemap):
 
         self.image = None
 
-        # Print CRS identifier into the figure.
-        if self.crs is not None:
-            if hasattr(self, "crs_text"):
-                self.crs_text.set_text(self.crs)
-            else:
-                self.crs_text = self.ax.figure.text(0, 0, self.crs)
+        # Print CRS identifier and project name into figure.
+        if self.crs is not None and self.project_name is not None:
+            self.crs_text = self.ax.figure.text(0, 0, f"{self.project_name}\n{self.crs}")
+        else:
+            # Print only CRS identifier into the figure.
+            if self.crs is not None:
+                if hasattr(self, "crs_text"):
+                    self.crs_text.set_text(self.crs)
+                else:
+                    self.crs_text = self.ax.figure.text(0, 0, self.crs)
 
         if self.appearance["draw_graticule"]:
-            try:
-                self._draw_auto_graticule()
-            except Exception as ex:
-                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
+            pass
+            # self._draw_auto_graticule() ; It's already called in mpl_qtwidget.py in MplTopviewCanvas init_map().
         else:
             self.map_parallels = None
             self.map_meridians = None
@@ -150,7 +157,8 @@ class MapCanvas(basemap.Basemap):
         self.identifier = identifier
 
     def set_axes_limits(self, ax=None):
-        """See Basemap.set_axes_limits() for documentation.
+        """
+        See Basemap.set_axes_limits() for documentation.
 
         This function is overridden in MapCanvas as a workaround to a problem
         in Basemap.set_axes_limits() that occurs in interactive matplotlib
@@ -166,8 +174,9 @@ class MapCanvas(basemap.Basemap):
         super(MapCanvas, self).set_axes_limits(ax=ax)
         matplotlib.interactive(intact)
 
-    def _draw_auto_graticule(self):
-        """Draw an automatically spaced graticule on the map.
+    def _draw_auto_graticule(self, font_size=None):
+        """
+        Draw an automatically spaced graticule on the map.
         """
         # Compute some map coordinates that are required below for the automatic
         # determination of which meridians and parallels to draw.
@@ -269,17 +278,18 @@ class MapCanvas(basemap.Basemap):
         latStart = np.floor((mapLatStart / spacingLat)) * spacingLat
         latStop = np.ceil((mapLatStop / spacingLat)) * spacingLat
 
-        #   d) call the basemap methods to draw the lines in the determined
-        #      range.
+        # d) call the basemap methods to draw the lines in the determined
+        #    range.
         self.map_parallels = self.drawparallels(np.arange(latStart, latStop,
                                                           spacingLat),
-                                                labels=[1, 1, 0, 0], zorder=3)
+                                                labels=[1, 1, 0, 0], fontsize=font_size, zorder=3)
         self.map_meridians = self.drawmeridians(np.arange(lonStart, lonStop,
                                                           spacingLon),
-                                                labels=[0, 0, 0, 1], zorder=3)
+                                                labels=[0, 0, 0, 1], fontsize=font_size, zorder=3)
 
     def set_graticule_visible(self, visible=True):
-        """Set the visibily of the graticule.
+        """
+        Set the visibily of the graticule.
 
         Removes a currently visible graticule by deleting internally stored
         line and text objects representing graticule lines and labels, then
@@ -315,7 +325,8 @@ class MapCanvas(basemap.Basemap):
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):
-        """Set the visibility of continent fillings.
+        """
+        Set the visibility of continent fillings.
         """
         if land_color is not None:
             self.appearance["colour_land"] = land_color
@@ -349,7 +360,8 @@ class MapCanvas(basemap.Basemap):
             self.ax.figure.canvas.draw()
 
     def set_coastlines_visible(self, visible=True):
-        """Set the visibility of coastlines and country borders.
+        """
+        Set the visibility of coastlines and country borders.
         """
         self.appearance["draw_coastlines"] = visible
         if visible and self.map_coastlines is None and self.map_countries is None:
@@ -385,7 +397,8 @@ class MapCanvas(basemap.Basemap):
             self.ax.figure.canvas.draw()
 
     def update_with_coordinate_change(self, kwargs_update=None):
-        """Redraws the entire map. This is necessary after zoom/pan operations.
+        """
+        Redraws the entire map. This is necessary after zoom/pan operations.
 
         Determines corner coordinates of the current axes, removes all items
         belonging the the current map and draws a new one by calling
@@ -489,8 +502,9 @@ class MapCanvas(basemap.Basemap):
     # self.urcrnry = axis[3]
 
     def imshow(self, X, **kwargs):
-        """Overloads basemap.imshow(). Deletes any existing image and
-           redraws the figure after the new image has been plotted.
+        """
+        Overloads basemap.imshow(). Deletes any existing image and
+        redraws the figure after the new image has been plotted.
         """
         if self.image is not None:
             self.image.remove()
@@ -522,8 +536,9 @@ class MapCanvas(basemap.Basemap):
         return x, y
 
     def gcpoints_path(self, lons, lats, del_s=100., map_coords=True):
-        """Same as gcpoints2, but for an entire path, i.e. multiple
-           line segments. lons and lats are lists of waypoint coordinates.
+        """
+        Same as gcpoints2, but for an entire path, i.e. multiple
+        line segments. lons and lats are lists of waypoint coordinates.
         """
         # use great circle formula for a perfect sphere.
         gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
@@ -543,7 +558,9 @@ class MapCanvas(basemap.Basemap):
             # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
-            lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
+            lonlats = []
+            if npoints > 0:
+                lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
             # The cylindrical projection of matplotlib is not periodic, that means that
             # -170 longitude and 190 longitude are not identical. The gc projection however
             # assumes identity and maps all longitudes to -180 to 180. This is no issue for
@@ -582,8 +599,9 @@ class MapCanvas(basemap.Basemap):
 
 
 class SatelliteOverpassPatch(object):
-    """Represents a satellite overpass on the top view map (satellite
-       track and, if available, swath).
+    """
+    Represents a satellite overpass on the top view map (satellite
+    track and, if available, swath).
     """
 
     # TODO: Derive this class from some Matplotlib actor class? Or create
@@ -610,7 +628,8 @@ class SatelliteOverpassPatch(object):
         self.draw()
 
     def draw(self):
-        """Do the actual plotting of the patch.
+        """
+        Do the actual plotting of the patch.
         """
         # Plot satellite track.
         sat = np.copy(self.sat)
@@ -651,15 +670,17 @@ class SatelliteOverpassPatch(object):
         self.map.ax.figure.canvas.draw()
 
     def update(self):
-        """Removes the current plot of the patch and redraws the patch.
-           This is necessary, for instance, when the map projection and/or
-           extent has been changed.
+        """
+        Removes the current plot of the patch and redraws the patch.
+        This is necessary, for instance, when the map projection and/or
+        extent has been changed.
         """
         self.remove()
         self.draw()
 
     def remove(self):
-        """Remove this satellite patch from the map canvas.
+        """
+        Remove this satellite patch from the map canvas.
         """
         if self.trackline is not None:
             for element in self.trackline:

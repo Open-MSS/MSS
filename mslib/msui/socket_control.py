@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -50,6 +50,8 @@ class ConnectionManager(QtCore.QObject):
         self.token = token
         self.user = user
         self.mscolab_server_url = mscolab_server_url
+        if token is not None:
+            logging.getLogger("engineio.client").addFilter(filter=lambda record: token not in record.getMessage())
         self.sio = socketio.Client(reconnection_attempts=5)
         self.sio.connect(self.mscolab_server_url)
 
@@ -160,6 +162,7 @@ class ConnectionManager(QtCore.QObject):
         })
 
     def save_file(self, token, p_id, content, comment=None):
+        # ToDo refactor API
         logging.debug("saving file")
         self.sio.emit('file-save', {
                       "p_id": p_id,

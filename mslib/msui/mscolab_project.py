@@ -33,7 +33,8 @@ from markdown.extensions import Extension
 from werkzeug.urls import url_join
 
 from mslib.mscolab.models import MessageType
-from PyQt5 import Qt, QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
+from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.qt5 import ui_mscolab_project_window as ui
 from mslib.utils import config_loader, show_popup
 
@@ -123,6 +124,11 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.load_users()
         # load messages
         self.load_all_messages()
+        if access_level == "viewer":
+            self.messageText.setEnabled(False)
+            self.previewBtn.setEnabled(False)
+            self.uploadBtn.setEnabled(False)
+            self.sendMessageBtn.setEnabled(False)
 
     # UI SET UP METHODS
     def setup_message_text(self):
@@ -233,11 +239,12 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         img_type = "Image (*.png *.gif *.jpg *jpeg *.bmp)"
         doc_type = "Document (*.*)"
         file_filter = f'{img_type};;{doc_type}'
-        file_path, file_type = QtWidgets.QFileDialog.getOpenFileName(self, "Select a file", "", file_filter)
-        if file_path == "":
+        file_path = get_open_filename(self, "Select a file", "", file_filter)
+        if file_path is None or file_path == "":
             return
+        file_type = file_path.split('.')[-1]
         self.attachment = file_path
-        if file_type == img_type:
+        if file_type in ['png', 'gif', 'jpg', 'jpeg', 'bmp']:
             self.attachment_type = MessageType.IMAGE
             self.display_uploaded_img(file_path)
         else:
@@ -286,7 +293,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.active_edit_id = message_id
         self.messageText.setText(message_text)
         self.messageText.setFocus()
-        self.messageText.moveCursor(Qt.QTextCursor.End)
+        self.messageText.moveCursor(QtGui.QTextCursor.End)
         self.editMessageBtn.setVisible(True)
         self.cancelBtn.setVisible(True)
         self.sendMessageBtn.setVisible(False)
@@ -326,15 +333,15 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         }
         url = url_join(self.mscolab_server_url, 'authorized_users')
         r = requests.get(url, data=data)
-        if r.text == "False":
-            show_popup(self, "Error", "Some error occurred while fetching users!")
-        else:
+        if r.text != "False":
             self.collaboratorsList.clear()
             users = r.json()["users"]
             for user in users:
                 item = QtWidgets.QListWidgetItem(f'{user["username"]} - {user["access_level"]}',
                                                  parent=self.collaboratorsList)
                 self.collaboratorsList.addItem(item)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def load_all_messages(self):
         # empty messages and reload from server
@@ -345,12 +352,17 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         }
         # returns an array of messages
         url = url_join(self.mscolab_server_url, "messages")
-        res = requests.get(url, data=data).json()
-        messages = res["messages"]
-        # clear message box
-        for message in messages:
-            self.render_new_message(message, scroll=False)
-        self.messageList.scrollToBottom()
+
+        res = requests.get(url, data=data)
+        if res.text != "False":
+            res = res.json()
+            messages = res["messages"]
+            # clear message box
+            for message in messages:
+                self.render_new_message(message, scroll=False)
+            self.messageList.scrollToBottom()
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def render_new_message(self, message, scroll=True):
         message_item = MessageItem(message, self)
@@ -482,7 +494,7 @@ class MessageItem(QtWidgets.QWidget):
         text_browser.anchorClicked.connect(self.on_link_click)
         text_browser.show()
         text_browser.setFixedHeight(
-            text_browser.document().size().height() + text_browser.contentsMargins().top() * 2
+            int(text_browser.document().size().height() + text_browser.contentsMargins().top() * 2)
         )
         return text_browser
 
@@ -609,23 +621,22 @@ class MessageItem(QtWidgets.QWidget):
         self.context_menu.exec_(self.messageBox.mapToGlobal(pos))
 
     def handle_copy_action(self):
-        Qt.QApplication.clipboard().setText(self.message_text)
+        QtWidgets.QApplication.clipboard().setText(self.message_text)
 
     def handle_download_action(self):
         file_name = fs.path.basename(self.attachment_path)
         file_name, file_ext = fs.path.splitext(file_name)
+        # fs.file_picker cannot take filenames that contain dots
+        default_filename = file_name.replace('.', '_') + file_ext
         if self.message_type == MessageType.DOCUMENT:
-            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Document", file_name,
-                                                               f"Document (*{file_ext})")
-            file_path = file_tuple[0]
-            if file_path != "":
+            file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
+            if file_path is not None:
                 file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path)).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:
-            file_tuple = QtWidgets.QFileDialog.getSaveFileName(self, "Save Image", file_name, f"Image (*{file_ext})")
-            file_path = file_tuple[0]
-            if file_path != "":
+            file_path = get_save_filename(self, "Save Image", default_filename, f"Image (*{file_ext})")
+            if file_path is not None:
                 self.message_image.save(file_path)
 
     def handle_reply_action(self):
@@ -644,7 +655,7 @@ class MessageItem(QtWidgets.QWidget):
         html = self.chat_window.markdown.convert(self.message_text)
         self.messageBox.setHtml(html)
         self.messageBox.setFixedHeight(
-            self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2
+            int(self.messageBox.document().size().height() + self.messageBox.contentsMargins().top() * 2)
         )
         self.textArea.adjustSize()
 
@@ -657,7 +668,7 @@ class MessageItem(QtWidgets.QWidget):
     def on_link_click(self, url):
         if url.scheme() == "":
             url.setScheme("http")
-        Qt.QDesktopServices.openUrl(url)
+        QtGui.QDesktopServices.openUrl(url)
 
 
 # Deregister all the syntax that we don't want to allow

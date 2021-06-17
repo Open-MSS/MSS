@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -121,7 +121,7 @@ class TestConfigLoader(object):
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("mss_settings.json")
         assert ":" not in file_content
-        config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
         data = utils.config_loader(config_file=config_file)
         assert data["num_labels"] == 10
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
@@ -144,7 +144,7 @@ class TestConfigLoader(object):
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("mss_settings.json")
         assert "num_labels" not in file_content
-        config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
         data = utils.config_loader(config_file=config_file)
         assert data["num_labels"] == 10
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
@@ -168,7 +168,7 @@ class TestConfigLoader(object):
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("mss_settings.json")
         assert "num_labels" in file_content
-        config_file = fs.path.join(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
         num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         # this overwrites the given value

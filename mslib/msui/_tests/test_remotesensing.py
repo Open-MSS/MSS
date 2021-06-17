@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Reimar Bauer, Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,12 @@
 """
 
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
+import skyfield_data
+
+
+def test_skyfield_data_expiration(recwarn):
+    skyfield_data.check_expirations()
+    assert len(recwarn) == 0, [_x.message for _x in recwarn]
 
 
 class TestAngles(object):

@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,6 +38,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
+from mslib._tests.utils import wait_until_signal
 
 PORTS = list(range(8084, 8094))
 
@@ -301,7 +302,7 @@ class Test_TopViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        wait_until_signal(self.wms_control.cpdlg.canceled)
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
@@ -311,7 +312,10 @@ class Test_TopViewWMS(object):
         self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
-        QtWidgets.QApplication.processEvents()
+        wait_until_signal(self.wms_control.image_displayed)
+        assert self.window.getView().map.image is not None
+        self.window.getView().set_map_appearance({})
+        self.window.getView().clear_figure()
+        assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()
         assert mockbox.critical.call_count == 0

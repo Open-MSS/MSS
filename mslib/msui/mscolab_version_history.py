@@ -10,6 +10,7 @@
     This file is part of mss.
 
     :copyright: 2020 Tanish Grover
+    :copyright: Copyright 2020-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -108,9 +109,12 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         }
         url = url_join(self.mscolab_server_url, 'get_project_by_id')
         res = requests.get(url, data=data)
-        xml_content = json.loads(res.text)["content"]
-        waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)
-        self.currentWaypointsTable.setModel(waypoint_model)
+        if res.text != "False":
+            xml_content = json.loads(res.text)["content"]
+            waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)
+            self.currentWaypointsTable.setModel(waypoint_model)
+        else:
+            show_popup(self, "Error", "Some error occurred while fetching data!")
 
     def load_all_changes(self):
         """
@@ -127,20 +131,23 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         url_path = f'get_all_changes?{query_string}'
         url = url_join(self.mscolab_server_url, url_path)
         r = requests.get(url, data=data)
-        changes = json.loads(r.text)["changes"]
-        self.changes.clear()
-        for change in changes:
-            created_at = datetime.strptime(change["created_at"], "%Y-%m-%d, %H:%M:%S")
-            local_time = utc_to_local_datetime(created_at)
-            date = local_time.strftime('%d/%m/%Y')
-            time = local_time.strftime('%I:%M %p')
-            item_text = f'{change["username"]} made change on {date} at {time}'
-            if change["version_name"] is not None:
-                item_text = f'{change["version_name"]}\n{item_text}'
-            item = QtWidgets.QListWidgetItem(item_text, parent=self.changes)
-            item.id = change["id"]
-            item.version_name = change["version_name"]
-            self.changes.addItem(item)
+        if r.text != "False":
+            changes = json.loads(r.text)["changes"]
+            self.changes.clear()
+            for change in changes:
+                created_at = datetime.strptime(change["created_at"], "%Y-%m-%d, %H:%M:%S")
+                local_time = utc_to_local_datetime(created_at)
+                date = local_time.strftime('%d/%m/%Y')
+                time = local_time.strftime('%I:%M %p')
+                item_text = f'{change["username"]} made change on {date} at {time}'
+                if change["version_name"] is not None:
+                    item_text = f'{change["version_name"]}\n{item_text}'
+                item = QtWidgets.QListWidgetItem(item_text, parent=self.changes)
+                item.id = change["id"]
+                item.version_name = change["version_name"]
+                self.changes.addItem(item)
+        else:
+            show_popup(self, "Error", "Session expired, new login required")
 
     def preview_change(self, current_item, previous_item):
         font = QtGui.QFont()
@@ -160,14 +167,18 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             "ch_id": current_item.id
         }
         url = url_join(self.mscolab_server_url, 'get_change_content')
-        res = requests.get(url, data=data).json()
-        waypoint_model = WaypointsTableModel(xml_content=res["content"])
-        self.changePreviewTable.setModel(waypoint_model)
-        if current_item.version_name is not None:
-            self.deleteVersionNameBtn.setVisible(True)
+        res = requests.get(url, data=data)
+        if res.text != "False":
+            res = res.json()
+            waypoint_model = WaypointsTableModel(xml_content=res["content"])
+            self.changePreviewTable.setModel(waypoint_model)
+            if current_item.version_name is not None:
+                self.deleteVersionNameBtn.setVisible(True)
+            else:
+                self.deleteVersionNameBtn.setVisible(False)
+            self.toggle_version_buttons(True)
         else:
-            self.deleteVersionNameBtn.setVisible(False)
-        self.toggle_version_buttons(True)
+            show_popup(self, "Error", "Session expired, new login required")
 
     def request_set_version_name(self, version_name, ch_id):
         data = {
@@ -188,32 +199,38 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 return
             selected_item = self.changes.currentItem()
             res = self.request_set_version_name(version_name, selected_item.id)
-            res = res.json()
-            if res["success"] is True:
-                item_text = selected_item.text().split('\n')[-1]
-                new_text = f"{version_name}\n{item_text}"
-                selected_item.setText(new_text)
-                selected_item.version_name = version_name
-                self.deleteVersionNameBtn.setVisible(True)
+            if res.text != "False":
+                res = res.json()
+                if res["success"] is True:
+                    item_text = selected_item.text().split('\n')[-1]
+                    new_text = f"{version_name}\n{item_text}"
+                    selected_item.setText(new_text)
+                    selected_item.version_name = version_name
+                    self.deleteVersionNameBtn.setVisible(True)
+                else:
+                    show_popup(self, "Error", res["message"])
             else:
-                show_popup(self, "Error", res["message"])
+                show_popup(self, "Error", "Session expired, new login required")
 
     def handle_delete_version_name(self):
         selected_item = self.changes.currentItem()
         res = self.request_set_version_name(None, selected_item.id)
-        res = res.json()
-        if res["success"] is True:
-            # Remove item if the filter is set to Named version
-            if self.versionFilterCB.currentIndex() == 0:
-                self.changes.takeItem(self.changes.currentRow())
-            # Remove name from item
+        if res.text != "False":
+            res = res.json()
+            if res["success"] is True:
+                # Remove item if the filter is set to Named version
+                if self.versionFilterCB.currentIndex() == 0:
+                    self.changes.takeItem(self.changes.currentRow())
+                # Remove name from item
+                else:
+                    item_text = selected_item.text().split('\n')[-1]
+                    selected_item.setText(item_text)
+                    selected_item.version_name = None
+                self.deleteVersionNameBtn.setVisible(False)
             else:
-                item_text = selected_item.text().split('\n')[-1]
-                selected_item.setText(item_text)
-                selected_item.version_name = None
-            self.deleteVersionNameBtn.setVisible(False)
+                show_popup(self, "Error", res["message"])
         else:
-            show_popup(self, "Error", res["message"])
+            show_popup(self, "Error", "Session expired, new login required")
 
     def handle_undo(self):
         qm = QtWidgets.QMessageBox
@@ -225,11 +242,13 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             }
             url = url_join(self.mscolab_server_url, 'undo')
             r = requests.post(url, data=data)
-            if r.text == "True":
+            if r.text != "False":
                 # reload windows
                 self.reloadWindows.emit()
                 self.load_current_waypoints()
                 self.load_all_changes()
+            else:
+                show_popup(self, "Error", "Session expired, new login required")
 
     def handle_refresh(self):
         self.load_current_waypoints()
@@ -237,3 +256,4 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
 
     def closeEvent(self, event):
         self.viewCloses.emit()
+        event.accept()

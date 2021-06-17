@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +37,8 @@ import pint
 from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
+import subprocess
+import sys
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -53,8 +55,35 @@ UR.define("degrees_north = degrees")
 UR.define("degrees_south = -degrees")
 UR.define("degrees_east = degrees")
 UR.define("degrees_west = -degrees")
-UR.define("sigma = dimensionless")
+
+UR.define("degrees_N = degrees")
+UR.define("degrees_S = -degrees")
+UR.define("degrees_E = degrees")
+UR.define("degrees_W = -degrees")
+
+UR.define("degreesN = degrees")
+UR.define("degreesS = -degrees")
+UR.define("degreesE = degrees")
+UR.define("degreesW = -degrees")
+
+UR.define("degree_north = degrees")
+UR.define("degree_south = -degrees")
+UR.define("degree_east = degrees")
+UR.define("degree_west = -degrees")
+
+UR.define("degree_N = degrees")
+UR.define("degree_S = -degrees")
+UR.define("degree_E = degrees")
+UR.define("degree_W = -degrees")
+
+UR.define("degreeN = degrees")
+UR.define("degreeS = -degrees")
+UR.define("degreeE = degrees")
+UR.define("degreeW = -degrees")
+
 UR.define("fraction = [] = frac")
+UR.define("sigma = 1 fraction")
+UR.define("level = sigma")
 UR.define("percent = 1e-2 fraction")
 UR.define("permille = 1e-3 fraction")
 UR.define("ppm = 1e-6 fraction")
@@ -122,34 +151,24 @@ def config_loader(config_file=None, dataset=None):
     Returns: a the dataset value or the config as dictionary
 
     """
+    default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
+    if dataset is not None and dataset not in default_config:
+        raise KeyError(f"requested dataset '{dataset}' not in defaults!")
     if config_file is None:
         config_file = constants.CACHED_CONFIG_FILE
     if config_file is None:
         logging.info(
             'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html')
-    default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
-    if dataset is not None and dataset not in default_config:
-        raise KeyError(f"requested dataset '{dataset}' not in defaults or config_file")
-    if config_file is None:
         if dataset is None:
             return default_config
         else:
             return default_config[dataset]
     user_config = read_config_file(config_file)
     if dataset is not None:
-        if dataset not in user_config:
-            return default_config[dataset]
-        else:
-            return user_config[dataset]
+        return user_config.get(dataset, default_config[dataset])
     else:
-        for key in user_config:
-            default_config[key] = user_config[key]
+        default_config.update(user_config)
         return default_config
-    if len(user_config) == 0:
-        if dataset is None:
-            return default_config
-        else:
-            return default_config[dataset]
 
 
 def get_distance(coord0, coord1):
@@ -431,14 +450,13 @@ def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     # parameter controls the degree of the splines used, i.e. order=1
     # stands for linear interpolation.
     for ml in range(data3D.shape[0]):
-        data = data3D[ml, :, :]
-        curtain[ml, :] = map_coordinates(data, ind_coords, order=1)
+        curtain[ml, :] = map_coordinates(data3D[ml, :, :].filled(np.nan), ind_coords, order=1)
 
     curtain[:, np.isnan(ind_lats) | np.isnan(ind_lons)] = np.nan
     return np.ma.masked_invalid(curtain)
 
 
-def latlon_points(p1, p2, numpoints=100, connection='linear'):
+def latlon_points(p1, p2, numpoints=100, connection='linear', contains_altitude=False):
     """
     Compute intermediate points between two given points.
 
@@ -452,8 +470,9 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
     """
     LAT = 0
     LON = 1
-    TIME = 2
-    lats, lons, times = None, None, None
+    ALT = 2
+    TIME = 2 if not contains_altitude else 3
+    lats, lons, alts, times = None, None, None, None
 
     if connection == 'linear':
         lats = np.linspace(p1[LAT], p2[LAT], numpoints)
@@ -468,13 +487,19 @@ def latlon_points(p1, p2, numpoints=100, connection='linear'):
             lats = np.asarray([p1[LAT], p2[LAT]])
             lons = np.asarray([p1[LON], p2[LON]])
 
+    if contains_altitude:
+        alts = np.linspace(p1[ALT], p2[ALT], numpoints)
+
     p1_time, p2_time = nc.date2num([p1[TIME], p2[TIME]], "seconds since 2000-01-01")
     times = np.linspace(p1_time, p2_time, numpoints)
 
-    return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
+    if not contains_altitude:
+        return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
+    else:
+        return lats, lons, alts, nc.num2date(times, "seconds since 2000-01-01")
 
 
-def path_points(points, numpoints=100, connection='linear'):
+def path_points(points, numpoints=100, connection='linear', contains_altitude=False):
     """
     Compute intermediate points of a path given by a list of points.
 
@@ -488,9 +513,13 @@ def path_points(points, numpoints=100, connection='linear'):
     """
     if connection not in ['linear', 'greatcircle']:
         return None, None
+    if points is None or len(points) == 0:
+        return None, None, None
+
     LAT = 0
     LON = 1
-    TIME = 2
+    ALT = 2
+    TIME = 3 if contains_altitude else 2
 
     # First compute the lengths of the individual path segments, i.e.
     # the distances between the points.
@@ -518,7 +547,11 @@ def path_points(points, numpoints=100, connection='linear'):
         lons = np.repeat(points[0][LON], numpoints)
         lats = np.repeat(points[0][LAT], numpoints)
         times = np.repeat(points[0][TIME], numpoints)
-        return lats, lons, times
+        if contains_altitude:
+            alts = np.repeat(points[0][ALT], numpoints)
+            return lats, lons, alts, times
+        else:
+            return lats, lons, times
 
     # For each segment, determine the number of points to be computed
     # from the distance between the two bounding points and the
@@ -527,6 +560,7 @@ def path_points(points, numpoints=100, connection='linear'):
     # first segment to avoid double points.
     lons = []
     lats = []
+    alts = []
     times = []
     for i in range(len(points) - 1):
         segment_points = int(round(distances[i] / length_point_segment))
@@ -534,14 +568,24 @@ def path_points(points, numpoints=100, connection='linear'):
         # (otherwise latlon_points will throw an exception).
         segment_points = max(segment_points, 2)
         # print segment_points
-        lats_, lons_, times_ = latlon_points(
-            points[i], points[i + 1],
-            numpoints=segment_points, connection=connection)
+        if not contains_altitude:
+            lats_, lons_, times_ = latlon_points(
+                points[i], points[i + 1],
+                numpoints=segment_points, connection=connection)
+        else:
+            lats_, lons_, alts_, times_ = latlon_points(
+                points[i], points[i + 1],
+                numpoints=segment_points, connection=connection, contains_altitude=True)
         startidx = 0 if i == 0 else 1
         lons.extend(lons_[startidx:])
         lats.extend(lats_[startidx:])
         times.extend(times_[startidx:])
-    return [np.asarray(_x) for _x in (lats, lons, times)]
+        if contains_altitude:
+            alts.extend(alts_[startidx:])
+
+    if not contains_altitude:
+        return [np.asarray(_x) for _x in (lats, lons, times)]
+    return [np.asarray(_x) for _x in (lats, lons, alts, times)]
 
 
 def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
@@ -563,10 +607,10 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
 
 def convert_to(value, from_unit, to_unit, default=1.):
     try:
-        value_unit = UR.Quantity(value, UR(from_unit))
+        value_unit = UR.Quantity(value, from_unit)
         result = value_unit.to(to_unit).magnitude
     except pint.UndefinedUnitError:
-        logging.error("Error in unit conversion (undefined) %s/%s", from_unit, to_unit)
+        logging.error("Error in unit conversion (undefined) '%s'/'%s'", from_unit, to_unit)
         result = value * default
     except pint.DimensionalityError:
         if UR(to_unit).to_base_units().units == UR.m:
@@ -587,7 +631,7 @@ def setup_logging(args):
     for ch in logger.handlers:
         logger.removeHandler(ch)
 
-    debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(message)s")
+    debug_formatter = logging.Formatter("%(asctime)s (%(module)s.%(funcName)s:%(lineno)s): %(levelname)s: %(message)s")
     default_formatter = logging.Formatter("%(levelname)s: %(message)s")
 
     # Console handler (suppress DEBUG by default)
@@ -693,3 +737,223 @@ def dropEvent(self, event):
 
 def dragEnterEvent(self, event):
     event.accept()
+
+
+class Worker(QtCore.QThread):
+    """
+    Can be used to run a function through a QThread without much struggle,
+    and receive the return value or exception through signals.
+    Beware not to modify the parents connections through the function.
+    You may change the GUI but it may sometimes not update until the Worker is done.
+    """
+    # Static set of all workers to avoid segfaults
+    workers = set()
+    finished = QtCore.pyqtSignal(object)
+    failed = QtCore.pyqtSignal(Exception)
+
+    def __init__(self, function):
+        Worker.workers.add(self)
+        super(Worker, self).__init__()
+        self.function = function
+        # pyqtSignals don't work without an application eventloop running
+        if QtCore.QCoreApplication.startingUp():
+            self.finished = NonQtCallback()
+            self.failed = NonQtCallback()
+
+        self.failed.connect(lambda e: self._update_gui())
+        self.finished.connect(lambda x: self._update_gui())
+
+    def run(self):
+        try:
+            result = self.function()
+            self.finished.emit(result)
+        except Exception as e:
+            self.failed.emit(e)
+        finally:
+            Worker.workers.remove(self)
+
+    @staticmethod
+    def create(function, on_success=None, on_failure=None, start=True):
+        """
+        Create, connect and directly execute a Worker in a single line.
+        Inspired by QThread.create only available in C++17.
+        """
+        worker = Worker(function)
+        if on_success:
+            worker.finished.connect(on_success)
+        if on_failure:
+            worker.failed.connect(on_failure)
+        if start:
+            worker.start()
+        return worker
+
+    @staticmethod
+    def _update_gui():
+        """
+        Iterate through all windows and update them.
+        Useful for when a thread modifies the GUI.
+        Happens automatically at the end of a Worker.
+        """
+        for window in QtWidgets.QApplication.allWindows():
+            window.requestUpdate()
+
+
+class Updater(QtCore.QObject):
+    """
+    Checks for a newer versions of MSS and provide functions to install it asynchronously.
+    Only works if conda is installed.
+    """
+    on_update_available = QtCore.pyqtSignal([str, str])
+    on_update_finished = QtCore.pyqtSignal()
+    on_log_update = QtCore.pyqtSignal([str])
+    on_status_update = QtCore.pyqtSignal([str])
+
+    def __init__(self, parent=None):
+        super(Updater, self).__init__(parent)
+        self.is_git_env = False
+        self.new_version = None
+        self.old_version = None
+        # pyqtSignals don't work without an application eventloop running
+        if QtCore.QCoreApplication.startingUp():
+            self.on_update_available = NonQtCallback()
+            self.on_update_finished = NonQtCallback()
+            self.on_log_update = NonQtCallback()
+            self.on_status_update = NonQtCallback()
+
+    def run(self):
+        """
+        Starts the updater process
+        """
+        Worker.create(self._check_version)
+
+    def _check_version(self):
+        """
+        Checks if conda search has a newer version of MSS
+        """
+        # Don't notify on updates if mss is in a git repo, as you are most likely a developer
+        try:
+            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
+                                 stderr=subprocess.STDOUT, encoding="utf8")
+            if "true" in git.stdout:
+                self.is_git_env = True
+        except FileNotFoundError:
+            pass
+
+        # Return if conda is not installed
+        try:
+            subprocess.run(["conda"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        except FileNotFoundError:
+            return
+
+        self.on_status_update.emit("Checking for updates...")
+
+        # Check if "search mss" yields a higher version than the currently running one
+        search = self._execute_command("conda search mss")
+        self.new_version = search.split("\n")[-2].split()[1]
+        c_list = self._execute_command("conda list mss")
+        self.old_version = c_list.split("\n")[-2].split()[1]
+        if any(c.isdigit() for c in self.new_version):
+            if self.new_version > self.old_version:
+                self.on_status_update.emit("Your version of MSS is outdated!")
+                self.on_update_available.emit(self.old_version, self.new_version)
+                if self.no_signals:
+                    logging.info(f"MSS can be updated from {self.old_version} to {self.new_version}.\n"
+                                 "Run the --update argument to update.")
+            else:
+                self.on_status_update.emit("Your MSS is up to date.")
+
+    def _restart_mss(self):
+        """
+        Restart mss with all the same parameters, not entirely
+        safe in case parameters change in higher versions, or while debugging
+        """
+        command = [sys.executable.split(os.sep)[-1]] + sys.argv
+        if os.name == "nt" and not command[1].endswith(".py"):
+            command[1] += "-script.py"
+        os.execv(sys.executable, command)
+
+    def _try_updating(self):
+        """
+        Execute 'conda/mamba install mss=newest python -y' and return if it worked or not
+        """
+        command = "conda"
+        try:
+            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            command = "mamba"
+        except FileNotFoundError:
+            pass
+
+        self.on_status_update.emit("Trying to update MSS...")
+        self._execute_command(f"{command} install mss={self.new_version} python -y")
+        if self._verify_newest_mss():
+            return True
+
+        return False
+
+    def _update_mss(self):
+        """
+        Try to install MSS' newest version
+        """
+        if not self._try_updating():
+            self.on_status_update.emit("Update failed. Please try it manually or by creating a new environment!")
+        else:
+            self.on_update_finished.emit()
+            self.on_status_update.emit("Update successful. Please restart MSS.")
+
+    def _verify_newest_mss(self):
+        """
+        Return if the newest mss exists in the environment or not
+        """
+        verify = self._execute_command("conda list mss")
+        if self.new_version in verify:
+            return True
+
+        return False
+
+    def _execute_command(self, command):
+        """
+        Handles proper execution of conda subprocesses and logging
+        """
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
+        self.on_log_update.emit(" ".join(process.args) + "\n")
+
+        text = ""
+        for line in process.stdout:
+            self.on_log_update.emit(line)
+            text += line
+
+        # Happens e.g. on connection errors during installation attempts
+        if "An unexpected error has occurred. Conda has prepared the above report" in text:
+            raise RuntimeError("Something went wrong! Can't safely continue to update.")
+        else:
+            return text
+
+    def update_mss(self):
+        """
+        Installs the newest mss version
+        """
+        def on_failure(e: Exception):
+            self.on_status_update.emit("Update failed, please do it manually.")
+            self.on_log_update.emit(str(e))
+
+        Worker.create(self._update_mss, on_failure=on_failure)
+
+
+class NonQtCallback:
+    """
+    Small mock of pyqtSignal to work without the QT eventloop.
+    Callbacks are run on the same thread as the caller of emit, as opposed to the caller of connect.
+    Keep in mind if this causes issues.
+    """
+    def __init__(self):
+        self.callbacks = []
+
+    def connect(self, function):
+        self.callbacks.append(function)
+
+    def emit(self, *args):
+        for cb in self.callbacks:
+            try:
+                cb(*args)
+            except Exception:
+                pass

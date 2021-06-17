@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,15 +47,18 @@ import fs
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
+from mslib.msui.mss_qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview
 from mslib.msui import topview
 from mslib.msui import sideview
+from mslib.msui import linearview
 from mslib.msui import editor
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
-from mslib.utils import config_loader, setup_logging
+from mslib.msui.updater import UpdaterUI
+from mslib.utils import config_loader, setup_logging, Worker, Updater
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
@@ -86,7 +89,8 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, type)
 
-        view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()}")
+        view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
+                                   f"{view_window.waypoints_model.name}")
         view_window.setIdentifier(view_name)
         self.window = view_window
         self.parent = parent
@@ -129,6 +133,59 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         self.flighttrack_model = flighttrack_model
 
 
+class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
+    """
+    Dialog showing shortcuts for all currently open windows
+    """
+
+    def __init__(self):
+        super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
+        self.setupUi(self)
+        self.current_shortcuts = self.get_shortcuts()
+        self.fill_list()
+
+    def fill_list(self):
+        """
+        Fills the treeWidget with all relevant windows as top level items and their shortcuts as children
+        """
+        for widget in self.current_shortcuts:
+            name = widget.window().windowTitle()
+            if len(name) == 0 or widget.window().isHidden():
+                continue
+            header = QtWidgets.QTreeWidgetItem(self.treeWidget)
+            header.setText(0, name)
+            if widget.window() == self.parent():
+                header.setExpanded(True)
+                header.setSelected(True)
+                self.treeWidget.setCurrentItem(header)
+            for description, shortcut in self.current_shortcuts[widget].items():
+                item = QtWidgets.QTreeWidgetItem(header)
+                item.setText(0, f"{description}: {shortcut}")
+                header.addChild(item)
+
+    def get_shortcuts(self):
+        """
+        Iterates through all top level widgets and puts their shortcuts in a dictionary
+        """
+        shortcuts = {}
+        for qobject in QtWidgets.QApplication.topLevelWidgets():
+            actions = [(qobject.window(), "Show Current Shortcuts", "Alt+S")]
+            actions.extend([
+                (action.parent().window(), action.toolTip(), ",".join(
+                    [shortcut.toString() for shortcut in action.shortcuts()]))
+                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0])
+            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), shortcut.key().toString())
+                            for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
+            actions.extend([(button.window(), button.toolTip(), button.shortcut().toString())
+                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut()])
+            for item in actions:
+                if item[0] not in shortcuts:
+                    shortcuts[item[0]] = {}
+                shortcuts[item[0]][item[1].replace(f"({item[2]})", "").strip()] = item[2]
+
+        return shortcuts
+
+
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
        defined in the QtDesigner file.
@@ -142,6 +199,8 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         super(MSS_AboutDialog, self).__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText(f"Version: {__version__}")
+        self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
+        self.lblChanges.setText(f'<a href="{self.milestone_url}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
         self.lblPython.setPixmap(blub)
 
@@ -187,6 +246,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionTopView.triggered.connect(self.create_new_view)
         self.actionSideView.triggered.connect(self.create_new_view)
         self.actionTableView.triggered.connect(self.create_new_view)
+        self.actionLinearView.triggered.connect(self.create_new_view)
 
         # mscolab menu
         self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
@@ -194,9 +254,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
+        self.actionShortcuts.triggered.connect(self.show_shortcuts)
+        self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
         # Config
-        self.actionConfiguration.triggered.connect(self.open_config_file)
+        self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
+        self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
 
         # Flight Tracks.
         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
@@ -215,6 +278,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Status Bar
         self.labelStatusbar.setText(self.status())
+
+        # Don't start the updater during a test run of mss_pyui
+        if "pytest" not in sys.modules:
+            self.updater = UpdaterUI(self)
+            self.actionUpdater.triggered.connect(self.updater.show)
 
     @staticmethod
     def preload_wms(urls):
@@ -341,6 +409,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self, "Import Flight Track", self.last_save_directory,
                 "All Files (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
+                self.last_save_directory = fs.path.dirname(filename)
                 try:
                     ft_name, new_waypoints = function(filename)
                 # wildcard exception to be resilient against error introduced by user code
@@ -379,6 +448,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self, "Export Flight Track", default_filename,
                 name + " (*." + extension + ")", pickertype=pickertype)
             if filename is not None:
+                self.last_save_directory = fs.path.dirname(filename)
                 try:
                     function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
                 # wildcard exception to be resilient against error introduced by user code
@@ -406,6 +476,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if ret == QtWidgets.QMessageBox.Yes:
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
+            while self.listViews.count() > 0:
+                self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
             # cleanup mscolab window
@@ -440,6 +512,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Table view.
             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
+        elif self.sender() == self.actionLinearView:
+            # Linear view.
+            view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
+            view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -520,14 +598,42 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         self.activate_flight_track(listitem)
 
-    def open_config_file(self):
-        """
-        Reads the config file
+    def restart_application(self):
+        while self.listViews.count() > 0:
+            self.listViews.item(0).window.handle_force_close()
+        self.listViews.clear()
+        self.remove_plugins()
+        self.add_plugins()
 
-        Returns:
-
+    def load_config_file(self):
         """
-        self.config_editor = editor.EditorMainWindow(parent=self)
+        Loads a config file and potentially restarts the application
+        """
+        ret = QtWidgets.QMessageBox.warning(
+            self, self.tr("Mission Support System"),
+            self.tr("Opening a config file will reset application. Continue?"),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if ret == QtWidgets.QMessageBox.Yes:
+            filename = get_open_filename(
+                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)")
+            if filename is not None:
+                constants.CACHED_CONFIG_FILE = filename
+                self.restart_application()
+
+    def open_config_editor(self):
+        """
+        Opens up a JSON config editor
+        """
+        if self.config_editor is None:
+            self.config_editor = editor.EditorMainWindow(parent=self)
+            self.config_editor.viewCloses.connect(self.close_config_editor)
+            self.config_editor.restartApplication.connect(self.restart_application)
+        else:
+            self.config_editor.showNormal()
+            self.config_editor.activateWindow()
+
+    def close_config_editor(self):
+        self.config_editor = None
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
@@ -537,6 +643,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self, "Open Flight Track", self.last_save_directory, "Flight Track Files (*.ftml)",
             pickertag="filepicker_default")
         if filename is not None:
+            self.last_save_directory = fs.path.dirname(filename)
             try:
                 if filename.endswith('.ftml'):
                     self.create_new_flight_track(filename=filename)
@@ -644,6 +751,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
+    def show_shortcuts(self):
+        """Show the shortcuts dialog to the user.
+        """
+        dlg = MSS_ShortcutsDialog()
+        dlg.setModal(True)
+        dlg.exec_()
+
     def status(self):
         if constants.CACHED_CONFIG_FILE is None:
             return ("Status : System Configuration")
@@ -670,6 +784,7 @@ def main():
                         default=os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log"))
     parser.add_argument("-m", "--menu", help="adds mss to menu", action="store_true", default=False)
     parser.add_argument("-d", "--deinstall", help="removes mss from menu", action="store_true", default=False)
+    parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -679,6 +794,16 @@ def main():
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
+        sys.exit()
+
+    if args.update:
+        updater = Updater()
+        updater.on_update_available.connect(lambda old, new: updater.update_mss())
+        updater.on_log_update.connect(lambda s: print(s.replace("\n", "")))
+        updater.on_status_update.connect(lambda s: print(s.replace("\n", "")))
+        updater.run()
+        while Worker.workers:
+            list(Worker.workers)[0].wait()
         sys.exit()
 
     setup_logging(args)
@@ -726,6 +851,7 @@ def main():
     application = QtWidgets.QApplication(sys.argv)
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
     application.setApplicationDisplayName("MSS")
+    application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSSMainWindow()
     mainwindow.create_new_flight_track()
     mainwindow.show()

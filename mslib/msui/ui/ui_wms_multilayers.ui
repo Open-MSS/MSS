@@ -99,7 +99,7 @@
         <bool>false</bool>
        </property>
        <property name="columnCount">
-        <number>3</number>
+        <number>4</number>
        </property>
        <attribute name="headerVisible">
         <bool>true</bool>
@@ -123,6 +123,11 @@
        <column>
         <property name="text">
          <string>Priority</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Colour</string>
         </property>
        </column>
       </widget>
@@ -190,7 +195,33 @@
     </layout>
    </item>
   </layout>
+  <action name="actionCloseWindow">
+   <property name="text">
+    <string>Close Window</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <addaction name="actionCloseWindow"/>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionCloseWindow</sender>
+   <signal>triggered()</signal>
+   <receiver>MultilayersDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>445</x>
+     <y>197</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

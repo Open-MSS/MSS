@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -112,6 +112,19 @@ class FileManager(object):
         if not perm:
             return False
         elif perm.access_level != "admin" and perm.access_level != "creator":
+            return False
+        return True
+
+    def is_collaborator(self, u_id, p_id):
+        """
+        p_id: project id
+        u_id: user-id
+        """
+        # return true only if the user is collaborator
+        permi = Permission.query.filter_by(u_id=u_id, p_id=p_id).first()
+        if not permi:
+            return False
+        elif permi.access_level != "collaborator":
             return False
         return True
 
@@ -279,7 +292,7 @@ class FileManager(object):
         return change_content
 
     def set_version_name(self, ch_id, p_id, u_id, version_name):
-        if not self.is_admin(u_id, p_id):
+        if not (self.is_admin(u_id, p_id) or self.is_collaborator(u_id, p_id)):
             return False
         Change.query\
             .filter(Change.id == ch_id)\
@@ -296,6 +309,8 @@ class FileManager(object):
         # ToDo a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
+        if not self.is_admin(user.id, ch.p_id):
+            return False
         if ch is None:
             return False
         project = Project.query.filter_by(id=ch.p_id).first()

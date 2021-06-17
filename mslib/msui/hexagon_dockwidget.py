@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Joern Ungermann, Stefan Ensmann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +55,8 @@ def create_hexagon(center_lat, center_lon, radius, angle=0.):
 
 
 class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
-    """This class implements the remote sensing functionality as dockable widget.
+    """
+    This class implements the remote sensing functionality as dockable widget.
     """
 
     def __init__(self, parent=None, view=None):
@@ -67,11 +68,22 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         super(HexagonControlWidget, self).__init__(parent)
         self.setupUi(self)
         self.view = view
+        if self.view:
+            self.view.tableWayPoints.selectionModel().selectionChanged.connect(self.on_selection_changed)
+            self.on_selection_changed(None)
 
         self.dsbHexgaonRadius.setValue(200)
 
         self.pbAddHexagon.clicked.connect(self._add_hexagon)
         self.pbRemoveHexagon.clicked.connect(self._remove_hexagon)
+
+    def on_selection_changed(self, index):
+        """
+        Disables add and remove when multiple rows are selected
+        """
+        enable = len(self.view.tableWayPoints.selectionModel().selectedRows()) <= 1
+        self.pbAddHexagon.setEnabled(enable)
+        self.pbRemoveHexagon.setEnabled(enable)
 
     def _get_parameters(self):
         return {
@@ -128,7 +140,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                 row_max = row + (7 - idx)
                 if row_min < 0 or row_max > len(waypoints_model.all_waypoint_data()):
                     raise HexagonException("Cannot remove hexagon, hexagon is not complete "
-                                           "(min, max = {:d}, {:d})".format(row_min, row_max))
+                                           f"min, max = {row_min:d}, {row_max:d}")
                 else:
                     found_one = False
                     for i in range(0, row_max - row_min):

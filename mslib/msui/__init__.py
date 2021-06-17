@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -59,6 +59,7 @@ class MissionSupportSystemDefaultConfig(object):
     # layout of different views, with immutable they can't resized
     layout = {"topview": (963, 702),
               "sideview": (913, 557),
+              "linearview": (913, 557),
               "tableview": (1236, 424),
               "immutable": False}
 
@@ -100,6 +101,10 @@ class MissionSupportSystemDefaultConfig(object):
                    ]
 
     default_VSEC_WMS = [
+        "http://localhost:8081/"
+    ]
+
+    default_LSEC_WMS = [
         "http://localhost:8081/"
     ]
 
@@ -187,3 +192,14 @@ class MissionSupportSystemDefaultConfig(object):
 
     # dictionary for import plugins, e.g. { "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"] }
     import_plugins = {}
+
+    # dictionary to make title, label and ticklabel sizes for topview and sideview configurable.
+    # You can put your default value here, whatever you want to give,it should be a number.
+    topview = {"plot_title_size": 10,
+               "axes_label_size": 10}
+
+    sideview = {"plot_title_size": 10,
+                "axes_label_size": 10}
+
+    linearview = {"plot_title_size": 10,
+                  "axes_label_size": 10}

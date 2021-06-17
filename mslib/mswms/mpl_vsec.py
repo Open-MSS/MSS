@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@ import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 from mslib.mswms import mss_2D_sections
-from mslib.utils import convert_to
+from mslib.utils import convert_to, UR
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
@@ -54,19 +54,22 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
     def __init__(self, driver=None):
-        """Constructor.
+        """
+        Constructor.
         """
         super(AbstractVerticalSectionStyle, self).__init__(driver=driver)
 
     def supported_crs(self):
-        """Returns a list of the coordinate reference systems supported by
-           this style.
+        """
+        Returns a list of the coordinate reference systems supported by
+        this style.
         """
         return ["VERT:LOGP"]
 
     # TODO: the general setup should be a separate class as well
     def _latlon_logp_setup(self, orography=105000.):
-        """General setup for lat/lon vs. log p vertical cross-sections.
+        """
+        General setup for lat/lon vs. log p vertical cross-sections.
         """
         ax = self.ax
 
@@ -78,14 +81,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                                          self.lons[::tick_index_step])],
                            rotation=25, fontsize=10, horizontalalignment='right')
 
-        # Add lines to highlight points if any are given.
-        ipoint = 0
-        for i, (lat, lon) in enumerate(zip(self.lats, self.lons)):
-            if (ipoint < len(self.highlight) and
-                np.hypot(lat - self.highlight[ipoint][0],
-                         lon - self.highlight[ipoint][1]) < 2E-10):
-                ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
-                ipoint += 1
+        if self.draw_verticals:
+            # Add lines to highlight points if any are given.
+            ipoint = 0
+            for i, (lat, lon) in enumerate(zip(self.lats, self.lons)):
+                if (ipoint < len(self.highlight) and
+                    np.hypot(lat - self.highlight[ipoint][0],
+                             lon - self.highlight[ipoint][1]) < 2E-10):
+                    ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
+                    ipoint += 1
 
         # Add lower limit of pressure curtain to indicate orography.
         ax.fill_between(self.lat_inds, orography, y2=self.p_bot,
@@ -116,14 +120,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
     @abstractmethod
     def _plot_style(self):
-        """Can call self._log_setup()
+        """
+        Can call self._log_setup()
         """
         pass
 
     def plot_vsection(self, data, lats, lons, valid_time, init_time,
                       resolution=(-1, -1), bbox=(-1, 1050, -1, 200), style=None,
                       show=False,
-                      highlight=None, noframe=False, figsize=(960, 480),
+                      highlight=None, noframe=False, figsize=(960, 480), draw_verticals=False,
                       numlabels=10, orography_color='k', transparent=False,
                       return_format="image/png"):
         """
@@ -151,13 +156,34 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         self.style = style
         self.highlight = highlight
         self.noframe = noframe
+        self.draw_verticals = draw_verticals
         self.p_bot = bbox[1] * 100
         self.p_top = bbox[3] * 100
         self.numlabels = numlabels
         self.orography_color = orography_color
 
+        # Provide an air_pressured 2-D field in 'Pa' from vertical axis
+        if (("air_pressure" not in self.data) and
+                UR(self.driver.vert_units).check("[pressure]")):
+            self.data_units["air_pressure"] = "Pa"
+            self.data["air_pressure"] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, self.data_units["air_pressure"]).repeat(
+                    len(self.lats), axis=1)
+        if (("air_potential_temperature" not in self.data) and
+                UR(self.driver.vert_units).check("[temperature]")):
+            self.data_units["air_potential_temperature"] = "K"
+            self.data["air_potential_temperature"] = convert_to(
+                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
+                self.driver.vert_units, self.data_units["air_potential_temperature"]).repeat(
+                    len(self.lats), axis=1)
+
         # Derive additional data fields and make the plot.
         self._prepare_datafields()
+        if "air_pressure" not in self.data:
+            raise KeyError(
+                "'air_pressure' need to be available for VSEC plots."
+                "Either provide as data or compute in _prepare_datafields")
 
         # Code for producing a png image with Matplotlib.
         # ===============================================
@@ -174,6 +200,10 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                 self.ax = self.fig.add_axes([0.0, 0.0, 1.0, 1.0])
             else:
                 self.ax = self.fig.add_axes([0.07, 0.17, 0.9, 0.72])
+
+            # prepare horizontal axis
+            self.horizontal_coordinate = self.lat_inds[np.newaxis, :].repeat(
+                self.data["air_pressure"].shape[0], axis=0)
 
             self._plot_style()
 
@@ -202,8 +232,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # Read the above stored png into a PIL image and create an adaptive
             # colour palette.
             output.seek(0)  # necessary for PIL.Image.open()
-            palette_img = PIL.Image.open(output).convert(mode="RGB"
-                                                         ).convert("P", palette=PIL.Image.ADAPTIVE)
+            palette_img = PIL.Image.open(output).convert(
+                mode="RGB").convert("P", palette=PIL.Image.ADAPTIVE)
             output = io.BytesIO()
             if not transparent:
                 logging.debug("saving figure as non-transparent PNG.")

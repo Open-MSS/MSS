@@ -60,7 +60,7 @@ class Ui_MultilayersDialog(object):
         self.listLayers.setAlternatingRowColors(True)
         self.listLayers.setAnimated(False)
         self.listLayers.setHeaderHidden(False)
-        self.listLayers.setColumnCount(3)
+        self.listLayers.setColumnCount(4)
         self.listLayers.setObjectName("listLayers")
         self.listLayers.headerItem().setText(0, "Name")
         self.listLayers.header().setVisible(True)
@@ -92,8 +92,12 @@ class Ui_MultilayersDialog(object):
         self.horizontalLayout_12.addWidget(self.pbViewCapabilities)
         self.verticalLayout_3.addLayout(self.horizontalLayout_12)
         self.verticalLayout_4.addLayout(self.verticalLayout_3)
+        self.actionCloseWindow = QtWidgets.QAction(MultilayersDialog)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
+        MultilayersDialog.addAction(self.actionCloseWindow)
 
         self.retranslateUi(MultilayersDialog)
+        self.actionCloseWindow.triggered.connect(MultilayersDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(MultilayersDialog)
 
     def retranslateUi(self, MultilayersDialog):
@@ -103,6 +107,7 @@ class Ui_MultilayersDialog(object):
         self.lFilter.setText(_translate("MultilayersDialog", "Layer Filter:"))
         self.listLayers.headerItem().setText(1, _translate("MultilayersDialog", "Style"))
         self.listLayers.headerItem().setText(2, _translate("MultilayersDialog", "Priority"))
+        self.listLayers.headerItem().setText(3, _translate("MultilayersDialog", "Colour"))
         self.label_7.setText(_translate("MultilayersDialog", "WMS URL:"))
         self.cbWMS_URL.setToolTip(_translate("MultilayersDialog", "Enter a valid WMS URL here."))
         self.cbWMS_URL.setItemText(0, _translate("MultilayersDialog", "http://localhost:8002/fc_wms"))
@@ -111,3 +116,5 @@ class Ui_MultilayersDialog(object):
         self.btGetCapabilities.setText(_translate("MultilayersDialog", "get capabilities"))
         self.pbViewCapabilities.setToolTip(_translate("MultilayersDialog", "Show information on the selected WMS server."))
         self.pbViewCapabilities.setText(_translate("MultilayersDialog", "view"))
+        self.actionCloseWindow.setText(_translate("MultilayersDialog", "Close Window"))
+        self.actionCloseWindow.setShortcut(_translate("MultilayersDialog", "Ctrl+W"))

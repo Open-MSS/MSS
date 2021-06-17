@@ -45,6 +45,9 @@
           <bold>true</bold>
          </font>
         </property>
+        <property name="toolTip">
+         <string>Redraw Map (R)</string>
+        </property>
         <property name="text">
          <string>&amp;REDRAW</string>
         </property>

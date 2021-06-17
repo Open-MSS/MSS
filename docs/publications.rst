@@ -15,10 +15,14 @@ application. The documents are available at:
 
 For copyright information, please see the files NOTICE and LICENSE.
 
+Acknowledgement
+---------------
 
-+-------------------------------------------------------------------------+
-| When using this software, please be so kind and acknowledge its use by  |
-| citing the above mentioned reference documentation in publications,     |
-| presentations, reports, etc. that you create. Thank you very much.      |
-+-------------------------------------------------------------------------+
+Please add the following acknowledgement and cite to your publications:
 
+  The authors gratefully acknowledge the use of the MSS flight planning
+  software (Rautenhaus, 2012; MSS development was partially funded by
+  the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation)
+  project no. UN 311/3-1)“.
+
+Thank you very much.

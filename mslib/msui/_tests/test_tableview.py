@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -68,6 +68,13 @@ class Test_TableView(object):
         Tests opening the hexagon dock widget.
         """
         self.window.cbTools.currentIndexChanged.emit(1)
+        QtWidgets.QApplication.processEvents()
+
+    def test_open_perf_settings(self):
+        """
+        Tests opening the performance settings dock widget.
+        """
+        self.window.cbTools.currentIndexChanged.emit(2)
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question",

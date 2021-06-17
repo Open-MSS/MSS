@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,14 +24,115 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
 import fs
 from flask import Flask
 import git
+from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, db, Permission, Project
 
+
 app = Flask(__name__, static_url_path='')
+
+
+def add_all_users_to_all_projects(access_level='collaborator'):
+    """ on db level we add all users as collaborator to all projects """
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    with app.app_context():
+        all_projects = Project.query.all()
+        all_path = [project.path for project in all_projects]
+        db.session.close()
+    for path in all_path:
+        access_level = 'collaborator'
+        if path == "TEMPLATE":
+            access_level = 'admin'
+        add_all_users_default_project(path=path, access_level=access_level)
+
+
+def add_all_users_default_project(path='TEMPLATE', description="Project to keep all users", access_level='admin'):
+    """ on db level we add all users to the project TEMPLATE for user handling"""
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    db.init_app(app)
+    with app.app_context():
+        project_available = Project.query.filter_by(path=path).first()
+        if not project_available:
+            project = Project(path, description)
+            db.session.add(project)
+            db.session.commit()
+            with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+                if not file_dir.exists(path):
+                    file_dir.makedir(path)
+                    file_dir.writetext(f'{path}/main.ftml', mscolab_settings.STUB_CODE)
+                    # initiate git
+                    r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', path))
+                    r.git.clear_cache()
+                    r.index.add(['main.ftml'])
+                    r.index.commit("initial commit")
+
+        project = Project.query.filter_by(path=path).first()
+        p_id = project.id
+        user_list = User.query \
+            .join(Permission, (User.id == Permission.u_id) & (Permission.p_id == p_id), isouter=True) \
+            .add_columns(User.id, User.username) \
+            .filter(Permission.u_id.is_(None))
+
+        new_u_ids = [user.id for user in user_list]
+        new_permissions = []
+        for u_id in new_u_ids:
+            new_permissions.append(Permission(u_id, project.id, access_level))
+        db.session.add_all(new_permissions)
+        try:
+            db.session.commit()
+            return True
+        except IntegrityError as err:
+            db.session.rollback()
+            logging.debug(f"Error writing to db: {err}")
+        db.session.close()
+
+
+def delete_user(email):
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    with app.app_context():
+        user = User.query.filter_by(emailid=str(email)).first()
+        if user:
+            print(f"User: {email} deleted from db")
+            db.session.delete(user)
+            db.session.commit()
+        db.session.close()
+
+
+def add_user(email, username, password):
+    """
+    on db level we add a user
+    """
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+
+    template = f"""
+    "MSCOLAB_mailid": "{email}",
+    "MSCOLAB_password": "{password}",
+"""
+    with app.app_context():
+        user_email_exists = User.query.filter_by(emailid=str(email)).first()
+        user_name_exists = User.query.filter_by(username=str(username)).first()
+        if not user_email_exists and not user_name_exists:
+            db_user = User(email, username, password)
+            db.session.add(db_user)
+            db.session.commit()
+            db.session.close()
+            print(f"Userdata: {email} {username} {password}")
+            print(template)
+        else:
+            print(f"{user_name_exists} already in db")
 
 
 def seed_data():

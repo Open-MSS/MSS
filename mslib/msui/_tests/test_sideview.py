@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,8 +36,9 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
+from mslib._tests.utils import wait_until_signal
 
-PORTS = list(range(8095, 8105))
+PORTS = list(range(8095, 8106))
 
 
 class Test_MSS_SV_OptionsDialog(object):
@@ -170,7 +171,7 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        wait_until_signal(self.wms_control.cpdlg.canceled)
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
@@ -180,7 +181,10 @@ class Test_SideViewWMS(object):
         self.query_server(f"http://127.0.0.1:{self.port}")
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
+        wait_until_signal(self.wms_control.image_displayed)
+        assert self.window.getView().image is not None
+        self.window.getView().clear_figure()
+        assert self.window.getView().image is None
         assert mockbox.critical.call_count == 0
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -213,4 +217,12 @@ class Test_SideViewWMS(object):
         # click again on same position
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
+        assert mockbox.critical.call_count == 0
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_y_axes(self, mockbox):
+        self.window.getView().get_settings()["secondary_axis"] = "pressure altitude"
+        self.window.getView().set_settings(self.window.getView().get_settings())
+        self.window.getView().get_settings()["secondary_axis"] = "flight level"
+        self.window.getView().set_settings(self.window.getView().get_settings())
         assert mockbox.critical.call_count == 0

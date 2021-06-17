@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2017-2018 Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -74,8 +74,12 @@ def get_pickertype(tag, typ):
 def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=None):
     pickertype = get_pickertype(pickertag, pickertype)
     if pickertype == "fs":
+        # fs filepicker takes file filters as a list
+        if not isinstance(filt, list):
+            filt = filt.split(';;')
         filename = getOpenFileName(parent, dirname, filt, title="Import Flight Track")
     elif pickertype in ["qt", "default"]:
+        # qt filepicker takes file filters separated by ';;'
         filename = get_open_filename_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
         raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
@@ -159,11 +163,13 @@ def variant_to_float(variant, locale=QtCore.QLocale()):
 # Import all Dialogues from the proper module directory.
 for mod in [
         "ui_about_dialog",
+        "ui_shortcuts",
+        "ui_updater_dialog",
         "ui_hexagon_dockwidget",
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
         "ui_mainwindow",
-        "ui_performance_settings",
+        "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
         "ui_sideview_options",
@@ -171,6 +177,8 @@ for mod in [
         "ui_tableview_window",
         "ui_topview_mapappearance",
         "ui_topview_window",
+        "ui_linearview_options",
+        "ui_linearview_window",
         "ui_wms_capabilities",
         "ui_wms_dockwidget",
         "ui_wms_password_dialog",

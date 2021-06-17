@@ -1,6 +1,123 @@
 Changelog
 =========
 
+Version 4.0.1
+~~~~~~~~~~~~~
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/58?closed=1
+
+Version 4.0.0
+-------------
+
+This release brings a new view mode of 1-D samples along the flight path.
+Also in sideview waypoint symbols and corresponding vertical lines can be switched off.
+A lot of UI improvements, e.g. import and export filters, topview history and home button implemented
+for steorographic projections
+
+HINT:
+~~~~~
+
+For using the 1-D samples along the flight path you have to add a configuration to your
+mss_wms_settings.py. Similiar as to the other layers add:
+
+.. code-block:: python
+
+  register_linear_layers = None
+  if mpl_lsec_styles is not None:
+      register_linear_layers = [
+          # ECMWF standard 1D section styles.
+          (mpl_lsec_styles.LS_DefaultStyle, "air_temperature", ["ecmwf_EUR_LL015"]),
+          (mpl_lsec_styles.LS_DefaultStyle, "divergence_of_wind", ["ecmwf_EUR_LL015"]),
+      ]
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/52?closed=1
+
+
+Version 3.0.4
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/57?closed=1
+
+Version 3.0.3
+-------------
+
+Bug Fix release
+
+* Security fix: viewers were able to store attachments within the chat and could undo flightpathes. #43f7fab10b0ae57c2747de94f39df08535d52cad
+* Security fix: omit recording of the token. #9afc5b4768817b4cd8dceca7201a4f1ebc331944
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/56?closed=1
+
+
+Version 3.0.2
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/55?closed=1
+
+Version 3.0.1
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/54?closed=1
+
+
+Version 3.0.0
+-------------
+May Bär implemented multilayer support for the Server and Client. By this
+Layers have a selectable priority in which they will be displayed. The multilayers
+are searchable and filterable. Layer parameters can be synchronized.
+The used style of each layer is persistently stored.
+The selection of layers is supported by favorization.
+
+
+Hint:
+~~~~~
+With version 3.0.0 we change our default channel order.
+conda-forge is now sorted before defaults.
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/3?closed=1
+
+
+Version 2.0.4
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/51?closed=1
+
+Version 2.0.3
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/49?closed=1
+
+Version 2.0.2
+-------------
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/48?closed=1
 
 Version 2.0.1
 ---------------

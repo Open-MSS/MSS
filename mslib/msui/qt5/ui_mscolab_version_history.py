@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_version_history.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MscolabVersionHistory(object):
     def setupUi(self, MscolabVersionHistory):
@@ -20,6 +22,7 @@ class Ui_MscolabVersionHistory(object):
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_3.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
+        self.horizontalLayout_3.setSpacing(6)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.usernameLabel = QtWidgets.QLabel(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred)
@@ -129,8 +132,12 @@ class Ui_MscolabVersionHistory(object):
         self.statusbar = QtWidgets.QStatusBar(MscolabVersionHistory)
         self.statusbar.setObjectName("statusbar")
         MscolabVersionHistory.setStatusBar(self.statusbar)
+        self.actionCloseWindow = QtWidgets.QAction(MscolabVersionHistory)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
+        MscolabVersionHistory.addAction(self.actionCloseWindow)
 
         self.retranslateUi(MscolabVersionHistory)
+        self.actionCloseWindow.triggered.connect(MscolabVersionHistory.close)
         QtCore.QMetaObject.connectSlotsByName(MscolabVersionHistory)
 
     def retranslateUi(self, MscolabVersionHistory):
@@ -150,4 +157,5 @@ class Ui_MscolabVersionHistory(object):
         self.nameVersionBtn.setText(_translate("MscolabVersionHistory", "Name Version"))
         self.checkoutBtn.setToolTip(_translate("MscolabVersionHistory", "Checkout to the selected version"))
         self.checkoutBtn.setText(_translate("MscolabVersionHistory", "Checkout"))
-
+        self.actionCloseWindow.setText(_translate("MscolabVersionHistory", "actionCloseWindow"))
+        self.actionCloseWindow.setShortcut(_translate("MscolabVersionHistory", "Ctrl+W"))

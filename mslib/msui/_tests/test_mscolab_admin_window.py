@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,6 @@
 import os
 import pytest
 import sys
-import time
 
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.conf import mscolab_settings
@@ -43,7 +42,7 @@ PORTS = list(range(9531, 9550))
 class Test_MscolabAdminWindow(object):
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
@@ -121,6 +120,9 @@ class Test_MscolabAdminWindow(object):
         users = ["test2", "test3"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
+        index = self.admin_window.addUsersPermission.findText("admin", QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.admin_window.addUsersPermission.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         # Check if they have been added in the modify users table
@@ -129,9 +131,6 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_modify_permissions(self):
-        self._connect_to_mscolab()
-        self._login()
-        self._activate_project_at_index(0)
         users = ["test2", "test3"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
@@ -148,9 +147,6 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
     def test_delete_permissions(self):
-        self._connect_to_mscolab()
-        self._login()
-        self._activate_project_at_index(0)
         # Select users in the add users table
         users = ["test2", "test3"]
         self._select_users(self.admin_window.addUsersTable, users)
@@ -170,20 +166,17 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_import_permissions(self):
-        self._connect_to_mscolab()
-        self._login()
-        self._activate_project_at_index(0)
         index = self.admin_window.importPermissionsCB.findText("three", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
         assert self.admin_window.modifyUsersTable.rowCount() == 5
 
     def _connect_to_mscolab(self):
         self.window.url.setEditText(self.url)
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
-        time.sleep(0.1)
+        QtTest.QTest.qWait(100)
 
     def _login(self):
         # login

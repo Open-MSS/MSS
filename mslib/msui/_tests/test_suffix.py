@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@
 """
 
 import sys
-from PyQt5 import QtWidgets, QtTest, QtCore
+from PyQt5 import QtWidgets, QtTest
 import mslib.msui.sideview as tv
 
 
@@ -48,12 +48,8 @@ class Test_SuffixChange(object):
         QtWidgets.QApplication.processEvents()
 
     def test_suffixchange(self):
-        cbView = self.window.cbVerticalAxis.view()
-        suffix = [' hpa', ' km', ' hft']
+        suffix = [' hPa', ' km', ' hft']
         for i in range(len(suffix)):
-            index = cbView.model().index(i, 0)
-            cbView.scrollTo(index)
-            item_react = cbView.visualRect(index)
-            QtTest.QTest.mouseClick(cbView.viewport(), QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item_react.center())
+            self.window.cbVerticalAxis.setCurrentIndex(i)
             QtWidgets.QApplication.processEvents()
             assert self.window.sbPtop.suffix() == suffix[i]

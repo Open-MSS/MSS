@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,8 +26,10 @@
     limitations under the License.
 """
 
+import mock
 import mslib.mswms.mswms as mswms
-from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_307_html
+from importlib import reload
+from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
 
 
 class Test_WMS(object):
@@ -39,7 +41,7 @@ class Test_WMS(object):
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_307_html(result.status, result.headers)
+        callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
 
     def test_get_query_string_wrong_values(self):
@@ -51,7 +53,7 @@ class Test_WMS(object):
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_307_html(result.status, result.headers)
+        callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
 
     def test_get_capabilities(self):
@@ -222,6 +224,65 @@ class Test_WMS(object):
             callback_ok_xml(result.status, result.headers)
             assert result.data.count(b"ServiceExceptionReport") > 0, result
 
+    def test_produce_lsec_plot(self):
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.LS_HV01&styles=&srs=LINE%3A1&format=text%2Fxml&'
+                'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+                'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_xml(result.status, result.headers)
+
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.LS_HV01&styles=&crs=LINE%3A1&format=text%2Fxml&'
+                'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+                'version=1.3.0&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
+
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_xml(result.status, result.headers)
+
+    def test_produce_lsec_service_exception(self):
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.LS_HV01&styles=&srs=LINE%3A1&format=text%2Fxml&'
+                'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+                'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
+        query_string = environ["QUERY_STRING"]
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(query_string))
+        callback_ok_xml(result.status, result.headers)
+        assert result.data.count(b"ServiceExceptionReport") == 0, result
+
+        for orig, fake in [
+                ("time=2012-10-17T12%3A00%3A00Z", "time=2012-01-17T12%3A00%3A00Z"),
+                ("&dim_init_time=2012-10-17T12%3A00%3A00Z", ""),
+                ("&time=2012-10-17T12%3A00%3A00Z", ""),
+                ("layers=ecmwf_EUR_LL015.LS_HV01", "layers=ecmwf_AUR_LL015.LS_HV01"),
+                ("layers=ecmwf_EUR_LL015.LS_HV01", "layers=ecmwf_EUR_LL015.LS_HV99"),
+                ("format=text%2Fxml", "format=oext%2Fxml"),
+                ("path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000",
+                 "path=aaaa%2C-8.93%2C25000%2C48.08%2C11.28%2C25000"),
+                ("&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000", ""),
+                ("bbox=201", "bbox=aaa")]:
+            environ["QUERY_STRING"] = query_string.replace(orig, fake)
+
+            result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+            callback_ok_xml(result.status, result.headers)
+            assert result.data.count(b"ServiceExceptionReport") > 0, result
+
     def test_application_request(self):
         environ = {
             'wsgi.url_scheme': 'http',
@@ -259,7 +320,7 @@ class Test_WMS(object):
 
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_307_html(result.status, result.headers)
+        callback_ok_html(result.status, result.headers)
         assert isinstance(result.data, bytes), result
         assert result.data.count(b"") >= 1, result
 
@@ -271,6 +332,46 @@ class Test_WMS(object):
         }
         self.client = mswms.application.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
-        callback_307_html(result.status, result.headers)
+        callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
         assert result.data.count(b"") > 0, result
+
+    def test_multiple_images(self):
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.PLDiv01,ecmwf_EUR_LL015.PLTemp01&styles=&elevation=200&'
+                'srs=EPSG%3A4326&format=image%2Fpng&'
+                'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
+                'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_image(result.status, result.headers)
+        assert isinstance(result.data, bytes), result
+
+    def test_multiple_xml(self):
+        environ = {
+            'wsgi.url_scheme': 'http',
+            'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+            'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.LS_HV01,ecmwf_EUR_LL015.LS_HV01&styles=&srs=LINE%3A1&format=text%2Fxml&'
+                'request=GetMap&dim_init_time=2012-10-17T12%3A00%3A00Z&'
+                'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
+
+        self.client = mswms.application.test_client()
+        result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+        callback_ok_xml(result.status, result.headers)
+
+    def test_import_error(self):
+        import mslib.mswms.wms
+        with mock.patch.dict("sys.modules", {"mss_wms_settings": None, "mss_wms_auth": None}):
+            reload(mslib.mswms.wms)
+            assert mslib.mswms.wms.mss_wms_settings.__file__ is None
+            assert mslib.mswms.wms.mss_wms_auth.__file__ is None
+        reload(mslib.mswms.wms)
+        assert mslib.mswms.wms.mss_wms_settings.__file__ is not None
+        assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
