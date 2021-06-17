@@ -33,7 +33,7 @@ from markdown.extensions import Extension
 from werkzeug.urls import url_join
 
 from mslib.mscolab.models import MessageType
-from PyQt5 import Qt, QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.qt5 import ui_mscolab_project_window as ui
 from mslib.utils import config_loader, show_popup
@@ -293,7 +293,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.active_edit_id = message_id
         self.messageText.setText(message_text)
         self.messageText.setFocus()
-        self.messageText.moveCursor(Qt.QTextCursor.End)
+        self.messageText.moveCursor(QtGui.QTextCursor.End)
         self.editMessageBtn.setVisible(True)
         self.cancelBtn.setVisible(True)
         self.sendMessageBtn.setVisible(False)
@@ -621,7 +621,7 @@ class MessageItem(QtWidgets.QWidget):
         self.context_menu.exec_(self.messageBox.mapToGlobal(pos))
 
     def handle_copy_action(self):
-        Qt.QApplication.clipboard().setText(self.message_text)
+        QtWidgets.QApplication.clipboard().setText(self.message_text)
 
     def handle_download_action(self):
         file_name = fs.path.basename(self.attachment_path)
@@ -668,7 +668,7 @@ class MessageItem(QtWidgets.QWidget):
     def on_link_click(self, url):
         if url.scheme() == "":
             url.setScheme("http")
-        Qt.QDesktopServices.openUrl(url)
+        QtGui.QDesktopServices.openUrl(url)
 
 
 # Deregister all the syntax that we don't want to allow
