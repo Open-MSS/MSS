@@ -1,6 +1,21 @@
 
 {
     "data_dir": "~/mssdata",
+    "filepicker_default": "default",
+
+    "import_plugins": {
+        "CSV": ["csv", "mslib.plugins.io.csv", "load_from_csv"],
+        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
+        "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"]
+    },
+
+    "export_plugins": {
+        "CSV": ["csv", "mslib.plugins.io.csv", "save_to_csv"],
+        "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
+        "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
+        "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
+        },
+
 
     "layout": {
        "topview": [963, 702],
@@ -53,10 +68,15 @@
 
    "new_flighttrack_template": ["Kiruna", "Ny-Alesund"],
    "new_flighttrack_flightlevel": 250,
+   "num_interpolation_points": 201,
+   "num_labels": 10,
+
    "WMS_request_timeout": 30,
 
    "default_WMS": ["http://www.your-server.de/forecasts"],
    "default_VSEC_WMS": ["http://www.your-server.de/forecasts"],
+   "default_LSEC_WMS": ["http://www.your-server.de/forecasts"],
+
    "default_MSCOLAB": ["http://www.your-mscolab-server.de/"],
    "WMS_login": {
                   "http://www.your-server.de/forecasts" : ["youruser", "yourpassword"]
@@ -64,8 +84,7 @@
    "MSC_login": {
                  "http://www.your-mscolab-server.de" : ["youruser", "yourpassword"]
                 },
-   "num_interpolation_points": 201,
-   "num_labels": 10,
 
-   "filepicker_default": "default"
+   "MSCOLAB_mailid": "",
+   "MSCOLAB_password": ""
 }
