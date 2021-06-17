@@ -845,7 +845,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # set active_pid here
             self.active_pid = item.p_id
             self.access_level = item.access_level
-            self.active_project_name = item.text().split("-")[0].strip()
+            self.active_project_name = item.text().rsplit("-", 1)[0].strip()
             self.waypoints_model = None
             # set active flightpath here
             self.load_wps_from_server()
