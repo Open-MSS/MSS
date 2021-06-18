@@ -49,8 +49,6 @@ from werkzeug.urls import url_join
 
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
-from mslib.msui.mss_qt import ui_mainwindow_new as ui_new
-from mslib.msui.mss_qt import ui_mscolab_connect_window as ui_conn
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
 from mslib.msui.mss_qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
@@ -65,12 +63,6 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from PyQt5 import QtGui, QtCore, QtWidgets
-
-from mslib.msui import mscolab_project as mp
-from mslib.msui import mscolab_admin_window as maw
-from mslib.msui import mscolab_version_history as mvh
-from mslib.msui import socket_control as sc
-from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
@@ -213,300 +205,9 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.lblPython.setPixmap(blub)
 
 
-class MSColab_ConnectWindow(QtWidgets.QMainWindow, ui_conn.Ui_MSColabConnectWindow):
-    """MSColab connect window class. Provides user interface elements to connect/disconnect,
-       login, add new user to an MSColab Server. Also implements HTTP Server Authentication prompt.
-    """
-
-    def __init__(self, parent=None):
-        """
-        Arguments:
-        parent -- Qt widget that is parent to this widget.
-        """
-        super(MSColab_ConnectWindow, self).__init__(parent)
-        self.setupUi(self)
-        self.parent = parent
-
-        self.stackedWidget.setCurrentWidget(self.loginPage)
-
-        # disable widgets in login frame
-        self.loginEmailLe.setEnabled(False)
-        self.loginPasswordLe.setEnabled(False)
-        self.loginBtn.setEnabled(False)
-        self.addUserBtn.setEnabled(False)
-
-        self.urlCb.setEditable(True)
-        self.add_mscolab_urls()
-
-        # connect login, adduser, connect buttons
-        self.connectBtn.clicked.connect(self.connect_handler)
-        self.loginBtn.clicked.connect(self.login_handler)
-        self.addUserBtn.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
-
-        # enable login button only if email and password are entered
-        self.loginEmailLe.textChanged[str].connect(self.enable_login_btn)
-        self.loginPasswordLe.textChanged[str].connect(self.enable_login_btn)
-
-        # connect new user dialogbutton
-        self.newUserBb.accepted.connect(self.new_user_handler)
-        self.newUserBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
-
-        # connecting slot to clear all input widgets while switching tabs
-        self.stackedWidget.currentChanged.connect(self.page_switched)
-
-        # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}, 'server_settings': {}})
-
-        # self.prev_index = 0
-        self.resize(self.sizeHint())
-
-    def page_switched(self, index):
-        # clear all text in all input
-        self.loginEmailLe.setText("")
-        self.loginPasswordLe.setText("")
-
-        self.newUsernameLe.setText("")
-        self.newEmailLe.setText("")
-        self.newPasswordLe.setText("")
-        self.newConfirmPasswordLe.setText("")
-
-        self.wmsUsernameLe.setText("")
-        self.wmsPasswordLe.setText("")
-
-        if index == 2:
-            self.connectBtn.setEnabled(False)
-        else:
-            self.connectBtn.setEnabled(True)
-        self.resize(self.sizeHint())
-
-        # self.prev_index = index
-
-    def add_mscolab_urls(self):
-        url_list = config_loader(dataset="default_MSCOLAB")
-        combo_box_urls = [self.urlCb.itemText(_i) for _i in range(self.urlCb.count())]
-        for url in (_url for _url in url_list if _url not in combo_box_urls):
-            self.urlCb.addItem(url)
-
-    def enable_login_btn(self):
-        self.loginBtn.setEnabled(self.loginEmailLe.text() != "" and self.loginPasswordLe.text() != "")
-
-    def connect_handler(self):
-        try:
-            url = str(self.urlCb.currentText())
-            r = requests.get(url_join(url, 'status'))
-            if r.text == "Mscolab server":
-                # disable url input
-                self.urlCb.setEnabled(False)
-
-                # enable/disable appropriate widgets in login frame
-                self.loginBtn.setEnabled(False)
-                self.addUserBtn.setEnabled(True)
-                self.loginEmailLe.setEnabled(True)
-                self.loginPasswordLe.setEnabled(True)
-
-                self.mscolab_server_url = url
-                # delete mscolab http_auth settings for the url
-                if self.mscolab_server_url in self.settings["auth"].keys():
-                    del self.settings["auth"][self.mscolab_server_url]
-
-                if self.mscolab_server_url not in self.settings["server_settings"].keys():
-                    self.settings["server_settings"].update({self.mscolab_server_url: {}})
-                save_settings_qsettings('mscolab', self.settings)
-
-                # Fill Email and Password fields from config
-                self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
-                self.loginPasswordLe.setText(config_loader(dataset="MSCOLAB_password"))
-                self.enable_login_btn()
-
-                # Change connect button text and connect disconnect handler
-                self.connectBtn.setText('Disconnect')
-                self.connectBtn.clicked.disconnect(self.connect_handler)
-                self.connectBtn.clicked.connect(self.disconnect_handler)
-            else:
-                show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
-        except requests.exceptions.ConnectionError:
-            logging.debug("MSColab server isn't active")
-            show_popup(self, "Error", "MSColab server isn't active")
-        except requests.exceptions.InvalidSchema:
-            logging.debug("invalid schema of url")
-            show_popup(self, "Error", "Invalid Url Scheme!")
-        except requests.exceptions.InvalidURL:
-            logging.debug("invalid url")
-            show_popup(self, "Error", "Invalid URL")
-        except requests.exceptions.SSLError:
-            logging.debug("Certificate Verification Failed")
-            show_popup(self, "Error", "Certificate Verification Failed")
-        except Exception as e:
-            logging.debug("Error %s", str(e))
-            show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
-
-    def disconnect_handler(self):
-        self.urlCb.setEnabled(True)
-
-        # enable/disable appropriate widgets in login frame
-        self.loginBtn.setEnabled(False)
-        self.addUserBtn.setEnabled(False)
-        self.loginEmailLe.setEnabled(False)
-        self.loginPasswordLe.setEnabled(False)
-
-        # clear text
-        self.stackedWidget.setCurrentWidget(self.loginPage)
-
-        # delete mscolab http_auth settings for the url
-        if self.mscolab_server_url in self.settings["auth"].keys():
-            del self.settings["auth"][self.mscolab_server_url]
-        save_settings_qsettings('mscolab', self.settings)
-        self.mscolab_server_url = None
-
-        self.connectBtn.setText('Connect')
-        self.connectBtn.clicked.disconnect(self.disconnect_handler)
-        self.connectBtn.clicked.connect(self.connect_handler)
-
-    def authenticate(self, data, r, url):
-        if r.status_code == 401:
-            username, password = self.wmsUsernameLe.text(), self.wmsPasswordLe.text()
-            self.settings["auth"][self.mscolab_server_url] = (username, password)
-            save_settings_qsettings('mscolab', self.settings)
-            s = requests.Session()
-            s.auth = (username, password)
-            s.headers.update({'x-test': 'true'})
-            r = s.post(url, data=data)
-        return r
-
-    def login_handler(self):
-        for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE:
-                constants.MSC_LOGIN_CACHE[key] = value
-        auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
-
-        # get mscolab /token http auth credentials from cache
-        emailid = self.loginEmailLe.text()
-        password = self.loginPasswordLe.text()
-        data = {
-            "email": emailid,
-            "password": password
-        }
-        s = requests.Session()
-        s.auth = (auth[0], auth[1])
-        s.headers.update({'x-test': 'true'})
-        url = f'{self.mscolab_server_url}/token'
-        try:
-            r = s.post(url, data=data)
-        except requests.exceptions.ConnectionError as ex:
-            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            # popup that Failed to establish a connection
-            show_popup(self, "Error", 'Failed to establish a new connection'
-                                        f' to "{self.mscolab_server_url}". Try in a moment again.')
-            self.disconnect_handler()
-            return
-
-        if r.text == "False":
-            # popup that has wrong credentials
-            show_popup(self, "Error", "Oh no, your credentials were incorrect.")
-        elif r.text == "Unauthorized Access":
-            # Server auth required for logging in
-            self.login_data = [data, r, url, auth]
-            self.connectBtn.setEnabled(False)
-            self.stackedWidget.setCurrentWidget(self.wmsAuthPage)
-            self.wmsBb.accepted.connect(self.login_server_auth)
-            self.wmsBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
-        else:
-            self.parent.after_login(emailid, self.mscolab_server_url, r)
-
-    def login_server_auth(self):
-        data, r, url, auth = self.login_data
-        emailid = data['email']
-        if r.status_code == 401:
-            r = self.authenticate(data, r, url)
-            if r.status_code == 200 and r.text not in ["False", "Unauthorized Access"]:
-                constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
-                self.parent.after_login(emailid, self.mscolab_server_url, r)
-            else:
-                show_popup(self, "Error", "Oh no, server authentication were incorrect.")
-                self.stackedWidget.setCurrentWidget(self.loginPage)
-
-    def new_user_handler(self):
-        for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE:
-                constants.MSC_LOGIN_CACHE[key] = value
-        auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
-
-        emailid = self.newEmailLe.text()
-        password = self.newPasswordLe.text()
-        re_password = self.newConfirmPasswordLe.text()
-        username = self.newUsernameLe.text()
-        if password != re_password:
-            show_popup(self, "Error", "Oh no, your passwords don\'t match")
-            return
-
-        data = {
-            "email": emailid,
-            "password": password,
-            "username": username
-        }
-        s = requests.Session()
-        s.auth = (auth[0], auth[1])
-        s.headers.update({'x-test': 'true'})
-        url = f'{self.mscolab_server_url}/register'
-        try:
-            r = s.post(url, data=data)
-        except requests.exceptions.ConnectionError as ex:
-            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            # popup that Failed to establish a connection
-            show_popup(self, "Error", 'Failed to establish a new connection'
-                                        f' to "{self.mscolab_server_url}". Try in a moment again.')
-            self.disconnect_handler()
-            return
-
-        if r.status_code == 201:
-            show_popup(self, "Success", "You are registered, you can now log in.", icon=1)
-            self.stackedWidget.setCurrentWidget(self.loginPage)
-        elif r.status_code == 401:
-            self.newuser_data = [data, r, url]
-            self.stackedWidget.setCurrentWidget(self.wmsAuthPage)
-            self.wmsBb.accepted.connect(self.newuser_server_auth)
-            self.wmsBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
-        else:
-            error_msg = json.loads(r.text)["message"]
-            show_popup(self, "Error", error_msg)
-
-    def newuser_server_auth(self):
-        data, r, url = self.newuser_data
-        r = self.authenticate(data, r, url)
-        if r.status_code == 201:
-            constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (data['username'], data['password'])
-            show_popup(self, "Success", "You are registered, you can now log in.", icon=1)
-            self.stackedWidget.setCurrentWidget(self.loginPage)
-        else:
-            show_popup(self, "Error", "Oh no, server authentication were incorrect.")
-            self.stackedWidget.setCurrentWidget(self.newuserPage)
-
-#     def closeEvent(self, event):
-#         event.accept()
-
-
-def verify_user_token(func):
-    @functools.wraps(func)
-    def wrapper(ref, *args, **kwargs):
-        data = {
-            "token": ref.token
-        }
-        try:
-            r = requests.get(f'{ref.mscolab_server_url}/test_authorized', data=data)
-        except requests.exceptions.ConnectionError as ex:
-            logging.error("unexpected error: %s %s", type(ex), ex)
-            return False
-        if r.text != "True":
-            show_popup(ref, "Error", "Your Connection is expired. New Login required!")
-            ref.logout()
-        else:
-            func(ref, *args, *kwargs)
-    return wrapper
-
-
-class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
+class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     """MSUI new main window class. Provides user interface elements for managing
-       flight tracks and views.
+       flight tracks, views and MSColab functionalities.
     """
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
@@ -534,6 +235,30 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir")
 
+        # File menu.
+        self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
+        self.actionOpenFlightTrack.triggered.connect(self.open_flight_track)
+        self.actionActivateSelectedFlightTrack.triggered.connect(self.activate_selected_flight_track)
+        self.actionSaveActiveFlightTrack.triggered.connect(self.save_flight_track)
+        self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_flight_track_as)
+        self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
+
+        # Views menu.
+        self.actionTopView.triggered.connect(functools.partial(self.create_view_handler, "topview"))
+        self.actionSideView.triggered.connect(functools.partial(self.create_view_handler, "sideview"))
+        self.actionTableView.triggered.connect(functools.partial(self.create_view_handler, "tableview"))
+        self.actionLinearView.triggered.connect(functools.partial(self.create_view_handler, "linearview"))
+
+        # Help menu.
+        self.actionOnlineHelp.triggered.connect(self.show_online_help)
+        self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
+        self.actionShortcuts.triggered.connect(self.show_shortcuts)
+        self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+
+        # # Config
+        # self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
+        # self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
+
         # self.newFlightTrackBtn.clicked.connect(functools.partial(self.create_new_flight_track, None, None))
 
         # Flight Tracks.
@@ -542,499 +267,65 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         # Views.
         # self.listViews.itemActivated.connect(self.activate_sub_window)
 
+        # self.add_import_filter("CSV", "csv", load_from_csv, pickertag="filepicker_default")
+        # self.add_export_filter("CSV", "csv", save_to_csv, pickertag="filepicker_default")
+
+        # self._imported_plugins, self._exported_plugins = {}, {}
+        # self.add_plugins()
+
+        preload_urls = config_loader(dataset="WMS_preload")
+        self.preload_wms(preload_urls)
+
+        # # Status Bar
+        # self.statusBar().showMessage(self.status())
+
+        # Create MSColab instance to handle all MSColab functionalities
+        self.mscolab = mscolab.MSSMscolab(ui=self)
+
         # Setting up MSColab Tab
-        self.connectBtn.clicked.connect(self.open_connect_window)
+        self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
 
-        # hide online widgets
-        self.usernameLabel.hide()
-        self.userOptionsTb.hide()
-        self.addProjectBtn.hide()
-        self.workingStatusLabel.hide()
-        self.workLocallyCheckbox.hide()
-        self.sandboxOptionsCb.hide()
-        self.projectOptionsCb.hide()
+        # Don't start the updater during a test run of mss_pyui
+        if "pytest" not in sys.modules:
+            self.updater = UpdaterUI(self)
+            self.actionUpdater.triggered.connect(self.updater.show)
 
-        # int to store active pid
-        self.active_pid = None
-        # storing access_level to save network call
-        self.access_level = None
-        # storing project_name to save network call
-        self.active_project_name = None
-        # Storing project list to pass to admin window
-        self.projects = None
-        # store active_flight_path here as object
-        self.waypoints_model = None
-        # Store active project's file path
-        self.local_ftml_file = None
-        # connection object to interact with sockets
-        self.conn = None
-        # store window instances
-        self.active_windows = []
-        # assign ids to view-window
-        self.id_count = 0
-        # project window
-        self.chat_window = None
-        # Admin Window
-        self.admin_window = None
-        # Version History Window
-        self.version_window = None
-        # Merge waypoints dialog
-        self.merge_dialog = None
-        # Mscolab help dialog
-        self.help_dialog = None
-        # set data dir, uri
-        # if data_dir is None:
-        #     self.data_dir = config_loader(dataset="mss_dir")
-        # else:
-        #     self.data_dir = data_dir
-        # self.create_dir()
-        # self.export_plugins = self.add_plugins(dataset="export_plugins")
-        # self.import_plugins = self.add_plugins(dataset="import_plugins")
-        self.mscolab_server_url = None
-
-        # fill value of mscolab url if found in QSettings storage
-        self.settings = load_settings_qsettings(
-            'mscolab', default_settings={'auth': {}, 'server_settings': {}})
-
-    def create_view_local(self, index):
-        """Method called when the user selects a new view to be opened. Creates
-           a new instance of the view and adds a QActiveViewsListWidgetItem to
-           the list of open views (self.listViews).
+    @staticmethod
+    def preload_wms(urls):
         """
-        # Ignore create view option.
-        if index == 0:
-            return
+        This method accesses a list of WMS servers and load their capability documents.
+        :param urls: List of URLs
+        """
+        pdlg = QtWidgets.QProgressDialog("Preloading WMS servers...", "Cancel", 0, len(urls))
+        pdlg.reset()
+        pdlg.setValue(0)
+        pdlg.setModal(True)
+        pdlg.show()
+        QtWidgets.QApplication.processEvents()
+        for i, base_url in enumerate(urls):
+            pdlg.setValue(i)
+            QtWidgets.QApplication.processEvents()
+            # initialize login cache from config file, but do not overwrite existing keys
+            for key, value in config_loader(dataset="WMS_login").items():
+                if key not in constants.WMS_LOGIN_CACHE:
+                    constants.WMS_LOGIN_CACHE[key] = value
+            username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
-        self.createViewCb.setCurrentIndex(0)
-        layout = config_loader(dataset="layout")
-        view_window = None
-        if index == 1:
-            # Top view.
-            view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
-            view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
-            if layout["immutable"]:
-                view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
-        elif index == 2:
-            # Side view.
-            view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
-            view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
-            if layout["immutable"]:
-                view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
-        elif index == 3:
-            # Table view.
-            view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
-            view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
-        elif index == 4:
-            # Linear view.
-            view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
-            view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
-            if layout["immutable"]:
-                view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
+            try:
+                request = requests.get(base_url)
+                if pdlg.wasCanceled():
+                    break
 
-        if view_window is not None:
-            # Make sure view window will be deleted after being closed, not
-            # just hidden (cf. Chapter 5 in PyQt4).
-            view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            # Open as a non-modal window.
-            view_window.show()
-            # Add an entry referencing the new view to the list of views.
-            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
-            view_window.viewCloses.connect(listitem.view_destroyed)
-            self.listViews.setCurrentItem(listitem)
-            self.viewsChanged.emit()
-
-    def open_connect_window(self):
-        self.connect_window = MSColab_ConnectWindow(parent=self)
-        self.connect_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.connect_window.setWindowTitle("Connect to MSColab")
-        self.connect_window.show()
-
-    def after_login(self, emailid, url, r):
-        self.connect_window.close()
-        _json = json.loads(r.text)
-        self.token = _json["token"]
-        self.user = _json["user"]
-        self.mscolab_server_url = url
-
-        self.connectBtn.hide()
-        # display connection status
-        self.mscStatusLabel.setText(self.tr(f"Connected to MSColab Server at {self.mscolab_server_url}"))
-        # display username beside useroptions toolbutton
-        self.usernameLabel.setText(self.tr(f"{self.user['username']}"))
-        self.usernameLabel.show()
-        # set up user menu and add to toolbutton
-        self.user_menu = QtWidgets.QMenu()
-        self.user_menu.addAction("Profile")
-        self.user_menu.addAction("Help")
-        self.user_menu.addAction("Logout")
-        self.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.userOptionsTb.setMenu(self.user_menu)
-        self.userOptionsTb.show()
-        # self.pixmap = QtGui.QPixmap("msui_redesign/gravatar.jpg")
-        # self.icon = QtGui.QIcon()
-        # self.icon.addPixmap(self.pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        # self.userOptionsTb.setIcon(self.icon)
-
-        self.add_projects_to_ui()
-        self.tabWidget.setCurrentIndex(1)
-
-        # # create socket connection here
-        # self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
-        # self.conn.signal_reload.connect(self.reload_window)
-        # self.conn.signal_new_permission.connect(self.render_new_permission)
-        # self.conn.signal_update_permission.connect(self.handle_update_permission)
-        # self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
-        # self.conn.signal_project_deleted.connect(self.handle_project_deleted)
-
-        # activate add project button here
-        self.addProjectBtn.show()
-        # save_settings_qsettings('mscolab', self.settings)
-
-    @verify_user_token
-    def add_projects_to_ui(self):
-        data = {
-            "token": self.token
-        }
-        r = requests.get(f'{self.mscolab_server_url}/projects', data=data)
-        if r.text != "False":
-            _json = json.loads(r.text)
-            self.projects = _json["projects"]
-            logging.debug("adding projects to ui")
-            projects = sorted(self.projects, key=lambda k: k["path"].lower())
-            self.listProjectsMSC.clear()
-            selectedProject = None
-            for project in projects:
-                project_desc = f'{project["path"]} - {project["access_level"]}'
-                widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjectsMSC)
-                widgetItem.p_id = project["p_id"]
-                widgetItem.access_level = project["access_level"]
-                if widgetItem.p_id == self.active_pid:
-                    selectedProject = widgetItem
-                self.listProjectsMSC.addItem(widgetItem)
-            if selectedProject is not None:
-                self.listProjectsMSC.setCurrentItem(selectedProject)
-                self.listProjectsMSC.itemActivated.emit(selectedProject)
-            self.listProjectsMSC.itemActivated.connect(self.set_active_pid)
-        else:
-            show_popup(self, "Error", "Session expired, new login required")
-            self.logout()
-
-    @verify_user_token
-    def set_active_pid(self, item):
-        if item.p_id == self.active_pid:
-            return
-        # # close all hanging window
-        # self.force_close_view_windows()
-        # self.close_external_windows()
-        # # Turn off work locally toggle
-        self.workLocallyCheckbox.blockSignals(True)
-        self.workLocallyCheckbox.setChecked(False)
-        self.workLocallyCheckbox.blockSignals(False)
-        self.sandboxOptionsCb.hide()
-
-        # set active_pid here
-        self.active_pid = item.p_id
-        self.access_level = item.access_level
-        self.active_project_name = item.text().split("-")[0].strip()
-        self.waypoints_model = None
-
-        # # set active flightpath here
-        # self.load_wps_from_server()
-        # enable project specific buttons
-        self.workingStatusLabel.show()
-        self.workingStatusLabel.setText(self.tr("Working On: Shared File."
-                                             "All your changes will be shared with everyone."
-                                             "Turn on work locally to work on local flight track file"))
-        # enable access level specific buttons
-        self.show_project_options()
-
-        # change font style for selected
-        font = QtGui.QFont()
-        for i in range(self.listProjectsMSC.count()):
-            self.listProjectsMSC.item(i).setFont(font)
-        font.setBold(True)
-        item.setFont(font)
-
-    def reload_wps_from_server(self):
-        if self.active_pid is None:
-            return
-        self.load_wps_from_server()
-        self.reload_view_windows()
-
-    @verify_user_token
-    def request_wps_from_server(self):
-        data = {
-            "token": self.token,
-            "p_id": self.active_pid
-        }
-        r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
-        if r.text != "False":
-            xml_content = json.loads(r.text)["content"]
-            return xml_content
-        else:
-            show_popup(self, "Error", "Session expired, new login required")
-
-    def load_wps_from_server(self):
-        if self.workLocallyCheckBox.isChecked():
-            return
-        xml_content = self.request_wps_from_server()
-        if xml_content is not None:
-            self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
-            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-
-    def show_project_options(self):
-        project_opt_list = ['Project Options']
-        allow_version_access = self.access_level in ["creator", "admin", "collaborator"]
-        if allow_version_access:
-            project_opt_list.extend(['Chat', 'Version History'])
-            self.workLocallyCheckbox.show()
-
-        allow_version_access = self.access_level in ["creator", "admin"]
-        if allow_version_access:
-            project_opt_list.extend(['Manage Users'])
-
-        allow_version_access = self.access_level in ["creator"]
-        if allow_version_access:
-            project_opt_list.extend(['Share Project', 'Delete Project'])
-
-        self.projectOptionsCb.clear()
-        self.projectOptionsCb.addItems(project_opt_list)
-        self.projectOptionsCb.show()
-
-    def hide_project_options(self):
-        self.workingStatusLabel.hide()
-        self.projectOptionsCb.hide()
-        self.workLocallyCheckbox.hide()
-        self.sandboxOptionsCb.hide()
-
-    @verify_user_token
-    def create_view_msc(self, index):
-        if index == 0 or self.active_pid is None:
-            return
-
-        _type = ["topview", "sideview", "tableview", "linearview"][index-1]
-        for active_window in self.active_windows:
-            if active_window.view_type == _type:
-                active_window.raise_()
-                active_window.activateWindow()
-                return
-
-        self.waypoints_model.name = self.active_project_name
-        if _type == "topview":
-            view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
-                                                   parent=self.listProjectsMSC,
-                                                   _id=self.id_count)
-        elif _type == "sideview":
-            view_window = sideview.MSSSideViewWindow(model=self.waypoints_model,
-                                                     parent=self.listProjectsMSC,
-                                                     _id=self.id_count)
-        elif _type == "tableview":
-            view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
-                                                       parent=self.listProjectsMSC,
-                                                       _id=self.id_count)
-        else:
-            view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
-                                                         parent=self.listProjectsMSC,
-                                                         _id=self.id_count)
-        view_window.view_type = _type
-
-        if self.access_level == "viewer":
-            self.disable_navbar_action_buttons(_type, view_window)
-
-        view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        view_window.setWindowTitle(f"{view_window.windowTitle()} - {self.active_project_name}")
-        view_window.show()
-        view_window.viewClosesId.connect(self.handle_view_close)
-        self.active_windows.append(view_window)
-
-        # increment id_count
-        self.id_count += 1
-
-
-# class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
-#     """MSUI main window class. Provides user interface elements for managing
-#        flight tracks and views.
-#     """
-
-#     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
-
-#     def __init__(self, *args):
-#         super(MSSMainWindow, self).__init__(*args)
-#         self.setupUi(self)
-#         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
-#         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
-#         # instead of the default Icon of python/pythonw
-#         try:
-#             import ctypes
-#             myappid = f"mss.mss_pyui.{__version__}"  # arbitrary string
-#             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-#         except (ImportError, AttributeError) as error:
-#             logging.debug("AttributeError, ImportError Exception %s", error)
-#         # Reference to the flight track that is currently displayed in the
-#         # views.
-#         self.active_flight_track = None
-#         self.last_save_directory = config_loader(dataset="data_dir")
-#         self.mscolab_window = None
-#         self.config_editor = None
-
-#         # Connect Qt SIGNALs:
-#         # ===================
-
-#         # File menu.
-#         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
-#         self.actionOpenFlightTrack.triggered.connect(self.open_flight_track)
-#         self.actionActivateSelectedFlightTrack.triggered.connect(self.activate_selected_flight_track)
-#         self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
-#         self.actionSaveActiveFlightTrack.triggered.connect(self.save_flight_track)
-#         self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_flight_track_as)
-
-#         # Views menu.
-#         self.actionTopView.triggered.connect(self.create_new_view)
-#         self.actionSideView.triggered.connect(self.create_new_view)
-#         self.actionTableView.triggered.connect(self.create_new_view)
-#         self.actionLinearView.triggered.connect(self.create_new_view)
-
-#         # mscolab menu
-#         self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
-
-#         # Help menu.
-#         self.actionOnlineHelp.triggered.connect(self.show_online_help)
-#         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
-#         self.actionShortcuts.triggered.connect(self.show_shortcuts)
-#         self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
-
-#         # Config
-#         self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
-#         self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
-
-#         # Flight Tracks.
-#         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
-
-#         # Views.
-#         self.listViews.itemActivated.connect(self.activate_sub_window)
-
-#         self.add_import_filter("CSV", "csv", load_from_csv, pickertag="filepicker_default")
-#         self.add_export_filter("CSV", "csv", save_to_csv, pickertag="filepicker_default")
-
-#         self._imported_plugins, self._exported_plugins = {}, {}
-#         self.add_plugins()
-
-#         preload_urls = config_loader(dataset="WMS_preload")
-#         self.preload_wms(preload_urls)
-
-#         # Status Bar
-#         self.labelStatusbar.setText(self.status())
-
-#         # Don't start the updater during a test run of mss_pyui
-#         if "pytest" not in sys.modules:
-#             self.updater = UpdaterUI(self)
-#             self.actionUpdater.triggered.connect(self.updater.show)
-
-#     @staticmethod
-#     def preload_wms(urls):
-#         """
-#         This method accesses a list of WMS servers and load their capability documents.
-#         :param urls: List of URLs
-#         """
-#         pdlg = QtWidgets.QProgressDialog("Preloading WMS servers...", "Cancel", 0, len(urls))
-#         pdlg.reset()
-#         pdlg.setValue(0)
-#         pdlg.setModal(True)
-#         pdlg.show()
-#         QtWidgets.QApplication.processEvents()
-#         for i, base_url in enumerate(urls):
-#             pdlg.setValue(i)
-#             QtWidgets.QApplication.processEvents()
-#             # initialize login cache from config file, but do not overwrite existing keys
-#             for key, value in config_loader(dataset="WMS_login").items():
-#                 if key not in constants.WMS_LOGIN_CACHE:
-#                     constants.WMS_LOGIN_CACHE[key] = value
-#             username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
-
-#             try:
-#                 request = requests.get(base_url)
-#                 if pdlg.wasCanceled():
-#                     break
-
-#                 wms = wms_control.MSSWebMapService(request.url, version=None,
-#                                                    username=username, password=password)
-#                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
-#                 logging.info("Stored WMS info for '%s'", wms.url)
-#             except Exception as ex:
-#                 logging.error("Error in preloading '%s': '%s'", type(ex), ex)
-#             if pdlg.wasCanceled():
-#                 break
-#         logging.debug("Contents of WMS_SERVICE_CACHE: %s", wms_control.WMS_SERVICE_CACHE.keys())
-#         pdlg.close()
-
-#     def create_new_view(self):
-#         """Method called when the user selects a new view to be opened. Creates
-#            a new instance of the view and adds a QActiveViewsListWidgetItem to
-#            the list of open views (self.listViews).
-#         """
-#         layout = config_loader(dataset="layout")
-#         view_window = None
-#         if self.sender() == self.actionTopView:
-#             # Top view.
-#             view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
-#             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
-#             if layout["immutable"]:
-#                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
-#         elif self.sender() == self.actionSideView:
-#             # Side view.
-#             view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
-#             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
-#             if layout["immutable"]:
-#                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
-#         elif self.sender() == self.actionTableView:
-#             # Table view.
-#             view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
-#             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
-#         elif self.sender() == self.actionLinearView:
-#             # Linear view.
-#             view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
-#             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
-#             if layout["immutable"]:
-#                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
-#         if view_window is not None:
-#             # Make sure view window will be deleted after being closed, not
-#             # just hidden (cf. Chapter 5 in PyQt4).
-#             view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-#             # Open as a non-modal window.
-#             view_window.show()
-#             # Add an entry referencing the new view to the list of views.
-#             listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
-#             view_window.viewCloses.connect(listitem.view_destroyed)
-#             self.listViews.setCurrentItem(listitem)
-#             self.viewsChanged.emit()
-
-#     def closeEvent(self, event):
-#         """Ask user if he/she wants to close the application. If yes, also
-#            close all views that are open.
-
-#         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
-#         Qt receives a window close request for our application window.
-#         """
-#         ret = QtWidgets.QMessageBox.warning(
-#             self, self.tr("Mission Support System"),
-#             self.tr("Do you want to close the Mission Support System application?"),
-#             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-
-#         if ret == QtWidgets.QMessageBox.Yes:
-#             # Table View stick around after MainWindow closes - maybe some dangling reference?
-#             # This removes them for sure!
-#             while self.listViews.count() > 0:
-#                 self.listViews.item(0).window.handle_force_close()
-#             self.listViews.clear()
-#             self.listFlightTracks.clear()
-#             # cleanup mscolab window
-#             if self.mscolab_window is not None:
-#                 self.mscolab_window.close()
-#             if self.config_editor is not None:
-#                 self.config_editor.close()
-#             event.accept()
-#         else:
-#             event.ignore()
+                wms = wms_control.MSSWebMapService(request.url, version=None,
+                                                   username=username, password=password)
+                wms_control.WMS_SERVICE_CACHE[wms.url] = wms
+                logging.info("Stored WMS info for '%s'", wms.url)
+            except Exception as ex:
+                logging.error("Error in preloading '%s': '%s'", type(ex), ex)
+            if pdlg.wasCanceled():
+                break
+        logging.debug("Contents of WMS_SERVICE_CACHE: %s", wms_control.WMS_SERVICE_CACHE.keys())
+        pdlg.close()
 
     def add_plugins(self):
         picker_default = config_loader(
@@ -1321,6 +612,53 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
             if ret == QtWidgets.QMessageBox.Yes:
                 self.listFlightTracks.takeItem(self.listFlightTracks.currentRow())
 
+    def create_view_handler(self, _type):
+        if self.tabWidget.currentIndex() == 0:
+            self.create_view_local(_type)
+        else:
+            self.mscolab.create_view_msc(_type)
+
+    def create_view_local(self, _type):
+        """Method called when the user selects a new view to be opened. Creates
+           a new instance of the view and adds a QActiveViewsListWidgetItem to
+           the list of open views (self.listViews).
+        """
+        layout = config_loader(dataset="layout")
+        view_window = None
+        if _type == "topview":
+            # Top view.
+            view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
+            view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
+        elif _type == "sideview":
+            # Side view.
+            view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
+            view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
+        elif _type == "tableview":
+            # Table view.
+            view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
+            view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
+        elif _type == "linearview":
+            # Linear view.
+            view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
+            view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
+        if view_window is not None:
+            # Make sure view window will be deleted after being closed, not
+            # just hidden (cf. Chapter 5 in PyQt4).
+            view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            # Open as a non-modal window.
+            view_window.show()
+            # Add an entry referencing the new view to the list of views.
+            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
+            view_window.viewCloses.connect(listitem.view_destroyed)
+            self.listViews.setCurrentItem(listitem)
+            self.viewsChanged.emit()
+
     def activate_sub_window(self, item):
         """When the user clicks on one of the open view or tool windows, this
            window is brought to the front. This function implements the slot to
@@ -1331,21 +669,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
         item.window.showNormal()
         item.window.raise_()
         item.window.activateWindow()
-
-    def close_mscolab_window(self):
-        self.mscolab_window = None
-
-    def activate_mscolab_window(self):
-        # initiate mscolab window
-        if self.mscolab_window is None:
-            self.mscolab_window = mscolab.MSSMscolabWindow(parent=self)
-            self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            self.mscolab_window.viewCloses.connect(self.close_mscolab_window)
-            self.mscolab_window.show()
-        else:
-            self.mscolab_window.setWindowState(QtCore.Qt.WindowNoState)
-            self.mscolab_window.raise_()
-            self.mscolab_window.activateWindow()
 
     def restart_application(self):
         while self.listViews.count() > 0:
@@ -1410,6 +733,34 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui_new.Ui_MSSMainWindow_new):
             filename = constants.CACHED_CONFIG_FILE
             head_filename, tail_filename = os.path.split(filename)
             return("Status : User Configuration '" + tail_filename + "' loaded")
+
+    # def closeEvent(self, event):
+    #     """Ask user if he/she wants to close the application. If yes, also
+    #        close all views that are open.
+
+    #     Overloads QtGui.QMainWindow.closeEvent(). This method is called if
+    #     Qt receives a window close request for our application window.
+    #     """
+    #     ret = QtWidgets.QMessageBox.warning(
+    #         self, self.tr("Mission Support System"),
+    #         self.tr("Do you want to close the Mission Support System application?"),
+    #         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+
+    #     if ret == QtWidgets.QMessageBox.Yes:
+    #         # Table View stick around after MainWindow closes - maybe some dangling reference?
+    #         # This removes them for sure!
+    #         while self.listViews.count() > 0:
+    #             self.listViews.item(0).window.handle_force_close()
+    #         self.listViews.clear()
+    #         self.listFlightTracks.clear()
+    #         # cleanup mscolab window
+    #         if self.mscolab_window is not None:
+    #             self.mscolab_window.close()
+    #         if self.config_editor is not None:
+    #             self.config_editor.close()
+    #         event.accept()
+    #     else:
+    #         event.ignore()
 
 
 def main():
@@ -1499,7 +850,7 @@ def main():
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     application.setStyleSheet("QFrame { border: 0; }")
     mainwindow = MSSMainWindow()
-    # mainwindow.create_new_flight_track()
+    mainwindow.create_new_flight_track()
     mainwindow.show()
     sys.exit(application.exec_())
 
