@@ -27,6 +27,10 @@
 """
 
 import mock
+import os
+import tempfile
+import mslib.mswms.wms
+import mslib.mswms.gallery_builder
 import mslib.mswms.mswms as mswms
 from importlib import reload
 from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
@@ -367,7 +371,6 @@ class Test_WMS(object):
         callback_ok_xml(result.status, result.headers)
 
     def test_import_error(self):
-        import mslib.mswms.wms
         with mock.patch.dict("sys.modules", {"mss_wms_settings": None, "mss_wms_auth": None}):
             reload(mslib.mswms.wms)
             assert mslib.mswms.wms.mss_wms_settings.__file__ is None
@@ -375,3 +378,31 @@ class Test_WMS(object):
         reload(mslib.mswms.wms)
         assert mslib.mswms.wms.mss_wms_settings.__file__ is not None
         assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
+
+    def test_gallery(self):
+        tempdir = tempfile.mkdtemp()
+        os.mkdir(os.path.join(tempdir, "docs"))
+        mslib.mswms.wms.static_location = tempdir
+        mslib.mswms.gallery_builder.static_location = tempdir
+        linear_plots = [[mslib.mswms.wms.server.lsec_drivers, mslib.mswms.wms.server.lsec_layer_registry]]
+
+        mslib.mswms.wms.server.generate_gallery(generate_code=True, plot_list=linear_plots)
+        assert os.path.exists(os.path.join(tempdir, "plots"))
+        assert os.path.exists(os.path.join(tempdir, "code"))
+        assert os.path.exists(os.path.join(tempdir, "docs", "plots.js"))
+
+        mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
+        assert not os.path.exists(os.path.join(tempdir, "code"))
+
+        file = os.path.join(tempdir, "plots", os.listdir(os.path.join(tempdir, "plots"))[0])
+        file2 = os.path.join(tempdir, "plots", os.listdir(os.path.join(tempdir, "plots"))[1])
+        modified_at = os.path.getmtime(file2)
+        os.remove(file)
+        assert not os.path.exists(file)
+        mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
+        assert not os.path.exists(os.path.join(tempdir, "code"))
+        assert os.path.exists(file)
+        assert modified_at == os.path.getmtime(file2)
+
+        mslib.mswms.wms.server.generate_gallery(force_regenerate=True, plot_list=linear_plots)
+        assert modified_at != os.path.getmtime(file2)

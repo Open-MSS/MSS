@@ -160,7 +160,7 @@ div.gallery img {
 
 <div class="tab">
   <button class="tablinks active" onclick="openTab(event, 'Top View')">Top Views</button>
-  <button class="tablinks" onclick="openTab(event, 'Vertical View')">Vertical Views</button>
+  <button class="tablinks" onclick="openTab(event, 'Side View')">Side Views</button>
   <button class="tablinks" onclick="openTab(event, 'Linear View')">Linear Views</button>
 </div>
 """
@@ -257,7 +257,7 @@ def add_image(plot, plot_object, generate_code=False):
     Adds the images to the static/plots/* folder and generates the html codes to display them
     """
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \
-        "Vertical" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
+        "Side" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
 
     if plot:
         if not os.path.exists(os.path.join(static_location, "plots")):

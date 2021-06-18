@@ -213,7 +213,7 @@ class WMSServer(object):
             else:
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
-    def generate_gallery(self, force_regenerate=False, generate_code=False):
+    def generate_gallery(self, force_regenerate=False, generate_code=False, plot_list=None):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
@@ -222,15 +222,18 @@ class WMSServer(object):
         if os.path.exists(os.path.join(static_location, "code")):
             shutil.rmtree(os.path.join(static_location, "code"))
 
-        for driver, registry in [[self.lsec_drivers, self.lsec_layer_registry],
-                                 [self.vsec_drivers, self.vsec_layer_registry],
-                                 [self.hsec_drivers, self.hsec_layer_registry]]:
+        if not plot_list:
+            plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
+                         [self.vsec_drivers, self.vsec_layer_registry],
+                         [self.hsec_drivers, self.hsec_layer_registry]]
+
+        for driver, registry in plot_list:
             for dataset in driver:
                 plot_driver = driver[dataset]
                 for plot in registry[dataset]:
                     plot_object = registry[dataset][plot]
                     l_type = "Linear" if driver == self.lsec_drivers else \
-                        "Vertical" if driver == self.vsec_drivers else "Top"
+                        "Side" if driver == self.vsec_drivers else "Top"
 
                     try:
                         if not os.path.exists(os.path.join(static_location, "plots",
