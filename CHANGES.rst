@@ -4,7 +4,7 @@ Changelog
 Version 4.0.2
 ~~~~~~~~~~~~~
 
-Big fix release
+Bug fix release
 
 All changes:
 https://github.com/Open-MSS/MSS/milestone/60?closed=1
