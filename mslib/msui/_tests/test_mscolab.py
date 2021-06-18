@@ -224,6 +224,12 @@ class Test_Mscolab(object):
         assert self.window.loginWidget.isVisible() is False
         self._create_project("Alpha", "Description Alpha")
         assert self.window.listProjects.model().rowCount() == 1
+        self._create_project("reproduce-test", "Description Test")
+        assert self.window.listProjects.model().rowCount() == 2
+        self._activate_project_at_index(0)
+        assert self.window.active_project_name == "Alpha"
+        self._activate_project_at_index(1)
+        assert self.window.active_project_name == "reproduce-test"
 
     def test_add_user(self):
         self._connect_to_mscolab()
