@@ -104,7 +104,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             "EPSG:4326",  # WGS 84 / cylindric
             "MSS:stere"])
         for code in self.supported_epsg_codes():
-            crs_list.add("EPSG:{:d}".format(code))
+            crs_list.add(f"EPSG:{code:d}")
         return sorted(crs_list)
 
     def _draw_auto_graticule(self, bm):
