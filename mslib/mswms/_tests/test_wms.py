@@ -271,7 +271,8 @@ class Test_WMS(object):
                 ("layers=ecmwf_EUR_LL015.LS_HV01", "layers=ecmwf_AUR_LL015.LS_HV01"),
                 ("layers=ecmwf_EUR_LL015.LS_HV01", "layers=ecmwf_EUR_LL015.LS_HV99"),
                 ("format=text%2Fxml", "format=oext%2Fxml"),
-                ("path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000", "path=aaaa%2C-8.93%2C25000%2C48.08%2C11.28%2C25000"),
+                ("path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000",
+                 "path=aaaa%2C-8.93%2C25000%2C48.08%2C11.28%2C25000"),
                 ("&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000", ""),
                 ("bbox=201", "bbox=aaa")]:
             environ["QUERY_STRING"] = query_string.replace(orig, fake)
