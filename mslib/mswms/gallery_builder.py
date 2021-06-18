@@ -165,7 +165,7 @@ div.gallery img {
 </div>
 """
 
-plots = {"Top": [], "Vertical": [], "Linear": []}
+plots = {"Top": [], "Side": [], "Linear": []}
 
 end = """
 <script>
