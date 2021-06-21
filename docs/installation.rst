@@ -56,7 +56,7 @@ leave out the 'source' here and below). ::
 
     $ conda create -n mssenv mamba
     $ conda activate mssenv
-    (mssenv) $ mamba install mss=4.0.1 python
+    (mssenv) $ mamba install mss=4.0.2 python
 
 
 You need to reactivate after the installation once the environment to setup all needed enironment
@@ -82,8 +82,8 @@ search for MSS what you can get ::
 
    (mssenv) $ mamba search mss
    ...
-   mss                            4.0.1  py38h578d9bd_0  conda-forge
-   mss                            4.0.1  py39hf3d152e_0  conda-forge
+   mss                            4.0.2  py38....._0  conda-forge
+   mss                            4.0.2  py39....._0  conda-forge
 
 compare what you have installed ::
 
@@ -93,9 +93,9 @@ compare what you have installed ::
 
 
 We have reports that often an update suceeds by using the install option and the new version number,
-in this example 4.0.1 and python as second option ::
+in this example 4.0.2 and python as second option ::
 
-   (mssenv) $ mamba install mss=4.0.1 python
+   (mssenv) $ mamba install mss=4.0.2 python
 
 All attemmpts show what you get if you continue. **Continue only if you get what you want.**
 
@@ -123,7 +123,7 @@ We suggest to create a mss user.
 * login again or export PATH="/home/mss/miniconda3/bin:$PATH"
 * conda create -n mssenv mamba
 * conda activate mssenv
-* mamba install mss=4.0.1 python
+* mamba install mss=4.0.2 python
 
 For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
 
