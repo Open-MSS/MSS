@@ -131,7 +131,7 @@
         <item row="1" column="0" colspan="2">
          <widget class="QListWidget" name="listFlightTracks">
           <property name="styleSheet">
-           <string notr="true"/>
+           <string notr="true">border: 1px solid grey;</string>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Sunken</enum>
@@ -190,10 +190,10 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QComboBox" name="sandboxOptionsCb">
+         <widget class="QComboBox" name="serverOptionsCb">
           <item>
            <property name="text">
-            <string>Sandbox Options</string>
+            <string>Server Options</string>
            </property>
           </item>
           <item>
@@ -301,7 +301,7 @@
       <string>Import Flight Track</string>
      </property>
     </widget>
-    <widget class="QMenu" name="menuExportFlightTrack">
+    <widget class="QMenu" name="menuExportActiveFlightTrack">
      <property name="title">
       <string>Export Flight Track</string>
      </property>
@@ -317,7 +317,7 @@
     <addaction name="actionCloseSelectedFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="menuImportFlightTrack"/>
-    <addaction name="menuExportFlightTrack"/>
+    <addaction name="menuExportActiveFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionConfiguration"/>
     <addaction name="separator"/>
