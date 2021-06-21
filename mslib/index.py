@@ -34,6 +34,7 @@ from flask import Flask
 from flask import send_from_directory, send_file, url_for
 from flask import abort
 from flask import request
+from flask import Response
 from markdown import Markdown
 from xstatic.main import XStatic
 from mslib.msui.icons import icons
@@ -105,8 +106,8 @@ def app_loader(name):
             (url_for('index'), 'Mission Support System',
              ((url_for('about'), 'About'),
               (url_for('install'), 'Install'),
-              (url_for('help'), 'Help'),
               (url_for('plots'), 'Plots'),
+              (url_for('help'), 'Help'),
               )),
         ]
         return menu
@@ -114,7 +115,7 @@ def app_loader(name):
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
     def get_content(filename, overrides=None):
-        markdown = Markdown()
+        markdown = Markdown(extensions=["fenced_code"])
         content = ""
         if os.path.isfile(filename):
             with codecs.open(filename, 'r', 'utf-8') as f:
@@ -152,11 +153,19 @@ def app_loader(name):
         content = get_content(_file)
         return render_template("/content.html", act="plots", content=content)
 
-    @APP.route("/mss/code")
-    def code():
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'code', request.args.get("filename"))
+    @APP.route("/mss/code/<path:filename>")
+    def code(filename):
+        download = request.args.get("download", False)
+        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'code', filename)
         content = get_content(_file)
-        return render_template("/content.html", act="code", content=content)
+        if not download:
+            return render_template("/content.html", act="code", content=content)
+        else:
+            with open(_file) as f:
+                text = f.read()
+            return Response("".join([s.replace("\t", "", 1) for s in text.splitlines(keepends=True)][14:-2]),
+                            mimetype="text/plain",
+                            headers={"Content-disposition": f"attachment; filename={filename.replace('.md', '.py')}"})
 
     @APP.route("/mss/help")
     def help():

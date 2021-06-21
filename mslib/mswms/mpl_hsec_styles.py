@@ -1353,7 +1353,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
     Total column probability of WCB trajectory occurence, derived from
     Lagranto trajectories (TNF 2012 product).
     """
-    name = ""
+    name = "VIProbWCB"
     title = "Total Column Probability of WCB (%)"
 
     # Variables with the highest number of dimensions first (otherwise
@@ -1416,7 +1416,7 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
     Number of Lagranto trajectories per grid box for WCB, MIX, INSITU
     trajectories (ML-Cirrus 2014 product).
     """
-    name = ""
+    name = "PLLagrantoTraj"
     title = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
 
     # Variables with the highest number of dimensions first (otherwise

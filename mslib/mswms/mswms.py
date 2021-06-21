@@ -55,7 +55,6 @@ def main():
                          help="Generates code snippets for each plot, available when clicking on them")
 
     args = parser.parse_args()
-    print(args)
 
     if args.version:
         print("***********************************************************************")

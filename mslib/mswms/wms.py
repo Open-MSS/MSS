@@ -255,14 +255,14 @@ class WMSServer(object):
                             elif driver == self.vsec_drivers:
                                 plot_driver.set_plot_parameters(**kwargs, vsec_path=[[0, 0], [1, 1]],
                                                                 vsec_numpoints=201, figsize=[800, 600],
-                                                                vsec_path_connection="linear",
+                                                                vsec_path_connection="linear", style="default",
                                                                 noframe=False, bbox=[101, 1050, 10, 180])
                                 path = [[min(plot_driver.lat_data), min(plot_driver.lon_data)],
                                         [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
                                 plot_driver.update_plot_parameters(vsec_path=path)
                             elif driver == self.hsec_drivers:
                                 elevations = plot_driver.get_elevations(file_type)
-                                elevation = elevations[len(elevations) // 2]
+                                elevation = elevations[len(elevations) // 2] if len(elevations) > 0 else None
                                 plot_driver.set_plot_parameters(**kwargs, noframe=False, figsize=[800, 600],
                                                                 crs="EPSG:4326", style="default",
                                                                 bbox=[-15, 35, 30, 65],
@@ -270,18 +270,18 @@ class WMSServer(object):
                                 bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
                                         max(plot_driver.lon_data), max(plot_driver.lat_data)]
                                 # Create square bbox for better images
-                                if abs(bbox[0] - bbox[2]) > abs(bbox[1] - bbox[3]):
-                                    bbox[2] = bbox[0] + abs(bbox[1] - bbox[3])
-                                else:
-                                    bbox[3] = bbox[1] + abs(bbox[0] - bbox[2])
+                                # if abs(bbox[0] - bbox[2]) > abs(bbox[1] - bbox[3]):
+                                #     bbox[2] = bbox[0] + abs(bbox[1] - bbox[3])
+                                # else:
+                                #     bbox[3] = bbox[1] + abs(bbox[0] - bbox[2])
                                 plot_driver.update_plot_parameters(bbox=bbox)
                             add_image(plot_driver.plot(), plot_object, generate_code)
                         else:
                             # Plot already exists, skip generation
                             add_image(None, plot_object, generate_code)
 
-                    except (IOError, ValueError) as e:
-                        logging.error("ERROR: %s %s", type(e), e)
+                    except Exception as e:
+                        logging.error("ERROR: %s %s %s", plot_object.required_datafields, type(e), e)
         write_js()
 
     def register_hsec_layer(self, datasets, layer_class):

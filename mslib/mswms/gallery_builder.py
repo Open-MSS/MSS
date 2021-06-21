@@ -39,9 +39,7 @@ begin = """
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body {font-family: Arial;}
 
 .gtooltip {
   position: relative;
@@ -230,11 +228,22 @@ def write_plot_details(plot_object, l_type="top"):
     """
     Extracts and writes the plots code files at static/code/*
     """
+    layer = "horizontal" if l_type == "Top" else "vertical" if l_type == "Side" else "linear"
     if not os.path.exists(os.path.join(static_location, "code")):
         os.mkdir(os.path.join(static_location, "code"))
+    modules = [m for m in inspect.getsource(inspect.getmodule(type(plot_object))).splitlines()
+               if m.startswith("import") or m.startswith("from")]
     with open(os.path.join(static_location, "code", f"{l_type}_{plot_object.name}.md"), "w+") as md:
-        md.write(f"Requires datafields: {', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)}\n\n")
-        md.write("\t" + "\t".join(inspect.getsource(type(plot_object)).splitlines(True)))
+        md.write(f"**How to use this plot**  \n1. Make sure you have the required datafields "
+                 f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n"
+                 f"2. [Download this file](/mss/code/{l_type}_{plot_object.name}.md?download=True)  \n"
+                 f"3. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n"
+                 f"4. Append this code into your `mss_wms_settings.py`:  \n")
+        md.write(f"---\n```python\nfrom {l_type}_{plot_object.name} import {plot_object.__class__.__name__}\n"
+                 f"register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers\n"
+                 f"register_{layer}_layers.append(({plot_object.__class__.__name__}, [next(iter(data))]))\n```\n---\n")
+        md.write(f"<details><summary>{l_type}_{plot_object.name}.py</summary>\n```python\n" + "\n".join(modules) + "\n")
+        md.write("".join(inspect.getsource(type(plot_object)).splitlines(True)) + "\n```\n</details>")
 
 
 def create_linear_plot(xml, file_location):
@@ -274,6 +283,6 @@ def add_image(plot, plot_object, generate_code=False):
         write_plot_details(plot_object, l_type)
 
     plots[l_type].append(image_md(f"/static/plots/{l_type}_{plot_object.name}.png", plot_object.name,
-                                  f"/mss/code?filename={l_type}_{plot_object.name}.md" if generate_code else None,
+                                  f"/mss/code/{l_type}_{plot_object.name}.md" if generate_code else None,
                                   f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
                                                             if plot_object.abstract else "")))

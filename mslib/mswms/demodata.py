@@ -80,7 +80,13 @@ dimensionless
  0.25 0.2
 vertically_integrated_probability_of_wcb_occurrence
 dimensionless
- 0.25 0.2"""
+ 0.25 0.2
+tropopause_altitude
+km
+ 10 3
+secondary_tropopause_altitude
+km
+ 30 3"""
 
 _PROFILES_TEXT = """\
 air_pressure
@@ -1196,7 +1202,10 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                 ("U", "eastward_wind"),
                 ("V", "northward_wind"),
                 ("W", "lagrangian_tendency_of_air_pressure"),
-                ("Q", "specific_humidity")):
+                ("Q", "specific_humidity"),
+                ("GPH", "geopotential_height"),
+                ("PT", "air_potential_temperature"),
+                ("D", "divergence_of_wind")):
             self.generate_file(
                 "hybrid", varname, "ml",
                 (("time", times), ("hybrid", np.arange(0, 18)), ("latitude", lats), ("longitude", lons)),
