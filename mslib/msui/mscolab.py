@@ -95,6 +95,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.addUserBtn.setEnabled(False)
 
         self.urlCb.setEditable(True)
+        # self.urlCb.lineEdit.returnPressed.connect(self.connect_handler)
+        # print(type(self.urlCb.lineEdit))
         self.add_mscolab_urls()
 
         # connect login, adduser, connect buttons
@@ -382,8 +384,6 @@ class MSSMscolab(QtCore.QObject):
     Class for implementing MSColab functionalities
     """
     name = "Mscolab"
-    identifier = None
-    viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
     def __init__(self, parent=None, data_dir=None):
         super(MSSMscolab, self).__init__(parent)
@@ -529,7 +529,7 @@ class MSSMscolab(QtCore.QObject):
 
             def set_exported_file():
                 file_path = get_open_filename(
-                    self, "Open ftml file", "", "Flight Track Files (*.ftml)")
+                    self.ui, "Open ftml file", "", "Flight Track Files (*.ftml)")
                 if file_path is not None:
                     file_name = fs.path.basename(file_path)
                     with open_fs(fs.path.dirname(file_path)) as file_dir:
@@ -1005,6 +1005,12 @@ class MSSMscolab(QtCore.QObject):
         item.setFont(font)
 
     def show_project_options(self):
+        self.ui.projectOptionsCb.clear()
+        if self.access_level == "viewer":
+            self.ui.projectOptionsCb.hide()
+            self.ui.menuImportFlightTrack.setEnabled(False)
+            return
+
         project_opt_list = ['Project Options']
         if self.access_level in ["creator", "admin", "collaborator"]:
             if self.ui.workLocallyCheckbox.isChecked():
@@ -1029,7 +1035,7 @@ class MSSMscolab(QtCore.QObject):
         if self.access_level in ["creator"]:
             project_opt_list.extend(['Share Project', 'Delete Project'])
 
-        self.ui.projectOptionsCb.clear()
+        self.ui.menuImportFlightTrack.setEnabled(True)
         self.ui.projectOptionsCb.addItems(project_opt_list)
         self.ui.projectOptionsCb.show()
 
@@ -1091,7 +1097,7 @@ class MSSMscolab(QtCore.QObject):
         if self.ui.workLocallyCheckbox.isChecked() and extension != "ftml":
             self.ui.statusBar().showMessage("Work Locally only supports FTML filetypes for import")
             return
-        file_path = get_open_filename(self, "Import to Server", "", f"Flight track (*.{extension})")
+        file_path = get_open_filename(self.ui, "Import to Server", "", f"Flight track (*.{extension})")
         if file_path is None:
             return
         dir_path, file_name = fs.path.split(file_path)
@@ -1132,7 +1138,7 @@ class MSSMscolab(QtCore.QObject):
         # Setting default filename path for filedialogue
         default_filename = f'{self.active_project_name}.{extension}'
         file_path = get_save_filename(
-            self, "Export From Server",
+            self.ui, "Export From Server",
             default_filename, f"Flight track (*.{extension})")
         if file_path is None:
             return
@@ -1180,7 +1186,7 @@ class MSSMscolab(QtCore.QObject):
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
 
-        self.ui.add_view_to_ui(view_window)
+        self.ui.add_view_to_ui(view_window, mscolab=True)
         # view_window.setWindowTitle(f"{view_window.windowTitle()} - {self.active_project_name}")
         view_window.viewClosesId.connect(self.handle_view_close)
         self.active_windows.append(view_window)

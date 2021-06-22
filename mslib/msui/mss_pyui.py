@@ -77,12 +77,14 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
     # Class variable to assign a unique ID to each view.
     opened_views = 0
 
-    def __init__(self, view_window, parent=None, viewsChanged=None,
+    def __init__(self, view_window, parent=None, viewsChanged=None, mscolab=False,
                  _type=QtWidgets.QListWidgetItem.UserType):
         """Add ID number to the title of the corresponding view window.
         """
         QActiveViewsListWidgetItem.opened_views += 1
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
+        if mscolab:
+            view_name = f'{view_name} - mscolab'
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, _type)
 
         view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
@@ -272,7 +274,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.preload_wms(preload_urls)
 
         # # Status Bar
-        # self.statusBar().showMessage(self.status())
+        self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
         self.mscolab = mscolab.MSSMscolab(parent=self)
@@ -299,6 +301,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             mscolab_active = True if self.mscolab.token is not None else False
             self.menuImportFlightTrack.setEnabled(mscolab_active)
             self.menuExportActiveFlightTrack.setEnabled(mscolab_active)
+            if mscolab_active and self.mscolab.access_level == "viewer":
+                self.menuImportFlightTrack.setEnabled(False)
         self.actionNewFlightTrack.setEnabled(local)
         self.actionOpenFlightTrack.setEnabled(local)
         self.actionActivateSelectedFlightTrack.setEnabled(local)
@@ -652,7 +656,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Add view window to the listViews pane
         self.add_view_to_ui(view_window)
 
-    def add_view_to_ui(self, view_window):
+    def add_view_to_ui(self, view_window, mscolab=False):
         if view_window is not None:
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
@@ -660,7 +664,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # Open as a non-modal window.
             view_window.show()
             # Add an entry referencing the new view to the list of views.
-            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
+            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged, mscolab)
             view_window.viewCloses.connect(listitem.view_destroyed)
             self.listViews.setCurrentItem(listitem)
             self.viewsChanged.emit()
@@ -740,33 +744,33 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             head_filename, tail_filename = os.path.split(filename)
             return("Status : User Configuration '" + tail_filename + "' loaded")
 
-    # def closeEvent(self, event):
-    #     """Ask user if he/she wants to close the application. If yes, also
-    #        close all views that are open.
+    def closeEvent(self, event):
+        """Ask user if he/she wants to close the application. If yes, also
+           close all views that are open.
 
-    #     Overloads QtGui.QMainWindow.closeEvent(). This method is called if
-    #     Qt receives a window close request for our application window.
-    #     """
-    #     ret = QtWidgets.QMessageBox.warning(
-    #         self, self.tr("Mission Support System"),
-    #         self.tr("Do you want to close the Mission Support System application?"),
-    #         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        Overloads QtGui.QMainWindow.closeEvent(). This method is called if
+        Qt receives a window close request for our application window.
+        """
+        ret = QtWidgets.QMessageBox.warning(
+            self, self.tr("Mission Support System"),
+            self.tr("Do you want to close the Mission Support System application?"),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
-    #     if ret == QtWidgets.QMessageBox.Yes:
-    #         # Table View stick around after MainWindow closes - maybe some dangling reference?
-    #         # This removes them for sure!
-    #         while self.listViews.count() > 0:
-    #             self.listViews.item(0).window.handle_force_close()
-    #         self.listViews.clear()
-    #         self.listFlightTracks.clear()
-    #         # cleanup mscolab window
-    #         if self.mscolab_window is not None:
-    #             self.mscolab_window.close()
-    #         if self.config_editor is not None:
-    #             self.config_editor.close()
-    #         event.accept()
-    #     else:
-    #         event.ignore()
+        if ret == QtWidgets.QMessageBox.Yes:
+            # Table View stick around after MainWindow closes - maybe some dangling reference?
+            # This removes them for sure!
+            while self.listViews.count() > 0:
+                self.listViews.item(0).window.handle_force_close()
+            self.listViews.clear()
+            self.listFlightTracks.clear()
+            # cleanup mscolab widgets
+            if self.mscolab.token is not None:
+                self.mscolab.logout()
+            if self.config_editor is not None:
+                self.config_editor.close()
+            event.accept()
+        else:
+            event.ignore()
 
 
 def main():
@@ -854,7 +858,6 @@ def main():
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
     application.setApplicationDisplayName("MSS")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
-    application.setStyleSheet("QFrame { border: 0; }")
     mainwindow = MSSMainWindow()
     mainwindow.create_new_flight_track()
     mainwindow.show()

@@ -218,7 +218,7 @@
         <item row="1" column="0" colspan="3">
          <widget class="QListWidget" name="listProjectsMSC">
           <property name="styleSheet">
-           <string notr="true"/>
+           <string notr="true">border: 1px solid grey;</string>
           </property>
          </widget>
         </item>
@@ -271,7 +271,7 @@
        <item>
         <widget class="QListWidget" name="listViews">
          <property name="styleSheet">
-          <string notr="true"/>
+          <string notr="true">border: 1px solid grey;</string>
          </property>
         </widget>
        </item>
@@ -508,6 +508,19 @@
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>connectBtn</tabstop>
+  <tabstop>userOptionsTb</tabstop>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>newFlightTrackBtn</tabstop>
+  <tabstop>listFlightTracks</tabstop>
+  <tabstop>addProjectBtn</tabstop>
+  <tabstop>listProjectsMSC</tabstop>
+  <tabstop>projectOptionsCb</tabstop>
+  <tabstop>workLocallyCheckbox</tabstop>
+  <tabstop>serverOptionsCb</tabstop>
+  <tabstop>listViews</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
