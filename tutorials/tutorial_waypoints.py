@@ -79,7 +79,7 @@ def automate_waypoints(obj=None):
     pag.hotkey('ctrl', 'h')
     pag.sleep(5)
     try:
-        x, y = pag.locateCenterOnScreen('tut pictures/add_waypoint.PNG')
+        x, y = pag.locateCenterOnScreen('pictures/add_waypoint.PNG')
         pag.click(x, y)
     except Exception:
         print("\nException : Clickable button/option not found on the screen.")
@@ -88,6 +88,23 @@ def automate_waypoints(obj=None):
     pag.moveTo(812, 412)
     pag.click(812, 412, interval=2)
     pag.sleep(5)
+
+    pag.moveTo(900, 450)
+    pag.click(900, 450, interval=2)
+    pag.sleep(5)
+
+    pag.moveTo(1000, 650)
+    pag.click(900, 450, interval=2)
+    pag.sleep(5)
+
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/move_waypoint.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Move Waypoint button could not be located on the screen")
+    pag.click(1000, 650, interval=3)
+    pag.keyDown()
+
     print("\nAutomation is done upto this point. Will continue it next.")
 
     # Close Everything!
