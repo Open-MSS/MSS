@@ -34,6 +34,7 @@ from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 
 
 static_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "static")
+docs_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs", "gallery")
 
 begin = """
 <!DOCTYPE html>
@@ -207,11 +208,32 @@ def image_md(image_location, caption="", link=None, tooltip=""):
                 </div>"""
 
 
-def write_js():
+def write_doc_index():
     """
-    Writes the static/docs/plots.js file containing the gallery
+    Write index containing all code examples for the sphinx docs
     """
+    with open(os.path.join(docs_location, "code", "index.rst"), "w+") as rst:
+        files = "\n".join(sorted(["   " + f[:-4] for f in os.listdir(os.path.join(docs_location, "code"))
+                                  if "index" not in f and ".rst" in f]))
+        rst.write(f"""
+Code Examples
+--------------
+
+.. toctree::
+
+{files}
+""")
+
+
+def write_js(sphinx=False):
+    """
+    Writes the plots.js file containing the gallery
+    """
+    location = docs_location if sphinx else os.path.join(static_location, "docs")
     js = begin
+    if sphinx:
+        js = js.replace("<h3>Plot Gallery</h3>", "")
+
     for l_type in plots:
         style = ""
         if l_type == "Top":
@@ -220,20 +242,28 @@ def write_js():
         js += "\n".join(plots[l_type])
         js += "</div>"
 
-    with open(os.path.join(static_location, "docs", "plots.js"), "w+") as md:
+    with open(os.path.join(location, "plots.js"), "w+") as md:
         md.write(js + end)
 
 
-def write_plot_details(plot_object, l_type="top"):
+def write_plot_details(plot_object, l_type="top", sphinx=False):
     """
     Extracts and writes the plots code files at static/code/*
     """
     layer = "horizontal" if l_type == "Top" else "vertical" if l_type == "Side" else "linear"
-    if not os.path.exists(os.path.join(static_location, "code")):
-        os.mkdir(os.path.join(static_location, "code"))
+    location = docs_location if sphinx else static_location
+
+    if not os.path.exists(os.path.join(location, "code")):
+        os.mkdir(os.path.join(location, "code"))
+
     modules = [m for m in inspect.getsource(inspect.getmodule(type(plot_object))).splitlines()
                if m.startswith("import") or m.startswith("from")]
-    with open(os.path.join(static_location, "code", f"{l_type}_{plot_object.name}.md"), "w+") as md:
+
+    if sphinx:
+        write_plot_details_sphinx(plot_object, l_type, layer, modules)
+        return
+
+    with open(os.path.join(location, "code", f"{l_type}_{plot_object.name}.md"), "w+") as md:
         md.write(f"**How to use this plot**  \n1. Make sure you have the required datafields "
                  f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n"
                  f"2. [Download this file](/mss/code/{l_type}_{plot_object.name}.md?download=True)  \n"
@@ -244,6 +274,48 @@ def write_plot_details(plot_object, l_type="top"):
                  f"register_{layer}_layers.append(({plot_object.__class__.__name__}, [next(iter(data))]))\n```\n---\n")
         md.write(f"<details><summary>{l_type}_{plot_object.name}.py</summary>\n```python\n" + "\n".join(modules) + "\n")
         md.write("".join(inspect.getsource(type(plot_object)).splitlines(True)) + "\n```\n</details>")
+
+
+def write_plot_details_sphinx(plot_object, l_type, layer, modules):
+    """
+    Write .rst files with plot code example for the sphinx docs
+    """
+    if not os.path.exists(os.path.join(docs_location, "code", "downloads")):
+        os.mkdir(os.path.join(docs_location, "code", "downloads"))
+
+    with open(os.path.join(docs_location, "code", f"{l_type}_{plot_object.name}.rst"), "w+") as md:
+        md.write(f"{l_type}_{plot_object.name}\n" + "-" * len(f"{l_type}_{plot_object.name}") + "\n")
+        md.write(f"""**How to use this plot**
+
+1. Make sure you have the required datafields ({', '.join(f'`{field[1]}`'
+                                                          for field in plot_object.required_datafields)})
+
+2. Download this :download:`file <downloads/{l_type}_{plot_object.name}.py>`
+
+3. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`
+
+4. Append this code into your `mss_wms_settings.py`:
+
+.. code-block:: python
+
+   from {l_type}_{plot_object.name} import {plot_object.__class__.__name__}"
+   register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers"
+   register_{layer}_layers.append(({plot_object.__class__.__name__}, [next(iter(data))]))
+
+.. raw:: html
+
+   <details>
+   <summary><a>Plot Code</a></summary>
+
+.. literalinclude:: downloads/{l_type}_{plot_object.name}.py
+
+.. raw:: html
+
+   </details>
+        """)
+    with open(os.path.join(docs_location, "code", "downloads", f"{l_type}_{plot_object.name}.py"), "w+") as md:
+        md.write("\n".join(modules) + "\n\n" +
+                 "".join(inspect.getsource(type(plot_object)).splitlines(True)))
 
 
 def create_linear_plot(xml, file_location):
@@ -261,28 +333,31 @@ def create_linear_plot(xml, file_location):
     fig.savefig(file_location)
 
 
-def add_image(plot, plot_object, generate_code=False):
+def add_image(plot, plot_object, generate_code=False, sphinx=False):
     """
-    Adds the images to the static/plots/* folder and generates the html codes to display them
+    Adds the images to the plots folder and generates the html codes to display them
     """
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \
         "Side" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
 
     if plot:
-        if not os.path.exists(os.path.join(static_location, "plots")):
-            os.mkdir(os.path.join(static_location, "plots"))
+        location = docs_location if sphinx else static_location
+        if not os.path.exists(os.path.join(location, "plots")):
+            os.mkdir(os.path.join(location, "plots"))
         if l_type == "Linear":
-            create_linear_plot(etree.fromstring(plot), os.path.join(static_location, "plots", l_type + "_" +
+            create_linear_plot(etree.fromstring(plot), os.path.join(location, "plots", l_type + "_" +
                                                                     plot_object.name + ".png"))
         else:
             with Image.open(io.BytesIO(plot)) as image:
-                image.save(os.path.join(static_location, "plots", l_type + "_" + plot_object.name + ".png"),
+                image.save(os.path.join(location, "plots", l_type + "_" + plot_object.name + ".png"),
                            format="PNG")
 
     if generate_code:
-        write_plot_details(plot_object, l_type)
+        write_plot_details(plot_object, l_type, sphinx)
 
-    plots[l_type].append(image_md(f"/static/plots/{l_type}_{plot_object.name}.png", plot_object.name,
-                                  f"/mss/code/{l_type}_{plot_object.name}.md" if generate_code else None,
+    img_path = f"../_static/{l_type}_{plot_object.name}.png" if sphinx \
+        else f"/static/plots/{l_type}_{plot_object.name}.png"
+    code_path = f"code/{l_type}_{plot_object.name}.html" if sphinx else f"/mss/code/{l_type}_{plot_object.name}.md"
+    plots[l_type].append(image_md(img_path, plot_object.name, code_path if generate_code else None,
                                   f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
                                                             if plot_object.abstract else "")))

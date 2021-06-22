@@ -62,7 +62,7 @@ from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
 from mslib.index import app_loader
-from mslib.mswms.gallery_builder import add_image, write_js, static_location
+from mslib.mswms.gallery_builder import add_image, write_js, write_doc_index, static_location, docs_location
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -213,14 +213,15 @@ class WMSServer(object):
             else:
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
-    def generate_gallery(self, force_regenerate=False, generate_code=False, plot_list=None):
+    def generate_gallery(self, force_regenerate=False, generate_code=False, sphinx=False, plot_list=None):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
-        if force_regenerate and os.path.exists(os.path.join(static_location, "plots")):
-            shutil.rmtree(os.path.join(static_location, "plots"))
-        if os.path.exists(os.path.join(static_location, "code")):
-            shutil.rmtree(os.path.join(static_location, "code"))
+        location = docs_location if sphinx else static_location
+        if force_regenerate and os.path.exists(os.path.join(location, "plots")):
+            shutil.rmtree(os.path.join(location, "plots"))
+        if os.path.exists(os.path.join(location, "code")):
+            shutil.rmtree(os.path.join(location, "code"))
 
         if not plot_list:
             plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
@@ -236,7 +237,7 @@ class WMSServer(object):
                         "Side" if driver == self.vsec_drivers else "Top"
 
                     try:
-                        if not os.path.exists(os.path.join(static_location, "plots",
+                        if not os.path.exists(os.path.join(location, "plots",
                                                            f"{l_type}_{plot_object.name}.png")):
                             # Plot doesn't already exist, generate it
                             file_type = plot_object.required_datafields[0][0]
@@ -275,14 +276,17 @@ class WMSServer(object):
                                 # else:
                                 #     bbox[3] = bbox[1] + abs(bbox[0] - bbox[2])
                                 plot_driver.update_plot_parameters(bbox=bbox)
-                            add_image(plot_driver.plot(), plot_object, generate_code)
+                            add_image(plot_driver.plot(), plot_object, generate_code, sphinx)
                         else:
                             # Plot already exists, skip generation
-                            add_image(None, plot_object, generate_code)
+                            add_image(None, plot_object, generate_code, sphinx)
 
                     except Exception as e:
+                        traceback.print_exc()
                         logging.error("ERROR: %s %s %s", plot_object.required_datafields, type(e), e)
-        write_js()
+        write_js(sphinx)
+        if sphinx and generate_code:
+            write_doc_index()
 
     def register_hsec_layer(self, datasets, layer_class):
         """
