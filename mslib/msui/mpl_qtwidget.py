@@ -36,6 +36,7 @@ import six
 import logging
 import numpy as np
 import matplotlib
+from metpy.units import units
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
 from matplotlib import cbook, figure
@@ -559,18 +560,17 @@ class MplSideViewCanvas(MplCanvas):
             )
 
     def _determine_ticks_labels(self, typ):
-        from metpy.units import units
         if typ == "no secondary axis":
-            major_ticks = []
-            minor_ticks = []
+            major_ticks = [] * units.pascal
+            minor_ticks = [] * units.pascal
             labels = []
             ylabel = ""
         elif typ == "pressure":
             # Compute the position of major and minor ticks. Major ticks are labelled.
-            major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
-            minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
+            major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)] * units.pascal
+            minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)] * units.pascal
             labels = [f"{int(_x / 100)}"
-                      if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks]
+                      if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks.magnitude]
             if len(labels) > 20:
                 labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
             elif len(labels) > 10:
@@ -586,8 +586,8 @@ class MplSideViewCanvas(MplCanvas):
                 ma_dist, mi_dist = 2, 0.5
             major_heights = np.arange(0, top_km + 1, ma_dist)
             minor_heights = np.arange(0, top_km + 1, mi_dist)
-            major_ticks = thermolib.flightlevel2pressure_a(units.Quantity(major_heights, "kilometer")).to(units.hPa).magnitude
-            minor_ticks = thermolib.flightlevel2pressure_a(units.Quantity(minor_heights, "kilometer")).to(units.hPa).magnitude
+            major_ticks = thermolib.flightlevel2pressure_a(major_heights * units.kilometer).to(units.pascal)
+            minor_ticks = thermolib.flightlevel2pressure_a(minor_heights * units.kilometer).to(units.pascal)
             labels = major_heights
             ylabel = "pressure altitude (km)"
         elif typ == "flight level":
@@ -600,8 +600,8 @@ class MplSideViewCanvas(MplCanvas):
                 ma_dist, mi_dist = 40, 10
             major_fl = np.arange(0, 2132, ma_dist)
             minor_fl = np.arange(0, 2132, mi_dist)
-            major_ticks = thermolib.flightlevel2pressure_a(major_fl)
-            minor_ticks = thermolib.flightlevel2pressure_a(minor_fl)
+            major_ticks = thermolib.flightlevel2pressure_a(major_fl * units.hectofoot).to(units.pascal)
+            minor_ticks = thermolib.flightlevel2pressure_a(minor_fl * units.hectofoot).to(units.pascal)
             labels = major_fl
             ylabel = "flight level (hft)"
         else:
@@ -633,8 +633,8 @@ class MplSideViewCanvas(MplCanvas):
             ylabel, major_ticks, minor_ticks, labels = self._determine_ticks_labels(typ)
 
             ax.set_ylabel(ylabel, fontsize=plot_title_size)
-            ax.set_yticks(minor_ticks, minor=True)
-            ax.set_yticks(major_ticks, minor=False)
+            ax.set_yticks(minor_ticks.magnitude, minor=True)
+            ax.set_yticks(major_ticks.magnitude, minor=False)
             ax.set_yticklabels([], minor=True)
             ax.set_yticklabels(labels, minor=False, fontsize=axes_label_size)
             ax.set_ylim(self.p_bot, self.p_top)
@@ -719,7 +719,7 @@ class MplSideViewCanvas(MplCanvas):
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
 
                 self.ceiling_alt = self.ax.plot(
-                    xs, thermolib.flightlevel2pressure_a(np.asarray(ys)),
+                    xs, thermolib.flightlevel2pressure_a(np.asarray(ys) * units.hectofoot),
                     color="k", ls="--")
                 self.update_ceiling(
                     self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
