@@ -12,7 +12,41 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 import os
+import sys
 import logging
+import setuptools
+
+if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
+    conda_file_dir = setuptools.__file__
+    conda_dir = conda_file_dir.split('lib')[0]
+    proj_lib = os.path.join(os.path.join(conda_dir, 'share'), 'proj')
+    if "win" in sys.platform:
+        proj_lib = os.path.join(os.path.join(conda_dir, 'Library'), 'share')
+    os.environ["PROJ_LIB"] = proj_lib
+    if not os.path.exists(proj_lib):
+        os.makedirs(proj_lib)
+        epsg_file = os.path.join(proj_lib, 'epsg')
+        if not os.path.exists(epsg_file):
+            with open(os.path.join(proj_lib, 'epsg'), 'w') as fid:
+                fid.write("# Placeholder for epsg data")
+
+# Generate plot gallery
+import fs
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from mslib.mswms.demodata import DataFiles
+
+root_fs = fs.open_fs("~/")
+if not root_fs.exists("mss/testdata"):
+    root_fs.makedirs("mss/testdata")
+
+examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
+                     server_config_fs=fs.open_fs("~/mss"))
+examples.create_server_config(detailed_information=True)
+examples.create_data()
+
+sys.path.insert(0, os.path.join(os.path.expanduser("~"), "mss"))
+from mslib.mswms.wms import server
+server.generate_gallery(sphinx=True, generate_code=True)
 
 # readthedocs has no past.builtins
 try:

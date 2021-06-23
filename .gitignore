@@ -18,5 +18,8 @@ mslib/mswms/mss_wms_settings.py
 mslib/mswms/mss_wms_auth.py
 mslib/mscolab/colabdata/
 docs/_build
+docs/gallery/plots
+docs/gallery/code
+docs/gallery/plots.js
 build/
 mss.egg-info/
