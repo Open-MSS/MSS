@@ -86,7 +86,7 @@ km
  10 3
 secondary_tropopause_altitude
 km
- 30 3"""
+ 12 3"""
 
 _PROFILES_TEXT = """\
 air_pressure
@@ -1204,8 +1204,8 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                 ("W", "lagrangian_tendency_of_air_pressure"),
                 ("Q", "specific_humidity"),
                 ("GPH", "geopotential_height"),
-                ("PT", "air_potential_temperature"),
-                ("D", "divergence_of_wind")):
+                ("THETA", "air_potential_temperature"),
+                ("DIV", "divergence_of_wind")):
             self.generate_file(
                 "hybrid", varname, "ml",
                 (("time", times), ("hybrid", np.arange(0, 18)), ("latitude", lats), ("longitude", lons)),

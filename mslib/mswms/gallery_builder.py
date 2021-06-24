@@ -298,8 +298,8 @@ def write_plot_details_sphinx(plot_object, l_type, layer, modules):
 
 .. code-block:: python
 
-   from {l_type}_{plot_object.name} import {plot_object.__class__.__name__}"
-   register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers"
+   from {l_type}_{plot_object.name} import {plot_object.__class__.__name__}
+   register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers
    register_{layer}_layers.append(({plot_object.__class__.__name__}, [next(iter(data))]))
 
 .. raw:: html
