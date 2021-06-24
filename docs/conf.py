@@ -45,8 +45,9 @@ examples.create_server_config(detailed_information=True)
 examples.create_data()
 
 sys.path.insert(0, os.path.join(os.path.expanduser("~"), "mss"))
+
 from mslib.mswms.wms import server
-server.generate_gallery(sphinx=True, generate_code=True)
+server.generate_gallery(sphinx=True, generate_code=True, all_plots=True)
 
 # readthedocs has no past.builtins
 try:

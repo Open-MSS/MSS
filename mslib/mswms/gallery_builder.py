@@ -36,6 +36,29 @@ from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 static_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "static")
 docs_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs", "gallery")
 
+
+code_header = """\"\"\"
+    This file is part of mss.
+
+    :copyright: Copyright 2021 by the mss team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+\"\"\"
+
+"""
+
+
 begin = """
 <!DOCTYPE html>
 <html>
@@ -259,24 +282,37 @@ def write_plot_details(plot_object, l_type="top", sphinx=False):
     modules = [m for m in inspect.getsource(inspect.getmodule(type(plot_object))).splitlines()
                if m.startswith("import") or m.startswith("from")]
 
+    native_import = "mslib" + \
+                    os.path.abspath(inspect.getfile(type(plot_object))).split("mslib")[-1].replace(os.sep, ".")[:-3] \
+        if os.path.join("mslib", "mswms") in os.path.abspath(inspect.getfile(type(plot_object))) else None
+
     if sphinx:
-        write_plot_details_sphinx(plot_object, l_type, layer, modules)
+        write_plot_details_sphinx(plot_object, l_type, layer, modules, native_import)
         return
 
     with open(os.path.join(location, "code", f"{l_type}_{plot_object.name}.md"), "w+") as md:
-        md.write(f"**How to use this plot**  \n1. Make sure you have the required datafields "
-                 f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n"
-                 f"2. [Download this file](/mss/code/{l_type}_{plot_object.name}.md?download=True)  \n"
-                 f"3. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n"
-                 f"4. Append this code into your `mss_wms_settings.py`:  \n")
+        md.write(f"**How to use this plot**  \n"
+                 f"Make sure you have the required datafields "
+                 f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n")
+        if native_import:
+            md.write("You can use it as is by appending this code into your `mss_wms_settings.py`:  \n")
+            md.write(f"---\n```python\nfrom {native_import} import {plot_object.__class__.__name__}\n"
+                     f"register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers\n"
+                     f"register_{layer}_layers.append(({plot_object.__class__.__name__},"
+                     f" [next(iter(data))]))\n```\n---\n")
+            md.write("**If you want to modify the plot**  \n")
+        md.write(f"1. [Download this file](/mss/code/{l_type}_{plot_object.name}.md?download=True)  \n"
+                 f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n"
+                 f"3. Append this code into your `mss_wms_settings.py`:  \n")
         md.write(f"---\n```python\nfrom {l_type}_{plot_object.name} import {plot_object.__class__.__name__}\n"
                  f"register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers\n"
                  f"register_{layer}_layers.append(({plot_object.__class__.__name__}, [next(iter(data))]))\n```\n---\n")
-        md.write(f"<details><summary>{l_type}_{plot_object.name}.py</summary>\n```python\n" + "\n".join(modules) + "\n")
+        md.write(f"<details><summary>{l_type}_{plot_object.name}.py</summary>\n```python\n" + code_header +
+                 "\n".join(modules) + "\n")
         md.write("".join(inspect.getsource(type(plot_object)).splitlines(True)) + "\n```\n</details>")
 
 
-def write_plot_details_sphinx(plot_object, l_type, layer, modules):
+def write_plot_details_sphinx(plot_object, l_type, layer, modules, native_import):
     """
     Write .rst files with plot code example for the sphinx docs
     """
@@ -287,14 +323,26 @@ def write_plot_details_sphinx(plot_object, l_type, layer, modules):
         md.write(f"{l_type}_{plot_object.name}\n" + "-" * len(f"{l_type}_{plot_object.name}") + "\n")
         md.write(f"""**How to use this plot**
 
-1. Make sure you have the required datafields ({', '.join(f'`{field[1]}`'
-                                                          for field in plot_object.required_datafields)})
+Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field in plot_object.required_datafields)})
 
-2. Download this :download:`file <downloads/{l_type}_{plot_object.name}.py>`
+""")
+        if native_import:
+            md.write(f"""You can use it as is by appending this code into your `mss_wms_settings.py`:
 
-3. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`
+.. code-block:: python
 
-4. Append this code into your `mss_wms_settings.py`:
+    from {native_import} import {plot_object.__class__.__name__}
+    register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers
+    register_{layer}_layers.append(({plot_object.__class__.__name__}, [next(iter(data))]))
+
+**If you want to modify the plot**""")
+        md.write(f"""
+
+1. Download this :download:`file <downloads/{l_type}_{plot_object.name}.py>`
+
+2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`
+
+3. Append this code into your `mss_wms_settings.py`:
 
 .. code-block:: python
 
@@ -314,7 +362,7 @@ def write_plot_details_sphinx(plot_object, l_type, layer, modules):
    </details>
         """)
     with open(os.path.join(docs_location, "code", "downloads", f"{l_type}_{plot_object.name}.py"), "w+") as md:
-        md.write("\n".join(modules) + "\n\n" +
+        md.write(code_header + "\n".join(modules) + "\n\n" +
                  "".join(inspect.getsource(type(plot_object)).splitlines(True)))
 
 

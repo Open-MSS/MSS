@@ -50,6 +50,7 @@ import io
 import logging
 import traceback
 import urllib.parse
+import inspect
 from xml.etree import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
@@ -213,10 +214,27 @@ class WMSServer(object):
             else:
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
-    def generate_gallery(self, force_regenerate=False, generate_code=False, sphinx=False, plot_list=None):
+    def generate_gallery(self, force_regenerate=False, generate_code=False, sphinx=False, plot_list=None,
+                         all_plots=False):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
+        if all_plots:
+            from mslib.mswms import mpl_hsec_styles, mpl_vsec_styles, mpl_lsec_styles
+            dataset = [next(iter(mss_wms_settings.data))]
+            mss_wms_settings.register_horizontal_layers = [
+                (plot[1], dataset) for plot in inspect.getmembers(mpl_hsec_styles, inspect.isclass)
+                if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+            ]
+            mss_wms_settings.register_vertical_layers = [
+                (plot[1], dataset) for plot in inspect.getmembers(mpl_vsec_styles, inspect.isclass)
+                if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+            ]
+            mss_wms_settings.register_linear_layers = [
+                (plot[1], dataset) for plot in inspect.getmembers(mpl_lsec_styles, inspect.isclass)
+            ]
+            self.__init__()
+
         location = docs_location if sphinx else static_location
         if force_regenerate and os.path.exists(os.path.join(location, "plots")):
             shutil.rmtree(os.path.join(location, "plots"))

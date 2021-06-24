@@ -163,7 +163,8 @@ def app_loader(name):
         else:
             with open(_file) as f:
                 text = f.read()
-            return Response("".join([s.replace("\t", "", 1) for s in text.splitlines(keepends=True)][14:-2]),
+            return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
+                                    .splitlines(keepends=True)][1:-2]),
                             mimetype="text/plain",
                             headers={"Content-disposition": f"attachment; filename={filename.replace('.md', '.py')}"})
 
