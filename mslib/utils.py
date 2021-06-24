@@ -32,6 +32,7 @@ import json
 import logging
 import netCDF4 as nc
 import numpy as np
+from metpy.units import units
 import os
 import pint
 from fs import open_fs, errors
@@ -598,9 +599,9 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
     if vertical_axis == "pressure":
         return float(pressure / 100)
     elif vertical_axis == "flight level":
-        return pressure2flightlevel(pressure)
+        return pressure2flightlevel(pressure * units.Pa)
     elif vertical_axis == "pressure altitude":
-        return pressure2flightlevel(pressure) / 32.8
+        return pressure2flightlevel(pressure * units.Pa).to(units.km)
     else:
         return pressure
 

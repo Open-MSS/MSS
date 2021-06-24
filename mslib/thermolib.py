@@ -31,13 +31,13 @@ import scipy.integrate
 import logging
 from metpy.package_tools import Exporter
 from metpy.constants import g, Rd
-from metpy.units import check_units, units
 from metpy.xarray import preprocess_and_wrap
 from xarray.ufuncs import exp, log
 from xarray import zeros_like
-import xarray
 import metpy.calc as mpcalc
-from metpy.units import units
+from metpy.units import units, check_units
+
+exporter = Exporter(globals())
 
 
 class VapourPressureError(Exception):
@@ -213,248 +213,17 @@ def omega_to_w(omega, p, t):
     return om_w
 
 
-def flightlevel2pressure(flightlevel):
-    """Conversion of flight level (given in hft) to pressure (Pa) with
-       hydrostatic equation, according to the profile of the ICAO
-       standard atmosphere.
-
-    Reference:
-        For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
-        470pp., Sections II.1.4. and II.6.1.2.
-
-    Arguments:
-        flightlevel -- flight level in hft
-    Returns:
-        static pressure (Pa)
-    """
-    # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 30.48
-
-    # g and R are used by all equations below.
-    g = 9.80665
-    R = 287.058
-
-    if z <= 11000.:
-        # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
-        # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
-        z0 = 0.
-        T0 = 288.15
-        gamma = 6.5e-3
-        p0 = 101325.
-
-        # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ((T0 - gamma * z - z0) / T0) ** (g / (gamma * R))
-        return p
-
-    elif z <= 20000.:
-        # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
-        # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
-        z0 = 11000.
-        p0 = 22632.64
-        T = 216.65
-
-        # Hydrostatic equation with constant temperature profile.
-        p = p0 * numpy.exp(-g * (z - z0) / (R * T))
-        return p
-
-    elif z <= 32000.:
-        # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
-        # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
-        z0 = 20000.
-        T0 = 216.65
-        gamma = -1.0e-3
-        p0 = 5475.16
-
-        # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ((T0 - gamma * (z - z0)) / T0) ** (g / (gamma * R))
-        return p
-
-    elif z <= 47000.:
-        # ICAO standard atmosphere between 32 and 47 km: T(z=32km) = -44.5 degC,
-        # p(z=32km) = 8.68019 hPa. Temperature gradient is -2.8 K/km.
-        z0 = 32000.
-        T0 = 228.66
-        gamma = -2.8e-3
-        p0 = 868.089
-
-        # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ((T0 - gamma * (z - z0)) / T0) ** (g / (gamma * R))
-        return p
-
-    elif z <= 51000:
-        # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
-        # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
-        z0 = 47000.
-        p0 = 110.928
-        T = 270.65
-
-        # Hydrostatic equation with constant temperature profile.
-        p = p0 * numpy.exp(-g * (z - z0) / (R * T))
-        return p
-
-    elif z <= 71000:
-        # ICAO standard atmosphere between 51 and 71 km: T(z=51km) = -2.5 degC,
-        # p(z=71km) = 0.66939 hPa. Temperature gradient is 2.8 K/km.
-        z0 = 51000.
-        T0 = 270.65
-        gamma = 2.8e-3
-        p0 = 66.952
-
-        # Hydrostatic equation with linear temperature gradient.
-        p = p0 * ((T0 - gamma * (z - z0)) / T0) ** (g / (gamma * R))
-        return p
-
-    else:
-        raise ValueError("flight level to pressure conversion not "
-                         "implemented for z > 71km")
+# Values according to ICAO standard atmosphere
+z0 = [0, 11, 20, 32, 47, 51, 71] * units.km
+t0 = [288.15, 216.65, 216.65, 228.66, 270.65, 270.65, float("NaN")] * units.K
+p0 = [101325, 22632.64, 5475.16, 868.089, 110.928, 66.952, 3.9591] * units.Pa
+gamma = [6.5e-3, 0, -1.0e-3, -2.8e-3, 0, -2.8e-3, float("NaN")] * units.K / units.km
 
 
-def pressure2flightlevel(p):
-    """Conversion of pressure (Pa) to flight level (hft) with
-       hydrostatic equation, according to the profile of the ICAO
-       standard atmosphere.
-
-    Reference:
-        For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
-        470pp., Sections II.1.4. and II.6.1.2.
-
-    Arguments:
-        p -- pressure (Pa)
-    Returns:
-        flight level in hft
-    """
-    # g and R are used by all equations below.
-    g = 9.80665
-    R = 287.058
-
-    if p < 3.956:
-        raise ValueError("pressure to flight level conversion not "
-                         "implemented for z > 71km (p ~ 4 Pa)")
-
-    elif p <= 66.952:
-        # ICAO standard atmosphere between 51 and 71 km: T(z=51km) = -2.5 degC,
-        # p(z=71km) = 0.66939 hPa. Temperature gradient is 2.8 K/km.
-        z0 = 51000.
-        T0 = 270.65
-        gamma = 2.8e-3
-        p0 = 66.952
-
-        # Hydrostatic equation with linear temperature gradient.
-        z = z0 + 1. / gamma * (T0 - T0 * numpy.exp(gamma * R / g * numpy.log(p / p0)))
-
-    elif p < 110.928:
-        # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
-        # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
-        z0 = 47000.
-        p0 = 110.928
-        T = 270.65
-
-        # Hydrostatic equation with constant temperature profile.
-        z = z0 - (R * T) / g * numpy.log(p / p0)
-
-    elif p < 868.089:
-        # ICAO standard atmosphere between 32 and 47 km: T(z=32km) = -44.5 degC,
-        # p(z=32km) = 54.75 hPa. Temperature gradient is -2.8 K/km.
-        z0 = 32000.
-        T0 = 228.66
-        gamma = -2.8e-3
-        p0 = 868.089
-
-        # Hydrostatic equation with linear temperature gradient.
-        z = z0 + 1. / gamma * (T0 - T0 * numpy.exp(gamma * R / g * numpy.log(p / p0)))
-
-    elif p < 5474.16:
-        # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
-        # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
-        z0 = 20000.
-        T0 = 216.65
-        gamma = -1.0e-3
-        p0 = 5475.16
-
-        # Hydrostatic equation with linear temperature gradient.
-        z = z0 + 1. / gamma * (T0 - T0 * numpy.exp(gamma * R / g * numpy.log(p / p0)))
-
-    elif p < 22632.:
-        # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
-        # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
-        z0 = 11000.
-        p0 = 22632.64
-        T = 216.65
-
-        # Hydrostatic equation with constant temperature profile.
-        z = z0 - (R * T) / g * numpy.log(p / p0)
-
-    else:
-        # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
-        # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
-        z0 = 0
-        T0 = 288.15
-        gamma = 6.5e-3
-        p0 = 101325.
-
-        # Hydrostatic equation with linear temperature gradient.
-        z = 1. / gamma * (T0 - T0 * numpy.exp(gamma * R / g * numpy.log(p / p0)))
-
-    # Convert from m to flight level (ft).
-    flightlevel = z * 0.0328083989502
-
-    return flightlevel
-
-
-def height_to_atmosphere(height):
-    height_m = height.to(units.meter)
-    # ICAO standard atmosphere between 0 and 11 km: T(z=0km) = 15 degC,
-    # p(z=0km) = 1013.25 hPa. Temperature gradient is 6.5 K/km.
-    if height_m <= 11000 * units.meter:
-        z0 = 0 * units.meter
-        T0 = 288.15 * units.kelvin
-        gamma = 6.5e-3 * units.kelvin / units.kilometer
-        p0 = 101325. * units.pascal
-    # ICAO standard atmosphere between 11 and 20 km: T(z=11km) = -56.5 degC,
-    # p(z=11km) = 226.32 hPa. Temperature is constant at -56.5 degC.
-    elif height_m <= 20000 * units.meter:
-        z0 = 11000. * units.meter
-        p0 = 22632.64 * units.pascal
-        T0 = 216.65 * units.kelvin
-        gamma = None
-    # ICAO standard atmosphere between 20 and 32 km: T(z=20km) = -56.5 degC,
-    # p(z=20km) = 54.75 hPa. Temperature gradient is -1.0 K/km.
-    elif height_m <= 32000 * units.meter:
-        z0 = 20000. * units.meter
-        T0 = 216.65 * units.kelvin
-        gamma = -1.0e-3 * units.kelvin / units.kilometer
-        p0 = 5475.16 * units.pascal
-    # ICAO standard atmosphere between 32 and 47 km: T(z=32km) = -44.5 degC,
-    # p(z=32km) = 8.68019 hPa. Temperature gradient is -2.8 K/km.
-    elif height_m <= 47000 * units.meter:
-        z0 = 32000. * units.meter
-        T0 = 228.66 * units.kelvin
-        gamma = -2.8e-3 * units.kelvin / units.kilometer
-        p0 = 868.089 * units.pascal
-    # ICAO standard atmosphere between 47 and 51 km: T(z=47km) = -2.5 degC,
-    # p(z=47km) = 1.10906 hPa. Temperature is constant at -2.5 degC.
-    elif height_m <= 51000 * units.meter:
-        z0 = 47000. * units.meter
-        T0 = 270.65 * units.kelvin
-        p0 = 110.928 * units.pascal
-        gamma = None
-    # ICAO standard atmosphere between 51 and 71 km: T(z=51km) = -2.5 degC,
-    # p(z=71km) = 0.66939 hPa. Temperature gradient is 2.8 K/km.
-    elif height_m <= 71000 * units.meter:
-        z0 = 51000. * units.meter
-        T0 = 270.65 * units.kelvin
-        gamma = 2.8e-3 * units.kelvin / units.kilometer
-        p0 = 66.952 * units.pascal
-    else:
-        raise ValueError("height to pressure conversion not implemented for z > 71km")
-    return z0, T0, gamma, p0
-
-
-exporter = Exporter(globals())
 @exporter.export
 @preprocess_and_wrap(wrap_like='height')
 @check_units('[length]')
-def flightlevel2pressure_a(height):
+def flightlevel2pressure(height):
     """
     Conversion of flight level (given in hft) to pressure (Pa) with
     hydrostatic equation, according to the profile of the ICAO
@@ -471,35 +240,36 @@ def flightlevel2pressure_a(height):
     Returns:
         static pressure (Pa)
     """
-    if (height.to(units.meter) > 71000 * units.meter).any():
-        raise ValueError("height to pressure conversion not implemented for z > 71km")
+    def hydrostatic_equation(z):
+        layer = next((i - 1 for i in range(len(z0)) if z0[i] > (z if hasattr(z, "__len__") else z[0])), -1)
+
+        if gamma[layer] != 0:
+            # Hydrostatic equation with linear temperature gradient gamma.
+            return p0[layer] * ((t0[layer] - gamma[layer] * (z - z0[layer])) / t0[layer]) ** (g / (gamma[layer] * Rd))
+        else:
+            # Hydrostatic equation with constant temperature gradient gamma.
+            return p0[layer] * numpy.exp(-g * (z - z0[layer]) / (Rd * t0[layer]))
+
+    if not hasattr(height, "__len__"):
+        return hydrostatic_equation(height)
+    test = len(height)
 
     # Initialize the return array.
-    p = numpy.zeros_like(height) * units.pascal
+    p = numpy.full_like(height, numpy.nan)
 
-    for segment_indices in [height <= 11000 * units.meter,
-                            (11000 * units.meter < height) * (height <= 20000 * units.meter),
-                            (20000 * units.meter < height) * (height <= 32000 * units.meter),
-                            (32000 * units.meter < height) * (height <= 47000 * units.meter),
-                            (47000 * units.meter < height) * (height <= 51000 * units.meter),
-                            (51000 * units.meter < height) * (height <= 71000 * units.meter),
-                            height > 71000 * units.meter]:
+    # Get indices for each atmosphere layer in array
+    for segment_indices in [[(z0[i] < height <= z0[i + 1]) for i in range(len(z0) - 1)]]:
         if any(segment_indices):
-            z0, T0, gamma, p0 = height_to_atmosphere(height[segment_indices][0])
-            # Hydrostatic equation with linear temperature gradient.
-            if gamma:
-                p[segment_indices] = p0 * ((T0 - gamma * (height[segment_indices] - z0)) / T0) ** (g / (gamma * Rd))
-            # Hydrostatic equation with constant temperature profile.
-            else:
-                p[segment_indices] = p0 * numpy.exp(-g * (height[segment_indices] - z0) / (Rd * T0))
+            test = hydrostatic_equation(height[segment_indices])
+            p[segment_indices] = hydrostatic_equation(height[segment_indices])
 
-    return p
+    return p * units.Pa
 
 
 @exporter.export
 @preprocess_and_wrap(wrap_like='pressure')
 @check_units('[pressure]')
-def pressure2flightlevel_a(pressure):
+def pressure2flightlevel(pressure):
     """
     Conversion of pressure (Pa) to flight level (hft) with
     hydrostatic equation, according to the profile of the ICAO
@@ -520,29 +290,25 @@ def pressure2flightlevel_a(pressure):
     Returns:
         flight level in hft
     """
+    def inverted_hydrostatic_equation(p):
+        layer = next((i - 1 for i in range(len(p0)) if p0[i] < (p if hasattr(p, "__len__") else p[0])), -1)
 
-    if (pressure.to(units.pascal) < 3.9591).any():
-        raise ValueError("pressure to flight level conversion not "
-                         "implemented for z > 71km (p ~ 4 Pa)")
+        if gamma[layer] != 0:
+            # Hydrostatic equation with linear temperature gradient gamma.
+            return z0[layer] + 1. / gamma[layer] * \
+                   (t0[layer] - t0[layer] * exp(gamma[layer] * Rd / g * log(p / p0[layer])))
+        else:
+            # Hydrostatic equation with constant temperature gradient gamma.
+            return p0[layer] * exp(-g * (p - z0[layer]) / (Rd * t0[layer]))
+
+    if not hasattr(pressure, "__len__"):
+        return inverted_hydrostatic_equation()
 
     # Initialize the return array.
-    z = zeros_like(pressure)
+    z = numpy.full_like(pressure, numpy.nan)
 
-    pressure_Pa = pressure.to(units.pascal)
-    for segment_indices, height in [(3.9591 > pressure_Pa <= 66.952, 71 * units.kilometer),
-                                    (11000 < pressure_Pa <= 110.928, 51 * units.kilometer),
-                                    (20000 < pressure_Pa <= 868.089, 47 * units.kilometer),
-                                    (32000 < pressure_Pa <= 5474.16, 32 * units.kilometer),
-                                    (47000 < pressure_Pa <= 22632, 20 * units.kilometer),
-                                    (pressure_Pa > 22632, 11 * units.kilometer)]:
+    for segment_indices, height in [[(p0[i] > pressure >= p0[i + 1]) for i in range(len(p0) - 1)]]:
         if segment_indices:
-            z0, T0, gamma, p0 = height_to_atmosphere(height)
-            # Hydrostatic equation with linear temperature gradient.
-            if gamma:
-                z[segment_indices] = z0 + 1. / gamma * (T0 - T0 *
-                                                        exp(gamma * Rd / g * log(pressure[segment_indices] / p0)))
-            # Hydrostatic equation with constant temperature profile.
-            else:
-                z[segment_indices] = p0 * exp(-g * (pressure_Pa[segment_indices] - z0) / (Rd * T0))
+            z[segment_indices] = inverted_hydrostatic_equation(pressure[segment_indices])
 
-    return z
+    return z * units.hft

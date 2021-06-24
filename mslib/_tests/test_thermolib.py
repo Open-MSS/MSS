@@ -27,36 +27,37 @@
 
 import numpy as np
 import pytest
+from metpy.units import units
 
 import mslib.thermolib as tl
 
 
 def test_flightlevel2pressure():
-    assert tl.flightlevel2pressure(182.8913020844737) == pytest.approx(50000)
-    assert tl.flightlevel2pressure(530.8390754393636) == pytest.approx(10000)
-    assert tl.flightlevel2pressure(782.4486256345779) == pytest.approx(3000)
-    assert tl.flightlevel2pressure(1151.9849776810745) == pytest.approx(550)
-    assert tl.flightlevel2pressure(1626.9512858549855) == pytest.approx(80)
-    assert tl.flightlevel2pressure(1804.3261490037305) == pytest.approx(40)
+    assert tl.flightlevel2pressure(182.8913020844737 * units.hft) == pytest.approx(50000)
+    assert tl.flightlevel2pressure(530.8390754393636 * units.hft) == pytest.approx(10000)
+    assert tl.flightlevel2pressure(782.4486256345779 * units.hft) == pytest.approx(3000)
+    assert tl.flightlevel2pressure(1151.9849776810745 * units.hft) == pytest.approx(550)
+    assert tl.flightlevel2pressure(1626.9512858549855 * units.hft) == pytest.approx(80)
+    assert tl.flightlevel2pressure(1804.3261490037305 * units.hft) == pytest.approx(40)
     with pytest.raises(ValueError):
-        tl.flightlevel2pressure(72000 / 30.48)
-    fls = np.arange(0, 71000, 1000) / 30.48
+        tl.flightlevel2pressure((72000 / 30.48) * units.hft)
+    fls = (np.arange(0, 71000, 1000) / 30.48) * units.hft
     assert np.allclose([tl.flightlevel2pressure(_x) for _x in fls],
-                       tl.flightlevel2pressure_a(fls))
+                       tl.flightlevel2pressure(fls))
 
 
 def test_pressure2flightlevel():
-    assert tl.pressure2flightlevel(50000) == pytest.approx(182.89130205844737)
-    assert tl.pressure2flightlevel(10000) == pytest.approx(530.8390754393636)
-    assert tl.pressure2flightlevel(3000) == pytest.approx(782.4486256345779)
-    assert tl.pressure2flightlevel(550) == pytest.approx(1151.9849776810745)
-    assert tl.pressure2flightlevel(80) == pytest.approx(1626.9512858549855)
-    assert tl.pressure2flightlevel(40) == pytest.approx(1804.3261490037305)
+    assert tl.pressure2flightlevel(50000 * units.Pa) == pytest.approx(182.89130205844737)
+    assert tl.pressure2flightlevel(10000 * units.Pa) == pytest.approx(530.8390754393636)
+    assert tl.pressure2flightlevel(3000 * units.Pa) == pytest.approx(782.4486256345779)
+    assert tl.pressure2flightlevel(550 * units.Pa) == pytest.approx(1151.9849776810745)
+    assert tl.pressure2flightlevel(80 * units.Pa) == pytest.approx(1626.9512858549855)
+    assert tl.pressure2flightlevel(40 * units.Pa) == pytest.approx(1804.3261490037305)
     with pytest.raises(ValueError):
-        tl.pressure2flightlevel(3.9)
-    pss = np.arange(5., 100000., 100.)
+        tl.pressure2flightlevel(3.9 * units.Pa)
+    pss = np.arange(5., 100000., 100.) * units.Pa
     assert np.allclose([tl.pressure2flightlevel(_x) for _x in pss],
-                       tl.pressure2flightlevel_a(pss))
+                       tl.pressure2flightlevel(pss))
 
 
 def test_geop_thickness():
