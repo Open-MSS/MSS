@@ -111,43 +111,21 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         if self.style in ["LOW", "TOT"]:
             lcc = bm.contourf(self.lonmesh, self.latmesh, data['low_cloud_area_fraction'],
                               np.arange(0.2, 1.1, 0.1), cmap=plt.cm.autumn_r)
-            if not self.noframe:
-                cbar = self.fig.colorbar(lcc, fraction=0.05, pad=-0.02, shrink=0.7)
-                cbar.set_label("Cloud cover fraction in grid box (0-1)")
-            else:
-                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                    ax, width="3%", height="30%", loc=4)
-                cbar = self.fig.colorbar(lcc, cax=axins1, orientation="vertical")
-                axins1.yaxis.set_ticks_position("left")
-                make_cbar_labels_readable(self.fig, axins1)
+            self.add_colorbar(lcc, "Cloud cover fraction in grid box (0-1)")
 
         if self.style in ["MED", "TOT"]:
             mcc = bm.contourf(self.lonmesh, self.latmesh, data['medium_cloud_area_fraction'],
                               np.arange(0.2, 1.1, 0.1), cmap=plt.cm.summer_r)
-            if not self.noframe:
-                self.fig.colorbar(mcc, fraction=0.05, pad=-0.02, shrink=0.7, format='')
-            else:
-                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                    ax, width="2%" if self.style == "TOT" else "3%", height="30%", loc=4)
-                cbar = self.fig.colorbar(mcc, cax=axins1, orientation="vertical",
-                                         format='' if self.style == "TOT" else "%.1f")
-                axins1.yaxis.set_ticks_position("left")
-                make_cbar_labels_readable(self.fig, axins1)
+            self.add_colorbar(mcc, width="2%" if self.style == "TOT" else "3%",
+                              format='' if self.style == "TOT" else "%.1f")
 
         if self.style in ["HIGH", "TOT"]:
             hcc = bm.contourf(self.lonmesh, self.latmesh, data['high_cloud_area_fraction'],
                               np.arange(0.2, 1.1, 0.1), cmap=plt.cm.Blues)
             bm.contour(self.lonmesh, self.latmesh, data['high_cloud_area_fraction'],
                        [0.2], colors="blue", linestyles="dotted")
-            if not self.noframe:
-                self.fig.colorbar(hcc, fraction=0.05, pad=0.08, shrink=0.7, format='')
-            else:
-                axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                    ax, width="1%" if self.style == "TOT" else "3%", height="30%", loc=4)
-                cbar = self.fig.colorbar(hcc, cax=axins1, orientation="vertical",
-                                         format='' if self.style == "TOT" else "%.1f")
-                axins1.yaxis.set_ticks_position("left")
-                make_cbar_labels_readable(self.fig, axins1)
+            self.add_colorbar(hcc, width="1%" if self.style == "TOT" else "3%",
+                              format='' if self.style == "TOT" else "%.1f")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, data['air_pressure_at_sea_level'],
@@ -278,15 +256,7 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
         # Filled contour plot.
         scs = bm.contourf(self.lonmesh, self.latmesh, sea,
                           np.arange(0, 91, 1), cmap=plt.cm.nipy_spectral)
-        if not self.noframe:
-            cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Solar Elevation Angle (degrees)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(scs, label="Solar Elevation Angle (degrees)")
 
         # Contour lines plot.
         # Colors in python2.6/site-packages/matplotlib/colors.py
@@ -350,15 +320,7 @@ class HS_SeaIceStyle_01(MPLBasemapHorizontalSectionStyle):
         else:
             scs = bm.contourf(self.lonmesh, self.latmesh, ice,
                               np.arange(0.1, 1.1, .1), cmap=plt.cm.Blues)
-        if not self.noframe:
-            cbar = self.fig.colorbar(scs, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Sea Ice Cover Fraction (0-1)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(scs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(scs, label="Sea Ice Cover Fraction (0-1)")
 
         # Plot title.
         titlestring = "Sea Ice Cover"
@@ -405,15 +367,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         tc = bm.contourf(self.lonmesh, self.latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral)
-        if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Temperature (degC)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(tc, "Temperature (degC)")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, tempC,
@@ -585,15 +539,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         tc = bm.contourf(self.lonmesh, self.latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.nipy_spectral)
-        if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Temperature (degC)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(tc, "Temperature (degC)")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, tempC,
@@ -679,15 +625,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         cs = bm.contourf(self.lonmesh, self.latmesh, wind,
                          # wind_contours, cmap=plt.cm.hot_r, alpha=0.8)
                          wind_contours, cmap=plt.cm.hot_r)
-        if not self.noframe:
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Wind Speed (m/s)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Wind Speed (m/s)")
 
         # Convert wind data from m/s to knots for the wind barbs.
         uk = convert_to(u, "m/s", "knots")
@@ -770,15 +708,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         rhc = bm.contourf(self.lonmesh, self.latmesh, rh,
                           filled_contours, cmap=plt.cm.winter_r)
-        if not self.noframe:
-            cbar = self.fig.colorbar(rhc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Relative Humidity (%)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(rhc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(rhc, "Relative Humidity (%)")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, rh,
@@ -853,15 +783,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         eqpt = data["equivalent_potential_temperature"]
         eqptc = bm.contourf(self.lonmesh, self.latmesh, eqpt,
                             filled_contours, cmap=plt.cm.gist_rainbow_r)
-        if not self.noframe:
-            cbar = self.fig.colorbar(eqptc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Equivalent Potential Temperature (degC)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(eqptc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(eqptc, "Equivalent Potential Temperature (degC)")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, eqpt,
@@ -939,15 +861,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         wc = bm.contourf(self.lonmesh, self.latmesh, w,
                          upward_contours, cmap=plt.cm.bwr)
-        if not self.noframe:
-            cbar = self.fig.colorbar(wc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Vertical velocity (cm/s)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(wc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(wc, "Vertical velocity (cm/s)")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, w,
@@ -1082,15 +996,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                         colors="b", linewidths=1)
         ax.clabel(ac, fontsize=10, fmt='%i')
 
-        if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Tracer (relative)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(tc, "Tracer (relative)")
 
         titlestring = f"EMAC Eyjafjallajokull Tracer (relative) at model level {self.level:.0f}"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
@@ -1138,15 +1044,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
                         colors="b", linewidths=1)
         ax.clabel(ac, fontsize=10, fmt='%.2f')
 
-        if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("column density (kg/m^2)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(tc, "column density (kg/m^2)")
 
         titlestring = "EMAC Eyjafjallajokull Tracer Total Column Density (kg/m^2)"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
@@ -1224,15 +1122,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         # to fill regions whose values exceed the colourbar range.
         contours = bm.contourf(self.lonmesh, self.latmesh, vardata,
                                filled_contours, cmap=fcmap, extend="both")
-        if not self.noframe:
-            cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label(label)
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(contours, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(contours, label)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, vardata,
@@ -1326,15 +1216,7 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
             mask = ~data["secondary_tropopause_altitude"].mask
             bm.contourf(self.lonmesh, self.latmesh, mask, [0, 0.5, 1.5], hatches=["", "xx"], alpha=0)
 
-        if not self.noframe:
-            cbar = self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label(label)
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(contours, label)
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, vardata,
@@ -1387,13 +1269,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         # Filled contours of p(WCB).
         contours = bm.contourf(self.lonmesh, self.latmesh, pwcb,
                                np.arange(0, 101, 10), cmap=plt.cm.pink_r)
-        if not self.noframe:
-            self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
+        self.add_colorbar(contours)
 
         titlestring = "Mean sea level pressure (hPa) and total column probability of WCB (0-1)"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
@@ -1457,13 +1333,7 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         # Filled contours of num(WCB).
         contours = bm.contourf(self.lonmesh, self.latmesh, nwcb,
                                thin_contours, cmap=plt.cm.gist_ncar_r, extend="max")
-        if not self.noframe:
-            self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
+        self.add_colorbar(contours)
 
         titlestring = "Cirrus density, insitu red, mix blue, wcb colour (1E-6/km^2/hPa)"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
@@ -1515,13 +1385,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         blh = data["atmosphere_boundary_layer_thickness"]
         contours = bm.contourf(
             self.lonmesh, self.latmesh, blh, np.arange(0, 3000, 100), cmap=plt.cm.terrain, extend="max")
-        if not self.noframe:
-            self.fig.colorbar(contours, fraction=0.05, pad=0.08, shrink=0.7)
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            self.fig.colorbar(contours, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
+        self.add_colorbar(contours)
 
         # Labelled thin grey contours of BLH, interval 500m.
         cs = bm.contour(self.lonmesh, self.latmesh, blh,
@@ -1575,15 +1439,7 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
 
         tc = bm.contourf(self.lonmesh, self.latmesh, tempC,
                          np.arange(cmin, cmax, 2), cmap=plt.cm.gray_r, extend="both")
-        if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7)
-            cbar.set_label("Brightness Temperature (K)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="30%", loc=4)
-            cbar = self.fig.colorbar(tc, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(tc, "Brightness Temperature (K)")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         # cs = bm.contour(self.lonmesh, self.latmesh, tempC,
