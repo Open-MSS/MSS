@@ -84,7 +84,7 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         QActiveViewsListWidgetItem.opened_views += 1
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
         if mscolab:
-            view_name = f'{view_name} - mscolab'
+            view_name = f'{view_name} - {view_window.waypoints_model.name} (mscolab)'
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, _type)
 
         view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
@@ -258,7 +258,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
 
         # Flight Tracks.
-        self.newFlightTrackBtn.clicked.connect(functools.partial(self.create_new_flight_track, None, None))
         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
 
         # Views.
@@ -282,10 +281,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
 
-        # # Don't start the updater during a test run of mss_pyui
-        # if "pytest" not in sys.modules:
-        #     self.updater = UpdaterUI(self)
-        #     self.actionUpdater.triggered.connect(self.updater.show)
+        # Don't start the updater during a test run of mss_pyui
+        if "pytest" not in sys.modules:
+            self.updater = UpdaterUI(self)
+            self.actionUpdater.triggered.connect(self.updater.show)
 
     def tab_switched_handler(self, index):
         if index == 0:
@@ -294,15 +293,26 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.actionExportFlightTrackFTML.setVisible(False)
             self.menuImportFlightTrack.setEnabled(True)
             self.menuExportActiveFlightTrack.setEnabled(True)
+            view_visible = True if self.active_flight_track is not None else False
         else:
             local = False
             self.actionImportFlightTrackFTML.setVisible(True)
             self.actionExportFlightTrackFTML.setVisible(True)
-            mscolab_active = True if self.mscolab.token is not None else False
+            view_visible = self.mscolab.active_pid is not None
+            mscolab_active = self.mscolab.token is not None and view_visible
             self.menuImportFlightTrack.setEnabled(mscolab_active)
             self.menuExportActiveFlightTrack.setEnabled(mscolab_active)
             if mscolab_active and self.mscolab.access_level == "viewer":
+                # viewer has no import access to server
                 self.menuImportFlightTrack.setEnabled(False)
+
+        # enable/disable view menu based on active flight track/project
+        self.actionTopView.setEnabled(view_visible)
+        self.actionSideView.setEnabled(view_visible)
+        self.actionTableView.setEnabled(view_visible)
+        self.actionLinearView.setEnabled(view_visible)
+
+        # enable/disable flight track menus
         self.actionNewFlightTrack.setEnabled(local)
         self.actionOpenFlightTrack.setEnabled(local)
         self.actionActivateSelectedFlightTrack.setEnabled(local)
@@ -540,19 +550,30 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            the one that is displayed in the views (only one flight track can be
            displayed at a time).
         """
+        self.mscolab.switch_to_local()
         self.active_flight_track = item.flighttrack_model
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
-            view_item.window.setFlightTrackModel(self.active_flight_track)
+            if view_item.window._id is None:
+                view_item.window.setFlightTrackModel(self.active_flight_track)
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
+        self.tab_switched_handler(0)
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
         self.activate_flight_track(item)
+
+    def switch_to_mscolab(self):
+        font = QtGui.QFont()
+        for i in range(self.listFlightTracks.count()):
+            self.listFlightTracks.item(i).setFont(font)
+        # set active fligt track to none
+        # to disable menu actions while switch tabs
+        self.active_flight_track = None
 
     def save_flight_track(self):
         """Slot for the 'Save Active Flight Track As' menu entry.

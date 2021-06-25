@@ -17,15 +17,9 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MSSMainWindow</string>
-  </property>
-  <property name="styleSheet">
-   <string notr="true"/>
+   <string>Mission Support System</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
    <layout class="QVBoxLayout" name="verticalLayout">
     <property name="spacing">
      <number>4</number>
@@ -97,15 +91,12 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="styleSheet">
-       <string notr="true">::tab-bar { alignment: left; } ::pane {}</string>
+       <string notr="true">::tab-bar { alignment: left; } ::pane{}</string>
       </property>
       <property name="currentIndex">
        <number>0</number>
       </property>
       <widget class="QWidget" name="localTab">
-       <property name="autoFillBackground">
-        <bool>false</bool>
-       </property>
        <attribute name="title">
         <string>Local</string>
        </attribute>
@@ -133,22 +124,12 @@
           <property name="styleSheet">
            <string notr="true">border: 1px solid grey;</string>
           </property>
-          <property name="frameShadow">
-           <enum>QFrame::Sunken</enum>
-          </property>
          </widget>
         </item>
         <item row="0" column="0">
          <widget class="QLabel" name="openFlightTracksLabel">
           <property name="text">
            <string>Open Flight Tracks:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="newFlightTrackBtn">
-          <property name="text">
-           <string>New Flight Track</string>
           </property>
          </widget>
         </item>
@@ -244,10 +225,7 @@
      </widget>
     </item>
     <item>
-     <widget class="QGroupBox" name="verticalGroupBox">
-      <property name="styleSheet">
-       <string notr="true"/>
-      </property>
+     <widget class="QGroupBox" name="openViewsGb">
       <layout class="QVBoxLayout" name="openViewsVL">
        <property name="leftMargin">
         <number>8</number>
@@ -372,32 +350,12 @@
     <string>&amp;Online Help</string>
    </property>
   </action>
-  <action name="actionEditConfiguration">
-   <property name="text">
-    <string>&amp;Edit Configuration</string>
-   </property>
-  </action>
-  <action name="actionCompareToDefault">
-   <property name="text">
-    <string>&amp;Compare to Default</string>
-   </property>
-  </action>
   <action name="actionOpenFlightTrack">
    <property name="text">
     <string>&amp;Open Flight Track</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionCSVImport">
-   <property name="text">
-    <string>CSV</string>
-   </property>
-  </action>
-  <action name="actionCSVExport">
-   <property name="text">
-    <string>&amp;CSV</string>
    </property>
   </action>
   <action name="actionNewFlightTrack">
@@ -424,16 +382,6 @@
     <string>Alt+S</string>
    </property>
   </action>
-  <action name="actionTextExport">
-   <property name="text">
-    <string>&amp;Text</string>
-   </property>
-  </action>
-  <action name="actionKMLExport">
-   <property name="text">
-    <string>&amp;KML</string>
-   </property>
-  </action>
   <action name="actionActivateSelectedFlightTrack">
    <property name="text">
     <string>&amp;Activate Selected Flight Track</string>
@@ -457,54 +405,36 @@
     <string>Ctrl+,</string>
    </property>
   </action>
-  <action name="actionChat">
-   <property name="text">
-    <string>&amp;Chat</string>
-   </property>
-  </action>
-  <action name="action_Version_History">
-   <property name="text">
-    <string>&amp;Version History</string>
-   </property>
-  </action>
-  <action name="action_Manage_Users">
-   <property name="text">
-    <string>&amp;Manage Users</string>
-   </property>
-  </action>
-  <action name="action_Share_Project">
-   <property name="text">
-    <string>&amp;Share Project</string>
-   </property>
-  </action>
-  <action name="actionDelete_Project">
-   <property name="text">
-    <string>Delete Project</string>
-   </property>
-  </action>
-  <action name="actionWork_Locally">
-   <property name="text">
-    <string>Work Locally</string>
-   </property>
-  </action>
   <action name="actionTopView">
    <property name="text">
-    <string>&amp;Top View</string>
+    <string>&amp;Top View (Horizontal Section)</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+H</string>
    </property>
   </action>
   <action name="actionSideView">
    <property name="text">
-    <string>&amp;Side View</string>
+    <string>&amp;Side View (Vertical Section)</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+V</string>
    </property>
   </action>
   <action name="actionTableView">
    <property name="text">
     <string>&amp;Table View</string>
    </property>
+   <property name="shortcut">
+    <string>Meta+T</string>
+   </property>
   </action>
   <action name="actionLinearView">
    <property name="text">
     <string>&amp;Linear View</string>
+   </property>
+   <property name="shortcut">
+    <string>Meta+L</string>
    </property>
   </action>
  </widget>
@@ -512,7 +442,6 @@
   <tabstop>connectBtn</tabstop>
   <tabstop>userOptionsTb</tabstop>
   <tabstop>tabWidget</tabstop>
-  <tabstop>newFlightTrackBtn</tabstop>
   <tabstop>listFlightTracks</tabstop>
   <tabstop>addProjectBtn</tabstop>
   <tabstop>listProjectsMSC</tabstop>
