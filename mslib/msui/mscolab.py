@@ -1168,7 +1168,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                 if item.p_id == p_id:
                     project_name = item.project_path
                     item.access_level = access_level
-                    item.setText('{project_name} - {item.access_level}')
+                    item.setText(f'{project_name} - {item.access_level}')
                     break
             if project_name is not None:
                 show_popup(self, "Permission Updated",
