@@ -13,4 +13,4 @@ Replace "air_temperature" with the quantity you want displayed, and "ml" with th
 
 It will produce a plot akin to this, which the client is able to adjust to its liking
 
-.. image:: ../samples/config/wms/LS_template.png
+.. image:: ../plots/Linear_LS_AT.png

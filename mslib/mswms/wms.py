@@ -252,6 +252,8 @@ class WMSServer(object):
             for driver, registry in plot_list:
                 for dataset in driver:
                     plot_driver = driver[dataset]
+                    if dataset not in registry:
+                        continue
                     for plot in registry[dataset]:
                         plot_object = registry[dataset][plot]
                         l_type = "Linear" if driver == self.lsec_drivers else \

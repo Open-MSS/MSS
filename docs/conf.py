@@ -46,8 +46,22 @@ examples.create_data()
 
 sys.path.insert(0, os.path.join(os.path.expanduser("~"), "mss"))
 
-from mslib.mswms.wms import server
-server.generate_gallery(sphinx=True, generate_code=True, all_plots=True)
+import mslib.mswms.wms
+import mslib.mswms.gallery_builder
+
+# Generate template plots
+from gallery.plot_examples import HS_template, VS_template
+dataset = [next(iter(mslib.mswms.wms.mss_wms_settings.data))]
+mslib.mswms.wms.mss_wms_settings.register_horizontal_layers = [(HS_template.HS_Template, dataset)]
+mslib.mswms.wms.mss_wms_settings.register_vertical_layers = [(VS_template.VS_Template, dataset)]
+mslib.mswms.wms.mss_wms_settings.register_linear_layers = []
+mslib.mswms.wms.server.__init__()
+mslib.mswms.wms.server.generate_gallery(sphinx=True, force_regenerate=True)
+mslib.mswms.gallery_builder.plots = {"Top": [], "Side": [], "Linear": []}
+
+# Generate all other plots
+mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True)
+print(mslib.mswms.wms.mss_wms_settings.register_horizontal_layers)
 
 # readthedocs has no past.builtins
 try:

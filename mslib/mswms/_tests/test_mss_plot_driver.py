@@ -29,6 +29,8 @@
 
 from datetime import datetime
 import pytest
+import os
+import sys
 from PIL import Image
 from xml.etree import ElementTree
 import io
@@ -37,6 +39,7 @@ import mss_wms_settings
 import mslib.mswms.mpl_vsec_styles as mpl_vsec_styles
 import mslib.mswms.mpl_hsec_styles as mpl_hsec_styles
 import mslib.mswms.mpl_lsec_styles as mpl_lsec_styles
+import mslib.mswms.gallery_builder
 
 
 def is_image_transparent(img):
@@ -188,6 +191,14 @@ class Test_VSec(object):
         assert img is not None
         noframe = self.plot(mpl_vsec_styles.VS_EMACEyja_Style_01(driver=self.vsec), noframe=True)
         assert noframe != img
+
+    def test_VS_gallery_template(self):
+        templates_location = os.path.join(mslib.mswms.gallery_builder.docs_location, "plot_examples")
+        sys.path.append(templates_location)
+        from VS_template import VS_Template
+
+        img = self.plot(VS_Template(driver=self.vsec))
+        assert img is not None
 
 
 class Test_LSec(object):
@@ -457,3 +468,11 @@ class Test_HSec(object):
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_Meteosat_BT108_01(driver=self.hsec), noframe=True)
         assert noframe != img
+
+    def test_HS_gallery_template(self):
+        templates_location = os.path.join(mslib.mswms.gallery_builder.docs_location, "plot_examples")
+        sys.path.append(templates_location)
+        from HS_template import HS_Template
+
+        img = self.plot(HS_Template(driver=self.hsec), level=300)
+        assert img is not None

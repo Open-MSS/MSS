@@ -417,7 +417,7 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
-    if not os.path.exists(static_location):
+    if not os.path.exists(static_location) and not sphinx:
         os.mkdir(static_location)
 
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \

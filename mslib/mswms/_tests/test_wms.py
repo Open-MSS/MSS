@@ -381,15 +381,17 @@ class Test_WMS(object):
 
     def test_gallery(self):
         tempdir = tempfile.mkdtemp()
-        os.mkdir(os.path.join(tempdir, "docs"))
+        docsdir = tempfile.mkdtemp()
         mslib.mswms.wms.static_location = tempdir
         mslib.mswms.gallery_builder.static_location = tempdir
+        mslib.mswms.wms.docs_location = docsdir
+        mslib.mswms.gallery_builder.docs_location = docsdir
         linear_plots = [[mslib.mswms.wms.server.lsec_drivers, mslib.mswms.wms.server.lsec_layer_registry]]
 
         mslib.mswms.wms.server.generate_gallery(generate_code=True, plot_list=linear_plots)
         assert os.path.exists(os.path.join(tempdir, "plots"))
         assert os.path.exists(os.path.join(tempdir, "code"))
-        assert os.path.exists(os.path.join(tempdir, "docs", "plots.js"))
+        assert os.path.exists(os.path.join(tempdir, "plots.js"))
 
         mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
         assert not os.path.exists(os.path.join(tempdir, "code"))
@@ -406,3 +408,9 @@ class Test_WMS(object):
 
         mslib.mswms.wms.server.generate_gallery(force_regenerate=True, plot_list=linear_plots)
         assert modified_at != os.path.getmtime(file2)
+
+        mslib.mswms.wms.server.generate_gallery(force_regenerate=True, generate_code=True, sphinx=True,
+                                                plot_list=linear_plots)
+        assert os.path.exists(os.path.join(docsdir, "plots"))
+        assert os.path.exists(os.path.join(docsdir, "code"))
+        assert os.path.exists(os.path.join(docsdir, "plots.js"))
