@@ -38,6 +38,7 @@ from flask import Response
 from markdown import Markdown
 from xstatic.main import XStatic
 from mslib.msui.icons import icons
+from mslib.mswms.gallery_builder import static_location
 
 # set the project root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
@@ -78,7 +79,7 @@ def prefix_route(route_function, prefix='', mask='{0}{1}'):
 
 def app_loader(name):
     APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'), static_url_path="/static",
-                static_folder=os.path.join(DOCS_SERVER_PATH, 'static'))
+                static_folder=static_location)
     APP.config.from_object(name)
     APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
@@ -106,10 +107,11 @@ def app_loader(name):
             (url_for('index'), 'Mission Support System',
              ((url_for('about'), 'About'),
               (url_for('install'), 'Install'),
-              (url_for('plots'), 'Plots'),
+              (url_for("plots"), 'Gallery'),
               (url_for('help'), 'Help'),
               )),
         ]
+
         return menu
 
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
@@ -149,14 +151,17 @@ def app_loader(name):
 
     @APP.route("/mss/plots")
     def plots():
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'plots.js')
-        content = get_content(_file)
+        if static_location != "":
+            _file = os.path.join(static_location, 'plots.js')
+            content = get_content(_file)
+        else:
+            content = "Gallery was not generated for this server."
         return render_template("/content.html", act="plots", content=content)
 
     @APP.route("/mss/code/<path:filename>")
     def code(filename):
         download = request.args.get("download", False)
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'code', filename)
+        _file = os.path.join(static_location, 'code', filename)
         content = get_content(_file)
         if not download:
             return render_template("/content.html", act="code", content=content)

@@ -53,9 +53,6 @@ def main():
                          help="Generates plots of all layers regardless if they are present of not")
     gallery.add_argument("--show-code", action="store_true", default=False,
                          help="Generates code snippets for each plot, available when clicking on the plot")
-    gallery.add_argument("--sphinx", action="store_true", default=False,
-                         help="Write gallery to sphinx docs instead of flask server, "
-                              "requires regeneration of the docs afterwards")
 
     args = parser.parse_args()
 
@@ -80,11 +77,8 @@ def main():
     setup_logging(args)
 
     if args.action == "gallery":
-        server.generate_gallery(args.force_regenerate, args.show_code, args.sphinx)
+        server.generate_gallery(args.force_regenerate, args.show_code)
         logging.info("Gallery generation done.")
-        if args.sphinx:
-            logging.info("Please regenerate the sphinx docs!")
-        sys.exit()
 
     updater.on_update_available.connect(lambda old, new: logging.info(f"MSS can be updated from {old} to {new}.\nRun"
                                                                       " the --update argument to update the server."))

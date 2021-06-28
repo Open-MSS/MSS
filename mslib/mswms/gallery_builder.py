@@ -26,17 +26,20 @@
 import os
 from PIL import Image
 import io
+import logging
 from matplotlib import pyplot as plt
 import defusedxml.ElementTree as etree
 import inspect
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
-from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
-from mslib.mswms.mpl_vsec_styles import VS_GenericStyle
-from mslib.mswms.mpl_hsec_styles import HS_GenericStyle
 
+static_location = ""
+try:
+    import mss_wms_settings
+    static_location = os.path.join(os.path.dirname(os.path.abspath(mss_wms_settings.__file__)), "gallery")
+except ImportError as e:
+    logging.warning(f"{e}. Can't generate gallery.")
 
-static_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "static")
 docs_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs", "gallery")
 
 
@@ -255,7 +258,7 @@ def write_js(sphinx=False):
     """
     Writes the plots.js file containing the gallery
     """
-    location = docs_location if sphinx else os.path.join(static_location, "docs")
+    location = docs_location if sphinx else static_location
     js = begin
     if sphinx:
         js = js.replace("<h3>Plot Gallery</h3>", "")
@@ -276,6 +279,11 @@ def import_instructions(plot_object, l_type, layer, native_import=None):
     """
     Returns instructions on how to import the plot object, or None if not yet implemented
     """
+    # Imports here due to some circular import issue if imported too soon
+    from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
+    from mslib.mswms.mpl_vsec_styles import VS_GenericStyle
+    from mslib.mswms.mpl_hsec_styles import HS_GenericStyle
+
     from_text = f"{l_type}_{plot_object.name}" if not native_import else native_import
     instruction = f"from {from_text} import {plot_object.__class__.__name__}\n" \
                   f"register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers\n"
@@ -409,6 +417,9 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
+    if not os.path.exists(static_location):
+        os.mkdir(static_location)
+
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \
         "Side" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
 

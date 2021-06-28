@@ -5,9 +5,6 @@
 *.swp
 *.patch
 *~
-mslib/static/plots/*
-mslib/static/code/*
-mslib/static/docs/plots.js
 mslib/mss_config.py
 mslib/performance/data/
 mslib/msui/mss.sideview.cfg
