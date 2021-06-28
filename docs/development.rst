@@ -1,6 +1,97 @@
 .. _development:
 
 
+1. System requirements
+
+  | Any system with basic configuration.
+  | Operating System : Any (Windows / Linux / Mac).
+
+2. Software requirement
+  | Python
+  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
+  
+
+3. Skill set
+  | Knowledge of git & github
+  | python
+
+============================
+Setting Up local Environement
+============================
+
+============================
+Forking the Repo
+============================
+1. Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window. 
+
+2. Kindly wait till it gets forked.
+
+3. After that copy will look like *<your-user-name>/MSS* forked from *Open-MSS/MSS*.
+
+============================
+Cloning the Repo
+============================
+
+1. Now you have your own copy of project. Here you have to start your work.
+
+2. Go to desired location on your computer where you want to set-up the project.
+
+3. Right click there and click on git bash. A terminal window will pop up
+
+4. Click The big green button which says "Code". Copy the URL. `Like this <https://user-images.githubusercontent.com/71402528/122255281-9a855d80-ceeb-11eb-9f85-fed38db30562.png>`_
+
+5. Now Type the command ``git clone <your-fork-url>.git`` and hit enter.
+
+6. Wait for few seconds till the project gets copied
+
+  or simply head over here for `cloning a repository <https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository>`_
+
+============================
+Setting up remote :
+============================
+
+1. Now you have to set up remote repositories
+
+2. Type ``git remote -v`` in terminal to list remote connections to your repo.
+
+3. It will show something like this:
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
+
+4. Now type the command git remote add upstream ``https://github.com/Open-MSS/MSS.git`` this will set upstream as main directory
+
+5. Again type in command git remote -v to check if remote has been set up correctly
+
+6. It should show something like this :
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
+
+  upstream        ``https://github.com/Open-MSS/MSS.git`` (fetch)
+
+  upstream        ``https://github.com/Open-MSS/MSS.git`` (push)
+
+
+============================
+How to Report Bugs:
+============================
+Please open a new issue in the appropriate GitHub repository `here <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
+
+Be sure to include as much information including screenshots, text output, and both your expected and actual results.
+
+============================
+How to Request Enhancements:
+============================
+First, please refer to the applicable `GitHub repository <https://github.com/Open-MSS/MSS>`_ and search `the repository's GitHub issues <https://github.com/Open-MSS/MSS/issues>`_ to make sure your idea has not been (or is not still) considered.
+
+Then, please `create a new issue <https://github.com/Open-MSS/MSS/issues/new>`_ in the GitHub repository describing your enhancement.
+
+Be sure to include as much detail as possible including step-by-step descriptions, specific examples, screenshots or mockups, and reasoning for why the enhancement might be worthwhile.
+
+============================
 Development
 ============================
 
@@ -39,6 +130,7 @@ In the mss package is some demodata included. The default where this is stored i
 MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
 
 MSS is based on the software of the conda-forge channel located, so we have to add this channel to the default::
+
 
   $ conda config --add channels conda-forge
 
@@ -255,4 +347,29 @@ Publish on Conda Forge
 * rerender the feedstock by conda smithy
 * send a pull request
 * maintainer will merge if there is no error
+
+
+============================
+Pushing your changes:
+============================
+
+1. Now you have made the changes, tested them and built them. So now it's time to push them.
+2. Goto your terminal and type git status and hit enter, this will show your changes from the files
+3. Then type in git add and hit enter, this will add all the files to staging area
+4. Commit the changes by ``git commit -m "<message-describing-your-change>"`` and hit enter.
+5. Now push your branch to your fork by ``git push origin <your-branch-name>`` and hit enter.
+
+
+============================
+Creating a pull request:
+============================
+By this time you can see a message on your github fork as your fork is ahead of Open-MSS:develop by <number> of commits and also you can see a button called Compare and pull request.
+
+Click on Compare and pull request button.
+
+You will see a template.
+
+Fill out the template completely by describing your change, cause of change, issue getting fixed etc.
+
+After filling the template completely click on Pull request
 
