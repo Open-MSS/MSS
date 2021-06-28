@@ -63,7 +63,6 @@ from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
 from mslib.index import app_loader
-from mslib.mswms.gallery_builder import add_image, write_js, write_doc_index, static_location, docs_location
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -219,6 +218,7 @@ class WMSServer(object):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
+        from mslib.mswms.gallery_builder import add_image, write_js, write_doc_index, static_location, docs_location
         if all_plots:
             from mslib.mswms import mpl_hsec_styles, mpl_vsec_styles, mpl_lsec_styles
             dataset = [next(iter(mss_wms_settings.data))]
