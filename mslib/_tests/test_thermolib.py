@@ -31,13 +31,27 @@ import pytest
 import mslib.thermolib as tl
 
 
+def test_flightlevel2pressure2flightlevel():
+    fs = np.arange(1, 71000, 1000.) / 30.48
+    ps = tl.flightlevel2pressure_a(fs)
+    fs_p = tl.pressure2flightlevel_a(ps)
+    assert fs == pytest.approx(fs_p)
+
+
+def test_pressure2flightlevel2pressure():
+    ps = np.arange(5, 105000, 1.)[::-1]
+    fs = tl.pressure2flightlevel_a(ps)
+    ps_p = tl.flightlevel2pressure_a(fs)
+    assert ps == pytest.approx(ps_p)
+
+
 def test_flightlevel2pressure():
-    assert tl.flightlevel2pressure(182.8913020844737) == pytest.approx(50000)
-    assert tl.flightlevel2pressure(530.8390754393636) == pytest.approx(10000)
-    assert tl.flightlevel2pressure(782.4486256345779) == pytest.approx(3000)
-    assert tl.flightlevel2pressure(1151.9849776810745) == pytest.approx(550)
-    assert tl.flightlevel2pressure(1626.9512858549855) == pytest.approx(80)
-    assert tl.flightlevel2pressure(1804.3261490037305) == pytest.approx(40)
+    assert tl.flightlevel2pressure(182.8850) == pytest.approx(50000)
+    assert tl.flightlevel2pressure(530.8279) == pytest.approx(10000)
+    assert tl.flightlevel2pressure(782.4335) == pytest.approx(3000)
+    assert tl.flightlevel2pressure(1151.9583) == pytest.approx(550)
+    assert tl.flightlevel2pressure(1626.8966) == pytest.approx(80)
+    assert tl.flightlevel2pressure(1804.2727) == pytest.approx(40)
     with pytest.raises(ValueError):
         tl.flightlevel2pressure(72000 / 30.48)
     fls = np.arange(0, 71000, 1000) / 30.48
@@ -46,12 +60,12 @@ def test_flightlevel2pressure():
 
 
 def test_pressure2flightlevel():
-    assert tl.pressure2flightlevel(50000) == pytest.approx(182.89130205844737)
-    assert tl.pressure2flightlevel(10000) == pytest.approx(530.8390754393636)
-    assert tl.pressure2flightlevel(3000) == pytest.approx(782.4486256345779)
-    assert tl.pressure2flightlevel(550) == pytest.approx(1151.9849776810745)
-    assert tl.pressure2flightlevel(80) == pytest.approx(1626.9512858549855)
-    assert tl.pressure2flightlevel(40) == pytest.approx(1804.3261490037305)
+    assert tl.pressure2flightlevel(50000.) == pytest.approx(182.8850)
+    assert tl.pressure2flightlevel(10000.) == pytest.approx(530.8279)
+    assert tl.pressure2flightlevel(3000.) == pytest.approx(782.4335)
+    assert tl.pressure2flightlevel(550.) == pytest.approx(1151.9583)
+    assert tl.pressure2flightlevel(80.) == pytest.approx(1626.8966)
+    assert tl.pressure2flightlevel(40.) == pytest.approx(1804.2727)
     with pytest.raises(ValueError):
         tl.pressure2flightlevel(3.9)
     pss = np.arange(5., 100000., 100.)
@@ -60,16 +74,22 @@ def test_pressure2flightlevel():
 
 
 def test_isa_temperature():
-    assert (tl.isa_temperature(100) - 268.3379999999811) < 1e-6
-    assert (tl.isa_temperature(200) - 248.5259999999622) < 1e-6
-    assert (tl.isa_temperature(300) - 228.7139999999434) < 1e-6
-    assert tl.isa_temperature(400) == 216.65
-    assert tl.isa_temperature(500) == 216.65
-    assert tl.isa_temperature(600) == 216.65
-    assert (tl.isa_temperature(700) - 217.9860000000203) < 1e-6
-    assert (tl.isa_temperature(800) - 221.0340000000232) < 1e-6
+    assert tl.isa_temperature(100) == pytest.approx(268.338)
+    assert tl.isa_temperature(200) == pytest.approx(248.526)
+    assert tl.isa_temperature(300) == pytest.approx(228.714)
+    assert tl.isa_temperature(400) == pytest.approx(216.650)
+    assert tl.isa_temperature(500) == pytest.approx(216.650)
+    assert tl.isa_temperature(600) == pytest.approx(216.650)
+    assert tl.isa_temperature(700) == pytest.approx(217.986)
+    assert tl.isa_temperature(800) == pytest.approx(221.034)
+    assert tl.isa_temperature(1000) == pytest.approx(227.13)
     with pytest.raises(ValueError):
-        tl.isa_temperature(1568.9002625)
+        tl.isa_temperature(71001 / 30.48)
+    assert tl.isa_temperature(11000 / 30.48) == pytest.approx(216.65)
+    assert tl.isa_temperature(20000 / 30.48) == pytest.approx(216.65)
+    assert tl.isa_temperature(32000 / 30.48) == pytest.approx(228.65)
+    assert tl.isa_temperature(47000 / 30.48) == pytest.approx(270.65)
+    assert tl.isa_temperature(51000 / 30.48) == pytest.approx(270.65)
 
 
 def test_geop_thickness():
