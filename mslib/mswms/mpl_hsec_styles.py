@@ -753,8 +753,9 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         """
         Computes relative humidity from p, t, q.
         """
+        pressure = convert_to(self.level, self.get_elevation_units(), "Pa")
         self.data["relative_humidity"] = thermolib.rel_hum(
-            self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
+            pressure, self.data["air_temperature"], self.data["specific_humidity"])
 
     def _plot_style(self):
         """
@@ -835,8 +836,9 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         """
         Computes relative humidity from p, t, q.
         """
+        pressure = convert_to(self.level, self.get_elevation_units(), "Pa")
         self.data["equivalent_potential_temperature"] = thermolib.eqpt_approx(
-            self.level * 100., self.data["air_temperature"], self.data["specific_humidity"])
+            pressure, self.data["air_temperature"], self.data["specific_humidity"])
         self.data["equivalent_potential_temperature"] = convert_to(
             self.data["equivalent_potential_temperature"], "K", "degC")
 
@@ -922,9 +924,10 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         """
         Computes relative humidity from p, t, q.
         """
+        pressure = convert_to(self.level, self.get_elevation_units(), "Pa")
         self.data["upward_wind"] = thermolib.omega_to_w(
             self.data["lagrangian_tendency_of_air_pressure"],
-            self.level * 100., self.data["air_temperature"])
+            pressure, self.data["air_temperature"])
         self.data["upward_wind"] = convert_to(self.data["upward_wind"], "m/s", "cm/s")
 
     def _plot_style(self):
