@@ -50,8 +50,8 @@ class TestDemodata(object):
         assert np.allclose(std, [3.03, 6.31, 6.33])
 
         mean, std = demodata.get_profile("air_potential_temperature", [300, 350, 400], "geopotential_height")
-        assert np.allclose(mean, [2953.99369248, 12007.44365002, 15285.95068235])
-        assert np.allclose(std, [117.675343762, 248.127730176, 164.947761167])
+        assert np.allclose(mean, [2970., 12026.92307692, 15307.89473684])
+        assert np.allclose(std, [118, 247.69230769, 164.34210526])
 
         mean, std = demodata.get_profile("ertel_potential_vorticity", [2, 4, 8], "geopotential_height")
         assert np.allclose(mean, [9565.89928058, 11148.1865285, 14139.43661972])

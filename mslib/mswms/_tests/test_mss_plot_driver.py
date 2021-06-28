@@ -320,6 +320,7 @@ class Test_HSec(object):
             img = self.plot(mpl_hsec_styles.HS_CloudsStyle_01(driver=self.hsec), style=style)
             assert img is not None
             noframe = self.plot(mpl_hsec_styles.HS_CloudsStyle_01(driver=self.hsec), style=style, noframe=True)
+            assert noframe is not None
             assert noframe != img
             assert not is_image_transparent(img)
 
@@ -332,12 +333,14 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec))
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     def test_HS_SEAStyle_01(self):
         img = self.plot(mpl_hsec_styles.HS_SEAStyle_01(driver=self.hsec))
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_SEAStyle_01(driver=self.hsec), noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     @pytest.mark.parametrize("style", ["PCOL", "CONT"])
@@ -345,24 +348,28 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_SeaIceStyle_01(driver=self.hsec), style=style)
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_SeaIceStyle_01(driver=self.hsec), style=style, noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     def test_HS_TemperatureStyle_ML_01(self):
         img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=10)
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_TemperatureStyle_ML_01(driver=self.hsec), level=10, noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     def test_HS_TemperatureStyle_PL_01(self):
         img = self.plot(mpl_hsec_styles.HS_TemperatureStyle_PL_01(driver=self.hsec), level=800)
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_TemperatureStyle_PL_01(driver=self.hsec), level=800, noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     def test_HS_GeopotentialWindStyle_PL(self):
         img = self.plot(mpl_hsec_styles.HS_GeopotentialWindStyle_PL(driver=self.hsec), level=300)
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_GeopotentialWindStyle_PL(driver=self.hsec), level=300, noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     @pytest.mark.parametrize("style", ["default", "nonlinear", "auto", "log", "autolog"])
@@ -373,6 +380,7 @@ class Test_HSec(object):
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_GenericStyle_PL_mole_fraction_of_ozone_in_air(driver=self.hsec),
                             level=300, style=style, noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     def test_HS_GenericStyle_other(self):
@@ -388,6 +396,7 @@ class Test_HSec(object):
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_GenericStyle_PL_ertel_potential_vorticity(driver=self.hsec),
                             level=300, style="ertel_potential_vorticity", noframe=True)
+        assert noframe is not None
         assert noframe != img
 
         img = self.plot(
@@ -396,12 +405,14 @@ class Test_HSec(object):
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_GenericStyle_PL_equivalent_latitude(driver=self.hsec),
                             level=300, style="equivalent_latitude", noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     def test_HS_RelativeHumidityStyle_PL_01(self):
         img = self.plot(mpl_hsec_styles.HS_RelativeHumidityStyle_PL_01(driver=self.hsec), level=300)
         assert img is not None
         noframe = self.plot(mpl_hsec_styles.HS_RelativeHumidityStyle_PL_01(driver=self.hsec), level=300, noframe=True)
+        assert noframe is not None
         assert noframe != img
 
     def test_HS_EQPTStyle_PL_01(self):
