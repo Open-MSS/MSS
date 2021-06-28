@@ -15,8 +15,7 @@ class HS_Template(mslib.mswms.mpl_hsec_styles.MPLBasemapHorizontalSectionStyle):
     ]
 
     def _plot_style(self):
-        temp_range = np.arange(-93, 28, 2)
-        height_range = np.arange(0, 21, 0.1)
+        fill_range = np.arange(-93, 28, 2)
         fill_entity = "air_temperature"
         contour_entity = "geopotential_height"
 
@@ -25,11 +24,10 @@ class HS_Template(mslib.mswms.mpl_hsec_styles.MPLBasemapHorizontalSectionStyle):
 
         cf = self.bm.contourf(
             self.lonmesh, self.latmesh, self.data[fill_entity],
-            temp_range, cmap=cmap, extend="both")
+            fill_range, cmap=cmap, extend="both")
         self.add_colorbar(cf, fill_entity)
 
         # contour
         heights_c = self.bm.contour(
-            self.lonmesh, self.latmesh, self.data[contour_entity],
-            height_range, colors="white")
+            self.lonmesh, self.latmesh, self.data[contour_entity], colors="white")
         self.bm.ax.clabel(heights_c, fmt="%i")

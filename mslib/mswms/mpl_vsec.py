@@ -68,8 +68,8 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                self.ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(contour, cax=axins1, orientation="vertical")
+                self.ax, width=width, height=height, loc=1)
+            self.fig.colorbar(contour, cax=axins1, orientation="vertical", ticks=tick_levels, format=format)
             axins1.yaxis.set_ticks_position("left")
             make_cbar_labels_readable(self.fig, axins1)
 
