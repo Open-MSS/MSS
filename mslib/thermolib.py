@@ -183,7 +183,7 @@ def eqpt_approx(p, t, q):
     t = units.Quantity(t, "K")
     dew_temp = mpcalc.dewpoint_from_specific_humidity(p, t, q)
     eqpt_temp = mpcalc.equivalent_potential_temperature(p, t, dew_temp)
-    return eqpt_temp.to('degC').magnitude
+    return eqpt_temp.to('K').magnitude
 
 
 def omega_to_w(omega, p, t):
