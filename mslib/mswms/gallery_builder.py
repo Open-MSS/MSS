@@ -303,7 +303,7 @@ def import_instructions(plot_object, l_type, layer, native_import=None):
     return instruction
 
 
-def write_plot_details(plot_object, l_type="top", sphinx=False):
+def write_plot_details(plot_object, l_type="top", sphinx=False, image_path=""):
     """
     Extracts and writes the plots code files at static/code/*
     """
@@ -325,7 +325,7 @@ def write_plot_details(plot_object, l_type="top", sphinx=False):
         return
 
     with open(os.path.join(location, "code", f"{l_type}_{plot_object.name}.md"), "w+") as md:
-        md.write(f"![](/static/plots/{l_type}_{plot_object.name}.png)\n\n")
+        md.write(f"![]({image_path})\n\n")
         instructions = import_instructions(plot_object, l_type, layer)
         if instructions:
             md.write(f"**How to use this plot**  \n"
@@ -417,7 +417,7 @@ def create_linear_plot(xml, file_location):
     fig.savefig(file_location)
 
 
-def add_image(plot, plot_object, generate_code=False, sphinx=False, plot_prefix=""):
+def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix=""):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
@@ -442,13 +442,14 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, plot_prefix=
                 image.save(os.path.join(location, "plots", l_type + "_" + plot_object.name + ".png"),
                            format="PNG")
 
-    if generate_code:
-        write_plot_details(plot_object, l_type, sphinx)
-
     img_path = f"../_images/{l_type}_{plot_object.name}.png" if sphinx \
-        else f"{plot_prefix}/static/plots/{l_type}_{plot_object.name}.png"
+        else f"{url_prefix}/static/plots/{l_type}_{plot_object.name}.png"
+
+    if generate_code:
+        write_plot_details(plot_object, l_type, sphinx, img_path)
+
     code_path = f"code/{l_type}_{plot_object.name}.html" if sphinx \
-        else f"{SCRIPT_NAME}mss/code/{l_type}_{plot_object.name}.md"
+        else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{plot_object.name}.md"
     plots[l_type].append(image_md(img_path, plot_object.name, code_path if generate_code else None,
                                   f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
                                                             if plot_object.abstract else "")))
