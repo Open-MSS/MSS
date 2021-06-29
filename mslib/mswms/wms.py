@@ -312,7 +312,7 @@ class WMSServer(object):
 
                         except Exception as e:
                             traceback.print_exc()
-                            logging.error("ERROR: %s %s %s", plot_object.required_datafields, type(e), e)
+                            logging.error("%s %s %s", plot_object.name, type(e), e)
             write_html(sphinx)
             if sphinx and generate_code:
                 write_doc_index()

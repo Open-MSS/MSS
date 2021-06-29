@@ -291,19 +291,93 @@ def import_instructions(plot_object, l_type, layer, native_import=None):
     from_text = f"{l_type}_{plot_object.name}" if not native_import else native_import
     instruction = f"from {from_text} import {plot_object.__class__.__name__}\n" \
                   f"register_{layer}_layers = [] if not register_{layer}_layers else register_{layer}_layers\n"
+    # Generic LS class
     if isinstance(plot_object, LS_DefaultStyle):
         instruction += f"register_{layer}_layers.append(({plot_object.__class__.__name__}, " \
                        f"\"{plot_object.required_datafields[-1][1]}\", \"{plot_object.required_datafields[-1][0]}\", " \
                        f"[next(iter(data))]))"
-    elif isinstance(plot_object, VS_GenericStyle) or isinstance(plot_object, HS_GenericStyle):
-        return None
+    # Generic HS or VS class without custom _prepare_datafields
+    elif (isinstance(plot_object, VS_GenericStyle) or isinstance(plot_object, HS_GenericStyle)) and "pass" in \
+            inspect.getsource(plot_object._prepare_datafields):
+        style = "hsec" if isinstance(plot_object, HS_GenericStyle) else "vsec"
+        if plot_object.contours:
+            for i in range(len(plot_object.contours)):
+                temp = list(plot_object.contours[i])
+                temp[1] = list(temp[1])
+                plot_object.contours[i] = tuple(temp)
+        instruction = f"from mslib.mswms import mpl_{style}_styles\n"
+        instruction += f"name = \"{plot_object.__class__.__name__}\"\n" \
+                       f"ent = \"{plot_object.dataname if hasattr(plot_object, 'dataname') else None}\"\n" \
+                       f"vtype = \"{plot_object.required_datafields[0][0]}\"\n" \
+                       f"add_data = " \
+                       f"{plot_object.required_datafields[1:] if len(plot_object.required_datafields) > 1 else None}\n"\
+                       f"fix_style = {plot_object.styles}\n" \
+                       f"contours = {plot_object.contours}\n"
+        instruction += f"mpl_{style}_styles.make_generic_class(name, ent, vtype, add_data, contours, fix_style)\n"
+        instruction += f"register_{layer}_layers.append((" \
+                       f"getattr(mpl_{style}_styles, \"{plot_object.__class__.__name__}\"), [next(iter(data))]))"
+    # Normal non-generic class
     else:
         instruction += f"register_{layer}_layers.append(({plot_object.__class__.__name__}, [next(iter(data))]))"
 
     return instruction
 
 
-def write_plot_details(plot_object, l_type="top", sphinx=False, image_path=""):
+def source_and_import(plot_object, l_type, layer):
+    """
+    Returns the source code and import instructions for the plot_object
+    """
+    # Imports here due to some circular import issue if imported too soon
+    from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
+    from mslib.mswms.mpl_vsec_styles import VS_GenericStyle
+    from mslib.mswms.mpl_hsec_styles import HS_GenericStyle
+
+    native_import = "mslib" + \
+                    os.path.abspath(inspect.getfile(type(plot_object))).split("mslib")[-1].replace(os.sep, ".")[:-3] \
+        if os.path.join("mslib", "mswms") in os.path.abspath(inspect.getfile(type(plot_object))) \
+        and not ((isinstance(plot_object, HS_GenericStyle) or isinstance(plot_object, VS_GenericStyle)) and
+                        "pass" not in inspect.getsource(plot_object._prepare_datafields)) else None
+
+    import_text = import_instructions(plot_object, l_type, layer)
+    import_text_native = import_instructions(plot_object, l_type, layer, native_import) if native_import else None
+
+    modules = [m for m in inspect.getsource(inspect.getmodule(type(plot_object))).splitlines()
+               if m.startswith("import") or m.startswith("from")]
+    source = code_header + "\n".join(modules) + "\n"
+    # Normal class, not generic
+    if not isinstance(plot_object, VS_GenericStyle) and not isinstance(plot_object, HS_GenericStyle) and \
+            not isinstance(plot_object, LS_DefaultStyle):
+        source += "\n" + "".join(inspect.getsource(type(plot_object)).splitlines(True))
+    # Generic VS or HS class with custom _prepare_datafields
+    elif not isinstance(plot_object, LS_DefaultStyle) and \
+            "pass" not in inspect.getsource(plot_object._prepare_datafields):
+        parent = "HS_GenericStyle" if isinstance(plot_object, HS_GenericStyle) else "VS_GenericStyle"
+        style = "hsec" if isinstance(plot_object, HS_GenericStyle) else "vsec"
+        if plot_object.contours:
+            for i in range(len(plot_object.contours)):
+                temp = list(plot_object.contours[i])
+                temp[1] = list(temp[1])
+                plot_object.contours[i] = tuple(temp)
+        source += f"from mslib.mswms.mpl_{style}_styles import {parent}\n\n"
+        prepare = inspect.getsource(plot_object._prepare_datafields)
+        prepare = prepare.replace(prepare.split("def ")[-1].split(":")[0], "_prepare_datafields(self)")
+        source += f"class {plot_object.__class__.__name__}({parent}):" + "\n"\
+                  + (("    " + "    ".join(prepare.splitlines(True))) if not prepare.startswith("    ") else prepare) \
+                  + "\n    "\
+                  + "\n    ".join([f"{val[0]} = \"{val[1]}\"" if isinstance(val[1], str) else f"{val[0]} = {val[1]}"
+                                   for val in inspect.getmembers(type(plot_object))
+                                   if not (str(val[1]).startswith("<") and str(val[1]).endswith(">")) and
+                                   not (val[0].startswith("__") and val[0].endswith("__")) and
+                                   not val[0] == "_pres_maj" and not val[0] == "_pres_min" and not val[0] == "_" and
+                                   not val[0] == "_plot_countries" and not val[0] == "queryable"])
+    # All other generic classes
+    else:
+        source = None
+
+    return source, import_text, import_text_native
+
+
+def write_plot_details(plot_object, l_type="top", sphinx=False, image_path="", code_path=""):
     """
     Extracts and writes the plots code files at static/code/*
     """
@@ -313,41 +387,33 @@ def write_plot_details(plot_object, l_type="top", sphinx=False, image_path=""):
     if not os.path.exists(os.path.join(location, "code")):
         os.mkdir(os.path.join(location, "code"))
 
-    modules = [m for m in inspect.getsource(inspect.getmodule(type(plot_object))).splitlines()
-               if m.startswith("import") or m.startswith("from")]
-
-    native_import = "mslib" + \
-                    os.path.abspath(inspect.getfile(type(plot_object))).split("mslib")[-1].replace(os.sep, ".")[:-3] \
-        if os.path.join("mslib", "mswms") in os.path.abspath(inspect.getfile(type(plot_object))) else None
-
     if sphinx:
-        write_plot_details_sphinx(plot_object, l_type, layer, modules, native_import)
+        write_plot_details_sphinx(plot_object, l_type, layer)
         return
 
     with open(os.path.join(location, "code", f"{l_type}_{plot_object.name}.md"), "w+") as md:
         md.write(f"![]({image_path})\n\n")
-        instructions = import_instructions(plot_object, l_type, layer)
+        source, instructions, instructions_native = source_and_import(plot_object, l_type, layer)
         if instructions:
             md.write(f"**How to use this plot**  \n"
                      f"Make sure you have the required datafields "
                      f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n")
-            if native_import:
+            if instructions_native:
                 md.write("You can use it as is by appending this code into your `mss_wms_settings.py`:  \n")
-                md.write(f"---\n```python\n{import_instructions(plot_object, l_type, layer, native_import)}\n```"
+                md.write(f"---\n```python\n{instructions_native}\n```"
                          f"\n---\n")
-                md.write("**If you want to modify the plot**  \n")
-            md.write(f"1. [Download this file](/mss/code/{l_type}_{plot_object.name}.md?download=True)  \n"
-                     f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n"
-                     f"3. Append this code into your `mss_wms_settings.py`:  \n")
-            md.write(f"---\n```python\n{instructions}\n```\n---\n")
-            md.write(f"<details><summary>{l_type}_{plot_object.name}.py</summary>\n```python\n" + code_header +
-                     "\n".join(modules) + "\n")
-            md.write("".join(inspect.getsource(type(plot_object)).splitlines(True)) + "\n```\n</details>")
-        else:
-            md.write("This plot was dynamically generated. There are currently no code examples available for it.")
+                if source:
+                    md.write("**If you want to modify the plot**  \n")
+            if source:
+                md.write(f"1. [Download this file]({code_path}?download=True)  \n"
+                         f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n"
+                         f"3. Append this code into your `mss_wms_settings.py`:  \n")
+                md.write(f"---\n```python\n{instructions}\n```\n---\n")
+                md.write(f"<details><summary>{l_type}_{plot_object.name}.py</summary>\n```python\n" + source +
+                         "\n```\n</details>")
 
 
-def write_plot_details_sphinx(plot_object, l_type, layer, modules, native_import):
+def write_plot_details_sphinx(plot_object, l_type, layer):
     """
     Write .rst files with plot code example for the sphinx docs
     """
@@ -355,23 +421,23 @@ def write_plot_details_sphinx(plot_object, l_type, layer, modules, native_import
         os.mkdir(os.path.join(DOCS_LOCATION, "code", "downloads"))
 
     with open(os.path.join(DOCS_LOCATION, "code", f"{l_type}_{plot_object.name}.rst"), "w+") as md:
-        instructions = import_instructions(plot_object, l_type, layer)
+        source, instructions, instructions_native = source_and_import(plot_object, l_type, layer)
         md.write(f"{l_type}_{plot_object.name}\n" + "-" * len(f"{l_type}_{plot_object.name}") + "\n")
-        if instructions:
-            md.write(f".. image:: ../plots/{l_type}_{plot_object.name}.png\n\n")
-            md.write(f"""**How to use this plot**
+        md.write(f".. image:: ../plots/{l_type}_{plot_object.name}.png\n\n")
+        md.write(f"""**How to use this plot**
 
 Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field in plot_object.required_datafields)})
 
 """)
-            if native_import:
-                md.write(f"""You can use it as is by appending this code into your `mss_wms_settings.py`:
+        if instructions_native:
+            md.write(f"""You can use it as is by appending this code into your `mss_wms_settings.py`:
 
 .. code-block:: python
 
-    {"    ".join(import_instructions(plot_object, l_type, layer, native_import).splitlines(True))}
+    {"    ".join(instructions_native.splitlines(True))}
 
-**If you want to modify the plot**""")
+{"**If you want to modify the plot**" if source else ""}""")
+        if source:
             md.write(f"""
 
 1. Download this :download:`file <downloads/{l_type}_{plot_object.name}.py>`
@@ -396,10 +462,7 @@ Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field 
    </details>
             """)
             with open(os.path.join(DOCS_LOCATION, "code", "downloads", f"{l_type}_{plot_object.name}.py"), "w+") as py:
-                py.write(code_header + "\n".join(modules) + "\n\n" +
-                         "".join(inspect.getsource(type(plot_object)).splitlines(True)))
-        else:
-            md.write("This plot was dynamically generated. There are currently no code examples available for it.")
+                py.write(source)
 
 
 def create_linear_plot(xml, file_location):
@@ -445,12 +508,12 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
 
     img_path = f"../_images/{l_type}_{plot_object.name}.png" if sphinx \
         else f"{url_prefix}/static/plots/{l_type}_{plot_object.name}.png"
-
-    if generate_code:
-        write_plot_details(plot_object, l_type, sphinx, img_path)
-
     code_path = f"code/{l_type}_{plot_object.name}.html" if sphinx \
         else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{plot_object.name}.md"
+
+    if generate_code:
+        write_plot_details(plot_object, l_type, sphinx, img_path, code_path)
+
     plots[l_type].append(image_md(img_path, plot_object.name, code_path if generate_code else None,
                                   f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
                                                             if plot_object.abstract else "")))
