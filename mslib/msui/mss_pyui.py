@@ -210,7 +210,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
 
-    def __init__(self, *args):
+    def __init__(self, mscolab_data_dir=None, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
@@ -276,7 +276,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
-        self.mscolab = mscolab.MSSMscolab(parent=self)
+        self.mscolab = mscolab.MSSMscolab(parent=self, data_dir=mscolab_data_dir)
 
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
@@ -357,30 +357,30 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         logging.debug("Contents of WMS_SERVICE_CACHE: %s", wms_control.WMS_SERVICE_CACHE.keys())
         pdlg.close()
 
+    def add_plugin_submenu(self, name, extension, plugin_type="Import"):
+        if plugin_type == "Import":
+            menu = self.menuImportFlightTrack
+            action_name = "actionImportFlightTrack" + clean_string(name)
+            handler = self.handle_import_local
+        elif plugin_type == "Export":
+            menu = self.menuExportActiveFlightTrack
+            action_name = "actionExportFlightTrack" + clean_string(name)
+            handler = self.handle_export_local
+
+        if hasattr(self, action_name):
+            raise ValueError(f"'{action_name}' has already been set!")
+        action = QtWidgets.QAction(self)
+        action.setObjectName(action_name)
+        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
+        action.triggered.connect(functools.partial(handler, name, extension))
+        menu.addAction(action)
+        setattr(self, action_name, action)
+
     def add_plugins(self):
-        def add_plugin_submenu(name, extension, plugin_type="Import"):
-            if plugin_type == "Import":
-                menu = self.menuImportFlightTrack
-                action_name = "actionImportFlightTrack" + clean_string(name)
-                handler = self.handle_import_local
-            elif plugin_type == "Export":
-                menu = self.menuExportActiveFlightTrack
-                action_name = "actionExportFlightTrack" + clean_string(name)
-                handler = self.handle_export_local
-
-            if hasattr(self, action_name):
-                raise ValueError(f"'{action_name}' has already been set!")
-            action = QtWidgets.QAction(self)
-            action.setObjectName(action_name)
-            action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
-            action.triggered.connect(functools.partial(handler, name, extension))
-            menu.addAction(action)
-            setattr(self, action_name, action)
-
-        add_plugin_submenu("FTML", "ftml", plugin_type="Import")
-        add_plugin_submenu("CSV", "csv", plugin_type="Import")
-        add_plugin_submenu("FTML", "ftml", plugin_type="Export")
-        add_plugin_submenu("CSV", "csv", plugin_type="Export")
+        self.add_plugin_submenu("FTML", "ftml", plugin_type="Import")
+        self.add_plugin_submenu("CSV", "csv", plugin_type="Import")
+        self.add_plugin_submenu("FTML", "ftml", plugin_type="Export")
+        self.add_plugin_submenu("CSV", "csv", plugin_type="Export")
         self.actionImportFlightTrackFTML.setVisible(False)
         self.actionExportFlightTrackFTML.setVisible(False)
 
@@ -391,7 +391,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             try:
                 imported_module = importlib.import_module(module)
                 self.import_plugins[extension] = getattr(imported_module, function)
-                add_plugin_submenu(name, extension, plugin_type="Import")
+                self.add_plugin_submenu(name, extension, plugin_type="Import")
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
@@ -407,7 +407,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             try:
                 imported_module = importlib.import_module(module)
                 self.export_plugins[extension] = getattr(imported_module, function)
-                add_plugin_submenu(name, extension, plugin_type="Export")
+                self.add_plugin_submenu(name, extension, plugin_type="Export")
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
@@ -880,6 +880,7 @@ def main():
     application.setApplicationDisplayName("MSS")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSSMainWindow()
+    mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()
     sys.exit(application.exec_())

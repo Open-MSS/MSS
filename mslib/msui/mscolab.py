@@ -439,6 +439,7 @@ class MSSMscolab(QtCore.QObject):
 
     def after_login(self, emailid, url, r):
         self.connect_window.close()
+        self.connect_window = None
         # fill value of mscolab url if found in QSettings storage
         self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}, 'server_settings': {}})
 
@@ -457,7 +458,7 @@ class MSSMscolab(QtCore.QObject):
         self.user_menu = QtWidgets.QMenu()
         # self.user_menu.addAction("Profile")
         # self.user_menu.addAction("Help")
-        self.user_menu.addAction("Logout", self.logout)
+        self.logout_action = self.user_menu.addAction("Logout", self.logout)
         self.ui.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.ui.userOptionsTb.setMenu(self.user_menu)
         self.ui.userOptionsTb.show()
@@ -1300,6 +1301,8 @@ class MSSMscolab(QtCore.QObject):
             self.create_view_msc(_type)
         self.ui.raise_()
         self.ui.activateWindow()
+        # for window in self.active_view_windows[:]:
+        #     window.setFlightTrackModel(self.waypoints_model)
 
     def force_close_view_windows(self):
         for window in self.active_view_windows[:]:
