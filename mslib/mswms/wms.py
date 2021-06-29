@@ -63,7 +63,7 @@ from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
 from mslib.index import app_loader
-from mslib.mswms.gallery_builder import add_image, write_js, write_doc_index, static_location, docs_location
+from mslib.mswms.gallery_builder import add_image, write_html, write_doc_index, STATIC_LOCATION, DOCS_LOCATION
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -214,7 +214,7 @@ class WMSServer(object):
             else:
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
-    def generate_gallery(self, force_regenerate=False, generate_code=False, sphinx=False, plot_list=None,
+    def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
                          all_plots=False):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
@@ -238,11 +238,16 @@ class WMSServer(object):
                 ]
                 self.__init__()
 
-            location = docs_location if sphinx else static_location
-            if force_regenerate and os.path.exists(os.path.join(location, "plots")):
+            location = DOCS_LOCATION if sphinx else STATIC_LOCATION
+            if clear and os.path.exists(os.path.join(location, "plots")):
                 shutil.rmtree(os.path.join(location, "plots"))
             if os.path.exists(os.path.join(location, "code")):
                 shutil.rmtree(os.path.join(location, "code"))
+            if os.path.exists(os.path.join(location, "plots.html")):
+                os.remove(os.path.join(location, "plots.html"))
+
+            if not (create or generate_code or all_plots or plot_list):
+                return
 
             if not plot_list:
                 plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
@@ -307,7 +312,7 @@ class WMSServer(object):
                         except Exception as e:
                             traceback.print_exc()
                             logging.error("ERROR: %s %s %s", plot_object.required_datafields, type(e), e)
-            write_js(sphinx)
+            write_html(sphinx)
             if sphinx and generate_code:
                 write_doc_index()
 

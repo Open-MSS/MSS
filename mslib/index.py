@@ -25,6 +25,7 @@
     limitations under the License.
 """
 
+import sys
 import os
 import codecs
 import mslib
@@ -38,7 +39,7 @@ from flask import Response
 from markdown import Markdown
 from xstatic.main import XStatic
 from mslib.msui.icons import icons
-from mslib.mswms.gallery_builder import static_location
+from mslib.mswms.gallery_builder import STATIC_LOCATION
 
 # set the project root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
@@ -79,7 +80,7 @@ def prefix_route(route_function, prefix='', mask='{0}{1}'):
 
 def app_loader(name):
     APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'), static_url_path="/static",
-                static_folder=static_location)
+                static_folder=STATIC_LOCATION)
     APP.config.from_object(name)
     APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
@@ -103,14 +104,23 @@ def app_loader(name):
         return send_from_directory(base_path, filename)
 
     def get_topmenu():
-        menu = [
-            (url_for('index'), 'Mission Support System',
-             ((url_for('about'), 'About'),
-              (url_for('install'), 'Install'),
-              (url_for("plots"), 'Gallery'),
-              (url_for('help'), 'Help'),
-              )),
-        ]
+        if "mscolab" in " ".join(sys.argv):
+            menu = [
+                (url_for('index'), 'Mission Support System',
+                 ((url_for('about'), 'About'),
+                  (url_for('install'), 'Install'),
+                  (url_for('help'), 'Help'),
+                  )),
+            ]
+        else:
+            menu = [
+                (url_for('index'), 'Mission Support System',
+                 ((url_for('about'), 'About'),
+                  (url_for('install'), 'Install'),
+                  (url_for("plots"), 'Gallery'),
+                  (url_for('help'), 'Help'),
+                  )),
+            ]
 
         return menu
 
@@ -151,17 +161,21 @@ def app_loader(name):
 
     @APP.route("/mss/plots")
     def plots():
-        if static_location != "":
-            _file = os.path.join(static_location, 'plots.js')
+        if STATIC_LOCATION != "" and os.path.exists(os.path.join(STATIC_LOCATION, 'plots.html')):
+            _file = os.path.join(STATIC_LOCATION, 'plots.html')
             content = get_content(_file)
         else:
-            content = "Gallery was not generated for this server."
+            content = "Gallery was not generated for this server.<br>" \
+                      "For further info on how to generate it, run the " \
+                      "<b>gallery --help</b> command line parameter of mswms.<br>" \
+                      "An example of the gallery can be seen " \
+                      "<a href=\"https://mss.readthedocs.io/en/latest/gallery/index.html\">here</a>"
         return render_template("/content.html", act="plots", content=content)
 
     @APP.route("/mss/code/<path:filename>")
     def code(filename):
         download = request.args.get("download", False)
-        _file = os.path.join(static_location, 'code', filename)
+        _file = os.path.join(STATIC_LOCATION, 'code', filename)
         content = get_content(_file)
         if not download:
             return render_template("/content.html", act="code", content=content)

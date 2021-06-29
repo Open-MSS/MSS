@@ -2,7 +2,7 @@
     mslib.mswms.gallery_builder
     ~~~~~~~~~~~~~~~~~~~
 
-    This module contains functions for generating the static/docs/plots.js file, aka the gallery.
+    This module contains functions for generating the plots.html file, aka the gallery.
 
     This file is part of mss.
 
@@ -33,14 +33,17 @@ import inspect
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 
-static_location = ""
+STATIC_LOCATION = ""
 try:
     import mss_wms_settings
-    static_location = os.path.join(os.path.dirname(os.path.abspath(mss_wms_settings.__file__)), "gallery")
+    if hasattr(mss_wms_settings, "_gallerypath"):
+        STATIC_LOCATION = mss_wms_settings._gallerypath
+    else:
+        STATIC_LOCATION = os.path.join(os.path.dirname(os.path.abspath(mss_wms_settings.__file__)), "gallery")
 except ImportError as e:
     logging.warning(f"{e}. Can't generate gallery.")
 
-docs_location = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs", "gallery")
+DOCS_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs", "gallery")
 
 
 code_header = """\"\"\"
@@ -187,9 +190,9 @@ div.gallery img {
 <h3>Plot Gallery</h3>
 
 <div class="tab">
-  <button class="tablinks active" onclick="openTab(event, 'Top View')">Top Views</button>
-  <button class="tablinks" onclick="openTab(event, 'Side View')">Side Views</button>
-  <button class="tablinks" onclick="openTab(event, 'Linear View')">Linear Views</button>
+  <button class="tablinks active" onclick="openTab(event, 'Top-View')">Top Views</button>
+  <button class="tablinks" onclick="openTab(event, 'Side-View')">Side Views</button>
+  <button class="tablinks" onclick="openTab(event, 'Linear-View')">Linear Views</button>
 </div>
 """
 
@@ -227,7 +230,7 @@ def image_md(image_location, caption="", link=None, tooltip=""):
     """
     image = f"""
     <a href="{link}">
-     <img src="{image_location}" style="width:100%"/>
+     <img src="{image_location}" alt="{tooltip}" style="width:100%"/>
     </a>""" if link else f"""<img src="{image_location}" style="width: 100 % "/>"""
     return f"""<div class="gallery">
                  {image}
@@ -241,8 +244,8 @@ def write_doc_index():
     """
     Write index containing all code examples for the sphinx docs
     """
-    with open(os.path.join(docs_location, "code", "index.rst"), "w+") as rst:
-        files = "\n".join(sorted(["   " + f[:-4] for f in os.listdir(os.path.join(docs_location, "code"))
+    with open(os.path.join(DOCS_LOCATION, "code", "index.rst"), "w+") as rst:
+        files = "\n".join(sorted(["   " + f[:-4] for f in os.listdir(os.path.join(DOCS_LOCATION, "code"))
                                   if "index" not in f and ".rst" in f]))
         rst.write(f"""
 Code Examples
@@ -254,25 +257,26 @@ Code Examples
 """)
 
 
-def write_js(sphinx=False):
+def write_html(sphinx=False):
     """
-    Writes the plots.js file containing the gallery
+    Writes the plots.html file containing the gallery
     """
-    location = docs_location if sphinx else static_location
-    js = begin
+    location = DOCS_LOCATION if sphinx else STATIC_LOCATION
+    html = begin
     if sphinx:
-        js = js.replace("<h3>Plot Gallery</h3>", "")
+        html = html.replace("<h3>Plot Gallery</h3>", "")
 
     for l_type in plots:
         style = ""
         if l_type == "Top":
             style = "style=\"display: block;\""
-        js += f"<div id=\"{l_type} View\" class=\"tabcontent\" {style}>"
-        js += "\n".join(plots[l_type])
-        js += "</div>"
+        html += f"<div id=\"{l_type}-View\" class=\"tabcontent\" {style}>"
+        html += "\n".join(plots[l_type])
+        html += "</div>"
 
-    with open(os.path.join(location, "plots.js"), "w+") as md:
-        md.write(js + end)
+    with open(os.path.join(location, "plots.html"), "w+") as file:
+        file.write(html + end)
+        print(os.path.join(location, "plots.html"))
 
 
 def import_instructions(plot_object, l_type, layer, native_import=None):
@@ -304,7 +308,7 @@ def write_plot_details(plot_object, l_type="top", sphinx=False):
     Extracts and writes the plots code files at static/code/*
     """
     layer = "horizontal" if l_type == "Top" else "vertical" if l_type == "Side" else "linear"
-    location = docs_location if sphinx else static_location
+    location = DOCS_LOCATION if sphinx else STATIC_LOCATION
 
     if not os.path.exists(os.path.join(location, "code")):
         os.mkdir(os.path.join(location, "code"))
@@ -347,10 +351,10 @@ def write_plot_details_sphinx(plot_object, l_type, layer, modules, native_import
     """
     Write .rst files with plot code example for the sphinx docs
     """
-    if not os.path.exists(os.path.join(docs_location, "code", "downloads")):
-        os.mkdir(os.path.join(docs_location, "code", "downloads"))
+    if not os.path.exists(os.path.join(DOCS_LOCATION, "code", "downloads")):
+        os.mkdir(os.path.join(DOCS_LOCATION, "code", "downloads"))
 
-    with open(os.path.join(docs_location, "code", f"{l_type}_{plot_object.name}.rst"), "w+") as md:
+    with open(os.path.join(DOCS_LOCATION, "code", f"{l_type}_{plot_object.name}.rst"), "w+") as md:
         instructions = import_instructions(plot_object, l_type, layer)
         md.write(f"{l_type}_{plot_object.name}\n" + "-" * len(f"{l_type}_{plot_object.name}") + "\n")
         if instructions:
@@ -391,7 +395,7 @@ Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field 
 
    </details>
             """)
-            with open(os.path.join(docs_location, "code", "downloads", f"{l_type}_{plot_object.name}.py"), "w+") as py:
+            with open(os.path.join(DOCS_LOCATION, "code", "downloads", f"{l_type}_{plot_object.name}.py"), "w+") as py:
                 py.write(code_header + "\n".join(modules) + "\n\n" +
                          "".join(inspect.getsource(type(plot_object)).splitlines(True)))
         else:
@@ -417,14 +421,14 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
-    if not os.path.exists(static_location) and not sphinx:
-        os.mkdir(static_location)
+    if not os.path.exists(STATIC_LOCATION) and not sphinx:
+        os.mkdir(STATIC_LOCATION)
 
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \
         "Side" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
 
     if plot:
-        location = docs_location if sphinx else static_location
+        location = DOCS_LOCATION if sphinx else STATIC_LOCATION
         if not os.path.exists(os.path.join(location, "plots")):
             os.mkdir(os.path.join(location, "plots"))
         if l_type == "Linear":

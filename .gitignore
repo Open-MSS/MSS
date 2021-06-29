@@ -17,6 +17,6 @@ mslib/mscolab/colabdata/
 docs/_build
 docs/gallery/plots
 docs/gallery/code
-docs/gallery/plots.js
+docs/gallery/plots.html
 build/
 mss.egg-info/

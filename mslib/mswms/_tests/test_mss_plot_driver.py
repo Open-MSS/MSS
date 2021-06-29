@@ -193,7 +193,7 @@ class Test_VSec(object):
         assert noframe != img
 
     def test_VS_gallery_template(self):
-        templates_location = os.path.join(mslib.mswms.gallery_builder.docs_location, "plot_examples")
+        templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)
         from VS_template import VS_Template
 
@@ -481,7 +481,7 @@ class Test_HSec(object):
         assert noframe != img
 
     def test_HS_gallery_template(self):
-        templates_location = os.path.join(mslib.mswms.gallery_builder.docs_location, "plot_examples")
+        templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)
         from HS_template import HS_Template
 

@@ -56,7 +56,7 @@ mslib.mswms.wms.mss_wms_settings.register_horizontal_layers = [(HS_template.HS_T
 mslib.mswms.wms.mss_wms_settings.register_vertical_layers = [(VS_template.VS_Template, dataset)]
 mslib.mswms.wms.mss_wms_settings.register_linear_layers = []
 mslib.mswms.wms.server.__init__()
-mslib.mswms.wms.server.generate_gallery(sphinx=True, force_regenerate=True)
+mslib.mswms.wms.server.generate_gallery(sphinx=True, create=True, clear=True)
 mslib.mswms.gallery_builder.plots = {"Top": [], "Side": [], "Linear": []}
 
 # Generate all other plots

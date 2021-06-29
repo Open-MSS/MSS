@@ -382,16 +382,16 @@ class Test_WMS(object):
     def test_gallery(self):
         tempdir = tempfile.mkdtemp()
         docsdir = tempfile.mkdtemp()
-        mslib.mswms.wms.static_location = tempdir
-        mslib.mswms.gallery_builder.static_location = tempdir
-        mslib.mswms.wms.docs_location = docsdir
-        mslib.mswms.gallery_builder.docs_location = docsdir
+        mslib.mswms.wms.STATIC_LOCATION = tempdir
+        mslib.mswms.gallery_builder.STATIC_LOCATION = tempdir
+        mslib.mswms.wms.DOCS_LOCATION = docsdir
+        mslib.mswms.gallery_builder.DOCS_LOCATION = docsdir
         linear_plots = [[mslib.mswms.wms.server.lsec_drivers, mslib.mswms.wms.server.lsec_layer_registry]]
 
         mslib.mswms.wms.server.generate_gallery(generate_code=True, plot_list=linear_plots)
         assert os.path.exists(os.path.join(tempdir, "plots"))
         assert os.path.exists(os.path.join(tempdir, "code"))
-        assert os.path.exists(os.path.join(tempdir, "plots.js"))
+        assert os.path.exists(os.path.join(tempdir, "plots.html"))
 
         mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
         assert not os.path.exists(os.path.join(tempdir, "code"))
@@ -406,11 +406,11 @@ class Test_WMS(object):
         assert os.path.exists(file)
         assert modified_at == os.path.getmtime(file2)
 
-        mslib.mswms.wms.server.generate_gallery(force_regenerate=True, plot_list=linear_plots)
+        mslib.mswms.wms.server.generate_gallery(clear=True, create=True, plot_list=linear_plots)
         assert modified_at != os.path.getmtime(file2)
 
-        mslib.mswms.wms.server.generate_gallery(force_regenerate=True, generate_code=True, sphinx=True,
+        mslib.mswms.wms.server.generate_gallery(clear=True, generate_code=True, sphinx=True,
                                                 plot_list=linear_plots)
         assert os.path.exists(os.path.join(docsdir, "plots"))
         assert os.path.exists(os.path.join(docsdir, "code"))
-        assert os.path.exists(os.path.join(docsdir, "plots.js"))
+        assert os.path.exists(os.path.join(docsdir, "plots.html"))
