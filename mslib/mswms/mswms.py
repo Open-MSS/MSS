@@ -58,6 +58,10 @@ def main():
     gallery.add_argument("--show-code", action="store_true", default=False,
                          help="Generates plots of all layers not already present, "
                               "and generates code snippets for each plot when clicking on the image")
+    gallery.add_argument("--plot-prefix", default="",
+                         help="Normally the plots should appear at the relative url /static/plots/*.png.\n"
+                              "In case they are prefixed by something, e.g. /demo/static/plots/*.png,"
+                              " please provide the prefix /demo here")
 
     args = parser.parse_args()
 
@@ -84,8 +88,9 @@ def main():
     if args.action == "gallery":
         create = args.create or args.refresh
         clear = args.clear or args.refresh
-        server.generate_gallery(create, clear, args.show_code)
+        server.generate_gallery(create, clear, args.show_code, plot_prefix=args.plot_prefix)
         logging.info("Gallery generation done.")
+        sys.exit()
 
     updater.on_update_available.connect(lambda old, new: logging.info(f"MSS can be updated from {old} to {new}.\nRun"
                                                                       " the --update argument to update the server."))

@@ -276,7 +276,7 @@ def write_html(sphinx=False):
 
     with open(os.path.join(location, "plots.html"), "w+") as file:
         file.write(html + end)
-        print(os.path.join(location, "plots.html"))
+        logging.info(f"plots.html created at {os.path.join(location, 'plots.html')}")
 
 
 def import_instructions(plot_object, l_type, layer, native_import=None):
@@ -417,10 +417,13 @@ def create_linear_plot(xml, file_location):
     fig.savefig(file_location)
 
 
-def add_image(plot, plot_object, generate_code=False, sphinx=False):
+def add_image(plot, plot_object, generate_code=False, sphinx=False, plot_prefix=""):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
+    # Import here due to some circular import issue if imported too soon
+    from mslib.index import SCRIPT_NAME
+
     if not os.path.exists(STATIC_LOCATION) and not sphinx:
         os.mkdir(STATIC_LOCATION)
 
@@ -443,8 +446,9 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False):
         write_plot_details(plot_object, l_type, sphinx)
 
     img_path = f"../_images/{l_type}_{plot_object.name}.png" if sphinx \
-        else f"/static/plots/{l_type}_{plot_object.name}.png"
-    code_path = f"code/{l_type}_{plot_object.name}.html" if sphinx else f"/mss/code/{l_type}_{plot_object.name}.md"
+        else f"{plot_prefix}/static/plots/{l_type}_{plot_object.name}.png"
+    code_path = f"code/{l_type}_{plot_object.name}.html" if sphinx \
+        else f"{SCRIPT_NAME}mss/code/{l_type}_{plot_object.name}.md"
     plots[l_type].append(image_md(img_path, plot_object.name, code_path if generate_code else None,
                                   f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
                                                             if plot_object.abstract else "")))

@@ -215,7 +215,7 @@ class WMSServer(object):
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
     def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
-                         all_plots=False):
+                         all_plots=False, plot_prefix=""):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
@@ -307,7 +307,7 @@ class WMSServer(object):
                                 add_image(plot_driver.plot(), plot_object, generate_code, sphinx)
                             else:
                                 # Plot already exists, skip generation
-                                add_image(None, plot_object, generate_code, sphinx)
+                                add_image(None, plot_object, generate_code, sphinx, plot_prefix=plot_prefix)
 
                         except Exception as e:
                             traceback.print_exc()
