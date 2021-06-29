@@ -268,7 +268,8 @@ class WMSServer(object):
                             if not os.path.exists(os.path.join(location, "plots",
                                                                f"{l_type}_{plot_object.name}.png")):
                                 # Plot doesn't already exist, generate it
-                                file_type = plot_object.required_datafields[0][0]
+                                file_type = next((field[0] for field in plot_object.required_datafields
+                                                  if field[0] != "sfc"), "sfc")
                                 init_time = plot_driver.get_init_times()[-1]
                                 valid_time = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
                                                                          file_type, init_time)[-1]
@@ -290,8 +291,8 @@ class WMSServer(object):
                                             [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
                                     plot_driver.update_plot_parameters(vsec_path=path)
                                 elif driver == self.hsec_drivers:
-                                    elevations = plot_driver.get_elevations(file_type)
-                                    elevation = elevations[len(elevations) // 2] if len(elevations) > 0 else None
+                                    elevations = plot_object.get_elevations()
+                                    elevation = float(elevations[len(elevations) // 2]) if len(elevations) > 0 else None
                                     plot_driver.set_plot_parameters(**kwargs, noframe=False, figsize=[800, 600],
                                                                     crs="EPSG:4326", style="default",
                                                                     bbox=[-15, 35, 30, 65],

@@ -415,6 +415,7 @@ def create_linear_plot(xml, file_location):
     ax.plot(range(numpoints), values)
     ax.set_ylabel(unit)
     fig.savefig(file_location)
+    plt.close(fig)
 
 
 def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix=""):
