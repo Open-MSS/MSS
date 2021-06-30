@@ -267,7 +267,8 @@ class WMSServer(object):
 
                         try:
                             if not os.path.exists(os.path.join(location, "plots",
-                                                               f"{l_type}_{plot_object.name}.png")):
+                                                               f"{l_type}_{dataset if multiple_datasets else ''}"
+                                                               f"{plot_object.name}.png")):
                                 # Plot doesn't already exist, generate it
                                 file_type = next((field[0] for field in plot_object.required_datafields
                                                   if field[0] != "sfc"), "sfc")
