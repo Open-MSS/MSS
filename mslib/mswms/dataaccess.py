@@ -225,9 +225,8 @@ class DefaultDataAccess(NWPDataAccess):
                 raise ValueError(f"variable type {vartype} not available for variable {variable}")
 
     def _parse_file(self, filename):
-        elevations = {"levels": [], "units": None}
+        elevations = {"filename": filename, "levels": [], "units": None}
         with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
-
             time_name, time_var = netCDF4tools.identify_CF_time(dataset)
             init_time = netCDF4tools.num2date(0, time_var.units)
             if not self.uses_inittime_dimension():
@@ -249,7 +248,10 @@ class DefaultDataAccess(NWPDataAccess):
                 raise IOError("Problem with longitude coordinate variable")
 
             if vert_type != "sfc":
-                elevations = {"levels": vert_var[:], "units": getattr(vert_var, "units", "1")}
+                elevations = {
+                    "filename": filename,
+                    "levels": vert_var[:],
+                    "units": getattr(vert_var, "units", "dimensionless")}
                 if vert_type in self._elevations:
                     if len(vert_var[:]) != len(self._elevations[vert_type]["levels"]):
                         raise IOError(f"Number of vertical levels does not fit to levels of "
@@ -420,7 +422,7 @@ class CachedDataAccess(DefaultDataAccess):
                 del self._file_cache[filename]
 
         self._filetree = {}
-        self._elevations = {"sfc": {"filename": None, "levels": []}}
+        self._elevations = {"sfc": {"filename": None, "levels": [], "units": None}}
 
         # Build the tree structure.
         for filename in self._available_files:
@@ -448,5 +450,7 @@ class CachedDataAccess(DefaultDataAccess):
                 except IOError as ex:
                     logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
                     continue
+                if content["vert_type"] not in self._elevations:
+                    self._elevations[content["vert_type"]] = content["elevations"]
                 self._file_cache[filename] = (mtime, content)
             self._add_to_filetree(filename, content)
