@@ -111,7 +111,7 @@ def identify_vertical_axis(dataset):
         name, var = identify_variable(dataset, standard_name)
         orientation = hybrid_orientation(var)
         if var is not None:
-            units = getattr(var, "units", "unknown units")
+            units = getattr(var, "units", "dimensionless")
             result.append((name, var, orientation, units, layertype))
     if len(result) == 0:
         return None, None, None, None, "sfc"
