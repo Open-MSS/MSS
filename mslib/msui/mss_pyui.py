@@ -76,6 +76,7 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
 
     # Class variable to assign a unique ID to each view.
     opened_views = 0
+    open_views = []
 
     def __init__(self, view_window, parent=None, viewsChanged=None, mscolab=False,
                  _type=QtWidgets.QListWidgetItem.UserType):
@@ -83,8 +84,8 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         QActiveViewsListWidgetItem.opened_views += 1
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
-        if mscolab:
-            view_name = f'{view_name} - {view_window.waypoints_model.name} (mscolab)'
+        # if mscolab:
+        #     view_name = f'{view_name} - {view_window.waypoints_model.name} (mscolab)'
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, _type)
 
         view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
@@ -93,6 +94,7 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         self.window = view_window
         self.parent = parent
         self.viewsChanged = viewsChanged
+        QActiveViewsListWidgetItem.open_views.append(view_window)
 
     def view_destroyed(self):
         """Slot that removes this QListWidgetItem from the parent (the
@@ -100,6 +102,10 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         if self.parent is not None:
             self.parent.takeItem(self.parent.row(self))
+            for index, window in enumerate(QActiveViewsListWidgetItem.open_views):
+                if window.identifier == self.window.identifier:
+                    del QActiveViewsListWidgetItem.open_views[index]
+                    break
         if self.viewsChanged is not None:
             self.viewsChanged.emit()
 
@@ -641,11 +647,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     def create_view_handler(self, _type):
         if self.tabWidget.currentIndex() == 0:
-            self.create_view_local(_type)
+            self.create_view(_type, self.active_flight_track, self.listFlightTracks)
         else:
             self.mscolab.create_view_msc(_type)
 
-    def create_view_local(self, _type):
+    def create_view(self, _type, model, parent):
         """Method called when the user selects a new view to be opened. Creates
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
@@ -654,41 +660,48 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
+            view_window = topview.MSSTopViewWindow(model=model, parent=parent)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-            view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
+            view_window = sideview.MSSSideViewWindow(model=model, parent=parent)
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
         elif _type == "tableview":
             # Table view.
-            view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
+            view_window = tableview.MSSTableViewWindow(model=model, parent=parent)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
+            view_window = linearview.MSSLinearViewWindow(model=model, parent=parent)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
-        # Add view window to the listViews pane
-        self.add_view_to_ui(view_window)
 
-    def add_view_to_ui(self, view_window, mscolab=False):
         if view_window is not None:
+            # Set view type to window
+            view_window.view_type = _type
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
             view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             # Open as a non-modal window.
             view_window.show()
             # Add an entry referencing the new view to the list of views.
-            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged, mscolab)
+            # listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged, mscolab)
+            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
             view_window.viewCloses.connect(listitem.view_destroyed)
             self.listViews.setCurrentItem(listitem)
+            # self.active_view_windows.append(view_window)
             self.viewsChanged.emit()
+
+    def get_active_views(self):
+        active_view_windows = []
+        for i in range(self.listViews.count()):
+            active_view_windows.append(self.listViews.item(i).window)
+        return active_view_windows
 
     def activate_sub_window(self, item):
         """When the user clicks on one of the open view or tool windows, this

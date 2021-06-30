@@ -390,10 +390,8 @@ class MSSMscolab(QtCore.QObject):
         self.local_ftml_file = None
         # connection object to interact with sockets
         self.conn = None
-        # store window instances
-        self.active_view_windows = []
         # assign ids to view-window
-        self.view_id = 0
+        # self.view_id = 0
         # project window
         self.chat_window = None
         # Admin Window
@@ -891,7 +889,7 @@ class MSSMscolab(QtCore.QObject):
             self.show_project_options()
 
             # update view window nav elements if open
-            for window in self.active_view_windows:
+            for window in self.ui.get_active_views():
                 _type = window.view_type
                 if self.access_level == "viewer":
                     self.disable_navbar_action_buttons(_type, window)
@@ -1037,6 +1035,10 @@ class MSSMscolab(QtCore.QObject):
                 # show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                 self.logout()
 
+    def change_view_wp_model(self):
+        for window in self.ui.get_active_views():
+            window.setFlightTrackModel(self.waypoints_model)
+
     def show_project_options(self):
         self.ui.projectOptionsCb.clear()
         if self.access_level == "viewer":
@@ -1120,7 +1122,7 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def reload_view_windows(self):
-        for window in self.active_view_windows:
+        for window in self.ui.get_active_views():
             window.setFlightTrackModel(self.waypoints_model)
             if hasattr(window, 'mpl'):
                 try:
@@ -1204,40 +1206,35 @@ class MSSMscolab(QtCore.QObject):
             if self.active_pid is None:
                 return
 
-            for active_window in self.active_view_windows:
-                if active_window.view_type == _type and active_window.waypoints_model.name == self.active_project_name:
-                    active_window.raise_()
-                    active_window.activateWindow()
-                    return
-
             self.waypoints_model.name = self.active_project_name
-            if _type == "topview":
-                view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
-                                                    parent=self.ui.listProjectsMSC,
-                                                    _id=self.view_id)
-            elif _type == "sideview":
-                view_window = sideview.MSSSideViewWindow(model=self.waypoints_model,
-                                                        parent=self.ui.listProjectsMSC,
-                                                        _id=self.view_id)
-            elif _type == "tableview":
-                view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
-                                                        parent=self.ui.listProjectsMSC,
-                                                        _id=self.view_id)
-            elif _type == "linearview":
-                view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
-                                                            parent=self.ui.listProjectsMSC,
-                                                            _id=self.view_id)
-            view_window.view_type = _type
+            view_window = self.ui.create_view(_type, self.waypoints_model, self.ui.listProjectsMSC)
+            # if _type == "topview":
+            #     view_window = topview.MSSTopViewWindow(model=self.waypoints_model,
+            #                                         parent=self.ui.listProjectsMSC,
+            #                                         _id=self.view_id)
+            # elif _type == "sideview":
+            #     view_window = sideview.MSSSideViewWindow(model=self.waypoints_model,
+            #                                             parent=self.ui.listProjectsMSC,
+            #                                             _id=self.view_id)
+            # elif _type == "tableview":
+            #     view_window = tableview.MSSTableViewWindow(model=self.waypoints_model,
+            #                                             parent=self.ui.listProjectsMSC,
+            #                                             _id=self.view_id)
+            # elif _type == "linearview":
+            #     view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
+            #                                                 parent=self.ui.listProjectsMSC,
+            #                                                 _id=self.view_id)
+            # view_window.view_type = _type
             if self.access_level == "viewer":
                 self.disable_navbar_action_buttons(_type, view_window)
 
-            self.ui.add_view_to_ui(view_window, mscolab=True)
-            # view_window.setWindowTitle(f"{view_window.windowTitle()} - {self.active_project_name}")
-            view_window.viewClosesId.connect(self.handle_view_close)
-            self.active_view_windows.append(view_window)
+            # self.ui.add_view_to_ui(view_window, mscolab=True)
+            # # view_window.setWindowTitle(f"{view_window.windowTitle()} - {self.active_project_name}")
+            # view_window.viewClosesId.connect(self.handle_view_close)
+            # self.active_view_windows.append(view_window)
 
-            # increment id_count
-            self.view_id += 1
+            # # increment id_count
+            # self.view_id += 1
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1288,27 +1285,17 @@ class MSSMscolab(QtCore.QObject):
             view_window.cbTools.setEnabled(True)
             view_window.tableWayPoints.setEnabled(True)
 
-    @QtCore.Slot(int)
-    def handle_view_close(self, value):
-        logging.debug("removing stale window")
-        for index, window in enumerate(self.active_view_windows):
-            if window._id == value:
-                del self.active_view_windows[index]
+    # @QtCore.Slot(int)
+    # def handle_view_close(self, value):
+    #     logging.debug("removing stale window")
+    #     for index, window in enumerate(self.active_view_windows):
+    #         if window._id == value:
+    #             del self.active_view_windows[index]
 
-    def change_view_wp_model(self):
-        window_types = [window.view_type for window in self.active_view_windows]
-        self.force_close_view_windows()
-        for _type in window_types:
-            self.create_view_msc(_type)
-        self.ui.raise_()
-        self.ui.activateWindow()
-        # for window in self.active_view_windows[:]:
-        #     window.setFlightTrackModel(self.waypoints_model)
-
-    def force_close_view_windows(self):
-        for window in self.active_view_windows[:]:
-            window.handle_force_close()
-        self.active_view_windows = []
+    # def force_close_view_windows(self):
+    #     for window in self.active_view_windows:
+    #         window.handle_force_close()
+    #     self.active_view_windows = []
 
     def logout(self):
         # switch to local tab
@@ -1336,7 +1323,6 @@ class MSSMscolab(QtCore.QObject):
             self.conn.disconnect()
             self.conn = None
         # close all hanging window
-        self.force_close_view_windows()
         self.close_external_windows()
         self.hide_project_options()
 
