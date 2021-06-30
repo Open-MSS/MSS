@@ -227,7 +227,6 @@ class DefaultDataAccess(NWPDataAccess):
     def _parse_file(self, filename):
         elevations = {"levels": [], "units": None}
         with netCDF4.Dataset(os.path.join(self._root_path, filename)) as dataset:
-
             time_name, time_var = netCDF4tools.identify_CF_time(dataset)
             init_time = netCDF4tools.num2date(0, time_var.units)
             if not self.uses_inittime_dimension():
@@ -448,5 +447,7 @@ class CachedDataAccess(DefaultDataAccess):
                 except IOError as ex:
                     logging.error("Skipping file '%s' (%s: %s)", filename, type(ex), ex)
                     continue
+                if content["vert_type"] not in self._elevations:
+                    self._elevations[content["vert_type"]] = content["elevations"]
                 self._file_cache[filename] = (mtime, content)
             self._add_to_filetree(filename, content)
