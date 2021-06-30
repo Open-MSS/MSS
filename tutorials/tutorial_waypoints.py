@@ -78,6 +78,8 @@ def automate_waypoints(obj=None):
         print("\nException : Enable Shortcuts for your system or try again!")
     pag.hotkey('ctrl', 'h')
     pag.sleep(5)
+
+    # Adding waypoints
     try:
         x, y = pag.locateCenterOnScreen('pictures/add_waypoint.PNG')
         pag.click(x, y)
@@ -89,23 +91,103 @@ def automate_waypoints(obj=None):
     pag.click(812, 412, interval=2)
     pag.sleep(5)
 
-    pag.moveTo(900, 450)
-    pag.click(900, 450, interval=2)
-    pag.sleep(5)
-
+    pag.moveTo(915, 560)
+    pag.click(915, 560, interval=2)
     pag.moveTo(1000, 650)
-    pag.click(900, 450, interval=2)
+    pag.click(1000, 650, interval=2)
     pag.sleep(5)
 
+    # Moving waypoints
     try:
         x, y = pag.locateCenterOnScreen('pictures/move_waypoint.PNG')
         pag.click(x,y, interval=3)
     except Exception:
         print("\n Exception : Move Waypoint button could not be located on the screen")
-    pag.click(1000, 650, interval=3)
-    pag.keyDown()
 
-    print("\nAutomation is done upto this point. Will continue it next.")
+    pag.moveTo(1000, 650, duration=1)
+    pag.dragTo(1200, 400, duration=1)
+    pag.moveTo(915, 560, duration=1)
+    pag.dragTo(950, 321, duration=1)
+
+    # Deleting waypoints
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/remove_waypoint.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Remove Waypoint button could not be located on the screen")
+    pag.moveTo(950, 321, duration=1)
+    pag.click(950, 321, duration=1)
+    pag.press('enter')
+
+    # Changing map to Global
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/europe(cyl).PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Map change dropdown could not be located on the screen")
+    pag.press('down', presses=2, interval=2)
+    pag.press('enter', interval=1)
+    pag.sleep(5)
+
+    # Zooming into the map
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/zoom.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Zoom button could not be located on the screen")
+    pag.moveTo(712, 347)
+    pag.dragRel(500, 200, duration=2)
+    pag.sleep(5)
+
+    # Panning into the map
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/pan.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Pan button could not be located on the screen")
+    pag.moveRel(400, 400, duration=1)
+    pag.dragRel(-100, -50, duration=2)
+    pag.sleep(5)
+
+    pag.moveTo(600, 400, duration=1)
+    pag.dragRel(90, 50, duration=2)
+    pag.sleep(5)
+
+    # Switching to the previous appearance of the map
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/previous.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Previous button could not be located on the screen")
+    pag.sleep(5)
+
+    # Switching to the next appearance of the map
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/next.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Next button could not be located on the screen")
+    pag.sleep(5)
+
+    # Resetting the map to the original size
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/home.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Home button could not be located on the screen")
+    pag.sleep(5)
+
+    # Saving the figure
+    try:
+        x, y = pag.locateCenterOnScreen('pictures/save.PNG')
+        pag.click(x,y, interval=3)
+    except Exception:
+        print("\n Exception : Save button could not be located on the screen")
+    pag.sleep(3)
+    pag.write('demodata.png', interval=3)
+    pag.press('enter', interval=1)
+
+    print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 
     # Close Everything!
     try:
@@ -131,6 +213,7 @@ def automate_waypoints(obj=None):
             pag.press('q')
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
+    pag.press('q')
 
 
 def main():

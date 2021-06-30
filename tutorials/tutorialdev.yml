@@ -1,5 +1,0 @@
-name: gsoc
-channels:
-  - conda-forge
-  - defaults
-prefix: C:\Users\HRITHIK\anaconda3\envs\gsoc\envs\gsoc
