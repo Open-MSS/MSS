@@ -81,7 +81,6 @@ requirements:
     - sqlite <3.35.1
     - gpxpy >=1.4.2
     - metpy
-    - conda-verify
 
 test:
   imports:
