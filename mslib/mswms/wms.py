@@ -255,6 +255,7 @@ class WMSServer(object):
                              [self.hsec_drivers, self.hsec_layer_registry]]
 
             for driver, registry in plot_list:
+                multiple_datasets = len(driver) > 1
                 for dataset in driver:
                     plot_driver = driver[dataset]
                     if dataset not in registry:
@@ -305,10 +306,12 @@ class WMSServer(object):
                                     # else:
                                     #     bbox[3] = bbox[1] + abs(bbox[0] - bbox[2])
                                     plot_driver.update_plot_parameters(bbox=bbox)
-                                add_image(plot_driver.plot(), plot_object, generate_code, sphinx, url_prefix=url_prefix)
+                                add_image(plot_driver.plot(), plot_object, generate_code, sphinx, url_prefix=url_prefix,
+                                          dataset=dataset if multiple_datasets else "")
                             else:
                                 # Plot already exists, skip generation
-                                add_image(None, plot_object, generate_code, sphinx, url_prefix=url_prefix)
+                                add_image(None, plot_object, generate_code, sphinx, url_prefix=url_prefix,
+                                          dataset=dataset if multiple_datasets else "")
 
                         except Exception as e:
                             traceback.print_exc()
