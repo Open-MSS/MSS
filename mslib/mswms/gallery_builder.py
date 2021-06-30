@@ -303,7 +303,7 @@ def import_instructions(plot_object, l_type, layer, native_import=None, dataset=
         if plot_object.contours:
             for i in range(len(plot_object.contours)):
                 temp = list(plot_object.contours[i])
-                if temp[1]:
+                if len(temp) > 1 and temp[1] is not None:
                     temp[1] = list(temp[1])
                     plot_object.contours[i] = tuple(temp)
         instruction = f"from mslib.mswms import mpl_{style}_styles\n"
@@ -358,7 +358,7 @@ def source_and_import(plot_object, l_type, layer, dataset=""):
         if plot_object.contours:
             for i in range(len(plot_object.contours)):
                 temp = list(plot_object.contours[i])
-                if temp[1]:
+                if len(temp) > 1 and temp[1] is not None:
                     temp[1] = list(temp[1])
                     plot_object.contours[i] = tuple(temp)
         source += f"from mslib.mswms.mpl_{style}_styles import {parent}\n\n"

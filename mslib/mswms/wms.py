@@ -274,6 +274,7 @@ class WMSServer(object):
                                 init_time = plot_driver.get_init_times()[-1]
                                 valid_time = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
                                                                          file_type, init_time)[-1]
+                                style = plot_object.styles[0][0] if plot_object.styles else None
                                 kwargs = {"plot_object": plot_object,
                                           "init_time": init_time,
                                           "valid_time": valid_time}
@@ -286,7 +287,7 @@ class WMSServer(object):
                                 elif driver == self.vsec_drivers:
                                     plot_driver.set_plot_parameters(**kwargs, vsec_path=[[0, 0], [1, 1]],
                                                                     vsec_numpoints=201, figsize=[800, 600],
-                                                                    vsec_path_connection="linear", style="default",
+                                                                    vsec_path_connection="linear", style=style,
                                                                     noframe=False, bbox=[101, 1050, 10, 180])
                                     path = [[min(plot_driver.lat_data), min(plot_driver.lon_data)],
                                             [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
@@ -295,7 +296,7 @@ class WMSServer(object):
                                     elevations = plot_object.get_elevations()
                                     elevation = float(elevations[len(elevations) // 2]) if len(elevations) > 0 else None
                                     plot_driver.set_plot_parameters(**kwargs, noframe=False, figsize=[800, 600],
-                                                                    crs="EPSG:4326", style="default",
+                                                                    crs="EPSG:4326", style=style,
                                                                     bbox=[-15, 35, 30, 65],
                                                                     level=elevation)
                                     bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
