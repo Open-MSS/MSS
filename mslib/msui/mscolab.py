@@ -507,7 +507,7 @@ class MSSMscolab(QtCore.QObject):
                 else:
                     self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
-            def set_exported_file():
+            def browse():
                 file_path = get_open_filename(
                     self.ui, "Open ftml file", "", "Flight Track Files (*.ftml)")
                 if file_path is not None:
@@ -525,7 +525,7 @@ class MSSMscolab(QtCore.QObject):
             self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
             self.add_proj_dialog.path.textChanged.connect(check_and_enable_project_accept)
             self.add_proj_dialog.description.textChanged.connect(check_and_enable_project_accept)
-            self.add_proj_dialog.browse.clicked.connect(set_exported_file)
+            self.add_proj_dialog.browse.clicked.connect(browse)
             self.proj_diag.show()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -614,7 +614,8 @@ class MSSMscolab(QtCore.QObject):
                 self.chat_window.activateWindow()
                 return
 
-            self.chat_window = mp.MSColabProjectWindow(self.token, self.active_pid, self.user, self.active_project_name,
+            self.chat_window = mp.MSColabProjectWindow(self.token, self.active_pid,
+                                                        self.user, self.active_project_name,
                                                         self.access_level, self.conn,
                                                         mscolab_server_url=self.mscolab_server_url)
             self.chat_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
