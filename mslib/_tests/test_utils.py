@@ -259,7 +259,7 @@ class TestConverter(object):
     def test_convert_pressure_to_vertical_axis_measure(self):
         assert utils.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
         assert utils.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400
-        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == 2.4668986099864068
+        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == pytest.approx(2.466631)
 
 
 class TestLatLonPoints(object):
