@@ -21,6 +21,7 @@ Topics
    docker_based_installation
    components
    development
+   gallery/index
    authors
    help
 
