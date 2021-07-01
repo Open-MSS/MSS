@@ -273,7 +273,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.add_plugins()
 
         # hide/show options while switching tabs
-        self.tabWidget.currentChanged.connect(self.tab_switched_handler)
+        self.tabWidget.currentChanged.connect(self.tab_switch_handler)
 
         preload_urls = config_loader(dataset="WMS_preload")
         self.preload_wms(preload_urls)
@@ -292,7 +292,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
 
-    def tab_switched_handler(self, index):
+    def tab_switch_handler(self, index):
         if index == 0:
             local = True
             self.actionImportFlightTrackFTML.setVisible(False)
@@ -557,17 +557,17 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            displayed at a time).
         """
         self.mscolab.switch_to_local()
+        self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
-            if view_item.window._id is None:
-                view_item.window.setFlightTrackModel(self.active_flight_track)
+            view_item.window.setFlightTrackModel(self.active_flight_track)
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
-        self.tab_switched_handler(0)
+        self.tab_switch_handler(0)
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()

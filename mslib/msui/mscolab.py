@@ -1005,9 +1005,12 @@ class MSSMscolab(QtCore.QObject):
             font.setBold(True)
             item.setFont(font)
 
-            self.change_view_wp_model()
+            # set new waypoints model to open views
+            for window in self.ui.get_active_views():
+                window.setFlightTrackModel(self.waypoints_model)
+
             self.ui.switch_to_mscolab()
-            self.ui.tab_switched_handler(1)
+            self.ui.tab_switch_handler(1)
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1034,10 +1037,6 @@ class MSSMscolab(QtCore.QObject):
             else:
                 # show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                 self.logout()
-
-    def change_view_wp_model(self):
-        for window in self.ui.get_active_views():
-            window.setFlightTrackModel(self.waypoints_model)
 
     def show_project_options(self):
         self.ui.projectOptionsCb.clear()
@@ -1300,6 +1299,12 @@ class MSSMscolab(QtCore.QObject):
     def logout(self):
         # switch to local tab
         self.ui.tabWidget.setCurrentIndex(0)
+
+        # # make mainwindow modal to select flighttrack before working on the open views
+        # if len(self.ui.get_active_views()) and self.active_pid is not None:
+        #     show_popup(self.ui, "Success", "Please select a flighttrack to continue working on the views", icon=1)
+        #     self.ui.setWindowModality(QtCore.Qt.ApplicationModal)
+
         # delete token and show login widget-items
         self.token = None
         # delete active-project-id
@@ -1330,6 +1335,8 @@ class MSSMscolab(QtCore.QObject):
         if self.mscolab_server_url in self.settings["auth"].keys():
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
+
+        self.ui.activate_flight_track(self.ui.listFlightTracks.item(0))
 
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, merge_wp_ui.Ui_MergeWaypointsDialog):
