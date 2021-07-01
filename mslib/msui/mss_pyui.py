@@ -229,7 +229,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
 
-        self.tabWidget.setCurrentIndex(0)
         self.config_editor = None
 
         # Setting up Local Tab
@@ -272,9 +271,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Add default and plugins from settings
         self.add_plugins()
 
-        # hide/show options while switching tabs
-        self.tabWidget.currentChanged.connect(self.tab_switch_handler)
-
         preload_urls = config_loader(dataset="WMS_preload")
         self.preload_wms(preload_urls)
 
@@ -291,40 +287,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
-
-    def tab_switch_handler(self, index):
-        if index == 0:
-            local = True
-            self.actionImportFlightTrackFTML.setVisible(False)
-            self.actionExportFlightTrackFTML.setVisible(False)
-            self.menuImportFlightTrack.setEnabled(True)
-            self.menuExportActiveFlightTrack.setEnabled(True)
-            view_visible = True if self.active_flight_track is not None else False
-        else:
-            local = False
-            self.actionImportFlightTrackFTML.setVisible(True)
-            self.actionExportFlightTrackFTML.setVisible(True)
-            view_visible = self.mscolab.active_pid is not None
-            mscolab_active = self.mscolab.token is not None and view_visible
-            self.menuImportFlightTrack.setEnabled(mscolab_active)
-            self.menuExportActiveFlightTrack.setEnabled(mscolab_active)
-            if mscolab_active and self.mscolab.access_level == "viewer":
-                # viewer has no import access to server
-                self.menuImportFlightTrack.setEnabled(False)
-
-        # enable/disable view menu based on active flight track/project
-        self.actionTopView.setEnabled(view_visible)
-        self.actionSideView.setEnabled(view_visible)
-        self.actionTableView.setEnabled(view_visible)
-        self.actionLinearView.setEnabled(view_visible)
-
-        # enable/disable flight track menus
-        self.actionNewFlightTrack.setEnabled(local)
-        self.actionOpenFlightTrack.setEnabled(local)
-        self.actionActivateSelectedFlightTrack.setEnabled(local)
-        self.actionSaveActiveFlightTrack.setEnabled(local)
-        self.actionSaveActiveFlightTrackAs.setEnabled(local)
-        self.actionCloseSelectedFlightTrack.setEnabled(local)
 
     @staticmethod
     def preload_wms(urls):
@@ -362,6 +324,25 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 break
         logging.debug("Contents of WMS_SERVICE_CACHE: %s", wms_control.WMS_SERVICE_CACHE.keys())
         pdlg.close()
+
+    def menu_handler(self):
+        self.menuImportFlightTrack.setEnabled(True)
+        # self.menuExportActiveFlightTrack.setEnabled(True)
+        if not self.local_active and self.mscolab.access_level == "viewer":
+            # viewer has no import access to server
+            self.menuImportFlightTrack.setEnabled(False)
+
+        # enable/disable FTML import/export actions
+        self.actionImportFlightTrackFTML.setVisible(not self.local_active)
+        self.actionExportFlightTrackFTML.setVisible(not self.local_active)
+
+        # enable/disable flight track menus
+        self.actionNewFlightTrack.setEnabled(self.local_active)
+        self.actionOpenFlightTrack.setEnabled(self.local_active)
+        self.actionActivateSelectedFlightTrack.setEnabled(self.local_active)
+        self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
+        self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
+        self.actionCloseSelectedFlightTrack.setEnabled(self.local_active)
 
     def add_plugin_submenu(self, name, extension, plugin_type="Import"):
         if plugin_type == "Import":
@@ -440,7 +421,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             delattr(self, full_name)
 
     def handle_import_local(self, name, extension):
-        if self.tabWidget.currentIndex() == 0:
+        if self.local_active:
             function = self.import_plugins[extension]
             filename = get_open_filename(
                 self, "Import Flight Track",
@@ -470,7 +451,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.mscolab.handle_import_msc(name, extension)
 
     def handle_export_local(self, name, extension):
-        if self.tabWidget.currentIndex() == 0:
+        if self.local_active:
             function = self.export_plugins[extension]
             default_filename = f'{os.path.join(self.last_save_directory, self.active_flight_track.name)}.{extension}'
             filename = get_save_filename(
@@ -557,7 +538,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
            displayed at a time).
         """
         self.mscolab.switch_to_local()
-        self.setWindowModality(QtCore.Qt.NonModal)
+        # self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
@@ -567,19 +548,18 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listFlightTracks.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
-        self.tab_switch_handler(0)
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
         self.activate_flight_track(item)
 
     def switch_to_mscolab(self):
+        self.local_active = False
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
-        # set active fligt track to none
-        # to disable menu actions while switch tabs
-        self.active_flight_track = None
+        # disable appropriate menu options
+        self.menu_handler()
 
     def save_flight_track(self):
         """Slot for the 'Save Active Flight Track As' menu entry.
@@ -646,12 +626,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 self.listFlightTracks.takeItem(self.listFlightTracks.currentRow())
 
     def create_view_handler(self, _type):
-        if self.tabWidget.currentIndex() == 0:
+        if self.local_active:
             self.create_view(_type, self.active_flight_track, self.listFlightTracks)
         else:
             self.mscolab.create_view_msc(_type)
 
-    def create_view(self, _type, model, parent):
+    def create_view(self, _type, model):
         """Method called when the user selects a new view to be opened. Creates
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
@@ -660,23 +640,23 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSSTopViewWindow(model=model, parent=parent)
+            view_window = topview.MSSTopViewWindow(model=model)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-            view_window = sideview.MSSSideViewWindow(model=model, parent=parent)
+            view_window = sideview.MSSSideViewWindow(model=model)
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
         elif _type == "tableview":
             # Table view.
-            view_window = tableview.MSSTableViewWindow(model=model, parent=parent)
+            view_window = tableview.MSSTableViewWindow(model=model)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSSLinearViewWindow(model=model, parent=parent)
+            view_window = linearview.MSSLinearViewWindow(model=model)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
