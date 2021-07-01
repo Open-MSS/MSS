@@ -270,8 +270,9 @@ class WMSServer(object):
                                                                f"{l_type}_{dataset if multiple_datasets else ''}"
                                                                f"{plot_object.name}.png")):
                                 # Plot doesn't already exist, generate it
-                                file_type = next((field[0] for field in plot_object.required_datafields
-                                                  if field[0] != "sfc"), "sfc")
+                                file_types = [field[0] for field in plot_object.required_datafields
+                                              if field[0] != "sfc"]
+                                file_type = file_types[0] if file_types else "sfc"
                                 init_time = plot_driver.get_init_times()[-1]
                                 valid_time = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
                                                                          file_type, init_time)[-1]

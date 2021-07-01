@@ -65,17 +65,18 @@ class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         pass
 
-    def add_colorbar(self, contour, label=None, tick_levels=None, width="3%", height="30%", format=None):
+    def add_colorbar(self, contour, label=None, tick_levels=None, width="3%", height="30%", cb_format=None,
+                     fraction=0.05, pad=0.08, shrink=0.7, loc=4, extend="both", tick_position="left"):
         if not self.noframe:
-            cbar = self.fig.colorbar(contour, fraction=0.05, pad=0.08, shrink=0.7)
+            cbar = self.fig.colorbar(contour, fraction=fraction, pad=pad, shrink=shrink)
             cbar.set_label(label)
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                self.bm.ax, width=width, height=height, loc=4)
+                self.bm.ax, width=width, height=height, loc=loc)
             self.fig.colorbar(
                 contour, cax=axins1, orientation="vertical",
-                ticks=tick_levels, extend="both", format=format)
-            axins1.yaxis.set_ticks_position("left")
+                ticks=tick_levels, extend=extend, format=cb_format)
+            axins1.yaxis.set_ticks_position(tick_position)
             make_cbar_labels_readable(self.fig, axins1)
 
 

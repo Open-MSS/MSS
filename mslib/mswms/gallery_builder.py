@@ -300,12 +300,15 @@ def import_instructions(plot_object, l_type, layer, native_import=None, dataset=
     elif (isinstance(plot_object, VS_GenericStyle) or isinstance(plot_object, HS_GenericStyle)) and "pass" in \
             inspect.getsource(plot_object._prepare_datafields):
         style = "hsec" if isinstance(plot_object, HS_GenericStyle) else "vsec"
+
+        # Convert range to list, since numpy arrays string representation is unparseable
         if plot_object.contours:
             for i in range(len(plot_object.contours)):
                 temp = list(plot_object.contours[i])
                 if len(temp) > 1 and temp[1] is not None:
                     temp[1] = list(temp[1])
                     plot_object.contours[i] = tuple(temp)
+
         instruction = f"from mslib.mswms import mpl_{style}_styles\n"
         instruction += f"name = \"{plot_object.__class__.__name__}\"\n" \
                        f"ent = \"{plot_object.dataname if hasattr(plot_object, 'dataname') else None}\"\n" \
@@ -355,12 +358,15 @@ def source_and_import(plot_object, l_type, layer, dataset=""):
             "pass" not in inspect.getsource(plot_object._prepare_datafields):
         parent = "HS_GenericStyle" if isinstance(plot_object, HS_GenericStyle) else "VS_GenericStyle"
         style = "hsec" if isinstance(plot_object, HS_GenericStyle) else "vsec"
+
+        # Convert range to list, since numpy arrays string representation is unparseable
         if plot_object.contours:
             for i in range(len(plot_object.contours)):
                 temp = list(plot_object.contours[i])
                 if len(temp) > 1 and temp[1] is not None:
                     temp[1] = list(temp[1])
                     plot_object.contours[i] = tuple(temp)
+
         source += f"from mslib.mswms.mpl_{style}_styles import {parent}\n\n"
         prepare = inspect.getsource(plot_object._prepare_datafields)
         prepare = prepare.replace(prepare.split("def ")[-1].split(":")[0], "_prepare_datafields(self)")

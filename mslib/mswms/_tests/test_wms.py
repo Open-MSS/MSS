@@ -379,9 +379,9 @@ class Test_WMS(object):
         assert mslib.mswms.wms.mss_wms_settings.__file__ is not None
         assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
 
-    def test_gallery(self):
-        tempdir = tempfile.mkdtemp()
-        docsdir = tempfile.mkdtemp()
+    def test_gallery(self, tmpdir):
+        tempdir = tmpdir.mkdir("static")
+        docsdir = tmpdir.mkdir("docs")
         mslib.mswms.wms.STATIC_LOCATION = tempdir
         mslib.mswms.gallery_builder.STATIC_LOCATION = tempdir
         mslib.mswms.wms.DOCS_LOCATION = docsdir
