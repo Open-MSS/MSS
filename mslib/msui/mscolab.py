@@ -260,18 +260,19 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.loginButton.setEnabled(True)
             else:
                 show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
-        except requests.exceptions.ConnectionError:
-            logging.debug("MSColab server isn't active")
-            show_popup(self, "Error", "MSColab server isn't active")
+        except requests.exceptions.SSLError:
+            logging.debug("Certificate Verification Failed")
+            show_popup(self, "Error", "Certificate Verification Failed")
         except requests.exceptions.InvalidSchema:
             logging.debug("invalid schema of url")
             show_popup(self, "Error", "Invalid Url Scheme!")
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
             show_popup(self, "Error", "Invalid URL")
-        except requests.exceptions.SSLError:
-            logging.debug("Certificate Verification Failed")
-            show_popup(self, "Error", "Certificate Verification Failed")
+        # ConnectionError is a superclass of other errors, best to put it in the bottom and first catch the others
+        except requests.exceptions.ConnectionError:
+            logging.debug("MSColab server isn't active")
+            show_popup(self, "Error", "MSColab server isn't active")
         except Exception as e:
             logging.debug("Error %s", str(e))
             show_popup(self, "Error", "Some unexpected error occurred. Please try again.")
@@ -966,7 +967,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             view_window = linearview.MSSLinearViewWindow(model=self.waypoints_model,
                                                          parent=self.listProjects,
                                                          _id=self.id_count)
-            view_window.view_type = "tableview"
+            view_window.view_type = "linearview"
         if self.access_level == "viewer":
             self.disable_navbar_action_buttons(_type, view_window)
 
@@ -986,7 +987,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         function disables some control, used if access_level is not appropriate
         """
-        if _type == "topview" or _type == "sideview":
+        if _type == "topview" or _type == "sideview" or _type == "linearview":
             actions = view_window.mpl.navbar.actions()
             for action in actions:
                 action_text = action.text()
@@ -1009,7 +1010,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
 
         function enables some control, used if access_level is appropriate
         """
-        if _type == "topview" or _type == "sideview":
+        if _type == "topview" or _type == "sideview" or _type == "linearview":
             actions = view_window.mpl.navbar.actions()
             for action in actions:
                 action_text = action.text()
@@ -1101,6 +1102,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
                     show_popup(self, "Success", "New Waypoints Saved To Server!", icon=1)
+            self.merge_dialog.close()
             self.merge_dialog = None
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
@@ -1145,6 +1147,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
                     show_popup(self, "Success", "New Waypoints Fetched To Local File!", icon=1)
+            self.merge_dialog.close()
             self.merge_dialog = None
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
@@ -1271,6 +1274,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
         for index, window in enumerate(self.active_windows):
             if window._id == value:
                 del self.active_windows[index]
+                self.raise_()
 
     def setIdentifier(self, identifier):
         self.identifier = identifier

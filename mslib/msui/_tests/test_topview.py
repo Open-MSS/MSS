@@ -313,6 +313,9 @@ class Test_TopViewWMS(object):
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.image_displayed)
-        QtWidgets.QApplication.processEvents()
+        assert self.window.getView().map.image is not None
+        self.window.getView().set_map_appearance({})
+        self.window.getView().clear_figure()
+        assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()
         assert mockbox.critical.call_count == 0

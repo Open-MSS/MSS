@@ -31,7 +31,7 @@ import pytest
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
-from PyQt5 import QtCore, QtTest, QtWidgets, Qt
+from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import mscolab_start_server
 
 
@@ -103,7 +103,7 @@ class Test_MscolabProject(object):
         self._send_message("**test message**")
         self._send_message("**test message**")
         self._activate_context_menu_action(Actions.COPY)
-        assert Qt.QApplication.clipboard().text() == "**test message**"
+        assert QtWidgets.QApplication.clipboard().text() == "**test message**"
 
     def test_reply_message(self):
         self._send_message("**test message**")
