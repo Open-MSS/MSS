@@ -117,7 +117,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             mcc = bm.contourf(self.lonmesh, self.latmesh, data['medium_cloud_area_fraction'],
                               np.arange(0.2, 1.1, 0.1), cmap=plt.cm.summer_r)
             self.add_colorbar(mcc, width="2%" if self.style == "TOT" else "3%",
-                              format='' if self.style == "TOT" else "%.1f")
+                              cb_format='' if self.style == "TOT" else "%.1f")
 
         if self.style in ["HIGH", "TOT"]:
             hcc = bm.contourf(self.lonmesh, self.latmesh, data['high_cloud_area_fraction'],
@@ -125,7 +125,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
             bm.contour(self.lonmesh, self.latmesh, data['high_cloud_area_fraction'],
                        [0.2], colors="blue", linestyles="dotted")
             self.add_colorbar(hcc, width="1%" if self.style == "TOT" else "3%",
-                              format='' if self.style == "TOT" else "%.1f")
+                              cb_format='' if self.style == "TOT" else "%.1f")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, data['air_pressure_at_sea_level'],

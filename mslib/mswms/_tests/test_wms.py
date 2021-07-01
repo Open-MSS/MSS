@@ -28,7 +28,6 @@
 
 import mock
 import os
-import tempfile
 import mslib.mswms.wms
 import mslib.mswms.gallery_builder
 import mslib.mswms.mswms as mswms
