@@ -29,6 +29,7 @@
 import logging
 from xml.dom.minidom import getDOMImplementation
 import matplotlib as mpl
+from pint import Quantity
 
 from mslib.mswms import mss_2D_sections
 from mslib.utils import convert_to
@@ -126,7 +127,10 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         node = xmldoc.createElement("Data")
         node.setAttribute("num_waypoints", f"{len(self.y_values)}")
         node.setAttribute("unit", self.unit)
-        data_str = ",".join([str(val) for val in self.y_values])
+        if isinstance(self.y_values[0], Quantity):
+            data_str = ",".join([str(val.magnitude) for val in self.y_values])
+        else:
+            data_str = ",".join([str(val) for val in self.y_values])
 
         node.appendChild(xmldoc.createTextNode(data_str))
         xmldoc.documentElement.appendChild(node)
