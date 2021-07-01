@@ -9,7 +9,7 @@
 2. Software requirement
   | Python
   | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
-  
+
 
 3. Skill set
   | Knowledge of git & github
@@ -22,7 +22,7 @@ Setting Up local Environement
 ============================
 Forking the Repo
 ============================
-1. Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window. 
+1. Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window.
 
 2. Kindly wait till it gets forked.
 
@@ -145,7 +145,7 @@ Create an environment and install the whole mss package dependencies then remove
 
   $ conda create -n mssdev mamba
   $ conda activate mssdev
-  $ mamba install mss=4.0.1 --only-deps
+  $ mamba install mss=$mss_version --only-deps
 
 You can also use conda to install mss, but mamba is a way faster.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
@@ -282,7 +282,7 @@ If you don't have a stable branch, create one first or change to that branch::
 Merging stable into develop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Bug fixes we have done in stable we need to merge regulary into develop too:: 
+Bug fixes we have done in stable we need to merge regulary into develop too::
 
    git checkout stable
    git pull git@github.com:Open-MSS/MSS.git stable
