@@ -26,6 +26,7 @@
 import pyautogui as pag
 import multiprocessing
 import sys
+import datetime
 from sys import platform
 from tutorials import screenrecorder as sr
 from mslib.msui import mss_pyui
@@ -68,7 +69,10 @@ def automate_waypoints(obj=None):
     This is the main automating script of the MSS waypoints tutorial which will be recorded and saved
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
+    # Giving time for loading of the MSS GUI.
     pag.sleep(15)
+
+    # Maximizing the window
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'win32':
             pag.hotkey('win', 'up')
@@ -82,25 +86,27 @@ def automate_waypoints(obj=None):
     # Adding waypoints
     try:
         x, y = pag.locateCenterOnScreen('pictures/add_waypoint.PNG')
-        pag.click(x, y)
+        pag.click(x, y, interval=2)
     except Exception:
         print("\nException : Clickable button/option not found on the screen.")
     pag.moveTo(712, 347)
     pag.click(712, 347, interval=2)
+    pag.sleep(1)
     pag.moveTo(812, 412)
     pag.click(812, 412, interval=2)
-    pag.sleep(5)
+    pag.sleep(1)
 
     pag.moveTo(915, 560)
     pag.click(915, 560, interval=2)
+    pag.sleep(1)
     pag.moveTo(1000, 650)
     pag.click(1000, 650, interval=2)
-    pag.sleep(5)
+    pag.sleep(3)
 
     # Moving waypoints
     try:
         x, y = pag.locateCenterOnScreen('pictures/move_waypoint.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Move Waypoint button could not be located on the screen")
 
@@ -112,27 +118,35 @@ def automate_waypoints(obj=None):
     # Deleting waypoints
     try:
         x, y = pag.locateCenterOnScreen('pictures/remove_waypoint.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Remove Waypoint button could not be located on the screen")
     pag.moveTo(950, 321, duration=1)
     pag.click(950, 321, duration=1)
-    pag.press('enter')
+    pag.sleep(3)
+    if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+        pag.press('enter', interval=1)
+    elif platform == 'darwin':
+        pag.press('return', interval=1)
+    pag.sleep(2)
 
     # Changing map to Global
     try:
         x, y = pag.locateCenterOnScreen('pictures/europe(cyl).PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Map change dropdown could not be located on the screen")
     pag.press('down', presses=2, interval=2)
-    pag.press('enter', interval=1)
+    if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+        pag.press('enter', interval=1)
+    elif platform == 'darwin':
+        pag.press('return', interval=1)
     pag.sleep(5)
 
     # Zooming into the map
     try:
         x, y = pag.locateCenterOnScreen('pictures/zoom.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Zoom button could not be located on the screen")
     pag.moveTo(712, 347)
@@ -142,7 +156,7 @@ def automate_waypoints(obj=None):
     # Panning into the map
     try:
         x, y = pag.locateCenterOnScreen('pictures/pan.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Pan button could not be located on the screen")
     pag.moveRel(400, 400, duration=1)
@@ -156,7 +170,7 @@ def automate_waypoints(obj=None):
     # Switching to the previous appearance of the map
     try:
         x, y = pag.locateCenterOnScreen('pictures/previous.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Previous button could not be located on the screen")
     pag.sleep(5)
@@ -164,7 +178,7 @@ def automate_waypoints(obj=None):
     # Switching to the next appearance of the map
     try:
         x, y = pag.locateCenterOnScreen('pictures/next.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Next button could not be located on the screen")
     pag.sleep(5)
@@ -172,7 +186,7 @@ def automate_waypoints(obj=None):
     # Resetting the map to the original size
     try:
         x, y = pag.locateCenterOnScreen('pictures/home.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Home button could not be located on the screen")
     pag.sleep(5)
@@ -180,12 +194,17 @@ def automate_waypoints(obj=None):
     # Saving the figure
     try:
         x, y = pag.locateCenterOnScreen('pictures/save.PNG')
-        pag.click(x,y, interval=3)
+        pag.click(x,y, interval=2)
     except Exception:
         print("\n Exception : Save button could not be located on the screen")
     pag.sleep(3)
-    pag.write('demodata.png', interval=3)
-    pag.press('enter', interval=1)
+    current_time = datetime.datetime.now().strftime('%d-%m-%Y %H-%M-%S')
+    fig_filename = f'Fig_{current_time}.PNG'
+    pag.write(fig_filename, interval=1)
+    if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+        pag.press('enter', interval=1)
+    elif platform == 'darwin':
+        pag.press('return', interval=1)
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 

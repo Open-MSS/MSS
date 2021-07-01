@@ -112,25 +112,6 @@ class ScreenRecorder:
                 if cv2.waitKey(max(int(surplus * frame_time_ms), 1)) & 0xFF == ord('q'):
                     break
 
-    def capture2(self):
-        """
-        Captures the frames of the screen at the rate of fps frames/second and writes into the
-        video writer object with the defined fourcc, codec and colour format.
-        """
-        with mss.mss() as sct:
-            bbox = {"top": 0, "left": 0, "width": self.width, "height": self.height}
-            self.start_rec_time = time.time()
-            print(f"Starting to record with FPS value {self.fps} ...")
-            while self.record:
-                img = sct.grab(bbox)
-                img_np = np.array(img)
-                img_final = cv2.cvtColor(img_np, cv2.COLOR_RGBA2RGB)
-                cv2.imshow(self.window_name, img_final)
-                self.recorded_video.write(img_final)
-                # Exits the screen capturing when user press 'q'
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
-
     def stop_capture(self):
         """
         When the screen is not being captured, this method is called to release the video writer
