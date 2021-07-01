@@ -45,7 +45,6 @@ class LS_DefaultStyle(AbstractLinearSectionStyle):
         abbreviation = "".join([text[0] for text in self.variable.split("_")])
         self.name = f"LS_{str.upper(abbreviation)}"
         self.title = f"{self.variable} Linear Plot"
-        self.abstract = f"{self.variable}"
 
 
 class LS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):

@@ -80,7 +80,13 @@ dimensionless
  0.25 0.2
 vertically_integrated_probability_of_wcb_occurrence
 dimensionless
- 0.25 0.2"""
+ 0.25 0.2
+tropopause_altitude
+km
+ 10 3
+secondary_tropopause_altitude
+km
+ 12 3"""
 
 _PROFILES_TEXT = """\
 air_pressure
@@ -891,7 +897,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 
 '''
         if detailed_information:
-            simple_server_config = '''# -*- coding: utf-8 -*-
+            simple_server_config = f'''# -*- coding: utf-8 -*-
 """
 
     mss_wms_settings
@@ -978,7 +984,8 @@ import mslib.mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
 
-_datapath = r"{data_dir}"
+_gallerypath = r"{os.path.abspath(os.path.join(self.data_fs.root_path, "..", "gallery"))}"
+_datapath = r"{self.data_fs.root_path}"
 
 data = {{
     "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
@@ -1054,7 +1061,6 @@ if mpl_lsec_styles is not None:
         (mpl_lsec_styles.LS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
-            simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)
         else:
             simple_server_config = '''"""
 simple server config for demodata
@@ -1196,7 +1202,11 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                 ("U", "eastward_wind"),
                 ("V", "northward_wind"),
                 ("W", "lagrangian_tendency_of_air_pressure"),
-                ("Q", "specific_humidity")):
+                ("Q", "specific_humidity"),
+                ("GPH", "geopotential_height"),
+                ("THETA", "air_potential_temperature"),
+                ("O3", "mole_fraction_of_ozone_in_air"),
+                ("DIV", "divergence_of_wind")):
             self.generate_file(
                 "hybrid", varname, "ml",
                 (("time", times), ("hybrid", np.arange(0, 18)), ("latitude", lats), ("longitude", lons)),

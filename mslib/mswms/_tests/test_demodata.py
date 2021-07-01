@@ -39,7 +39,7 @@ class TestDemodata(object):
         assert ROOT_FS.exists(u'.')
         assert DATA_FS.exists(u'.')
         assert SERVER_CONFIG_FS.exists(SERVER_CONFIG_FILE)
-        assert len(DATA_FS.listdir(u'.')) == 19
+        assert len(DATA_FS.listdir(u'.')) == 23
 
     def test_server_config_file(self):
         imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE_PATH)
