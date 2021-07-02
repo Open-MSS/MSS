@@ -28,9 +28,8 @@
 
 from past.builtins import basestring
 
-import imp
 import numpy as np
-from mslib._tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE, SERVER_CONFIG_FILE_PATH
+from mslib._tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE
 import mslib.mswms.demodata as demodata
 
 
@@ -40,9 +39,6 @@ class TestDemodata(object):
         assert DATA_FS.exists(u'.')
         assert SERVER_CONFIG_FS.exists(SERVER_CONFIG_FILE)
         assert len(DATA_FS.listdir(u'.')) == 23
-
-    def test_server_config_file(self):
-        imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE_PATH)
 
     def test_get_profile(self):
         mean, std = demodata.get_profile("air_pressure", [1000, 10000, 50000], "air_temperature")
