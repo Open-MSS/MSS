@@ -335,13 +335,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionImportFlightTrackFTML.setVisible(not self.local_active)
         self.actionExportFlightTrackFTML.setVisible(not self.local_active)
 
-        # enable/disable flight track menus
-        self.actionNewFlightTrack.setEnabled(self.local_active)
-        self.actionOpenFlightTrack.setEnabled(self.local_active)
-        self.actionActivateSelectedFlightTrack.setEnabled(self.local_active)
-        self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
-        self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
-        self.actionCloseSelectedFlightTrack.setEnabled(self.local_active)
+        # # enable/disable flight track menus
+        # self.actionNewFlightTrack.setEnabled(self.local_active)
+        # self.actionOpenFlightTrack.setEnabled(self.local_active)
+        # self.actionActivateSelectedFlightTrack.setEnabled(self.local_active)
+        # self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
+        # self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
+        # self.actionCloseSelectedFlightTrack.setEnabled(self.local_active)
 
     def add_plugin_submenu(self, name, extension, plugin_type="Import"):
         if plugin_type == "Import":
@@ -507,8 +507,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
         listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
-        # Activate new item
-        self.activate_flight_track(listitem)
+        # # Activate new item
+        # self.activate_flight_track(listitem)
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
@@ -770,15 +770,16 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
+            # cleanup mscolab widgets
+            if self.mscolab.token is not None:
+                self.mscolab.logout()
             # Table View stick around after MainWindow closes - maybe some dangling reference?
             # This removes them for sure!
             while self.listViews.count() > 0:
                 self.listViews.item(0).window.handle_force_close()
             self.listViews.clear()
             self.listFlightTracks.clear()
-            # cleanup mscolab widgets
-            if self.mscolab.token is not None:
-                self.mscolab.logout()
+            # close configuration editor
             if self.config_editor is not None:
                 self.config_editor.close()
             event.accept()
@@ -874,6 +875,8 @@ def main():
     mainwindow = MSSMainWindow()
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
+    mainwindow.listFlightTracks.setCurrentRow(0)
+    mainwindow.activate_selected_flight_track()
     mainwindow.show()
     sys.exit(application.exec_())
 

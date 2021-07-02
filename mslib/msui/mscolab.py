@@ -43,7 +43,7 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
-from mslib.msui import sideview, tableview, topview, linearview
+# from mslib.msui import sideview, tableview, topview, linearview
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -371,16 +371,19 @@ class MSSMscolab(QtCore.QObject):
         # hide mscolab related widgets
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
-        self.ui.addProjectBtn.hide()
+        self.ui.actionAddProject.setEnabled(False)
         self.hide_project_options()
-        self.ui.actionShareProject.setVisible(False)
 
         # connect project options menu actions
+        self.ui.actionAddProject.triggered.connect(self.add_project_handler)
         self.ui.actionChat.triggered.connect(self.project_options_handler)
         self.ui.actionVersionHistory.triggered.connect(self.project_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.project_options_handler)
-        self.ui.actionShareProject.triggered.connect(self.project_options_handler)
         self.ui.actionDeleteProject.triggered.connect(self.project_options_handler)
+
+        # connect slot for handling project options combobox
+        self.ui.workLocallyCheckbox.stateChanged.connect(self.handle_work_locally_toggle)
+        self.ui.serverOptionsCb.currentIndexChanged.connect(self.server_options_handler)
 
         # if token is None, not authorized, else authorized
         self.token = None
@@ -472,12 +475,8 @@ class MSSMscolab(QtCore.QObject):
         # self.icon = QtGui.QIcon()
         # self.icon.addPixmap(self.pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
         # self.userOptionsTb.setIcon(self.icon)
-        # show add project button here
-        self.ui.addProjectBtn.show()
-        self.ui.addProjectBtn.clicked.connect(self.add_project_handler)
-        # connect slot for handling project options combobox
-        self.ui.workLocallyCheckbox.stateChanged.connect(self.handle_work_locally_toggle)
-        self.ui.serverOptionsCb.currentIndexChanged.connect(self.server_options_handler)
+        # enable add project menu action
+        self.ui.actionAddProject.setEnabled(True)
 
         # Populate open projects list
         self.add_projects_to_ui()
@@ -597,8 +596,6 @@ class MSSMscolab(QtCore.QObject):
             self.open_version_history_window()
         elif self.sender() == self.ui.actionManageUsers:
             self.open_admin_window()
-        elif self.sender() == self.ui.actionShareProject:
-            pass
         elif self.sender() == self.ui.actionDeleteProject:
             self.handle_delete_project()
 
@@ -716,14 +713,14 @@ class MSSMscolab(QtCore.QObject):
                                                                     self.user['username'], self.active_project_name,
                                                                     'mscolab_project.ftml'))
                 self.ui.workingStatusLabel.setText(
-                    self.ui.tr("Working On: Local File. Your changes are only available to you."
+                    self.ui.tr("Working On: Local File.\nYour changes are only available to you."
                             "To save your changes with everyone, use the \"Save to Server\" button."))
                 self.ui.serverOptionsCb.show()
                 self.reload_local_wp()
             else:
                 self.local_ftml_file = None
                 self.ui.workingStatusLabel.setText(
-                    self.ui.tr("Working On: Shared File. All your changes will be shared with everyone."
+                    self.ui.tr("Working On: Shared File.\nAll your changes will be shared with everyone."
                             "Turn on work locally to work on local flight track file"))
                 self.ui.serverOptionsCb.hide()
                 self.waypoints_model = None
@@ -906,7 +903,7 @@ class MSSMscolab(QtCore.QObject):
             self.active_pid = None
             self.access_level = None
             self.active_project_name = None
-            self.ui.workingStatusLabel.hide()
+            # self.ui.workingStatusLabel.setEnabled(False)
             self.force_close_view_windows()
             self.close_external_windows()
             self.hide_project_options()
@@ -969,8 +966,9 @@ class MSSMscolab(QtCore.QObject):
 
     def set_active_pid(self, item):
         if self.verify_user_token():
-            if item.p_id == self.active_pid:
-                return
+            if not self.ui.local_active:
+                if item.p_id == self.active_pid:
+                    return
 
             # close all hanging window
             self.close_external_windows()
@@ -990,10 +988,10 @@ class MSSMscolab(QtCore.QObject):
             # set active flightpath here
             self.load_wps_from_server()
             # display working status
-            self.ui.workingStatusLabel.setText(self.ui.tr("Working On: Shared File."
+            self.ui.workingStatusLabel.setText(self.ui.tr("Working On: Shared File.\n"
                                                 "All your changes will be shared with everyone."
                                                 "Turn on work locally to work on local flight track file"))
-            self.ui.workingStatusLabel.show()
+            # self.ui.workingStatusLabel.show()
             # enable access level specific widgets
             self.show_project_options()
 
@@ -1014,8 +1012,8 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def switch_to_local(self):
+        self.ui.local_active = True
         if self.active_pid is not None:
-            self.ui.local_active = True
             if self.verify_user_token():
                 # change font style for selected
                 font = QtGui.QFont()
@@ -1034,26 +1032,24 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.actionShareProject.setEnabled(False)
-        self.ui.actionDeleteProject.setEnabled(False)
+        self.ui.menuProjectProperties.setEnabled(False)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
 
-        project_opt_list = ['Project Options']
         if self.access_level in ["creator", "admin", "collaborator"]:
             if self.ui.workLocallyCheckbox.isChecked():
                 self.ui.actionChat.setEnabled(True)
             else:
                 self.ui.actionChat.setEnabled(True)
                 self.ui.actionVersionHistory.setEnabled(True)
-            self.ui.workLocallyCheckbox.show()
+            self.ui.workLocallyCheckbox.setEnabled(True)
         else:
             if self.version_window is not None:
                 self.version_window.close()
             if self.chat_window is not None:
                 self.chat_window.close()
-            self.ui.workLocallyCheckbox.hide()
+            self.ui.workLocallyCheckbox.setEnabled(False)
             self.ui.serverOptionsCb.hide()
 
         if self.access_level in ["creator", "admin"]:
@@ -1063,9 +1059,7 @@ class MSSMscolab(QtCore.QObject):
                 self.admin_window.close()
 
         if self.access_level in ["creator"]:
-            project_opt_list.extend(['Share Project', 'Delete Project'])
-            self.ui.actionShareProject.setEnabled(True)
-            self.ui.actionDeleteProject.setEnabled(True)
+            self.ui.menuProjectProperties.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 
@@ -1073,12 +1067,11 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.actionShareProject.setEnabled(False)
-        self.ui.actionDeleteProject.setEnabled(False)
-        # self.ui.projectOptionsCb.hide()
-        self.ui.workingStatusLabel.hide()
-        self.ui.workLocallyCheckbox.hide()
+        self.ui.menuProjectProperties.setEnabled(False)
+        self.ui.workLocallyCheckbox.setEnabled(False)
         self.ui.serverOptionsCb.hide()
+        # change working status label
+        self.ui.workingStatusLabel.setText(self.ui.tr("No Project Selected"))
 
     def request_wps_from_server(self):
         if self.verify_user_token():
@@ -1263,7 +1256,8 @@ class MSSMscolab(QtCore.QObject):
             view_window.tableWayPoints.setEnabled(True)
 
     def logout(self):
-        self.switch_to_local()
+        self.ui.local_active = True
+        self.ui.menu_handler()
         # delete token and show login widget-items
         self.token = None
         # delete active-project-id
@@ -1281,7 +1275,8 @@ class MSSMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.connectBtn.show()
-        self.ui.addProjectBtn.hide()
+        # self.ui.addProjectBtn.hide()
+        self.ui.actionAddProject.setEnabled(False)
         # disconnect socket
         if self.conn is not None:
             self.conn.disconnect()
