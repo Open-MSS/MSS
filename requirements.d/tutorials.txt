@@ -1,0 +1,6 @@
+# This file may be used to create an environment using:
+# $ conda create --name <env> --file <this file>
+# platform: win-64
+opencv=4.5.2=py39hcbf5309_0
+pyautogui=0.9.48=py39hde42818_1
+python-mss=6.1.0=pyhd3deb0d_0
