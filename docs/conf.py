@@ -123,7 +123,8 @@ release = __version__
 if "/home/docs/checkouts" in " ".join(sys.argv):
     mss_search = subprocess.run(["conda", "search", "-c", "conda-forge", "mss"], stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, encoding="utf8").stdout
-    mss_search = "   ".join([line for line in mss_search.splitlines(True) if line.startswith("mss ")][-2:])
+    # mss_search is inside a code block, reflect indentation
+    mss_search = (" " * 3).join([line for line in mss_search.splitlines(True) if line.startswith("mss ")][-2:])
 
     for file in os.listdir():
         if file.endswith(".rst"):
