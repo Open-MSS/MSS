@@ -263,6 +263,12 @@ class Test_Mscolab(object):
         self._create_project("/", "Description Alpha")
         assert mockbox.return_value.showMessage.call_count == 5
         assert self.window.listProjects.model().rowCount() == 1
+        self._create_project("reproduce-test", "Description Test")
+        assert self.window.listProjects.model().rowCount() == 2
+        self._activate_project_at_index(0)
+        assert self.window.active_project_name == "Alpha"
+        self._activate_project_at_index(1)
+        assert self.window.active_project_name == "reproduce-test"
 
     @mock.patch("mslib.msui.mscolab.MSCOLAB_AuthenticationDialog.exec_", return_value=QtWidgets.QDialog.Accepted)
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")
