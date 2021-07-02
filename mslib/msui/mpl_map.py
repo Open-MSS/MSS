@@ -132,16 +132,18 @@ class MapCanvas(basemap.Basemap):
 
         self.image = None
 
-        # Print CRS identifier and project name into figure.
-        if self.crs is not None and self.project_name is not None:
-            self.crs_text = self.ax.figure.text(0, 0, f"{self.project_name}\n{self.crs}")
+        # Print project name and CRS identifier into figure.
+        crs_text = ""
+        if self.project_name is not None:
+            crs_text += self.project_name
+        if self.crs is not None:
+            if len(crs_text) > 0:
+                crs_text += "\n"
+            crs_text += self.crs
+        if hasattr(self, "crs_text"):  # update existing textbox
+            self.crs_text.set_text(crs_text)
         else:
-            # Print only CRS identifier into the figure.
-            if self.crs is not None:
-                if hasattr(self, "crs_text"):
-                    self.crs_text.set_text(self.crs)
-                else:
-                    self.crs_text = self.ax.figure.text(0, 0, self.crs)
+            self.crs_text = self.ax.figure.text(0, 0, crs_text)
 
         if self.appearance["draw_graticule"]:
             pass
