@@ -66,6 +66,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         self.data_access = data_access_object
         self.dataset = None
         self.plot_object = None
+        self.filenames = []
 
     def __del__(self):
         """
@@ -89,6 +90,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         if len(self.plot_object.required_datafields) == 0:
             logging.debug("no datasets required.")
             self.dataset = None
+            self.filenames = []
             self.init_time = None
             self.fc_time = None
             self.times = np.array([])
@@ -114,13 +116,10 @@ class MSSPlotDriver(metaclass=ABCMeta):
         # Check if a dataset is open and if it contains the requested times.
         # (a dataset will only be open if the used layer has not changed,
         # i.e. the required variables have not changed as well).
-        if self.dataset is not None:
-            logging.debug("checking on open dataset.")
-            if self.init_time == init_time:
-                logging.debug("\tinitialisation time ok (%s).", init_time)
-                if fc_time in self.times:
-                    logging.debug("\tforecast valid time contained (%s).", fc_time)
-                    return
+        if (self.dataset is not None) and (self.init_time == init_time) and (fc_time in self.times):
+            logging.debug("\tinit time correct and forecast valid time contained (%s).", fc_time)
+            if not self.data_access.is_reload_required(self.filenames):
+                return
             logging.debug("need to re-open input files.")
             self.dataset.close()
             self.dataset = None
@@ -129,16 +128,16 @@ class MSSPlotDriver(metaclass=ABCMeta):
         # requested time:
 
         # Create the names of the files containing the required parameters.
-        filenames = []
+        self.filenames = []
         for vartype, var, _ in self.plot_object.required_datafields:
             filename = self.data_access.get_filename(
                 var, vartype, init_time, fc_time, fullpath=True)
-            if filename not in filenames:
-                filenames.append(filename)
+            if filename not in self.filenames:
+                self.filenames.append(filename)
             logging.debug("\tvariable '%s' requires input file '%s'",
                           var, os.path.basename(filename))
 
-        if len(filenames) == 0:
+        if len(self.filenames) == 0:
             raise ValueError("no files found that correspond to the specified "
                              "datafields. Aborting..")
 
@@ -147,7 +146,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         # Open NetCDF files as one dataset with common dimensions.
         logging.debug("opening datasets.")
         dsKWargs = self.data_access.mfDatasetArgs()
-        dataset = netCDF4tools.MFDatasetCommonDims(filenames, **dsKWargs)
+        dataset = netCDF4tools.MFDatasetCommonDims(self.filenames, **dsKWargs)
 
         # Load and check time dimension. self.dataset will remain None
         # if an Exception is raised here.

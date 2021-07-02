@@ -15,4 +15,5 @@ sphinx
 sphinx_rtd_theme
 gitpython
 gevent
+pynco
 conda-verify
