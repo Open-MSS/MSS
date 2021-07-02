@@ -279,6 +279,7 @@
      <string>&amp;Help</string>
     </property>
     <addaction name="actionShortcuts"/>
+    <addaction name="actionMSColab"/>
     <addaction name="actionUpdater"/>
     <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
@@ -447,11 +448,21 @@
     <string>&amp;Delete Project</string>
    </property>
   </action>
+  <action name="actionMSColab">
+   <property name="text">
+    <string>&amp;MSColab</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>connectBtn</tabstop>
   <tabstop>userOptionsTb</tabstop>
+  <tabstop>listFlightTracks</tabstop>
   <tabstop>listViews</tabstop>
+  <tabstop>addProjectBtn</tabstop>
+  <tabstop>listProjectsMSC</tabstop>
+  <tabstop>workLocallyCheckbox</tabstop>
+  <tabstop>serverOptionsCb</tabstop>
  </tabstops>
  <resources/>
  <connections>

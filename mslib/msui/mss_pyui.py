@@ -230,8 +230,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             logging.debug("AttributeError, ImportError Exception %s", error)
 
         self.config_editor = None
-
-        # Setting up Local Tab
+        self.local_active = True
         self.new_flight_track_counter = 0
 
         # Reference to the flight track that is currently displayed in the views.
@@ -627,7 +626,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     def create_view_handler(self, _type):
         if self.local_active:
-            self.create_view(_type, self.active_flight_track, self.listFlightTracks)
+            self.create_view(_type, self.active_flight_track)
         else:
             self.mscolab.create_view_msc(_type)
 

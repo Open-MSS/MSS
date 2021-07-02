@@ -166,6 +166,8 @@ class Ui_MSSMainWindow(object):
         self.actionShareProject.setObjectName("actionShareProject")
         self.actionDeleteProject = QtWidgets.QAction(MSSMainWindow)
         self.actionDeleteProject.setObjectName("actionDeleteProject")
+        self.actionMSColab = QtWidgets.QAction(MSSMainWindow)
+        self.actionMSColab.setObjectName("actionMSColab")
         self.menuFile.addAction(self.actionNewFlightTrack)
         self.menuFile.addAction(self.actionOpenFlightTrack)
         self.menuFile.addSeparator()
@@ -183,6 +185,7 @@ class Ui_MSSMainWindow(object):
         self.menuFile.addSeparator()
         self.menuFile.addAction(self.actionQuit)
         self.menuHelp.addAction(self.actionShortcuts)
+        self.menuHelp.addAction(self.actionMSColab)
         self.menuHelp.addAction(self.actionUpdater)
         self.menuHelp.addAction(self.actionOnlineHelp)
         self.menuHelp.addAction(self.actionAboutMSUI)
@@ -205,7 +208,12 @@ class Ui_MSSMainWindow(object):
         self.actionQuit.triggered.connect(MSSMainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MSSMainWindow)
         MSSMainWindow.setTabOrder(self.connectBtn, self.userOptionsTb)
-        MSSMainWindow.setTabOrder(self.userOptionsTb, self.listViews)
+        MSSMainWindow.setTabOrder(self.userOptionsTb, self.listFlightTracks)
+        MSSMainWindow.setTabOrder(self.listFlightTracks, self.listViews)
+        MSSMainWindow.setTabOrder(self.listViews, self.addProjectBtn)
+        MSSMainWindow.setTabOrder(self.addProjectBtn, self.listProjectsMSC)
+        MSSMainWindow.setTabOrder(self.listProjectsMSC, self.workLocallyCheckbox)
+        MSSMainWindow.setTabOrder(self.workLocallyCheckbox, self.serverOptionsCb)
 
     def retranslateUi(self, MSSMainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -261,6 +269,7 @@ class Ui_MSSMainWindow(object):
         self.actionManageUsers.setText(_translate("MSSMainWindow", "&Manage Users"))
         self.actionShareProject.setText(_translate("MSSMainWindow", "&Share Project"))
         self.actionDeleteProject.setText(_translate("MSSMainWindow", "&Delete Project"))
+        self.actionMSColab.setText(_translate("MSSMainWindow", "&MSColab"))
 
 
 if __name__ == "__main__":

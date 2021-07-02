@@ -1286,13 +1286,16 @@ class MSSMscolab(QtCore.QObject):
         if self.conn is not None:
             self.conn.disconnect()
             self.conn = None
+        # close all hanging window
+        self.close_external_windows()
+        self.hide_project_options()
 
         # delete mscolab http_auth settings for the url
         if self.mscolab_server_url in self.settings["auth"].keys():
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
-        # activate first item in the open flighttrack list
+        # activate first local flighttrack after logging out
         self.ui.listFlightTracks.setCurrentRow(0)
         self.ui.activate_selected_flight_track()
 
