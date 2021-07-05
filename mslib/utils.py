@@ -599,9 +599,9 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
     if vertical_axis == "pressure":
         return float(pressure / 100)
     elif vertical_axis == "flight level":
-        return pressure2flightlevel(pressure * units.Pa)
+        return pressure2flightlevel(pressure * units.Pa).magnitude
     elif vertical_axis == "pressure altitude":
-        return pressure2flightlevel(pressure * units.Pa).to(units.km)
+        return pressure2flightlevel(pressure * units.Pa).to(units.km).magnitude
     else:
         return pressure
 

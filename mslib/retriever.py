@@ -144,7 +144,7 @@ def main():
         params["basemap"].update(config["predefined_map_sections"][section]["map"])
         wps = load_from_ftml(filename)
         wp_lats, wp_lons, wp_locs = [[x[i] for x in wps] for i in [0, 1, 3]]
-        wp_presss = [mslib.thermolib.flightlevel2pressure(wp[2] * units.hft) for wp in wps]
+        wp_presss = [mslib.thermolib.flightlevel2pressure(wp[2] * units.hft).magnitude for wp in wps]
         for url, layer, style, elevation in config["automated_plotting"]["hsecs"]:
             fig.clear()
             ax = fig.add_subplot(111, zorder=99)

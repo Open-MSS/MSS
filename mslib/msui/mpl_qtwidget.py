@@ -719,7 +719,7 @@ class MplSideViewCanvas(MplCanvas):
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
 
                 self.ceiling_alt = self.ax.plot(
-                    xs, thermolib.flightlevel2pressure(np.asarray(ys) * units.hft),
+                    xs, thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude,
                     color="k", ls="--")
                 self.update_ceiling(
                     self.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
@@ -759,7 +759,7 @@ class MplSideViewCanvas(MplCanvas):
         # Plot lines indicating flight level altitude.
         ax = self.ax
         for level in self.flightlevels:
-            pressure = thermolib.flightlevel2pressure(level * units.hft)
+            pressure = thermolib.flightlevel2pressure(level * units.hft).magnitude
             self.fl_label_list.append(ax.axhline(pressure, color='k'))
             self.fl_label_list.append(ax.text(0.1, pressure, f"FL{level:d}"))
         self.draw()

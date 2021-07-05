@@ -698,7 +698,7 @@ class VPathInteractor(PathInteractor):
             return
         y = event.ydata
         wpm = self.waypoints_model
-        flightlevel = float(pressure2flightlevel(y * units.Pa))
+        flightlevel = float(pressure2flightlevel(y * units.Pa).magnitude)
         [lat, lon], best_index = self.get_lat_lon(event)
         loc = find_location(lat, lon)  # skipped tolerance which uses appropriate_epsilon_km
         if loc is not None:
