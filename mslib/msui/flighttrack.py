@@ -107,7 +107,7 @@ class Waypoint(object):
             self.lat = lat
             self.lon = lon
         self.flightlevel = flightlevel
-        self.pressure = thermolib.flightlevel2pressure(flightlevel * units.hft)
+        self.pressure = thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude
         self.distance_to_prev = 0.
         self.distance_total = 0.
         self.comments = comments

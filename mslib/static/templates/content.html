@@ -1,5 +1,12 @@
   {% extends "theme.html" %} {% block body %}
   <div class="container">
+    <style>
+        @media (min-width: 1px) {
+          .container {
+            max-width: 90%;
+          }
+        }
+    </style>
     <div class="col">
       {{ content|safe }}<br>
     </div>

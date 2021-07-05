@@ -567,18 +567,18 @@ class MplSideViewCanvas(MplCanvas):
             ylabel = ""
         elif typ == "pressure":
             # Compute the position of major and minor ticks. Major ticks are labelled.
-            major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)] * units.pascal
-            minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)] * units.pascal
+            major_ticks = self._pres_maj[(self._pres_maj <= self.p_bot) & (self._pres_maj >= self.p_top)]
+            minor_ticks = self._pres_min[(self._pres_min <= self.p_bot) & (self._pres_min >= self.p_top)]
             labels = [f"{int(_x / 100)}"
-                      if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks.magnitude]
+                      if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks]
             if len(labels) > 20:
                 labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
             elif len(labels) > 10:
                 labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
             ylabel = "pressure (hPa)"
         elif typ == "pressure altitude":
-            bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km)
-            top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km)
+            bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km).magnitude
+            top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km).magnitude
             ma_dist, mi_dist = 4, 1.0
             if (top_km - bot_km) <= 20:
                 ma_dist, mi_dist = 1, 0.5
@@ -586,13 +586,13 @@ class MplSideViewCanvas(MplCanvas):
                 ma_dist, mi_dist = 2, 0.5
             major_heights = np.arange(0, top_km + 1, ma_dist)
             minor_heights = np.arange(0, top_km + 1, mi_dist)
-            major_ticks = thermolib.flightlevel2pressure(major_heights * units.kilometer)
-            minor_ticks = thermolib.flightlevel2pressure(minor_heights * units.kilometer)
+            major_ticks = thermolib.flightlevel2pressure(major_heights * units.kilometer).magnitude
+            minor_ticks = thermolib.flightlevel2pressure(minor_heights * units.kilometer).magnitude
             labels = major_heights
             ylabel = "pressure altitude (km)"
         elif typ == "flight level":
-            bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km)
-            top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km)
+            bot_km = thermolib.pressure2flightlevel(self.p_bot * units.Pa).to(units.km).magnitude
+            top_km = thermolib.pressure2flightlevel(self.p_top * units.Pa).to(units.km).magnitude
             ma_dist, mi_dist = 50, 10
             if (top_km - bot_km) <= 10:
                 ma_dist, mi_dist = 20, 10
@@ -600,8 +600,8 @@ class MplSideViewCanvas(MplCanvas):
                 ma_dist, mi_dist = 40, 10
             major_fl = np.arange(0, 2132, ma_dist)
             minor_fl = np.arange(0, 2132, mi_dist)
-            major_ticks = thermolib.flightlevel2pressure(major_fl * units.hft)
-            minor_ticks = thermolib.flightlevel2pressure(minor_fl * units.hft)
+            major_ticks = thermolib.flightlevel2pressure(major_fl * units.hft).magnitude
+            minor_ticks = thermolib.flightlevel2pressure(minor_fl * units.hft).magnitude
             labels = major_fl
             ylabel = "flight level (hft)"
         else:
@@ -633,8 +633,8 @@ class MplSideViewCanvas(MplCanvas):
             ylabel, major_ticks, minor_ticks, labels = self._determine_ticks_labels(typ)
 
             ax.set_ylabel(ylabel, fontsize=plot_title_size)
-            ax.set_yticks(minor_ticks.magnitude, minor=True)
-            ax.set_yticks(major_ticks.magnitude, minor=False)
+            ax.set_yticks(minor_ticks, minor=True)
+            ax.set_yticks(major_ticks, minor=False)
             ax.set_yticklabels([], minor=True)
             ax.set_yticklabels(labels, minor=False, fontsize=axes_label_size)
             ax.set_ylim(self.p_bot, self.p_top)
@@ -891,11 +891,11 @@ class MplSideViewCanvas(MplCanvas):
             p_top_old = self.p_top
 
         if self.settings_dict["vertical_axis"] == "pressure altitude":
-            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * units.km)
-            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * units.km)
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * units.km).magnitude
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * units.km).magnitude
         elif self.settings_dict["vertical_axis"] == "flight level":
-            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * units.hft)
-            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * units.hft)
+            self.p_bot = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][0] * units.hft).magnitude
+            self.p_top = thermolib.flightlevel2pressure(self.settings_dict["vertical_extent"][1] * units.hft).magnitude
         else:
             self.p_bot = self.settings_dict["vertical_extent"][0] * 100
             self.p_top = self.settings_dict["vertical_extent"][1] * 100

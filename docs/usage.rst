@@ -92,14 +92,15 @@ importing changed files back in addition to the main FTML format. These filters 
 from the File menu of the Main Window.
 
 MSS currently offers several import/export filters in the mslib.plugins.io module, which may serve
-as an example for the definition of own plugins. They are listed below. The CSV plugin is enabled
-by default. Enabling the experimental FliteStar text import plugin would require those lines in
+as an example for the definition of own plugins. Take care that added plugins use different file extensions.
+They are listed below. The CSV plugin is enabled by default.
+Enabling the experimental FliteStar text import plugin would require those lines in
 the UI settings file:
 
 .. code:: text
 
     "import_plugins": {
-        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"]
+        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"]
     },
 
 The dictionary entry defines the name of the filter in the File menu. The list specifies in this

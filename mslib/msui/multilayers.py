@@ -181,14 +181,24 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.synced_reference.vtimes = vtimes
         self.synced_reference.allowed_crs = crs
 
+        if self.current_layer:
+            if not self.synced_reference.level:
+                self.synced_reference.level = self.current_layer.level
+            if not self.synced_reference.itime:
+                self.synced_reference.itime = self.current_layer.itime
+            if not self.synced_reference.vtime:
+                self.synced_reference.vtime = self.current_layer.vtime
+
         if self.synced_reference.level not in self.synced_reference.levels:
-            self.synced_reference.level = self.synced_reference.levels[0] if self.synced_reference.levels else None
+            self.synced_reference.level = levels[0] if levels else None
 
         if self.synced_reference.itime not in self.synced_reference.itimes:
-            self.synced_reference.itime = self.synced_reference.itimes[0] if self.synced_reference.itimes else None
+            self.synced_reference.itime = itimes[-1] if itimes else None
 
-        if self.synced_reference.vtime not in self.synced_reference.vtimes:
-            self.synced_reference.vtime = self.synced_reference.vtimes[0] if self.synced_reference.vtimes else None
+        if self.synced_reference.vtime not in self.synced_reference.vtimes or \
+                self.synced_reference.vtime < self.synced_reference.itime:
+            self.synced_reference.vtime = next((vtime for vtime in vtimes if
+                                                vtime >= self.synced_reference.itime), None) if vtimes else None
 
     def filter_multilayers(self, filter_string=None):
         """
@@ -562,7 +572,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if "elevation" in self.extents:
             units = self.dimensions["elevation"]["units"]
             values = self.extents["elevation"]["values"]
-            self.levels = ["{} ({})".format(e.strip(), units) for e in values]
+            self.levels = [f"{e.strip()} ({units})" for e in values]
             self.level = self.levels[0]
 
     def _parse_itimes(self):
@@ -583,7 +593,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr("ERROR: {}".format(msg)))
+                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
             else:
                 self.itime = self.itimes[-1]
 
@@ -605,7 +615,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
                 logging.error(msg)
                 QtWidgets.QMessageBox.critical(
                     self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr("ERROR: {}".format(msg)))
+                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
             else:
                 if self.itime:
                     self.vtime = next((vtime for vtime in self.vtimes if vtime >= self.itime), self.vtimes[0])
