@@ -173,6 +173,7 @@ for mod in [
         "ui_mscolab_help_dialog",
         "ui_add_project_dialog",
         "ui_mscolab_merge_waypoints_dialog",
+        "ui_mscolab_profile_dialog",
         "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",

@@ -251,8 +251,6 @@
     <addaction name="actionOpenFlightTrack"/>
     <addaction name="actionAddProject"/>
     <addaction name="separator"/>
-    <addaction name="actionActivateSelectedFlightTrack"/>
-    <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
     <addaction name="separator"/>
@@ -363,11 +361,6 @@
    </property>
    <property name="shortcut">
     <string>Alt+S</string>
-   </property>
-  </action>
-  <action name="actionActivateSelectedFlightTrack">
-   <property name="text">
-    <string>&amp;Activate Selected Flight Track</string>
    </property>
   </action>
   <action name="actionCloseSelectedFlightTrack">

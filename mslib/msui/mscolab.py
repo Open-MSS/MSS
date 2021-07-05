@@ -52,6 +52,7 @@ from mslib.msui.mss_qt import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
 from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
+from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 from mslib.msui import constants
 from mslib.utils import config_loader
@@ -465,8 +466,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.usernameLabel.show()
         # set up user menu and add to toolbutton
         self.user_menu = QtWidgets.QMenu()
-        # self.user_menu.addAction("Profile")
-        # self.user_menu.addAction("Help")
+        self.profile_action = self.user_menu.addAction("Profile", self.open_profile_window)
         self.logout_action = self.user_menu.addAction("Logout", self.logout)
         self.ui.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.ui.userOptionsTb.setMenu(self.user_menu)
@@ -499,6 +499,20 @@ class MSSMscolab(QtCore.QObject):
             logging.error("unexpected error: %s %s", type(ex), ex)
             return False
         return r.text == "True"
+
+    def open_profile_window(self):
+        self.prof_diag = QtWidgets.QDialog()
+        self.profile_dialog = ui_profile.Ui_ProfileWindow()
+        self.profile_dialog.setupUi(self.prof_diag)
+        self.profile_dialog.f_content = None
+        self.profile_dialog.buttonBox.accepted.connect(lambda: self.prof_diag.close())
+        self.profile_dialog.usernameLabel_2.setText(self.user['username'])
+        self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
+        # self.profile_dialog.emailLabel_2.setText(self.user['email'])
+        # self.profile_dialog.path.textChanged.connect(check_and_enable_project_accept)
+        # self.profile_dialog.description.textChanged.connect(check_and_enable_project_accept)
+        # self.profile_dialog.browse.clicked.connect(browse)
+        self.prof_diag.show()
 
     def add_project_handler(self):
         if self.verify_user_token():
@@ -1071,7 +1085,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.workLocallyCheckbox.setEnabled(False)
         self.ui.serverOptionsCb.hide()
         # change working status label
-        self.ui.workingStatusLabel.setText(self.ui.tr("No Project Selected"))
+        self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Project Selected"))
 
     def request_wps_from_server(self):
         if self.verify_user_token():

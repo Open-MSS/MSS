@@ -240,7 +240,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # File menu.
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
         self.actionOpenFlightTrack.triggered.connect(self.open_flight_track)
-        self.actionActivateSelectedFlightTrack.triggered.connect(self.activate_selected_flight_track)
         self.actionSaveActiveFlightTrack.triggered.connect(self.save_flight_track)
         self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_flight_track_as)
         self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
@@ -335,12 +334,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionImportFlightTrackFTML.setVisible(not self.local_active)
         self.actionExportFlightTrackFTML.setVisible(not self.local_active)
 
-        # # enable/disable flight track menus
+        # enable/disable flight track menus
         # self.actionNewFlightTrack.setEnabled(self.local_active)
         # self.actionOpenFlightTrack.setEnabled(self.local_active)
-        # self.actionActivateSelectedFlightTrack.setEnabled(self.local_active)
-        # self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
-        # self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
+        self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
+        self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
         # self.actionCloseSelectedFlightTrack.setEnabled(self.local_active)
 
     def add_plugin_submenu(self, name, extension, plugin_type="Import"):
@@ -507,8 +505,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
         listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
-        # # Activate new item
-        # self.activate_flight_track(listitem)
+        # Activate new item
+        self.activate_flight_track(listitem)
 
     def open_flight_track(self):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
@@ -611,7 +609,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                                               self.tr("At least one flight track has to be open."))
             return
         item = self.listFlightTracks.currentItem()
-        if item.flighttrack_model == self.active_flight_track:
+        if item.flighttrack_model == self.active_flight_track and not self.local_active:
             QtWidgets.QMessageBox.information(self, self.tr("Flight Track Management"),
                                               self.tr("Cannot close currently active flight track."))
             return
@@ -875,8 +873,6 @@ def main():
     mainwindow = MSSMainWindow()
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
-    mainwindow.listFlightTracks.setCurrentRow(0)
-    mainwindow.activate_selected_flight_track()
     mainwindow.show()
     sys.exit(application.exec_())
 
