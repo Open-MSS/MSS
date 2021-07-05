@@ -68,7 +68,7 @@ def call_mss():
     mss_pyui.main()
 
 
-def automate_waypoints(obj=None):
+def automate_waypoints():
     """
     This is the main automating script of the MSS waypoints tutorial which will be recorded and saved
     to a file having dateframe nomenclature with a .mp4 extension(codec).
@@ -144,7 +144,7 @@ def automate_waypoints(obj=None):
 
     # Changing map to Global
     try:
-        if platform == 'linux' or 'linux2' or 'darwin':
+        if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             x, y = pag.locateCenterOnScreen('pictures/europe(cyl).PNG')
             pag.click(x, y, interval=2)
         elif platform == 'win32':
