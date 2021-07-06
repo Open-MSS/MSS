@@ -1187,6 +1187,8 @@ class MplTopViewCanvas(MplCanvas):
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
             appearance = self.get_map_appearance()
+            if appearance["draw_airports"]:
+                self.map.set_draw_airports(True)
             try:
                 self.waypoints_interactor = mpl_pi.HPathInteractor(
                     self.map, self.waypoints_model,
@@ -1230,6 +1232,10 @@ class MplTopViewCanvas(MplCanvas):
             self.map._draw_auto_graticule(self.tov_als)
         else:
             self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
+        if self.appearance_settings["draw_airports"]:
+            self.map.set_draw_airports(True)
+        else:
+            self.map.set_draw_airports(False)
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
         # in waypoints_interactor()
@@ -1396,6 +1402,7 @@ class MplTopViewCanvas(MplCanvas):
                     "fill_continents": True,
                     "draw_flighttrack": True,
                     "draw_marker": True,
+                    "draw_airports": False,
                     "label_flighttrack": True,
                     "tov_plot_title_size": "default",
                     "tov_axes_label_size": "default",
@@ -1418,6 +1425,7 @@ class MplTopViewCanvas(MplCanvas):
 
         if self.map is not None:
             self.map.set_coastlines_visible(settings["draw_coastlines"])
+            self.map.set_draw_airports(settings["draw_airports"])
             self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
                                                 land_color=settings["colour_land"],
                                                 lake_color=settings["colour_water"])

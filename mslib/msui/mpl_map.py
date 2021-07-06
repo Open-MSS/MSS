@@ -45,6 +45,7 @@ except ImportError:
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
+from mslib import openaip
 
 
 class MapCanvas(basemap.Basemap):
@@ -154,6 +155,9 @@ class MapCanvas(basemap.Basemap):
 
         # self.warpimage() # disable fillcontinents when loading bluemarble
         self.ax.set_autoscale_on(False)
+        self.airpoints = None
+        self.airtext = None
+        self.airport_hover = None
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -324,6 +328,49 @@ class MapCanvas(basemap.Basemap):
             self.map_meridians = None
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
+
+    def set_draw_airports(self, value):
+        if not value and self.airpoints:
+            self.airpoints.set_visible(False)
+            self.airtext.set_visible(False)
+        elif value:
+            self.draw_airports()
+            self.airpoints.set_visible(True)
+
+    def draw_airports(self):
+        """
+        Load and draw airports and their respective name on hover
+        """
+        if not self.airpoints:
+            airports = openaip.get_openflights_airports()
+            lons = [float(airport[7]) for airport in airports]
+            lats = [float(airport[6]) for airport in airports]
+            annotations = [airport[1] for airport in airports]
+            self.airpoints = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
+                                             zorder=5)
+            self.airtext = self.ax.annotate(annotations[0], xy=(lons[0], lats[0]), xycoords="data",
+                                            bbox={"boxstyle": "round", "facecolor": "w",
+                                                  "edgecolor": "0.5", "alpha": 0.9}, zorder=6)
+            self.airtext.set_visible(False)
+
+            def update_text(index):
+                pos = self.airpoints.get_offsets()[index["ind"][0]]
+                self.airtext.xy = pos
+                self.airtext.set_position(pos)
+                self.airtext.set_text(", ".join([annotations[i] for i in index["ind"]]))
+
+            def on_move(event):
+                if event.inaxes == self.ax:
+                    cont, ind = self.airpoints.contains(event)
+                    if cont:
+                        update_text(ind)
+                        self.airtext.set_visible(True)
+                        self.ax.figure.canvas.draw_idle()
+                    elif self.airtext.get_visible():
+                        self.airtext.set_visible(False)
+                        self.ax.figure.canvas.draw_idle()
+
+            self.airport_hover = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_topview_mapappearance.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_topview_mapappearance.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -153,6 +153,12 @@ class Ui_MapAppearanceDialog(object):
         spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_5.addItem(spacerItem3)
         self.verticalLayout.addLayout(self.horizontalLayout_5)
+        self.horizontalLayout_6 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
+        self.cbDrawAirports = QtWidgets.QCheckBox(MapAppearanceDialog)
+        self.cbDrawAirports.setObjectName("cbDrawAirports")
+        self.horizontalLayout_6.addWidget(self.cbDrawAirports)
+        self.verticalLayout.addLayout(self.horizontalLayout_6)
         self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_4.setObjectName("horizontalLayout_4")
         self.cbLabelFlightTrack = QtWidgets.QCheckBox(MapAppearanceDialog)
@@ -237,6 +243,7 @@ class Ui_MapAppearanceDialog(object):
         self.cbDrawMarker.setToolTip(_translate("MapAppearanceDialog", "Draw a circle marker on every waypoint along the flight track"))
         self.cbDrawMarker.setText(_translate("MapAppearanceDialog", "draw marker"))
         self.btWaypointsColour.setText(_translate("MapAppearanceDialog", "colour of waypoints"))
+        self.cbDrawAirports.setText(_translate("MapAppearanceDialog", "draw airports"))
         self.cbLabelFlightTrack.setText(_translate("MapAppearanceDialog", "label flight track"))
         self.groupBox.setTitle(_translate("MapAppearanceDialog", "Plot Options"))
         self.tov_cbtitlesize.setItemText(0, _translate("MapAppearanceDialog", "default"))
@@ -273,13 +280,3 @@ class Ui_MapAppearanceDialog(object):
         self.tov_cbaxessize.setItemText(14, _translate("MapAppearanceDialog", "30"))
         self.tov_cbaxessize.setItemText(15, _translate("MapAppearanceDialog", "32"))
         self.label.setText(_translate("MapAppearanceDialog", " Plot Title Size"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MapAppearanceDialog = QtWidgets.QDialog()
-    ui = Ui_MapAppearanceDialog()
-    ui.setupUi(MapAppearanceDialog)
-    MapAppearanceDialog.show()
-    sys.exit(app.exec_())
