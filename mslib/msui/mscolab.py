@@ -1137,7 +1137,7 @@ class MSSMscolab(QtCore.QObject):
                 except AttributeError as err:
                     logging.error("%s" % err)
 
-    def handle_import_msc(self, name, extension):
+    def handle_import_msc(self, extension):
         if self.verify_user_token():
             if self.active_pid is None:
                 return
@@ -1181,28 +1181,27 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def handle_export_msc(self, name, extension):
+    def handle_export_msc(self, extension):
         if self.verify_user_token():
             if self.active_pid is None:
                 return
 
             # Setting default filename path for filedialogue
             default_filename = f'{self.active_project_name}.{extension}'
-            file_path = get_save_filename(
+            file_name = get_save_filename(
                 self.ui, "Export From Server",
                 default_filename, f"Flight track (*.{extension})")
-            if file_path is None:
+            if file_name is None:
                 return
-            file_name = fs.path.basename(file_path)
-            file_name, file_ext = fs.path.splitext(file_name)
-            if file_ext[1:] == "ftml":
+            if file_name.endswith('.ftml'):
                 xml_doc = self.waypoints_model.get_xml_doc()
-                dir_path, file_name = fs.path.split(file_path)
+                dir_path, file_name = fs.path.split(file_name)
                 with open_fs(dir_path).open(file_name, 'w') as file:
                     xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
             else:
-                _function = self.ui.export_plugins[file_ext[1:]]
-                _function(file_path, file_name, self.waypoints_model.waypoints)
+                file_path = fs.path.basename(file_name)
+                _function = self.ui.export_plugins[extension]
+                _function(file_name, file_path, self.waypoints_model.waypoints)
                 show_popup(self.ui, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
