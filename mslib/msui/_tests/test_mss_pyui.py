@@ -160,7 +160,7 @@ class Test_MSSSideViewWindow(object):
         assert self.window.listFlightTracks.count() == 1
         assert mockopen.call_count == 0
         self.window.last_save_directory = self.sample_path
-        self.window.actionImportFlightTrackCSV()
+        self.window.actionImportFlightTrackCSV.trigger()
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
         assert mockopen.call_count == 1
@@ -170,27 +170,29 @@ class Test_MSSSideViewWindow(object):
         assert self.window.listFlightTracks.count() == 1
         assert mocksave.call_count == 0
         self.window.last_save_directory = ROOT_DIR
-        self.window.actionExportFlightTrackCSV()
+        self.window.actionExportFlightTrackCSV.trigger()
         assert mocksave.call_count == 1
         assert os.path.exists(self.save_csv)
         os.remove(self.save_csv)
 
     @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=os.path.join(sample_path, u"example.txt"))
     def test_plugin_txt_read(self, mockopen):
-        self.window.add_import_filter("_TXT", "txt", load_from_txt)
+        self.window.add_plugin_submenu("_TXT", "txt", plugin_type="Import")
+        self.window.import_plugins['txt'] = load_from_txt
         assert self.window.listFlightTracks.count() == 1
         assert mockopen.call_count == 0
         self.window.last_save_directory = self.sample_path
-        self.window.actionImportFlightTrack_TXT()
+        self.window.actionImportFlightTrack_TXT.trigger()
         assert mockopen.call_count == 1
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
 
     @mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_txt)
     def test_plugin_txt_write(self, mocksave):
-        self.window.add_export_filter("_TXT", "txt", save_to_txt)
+        self.window.add_plugin_submenu("_TXT", "txt", plugin_type="Export")
+        self.window.export_plugins['txt'] = save_to_txt
         self.window.last_save_directory = ROOT_DIR
-        self.window.actionExportFlightTrack_TXT()
+        self.window.actionExportFlightTrack_TXT.trigger()
         assert mocksave.call_count == 1
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 1
@@ -201,9 +203,10 @@ class Test_MSSSideViewWindow(object):
                 return_value=os.path.join(sample_path, u"flitestar.txt"))
     def test_plugin_flitestar(self, mockopen):
         self.window.last_save_directory = self.sample_path
-        self.window.add_import_filter("_FliteStar", "txt", load_from_flitestar)
+        self.window.add_plugin_submenu("_FliteStar", "fls", plugin_type="Import")
+        self.window.import_plugins['fls'] = load_from_flitestar
         assert self.window.listFlightTracks.count() == 1
-        self.window.actionImportFlightTrack_FliteStar()
+        self.window.actionImportFlightTrack_FliteStar.trigger()
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
         assert mockopen.call_count == 1

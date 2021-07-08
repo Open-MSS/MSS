@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>507</width>
+    <width>769</width>
     <height>736</height>
    </rect>
   </property>
@@ -20,10 +20,7 @@
    <string>Mission Support System</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <property name="spacing">
-     <number>4</number>
-    </property>
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0" columnstretch="1,1">
     <property name="leftMargin">
      <number>8</number>
     </property>
@@ -36,10 +33,41 @@
     <property name="bottomMargin">
      <number>8</number>
     </property>
-    <item>
+    <property name="spacing">
+     <number>4</number>
+    </property>
+    <item row="2" column="0">
+     <widget class="QGroupBox" name="openViewsGb">
+      <layout class="QVBoxLayout" name="openViewsVL">
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+       <property name="rightMargin">
+        <number>8</number>
+       </property>
+       <property name="bottomMargin">
+        <number>8</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="openViewsLabel">
+         <property name="text">
+          <string>Open Views:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listViews"/>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="2">
      <layout class="QHBoxLayout" name="userOptionsHL" stretch="1,0,0,0">
       <property name="leftMargin">
-       <number>5</number>
+       <number>0</number>
       </property>
       <property name="rightMargin">
        <number>0</number>
@@ -88,145 +116,84 @@
       </item>
      </layout>
     </item>
-    <item>
-     <widget class="QTabWidget" name="tabWidget">
-      <property name="styleSheet">
-       <string notr="true">::tab-bar { alignment: left; } ::pane{}</string>
+    <item row="1" column="1" rowspan="2">
+     <widget class="QGroupBox" name="openProjectsGb">
+      <property name="title">
+       <string/>
       </property>
-      <property name="currentIndex">
-       <number>0</number>
-      </property>
-      <widget class="QWidget" name="localTab">
-       <attribute name="title">
-        <string>Local</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0">
-        <property name="leftMargin">
-         <number>12</number>
-        </property>
-        <property name="topMargin">
-         <number>12</number>
-        </property>
-        <property name="rightMargin">
-         <number>12</number>
-        </property>
-        <property name="bottomMargin">
-         <number>12</number>
-        </property>
-        <property name="horizontalSpacing">
-         <number>-1</number>
-        </property>
-        <property name="verticalSpacing">
-         <number>10</number>
-        </property>
-        <item row="1" column="0" colspan="2">
-         <widget class="QListWidget" name="listFlightTracks">
-          <property name="styleSheet">
-           <string notr="true">border: 1px solid grey;</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="openFlightTracksLabel">
+      <layout class="QGridLayout" name="gridLayout_3">
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+       <property name="rightMargin">
+        <number>8</number>
+       </property>
+       <property name="bottomMargin">
+        <number>8</number>
+       </property>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="workingStatusLabel">
+         <property name="font">
+          <font>
+           <pointsize>13</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>No projects selected</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="workLocallyCheckbox">
+         <property name="text">
+          <string>Work Asynchronously</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="openProjectsMSCLabel">
+         <property name="text">
+          <string>Open Projects:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QListWidget" name="listProjectsMSC"/>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="serverOptionsCb">
+         <item>
           <property name="text">
-           <string>Open Flight Tracks:</string>
+           <string>Server Options</string>
           </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="shareTab">
-       <attribute name="title">
-        <string>Share</string>
-       </attribute>
-       <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0">
-        <property name="leftMargin">
-         <number>12</number>
-        </property>
-        <property name="topMargin">
-         <number>12</number>
-        </property>
-        <property name="rightMargin">
-         <number>12</number>
-        </property>
-        <property name="bottomMargin">
-         <number>12</number>
-        </property>
-        <property name="verticalSpacing">
-         <number>10</number>
-        </property>
-        <item row="2" column="0" colspan="3">
-         <widget class="QLabel" name="workingStatusLabel">
-          <property name="font">
-           <font>
-            <pointsize>11</pointsize>
-           </font>
-          </property>
+         </item>
+         <item>
           <property name="text">
-           <string>working on</string>
+           <string>Fetch From Server</string>
           </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="1">
-         <widget class="QComboBox" name="serverOptionsCb">
-          <item>
-           <property name="text">
-            <string>Server Options</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Fetch From Server</string>
-           </property>
-          </item>
-          <item>
-           <property name="text">
-            <string>Save To Server</string>
-           </property>
-          </item>
-         </widget>
-        </item>
-        <item row="3" column="0">
-         <widget class="QCheckBox" name="workLocallyCheckbox">
+         </item>
+         <item>
           <property name="text">
-           <string>Work Locally</string>
+           <string>Save To Server</string>
           </property>
-         </widget>
-        </item>
-        <item row="1" column="0" colspan="3">
-         <widget class="QListWidget" name="listProjectsMSC">
-          <property name="styleSheet">
-           <string notr="true">border: 1px solid grey;</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="2">
-         <widget class="QComboBox" name="projectOptionsCb"/>
-        </item>
-        <item row="0" column="0">
-         <widget class="QLabel" name="openProjectsMSCLabel">
-          <property name="text">
-           <string>Open Projects:</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" alignment="Qt::AlignRight">
-         <widget class="QPushButton" name="addProjectBtn">
-          <property name="text">
-           <string>Add Project</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
+         </item>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
-    <item>
-     <widget class="QGroupBox" name="openViewsGb">
-      <layout class="QVBoxLayout" name="openViewsVL">
+    <item row="1" column="0">
+     <widget class="QGroupBox" name="openFlightTracksGb">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
        <property name="leftMargin">
         <number>8</number>
        </property>
@@ -240,18 +207,14 @@
         <number>8</number>
        </property>
        <item>
-        <widget class="QLabel" name="openViewsLabel">
+        <widget class="QLabel" name="openFlightTracksLabel">
          <property name="text">
-          <string>Open Views:</string>
+          <string>Open Flight Tracks:</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="listViews">
-         <property name="styleSheet">
-          <string notr="true">border: 1px solid grey;</string>
-         </property>
-        </widget>
+        <widget class="QListWidget" name="listFlightTracks"/>
        </item>
       </layout>
      </widget>
@@ -263,7 +226,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>507</width>
+     <width>769</width>
      <height>22</height>
     </rect>
    </property>
@@ -286,8 +249,7 @@
     </widget>
     <addaction name="actionNewFlightTrack"/>
     <addaction name="actionOpenFlightTrack"/>
-    <addaction name="separator"/>
-    <addaction name="actionActivateSelectedFlightTrack"/>
+    <addaction name="actionAddProject"/>
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
@@ -306,6 +268,7 @@
      <string>&amp;Help</string>
     </property>
     <addaction name="actionShortcuts"/>
+    <addaction name="actionMSColab"/>
     <addaction name="actionUpdater"/>
     <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
@@ -319,8 +282,26 @@
     <addaction name="actionTableView"/>
     <addaction name="actionLinearView"/>
    </widget>
+   <widget class="QMenu" name="menuProject">
+    <property name="title">
+     <string>Project</string>
+    </property>
+    <widget class="QMenu" name="menuProjectProperties">
+     <property name="title">
+      <string>Project Properties</string>
+     </property>
+     <addaction name="actionEditProject"/>
+     <addaction name="actionDeleteProject"/>
+    </widget>
+    <addaction name="actionChat"/>
+    <addaction name="actionVersionHistory"/>
+    <addaction name="actionManageUsers"/>
+    <addaction name="separator"/>
+    <addaction name="menuProjectProperties"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuViews"/>
+   <addaction name="menuProject"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -382,11 +363,6 @@
     <string>Alt+S</string>
    </property>
   </action>
-  <action name="actionActivateSelectedFlightTrack">
-   <property name="text">
-    <string>&amp;Activate Selected Flight Track</string>
-   </property>
-  </action>
   <action name="actionCloseSelectedFlightTrack">
    <property name="text">
     <string>&amp;Close Selected Flight Track</string>
@@ -437,18 +413,50 @@
     <string>Meta+L</string>
    </property>
   </action>
+  <action name="actionChat">
+   <property name="text">
+    <string>&amp;Chat</string>
+   </property>
+  </action>
+  <action name="actionVersionHistory">
+   <property name="text">
+    <string>&amp;Version History</string>
+   </property>
+  </action>
+  <action name="actionManageUsers">
+   <property name="text">
+    <string>&amp;Manage Users</string>
+   </property>
+  </action>
+  <action name="actionMSColab">
+   <property name="text">
+    <string>&amp;MSColab</string>
+   </property>
+  </action>
+  <action name="actionAddProject">
+   <property name="text">
+    <string>&amp;Add Project</string>
+   </property>
+  </action>
+  <action name="actionEditProject">
+   <property name="text">
+    <string>&amp;Edit Project</string>
+   </property>
+  </action>
+  <action name="actionDeleteProject">
+   <property name="text">
+    <string>&amp;Delete Project</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>connectBtn</tabstop>
   <tabstop>userOptionsTb</tabstop>
-  <tabstop>tabWidget</tabstop>
   <tabstop>listFlightTracks</tabstop>
-  <tabstop>addProjectBtn</tabstop>
+  <tabstop>listViews</tabstop>
   <tabstop>listProjectsMSC</tabstop>
-  <tabstop>projectOptionsCb</tabstop>
   <tabstop>workLocallyCheckbox</tabstop>
   <tabstop>serverOptionsCb</tabstop>
-  <tabstop>listViews</tabstop>
  </tabstops>
  <resources/>
  <connections>
