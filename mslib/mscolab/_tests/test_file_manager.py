@@ -33,8 +33,8 @@ from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import file_manager
 from mslib.mscolab.models import User, Project
-from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
+import mslib.msui.mss_pyui as mss_pyui
 
 PORTS = list(range(19341, 19390))
 
@@ -46,8 +46,7 @@ class Test_FileManager(object):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.sockets = []
         self.fm = file_manager.FileManager(mscolab_settings.MSCOLAB_DATA_DIR)
         self._example_data()
@@ -64,10 +63,10 @@ class Test_FileManager(object):
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

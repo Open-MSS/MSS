@@ -523,12 +523,23 @@ class MSSMscolab(QtCore.QObject):
                     self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
             def browse():
+                file_type = ["Flight track (*.ftml)"] + [
+                    f"Flight track (*.{ext})" for ext in self.ui.import_plugins.keys()
+                ]
                 file_path = get_open_filename(
-                    self.ui, "Open ftml file", "", "Flight Track Files (*.ftml)")
+                    self.ui, "Open Flighttrack file", "", ';;'.join(file_type))
                 if file_path is not None:
                     file_name = fs.path.basename(file_path)
-                    with open_fs(fs.path.dirname(file_path)) as file_dir:
-                        file_content = file_dir.readtext(file_name)
+                    if file_path.endswith('ftml'):
+                        with open_fs(fs.path.dirname(file_path)) as file_dir:
+                            file_content = file_dir.readtext(file_name)
+                    else:
+                        ext = fs.path.splitext(file_path)[-1][1:]
+                        function = self.ui.import_plugins[ext]
+                        ft_name, waypoints = function(file_path)
+                        model = ft.WaypointsTableModel(waypoints=waypoints)
+                        xml_doc = model.get_xml_doc()
+                        file_content = xml_doc.toprettyxml(indent="  ", newl="\n")
                     self.add_proj_dialog.f_content = file_content
                     self.add_proj_dialog.selectedFile.setText(file_name)
 
@@ -918,7 +929,6 @@ class MSSMscolab(QtCore.QObject):
             self.access_level = None
             self.active_project_name = None
             # self.ui.workingStatusLabel.setEnabled(False)
-            self.force_close_view_windows()
             self.close_external_windows()
             self.hide_project_options()
 

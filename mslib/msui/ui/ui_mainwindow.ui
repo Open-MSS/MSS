@@ -448,6 +448,14 @@
     <string>&amp;Delete Project</string>
    </property>
   </action>
+  <action name="actionBringMainWindowToFront">
+   <property name="text">
+    <string>Bring Main Window To Front</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Up</string>
+   </property>
+  </action>
  </widget>
  <tabstops>
   <tabstop>connectBtn</tabstop>

@@ -32,13 +32,13 @@ from flask import json
 from werkzeug.urls import url_join
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab import server
-from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.models import User
 from mslib._tests.utils import (mscolab_register_user,
                                 mscolab_register_and_login, mscolab_create_content,
                                 mscolab_create_project,
                                 mscolab_delete_user, mscolab_login, mscolab_start_server)
 from PyQt5 import QtWidgets, QtTest
+import mslib.msui.mss_pyui as mss_pyui
 
 PORTS = list(range(10481, 10530))
 
@@ -50,17 +50,16 @@ class Test_Init_Server(object):
         self.process, self.url, self.app, self.sockio, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
 
     def teardown(self):
         # to disconnect connections, and clear token
         # Not logging out since it pops up a dialog
-        # self.window.logout()
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        # self.window.mscolab.logout()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
@@ -80,14 +79,13 @@ class Test_Server(object):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS, mscolab_settings)
         QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
 
     def teardown(self):
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

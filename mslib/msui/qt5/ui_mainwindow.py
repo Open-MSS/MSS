@@ -167,6 +167,8 @@ class Ui_MSSMainWindow(object):
         self.actionEditProject.setObjectName("actionEditProject")
         self.actionDeleteProject = QtWidgets.QAction(MSSMainWindow)
         self.actionDeleteProject.setObjectName("actionDeleteProject")
+        self.actionBringMainWindowToFront = QtWidgets.QAction(MSSMainWindow)
+        self.actionBringMainWindowToFront.setObjectName("actionBringMainWindowToFront")
         self.menuFile.addAction(self.actionNewFlightTrack)
         self.menuFile.addAction(self.actionOpenFlightTrack)
         self.menuFile.addAction(self.actionAddProject)
@@ -268,6 +270,8 @@ class Ui_MSSMainWindow(object):
         self.actionAddProject.setText(_translate("MSSMainWindow", "&Add Project"))
         self.actionEditProject.setText(_translate("MSSMainWindow", "&Edit Project"))
         self.actionDeleteProject.setText(_translate("MSSMainWindow", "&Delete Project"))
+        self.actionBringMainWindowToFront.setText(_translate("MSSMainWindow", "Bring Main Window To Front"))
+        self.actionBringMainWindowToFront.setShortcut(_translate("MSSMainWindow", "Ctrl+Up"))
 
 
 if __name__ == "__main__":

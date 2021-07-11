@@ -26,7 +26,6 @@
 """
 
 import sys
-from mslib.msui.mscolab import MSSMscolabWindow
 from PyQt5 import QtTest, QtWidgets
 from mslib.mscolab.models import User
 from mslib.mscolab.conf import mscolab_settings
@@ -34,6 +33,7 @@ from mslib._tests.utils import (mscolab_register_and_login,
                                 mscolab_create_project, mscolab_delete_all_projects,
                                 mscolab_delete_user, mscolab_start_server)
 from mslib.mscolab.seed import add_all_users_default_project, add_user, delete_user
+import mslib.msui.mss_pyui as mss_pyui
 
 
 PORTS = list(range(19571, 19590))
@@ -45,8 +45,7 @@ class Test_Seed():
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS, mscolab_settings)
         QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, self.url, 'UV0@uv0', 'UV0', 'uv0')
             assert response.status == '200 OK'
@@ -66,10 +65,10 @@ class Test_Seed():
             user = User.query.filter_by(emailid="UV2@v2").first()
             if user is not None:
                 delete_user('UV2@uv2')
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
