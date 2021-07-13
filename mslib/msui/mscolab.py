@@ -273,8 +273,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             r = s.post(url, data=data)
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            self.set_status("Error", 'Failed to establish a new connection'
-                                        f' to "{self.mscolab_server_url}". Try in a moment again.')
+            self.set_status(
+                "Error",
+                "Failed to establish a new connection" f' to "{self.mscolab_server_url}". Try in a moment again.',
+            )
             self.disconnect_handler()
             return
 
@@ -330,8 +332,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             r = s.post(url, data=data)
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-            self.set_status("Error", 'Failed to establish a new connection'
-                                        f' to "{self.mscolab_server_url}". Try in a moment again.')
+            self.set_status(
+                "Error",
+                "Failed to establish a new connection" f' to "{self.mscolab_server_url}". Try in a moment again.',
+            )
             self.disconnect_handler()
             return
 
@@ -633,10 +637,15 @@ class MSSMscolab(QtCore.QObject):
                 self.chat_window.activateWindow()
                 return
 
-            self.chat_window = mp.MSColabProjectWindow(self.token, self.active_pid,
-                                                        self.user, self.active_project_name,
-                                                        self.access_level, self.conn,
-                                                        mscolab_server_url=self.mscolab_server_url)
+            self.chat_window = mp.MSColabProjectWindow(
+                self.token,
+                self.active_pid,
+                self.user,
+                self.active_project_name,
+                self.access_level,
+                self.conn,
+                mscolab_server_url=self.mscolab_server_url,
+            )
             self.chat_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             self.chat_window.viewCloses.connect(self.close_chat_window)
             self.chat_window.reloadWindows.connect(self.reload_windows_slot)
@@ -657,9 +666,15 @@ class MSSMscolab(QtCore.QObject):
                 self.admin_window.activateWindow()
                 return
 
-            self.admin_window = maw.MSColabAdminWindow(self.token, self.active_pid, self.user,
-                                                        self.active_project_name, self.projects, self.conn,
-                                                        mscolab_server_url=self.mscolab_server_url)
+            self.admin_window = maw.MSColabAdminWindow(
+                self.token,
+                self.active_pid,
+                self.user,
+                self.active_project_name,
+                self.projects,
+                self.conn,
+                mscolab_server_url=self.mscolab_server_url,
+            )
             self.admin_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             self.admin_window.viewCloses.connect(self.close_admin_window)
             self.admin_window.show()
@@ -705,9 +720,12 @@ class MSSMscolab(QtCore.QObject):
         if self.verify_user_token():
             entered_project_name, ok = QtWidgets.QInputDialog.getText(
                 self.ui,
-                self.ui.tr('Delete Project'),
-                self.ui.tr(f"You're about to delete the project - '{self.active_project_name}'. "
-                        f"Enter the project name to confirm: "))
+                self.ui.tr("Delete Project"),
+                self.ui.tr(
+                    f"You're about to delete the project - '{self.active_project_name}'. "
+                    f"Enter the project name to confirm: "
+                ),
+            )
             if ok:
                 if entered_project_name == self.active_project_name:
                     data = {
@@ -733,20 +751,25 @@ class MSSMscolab(QtCore.QObject):
                 if self.version_window is not None:
                     self.version_window.close()
                 self.create_local_project_file()
-                self.local_ftml_file = fs.path.combine(self.data_dir,
-                                                        fs.path.join('local_mscolab_data',
-                                                                    self.user['username'], self.active_project_name,
-                                                                    'mscolab_project.ftml'))
+                self.local_ftml_file = fs.path.combine(
+                    self.data_dir,
+                    fs.path.join(
+                        "local_mscolab_data", self.user["username"], self.active_project_name, "mscolab_project.ftml"),
+                )
                 self.ui.workingStatusLabel.setText(
-                    self.ui.tr("Working On: Local File.\nYour changes are only available to you."
-                            "To save your changes with everyone, use the \"Save to Server\" button."))
+                    self.ui.tr(
+                        "Working On: Local File.\nYour changes are only available to you."
+                        'To save your changes with everyone, use the "Save to Server" button.')
+                )
                 self.ui.serverOptionsCb.show()
                 self.reload_local_wp()
             else:
                 self.local_ftml_file = None
                 self.ui.workingStatusLabel.setText(
-                    self.ui.tr("Working On: Shared File.\nAll your changes will be shared with everyone."
-                            "Turn on work locally to work on local flight track file"))
+                    self.ui.tr(
+                        "Working On: Shared File.\nAll your changes will be shared with everyone."
+                        "Turn on work locally to work on local flight track file")
+                )
                 self.ui.serverOptionsCb.hide()
                 self.waypoints_model = None
                 self.load_wps_from_server()
@@ -1012,9 +1035,13 @@ class MSSMscolab(QtCore.QObject):
             # set active flightpath here
             self.load_wps_from_server()
             # display working status
-            self.ui.workingStatusLabel.setText(self.ui.tr("Working On: Shared File.\n"
-                                                "All your changes will be shared with everyone."
-                                                "Turn on work locally to work on local flight track file"))
+            self.ui.workingStatusLabel.setText(
+                self.ui.tr(
+                    "Working On: Shared File.\n"
+                    "All your changes will be shared with everyone."
+                    "Turn on work locally to work on local flight track file"
+                )
+            )
             # self.ui.workingStatusLabel.show()
             # enable access level specific widgets
             self.show_project_options()

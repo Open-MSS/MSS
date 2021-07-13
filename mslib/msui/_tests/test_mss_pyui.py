@@ -29,6 +29,7 @@
 import sys
 import mock
 import os
+import pytest
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
@@ -38,22 +39,22 @@ from mslib.plugins.io.text import load_from_txt, save_to_txt
 from mslib.plugins.io.flitestar import load_from_flitestar
 
 
-# class Test_MSS_AboutDialog():
-#     def setup(self):
-#         self.application = QtWidgets.QApplication(sys.argv)
-#         self.window = mss_pyui.MSS_AboutDialog()
+class Test_MSS_AboutDialog():
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = mss_pyui.MSS_AboutDialog()
 
-#     def test_milestone_url(self):
-#         with urlopen(self.window.milestone_url) as f:
-#             text = f.read()
-#         pattern = f'value="is:closed milestone:{__version__[:-1]}"'
-#         assert pattern in text.decode('utf-8')
+    def test_milestone_url(self):
+        with urlopen(self.window.milestone_url) as f:
+            text = f.read()
+        pattern = f'value="is:closed milestone:{__version__[:-1]}"'
+        assert pattern in text.decode('utf-8')
 
-#     def teardown(self):
-#         self.window.hide()
-#         QtWidgets.QApplication.processEvents()
-#         self.application.quit()
-#         QtWidgets.QApplication.processEvents()
+    def teardown(self):
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
 
 
 class Test_MSS_ShortcutDialog():
@@ -163,15 +164,16 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_ftml)
         os.remove(self.save_ftml)
 
-    # @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=os.path.join(sample_path, u"example.csv"))
-    # def test_plugin_csv_read(self, mockopen):
-    #     assert self.window.listFlightTracks.count() == 1
-    #     assert mockopen.call_count == 0
-    #     self.window.last_save_directory = self.sample_path
-    #     self.window.actionImportFlightTrackCSV.trigger()
-    #     QtWidgets.QApplication.processEvents()
-    #     assert self.window.listFlightTracks.count() == 2
-    #     assert mockopen.call_count == 1
+    @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=os.path.join(sample_path, u"example.csv"))
+    def test_plugin_csv_read(self, mockopen):
+        pytest.skip("yet to refactor for new UI")
+        assert self.window.listFlightTracks.count() == 1
+        assert mockopen.call_count == 0
+        self.window.last_save_directory = self.sample_path
+        self.window.actionImportFlightTrackCSV.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1
 
     @mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_csv)
     def test_plugin_csv_write(self, mocksave):
@@ -183,17 +185,18 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_csv)
         os.remove(self.save_csv)
 
-    # @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=os.path.join(sample_path, u"example.txt"))
-    # def test_plugin_txt_read(self, mockopen):
-    #     self.window.add_plugin_submenu("_TXT", "txt", plugin_type="Import")
-    #     self.window.import_plugins['txt'] = load_from_txt
-    #     assert self.window.listFlightTracks.count() == 1
-    #     assert mockopen.call_count == 0
-    #     self.window.last_save_directory = self.sample_path
-    #     self.window.actionImportFlightTrack_TXT.trigger()
-    #     assert mockopen.call_count == 1
-    #     QtWidgets.QApplication.processEvents()
-    #     assert self.window.listFlightTracks.count() == 2
+    @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=os.path.join(sample_path, u"example.txt"))
+    def test_plugin_txt_read(self, mockopen):
+        pytest.skip("yet to refactor for new UI")
+        self.window.add_plugin_submenu("_TXT", "txt", plugin_type="Import")
+        self.window.import_plugins['txt'] = load_from_txt
+        assert self.window.listFlightTracks.count() == 1
+        assert mockopen.call_count == 0
+        self.window.last_save_directory = self.sample_path
+        self.window.actionImportFlightTrack_TXT.trigger()
+        assert mockopen.call_count == 1
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
 
     @mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_txt)
     def test_plugin_txt_write(self, mocksave):
@@ -207,14 +210,15 @@ class Test_MSSSideViewWindow(object):
         assert os.path.exists(self.save_txt)
         os.remove(self.save_txt)
 
-    # @mock.patch("mslib.msui.mss_pyui.get_open_filename",
-    #             return_value=os.path.join(sample_path, u"flitestar.txt"))
-    # def test_plugin_flitestar(self, mockopen):
-    #     self.window.last_save_directory = self.sample_path
-    #     self.window.add_plugin_submenu("_FliteStar", "fls", plugin_type="Import")
-    #     self.window.import_plugins['fls'] = load_from_flitestar
-    #     assert self.window.listFlightTracks.count() == 1
-    #     self.window.actionImportFlightTrack_FliteStar.trigger()
-    #     QtWidgets.QApplication.processEvents()
-    #     assert self.window.listFlightTracks.count() == 2
-    #     assert mockopen.call_count == 1
+    @mock.patch("mslib.msui.mss_pyui.get_open_filename",
+                return_value=os.path.join(sample_path, u"flitestar.txt"))
+    def test_plugin_flitestar(self, mockopen):
+        pytest.skip("yet to refactor for new UI")
+        self.window.last_save_directory = self.sample_path
+        self.window.add_plugin_submenu("_FliteStar", "fls", plugin_type="Import")
+        self.window.import_plugins['fls'] = load_from_flitestar
+        assert self.window.listFlightTracks.count() == 1
+        self.window.actionImportFlightTrack_FliteStar.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert self.window.listFlightTracks.count() == 2
+        assert mockopen.call_count == 1

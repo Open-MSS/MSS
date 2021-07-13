@@ -590,8 +590,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
         filename = get_save_filename(
-                        self, "Save Flight Track", default_filename,
-                        ';;'.join(file_type), pickertag="filepicker_default")
+            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertag="filepicker_default"
+        )
         logging.debug("filename : '%s'", filename)
         if filename:
             self.save_flight_track(filename)
@@ -616,7 +616,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             for idx in range(self.listFlightTracks.count()):
                 if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
                     self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
-
 
     def close_selected_flight_track(self):
         """Slot to close the currently selected flight track. Flight tracks can
