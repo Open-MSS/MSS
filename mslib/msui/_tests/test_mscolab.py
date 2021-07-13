@@ -153,13 +153,6 @@ class Test_Mscolab(object):
     def test_view_open(self):
         self._connect_to_mscolab()
         self._login()
-        # # test without activating project
-        # QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)
-        # QtTest.QTest.mouseClick(self.window.sideview, QtCore.Qt.LeftButton)
-        # QtTest.QTest.mouseClick(self.window.tableview, QtCore.Qt.LeftButton)
-        # QtTest.QTest.mouseClick(self.window.linearview, QtCore.Qt.LeftButton)
-        # QtWidgets.QApplication.processEvents()
-        # assert len(self.window.get_active_views()) == 0
         # test after activating project
         self._activate_project_at_index(0)
         self.window.actionTableView.trigger()
@@ -324,7 +317,7 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
-        pytest.skip("yet to refactor for new UI")
+        pytest.skip("To be done")
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
@@ -338,14 +331,14 @@ class Test_Mscolab(object):
             assert Permission.query.filter_by(u_id=u_id).count() == 0
 
     def test_open_help_dialog(self):
-        pytest.skip("yet to refactor for new UI")
+        pytest.skip("To be done")
         QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.help_dialog is not None
         self.window.close()
 
     def test_close_help_dialog(self):
-        pytest.skip("yet to refactor for new UI")
+        pytest.skip("To be done")
         QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         self.window.close()

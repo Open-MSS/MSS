@@ -166,7 +166,7 @@ class Test_MSSSideViewWindow(object):
 
     @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=os.path.join(sample_path, u"example.csv"))
     def test_plugin_csv_read(self, mockopen):
-        pytest.skip("yet to refactor for new UI")
+        pytest.skip("To be done")
         assert self.window.listFlightTracks.count() == 1
         assert mockopen.call_count == 0
         self.window.last_save_directory = self.sample_path
@@ -187,7 +187,7 @@ class Test_MSSSideViewWindow(object):
 
     @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=os.path.join(sample_path, u"example.txt"))
     def test_plugin_txt_read(self, mockopen):
-        pytest.skip("yet to refactor for new UI")
+        pytest.skip("To be done")
         self.window.add_plugin_submenu("_TXT", "txt", plugin_type="Import")
         self.window.import_plugins['txt'] = load_from_txt
         assert self.window.listFlightTracks.count() == 1
@@ -213,7 +213,7 @@ class Test_MSSSideViewWindow(object):
     @mock.patch("mslib.msui.mss_pyui.get_open_filename",
                 return_value=os.path.join(sample_path, u"flitestar.txt"))
     def test_plugin_flitestar(self, mockopen):
-        pytest.skip("yet to refactor for new UI")
+        pytest.skip("To be done")
         self.window.last_save_directory = self.sample_path
         self.window.add_plugin_submenu("_FliteStar", "fls", plugin_type="Import")
         self.window.import_plugins['fls'] = load_from_flitestar

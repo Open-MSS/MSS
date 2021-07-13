@@ -58,13 +58,3 @@ class Ui_addProjectDialog(object):
         self.label_3.setText(_translate("addProjectDialog", "Choose Flighttrack File (Optional)"))
         self.label_2.setText(_translate("addProjectDialog", "Description"))
         self.selectedFile.setPlaceholderText(_translate("addProjectDialog", "(use browse to pick a file)"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    addProjectDialog = QtWidgets.QDialog()
-    ui = Ui_addProjectDialog()
-    ui.setupUi(addProjectDialog)
-    addProjectDialog.show()
-    sys.exit(app.exec_())

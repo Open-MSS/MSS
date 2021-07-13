@@ -215,13 +215,3 @@ class Ui_MSColabConnectDialog(object):
         self.httpPasswordLabel.setText(_translate("MSColabConnectDialog", "Password:"))
         self.httpUsernameLe.setPlaceholderText(_translate("MSColabConnectDialog", "Server Auth Username"))
         self.statusLabel.setText(_translate("MSColabConnectDialog", "Status:"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MSColabConnectDialog = QtWidgets.QDialog()
-    ui = Ui_MSColabConnectDialog()
-    ui.setupUi(MSColabConnectDialog)
-    MSColabConnectDialog.show()
-    sys.exit(app.exec_())

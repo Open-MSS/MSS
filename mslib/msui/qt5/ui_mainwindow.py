@@ -272,13 +272,3 @@ class Ui_MSSMainWindow(object):
         self.actionDeleteProject.setText(_translate("MSSMainWindow", "&Delete Project"))
         self.actionBringMainWindowToFront.setText(_translate("MSSMainWindow", "Bring Main Window To Front"))
         self.actionBringMainWindowToFront.setShortcut(_translate("MSSMainWindow", "Ctrl+Up"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MSSMainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MSSMainWindow()
-    ui.setupUi(MSSMainWindow)
-    MSSMainWindow.show()
-    sys.exit(app.exec_())
