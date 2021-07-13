@@ -132,16 +132,18 @@ class MapCanvas(basemap.Basemap):
 
         self.image = None
 
-        # Print CRS identifier and project name into figure.
-        if self.crs is not None and self.project_name is not None:
-            self.crs_text = self.ax.figure.text(0, 0, f"{self.project_name}\n{self.crs}")
+        # Print project name and CRS identifier into figure.
+        crs_text = ""
+        if self.project_name is not None:
+            crs_text += self.project_name
+        if self.crs is not None:
+            if len(crs_text) > 0:
+                crs_text += "\n"
+            crs_text += self.crs
+        if hasattr(self, "crs_text"):  # update existing textbox
+            self.crs_text.set_text(crs_text)
         else:
-            # Print only CRS identifier into the figure.
-            if self.crs is not None:
-                if hasattr(self, "crs_text"):
-                    self.crs_text.set_text(self.crs)
-                else:
-                    self.crs_text = self.ax.figure.text(0, 0, self.crs)
+            self.crs_text = self.ax.figure.text(0, 0, crs_text)
 
         if self.appearance["draw_graticule"]:
             pass
@@ -558,7 +560,9 @@ class MapCanvas(basemap.Basemap):
             # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
             # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
             # of pyproj?? (mr, 16Oct2012)
-            lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
+            lonlats = []
+            if npoints > 0:
+                lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
             # The cylindrical projection of matplotlib is not periodic, that means that
             # -170 longitude and 190 longitude are not identical. The gc projection however
             # assumes identity and maps all longitudes to -180 to 180. This is no issue for

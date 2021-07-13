@@ -36,9 +36,11 @@ from abc import abstractmethod
 from xml.dom.minidom import getDOMImplementation
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import mpl_toolkits.axes_grid1
 
 from mslib.mswms import mss_2D_sections
 from mslib.utils import convert_to, UR
+from mslib.mswms.utils import make_cbar_labels_readable
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
@@ -58,6 +60,19 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         Constructor.
         """
         super(AbstractVerticalSectionStyle, self).__init__(driver=driver)
+
+    def add_colorbar(self, contour, label=None, tick_levels=None, width="3%", height="30%", cb_format=None, left=0.08,
+                     right=0.95, top=0.9, bottom=0.14, fraction=0.05, pad=0.01, loc=1, tick_position="left"):
+        if not self.noframe:
+            self.fig.subplots_adjust(left=left, right=right, top=top, bottom=bottom)
+            cbar = self.fig.colorbar(contour, fraction=fraction, pad=pad)
+            cbar.set_label(label)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                self.ax, width=width, height=height, loc=loc)
+            self.fig.colorbar(contour, cax=axins1, orientation="vertical", ticks=tick_levels, format=cb_format)
+            axins1.yaxis.set_ticks_position(tick_position)
+            make_cbar_labels_readable(self.fig, axins1)
 
     def supported_crs(self):
         """

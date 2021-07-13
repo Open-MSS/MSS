@@ -27,6 +27,9 @@
 import sys
 import os
 import fs
+import fs.errors
+import fs.opener.errors
+import requests.exceptions
 import mock
 import pytest
 
@@ -150,7 +153,8 @@ class Test_Mscolab(object):
         self._activate_project_at_index(0)
         assert self.window.mscolab.active_pid is not None
 
-    def test_view_open(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_view_open(self, mockbox):
         self._connect_to_mscolab()
         self._login()
         # test after activating project
@@ -182,10 +186,7 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
-    @mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName",
-                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_import.ftml'), None))
+    @pytest.mark.parametrize("ext", [".ftml", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockExport, mockImport, mockMessage):
         self._connect_to_mscolab()
@@ -245,8 +246,8 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listProjectsMSC.model().rowCount() == 1
 
-    def test_add_project(self):
-        # ToDo test needs to be independent from test_user_delete
+    @mock.patch("PyQt5.QtWidgets.QErrorMessage")
+    def test_add_project(self, mockbox):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
@@ -343,6 +344,21 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.window.close()
         assert self.window.help_dialog is None
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    @mock.patch("sys.exit")
+    def test_create_dir_exceptions(self, mockexit, mockbox):
+        with mock.patch("fs.open_fs", new=ExceptionMock(fs.errors.CreateFailed).raise_exc):
+            self.window.data_dir = "://"
+            self.window.create_dir()
+            assert mockbox.critical.call_count == 1
+            assert mockexit.call_count == 1
+
+        with mock.patch("fs.open_fs", new=ExceptionMock(fs.opener.errors.UnsupportedProtocol).raise_exc):
+            self.window.data_dir = "://"
+            self.window.create_dir()
+            assert mockbox.critical.call_count == 2
+            assert mockexit.call_count == 2
 
     def _connect_to_mscolab(self):
         self.window.mscolab.open_connect_window()

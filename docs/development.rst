@@ -1,8 +1,8 @@
 .. _development:
 
-
+===========
 Development
-============================
+===========
 
 This chapter will get you started with MSS development.
 
@@ -30,13 +30,85 @@ Output and Logging
 When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
 warning for warnings, error for errors, critical for critical errors/states).
 
-Setup a development environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Setting Up a Local Environment
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If you want to contribute make a fork on github of `MSS <https://github.com/Open-MSS/MSS>`_.
+Requirements
+------------
 
-In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
-MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
+1. System requirements
+
+  | Any system with basic configuration.
+  | Operating System : Any (Windows / Linux / Mac).
+
+2. Software requirement
+
+  | Python
+  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
+
+
+3. Skill set
+
+  | Knowledge of git & github
+  | python
+
+Forking the Repo
+----------------
+
+1. Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window.
+
+2. Kindly wait till it gets forked.
+
+3. After that copy will look like *<your-user-name>/MSS* forked from *Open-MSS/MSS*.
+
+Cloning the Repo
+----------------
+
+1. Now you have your own copy of project. Here you have to start your work.
+
+2. Go to desired location on your computer where you want to set-up the project.
+
+3. Right click there and click on git bash. A terminal window will pop up
+
+4. Click The big green button which says "Code". Copy the URL. `Like this <https://user-images.githubusercontent.com/71402528/122255281-9a855d80-ceeb-11eb-9f85-fed38db30562.png>`_
+
+5. Now Type the command ``git clone <your-fork-url>.git`` and hit enter.
+
+6. Wait for few seconds till the project gets copied
+
+  or simply head over here for `cloning a repository <https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository>`_
+
+7. Add the path of your local cloned mss directory to $PYTHONPATH.
+
+Setting up a git remote
+-----------------------
+
+1. Now you have to set up remote repositories
+
+2. Type ``git remote -v`` in terminal to list remote connections to your repo.
+
+3. It will show something like this:
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
+
+4. Now type the command git remote add upstream ``https://github.com/Open-MSS/MSS.git`` this will set upstream as main directory
+
+5. Again type in command git remote -v to check if remote has been set up correctly
+
+6. It should show something like this :
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
+
+  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
+
+  upstream        ``https://github.com/Open-MSS/MSS.git`` (fetch)
+
+  upstream        ``https://github.com/Open-MSS/MSS.git`` (push)
+
+Installing dependencies
+-----------------------
 
 MSS is based on the software of the conda-forge channel located, so we have to add this channel to the default::
 
@@ -53,26 +125,54 @@ Create an environment and install the whole mss package dependencies then remove
 
   $ conda create -n mssdev mamba
   $ conda activate mssdev
-  $ mamba install mss --only-deps
+  $ mamba install mss=$mss_version --only-deps
 
 You can also use conda to install mss, but mamba is a way faster.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
-Add the path of your local cloned mss directory to $PYTHONPATH.
+Pushing your changes
+--------------------
 
-For developer we provide additional packages for running tests, activate your env and run::
+1. Now you have made the changes, tested them and built them. So now it's time to push them.
+2. Goto your terminal and type git status and hit enter, this will show your changes from the files
+3. Then type in git add and hit enter, this will add all the files to staging area
+4. Commit the changes by ``git commit -m "<message-describing-your-change>"`` and hit enter.
+5. Now push your branch to your fork by ``git push origin <your-branch-name>`` and hit enter.
 
-  $ mamba install --file requirements.d/development.txt
 
-On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager.
-This is used to run tests on a virtual display.
-If you don't want tests redirected to the xvfb display just setup an environment variable::
+Creating a pull request
+-----------------------
 
- $ export TESTS_VISIBLE=TRUE
+By this time you can see a message on your github fork as your fork is ahead of Open-MSS:develop by <number> of commits and also you can see a button called Compare and pull request.
 
+Click on Compare and pull request button.
+
+You will see a template.
+
+Fill out the template completely by describing your change, cause of change, issue getting fixed etc.
+
+After filling the template completely click on Pull request
+
+How to Report Bugs
+~~~~~~~~~~~~~~~~~~
+
+Please open a new issue in the appropriate GitHub repository `here <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
+
+Be sure to include as much information including screenshots, text output, and both your expected and actual results.
+
+How to Request Enhancements
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First, please refer to the applicable `GitHub repository <https://github.com/Open-MSS/MSS>`_ and search `the repository's GitHub issues <https://github.com/Open-MSS/MSS/issues>`_ to make sure your idea has not been (or is not still) considered.
+
+Then, please `create a new issue <https://github.com/Open-MSS/MSS/issues/new>`_ in the GitHub repository describing your enhancement.
+
+Be sure to include as much detail as possible including step-by-step descriptions, specific examples, screenshots or mockups, and reasoning for why the enhancement might be worthwhile.
 
 Setup demodata
 ~~~~~~~~~~~~~~
+In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
+MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
 
 :ref:`demodata` is provided by executing::
 
@@ -104,6 +204,15 @@ Now you can use the MSS desktop application to connect to it using the Mscolab w
 
 Running tests
 ~~~~~~~~~~~~~~~~~~~
+For developers we provide additional packages for running tests, activate your env and run::
+
+  $ mamba install --file requirements.d/development.txt
+
+On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager.
+This is used to run tests on a virtual display.
+If you don't want tests redirected to the xvfb display just setup an environment variable::
+
+ $ export TESTS_VISIBLE=TRUE
 
 We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
@@ -190,7 +299,7 @@ If you don't have a stable branch, create one first or change to that branch::
 Merging stable into develop
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Bug fixes we have done in stable we need to merge regulary into develop too:: 
+Bug fixes we have done in stable we need to merge regulary into develop too::
 
    git checkout stable
    git pull git@github.com:Open-MSS/MSS.git stable
@@ -255,4 +364,3 @@ Publish on Conda Forge
 * rerender the feedstock by conda smithy
 * send a pull request
 * maintainer will merge if there is no error
-

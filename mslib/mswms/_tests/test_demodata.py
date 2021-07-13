@@ -28,9 +28,8 @@
 
 from past.builtins import basestring
 
-import imp
 import numpy as np
-from mslib._tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE, SERVER_CONFIG_FILE_PATH
+from mslib._tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE
 import mslib.mswms.demodata as demodata
 
 
@@ -39,10 +38,7 @@ class TestDemodata(object):
         assert ROOT_FS.exists(u'.')
         assert DATA_FS.exists(u'.')
         assert SERVER_CONFIG_FS.exists(SERVER_CONFIG_FILE)
-        assert len(DATA_FS.listdir(u'.')) == 19
-
-    def test_server_config_file(self):
-        imp.load_source('mss_wms_settings', SERVER_CONFIG_FILE_PATH)
+        assert len(DATA_FS.listdir(u'.')) == 23
 
     def test_get_profile(self):
         mean, std = demodata.get_profile("air_pressure", [1000, 10000, 50000], "air_temperature")
@@ -50,8 +46,8 @@ class TestDemodata(object):
         assert np.allclose(std, [3.03, 6.31, 6.33])
 
         mean, std = demodata.get_profile("air_potential_temperature", [300, 350, 400], "geopotential_height")
-        assert np.allclose(mean, [2953.99369248, 12007.44365002, 15285.95068235])
-        assert np.allclose(std, [117.675343762, 248.127730176, 164.947761167])
+        assert np.allclose(mean, [2970., 12026.92307692, 15307.89473684])
+        assert np.allclose(std, [118, 247.69230769, 164.34210526])
 
         mean, std = demodata.get_profile("ertel_potential_vorticity", [2, 4, 8], "geopotential_height")
         assert np.allclose(mean, [9565.89928058, 11148.1865285, 14139.43661972])

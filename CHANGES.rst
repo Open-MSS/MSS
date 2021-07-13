@@ -1,6 +1,30 @@
 Changelog
 =========
 
+Version 4.0.3
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/62?closed=1
+
+Version 4.0.2
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/60?closed=1
+
+Version 4.0.1
+~~~~~~~~~~~~~
+
+Bug Fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/58?closed=1
+
 Version 4.0.0
 -------------
 

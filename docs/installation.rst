@@ -56,7 +56,7 @@ leave out the 'source' here and below). ::
 
     $ conda create -n mssenv mamba
     $ conda activate mssenv
-    (mssenv) $ mamba install mss
+    (mssenv) $ mamba install mss=$mss_version python
 
 
 You need to reactivate after the installation once the environment to setup all needed enironment
@@ -70,7 +70,9 @@ variables. ::
 update
 ++++++
 For updating an existing MSS installation to the current version, it is best to install
-it into a new environment.
+it into a new environment. If your current version is not far behind the new version
+you could try the mamba update mss as described.
+
 
 .. Important::
   mamba is under development. All dependencies of MSS and MSS itselfs are under development.
@@ -79,9 +81,8 @@ it into a new environment.
 search for MSS what you can get ::
 
    (mssenv) $ mamba search mss
-
-    mss                            3.0.3  py39hf3d152e_0  conda-forge
-    mss                            3.0.3  py39hf3d152e_1  conda-forge
+   ...
+   $mss_search
 
 compare what you have installed ::
 
@@ -89,25 +90,19 @@ compare what you have installed ::
 
      mss                            3.0.2     py39hf3d152e_0    conda-forge
 
-If an existing environment shall be updated, it is important to update all packages in this environment. ::
 
-   $ conda activate mssenv
-   (mssenv) $ mamba update --all
+We have reports that often an update suceeds by using the install option and the new version number,
+in this example $mss_version and python as second option ::
 
-In this example there was a further build done after the first release of 3.0.3.
-Compare in the list of proposed updates what you would get ::
+   (mssenv) $ mamba install mss=$mss_version python
 
-   matplotlib                3.4.2            py39hf3d152e_0    conda-forge
-   matplotlib-base           3.4.2            py39h2fa2bec_0    conda-forge
-   mss                       3.0.3            py39hf3d152e_0    conda-forge
-   multidict                 5.1.0            py39h3811e60_1    conda-forge
+All attemmpts show what you get if you continue. **Continue only if you get what you want.**
 
-If you see a mismatch like this, not getting the recent buildnumber. In this example value in
-third column ends with "_1" you have to force the update by the conda command::
+The alternative is to use a new environment and install mss.
 
-  (mssenv) $ conda install mss==3.0.3=py39hf3d152e_1
 
-For further details :ref:`mss-configuration`
+
+For further details of configurating mss :ref:`mss-configuration`
 
 
 
@@ -127,7 +122,7 @@ We suggest to create a mss user.
 * login again or export PATH="/home/mss/miniconda3/bin:$PATH"
 * conda create -n mssenv mamba
 * conda activate mssenv
-* mamba install mss
+* mamba install mss=$mss_version python
 
 For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
 

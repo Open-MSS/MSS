@@ -50,10 +50,12 @@ import io
 import logging
 import traceback
 import urllib.parse
+import inspect
 from xml.etree import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
+import shutil
 
 from flask import request, make_response, render_template
 from flask_httpauth import HTTPBasicAuth
@@ -61,6 +63,7 @@ from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
 from mslib.index import app_loader
+from mslib.mswms.gallery_builder import add_image, write_html, write_doc_index, STATIC_LOCATION, DOCS_LOCATION
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -205,9 +208,120 @@ class WMSServer(object):
             mss_wms_settings.register_linear_layers = []
         for layer in mss_wms_settings.register_linear_layers:
             if len(layer) == 3:
-                self.register_lsec_layer(layer[2], layer[1], layer[0])
+                self.register_lsec_layer(layer[2], layer[1], layer_class=layer[0])
+            elif len(layer) == 4:
+                self.register_lsec_layer(layer[3], layer[1], layer[2], layer[0])
             else:
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
+
+    def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
+                         all_plots=False, url_prefix=""):
+        """
+        Iterates through all registered layers, draws their plots and puts them in the gallery
+        """
+        if mss_wms_settings.__file__:
+            if all_plots:
+                # Imports here due to some circular import issue if imported too soon
+                from mslib.mswms import mpl_hsec_styles, mpl_vsec_styles, mpl_lsec_styles
+
+                dataset = [next(iter(mss_wms_settings.data))]
+                mss_wms_settings.register_horizontal_layers = [
+                    (plot[1], dataset) for plot in inspect.getmembers(mpl_hsec_styles, inspect.isclass)
+                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+                ]
+                mss_wms_settings.register_vertical_layers = [
+                    (plot[1], dataset) for plot in inspect.getmembers(mpl_vsec_styles, inspect.isclass)
+                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+                ]
+                mss_wms_settings.register_linear_layers = [
+                    (plot[1], dataset) for plot in inspect.getmembers(mpl_lsec_styles, inspect.isclass)
+                ]
+                self.__init__()
+
+            location = DOCS_LOCATION if sphinx else STATIC_LOCATION
+            if clear and os.path.exists(os.path.join(location, "plots")):
+                shutil.rmtree(os.path.join(location, "plots"))
+            if os.path.exists(os.path.join(location, "code")):
+                shutil.rmtree(os.path.join(location, "code"))
+            if os.path.exists(os.path.join(location, "plots.html")):
+                os.remove(os.path.join(location, "plots.html"))
+
+            if not (create or generate_code or all_plots or plot_list):
+                return
+
+            if not plot_list:
+                plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
+                             [self.vsec_drivers, self.vsec_layer_registry],
+                             [self.hsec_drivers, self.hsec_layer_registry]]
+
+            for driver, registry in plot_list:
+                multiple_datasets = len(driver) > 1
+                for dataset in driver:
+                    plot_driver = driver[dataset]
+                    if dataset not in registry:
+                        continue
+                    for plot in registry[dataset]:
+                        plot_object = registry[dataset][plot]
+                        l_type = "Linear" if driver == self.lsec_drivers else \
+                            "Side" if driver == self.vsec_drivers else "Top"
+
+                        try:
+                            if not os.path.exists(os.path.join(location, "plots",
+                                                               f"{l_type}_{dataset if multiple_datasets else ''}"
+                                                               f"{plot_object.name}.png")):
+                                # Plot doesn't already exist, generate it
+                                file_types = [field[0] for field in plot_object.required_datafields
+                                              if field[0] != "sfc"]
+                                file_type = file_types[0] if file_types else "sfc"
+                                init_time = plot_driver.get_init_times()[-1]
+                                valid_time = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
+                                                                         file_type, init_time)[-1]
+                                style = plot_object.styles[0][0] if plot_object.styles else None
+                                kwargs = {"plot_object": plot_object,
+                                          "init_time": init_time,
+                                          "valid_time": valid_time}
+                                if driver == self.lsec_drivers:
+                                    plot_driver.set_plot_parameters(**kwargs, lsec_path=[[0, 0, 20000], [1, 1, 20000]],
+                                                                    lsec_numpoints=201, lsec_path_connection="linear")
+                                    path = [[min(plot_driver.lat_data), min(plot_driver.lon_data), 20000],
+                                            [max(plot_driver.lat_data), max(plot_driver.lon_data), 20000]]
+                                    plot_driver.update_plot_parameters(lsec_path=path)
+                                elif driver == self.vsec_drivers:
+                                    plot_driver.set_plot_parameters(**kwargs, vsec_path=[[0, 0], [1, 1]],
+                                                                    vsec_numpoints=201, figsize=[800, 600],
+                                                                    vsec_path_connection="linear", style=style,
+                                                                    noframe=False, bbox=[101, 1050, 10, 180])
+                                    path = [[min(plot_driver.lat_data), min(plot_driver.lon_data)],
+                                            [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
+                                    plot_driver.update_plot_parameters(vsec_path=path)
+                                elif driver == self.hsec_drivers:
+                                    elevations = plot_object.get_elevations()
+                                    elevation = float(elevations[len(elevations) // 2]) if len(elevations) > 0 else None
+                                    plot_driver.set_plot_parameters(**kwargs, noframe=False, figsize=[800, 600],
+                                                                    crs="EPSG:4326", style=style,
+                                                                    bbox=[-15, 35, 30, 65],
+                                                                    level=elevation)
+                                    bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
+                                            max(plot_driver.lon_data), max(plot_driver.lat_data)]
+                                    # Create square bbox for better images
+                                    # if abs(bbox[0] - bbox[2]) > abs(bbox[1] - bbox[3]):
+                                    #     bbox[2] = bbox[0] + abs(bbox[1] - bbox[3])
+                                    # else:
+                                    #     bbox[3] = bbox[1] + abs(bbox[0] - bbox[2])
+                                    plot_driver.update_plot_parameters(bbox=bbox)
+                                add_image(plot_driver.plot(), plot_object, generate_code, sphinx, url_prefix=url_prefix,
+                                          dataset=dataset if multiple_datasets else "")
+                            else:
+                                # Plot already exists, skip generation
+                                add_image(None, plot_object, generate_code, sphinx, url_prefix=url_prefix,
+                                          dataset=dataset if multiple_datasets else "")
+
+                        except Exception as e:
+                            traceback.print_exc()
+                            logging.error("%s %s %s", plot_object.name, type(e), e)
+            write_html(sphinx)
+            if sphinx and generate_code:
+                write_doc_index()
 
     def register_hsec_layer(self, datasets, layer_class):
         """
@@ -262,7 +376,7 @@ class WMSServer(object):
                     raise ValueError("dataset '%s' not available", dataset)
             self.vsec_layer_registry[dataset][layer.name] = layer
 
-    def register_lsec_layer(self, datasets, variable=None, layer_class=None):
+    def register_lsec_layer(self, datasets, variable=None, filetype="ml", layer_class=None):
         """
         Register linear section layer in internal dict of layers.
 
@@ -274,7 +388,7 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 if variable:
-                    layer = layer_class(self.lsec_drivers[dataset], variable)
+                    layer = layer_class(self.lsec_drivers[dataset], variable, filetype)
                 else:
                     layer = layer_class(self.lsec_drivers[dataset])
             except KeyError as ex:
