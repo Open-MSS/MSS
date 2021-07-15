@@ -33,10 +33,10 @@ from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.models import User, MessageType
 from mslib.mscolab.utils import get_recent_pid, get_session_id, get_message_dict, create_files, os_fs_create_dir
 from mslib.mscolab.conf import mscolab_settings
-from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import (mscolab_start_server, mscolab_create_project, mscolab_register_and_login,
                                 mscolab_delete_user, mscolab_delete_all_projects)
 from mslib.mscolab.server import register_user
+import mslib.msui.mss_pyui as mss_pyui
 
 PORTS = list(range(9561, 9580))
 
@@ -64,8 +64,7 @@ class Test_Utils_with_Projects(object):
         self.process, self.url, self.app, self.sio, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
 
         with self.app.app_context():
             response = mscolab_register_and_login(self.app, self.url, 'a1a@a1a', 'a1a', 'a1a')
@@ -83,10 +82,10 @@ class Test_Utils_with_Projects(object):
         with self.app.app_context():
             mscolab_delete_all_projects(self.app, self.url, 'a1a@a1a', 'a1a', 'a1a')
             mscolab_delete_user(self.app, self.url, 'a1a@a1a', 'a1a')
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
@@ -117,8 +116,7 @@ class Test_Utils_No_Project(object):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(100)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         with self.app.app_context():
             register_user('sdf@s.com', 'sdf', 'sdf')
             self.user = User.query.filter_by(emailid="sdf@s.com").first()
@@ -126,10 +124,10 @@ class Test_Utils_No_Project(object):
     def teardown(self):
         with self.app.app_context():
             mscolab_delete_user(self.app, self.url, 'sdf@s.com', 'sdf')
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

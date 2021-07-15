@@ -30,9 +30,9 @@ import pytest
 import mock
 
 from mslib._tests.utils import mscolab_start_server
-from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
+import mslib.msui.mss_pyui as mss_pyui
 
 
 PORTS = list(range(9591, 9620))
@@ -45,23 +45,24 @@ class Test_MscolabVersionHistory(object):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.show()
+        # connect and login to mscolab
         self._connect_to_mscolab()
         self._login()
+        # activate project and open chat window
         self._activate_project_at_index(0)
-        # activate project window here by clicking button
-        QtTest.QTest.mouseClick(self.window.versionHistoryBtn, QtCore.Qt.LeftButton)
+        self.window.actionVersionHistory.trigger()
         QtWidgets.QApplication.processEvents()
-        self.version_window = self.window.version_window
+        self.version_window = self.window.mscolab.version_window
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
@@ -70,10 +71,10 @@ class Test_MscolabVersionHistory(object):
         self._change_version_filter(1)
         len_prev = self.version_window.changes.count()
         # make a changes
-        self.window.waypoints_model.invert_direction()
+        self.window.mscolab.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
-        self.window.waypoints_model.invert_direction()
+        self.window.mscolab.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         self.version_window.load_all_changes()
@@ -85,7 +86,7 @@ class Test_MscolabVersionHistory(object):
     def test_set_version_name(self, mockbox):
         self._change_version_filter(1)
         # make a changes
-        self.window.waypoints_model.invert_direction()
+        self.window.mscolab.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         self.version_window.load_all_changes()
@@ -110,7 +111,7 @@ class Test_MscolabVersionHistory(object):
         self._change_version_filter(1)
         # make changes
         for i in range(2):
-            self.window.waypoints_model.invert_direction()
+            self.window.mscolab.waypoints_model.invert_direction()
             QtWidgets.QApplication.processEvents()
             QtTest.QTest.qWait(100)
         self.version_window.load_all_changes()
@@ -126,10 +127,10 @@ class Test_MscolabVersionHistory(object):
     def test_refresh(self):
         self._change_version_filter(1)
         changes_count = self.version_window.changes.count()
-        self.window.waypoints_model.invert_direction()
+        self.window.mscolab.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
-        self.window.waypoints_model.invert_direction()
+        self.window.mscolab.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         QtTest.QTest.mouseClick(self.version_window.refreshBtn, QtCore.Qt.LeftButton)
@@ -139,22 +140,26 @@ class Test_MscolabVersionHistory(object):
         assert new_changes_count == changes_count + 2
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText(self.url)
-        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(100)
+        self.window.mscolab.open_connect_window()
+        self.connect_window = self.window.mscolab.connect_window
+        self.connect_window.urlCb.setEditText(self.url)
+        QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(500)
 
     def _login(self):
-        self.window.emailid.setText('a')
-        self.window.password.setText('a')
-        QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
+        self.connect_window.loginEmailLe.setText('a')
+        self.connect_window.loginPasswordLe.setText('a')
+        QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(500)
 
     def _activate_project_at_index(self, index):
-        item = self.window.listProjects.item(index)
-        point = self.window.listProjects.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
+        item = self.window.listProjectsMSC.item(index)
+        point = self.window.listProjectsMSC.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
     def _activate_change_at_index(self, index):

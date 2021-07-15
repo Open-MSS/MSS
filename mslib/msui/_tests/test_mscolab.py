@@ -65,20 +65,17 @@ class Test_Mscolab_connect_window():
         assert self.window.urlCb.count() >= 1
 
     def test_disconnect(self):
-        # pytest.skip("Failing randomly for unknown reasons #870")
         self._connect_to_mscolab()
         QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
         assert self.window.mscolab_server_url is None
 
     def test_login(self):
-        # pytest.skip("Failing randomly for unknown reasons #870")
         self._connect_to_mscolab()
         self._login()
         QtWidgets.QApplication.processEvents()
         # show logged in widgets
         assert self.main_window.usernameLabel.text() == 'a'
         assert self.main_window.connectBtn.isVisible() is False
-        assert self.main_window.tabWidget.currentIndex() == 1
         assert self.main_window.mscolab.connect_window is None
         # test project listing visibility
         assert self.main_window.listProjectsMSC.model().rowCount() == 3
@@ -86,8 +83,6 @@ class Test_Mscolab_connect_window():
         self.main_window.mscolab.logout_action.trigger()
         QtWidgets.QApplication.processEvents()
         assert self.main_window.listProjectsMSC.model().rowCount() == 0
-        # ToDo understand why this is not cleared
-        # assert self.window.label.text() == ""
         assert self.main_window.mscolab.conn is None
 
     def test_add_user(self):
@@ -156,26 +151,22 @@ class Test_Mscolab(object):
         assert self.window.mscolab.active_pid is not None
 
     def test_view_open(self):
-        pytest.skip("yet to refactor for new UI")
         self._connect_to_mscolab()
         self._login()
-        # test without activating project
-        QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)
-        QtTest.QTest.mouseClick(self.window.sideview, QtCore.Qt.LeftButton)
-        QtTest.QTest.mouseClick(self.window.tableview, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        assert len(self.window.active_windows) == 0
         # test after activating project
         self._activate_project_at_index(0)
-        QtTest.QTest.mouseClick(self.window.tableview, QtCore.Qt.LeftButton)
+        self.window.actionTableView.trigger()
         QtWidgets.QApplication.processEvents()
-        assert len(self.window.active_windows) == 1
-        QtTest.QTest.mouseClick(self.window.topview, QtCore.Qt.LeftButton)
+        assert len(self.window.get_active_views()) == 1
+        self.window.actionTopView.trigger()
         QtWidgets.QApplication.processEvents()
-        assert len(self.window.active_windows) == 2
-        QtTest.QTest.mouseClick(self.window.sideview, QtCore.Qt.LeftButton)
+        assert len(self.window.get_active_views()) == 2
+        self.window.actionSideView.trigger()
         QtWidgets.QApplication.processEvents()
-        assert len(self.window.active_windows) == 3
+        assert len(self.window.get_active_views()) == 3
+        self.window.actionLinearView.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.get_active_views()) == 4
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
@@ -184,7 +175,6 @@ class Test_Mscolab(object):
         self._login()
         self._activate_project_at_index(0)
         self.window.actionExportFlightTrackFTML.trigger()
-        # QtTest.QTest.mouseClick(self.window.exportBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         exported_waypoints = WaypointsTableModel(filename=fs.path.join(self.window.mscolab.data_dir, 'test_export.ftml'))
         wp_count = len(self.window.mscolab.waypoints_model.waypoints)
@@ -203,14 +193,12 @@ class Test_Mscolab(object):
         self._activate_project_at_index(0)
         exported_wp = WaypointsTableModel(waypoints=self.window.mscolab.waypoints_model.waypoints)
         self.window.actionExportFlightTrackFTML.trigger()
-        # QtTest.QTest.mouseClick(self.window.exportBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        self.window.waypoints_model.invert_direction()
+        self.window.mscolab.waypoints_model.invert_direction()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         assert exported_wp.waypoint_data(0).lat != self.window.mscolab.waypoints_model.waypoint_data(0).lat
         self.window.actionImportFlightTrackFTML.trigger()
-        # QtTest.QTest.mouseClick(self.window.importBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         assert len(self.window.mscolab.waypoints_model.waypoints) == 2
@@ -237,21 +225,6 @@ class Test_Mscolab(object):
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_user_delete(self, mockmessage):
-        pytest.skip("yet to refactor for new UI")
-        self._connect_to_mscolab()
-        self._create_user("something", "something@something.org", "something")
-        self._login("something@something.org", "something")
-        u_id = self.window.user['id']
-        QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        assert len(self.window.listProjects) == 0
-        assert self.window.loggedInWidget.isVisible() is False
-        with self.app.app_context():
-            assert User.query.filter_by(emailid='something').count() == 0
-            assert Permission.query.filter_by(u_id=u_id).count() == 0
-
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
     def test_browse_add_project(self, mockopen, mockmessage):
@@ -259,7 +232,7 @@ class Test_Mscolab(object):
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
         assert self.window.listProjectsMSC.model().rowCount() == 0
-        QtTest.QTest.mouseClick(self.window.addProjectBtn, QtCore.Qt.LeftButton)
+        self.window.actionAddProject.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str("example"))
         QtWidgets.QApplication.processEvents()
@@ -282,20 +255,6 @@ class Test_Mscolab(object):
         self._create_project("Alpha", "Description Alpha")
         assert self.window.listProjectsMSC.model().rowCount() == 1
 
-    def test_close_help_dialog(self):
-        pytest.skip("yet to refactor for new UI")
-        QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        self.window.close()
-        assert self.window.help_dialog is None
-
-    def test_open_help_dialog(self):
-        pytest.skip("yet to refactor for new UI")
-        QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        assert self.window.help_dialog is not None
-        self.window.close()
-
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_project(self, mocktext):
         # pytest.skip('needs a review for the delete button pressed. Seems to delete a None project')
@@ -311,8 +270,7 @@ class Test_Mscolab(object):
         p_id = self.window.mscolab.get_recent_pid()
         assert p_id is not None
         assert self.window.listProjectsMSC.model().rowCount() == 1
-        self.window.projectOptionsCb.setCurrentIndex(5)
-        # QtTest.QTest.mouseClick(self.window.deleteProjectBtn, QtCore.Qt.LeftButton)
+        self.window.actionDeleteProject.trigger()
         QtWidgets.QApplication.processEvents()
         p_id = self.window.mscolab.get_recent_pid()
         assert p_id is None
@@ -357,6 +315,35 @@ class Test_Mscolab(object):
         self.window.mscolab.delete_project_from_list(p_id)
         assert self.window.mscolab.active_pid is None
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_user_delete(self, mockmessage):
+        pytest.skip("To be done")
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._login("something@something.org", "something")
+        u_id = self.window.user['id']
+        QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.listProjects) == 0
+        assert self.window.loggedInWidget.isVisible() is False
+        with self.app.app_context():
+            assert User.query.filter_by(emailid='something').count() == 0
+            assert Permission.query.filter_by(u_id=u_id).count() == 0
+
+    def test_open_help_dialog(self):
+        pytest.skip("To be done")
+        QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert self.window.help_dialog is not None
+        self.window.close()
+
+    def test_close_help_dialog(self):
+        pytest.skip("To be done")
+        QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        self.window.close()
+        assert self.window.help_dialog is None
+
     def _connect_to_mscolab(self):
         self.window.mscolab.open_connect_window()
         self.connect_window = self.window.mscolab.connect_window
@@ -389,7 +376,7 @@ class Test_Mscolab(object):
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     def _create_project(self, path, description, mockbox):
-        QtTest.QTest.mouseClick(self.window.addProjectBtn, QtCore.Qt.LeftButton)
+        self.window.actionAddProject.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str(path))
         QtWidgets.QApplication.processEvents()

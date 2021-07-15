@@ -69,13 +69,3 @@ class Ui_ProfileWindow(object):
         self.mscolabURLLabel.setText(_translate("ProfileWindow", "Mscolab:"))
         self.setGravatarBtn.setText(_translate("ProfileWindow", "Set Gravatar"))
         self.deleteAccountBtn.setText(_translate("ProfileWindow", "Delete Account"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    ProfileWindow = QtWidgets.QDialog()
-    ui = Ui_ProfileWindow()
-    ui.setupUi(ProfileWindow)
-    ProfileWindow.show()
-    sys.exit(app.exec_())

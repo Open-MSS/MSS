@@ -84,8 +84,6 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         QActiveViewsListWidgetItem.opened_views += 1
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
-        # if mscolab:
-        #     view_name = f'{view_name} - {view_window.waypoints_model.name} (mscolab)'
         super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, _type)
 
         view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
@@ -260,6 +258,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
         # self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
 
+        # Raise Main Window to front with Ctrl/Cmnd + up keyboard shortcut
+        self.addAction(self.actionBringMainWindowToFront)
+        self.actionBringMainWindowToFront.triggered.connect(self.bring_main_window_to_front)
+        self.actionBringMainWindowToFront.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+
         # Flight Tracks.
         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
 
@@ -323,15 +326,20 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         logging.debug("Contents of WMS_SERVICE_CACHE: %s", wms_control.WMS_SERVICE_CACHE.keys())
         pdlg.close()
 
+    def bring_main_window_to_front(self):
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
     def menu_handler(self):
         self.menuImportFlightTrack.setEnabled(True)
         # self.menuExportActiveFlightTrack.setEnabled(True)
-        if not self.local_active and self.mscolab.access_level == "viewer":
+        if (not self.local_active and self.mscolab.access_level == "viewer") or self.local_active:
             # viewer has no import access to server
             self.menuImportFlightTrack.setEnabled(False)
 
         # enable/disable FTML import/export actions
-        self.actionImportFlightTrackFTML.setVisible(not self.local_active)
+        # self.actionImportFlightTrackFTML.setVisible(not self.local_active)
         # self.actionExportFlightTrackFTML.setVisible(not self.local_active)
 
         # enable/disable flight track menus
@@ -365,8 +373,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.add_plugin_submenu("CSV", "csv", plugin_type="Import")
         self.add_plugin_submenu("FTML", "ftml", plugin_type="Export")
         self.add_plugin_submenu("CSV", "csv", plugin_type="Export")
-        self.actionImportFlightTrackFTML.setVisible(False)
-        self.actionExportFlightTrackFTML.setVisible(False)
+        # self.actionImportFlightTrackFTML.setVisible(False)
+        # self.actionExportFlightTrackFTML.setVisible(False)
 
         self.import_plugins = {"csv": load_from_csv}
         plugins = config_loader(dataset="import_plugins")
@@ -490,7 +498,24 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                             "Please add at least two valid locations."))
 
         if filename is not None:
-            waypoints_model = ft.WaypointsTableModel(filename=filename)
+            if filename.endswith('.ftml'):
+                try:
+                    waypoints_model = ft.WaypointsTableModel(filename=filename)
+                except (SyntaxError, OSError, IOError) as ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("Problem while opening flight track FTML:"),
+                        self.tr(f"ERROR: {type(ex)} {ex}"))
+            else:
+                try:
+                    ext = fs.path.splitext(filename)[-1][1:]
+                    function = self.import_plugins[ext]
+                    ft_name, waypoints_model = function(filename)
+                # wildcard exception to be resilient against error introduced by user code
+                except Exception as ex:
+                    logging.error("file io plugin error: %s %s", type(ex), ex)
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("file io plugin error"),
+                        self.tr(f"ERROR: {type(ex)} {ex}"))
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
@@ -512,22 +537,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
            passes the result to createNewFlightTrack().
         """
+        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
         filename = get_open_filename(
-            self, "Open Flight Track", self.last_save_directory, "Flight Track Files (*.ftml)",
+            self, "Open Flight Track", self.last_save_directory, ';;'.join(file_type),
             pickertag="filepicker_default")
         if filename is not None:
             self.last_save_directory = fs.path.dirname(filename)
-            try:
-                if filename.endswith('.ftml'):
-                    self.create_new_flight_track(filename=filename)
-                else:
-                    QtWidgets.QMessageBox.warning(self, "Open flight track",
-                                                  f"No supported file extension recognized!\n{filename:}")
-
-            except (SyntaxError, OSError, IOError) as ex:
-                QtWidgets.QMessageBox.critical(
-                    self, self.tr("Problem while opening flight track FTML:"),
-                    self.tr(f"ERROR: {type(ex)} {ex}"))
+            self.create_new_flight_track(filename=filename)
 
     def activate_flight_track(self, item):
         """Set the currently selected flight track to be the active one, i.e.
@@ -545,6 +561,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listFlightTracks.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
+        self.menu_handler()
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -573,8 +590,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
         filename = get_save_filename(
-                        self, "Save Flight Track", default_filename,
-                        ';;'.join(file_type), pickertag="filepicker_default")
+            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertag="filepicker_default"
+        )
         logging.debug("filename : '%s'", filename)
         if filename:
             self.save_flight_track(filename)
@@ -599,7 +616,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             for idx in range(self.listFlightTracks.count()):
                 if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
                     self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
-
 
     def close_selected_flight_track(self):
         """Slot to close the currently selected flight track. Flight tracks can

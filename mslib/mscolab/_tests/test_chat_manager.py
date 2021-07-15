@@ -34,8 +34,8 @@ from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.models import User, MessageType, Message
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.chat_manager import ChatManager
-from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
+import mslib.msui.mss_pyui as mss_pyui
 
 
 PORTS = list(range(9321, 9340))
@@ -48,8 +48,7 @@ class Test_Chat_Manager(object):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.cm = ChatManager()
         self.room_name = "europe"
         data = {
@@ -70,10 +69,10 @@ class Test_Chat_Manager(object):
         requests.post(url, data=data)
 
     def teardown(self):
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.version_window:
+            self.window.mscolab.version_window.close()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
