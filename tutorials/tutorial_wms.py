@@ -27,11 +27,8 @@
 import pyautogui as pag
 import multiprocessing
 import sys
-import datetime
 from sys import platform
-
 from pyscreeze import ImageNotFoundException
-
 from tutorials import screenrecorder as sr
 from mslib.msui import mss_pyui
 
@@ -153,7 +150,7 @@ def automate_waypoints():
     # Filter layer
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/layer_filter.png')
-        pag.click(x+60, y, interval=2)
+        pag.click(x + 60, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Layer filter editbox\' button/option not found on the screen.")
     pag.write('temp', interval=0.25)
@@ -184,7 +181,7 @@ def automate_waypoints():
     pag.sleep(1)
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/divergence_layer.png')
-        pag.moveTo(x-268, y, duration=2)
+        pag.moveTo(x - 268, y, duration=2)
         pag.click(interval=1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer multilayering checkbox\' option not found on the screen.")
@@ -210,7 +207,7 @@ def automate_waypoints():
     # Starring the layers
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/divergence_layer.png')
-        pag.moveTo(x-255, y, duration=2)
+        pag.moveTo(x - 255, y, duration=2)
         pag.click(interval=1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer star\' button/option not found on the screen.")
@@ -245,7 +242,7 @@ def automate_waypoints():
     pag.click(temp1, temp2 + 88, interval=2)
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/level.png')
-        pag.click(x+200, y, interval=2)
+        pag.click(x + 200, y, interval=2)
         pag.move(None, 20, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
@@ -260,20 +257,19 @@ def automate_waypoints():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Pressure level\' button/option not found on the screen.")
 
-
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/initialization.png')
         initx, inity = x, y
-        pag.click(x+200, y, interval=1)
+        pag.click(x + 200, y, interval=1)
         pag.sleep(1)
-        pag.click(x+200, y, interval=1)
+        pag.click(x + 200, y, interval=1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Initialization\' button/option not found on the screen.")
 
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/valid.png')
         validx, validy = x, y
-        pag.click(x+200, y, interval=2)
+        pag.click(x + 200, y, interval=2)
         pag.move(None, 20, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
@@ -285,12 +281,12 @@ def automate_waypoints():
         print("\nException : \'Valid till\' button/option not found on the screen.")
 
     # Time gap for initialization and valid
-    pag.click(initx+818, inity, interval=2)
+    pag.click(initx + 818, inity, interval=2)
     pag.press('up', presses=5, interval=0.25)
     pag.press('down', presses=3, interval=0.25)
     pag.press('enter') if platform == 'linux' or platform == 'linux2' or platform == 'win32' else pag.press('return')
 
-    pag.click(validx+833, validy, interval=2)
+    pag.click(validx + 833, validy, interval=2)
     pag.press('up', presses=5, interval=0.20)
     pag.press('down', presses=6, interval=0.20)
     pag.press('enter') if platform == 'linux' or platform == 'linux2' or platform == 'win32' else pag.press('return')
@@ -300,13 +296,13 @@ def automate_waypoints():
     pag.click(initx + 882, inity, clicks=2, interval=2)
 
     # Previous and Next of Valid values
-    pag.click(validx+760, validy, clicks=4, interval=2)
-    pag.click(validx+884, validy, clicks=4, interval=2)
+    pag.click(validx + 760, validy, clicks=4, interval=2)
+    pag.click(validx + 884, validy, clicks=4, interval=2)
 
     # Auto-update feature of wms
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/auto_update.png')
-        pag.click(x-53, y, interval=2)
+        pag.click(x - 53, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\' auto update checkbox\' button/option not found on the screen.")
     pag.click(temp1, temp2, interval=1)
@@ -316,20 +312,20 @@ def automate_waypoints():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\' retrieve\' button/option not found on the screen.")
     pag.sleep(3)
-    pag.click(temp1, temp2+88, interval=2)
+    pag.click(temp1, temp2 + 88, interval=2)
     pag.click(retx, rety, interval=2)
     pag.sleep(3)
-    pag.click(x-53, y, interval=2)
+    pag.click(x - 53, y, interval=2)
     pag.click(temp1, temp2, interval=2)
     pag.sleep(2)
 
     # Using and not using Cache
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/use_cache.png')
-        pag.click(x-46, y, interval=2)
+        pag.click(x - 46, y, interval=2)
         pag.click(temp1, temp2, interval=2)
         pag.sleep(4)
-        pag.click(temp1, temp2+88, interval=2)
+        pag.click(temp1, temp2 + 88, interval=2)
         pag.sleep(4)
         pag.click(x - 46, y, interval=2)
         pag.click(temp1, temp2 + 44, interval=2)
@@ -347,7 +343,7 @@ def automate_waypoints():
             pag.press('return', interval=1)
         pag.click(temp1, temp2, interval=2)
         pag.sleep(4)
-        pag.click(temp1, temp2+88, interval=2)
+        pag.click(temp1, temp2 + 88, interval=2)
         pag.sleep(4)
         pag.click(temp1, temp2 + 44, interval=2)
         pag.sleep(4)
@@ -359,7 +355,7 @@ def automate_waypoints():
     pag.sleep(1)
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/transparent.png')
-        pag.click(x-53, y, interval=2)
+        pag.click(x - 53, y, interval=2)
         pag.click(retx, rety, interval=2)
         pag.sleep(1)
         pag.click(x - 53, y, interval=2)
@@ -374,7 +370,7 @@ def automate_waypoints():
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/remove.png')
         pag.click(x, y, interval=2)
         pag.sleep(1)
-        pag.click(temp1, temp2+88, interval=2)
+        pag.click(temp1, temp2 + 88, interval=2)
         pag.click(x, y, interval=2)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
@@ -383,7 +379,7 @@ def automate_waypoints():
     # Deleting All layers
     try:
         x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/delete_layers.png')
-        pag.click(x-74, y, interval=2)
+        pag.click(x - 74, y, interval=2)
         pag.sleep(1)
         x1, y1 = pag.locateCenterOnScreen('pictures/tutorial_wms/get_capabilities.png')
         pag.click(x1, y1, interval=2)

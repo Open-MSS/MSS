@@ -141,9 +141,6 @@ class ScreenRecorder:
             self.start_rec_time = time.time()
             frame_time_ms = 1000 / self.fps
             frames = 0
-
-            screen = sct.monitors[0]
-
             print(f"Starting to record with FPS value {self.fps} ...")
             while self.record:
                 img = sct.grab(bbox)

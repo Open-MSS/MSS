@@ -2,10 +2,10 @@ import os
 import ctypes
 import ctypes.util
 import numpy as np
-import sys
 
 # A helper function to convert data from Xlib to byte array.
-import struct, array
+import struct
+import array
 
 # Define ctypes version of XFixesCursorImage structure.
 PIXEL_DATA_PTR = ctypes.POINTER(ctypes.c_ulong)
@@ -79,7 +79,8 @@ class Xcursor:
             self.display = self.xlib.XOpenDisplay(display)  # (display) or (None)
 
     def argbdata_to_pixdata(self, data, len):
-        if data == None or len < 1: return None
+        if data is None or len < 1:
+            return None
 
         # Create byte array
         b = array.array('b', b'\x00' * 4 * len)
