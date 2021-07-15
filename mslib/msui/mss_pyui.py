@@ -270,7 +270,15 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.listViews.itemActivated.connect(self.activate_sub_window)
 
         # Add default and plugins from settings
-        self.add_plugins()
+        picker_default = config_loader(dataset="filepicker_default")
+        self.add_plugin_submenu("FTML", "ftml", picker_default, plugin_type="Import")
+        self.add_plugin_submenu("FTML", "ftml", picker_default, plugin_type="Export")
+        self.add_plugin_submenu("CSV", "csv", picker_default, plugin_type="Import")
+        self.add_plugin_submenu("CSV", "csv", picker_default, plugin_type="Export")
+        self.import_plugins = {"csv": load_from_csv}
+        self.export_plugins = {"csv": save_to_csv}
+        self.add_import_plugins(picker_default)
+        self.add_export_plugins(picker_default)
 
         preload_urls = config_loader(dataset="WMS_preload")
         self.preload_wms(preload_urls)
@@ -349,14 +357,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
         # self.actionCloseSelectedFlightTrack.setEnabled(self.local_active)
 
-    def add_plugin_submenu(self, name, extension, plugin_type="Import"):
+    def add_plugin_submenu(self, name, extension, pickertype, plugin_type="Import"):
         if plugin_type == "Import":
             menu = self.menuImportFlightTrack
-            action_name = "actionImportFlightTrack" + clean_string(name)
+            action_name = "actionImportFlightTrack" + clean_string(extension)
             handler = self.handle_import_local
         elif plugin_type == "Export":
             menu = self.menuExportActiveFlightTrack
-            action_name = "actionExportFlightTrack" + clean_string(name)
+            action_name = "actionExportFlightTrack" + clean_string(extension)
             handler = self.handle_export_local
 
         if hasattr(self, action_name):
@@ -364,49 +372,63 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         action = QtWidgets.QAction(self)
         action.setObjectName(action_name)
         action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
-        action.triggered.connect(functools.partial(handler, extension))
+        action.triggered.connect(functools.partial(handler, extension, pickertype))
         menu.addAction(action)
         setattr(self, action_name, action)
 
-    def add_plugins(self):
-        self.add_plugin_submenu("FTML", "ftml", plugin_type="Import")
-        self.add_plugin_submenu("CSV", "csv", plugin_type="Import")
-        self.add_plugin_submenu("FTML", "ftml", plugin_type="Export")
-        self.add_plugin_submenu("CSV", "csv", plugin_type="Export")
-        # self.actionImportFlightTrackFTML.setVisible(False)
-        # self.actionExportFlightTrackFTML.setVisible(False)
-
-        self.import_plugins = {"csv": load_from_csv}
+    def add_import_plugins(self, picker_default):
         plugins = config_loader(dataset="import_plugins")
         for name in plugins:
             extension, module, function = plugins[name][:3]
+            picker_type = picker_default
+            if len(plugins[name]) == 4:
+                picker_type = plugins[name][3]
             try:
                 imported_module = importlib.import_module(module)
-                self.import_plugins[extension] = getattr(imported_module, function)
-                self.add_plugin_submenu(name, extension, plugin_type="Import")
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self._plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self.tr(f"ERROR: Configuration\n\n{plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
+            try:
+                self.add_plugin_submenu(name, extension, picker_type, plugin_type="Import")
+            # wildcard exception to be resilient against error introduced by user code
+            except Exception as ex:
+                logging.error("Error on installing plugin: %s: %s", type(ex), ex)
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("file io plugin error import plugins"),
+                    self.tr(f"ERROR: Configuration\n\n{self.import_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
+                continue
+            self.import_plugins[extension] = getattr(imported_module, function)
 
-        self.export_plugins = {"csv": save_to_csv}
+    def add_export_plugins(self, picker_default):
         plugins = config_loader(dataset="export_plugins")
         for name in plugins:
             extension, module, function = plugins[name][:3]
+            picker_type = picker_default
+            if len(plugins[name]) == 4:
+                picker_type = plugins[name][3]
             try:
                 imported_module = importlib.import_module(module)
-                self.export_plugins[extension] = getattr(imported_module, function)
-                self.add_plugin_submenu(name, extension, plugin_type="Export")
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self._plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self, self.tr("file io plugin error export plugins"),
+                    self.tr(f"ERROR: Configuration\n\n{plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
+            try:
+                self.add_plugin_submenu(name, extension, picker_type, plugin_type="Export")
+            # wildcard exception to be resilient against error introduced by user code
+            except Exception as ex:
+                logging.error("Error on installing plugin: %s: %s", type(ex), ex)
+                QtWidgets.QMessageBox.critical(
+                    self, self.tr("file io plugin error import plugins"),
+                    self.tr(f"ERROR: Configuration\n\n{self.export_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
+                continue
+            self.export_plugins[extension] = getattr(imported_module, function)
 
     def remove_plugins(self):
         for name in self.import_plugins:
@@ -416,6 +438,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             assert len(actions) == 1
             self.menuImportFlightTrack.removeAction(actions[0])
             delattr(self, full_name)
+        self.import_plugins = {}
 
         for name in self.export_plugins:
             full_name = "actionExportFlightTrack" + clean_string(name)
@@ -424,14 +447,16 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             assert len(actions) == 1
             self.menuExportActiveFlightTrack.removeAction(actions[0])
             delattr(self, full_name)
+        self.export_plugins = {}
 
-    def handle_import_local(self, extension):
+    def handle_import_local(self, extension, pickertype):
         if self.local_active:
             function = self.import_plugins[extension]
             filename = get_open_filename(
                 self, "Import Flight Track",
                 self.last_save_directory,
-                f"Flight Track (*.{extension})")
+                f"Flight Track (*.{extension})",
+                pickertype=pickertype)
             if filename is not None:
                 self.last_save_directory = fs.path.dirname(filename)
                 try:
@@ -453,19 +478,28 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self.listFlightTracks.setCurrentItem(listitem)
                     self.activate_flight_track(listitem)
         else:
-            self.mscolab.handle_import_msc(extension)
+            self.mscolab.handle_import_msc(extension, pickertype)
 
-    def handle_export_local(self, extension):
+    def handle_export_local(self, extension, pickertype):
         if self.local_active:
-            function = self.export_plugins[extension]
             default_filename = f'{os.path.join(self.last_save_directory, self.active_flight_track.name)}.{extension}'
             filename = get_save_filename(
                 self, "Export Flight Track",
-                default_filename, f"Flight Track (*.{extension})")
+                default_filename, f"Flight Track (*.{extension})",
+                pickertype=pickertype)
             if filename is not None:
                 self.last_save_directory = fs.path.dirname(filename)
                 try:
-                    function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                    if extension in self.export_plugins:
+                        function = self.export_plugins[extension]
+                        function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                    elif filename.endswith('.ftml'):
+                        doc = self.active_flight_track.get_xml_doc()
+                        dirname, name = fs.path.split(filename)
+                        file_dir = fs.open_fs(dirname)
+                        with file_dir.open(name, 'w') as file_object:
+                            doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+                        file_dir.close()
                 # wildcard exception to be resilient against error introduced by user code
                 except Exception as ex:
                     logging.error("file io plugin error: %s %s", type(ex), ex)
@@ -473,7 +507,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                         self, self.tr("file io plugin error"),
                         self.tr(f"ERROR: {type(ex)} {ex}"))
         else:
-            self.mscolab.handle_export_msc(extension)
+            self.mscolab.handle_export_msc(extension, pickertype)
 
     def create_new_flight_track(self, template=None, filename=None):
         """Creates a new flight track model from a template. Adds a new entry to
@@ -509,13 +543,20 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 try:
                     ext = fs.path.splitext(filename)[-1][1:]
                     function = self.import_plugins[ext]
-                    ft_name, waypoints_model = function(filename)
+                    ft_name, new_waypoints = function(filename)
+                    waypoints_model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
                 # wildcard exception to be resilient against error introduced by user code
                 except Exception as ex:
                     logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(f"ERROR: {type(ex)} {ex}"))
+            # if waypoints_model is not None:
+            #     for i in range(self.listFlightTracks.count()):
+            #         fltr = self.listFlightTracks.item(i)
+            #         if fltr.flighttrack_model.name == waypoints_model.name:
+            #             waypoints_model.name += " - opened from file"
+            #             break
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
@@ -537,7 +578,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
            passes the result to createNewFlightTrack().
         """
-        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
+        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.import_plugins.keys()]
         filename = get_open_filename(
             self, "Open Flight Track", self.last_save_directory, ';;'.join(file_type),
             pickertag="filepicker_default")
@@ -627,7 +668,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                                               self.tr("At least one flight track has to be open."))
             return
         item = self.listFlightTracks.currentItem()
-        if item.flighttrack_model == self.active_flight_track and not self.local_active:
+        if item.flighttrack_model == self.active_flight_track and self.local_active:
             QtWidgets.QMessageBox.information(self, self.tr("Flight Track Management"),
                                               self.tr("Cannot close currently active flight track."))
             return

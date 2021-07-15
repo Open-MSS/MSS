@@ -202,18 +202,18 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 # self.loginEmailLe.setFocus()
             else:
                 self.set_status("Error", "Some unexpected error occurred. Please try again.")
-        except requests.exceptions.ConnectionError:
-            logging.debug("MSColab server isn't active")
-            self.set_status("Error", "MSColab server isn't active")
+        except requests.exceptions.SSLError:
+            logging.debug("Certificate Verification Failed")
+            self.set_status("Error", "Certificate Verification Failed")
         except requests.exceptions.InvalidSchema:
             logging.debug("invalid schema of url")
             self.set_status("Error", "Invalid Url Scheme!")
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
             self.set_status("Error", "Invalid URL")
-        except requests.exceptions.SSLError:
-            logging.debug("Certificate Verification Failed")
-            self.set_status("Error", "Certificate Verification Failed")
+        except requests.exceptions.ConnectionError:
+            logging.debug("MSColab server isn't active")
+            self.set_status("Error", "MSColab server isn't active")
         except Exception as e:
             logging.debug("Error %s", str(e))
             self.set_status("Error", "Some unexpected error occurred. Please try again.")
@@ -819,6 +819,7 @@ class MSSMscolab(QtCore.QObject):
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
                     show_popup(self.ui, "Success", "New Waypoints Fetched To Local File!", icon=1)
+            self.merge_dialog.close()
             self.merge_dialog = None
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -839,6 +840,7 @@ class MSSMscolab(QtCore.QObject):
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
                     show_popup(self.ui, "Success", "New Waypoints Saved To Server!", icon=1)
+            self.merge_dialog.close()
             self.merge_dialog = None
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -1174,7 +1176,7 @@ class MSSMscolab(QtCore.QObject):
                 except AttributeError as err:
                     logging.error("%s" % err)
 
-    def handle_import_msc(self, extension):
+    def handle_import_msc(self, extension, pickertype):
         if self.verify_user_token():
             if self.active_pid is None:
                 return
@@ -1182,7 +1184,9 @@ class MSSMscolab(QtCore.QObject):
             if self.ui.workLocallyCheckbox.isChecked() and extension != "ftml":
                 self.ui.statusBar().showMessage("Work Locally only supports FTML filetypes for import")
                 return
-            file_path = get_open_filename(self.ui, "Import to Server", "", f"Flight track (*.{extension})")
+            file_path = get_open_filename(
+                self.ui, "Import to Server", "", f"Flight track (*.{extension})", pickertype=pickertype
+            )
             if file_path is None:
                 return
             dir_path, file_name = fs.path.split(file_path)
@@ -1218,7 +1222,7 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def handle_export_msc(self, extension):
+    def handle_export_msc(self, extension, pickertype):
         if self.verify_user_token():
             if self.active_pid is None:
                 return
@@ -1227,7 +1231,8 @@ class MSSMscolab(QtCore.QObject):
             default_filename = f'{self.active_project_name}.{extension}'
             file_name = get_save_filename(
                 self.ui, "Export From Server",
-                default_filename, f"Flight track (*.{extension})")
+                default_filename, f"Flight track (*.{extension})",
+                pickertype=pickertype)
             if file_name is None:
                 return
             if file_name.endswith('.ftml'):

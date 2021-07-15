@@ -37,7 +37,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib._tests.utils import mscolab_start_server
+from mslib._tests.utils import mscolab_start_server, ExceptionMock
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.msui import mscolab
 
@@ -129,6 +129,16 @@ class Test_Mscolab_connect_window():
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
+    # import/export plugins
+    import_plugins = {
+        "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
+        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
+    }
+    export_plugins = {
+        "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
+        # "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
+        # "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
+    }
 
     def setup(self):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -142,6 +152,11 @@ class Test_Mscolab(object):
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
+        # force close all open views
+        while self.window.listViews.count() > 0:
+            self.window.listViews.item(0).window.handle_force_close()
+        # close all hanging project option windows
+        self.window.mscolab.close_external_windows()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
@@ -172,13 +187,25 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 4
 
+        project = self.window.mscolab.active_pid
+        uid = self.window.mscolab.user["id"]
+        active_windows = self.window.get_active_views()
+        topview = active_windows[1]
+        tableview = active_windows[0]
+        self.window.mscolab.handle_update_permission(project, uid, "viewer")
+        assert not tableview.btAddWayPointToFlightTrack.isEnabled()
+        assert any(action.text() == "Ins WP" and not action.isEnabled() for action in topview.mpl.navbar.actions())
+        self.window.mscolab.handle_update_permission(project, uid, "creator")
+        assert tableview.btAddWayPointToFlightTrack.isEnabled()
+        assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
+
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
     def test_handle_export(self, mockbox):
         self._connect_to_mscolab()
         self._login()
         self._activate_project_at_index(0)
-        self.window.actionExportFlightTrackFTML.trigger()
+        self.window.actionExportFlightTrackftml.trigger()
         QtWidgets.QApplication.processEvents()
         exported_waypoints = WaypointsTableModel(filename=fs.path.join(self.window.mscolab.data_dir, 'test_export.ftml'))
         wp_count = len(self.window.mscolab.waypoints_model.waypoints)
@@ -186,28 +213,44 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @pytest.mark.parametrize("ext", [".ftml", ".txt"])
+    @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_import_file(self, mockExport, mockImport, mockMessage):
-        self._connect_to_mscolab()
-        self._login()
-        self._activate_project_at_index(0)
-        exported_wp = WaypointsTableModel(waypoints=self.window.mscolab.waypoints_model.waypoints)
-        self.window.actionExportFlightTrackFTML.trigger()
-        QtWidgets.QApplication.processEvents()
-        self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        assert exported_wp.waypoint_data(0).lat != self.window.mscolab.waypoints_model.waypoint_data(0).lat
-        self.window.actionImportFlightTrackFTML.trigger()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        assert len(self.window.mscolab.waypoints_model.waypoints) == 2
-        imported_wp = self.window.mscolab.waypoints_model
-        wp_count = len(imported_wp.waypoints)
-        assert wp_count == 2
-        for i in range(wp_count):
-            assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
+    def test_import_file(self, mockbox, ext):
+        with mock.patch("mslib.msui.mscolab.config_loader", return_value=self.import_plugins):
+            self.window.add_import_plugins("qt")
+        with mock.patch("mslib.msui.mscolab.config_loader", return_value=self.export_plugins):
+            self.window.add_export_plugins("qt")
+        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(fs.path.join(
+                mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
+            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(fs.path.join(
+                    mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
+                self._connect_to_mscolab()
+                self._login()
+                self._activate_project_at_index(0)
+                exported_wp = WaypointsTableModel(waypoints=self.window.mscolab.waypoints_model.waypoints)
+                full_name = f"actionExportFlightTrack{ext[1:]}"
+                for action in self.window.menuExportActiveFlightTrack.actions():
+                    if action.objectName() == full_name:
+                        action.trigger()
+                        break
+                QtWidgets.QApplication.processEvents()
+                self.window.mscolab.waypoints_model.invert_direction()
+                QtWidgets.QApplication.processEvents()
+                QtTest.QTest.qWait(100)
+                assert exported_wp.waypoint_data(0).lat != self.window.mscolab.waypoints_model.waypoint_data(0).lat
+                full_name = f"actionImportFlightTrack{ext[1:]}"
+                for action in self.window.menuImportFlightTrack.actions():
+                    if action.objectName() == full_name:
+                        action.trigger()
+                        break
+                QtWidgets.QApplication.processEvents()
+                QtTest.QTest.qWait(100)
+                assert len(self.window.mscolab.waypoints_model.waypoints) == 2
+                imported_wp = self.window.mscolab.waypoints_model
+                wp_count = len(imported_wp.waypoints)
+                assert wp_count == 2
+                for i in range(wp_count):
+                    assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
 
     def test_work_locally_toggle(self):
         self._connect_to_mscolab()
@@ -254,7 +297,20 @@ class Test_Mscolab(object):
         assert self.window.usernameLabel.text() == 'something'
         assert self.window.connectBtn.isVisible() is False
         self._create_project("Alpha", "Description Alpha")
-        assert self.window.listProjectsMSC.model().rowCount() == 1
+        assert mockbox.return_value.showMessage.call_count == 2
+        with mock.patch("PyQt5.QtWidgets.QLineEdit.text", return_value=None):
+            self._create_project("Alpha2", "Description Alpha")
+        with mock.patch("PyQt5.QtWidgets.QTextEdit.toPlainText", return_value=None):
+            self._create_project("Alpha3", "Description Alpha")
+        self._create_project("/", "Description Alpha")
+        assert mockbox.return_value.showMessage.call_count == 5
+        assert self.window.listProjects.model().rowCount() == 1
+        self._create_project("reproduce-test", "Description Test")
+        assert self.window.listProjects.model().rowCount() == 2
+        self._activate_project_at_index(0)
+        assert self.window.active_project_name == "Alpha"
+        self._activate_project_at_index(1)
+        assert self.window.active_project_name == "reproduce-test"
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_project(self, mocktext):
