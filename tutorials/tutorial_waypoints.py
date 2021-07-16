@@ -220,7 +220,7 @@ def automate_waypoints():
         pag.write(fig_filename, interval=0.25)
         pag.press('enter', interval=1)
     if platform == 'linux' or platform == 'linux2':
-        # pag.hotkey('altleft', 'tab') if the save file system window is not in the forefront, use this statement.
+        pag.hotkey('altleft', 'tab')  # if the save file system window is not in the forefront, use this statement.
         # This can happen sometimes. At that time, you just need to uncomment it.
         pag.write(fig_filename, interval=0.25)
         pag.press('enter', interval=1)

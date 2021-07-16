@@ -71,7 +71,12 @@ def automate_waypoints():
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
-    pag.sleep(10)
+    pag.sleep(5)
+
+    if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+        dir_path = 'pictures/tutorial_wms/linux/'
+    elif platform == 'win32':
+        dir_path = 'pictures/tutorial_wms/win/'
 
     # Maximizing the window
     try:
@@ -85,163 +90,184 @@ def automate_waypoints():
         print("\nException : Enable Shortcuts for your system or try again!")
     pag.sleep(2)
     pag.hotkey('ctrl', 'h')
-    pag.sleep(5)
+    pag.sleep(1)
 
     # Opening web map service
     try:
-        x, y = pag.locateCenterOnScreen('pictures/selecttoopencontrol.PNG')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}selecttoopencontrol.png')
         pag.click(x, y, interval=2)
+        pag.press('down', interval=1)
+        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+            pag.press('enter', interval=1)
+        elif platform == 'darwin':
+            pag.press('return', interval=1)
+        pag.move(None, -777, duration=1)
+        if platform == 'win32':
+            pag.dragRel(400, None, duration=2)
+        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            pag.dragRel(800, None, duration=2)
     except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\' select to open control\' button/option not found on the screen.")
-    pag.press('down', interval=1)
-    if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-        pag.press('enter', interval=1)
-    elif platform == 'darwin':
-        pag.press('return', interval=1)
-    pag.move(None, -777, duration=1)
-    pag.dragRel(400, None, duration=2)
+        print("\nException :\'select to open control\' button/option not found on the screen.")
 
     # Locating Server Layer
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/layers.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}layers.png')
         pag.click(x, y, interval=2)
+        if platform == 'win32':
+            pag.move(35, -485, duration=1)
+            pag.dragRel(-800, -60, duration=2)
+        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            pag.move(35, -522, duration=1)
+            pag.dragRel(-800, -30, duration=2)
+        pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Server\\Layers\' button/option not found on the screen.")
-    pag.move(35, -485, duration=1)
-    pag.dragRel(-800, -60, duration=2)
-    pag.sleep(1)
 
     # Entering wms URL
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/wms_url.png')
-        pag.click(x, y, interval=2)
+        x, y = pag.locateCenterOnScreen(f'{dir_path}wms_url.png')
+        pag.click(x + 220, y, interval=2)
+        pag.hotkey('ctrl', 'a', interval=1)
+        pag.write('http://open-mss.org/', interval=0.25)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'WMS URL\' editbox button/option not found on the screen.")
-    pag.hotkey('ctrl', 'a', interval=1)
-    pag.write('http://open-mss.org/', interval=0.25)
+
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/get_capabilities.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}get_capabilities.png')
         pag.click(x, y, interval=2)
+        pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Get capabilities\' button/option not found on the screen.")
-    pag.sleep(3)
 
     # Selecting some layers
+    if platform == 'win32':
+        gap = 22
+    elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+        gap = 18
+
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/divergence_layer.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
+        pag.sleep(1)
+        pag.move(None, gap, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
+        pag.move(None, gap * 2, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
+        pag.move(None, gap, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
+        pag.move(None, -gap * 4, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence Layer\' option not found on the screen.")
-    pag.sleep(1)
-    pag.move(None, 22, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
-    pag.move(None, 44, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
-    pag.move(None, 22, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
-    pag.move(None, -88, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
 
     # Filter layer
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/layer_filter.png')
-        pag.click(x + 60, y, interval=2)
+        x, y = pag.locateCenterOnScreen(f'{dir_path}layer_filter.png')
+        pag.click(x + 150, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Layer filter editbox\' button/option not found on the screen.")
-    pag.write('temp', interval=0.25)
-    pag.move(None, 81, duration=1)
-    pag.click(interval=2)
-    pag.sleep(1)
-    pag.move(None, 22, duration=1)
-    pag.click(interval=2)
-    pag.sleep(1)
+    if x is not None and y is not None:
+        pag.write('temperature', interval=0.25)
+        pag.moveTo(temp1, temp2, duration=1)
+        pag.click(interval=2)
+        pag.sleep(1)
+        pag.move(None, gap, duration=1)
+        pag.click(interval=2)
+        pag.sleep(1)
 
-    # Clearing filter
-    pag.move(30, -104, duration=1)
-    pag.click(interval=1)
-    if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-        pag.press('backspace', presses=4, interval=0.25)
-    elif platform == 'darwin':
-        pag.press('delete', presses=4, interval=0.25)
-    pag.sleep(1)
+        # Clearing filter
+        pag.moveTo(x + 150, y, duration=1)
+        pag.click(interval=1)
+        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+            pag.press('backspace', presses=11, interval=0.25)
+        elif platform == 'darwin':
+            pag.press('delete', presses=11, interval=0.25)
+        pag.sleep(1)
 
     # Multilayering
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/multilayering.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
         pag.moveTo(x, y, duration=2)
         pag.move(-48, None)
         pag.click()
+        pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
-    pag.sleep(1)
+
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/divergence_layer.png')
-        pag.moveTo(x - 268, y, duration=2)
+        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
+        if platform == 'win32':
+            pag.moveTo(x - 268, y, duration=2)
+        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            pag.moveTo(x - 248, y, duration=2)
         pag.click(interval=1)
+        pag.sleep(2)
+        pag.move(None, gap * 4, duration=1)
+        pag.click(interval=1)
+        pag.sleep(2)
+        pag.move(None, -gap * 4, duration=1)
+        pag.click(interval=1)
+        pag.sleep(2)
+        pag.move(None, gap * 4, duration=1)
+        pag.click(interval=1)
+        pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer multilayering checkbox\' option not found on the screen.")
-    pag.sleep(2)
-    pag.move(None, 88, duration=1)
-    pag.click(interval=1)
-    pag.sleep(2)
-    pag.move(None, -88, duration=1)
-    pag.click(interval=1)
-    pag.sleep(2)
-    pag.move(None, 88, duration=1)
-    pag.click(interval=1)
-    pag.sleep(2)
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/multilayering.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
         pag.moveTo(x, y, duration=2)
         pag.move(-48, None)
         pag.click()
+        pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
-    pag.sleep(1)
 
     # Starring the layers
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/divergence_layer.png')
-        pag.moveTo(x - 255, y, duration=2)
+        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
+        if platform == 'win32':
+            pag.moveTo(x - 255, y, duration=2)
+        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            pag.moveTo(x - 231, y, duration=2)
         pag.click(interval=1)
+        pag.sleep(1)
+        pag.move(None, gap * 4, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
+        pag.move(None, -gap, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer star\' button/option not found on the screen.")
-    pag.sleep(1)
-    pag.move(None, 88, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
-    pag.move(None, -22, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
 
     # Filtering starred layers.
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/star_filter.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}star_filter.png')
         pag.click(x, y, interval=2)
+        pag.click(temp1, temp2, duration=1)
+        pag.sleep(1)
+        pag.move(None, gap, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
+        pag.move(None, gap, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
+        pag.moveTo(x - 20, y, duration=1)
+        pag.click(interval=1)
+        pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Starred filter\' button/option not found on the screen.")
-    pag.move(-50, 80, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
-    pag.move(None, 22, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
-    pag.move(None, 22, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
-    pag.move(20, -133, duration=1)
-    pag.click(interval=1)
-    pag.sleep(1)
 
     # Setting different levels and valid time
-    pag.click(temp1, temp2 + 88, interval=2)
+    if temp1 is not None and temp2 is not None:
+        pag.click(temp1, temp2 + (gap * 4), interval=2)
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/level.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}level.png')
         pag.click(x + 200, y, interval=2)
         pag.move(None, 20, duration=1)
         pag.click(interval=1)
@@ -258,7 +284,7 @@ def automate_waypoints():
         print("\nException : \'Pressure level\' button/option not found on the screen.")
 
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/initialization.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}initialization.png')
         initx, inity = x, y
         pag.click(x + 200, y, interval=1)
         pag.sleep(1)
@@ -267,7 +293,7 @@ def automate_waypoints():
         print("\nException : \'Initialization\' button/option not found on the screen.")
 
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/valid.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}valid.png')
         validx, validy = x, y
         pag.click(x + 200, y, interval=2)
         pag.move(None, 20, duration=1)
@@ -281,61 +307,69 @@ def automate_waypoints():
         print("\nException : \'Valid till\' button/option not found on the screen.")
 
     # Time gap for initialization and valid
-    pag.click(initx + 818, inity, interval=2)
-    pag.press('up', presses=5, interval=0.25)
-    pag.press('down', presses=3, interval=0.25)
-    pag.press('enter') if platform == 'linux' or platform == 'linux2' or platform == 'win32' else pag.press('return')
+    if initx is not None and inity is not None and validx is not None and validy is not None:
+        pag.click(initx + 818, inity, interval=2)
+        pag.press('up', presses=5, interval=0.25)
+        pag.press('down', presses=3, interval=0.25)
+        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+            pag.press('enter')
+        elif platform == 'darwin':
+            pag.press('return')
 
-    pag.click(validx + 833, validy, interval=2)
-    pag.press('up', presses=5, interval=0.20)
-    pag.press('down', presses=6, interval=0.20)
-    pag.press('enter') if platform == 'linux' or platform == 'linux2' or platform == 'win32' else pag.press('return')
+        pag.click(validx + 833, validy, interval=2)
+        pag.press('up', presses=5, interval=0.20)
+        pag.press('down', presses=6, interval=0.20)
+        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+            pag.press('enter')
+        elif platform == 'darwin':
+            pag.press('return')
 
-    # Previous and Next of Initial(Initialization) values
-    pag.click(initx + 753, inity, clicks=2, interval=2)
-    pag.click(initx + 882, inity, clicks=2, interval=2)
+        # Previous and Next of Initial(Initialization) values
+        pag.click(initx + 753, inity, clicks=2, interval=2)
+        pag.click(initx + 882, inity, clicks=2, interval=2)
 
-    # Previous and Next of Valid values
-    pag.click(validx + 760, validy, clicks=4, interval=2)
-    pag.click(validx + 884, validy, clicks=4, interval=2)
+        # Previous and Next of Valid values
+        pag.click(validx + 760, validy, clicks=4, interval=4)
+        pag.click(validx + 887, validy, clicks=4, interval=4)
 
     # Auto-update feature of wms
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/auto_update.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}auto_update.png')
         pag.click(x - 53, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\' auto update checkbox\' button/option not found on the screen.")
-    pag.click(temp1, temp2, interval=1)
-    try:
-        retx, rety = pag.locateCenterOnScreen('pictures/tutorial_wms/retrieve.png')
-        pag.click(retx, rety, interval=2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\' retrieve\' button/option not found on the screen.")
-    pag.sleep(3)
-    pag.click(temp1, temp2 + 88, interval=2)
-    pag.click(retx, rety, interval=2)
-    pag.sleep(3)
-    pag.click(x - 53, y, interval=2)
-    pag.click(temp1, temp2, interval=2)
-    pag.sleep(2)
+    if temp1 is not None and temp2 is not None:
+        pag.click(temp1, temp2, interval=1)
+        try:
+            retx, rety = pag.locateCenterOnScreen(f'{dir_path}retrieve.png')
+            pag.click(retx, rety, interval=2)
+            pag.sleep(3)
+            pag.click(temp1, temp2 + (gap * 4), interval=2)
+            pag.click(retx, rety, interval=2)
+            pag.sleep(3)
+            pag.click(x - 53, y, interval=2)
+            pag.click(temp1, temp2, interval=2)
+            pag.sleep(2)
+        except (ImageNotFoundException, OSError, Exception):
+            print("\nException :\' retrieve\' button/option not found on the screen.")
 
     # Using and not using Cache
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/use_cache.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}use_cache.png')
         pag.click(x - 46, y, interval=2)
         pag.click(temp1, temp2, interval=2)
         pag.sleep(4)
-        pag.click(temp1, temp2 + 88, interval=2)
+        pag.click(temp1, temp2 + (gap * 4), interval=2)
         pag.sleep(4)
         pag.click(x - 46, y, interval=2)
-        pag.click(temp1, temp2 + 44, interval=2)
+        pag.click(temp1, temp2 + (gap * 2), interval=2)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Use Cache checkbox\' button/option not found on the screen.")
 
     # Clearing cache. The layers load slower
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/clear_cache.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}clear_cache.png')
         pag.click(x, y, interval=2)
         if platform == 'linux' or platform == 'linux2' or platform == 'win32':
             pag.press('enter', interval=1)
@@ -343,45 +377,51 @@ def automate_waypoints():
             pag.press('return', interval=1)
         pag.click(temp1, temp2, interval=2)
         pag.sleep(4)
-        pag.click(temp1, temp2 + 88, interval=2)
+        pag.click(temp1, temp2 + (gap * 4), interval=2)
         pag.sleep(4)
-        pag.click(temp1, temp2 + 44, interval=2)
+        pag.click(temp1, temp2 + (gap * 2), interval=2)
         pag.sleep(4)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Clear cache\' button/option not found on the screen.")
 
     # Transparent layer
-    pag.click(temp1, temp2, interval=2)
-    pag.sleep(1)
-    try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/transparent.png')
-        pag.click(x - 53, y, interval=2)
-        pag.click(retx, rety, interval=2)
-        pag.sleep(1)
-        pag.click(x - 53, y, interval=2)
+    if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2, interval=2)
-        pag.click(retx, rety, interval=2)
         pag.sleep(1)
+    try:
+        x, y = pag.locateCenterOnScreen(f'{dir_path}transparent.png')
+        pag.click(x - 53, y, interval=2)
+        if retx is not None and rety is not None:
+            pag.click(retx, rety, interval=2)
+            pag.sleep(1)
+            pag.click(x - 53, y, interval=2)
+            pag.click(temp1, temp2, interval=2)
+            pag.click(retx, rety, interval=2)
+            pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Transparent Checkbox\' button/option not found on the screen.")
 
     # Removing a Layer from the map
-    try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/remove.png')
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-        pag.click(temp1, temp2 + 88, interval=2)
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Transparent Checkbox\' button/option not found on the screen.")
+    if temp1 is not None and temp2 is not None:
+        try:
+            x, y = pag.locateCenterOnScreen(f'{dir_path}remove.png')
+            pag.click(x, y, interval=2)
+            pag.sleep(1)
+            pag.click(temp1, temp2 + (gap * 4), interval=2)
+            pag.click(x, y, interval=2)
+            pag.sleep(1)
+        except (ImageNotFoundException, OSError, Exception):
+            print("\nException :\'Transparent Checkbox\' button/option not found on the screen.")
 
     # Deleting All layers
     try:
-        x, y = pag.locateCenterOnScreen('pictures/tutorial_wms/delete_layers.png')
-        pag.click(x - 74, y, interval=2)
+        x, y = pag.locateCenterOnScreen(f'{dir_path}delete_layers.png')
+        if platform == 'win32':
+            pag.click(x - 74, y, interval=2)
+        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            pag.click(x - 70, y, interval=2)
         pag.sleep(1)
-        x1, y1 = pag.locateCenterOnScreen('pictures/tutorial_wms/get_capabilities.png')
+        x1, y1 = pag.locateCenterOnScreen(f'{dir_path}get_capabilities.png')
         pag.click(x1, y1, interval=2)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
@@ -429,7 +469,7 @@ def automate_waypoints():
             pag.press('q')
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
-    pag.press('q')
+    # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
 
 
 def main():
@@ -452,7 +492,7 @@ def main():
     p1.join()
     p3.join()
     print("\n\nINFO : Automation Completes Successfully!")
-    pag.press('q')
+    # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
     sys.exit()
 
 

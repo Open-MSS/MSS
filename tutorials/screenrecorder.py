@@ -111,7 +111,15 @@ class ScreenRecorder:
             frames = 0
             print(f"Starting to record with FPS value {self.fps} ...")
             while self.record:
-                x, y = pyautogui.position()
+                if platform == 'win32' or platform == 'darwin':
+                    x, y = pyautogui.position()
+                elif platform == 'linux':
+                    x, y = 1000, 500  # Fixed mouse pointer in linux at this coordinate. Throwing error of some kind.
+                    # Hence, the mouse pointer is not visible in the recordings but is at a fixed place.
+                    # Alternatively if you just record anything running screenrecorder.py directly this
+                    # pyautogui.position() works perfectly in any operating system.(ofcourse you need to change the
+                    # code by removing this platform thing). But when tutorials are called, it
+                    # is throwing some untraceable error in Linux.
                 img = Image.frombytes("RGBA", sct.grab(bbox).size, sct.grab(bbox).bgra, "raw", "RGBA")
                 img.paste(mouse_pointer, (x, y, x + width, y + height), mask=mouse_pointer)
                 img_np = np.array(img)
