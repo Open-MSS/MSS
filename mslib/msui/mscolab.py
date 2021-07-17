@@ -1176,23 +1176,16 @@ class MSSMscolab(QtCore.QObject):
                 except AttributeError as err:
                     logging.error("%s" % err)
 
-    def handle_import_msc(self, extension, pickertype):
+    def handle_import_msc(self, file_path, extension, function, pickertype):
         if self.verify_user_token():
             if self.active_pid is None:
                 return
-
-            if self.ui.workLocallyCheckbox.isChecked() and extension != "ftml":
-                self.ui.statusBar().showMessage("Work Locally only supports FTML filetypes for import")
-                return
-            file_path = get_open_filename(
-                self.ui, "Import to Server", "", f"Flight track (*.{extension})", pickertype=pickertype
-            )
             if file_path is None:
                 return
             dir_path, file_name = fs.path.split(file_path)
             file_name = fs.path.basename(file_path)
             name, file_ext = fs.path.splitext(file_name)
-            if file_ext[1:] == "ftml":
+            if function is None:
                 with open_fs(dir_path) as file_dir:
                     xml_content = file_dir.readtext(file_name)
                 try:
@@ -1200,20 +1193,18 @@ class MSSMscolab(QtCore.QObject):
                 except SyntaxError:
                     show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                     return
-                self.waypoints_model = model
-                if self.ui.workLocallyCheckbox.isChecked():
-                    self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                    self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-                else:
-                    self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
-                    self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             else:
-                _function = self.ui.import_plugins[file_ext[1:]]
-                _, new_waypoints = _function(file_path)
+                # _function = self.ui.import_plugins[file_ext[1:]]
+                _, new_waypoints = function(file_path)
                 model = ft.WaypointsTableModel(waypoints=new_waypoints)
-                self.waypoints_model = model
                 xml_doc = self.waypoints_model.get_xml_doc()
                 xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            self.waypoints_model = model
+            if self.ui.workLocallyCheckbox.isChecked():
+                self.waypoints_model.save_to_ftml(self.local_ftml_file)
+                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            else:
                 self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             self.reload_view_windows()
@@ -1222,7 +1213,7 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def handle_export_msc(self, extension, pickertype):
+    def handle_export_msc(self, extension, function, pickertype):
         if self.verify_user_token():
             if self.active_pid is None:
                 return
@@ -1235,15 +1226,14 @@ class MSSMscolab(QtCore.QObject):
                 pickertype=pickertype)
             if file_name is None:
                 return
-            if file_name.endswith('.ftml'):
+            if function is None:
                 xml_doc = self.waypoints_model.get_xml_doc()
                 dir_path, file_name = fs.path.split(file_name)
                 with open_fs(dir_path).open(file_name, 'w') as file:
                     xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
             else:
-                file_path = fs.path.basename(file_name)
-                _function = self.ui.export_plugins[extension]
-                _function(file_name, file_path, self.waypoints_model.waypoints)
+                name = fs.path.basename(file_name)
+                function(file_name, name, self.waypoints_model.waypoints)
                 show_popup(self.ui, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -1330,7 +1320,6 @@ class MSSMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.connectBtn.show()
-        # self.ui.addProjectBtn.hide()
         self.ui.actionAddProject.setEnabled(False)
         # disconnect socket
         if self.conn is not None:
