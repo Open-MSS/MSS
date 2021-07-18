@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>769</width>
+    <width>738</width>
     <height>736</height>
    </rect>
   </property>
@@ -34,7 +34,7 @@
      <number>8</number>
     </property>
     <property name="spacing">
-     <number>4</number>
+     <number>2</number>
     </property>
     <item row="2" column="0">
      <widget class="QGroupBox" name="openViewsGb">
@@ -84,11 +84,6 @@
       </item>
       <item alignment="Qt::AlignRight">
        <widget class="QLabel" name="usernameLabel">
-        <property name="font">
-         <font>
-          <pointsize>15</pointsize>
-         </font>
-        </property>
         <property name="text">
          <string>User</string>
         </property>
@@ -136,11 +131,6 @@
        </property>
        <item row="2" column="0" colspan="2">
         <widget class="QLabel" name="workingStatusLabel">
-         <property name="font">
-          <font>
-           <pointsize>13</pointsize>
-          </font>
-         </property>
          <property name="text">
           <string>No projects selected</string>
          </property>
@@ -226,7 +216,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>769</width>
+     <width>738</width>
      <height>22</height>
     </rect>
    </property>
@@ -247,16 +237,21 @@
       <string>Export Flight Track</string>
      </property>
     </widget>
-    <addaction name="actionNewFlightTrack"/>
-    <addaction name="actionOpenFlightTrack"/>
-    <addaction name="actionAddProject"/>
+    <widget class="QMenu" name="menuNew">
+     <property name="title">
+      <string>New</string>
+     </property>
+     <addaction name="actionNewFlightTrack"/>
+     <addaction name="actionAddProject"/>
+    </widget>
+    <addaction name="menuNew"/>
+    <addaction name="menuImportFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
     <addaction name="separator"/>
     <addaction name="actionCloseSelectedFlightTrack"/>
     <addaction name="separator"/>
-    <addaction name="menuImportFlightTrack"/>
     <addaction name="menuExportActiveFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionConfiguration"/>
@@ -331,22 +326,6 @@
     <string>&amp;Online Help</string>
    </property>
   </action>
-  <action name="actionOpenFlightTrack">
-   <property name="text">
-    <string>&amp;Open Flight Track</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
-  <action name="actionNewFlightTrack">
-   <property name="text">
-    <string>&amp;New Flight Track</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
   <action name="actionQuit">
    <property name="text">
     <string>&amp;Quit</string>
@@ -365,7 +344,7 @@
   </action>
   <action name="actionCloseSelectedFlightTrack">
    <property name="text">
-    <string>&amp;Close Selected Flight Track</string>
+    <string>&amp;Close Selected Local Flight Track</string>
    </property>
   </action>
   <action name="actionUpdater">
@@ -433,11 +412,6 @@
     <string>&amp;MSColab</string>
    </property>
   </action>
-  <action name="actionAddProject">
-   <property name="text">
-    <string>&amp;Add Project</string>
-   </property>
-  </action>
   <action name="actionEditProject">
    <property name="text">
     <string>&amp;Edit Project</string>
@@ -454,6 +428,16 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Up</string>
+   </property>
+  </action>
+  <action name="actionNewFlightTrack">
+   <property name="text">
+    <string>&amp;Local Flight Track</string>
+   </property>
+  </action>
+  <action name="actionAddProject">
+   <property name="text">
+    <string>&amp;MSColab Project</string>
    </property>
   </action>
  </widget>

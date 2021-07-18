@@ -80,7 +80,13 @@ dimensionless
  0.25 0.2
 vertically_integrated_probability_of_wcb_occurrence
 dimensionless
- 0.25 0.2"""
+ 0.25 0.2
+tropopause_altitude
+km
+ 10 3
+secondary_tropopause_altitude
+km
+ 12 3"""
 
 _PROFILES_TEXT = """\
 air_pressure
@@ -137,12 +143,12 @@ PVU
   1.95e-01   4.09e-00
 geopotential_height
 m
-  5.95e+01   9.22e+01
-  5.27e+01   9.22e+01
-  4.73e+01   9.22e+01
-  4.20e+01   9.22e+01
-  3.55e+01   9.22e+01
-  3.08e+01   9.22e+01
+  5.95e+04   9.22e+01
+  5.27e+04   9.22e+01
+  4.73e+04   9.22e+01
+  4.20e+04   9.22e+01
+  3.55e+04   9.22e+01
+  3.08e+04   9.22e+01
   2.57e+04   9.22e+01
   2.33e+04   6.80e+01
   2.01e+04   6.96e+01
@@ -195,24 +201,24 @@ K
   1.45e+03   1.83e+01
   1.05e+03   2.14e+01
   8.29e+02   1.12e+01
-  657.443538145 3.79
-  580.079898831 2.07
-  498.951941454 3.10
-  453.218730010 4.82
-  409.307918523 6.31
-  371.412271319 5.91
-  345.272674711 5.03
-  329.890732188 3.86
-  323.019997594 5.00
-  317.020226317 6.20
-  310.848481822 6.33
-  305.484573481 6.30
-  300.073050812 6.62
-  295.235341640 7.36
-  292.260568339 7.67
-  289.587551318 7.91
-  288.351954158 7.97
-  288.192732138 7.93
+  6.57e+02   3.79
+  5.80e+02   2.07
+  4.98e+02   3.10
+  4.53e+02   4.82
+  4.09e+02   6.31
+  3.71e+02   5.91
+  3.45e+02   5.03
+  3.29e+02   3.86
+  3.23e+02   5.00
+  3.17e+02   6.20
+  3.10e+02   6.33
+  3.05e+02   6.30
+  3.00e+02   6.62
+  2.95e+02   7.36
+  2.92e+02   7.67
+  2.89e+02   7.91
+  2.88e+02   7.97
+  2.87e+02   7.93
 eastward_wind
 m.s^-1
   4.68e+01   1.36e+01
@@ -281,16 +287,16 @@ kg.kg^-1
   4.99e-06   3.43e-06
   1.78e-05   1.58e-05
   5.30e-05   4.71e-05
-  1.27e-04   1.14e-04
-  3.88e-04   3.59e-04
-  8.00e-04   7.17e-04
-  1.38e-03   1.16e-03
-  2.25e-03   1.63e-03
-  3.45e-03   2.02e-03
-  4.24e-03   2.18e-03
-  5.16e-03   2.37e-03
-  5.64e-03   2.44e-03
-  6.07e-03   2.55e-03
+  1.72e-04   1.74e-04
+  4.88e-04   4.59e-04
+  8.00e-04   1.17e-03
+  1.38e-03   2.16e-03
+  2.25e-03   2.63e-03
+  3.45e-03   3.02e-03
+  4.24e-03   3.18e-03
+  5.16e-03   3.37e-03
+  5.64e-03   3.44e-03
+  6.07e-03   3.55e-03
 lagrangian_tendency_of_air_pressure
 Pa.s^-1
  -4.38e-03   6.64e-02
@@ -319,30 +325,30 @@ Pa.s^-1
   1.85e-02   3.18e-01
 divergence_of_wind
 s^-1
-  2.66e-09   1.74e-05
-  1.00e-06   2.00e-05
-  4.04e-06   2.49e-05
-  2.20e-06   2.36e-05
-  3.60e-07   2.05e-05
-  3.64e-07   2.07e-05
-  2.19e-07   1.75e-05
-  2.29e-07   1.73e-05
-  2.93e-07   2.00e-05
-  2.17e-07   2.65e-05
-  2.76e-07   2.91e-05
-  4.83e-07   3.13e-05
-  2.32e-07   3.50e-05
-  1.98e-07   3.45e-05
-  2.86e-07   3.43e-05
-  8.41e-08   3.28e-05
- -8.39e-08   3.42e-05
- -2.00e-07   3.79e-05
- -2.87e-07   4.33e-05
- -2.19e-07   5.11e-05
- -8.42e-08   5.39e-05
-  1.39e-08   5.63e-05
-  4.93e-08   5.71e-05
-  8.47e-08   5.94e-05
+  2.66e-09   1.74e-04
+  1.00e-06   2.00e-04
+  4.04e-06   2.49e-04
+  2.20e-06   2.36e-04
+  3.60e-07   2.05e-04
+  3.64e-07   2.07e-04
+  2.19e-07   1.75e-04
+  2.29e-07   1.73e-04
+  2.93e-07   2.00e-04
+  2.17e-07   2.65e-04
+  2.76e-07   2.91e-04
+  4.83e-07   3.13e-04
+  2.32e-07   3.50e-04
+  1.98e-07   3.45e-04
+  2.86e-07   3.43e-04
+  8.41e-08   3.28e-04
+ -8.39e-08   3.42e-04
+ -2.00e-07   3.79e-04
+ -2.87e-07   4.33e-04
+ -2.19e-07   5.11e-04
+ -8.42e-08   5.39e-04
+  1.39e-08   5.63e-04
+  4.93e-08   5.71e-04
+  8.47e-08   5.94e-04
 mole_fraction_of_ozone_in_air
 kg.kg^-1
   1.45e-06   7.50e-08
@@ -397,12 +403,12 @@ kg.kg^-1
   6.09e-08   4.65e-09
 equivalent_latitude
 degree
-  4.30e+01   1.05e+01
-  4.48e+01   8.70e+00
-  4.58e+01   5.58e+00
-  4.21e+01   8.11e+00
-  4.37e+01   7.42e+00
-  4.57e+01   5.66e+00
+  43.0    1.05e+01
+  44.8    8.70e+00
+  45.8    5.58e+00
+  42.1    8.11e+00
+  43.7    7.42e+00
+  45.7    5.66e+00
   80.09   1.21
   50.70   5.69
   30.46   4.69
@@ -864,7 +870,7 @@ class DataFiles(object):
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -891,7 +897,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 
 '''
         if detailed_information:
-            simple_server_config = '''# -*- coding: utf-8 -*-
+            simple_server_config = f'''# -*- coding: utf-8 -*-
 """
 
     mss_wms_settings
@@ -904,7 +910,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -978,7 +984,8 @@ import mslib.mswms
 #base_dir = os.path.abspath(os.path.dirname(mslib.mswms.__file__))
 #xml_template_location = os.path.join(base_dir, "xml_templates")
 
-_datapath = r"{data_dir}"
+_gallerypath = r"{os.path.abspath(os.path.join(self.data_fs.root_path, "..", "gallery"))}"
+_datapath = r"{self.data_fs.root_path}"
 
 data = {{
     "ecmwf_EUR_LL015": mslib.mswms.dataaccess.DefaultDataAccess(_datapath, "EUR_LL015"),
@@ -1054,7 +1061,6 @@ if mpl_lsec_styles is not None:
         (mpl_lsec_styles.LS_VerticalVelocityStyle_01, ["ecmwf_EUR_LL015"])
     ]
 '''
-            simple_server_config = simple_server_config.format(data_dir=self.data_fs.root_path)
         else:
             simple_server_config = '''"""
 simple server config for demodata
@@ -1196,7 +1202,11 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
                 ("U", "eastward_wind"),
                 ("V", "northward_wind"),
                 ("W", "lagrangian_tendency_of_air_pressure"),
-                ("Q", "specific_humidity")):
+                ("Q", "specific_humidity"),
+                ("GPH", "geopotential_height"),
+                ("THETA", "air_potential_temperature"),
+                ("O3", "mole_fraction_of_ozone_in_air"),
+                ("DIV", "divergence_of_wind")):
             self.generate_file(
                 "hybrid", varname, "ml",
                 (("time", times), ("hybrid", np.arange(0, 18)), ("latitude", lats), ("longitude", lons)),

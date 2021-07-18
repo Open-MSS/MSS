@@ -83,6 +83,7 @@ UR.define("degreeW = -degrees")
 
 UR.define("fraction = [] = frac")
 UR.define("sigma = 1 fraction")
+UR.define("level = sigma")
 UR.define("percent = 1e-2 fraction")
 UR.define("permille = 1e-3 fraction")
 UR.define("ppm = 1e-6 fraction")

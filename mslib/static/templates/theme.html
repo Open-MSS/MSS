@@ -16,7 +16,7 @@
   <div id="wrap">
     <header>
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="container-fluid">
           <ul class="navbar-nav mr-auto">
             <li style="list-style: none; display: inline">
               <a class="navbar-brand" href="{{ url_for('index') }}"><img src="{{ url_for('logo') }}" title="Mission Support System" alt="logo Mission Support System"></a>
@@ -58,7 +58,7 @@
   <script src="{{ url_for('files', name='jquery', filename='jquery.min.js') }}">
   </script> 
   <script src="{{ url_for('files', name='bootstrap', filename='js/bootstrap.js') }}">
-  </script> 
+  </script>
   <script type="text/javascript">
       $(document).ready(function() {
       $('#myCarousel').carousel({
