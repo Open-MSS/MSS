@@ -31,11 +31,13 @@
 import os
 import sys
 import json
+import hashlib
 import logging
 import types
 import fs
 import requests
 import re
+import urllib.request
 from fs import open_fs
 from werkzeug.urls import url_join
 
@@ -418,8 +420,12 @@ class MSSMscolab(QtCore.QObject):
         self.merge_dialog = None
         # Mscolab help dialog
         self.help_dialog = None
+        # Profile dialog
+        self.prof_diag = None
         # Mscolab Server URL
         self.mscolab_server_url = None
+        # User email
+        self.email = None
 
         # set data dir, uri
         if data_dir is None:
@@ -452,6 +458,7 @@ class MSSMscolab(QtCore.QObject):
         self.connect_window.exec_()
 
     def after_login(self, emailid, url, r):
+        self.email = self.connect_window.loginEmailLe.text()
         self.connect_window.close()
         self.connect_window = None
         # fill value of mscolab url if found in QSettings storage
@@ -471,14 +478,12 @@ class MSSMscolab(QtCore.QObject):
         # set up user menu and add to toolbutton
         self.user_menu = QtWidgets.QMenu()
         self.profile_action = self.user_menu.addAction("Profile", self.open_profile_window)
+        self.user_menu.addSeparator()
         self.logout_action = self.user_menu.addAction("Logout", self.logout)
         self.ui.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.ui.userOptionsTb.setMenu(self.user_menu)
         self.ui.userOptionsTb.show()
-        # self.pixmap = QtGui.QPixmap("msui_redesign/gravatar.jpg")
-        # self.icon = QtGui.QIcon()
-        # self.icon.addPixmap(self.pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        # self.userOptionsTb.setIcon(self.icon)
+        self.set_gravatar()
         # enable add project menu action
         self.ui.actionAddProject.setEnabled(True)
 
@@ -504,19 +509,60 @@ class MSSMscolab(QtCore.QObject):
             return False
         return r.text == "True"
 
+    def set_gravatar(self, refresh=False):
+        image = None
+        # if not refresh and os.path.exists(f"{email_hash}.jpg"):
+        if self.email is not None:
+            email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
+            gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}?s=80"
+            urllib.request.urlretrieve(gravatar_url, f"{email_hash}.jpg")
+            image = f"{email_hash}.jpg"
+
+        pixmap = QtGui.QPixmap(image)
+        # check if pixmap has correct image
+        if pixmap.isNull():
+            user_name = self.user["username"]
+            first_alphabet = user_name[user_name.find(next(filter(str.isalpha, user_name)))].lower()
+            pixmap = QtGui.QPixmap(f":/gravatars/default-gravatars/{first_alphabet}.png")
+        icon = QtGui.QIcon()
+        icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+
+        # set icon for user options toolbutton
+        self.ui.userOptionsTb.setIcon(icon)
+
+        # set icon for profile window
+        if self.prof_diag is not None:
+            self.profile_dialog.gravatarLabel.setPixmap(pixmap)
+
     def open_profile_window(self):
         self.prof_diag = QtWidgets.QDialog()
         self.profile_dialog = ui_profile.Ui_ProfileWindow()
         self.profile_dialog.setupUi(self.prof_diag)
-        self.profile_dialog.f_content = None
         self.profile_dialog.buttonBox.accepted.connect(lambda: self.prof_diag.close())
         self.profile_dialog.usernameLabel_2.setText(self.user['username'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
-        # self.profile_dialog.emailLabel_2.setText(self.user['email'])
-        # self.profile_dialog.path.textChanged.connect(check_and_enable_project_accept)
-        # self.profile_dialog.description.textChanged.connect(check_and_enable_project_accept)
-        # self.profile_dialog.browse.clicked.connect(browse)
+        self.profile_dialog.emailLabel_2.setText(self.email)
+        self.profile_dialog.setGravatarBtn.clicked.connect(lambda: self.set_gravatar(refresh=True))
+        self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
         self.prof_diag.show()
+        self.set_gravatar(refresh=True)
+
+    def delete_account(self):
+        if self.verify_user_token():
+            w = QtWidgets.QWidget()
+            qm = QtWidgets.QMessageBox
+            reply = qm.question(w, self.tr('Continue?'),
+                                self.tr("You're about to delete your account. You cannot undo this operation!"),
+                                qm.Yes, qm.No)
+            if reply == QtWidgets.QMessageBox.No:
+                return
+            data = {
+                "token": self.token
+            }
+            requests.post(self.mscolab_server_url + '/delete_user', data=data)
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+        self.logout()
 
     def add_project_handler(self):
         if self.verify_user_token():
@@ -1303,6 +1349,12 @@ class MSSMscolab(QtCore.QObject):
     def logout(self):
         self.ui.local_active = True
         self.ui.menu_handler()
+        # close all hanging window
+        if self.prof_diag is not None:
+            self.prof_diag.close()
+            self.prof_diag = None
+        self.close_external_windows()
+        self.hide_project_options()
         # delete token and show login widget-items
         self.token = None
         # delete active-project-id
@@ -1315,6 +1367,10 @@ class MSSMscolab(QtCore.QObject):
         self.local_ftml_file = None
         # clear project listing
         self.ui.listProjectsMSC.clear()
+        # clear mscolab url
+        self.mscolab_server_url = None
+        # clear user email
+        self.email = None
         # clear projects list here
         self.ui.mscStatusLabel.setText(self.ui.tr("status: Disconnected"))
         self.ui.usernameLabel.hide()
@@ -1325,18 +1381,17 @@ class MSSMscolab(QtCore.QObject):
         if self.conn is not None:
             self.conn.disconnect()
             self.conn = None
-        # close all hanging window
-        self.close_external_windows()
-        self.hide_project_options()
 
         # delete mscolab http_auth settings for the url
         if self.mscolab_server_url in self.settings["auth"].keys():
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
-        # activate first local flighttrack after logging out
-        self.ui.listFlightTracks.setCurrentRow(0)
-        self.ui.activate_selected_flight_track()
+        # Don't try to activate local flighttrack while testing
+        if "pytest" not in sys.modules:
+            # activate first local flighttrack after logging out
+            self.ui.listFlightTracks.setCurrentRow(0)
+            self.ui.activate_selected_flight_track()
 
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, merge_wp_ui.Ui_MergeWaypointsDialog):

@@ -29,7 +29,7 @@ import os
 import fs
 import fs.errors
 import fs.opener.errors
-# import requests.exceptions
+import requests.exceptions
 import mock
 import pytest
 
@@ -88,12 +88,13 @@ class Test_Mscolab_connect_window():
         assert self.main_window.listProjectsMSC.model().rowCount() == 0
         assert self.main_window.mscolab.conn is None
 
-        # ToDo for new connect window
-        # for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
-        #             requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
-        #     with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
-        #         self.window.connect_handler()
-        # assert mockbox.critical.call_count == 5
+        window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
+        for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
+                    requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
+            with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
+                with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
+                    window.connect_handler()
+                    mockset.assert_called_once_with("color: red;")
 
     def test_add_user(self):
         self._connect_to_mscolab()
@@ -226,10 +227,9 @@ class Test_Mscolab(object):
             self.window.add_import_plugins("qt")
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
-        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(fs.path.join(
-                mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
-            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(fs.path.join(
-                    mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
+        file_path = fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}')
+        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(file_path, None)):
+            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(file_path, None)):
                 self._connect_to_mscolab()
                 self._login()
                 self._activate_project_at_index(0)
