@@ -1,5 +1,5 @@
 """
-    mslib.msui.screenrecorder
+    mss.tutorials.screenrecorder
     ~~~~~~~~~~~~~~~~~~~
 
     This python script is meant for recording the screens while automated  tutorials are running.
@@ -29,7 +29,11 @@ import os
 import sys
 import time
 import mss
+import pyautogui
 from PyQt5 import QtWidgets
+from cursor import Xcursor
+from sys import platform
+from PIL import Image
 
 
 class ScreenRecorder:
@@ -83,6 +87,59 @@ class ScreenRecorder:
         return fps
 
     def capture(self):
+        """
+        Captures the frames of the screen at the rate of fps frames/second and writes into the
+        video writer object with the defined fourcc, codec and colour format.
+        """
+        if platform == 'linux' or platform == 'linux2':
+            cursor = Xcursor()
+            cursor_imgarray = cursor.getCursorImageArray()
+            cursor.saveImage(cursor_imgarray, 'cursor_image.png')
+            mouse_pointer = Image.open('cursor_image.png')
+            width, height = mouse_pointer.size
+        elif platform == 'win32' or platform == 'darwin':
+            mouse_pointer = Image.open('pictures/cursor_image.png')
+            width, height = mouse_pointer.size
+        else:
+            print('Not supported in this platform')
+            mouse_pointer = None
+            width, height = None, None
+        with mss.mss() as sct:
+            bbox = {"top": 0, "left": 0, "width": self.width, "height": self.height}
+            self.start_rec_time = time.time()
+            frame_time_ms = 1000 / self.fps
+            frames = 0
+            print(f"Starting to record with FPS value {self.fps} ...")
+            while self.record:
+                if platform == 'win32' or platform == 'darwin':
+                    x, y = pyautogui.position()
+                elif platform == 'linux':
+                    x, y = 1000, 500  # Fixed mouse pointer in linux at this coordinate. Throwing error of some kind.
+                    # Hence, the mouse pointer is not visible in the recordings but is at a fixed place.
+                    # Alternatively if you just record anything running screenrecorder.py directly this
+                    # pyautogui.position() works perfectly in any operating system.(ofcourse you need to change the
+                    # code by removing this platform thing). But when tutorials are called, it
+                    # is throwing some untraceable error in Linux.
+                img = Image.frombytes("RGBA", sct.grab(bbox).size, sct.grab(bbox).bgra, "raw", "RGBA")
+                img.paste(mouse_pointer, (x, y, x + width, y + height), mask=mouse_pointer)
+                img_np = np.array(img)
+                img_final = cv2.cvtColor(img_np, cv2.COLOR_RGBA2RGB)
+                cv2.imshow(self.window_name, img_final)
+                self.recorded_video.write(img_final)
+                frames += 1
+                expected_frames = ((time.time() - self.start_rec_time) * 1000) / frame_time_ms
+                surplus = frames - expected_frames
+
+                # Duplicate previous frame to meet FPS quota. Consider lowering the FPS instead!
+                if int(surplus) <= -1:
+                    frames -= int(surplus)
+                    for i in range(int(-surplus)):
+                        self.recorded_video.write(img_final)
+                # Exits the screen capturing when user press 'q'
+                if cv2.waitKey(max(int(surplus * frame_time_ms), 1)) & 0xFF == ord('q'):
+                    break
+
+    def capture2(self):
         """
         Captures the frames of the screen at the rate of fps frames/second and writes into the
         video writer object with the defined fourcc, codec and colour format.
