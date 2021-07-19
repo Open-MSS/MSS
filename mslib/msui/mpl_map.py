@@ -37,6 +37,7 @@ import numpy as np
 import matplotlib
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
+from matplotlib.collections import PolyCollection
 import mpl_toolkits.basemap as basemap
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -45,7 +46,7 @@ except ImportError:
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
-from mslib import openaip
+from mslib.utils import get_airports, get_airspaces
 
 
 class MapCanvas(basemap.Basemap):
@@ -155,9 +156,12 @@ class MapCanvas(basemap.Basemap):
 
         # self.warpimage() # disable fillcontinents when loading bluemarble
         self.ax.set_autoscale_on(False)
-        self.airpoints = None
-        self.airtext = None
-        self.airport_hover = None
+        if not hasattr(self, "airpoints"):
+            self.airports = None
+            self.airtext = None
+        if not hasattr(self, "airbases"):
+            self.airspaces = None
+            self.airspacetext = None
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -329,48 +333,118 @@ class MapCanvas(basemap.Basemap):
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
 
-    def set_draw_airports(self, value):
-        if not value and self.airpoints:
-            self.airpoints.set_visible(False)
-            self.airtext.set_visible(False)
-        elif value:
-            self.draw_airports()
-            self.airpoints.set_visible(True)
+    def set_draw_airports(self, value, port_type="small_airport", reload=True):
+        """
+        Sets airports to visible or not visible
+        """
+        if (not value or reload) and self.airports:
+            self.airports.remove()
+            self.airtext.remove()
+            self.airports = None
+            self.airtext = None
+            self.ax.figure.canvas.mpl_disconnect(self.airports_event)
+        if value:
+            self.draw_airports(port_type)
 
-    def draw_airports(self):
+    def set_draw_airspaces(self, value, reload=True):
+        """
+        Sets airspaces to visible or not visible
+        """
+        if (not value or reload) and self.airspaces:
+            self.airspaces.remove()
+            self.airspacetext.remove()
+            self.airspaces = None
+            self.airspacetext = None
+            self.ax.figure.canvas.mpl_disconnect(self.airspace_event)
+        if value:
+            self.draw_airspaces()
+
+    def draw_airspaces(self):
+        """
+        Load and draw airbase data
+        """
+        if not self.airspaces:
+            airbases = get_airspaces()
+            if not airbases:
+                logging.error("Tried to draw airspaces without .aip files.")
+                return
+
+            collection = PolyCollection([airbase["polygons"] for airbase in airbases], alpha=0.4, edgecolor="black",
+                                        zorder=6)
+            collection.set_pickradius(0)
+            self.airspaces = self.ax.add_collection(collection)
+            self.airspacetext = self.ax.annotate(airbases[0]["name"], xy=airbases[0]["polygons"][0], xycoords="data",
+                                                 bbox={"boxstyle": "round", "facecolor": "w",
+                                                       "edgecolor": "0.5", "alpha": 0.9}, zorder=7)
+            self.airspacetext.set_visible(False)
+
+            def update_text(index):
+                pos = self.airspaces.get_paths()[index["ind"][0]].get_extents().get_points()[-1]
+                self.airspacetext.xy = pos
+                self.airspacetext.set_position(pos)
+                self.airspacetext.set_text("\n".join([f"{airbases[i]['name']}, {airbases[i]['bottom']} - "
+                                                     f"{airbases[i]['top']}km" for i in index["ind"]]))
+                c = ["green" if i in index["ind"] else "C0" for i in range(len(self.airspaces.get_paths()))]
+                self.airspaces.set_facecolor(c)
+
+            def on_move(event):
+                if self.airspaces and event.inaxes == self.ax:
+                    cont, ind = self.airspaces.contains(event)
+                    if cont:
+                        update_text(ind)
+                        self.airspacetext.set_visible(True)
+                        self.ax.figure.canvas.draw_idle()
+                    elif self.airspacetext.get_visible():
+                        self.airspacetext.set_visible(False)
+                        c = ["C0" for i in range(len(self.airspaces.get_paths()))]
+                        self.airspaces.set_facecolor(c)
+                        self.ax.figure.canvas.draw_idle()
+
+            self.airspace_event = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)
+
+    def draw_airports(self, port_type):
         """
         Load and draw airports and their respective name on hover
         """
-        if not self.airpoints:
-            airports = openaip.get_openflights_airports()
-            lons = [float(airport[7]) for airport in airports]
-            lats = [float(airport[6]) for airport in airports]
-            annotations = [airport[1] for airport in airports]
-            self.airpoints = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
-                                             zorder=5)
+        if not self.airports:
+            airports = get_airports()
+            if not airports:
+                logging.error("Tried to draw airports without airports.csv")
+                return
+
+            lons = [float(airport["longitude_deg"]) for airport in airports if airport["type"] == port_type]
+            lats = [float(airport["latitude_deg"]) for airport in airports if airport["type"] == port_type]
+            annotations = [airport["name"] for airport in airports if airport["type"] == port_type]
+            self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
+                                            zorder=5)
+            self.airports.set_pickradius(1)
             self.airtext = self.ax.annotate(annotations[0], xy=(lons[0], lats[0]), xycoords="data",
                                             bbox={"boxstyle": "round", "facecolor": "w",
-                                                  "edgecolor": "0.5", "alpha": 0.9}, zorder=6)
+                                                  "edgecolor": "0.5", "alpha": 0.9}, zorder=7)
             self.airtext.set_visible(False)
 
             def update_text(index):
-                pos = self.airpoints.get_offsets()[index["ind"][0]]
+                pos = self.airports.get_offsets()[index["ind"][0]]
                 self.airtext.xy = pos
                 self.airtext.set_position(pos)
-                self.airtext.set_text(", ".join([annotations[i] for i in index["ind"]]))
+                self.airtext.set_text("\n".join([annotations[i] for i in index["ind"]]))
+                c = ["green" if i in index["ind"] else "red" for i in range(len(self.airports.get_offsets()))]
+                self.airports.set_facecolor(c)
 
             def on_move(event):
-                if event.inaxes == self.ax:
-                    cont, ind = self.airpoints.contains(event)
+                if self.airports and event.inaxes == self.ax:
+                    cont, ind = self.airports.contains(event)
                     if cont:
                         update_text(ind)
                         self.airtext.set_visible(True)
                         self.ax.figure.canvas.draw_idle()
                     elif self.airtext.get_visible():
                         self.airtext.set_visible(False)
+                        c = ["red" for i in range(len(self.airports.get_offsets()))]
+                        self.airports.set_facecolor(c)
                         self.ax.figure.canvas.draw_idle()
 
-            self.airport_hover = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)
+            self.airports_event = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):

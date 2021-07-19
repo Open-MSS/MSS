@@ -1188,7 +1188,9 @@ class MplTopViewCanvas(MplCanvas):
             # itself to the change() signals of the flight track data model.
             appearance = self.get_map_appearance()
             if appearance["draw_airports"]:
-                self.map.set_draw_airports(True)
+                self.map.set_draw_airports(True, port_type=appearance["airport_type"])
+            if appearance["draw_airbases"]:
+                self.map.set_draw_airspaces(True)
             try:
                 self.waypoints_interactor = mpl_pi.HPathInteractor(
                     self.map, self.waypoints_model,
@@ -1233,9 +1235,13 @@ class MplTopViewCanvas(MplCanvas):
         else:
             self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
         if self.appearance_settings["draw_airports"]:
-            self.map.set_draw_airports(True)
+            self.map.set_draw_airports(True, port_type=self.appearance_settings["airport_type"])
         else:
             self.map.set_draw_airports(False)
+        if self.appearance_settings["draw_airbases"]:
+            self.map.set_draw_airspaces(True)
+        else:
+            self.map.set_draw_airspaces(False)
         self.draw()  # this one is required to trigger a
         # drawevent to update the background
         # in waypoints_interactor()
@@ -1403,6 +1409,8 @@ class MplTopViewCanvas(MplCanvas):
                     "draw_flighttrack": True,
                     "draw_marker": True,
                     "draw_airports": False,
+                    "airport_type": "small_airport",
+                    "draw_airbases": False,
                     "label_flighttrack": True,
                     "tov_plot_title_size": "default",
                     "tov_axes_label_size": "default",
@@ -1425,7 +1433,8 @@ class MplTopViewCanvas(MplCanvas):
 
         if self.map is not None:
             self.map.set_coastlines_visible(settings["draw_coastlines"])
-            self.map.set_draw_airports(settings["draw_airports"])
+            self.map.set_draw_airports(settings["draw_airports"], port_type=settings["airport_type"])
+            self.map.set_draw_airspaces(settings["draw_airbases"])
             self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
                                                 land_color=settings["colour_land"],
                                                 lake_color=settings["colour_water"])

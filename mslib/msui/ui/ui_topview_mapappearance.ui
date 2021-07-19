@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>462</width>
-    <height>387</height>
+    <height>411</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -431,10 +431,111 @@
     <layout class="QHBoxLayout" name="horizontalLayout_6">
      <item>
       <widget class="QCheckBox" name="cbDrawAirports">
+       <property name="minimumSize">
+        <size>
+         <width>145</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string>draw airports</string>
        </property>
       </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cbAirportType">
+       <property name="minimumSize">
+        <size>
+         <width>135</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="layoutDirection">
+        <enum>Qt::LeftToRight</enum>
+       </property>
+       <item>
+        <property name="text">
+         <string>small_airport</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>medium_airport</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>large_airport</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>heliport</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>balloonport</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>seaplane_base</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>closed</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QCheckBox" name="cbDrawAirbases">
+       <property name="text">
+        <string>draw airspaces</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.openaip.net/user/login&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Login&lt;/span&gt;&lt;/a&gt; then &lt;a href=&quot;http://www.openaip.net/downloads/airspaces&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Download&lt;/span&gt;&lt;/a&gt; the desired .aip airspace files&lt;/p&gt;&lt;p&gt;Put the downloaded files into &lt;a href=&quot;MSS_CONFIG_PATH&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;this directory&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="openExternalLinks">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_5">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>

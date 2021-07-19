@@ -41,6 +41,7 @@ from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
+from mslib.msui.constants import MSS_CONFIG_PATH
 
 # Dock window indices.
 WMS = 0
@@ -63,6 +64,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         """
         super(MSS_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
+        self.label_2.setText(self.label_2.text().replace("MSS_CONFIG_PATH", MSS_CONFIG_PATH))
+
         if settings_dict is None:
             settings_dict = {"draw_graticule": True,
                              "draw_coastlines": True,
@@ -71,6 +74,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "draw_flighttrack": True,
                              "draw_marker": True,
                              "draw_airports": False,
+                             "airport_type": "small_airport",
+                             "draw_airbases": False,
                              "label_flighttrack": True,
                              "tov_plot_title_size": "default",
                              "tov_axes_label_size": "default",
@@ -101,6 +106,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
         self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
         self.cbDrawAirports.setChecked(settings_dict["draw_airports"])
+        self.cbAirportType.setCurrentIndex(self.cbAirportType.findText(settings_dict["airport_type"]))
+        self.cbDrawAirbases.setChecked(settings_dict["draw_airbases"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
@@ -139,6 +146,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "draw_marker": self.cbDrawMarker.isChecked(),
             "draw_airports": self.cbDrawAirports.isChecked(),
+            "airport_type": self.cbAirportType.currentText(),
+            "draw_airbases": self.cbDrawAirbases.isChecked(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
             "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
@@ -329,7 +338,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         settings = self.getView().get_map_appearance()
         dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
-        dlg.setModal(True)
+        dlg.setModal(False)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_map_appearance(settings)

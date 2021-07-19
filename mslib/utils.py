@@ -39,6 +39,10 @@ from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import subprocess
 import sys
+import requests
+import time
+import csv
+import defusedxml.ElementTree as etree
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -48,6 +52,7 @@ except ImportError:
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore, QtWidgets
+from mslib.msui.constants import MSS_CONFIG_PATH
 
 UR = pint.UnitRegistry()
 UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
@@ -957,3 +962,89 @@ class NonQtCallback:
                 cb(*args)
             except Exception:
                 pass
+
+
+_airspaces = []
+_airports = []
+_airports_mtime = 0
+_airspaces_mtime = {}
+
+
+def get_airports(allow_download=True, progress_callback=lambda i: logging.info(f"{int(i * 100)}% Downloaded")):
+    """
+    Gets or downloads the airports.csv in ~/.config/mss and returns all airports within
+    """
+    global _airports, _airports_mtime
+    if _airports and os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv")) == _airports_mtime:
+        return _airports
+    if os.path.exists(os.path.join(MSS_CONFIG_PATH, "airports.csv")) \
+            and (time.time() - os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))) < 60 * 60 * 24 * 60:
+        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r") as file:
+            _airports_mtime = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
+            return list(csv.DictReader(file, delimiter=","))
+    elif allow_download:
+        url = "https://ourairports.com/data/airports.csv"
+        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "wb+") as file:
+            logging.info("Downloading airports.csv. This might take a while.")
+            response = requests.get(url, stream=True)
+            length = response.headers.get("content-length")
+            if length is None:  # no content length header
+                file.write(response.content)
+            else:
+                dl = 0
+                length = int(length)
+                for data in response.iter_content(chunk_size=length // 100):
+                    dl += len(data)
+                    file.write(data)
+                    progress_callback(dl / length)
+            _airports_mtime = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
+        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r") as file:
+            return list(csv.DictReader(file, delimiter=","))
+    else:
+        return []
+
+
+def get_airspaces():
+    """
+    Gets the .aip files in ~/.config/mss and returns all airspaces within
+    """
+    global _airspaces, _airspaces_mtime
+    reload = False
+    files = [file for file in os.listdir(MSS_CONFIG_PATH) if file.endswith(".aip")]
+    if _airspaces and len(files) == len(_airspaces_mtime):
+        for file in files:
+            if file not in _airspaces_mtime or \
+                    os.path.getmtime(os.path.join(MSS_CONFIG_PATH, file)) != _airspaces_mtime[file]:
+                reload = True
+                break
+        if not reload:
+            return _airspaces
+
+    _airspaces_mtime = {}
+    _airspaces = []
+    for file in files:
+        airspace = etree.parse(os.path.join(MSS_CONFIG_PATH, file))
+        airspace = airspace.find("AIRSPACES")
+        for elem in airspace:
+            airspace_data = {
+                "name": elem.find("NAME").text,
+                "polygons": elem.find("GEOMETRY").find("POLYGON").text,
+                "top": float(elem.find("ALTLIMIT_TOP").find("ALT").text),
+                "top_unit": elem.find("ALTLIMIT_TOP").find("ALT").get("UNIT"),
+                "bottom": float(elem.find("ALTLIMIT_BOTTOM").find("ALT").text),
+                "bottom_unit": elem.find("ALTLIMIT_BOTTOM").find("ALT").get("UNIT"),
+                "country": elem.find("COUNTRY").text
+            }
+            # Convert to kilometers
+            airspace_data["top"] /= 3281 if airspace_data["top_unit"] == "F" else 32.81
+            airspace_data["bottom"] /= 3281 if airspace_data["bottom_unit"] == "F" else 32.81
+            airspace_data["top"] = round(airspace_data["top"], 2)
+            airspace_data["bottom"] = round(airspace_data["bottom"], 2)
+            airspace_data.pop("top_unit")
+            airspace_data.pop("bottom_unit")
+
+            airspace_data["polygons"] = [(float(data.split(" ")[0]), float(data.split(" ")[-1]))
+                                         for data in airspace_data["polygons"].split(", ")]
+            _airspaces.append(airspace_data)
+            _airspaces_mtime[file] = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, file))
+    return sorted(_airspaces, key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
