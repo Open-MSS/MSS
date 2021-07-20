@@ -312,9 +312,6 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         if name not in self.layers[wms.url]:
             layerobj = self.dock_widget.get_layer_object(wms, name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj, name=name)
-            if widget.is_invalid:
-                self.layers[wms.url]["header"].removeChild(widget)
-                return
 
             widget.wms_name = wms.url
             if layerobj.abstract:
@@ -359,6 +356,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             widget.setSizeHint(0, size)
 
             self.layers[wms.url][name] = widget
+            if widget.is_invalid:
+                widget.setDisabled(True)
+                return
             self.current_layer = widget
             self.listLayers.setCurrentItem(widget)
 
@@ -371,6 +371,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             index = self.cbWMS_URL.findText(item.text(0))
             if index != -1 and index != self.cbWMS_URL.currentIndex():
                 self.cbWMS_URL.setCurrentIndex(index)
+            return
+        if item.is_invalid:
             return
 
         self.threads += 1
@@ -463,7 +465,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             for child_index in range(header.childCount()):
                 layer = header.child(child_index)
                 is_active = self.is_sync_possible(layer) or not (layer.itimes or layer.vtimes or layer.levels)
-                layer.setDisabled(not is_active)
+                layer.setDisabled(not is_active or layer.is_invalid)
         self.threads -= 1
 
     def is_sync_possible(self, layer):
@@ -493,7 +495,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                     layer.setCheckState(0, 2 if layer.is_synced or layer.is_active_unsynced else 0)
                 else:
                     layer.setData(0, QtCore.Qt.CheckStateRole, QtCore.QVariant())
-                    layer.setDisabled(False)
+                    layer.setDisabled(layer.is_invalid)
 
         if self.cbMultilayering.isChecked():
             self.update_checkboxes()
