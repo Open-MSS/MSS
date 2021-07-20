@@ -979,7 +979,7 @@ def get_airports(allow_download=True, progress_callback=lambda i: logging.info(f
         return _airports
     if os.path.exists(os.path.join(MSS_CONFIG_PATH, "airports.csv")) \
             and (time.time() - os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))) < 60 * 60 * 24 * 60:
-        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r") as file:
+        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r", encoding="utf8") as file:
             _airports_mtime = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
     elif allow_download:
@@ -998,7 +998,7 @@ def get_airports(allow_download=True, progress_callback=lambda i: logging.info(f
                     file.write(data)
                     progress_callback(dl / length)
             _airports_mtime = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
-        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r") as file:
+        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r", encoding="utf8") as file:
             return list(csv.DictReader(file, delimiter=","))
     else:
         return []

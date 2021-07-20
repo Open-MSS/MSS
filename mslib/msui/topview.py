@@ -64,7 +64,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         """
         super(MSS_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
-        self.label_2.setText(self.label_2.text().replace("MSS_CONFIG_PATH", MSS_CONFIG_PATH))
+        self.label_2.setText(self.label_2.text().replace("MSS_CONFIG_PATH", "file:///" + MSS_CONFIG_PATH))
 
         if settings_dict is None:
             settings_dict = {"draw_graticule": True,
