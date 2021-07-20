@@ -106,40 +106,8 @@ Author: Jakub Steiner jimmac@gmail.com
 License: https://github.com/freedesktop/tango-icon-library/blob/master/COPYING.PublicDomain
 Further Information: http://tango.freedesktop.org
 
+Airports Data
+-------------
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+To draw airports on the topview we use the services provided by ourairports
+Further Information: https://ourairports.com/about.html#overview

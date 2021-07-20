@@ -1433,8 +1433,8 @@ class MplTopViewCanvas(MplCanvas):
 
         if self.map is not None:
             self.map.set_coastlines_visible(settings["draw_coastlines"])
-            self.map.set_draw_airports(settings["draw_airports"], port_type=settings["airport_type"])
-            self.map.set_draw_airspaces(settings["draw_airbases"])
+            self.map.set_draw_airports(settings["draw_airports"], port_type=settings["airport_type"], reload=True)
+            self.map.set_draw_airspaces(settings["draw_airbases"], reload=True)
             self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
                                                 land_color=settings["colour_land"],
                                                 lake_color=settings["colour_water"])

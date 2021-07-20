@@ -156,10 +156,10 @@ class MapCanvas(basemap.Basemap):
 
         # self.warpimage() # disable fillcontinents when loading bluemarble
         self.ax.set_autoscale_on(False)
-        if not hasattr(self, "airpoints"):
+        if not hasattr(self, "airports") or not self.airports:
             self.airports = None
             self.airtext = None
-        if not hasattr(self, "airbases"):
+        if not hasattr(self, "airspaces") or not self.airspaces:
             self.airspaces = None
             self.airspacetext = None
 
@@ -333,7 +333,7 @@ class MapCanvas(basemap.Basemap):
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
 
-    def set_draw_airports(self, value, port_type="small_airport", reload=True):
+    def set_draw_airports(self, value, port_type="small_airport", reload=False):
         """
         Sets airports to visible or not visible
         """
@@ -346,7 +346,7 @@ class MapCanvas(basemap.Basemap):
         if value:
             self.draw_airports(port_type)
 
-    def set_draw_airspaces(self, value, reload=True):
+    def set_draw_airspaces(self, value, reload=False):
         """
         Sets airspaces to visible or not visible
         """
