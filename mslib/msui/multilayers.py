@@ -312,6 +312,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         if name not in self.layers[wms.url]:
             layerobj = self.dock_widget.get_layer_object(wms, name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj, name=name)
+
             widget.wms_name = wms.url
             if layerobj.abstract:
                 widget.setToolTip(0, layerobj.abstract)
@@ -355,6 +356,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             widget.setSizeHint(0, size)
 
             self.layers[wms.url][name] = widget
+            if widget.is_invalid:
+                widget.setDisabled(True)
+                return
             self.current_layer = widget
             self.listLayers.setCurrentItem(widget)
 
@@ -367,6 +371,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             index = self.cbWMS_URL.findText(item.text(0))
             if index != -1 and index != self.cbWMS_URL.currentIndex():
                 self.cbWMS_URL.setCurrentIndex(index)
+            return
+        if item.is_invalid:
             return
 
         self.threads += 1
@@ -459,7 +465,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             for child_index in range(header.childCount()):
                 layer = header.child(child_index)
                 is_active = self.is_sync_possible(layer) or not (layer.itimes or layer.vtimes or layer.levels)
-                layer.setDisabled(not is_active)
+                layer.setDisabled(not is_active or layer.is_invalid)
         self.threads -= 1
 
     def is_sync_possible(self, layer):
@@ -489,7 +495,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                     layer.setCheckState(0, 2 if layer.is_synced or layer.is_active_unsynced else 0)
                 else:
                     layer.setData(0, QtCore.Qt.CheckStateRole, QtCore.QVariant())
-                    layer.setDisabled(False)
+                    layer.setDisabled(layer.is_invalid)
 
         if self.cbMultilayering.isChecked():
             self.update_checkboxes()
@@ -526,6 +532,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         self.is_synced = False
         self.is_active_unsynced = False
         self.is_favourite = False
+        self.is_invalid = False
 
         if not is_empty:
             self._parse_layerobj()
@@ -579,11 +586,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_init_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.itimes = [_time.isoformat() + "Z" for _time in self.allowed_init_times]
             if len(self.allowed_init_times) == 0:
-                msg = "cannot determine init time format"
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
+                logging.error(f"Cannot determine init time format of {self.header.text(0)} for {self.text(0)}")
+                self.is_invalid = True
             else:
                 self.itime = self.itimes[-1]
 
@@ -601,11 +605,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_valid_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
-                msg = "cannot determine init time format"
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
+                logging.error(f"Cannot determine valid time format of {self.header.text(0)} for {self.text(0)}")
+                self.is_invalid = True
             else:
                 if self.itime:
                     self.vtime = next((vtime for vtime in self.vtimes if vtime >= self.itime), self.vtimes[0])
