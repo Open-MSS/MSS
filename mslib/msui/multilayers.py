@@ -312,6 +312,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         if name not in self.layers[wms.url]:
             layerobj = self.dock_widget.get_layer_object(wms, name.split(" | ")[-1])
             widget = Layer(self.layers[wms.url]["header"], self, layerobj, name=name)
+            if widget.is_invalid:
+                self.layers[wms.url]["header"].removeChild(widget)
+                return
+
             widget.wms_name = wms.url
             if layerobj.abstract:
                 widget.setToolTip(0, layerobj.abstract)
@@ -526,6 +530,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         self.is_synced = False
         self.is_active_unsynced = False
         self.is_favourite = False
+        self.is_invalid = False
 
         if not is_empty:
             self._parse_layerobj()
@@ -579,11 +584,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_init_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.itimes = [_time.isoformat() + "Z" for _time in self.allowed_init_times]
             if len(self.allowed_init_times) == 0:
-                msg = "cannot determine init time format"
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
+                logging.error(f"Cannot determine init time format of {self.header.text(0)} for {self.text(0)}")
+                self.is_invalid = True
             else:
                 self.itime = self.itimes[-1]
 
@@ -601,11 +603,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_valid_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
-                msg = "cannot determine init time format"
-                logging.error(msg)
-                QtWidgets.QMessageBox.critical(
-                    self.parent.dock_widget, self.parent.dock_widget.tr("Web Map Service"),
-                    self.parent.dock_widget.tr(f"ERROR: {msg}"))
+                logging.error(f"Cannot determine valid time format of {self.header.text(0)} for {self.text(0)}")
+                self.is_invalid = True
             else:
                 if self.itime:
                     self.vtime = next((vtime for vtime in self.vtimes if vtime >= self.itime), self.vtimes[0])
