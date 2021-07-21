@@ -367,7 +367,7 @@ class MapCanvas(basemap.Basemap):
         """
         if not self.airspaces:
             airbases = sorted(copy.deepcopy(get_airspaces()), key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
-            max_height = max([airbase["bottom"] for airbase in airbases])
+            max_height = airbases[-1]["bottom"]
             cmap = get_cmap("Blues")
             airspace_colors = [cmap(1 - airbases[i]["bottom"] / max_height) for i in range(len(airbases))]
             if not airbases:
@@ -420,10 +420,22 @@ class MapCanvas(basemap.Basemap):
             if not airports:
                 logging.error("Tried to draw airports without airports.csv")
                 return
-            lons = [float(airport["longitude_deg"]) for airport in airports if airport["type"] == port_type]
-            lats = [float(airport["latitude_deg"]) for airport in airports if airport["type"] == port_type]
-            lons, lats = self.projtran(lons, lats)
-            annotations = [airport["name"] for airport in airports if airport["type"] == port_type]
+
+            lons, lats = self.projtran(*zip(*[(float(airport["longitude_deg"]),
+                                            float(airport["latitude_deg"])) for airport in airports]))
+            for i, airport in enumerate(airports):
+                airports[i]["longitude_deg"] = lons[i]
+                airports[i]["latitude_deg"] = lats[i]
+
+            airports = [airport for airport in airports if airport["type"] == port_type and
+                        self.llcrnrx <= float(airport["longitude_deg"]) <= self.urcrnrx and
+                        self.llcrnry <= float(airport["latitude_deg"]) <= self.urcrnry]
+            lons = [float(airport["longitude_deg"]) for airport in airports]
+            lats = [float(airport["latitude_deg"]) for airport in airports]
+            annotations = [airport["name"] for airport in airports]
+            if not airports:
+                return
+
             self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
                                             zorder=5)
             self.airports.set_pickradius(1)
