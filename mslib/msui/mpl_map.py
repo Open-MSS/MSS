@@ -341,6 +341,8 @@ class MapCanvas(basemap.Basemap):
         Sets airports to visible or not visible
         """
         if (not value or reload) and self.airports:
+            if "OurAirports" in self.crs_text.get_text():
+                self.crs_text.set_text(self.crs_text.get_text().replace(f"Airports provided by OurAirports\n", ""))
             self.airports.remove()
             self.airtext.remove()
             self.airports = None
@@ -354,6 +356,8 @@ class MapCanvas(basemap.Basemap):
         Sets airspaces to visible or not visible
         """
         if (not value or reload) and self.airspaces:
+            if "openaip.net" in self.crs_text.get_text():
+                self.crs_text.set_text(self.crs_text.get_text().replace(f"Airspaces provided by openaip.net\n", ""))
             self.airspaces.remove()
             self.airspacetext.remove()
             self.airspaces = None
@@ -379,6 +383,9 @@ class MapCanvas(basemap.Basemap):
             airbases = [airbase for airbase in airbases if Polygon(airbase["polygon"]).intersects(map_polygon)]
             if not airbases:
                 return
+
+            if "openaip.net" not in self.crs_text.get_text():
+                self.crs_text.set_text(f"Airspaces provided by openaip.net\n" + self.crs_text.get_text())
 
             airbases.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
             max_height = airbases[-1]["bottom"]
@@ -444,6 +451,9 @@ class MapCanvas(basemap.Basemap):
             annotations = [airport["name"] for airport in airports]
             if not airports:
                 return
+
+            if "OurAirports" not in self.crs_text.get_text():
+                self.crs_text.set_text(f"Airports provided by OurAirports\n" + self.crs_text.get_text())
 
             self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
                                             zorder=5)
