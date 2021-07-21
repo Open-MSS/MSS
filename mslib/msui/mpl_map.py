@@ -33,8 +33,10 @@
 """
 
 import logging
+import copy
 import numpy as np
 import matplotlib
+from matplotlib.cm import get_cmap
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from matplotlib.collections import PolyCollection
@@ -364,13 +366,18 @@ class MapCanvas(basemap.Basemap):
         Load and draw airbase data
         """
         if not self.airspaces:
-            airbases = get_airspaces()
+            airbases = sorted(copy.deepcopy(get_airspaces()), key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
+            max_height = max([airbase["bottom"] for airbase in airbases])
+            cmap = get_cmap("Blues")
+            airspace_colors = [cmap(1 - airbases[i]["bottom"] / max_height) for i in range(len(airbases))]
             if not airbases:
                 logging.error("Tried to draw airspaces without .aip files.")
                 return
 
-            collection = PolyCollection([airbase["polygons"] for airbase in airbases], alpha=0.4, edgecolor="black",
-                                        zorder=6)
+            for i, airbase in enumerate(airbases):
+                airbases[i]["polygons"] = list(zip(*self.projtran(*list(zip(*airbase["polygons"])))))
+            collection = PolyCollection([airbase["polygons"] for airbase in airbases], alpha=0.5, edgecolor="black",
+                                        zorder=6, facecolors=airspace_colors)
             collection.set_pickradius(0)
             self.airspaces = self.ax.add_collection(collection)
             self.airspacetext = self.ax.annotate(airbases[0]["name"], xy=airbases[0]["polygons"][0], xycoords="data",
@@ -378,26 +385,28 @@ class MapCanvas(basemap.Basemap):
                                                        "edgecolor": "0.5", "alpha": 0.9}, zorder=7)
             self.airspacetext.set_visible(False)
 
-            def update_text(index):
-                pos = self.airspaces.get_paths()[index["ind"][0]].get_extents().get_points()[-1]
-                self.airspacetext.xy = pos
-                self.airspacetext.set_position(pos)
+            def update_text(index, xydata):
+                self.airspacetext.xy = xydata
+                self.airspacetext.set_position(xydata)
                 self.airspacetext.set_text("\n".join([f"{airbases[i]['name']}, {airbases[i]['bottom']} - "
                                                      f"{airbases[i]['top']}km" for i in index["ind"]]))
-                c = ["green" if i in index["ind"] else "C0" for i in range(len(self.airspaces.get_paths()))]
-                self.airspaces.set_facecolor(c)
+                highlight_cmap = get_cmap("YlGn")
+                for i in index["ind"]:
+                    airspace_colors[i] = highlight_cmap(1 - airbases[i]["bottom"] / max_height)
+                self.airspaces.set_facecolor(airspace_colors)
+                for i in index["ind"]:
+                    airspace_colors[i] = cmap(1 - airbases[i]["bottom"] / max_height)
 
             def on_move(event):
                 if self.airspaces and event.inaxes == self.ax:
                     cont, ind = self.airspaces.contains(event)
                     if cont:
-                        update_text(ind)
+                        update_text(ind, (event.xdata, event.ydata))
                         self.airspacetext.set_visible(True)
                         self.ax.figure.canvas.draw_idle()
                     elif self.airspacetext.get_visible():
                         self.airspacetext.set_visible(False)
-                        c = ["C0" for i in range(len(self.airspaces.get_paths()))]
-                        self.airspaces.set_facecolor(c)
+                        self.airspaces.set_facecolor(airspace_colors)
                         self.ax.figure.canvas.draw_idle()
 
             self.airspace_event = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)
@@ -411,9 +420,9 @@ class MapCanvas(basemap.Basemap):
             if not airports:
                 logging.error("Tried to draw airports without airports.csv")
                 return
-
             lons = [float(airport["longitude_deg"]) for airport in airports if airport["type"] == port_type]
             lats = [float(airport["latitude_deg"]) for airport in airports if airport["type"] == port_type]
+            lons, lats = self.projtran(lons, lats)
             annotations = [airport["name"] for airport in airports if airport["type"] == port_type]
             self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
                                             zorder=5)
@@ -428,8 +437,6 @@ class MapCanvas(basemap.Basemap):
                 self.airtext.xy = pos
                 self.airtext.set_position(pos)
                 self.airtext.set_text("\n".join([annotations[i] for i in index["ind"]]))
-                c = ["green" if i in index["ind"] else "red" for i in range(len(self.airports.get_offsets()))]
-                self.airports.set_facecolor(c)
 
             def on_move(event):
                 if self.airports and event.inaxes == self.ax:
@@ -440,8 +447,6 @@ class MapCanvas(basemap.Basemap):
                         self.ax.figure.canvas.draw_idle()
                     elif self.airtext.get_visible():
                         self.airtext.set_visible(False)
-                        c = ["red" for i in range(len(self.airports.get_offsets()))]
-                        self.airports.set_facecolor(c)
                         self.ax.figure.canvas.draw_idle()
 
             self.airports_event = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)

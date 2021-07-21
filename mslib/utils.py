@@ -1047,4 +1047,4 @@ def get_airspaces():
                                          for data in airspace_data["polygons"].split(", ")]
             _airspaces.append(airspace_data)
             _airspaces_mtime[file] = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, file))
-    return sorted(_airspaces, key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
+    return _airspaces

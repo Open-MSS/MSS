@@ -1235,11 +1235,11 @@ class MplTopViewCanvas(MplCanvas):
         else:
             self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
         if self.appearance_settings["draw_airports"]:
-            self.map.set_draw_airports(True, port_type=self.appearance_settings["airport_type"])
+            self.map.set_draw_airports(True, port_type=self.appearance_settings["airport_type"], reload=True)
         else:
             self.map.set_draw_airports(False)
         if self.appearance_settings["draw_airbases"]:
-            self.map.set_draw_airspaces(True)
+            self.map.set_draw_airspaces(True, reload=True)
         else:
             self.map.set_draw_airspaces(False)
         self.draw()  # this one is required to trigger a
