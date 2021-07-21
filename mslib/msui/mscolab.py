@@ -1457,13 +1457,12 @@ class MSSMscolab(QtCore.QObject):
             self.conn = None
 
         # remove temporary gravatar image
-        if (self.gravatar is not None
-            and not self.email in config_loader(dataset="gravatar_ids")
-            and os.path.exists(self.gravatar)):
-            try:
-                os.remove(self.gravatar)
-            except Exception as e:
-                logging.debug(f"Error {e}")
+        if self.gravatar is not None:
+            if self.email not in config_loader(dataset="gravatar_ids") and os.path.exists(self.gravatar):
+                try:
+                    os.remove(self.gravatar)
+                except Exception as e:
+                    logging.debug(f"Error {e}")
         self.gravatar = None
 
         # delete mscolab http_auth settings for the url
