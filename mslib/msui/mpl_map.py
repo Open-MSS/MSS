@@ -35,6 +35,7 @@
 import logging
 import copy
 import numpy as np
+from shapely.geometry import Polygon
 import matplotlib
 from matplotlib.cm import get_cmap
 import matplotlib.path as mpath
@@ -366,21 +367,29 @@ class MapCanvas(basemap.Basemap):
         Load and draw airbase data
         """
         if not self.airspaces:
-            airbases = sorted(copy.deepcopy(get_airspaces()), key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
-            max_height = airbases[-1]["bottom"]
-            cmap = get_cmap("Blues")
-            airspace_colors = [cmap(1 - airbases[i]["bottom"] / max_height) for i in range(len(airbases))]
+            airbases = copy.deepcopy(get_airspaces())
             if not airbases:
                 logging.error("Tried to draw airspaces without .aip files.")
                 return
 
             for i, airbase in enumerate(airbases):
-                airbases[i]["polygons"] = list(zip(*self.projtran(*list(zip(*airbase["polygons"])))))
-            collection = PolyCollection([airbase["polygons"] for airbase in airbases], alpha=0.5, edgecolor="black",
+                airbases[i]["polygon"] = list(zip(*self.projtran(*list(zip(*airbase["polygon"])))))
+            map_polygon = Polygon([(self.llcrnrx, self.llcrnry), (self.urcrnrx, self.llcrnry),
+                                  (self.urcrnrx, self.urcrnry), (self.llcrnrx, self.urcrnry)])
+            airbases = [airbase for airbase in airbases if Polygon(airbase["polygon"]).intersects(map_polygon)]
+            if not airbases:
+                return
+
+            airbases.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
+            max_height = airbases[-1]["bottom"]
+            cmap = get_cmap("Blues")
+            airspace_colors = [cmap(1 - airbases[i]["bottom"] / max_height) for i in range(len(airbases))]
+
+            collection = PolyCollection([airbase["polygon"] for airbase in airbases], alpha=0.5, edgecolor="black",
                                         zorder=6, facecolors=airspace_colors)
             collection.set_pickradius(0)
             self.airspaces = self.ax.add_collection(collection)
-            self.airspacetext = self.ax.annotate(airbases[0]["name"], xy=airbases[0]["polygons"][0], xycoords="data",
+            self.airspacetext = self.ax.annotate(airbases[0]["name"], xy=airbases[0]["polygon"][0], xycoords="data",
                                                  bbox={"boxstyle": "round", "facecolor": "w",
                                                        "edgecolor": "0.5", "alpha": 0.9}, zorder=7)
             self.airspacetext.set_visible(False)

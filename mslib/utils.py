@@ -1028,7 +1028,7 @@ def get_airspaces():
         for elem in airspace:
             airspace_data = {
                 "name": elem.find("NAME").text,
-                "polygons": elem.find("GEOMETRY").find("POLYGON").text,
+                "polygon": elem.find("GEOMETRY").find("POLYGON").text,
                 "top": float(elem.find("ALTLIMIT_TOP").find("ALT").text),
                 "top_unit": elem.find("ALTLIMIT_TOP").find("ALT").get("UNIT"),
                 "bottom": float(elem.find("ALTLIMIT_BOTTOM").find("ALT").text),
@@ -1043,8 +1043,8 @@ def get_airspaces():
             airspace_data.pop("top_unit")
             airspace_data.pop("bottom_unit")
 
-            airspace_data["polygons"] = [(float(data.split(" ")[0]), float(data.split(" ")[-1]))
-                                         for data in airspace_data["polygons"].split(", ")]
+            airspace_data["polygon"] = [(float(data.split(" ")[0]), float(data.split(" ")[-1]))
+                                        for data in airspace_data["polygon"].split(", ")]
             _airspaces.append(airspace_data)
             _airspaces_mtime[file] = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, file))
     return _airspaces
