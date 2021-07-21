@@ -336,11 +336,11 @@ class MapCanvas(basemap.Basemap):
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
 
-    def set_draw_airports(self, value, port_type="small_airport", reload=False):
+    def set_draw_airports(self, value, port_type="small_airport", reload=True):
         """
         Sets airports to visible or not visible
         """
-        if (not value or reload) and self.airports:
+        if (reload or not value) and self.airports:
             if "OurAirports" in self.crs_text.get_text():
                 self.crs_text.set_text(self.crs_text.get_text().replace(f"Airports provided by OurAirports\n", ""))
             self.airports.remove()
@@ -351,11 +351,11 @@ class MapCanvas(basemap.Basemap):
         if value:
             self.draw_airports(port_type)
 
-    def set_draw_airspaces(self, value, reload=False):
+    def set_draw_airspaces(self, value, range_km=None, reload=True):
         """
         Sets airspaces to visible or not visible
         """
-        if (not value or reload) and self.airspaces:
+        if (reload or not value) and self.airspaces:
             if "openaip.net" in self.crs_text.get_text():
                 self.crs_text.set_text(self.crs_text.get_text().replace(f"Airspaces provided by openaip.net\n", ""))
             self.airspaces.remove()
@@ -364,39 +364,41 @@ class MapCanvas(basemap.Basemap):
             self.airspacetext = None
             self.ax.figure.canvas.mpl_disconnect(self.airspace_event)
         if value:
-            self.draw_airspaces()
+            self.draw_airspaces(range_km)
 
-    def draw_airspaces(self):
+    def draw_airspaces(self, range_km=None):
         """
-        Load and draw airbase data
+        Load and draw airspace data
         """
         if not self.airspaces:
-            airbases = copy.deepcopy(get_airspaces())
-            if not airbases:
+            airspaces = copy.deepcopy(get_airspaces())
+            if not airspaces:
                 logging.error("Tried to draw airspaces without .aip files.")
                 return
 
-            for i, airbase in enumerate(airbases):
-                airbases[i]["polygon"] = list(zip(*self.projtran(*list(zip(*airbase["polygon"])))))
+            for i, airspace in enumerate(airspaces):
+                airspaces[i]["polygon"] = list(zip(*self.projtran(*list(zip(*airspace["polygon"])))))
             map_polygon = Polygon([(self.llcrnrx, self.llcrnry), (self.urcrnrx, self.llcrnry),
                                   (self.urcrnrx, self.urcrnry), (self.llcrnrx, self.urcrnry)])
-            airbases = [airbase for airbase in airbases if Polygon(airbase["polygon"]).intersects(map_polygon)]
-            if not airbases:
+            airspaces = [airspace for airspace in airspaces if
+                        (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1]) and
+                        Polygon(airspace["polygon"]).intersects(map_polygon)]
+            if not airspaces:
                 return
 
             if "openaip.net" not in self.crs_text.get_text():
                 self.crs_text.set_text(f"Airspaces provided by openaip.net\n" + self.crs_text.get_text())
 
-            airbases.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
-            max_height = airbases[-1]["bottom"]
+            airspaces.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
+            max_height = airspaces[-1]["bottom"]
             cmap = get_cmap("Blues")
-            airspace_colors = [cmap(1 - airbases[i]["bottom"] / max_height) for i in range(len(airbases))]
+            airspace_colors = [cmap(1 - airspaces[i]["bottom"] / max_height) for i in range(len(airspaces))]
 
-            collection = PolyCollection([airbase["polygon"] for airbase in airbases], alpha=0.5, edgecolor="black",
+            collection = PolyCollection([airspace["polygon"] for airspace in airspaces], alpha=0.5, edgecolor="black",
                                         zorder=6, facecolors=airspace_colors)
             collection.set_pickradius(0)
             self.airspaces = self.ax.add_collection(collection)
-            self.airspacetext = self.ax.annotate(airbases[0]["name"], xy=airbases[0]["polygon"][0], xycoords="data",
+            self.airspacetext = self.ax.annotate(airspaces[0]["name"], xy=airspaces[0]["polygon"][0], xycoords="data",
                                                  bbox={"boxstyle": "round", "facecolor": "w",
                                                        "edgecolor": "0.5", "alpha": 0.9}, zorder=7)
             self.airspacetext.set_visible(False)
@@ -404,14 +406,14 @@ class MapCanvas(basemap.Basemap):
             def update_text(index, xydata):
                 self.airspacetext.xy = xydata
                 self.airspacetext.set_position(xydata)
-                self.airspacetext.set_text("\n".join([f"{airbases[i]['name']}, {airbases[i]['bottom']} - "
-                                                     f"{airbases[i]['top']}km" for i in index["ind"]]))
+                self.airspacetext.set_text("\n".join([f"{airspaces[i]['name']}, {airspaces[i]['bottom']} - "
+                                                     f"{airspaces[i]['top']}km" for i in index["ind"]]))
                 highlight_cmap = get_cmap("YlGn")
                 for i in index["ind"]:
-                    airspace_colors[i] = highlight_cmap(1 - airbases[i]["bottom"] / max_height)
+                    airspace_colors[i] = highlight_cmap(1 - airspaces[i]["bottom"] / max_height)
                 self.airspaces.set_facecolor(airspace_colors)
                 for i in index["ind"]:
-                    airspace_colors[i] = cmap(1 - airbases[i]["bottom"] / max_height)
+                    airspace_colors[i] = cmap(1 - airspaces[i]["bottom"] / max_height)
 
             def on_move(event):
                 if self.airspaces and event.inaxes == self.ax:

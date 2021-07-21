@@ -1189,8 +1189,9 @@ class MplTopViewCanvas(MplCanvas):
             appearance = self.get_map_appearance()
             if appearance["draw_airports"]:
                 self.map.set_draw_airports(True, port_type=appearance["airport_type"])
-            if appearance["draw_airbases"]:
-                self.map.set_draw_airspaces(True)
+            if appearance["draw_airspaces"]:
+                self.map.set_draw_airspaces(True, (appearance["filter_from"], appearance["filter_to"])
+                                            if appearance["filter_airspaces"] else None)
             try:
                 self.waypoints_interactor = mpl_pi.HPathInteractor(
                     self.map, self.waypoints_model,
@@ -1235,11 +1236,13 @@ class MplTopViewCanvas(MplCanvas):
         else:
             self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
         if self.appearance_settings["draw_airports"]:
-            self.map.set_draw_airports(True, port_type=self.appearance_settings["airport_type"], reload=True)
+            self.map.set_draw_airports(True, port_type=self.appearance_settings["airport_type"])
         else:
             self.map.set_draw_airports(False)
-        if self.appearance_settings["draw_airbases"]:
-            self.map.set_draw_airspaces(True, reload=True)
+        if self.appearance_settings["draw_airspaces"]:
+            self.map.set_draw_airspaces(True, (self.appearance_settings["filter_from"],
+                                               self.appearance_settings["filter_to"])
+                                        if self.appearance_settings["filter_airspaces"] else None)
         else:
             self.map.set_draw_airspaces(False)
         self.draw()  # this one is required to trigger a
@@ -1410,7 +1413,10 @@ class MplTopViewCanvas(MplCanvas):
                     "draw_marker": True,
                     "draw_airports": False,
                     "airport_type": "small_airport",
-                    "draw_airbases": False,
+                    "draw_airspaces": False,
+                    "filter_airspaces": False,
+                    "filter_from": 0,
+                    "filter_to": 100,
                     "label_flighttrack": True,
                     "tov_plot_title_size": "default",
                     "tov_axes_label_size": "default",
@@ -1433,8 +1439,9 @@ class MplTopViewCanvas(MplCanvas):
 
         if self.map is not None:
             self.map.set_coastlines_visible(settings["draw_coastlines"])
-            self.map.set_draw_airports(settings["draw_airports"], port_type=settings["airport_type"], reload=True)
-            self.map.set_draw_airspaces(settings["draw_airbases"], reload=True)
+            self.map.set_draw_airports(settings["draw_airports"], port_type=settings["airport_type"])
+            self.map.set_draw_airspaces(settings["draw_airspaces"], (settings["filter_from"], settings["filter_to"])
+                                        if settings["filter_airspaces"] else None)
             self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
                                                 land_color=settings["colour_land"],
                                                 lake_color=settings["colour_water"])

@@ -75,7 +75,10 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "draw_marker": True,
                              "draw_airports": False,
                              "airport_type": "small_airport",
-                             "draw_airbases": False,
+                             "draw_airspaces": False,
+                             "filter_airspaces": False,
+                             "filter_from": 0,
+                             "filter_to": 100,
                              "label_flighttrack": True,
                              "tov_plot_title_size": "default",
                              "tov_axes_label_size": "default",
@@ -107,7 +110,10 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
         self.cbDrawAirports.setChecked(settings_dict["draw_airports"])
         self.cbAirportType.setCurrentIndex(self.cbAirportType.findText(settings_dict["airport_type"]))
-        self.cbDrawAirbases.setChecked(settings_dict["draw_airbases"])
+        self.cbDrawAirspaces.setChecked(settings_dict["draw_airspaces"])
+        self.cbFilterAirspaces.setChecked(settings_dict["filter_airspaces"])
+        self.sbFrom.setValue(settings_dict["filter_from"])
+        self.sbTo.setValue(settings_dict["filter_to"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
@@ -147,7 +153,10 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "draw_marker": self.cbDrawMarker.isChecked(),
             "draw_airports": self.cbDrawAirports.isChecked(),
             "airport_type": self.cbAirportType.currentText(),
-            "draw_airbases": self.cbDrawAirbases.isChecked(),
+            "draw_airspaces": self.cbDrawAirspaces.isChecked(),
+            "filter_airspaces": self.cbFilterAirspaces.isChecked(),
+            "filter_from": self.sbFrom.value(),
+            "filter_to": self.sbTo.value(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
             "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
