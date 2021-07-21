@@ -9,7 +9,6 @@
         <file>mscolab-help/add-project.png</file>
     </qresource>
     <qresource prefix="/gravatars">
-        <file>default-gravatars/default.jpg</file>
         <file>default-gravatars/a.png</file>
         <file>default-gravatars/b.png</file>
         <file>default-gravatars/c.png</file>
@@ -36,5 +35,6 @@
         <file>default-gravatars/x.png</file>
         <file>default-gravatars/y.png</file>
         <file>default-gravatars/z.png</file>
+        <file>default-gravatars/default.png</file>
     </qresource>
 </RCC>

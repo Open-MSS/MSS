@@ -187,6 +187,9 @@ class MissionSupportSystemDefaultConfig(object):
     # mss dir
     mss_dir = "~/mss"
 
+    # list of gravatar email ids to automatically fetch
+    gravatar_ids = []
+
     # dictionary for export plugins, e.g.  {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"] }
     export_plugins = {}
 

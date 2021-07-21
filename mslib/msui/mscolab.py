@@ -39,6 +39,7 @@ import requests
 import re
 import urllib.request
 from fs import open_fs
+from PIL import Image
 from werkzeug.urls import url_join
 
 from mslib.msui import flighttrack as ft
@@ -483,7 +484,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         self.ui.userOptionsTb.setMenu(self.user_menu)
         self.ui.userOptionsTb.show()
-        self.set_gravatar()
+        self.fetch_gravatar()
         # enable add project menu action
         self.ui.actionAddProject.setEnabled(True)
 
@@ -509,21 +510,62 @@ class MSSMscolab(QtCore.QObject):
             return False
         return r.text == "True"
 
-    def set_gravatar(self, refresh=False):
-        image = None
-        # if not refresh and os.path.exists(f"{email_hash}.jpg"):
-        if self.email is not None:
-            email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
-            gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}?s=80"
-            urllib.request.urlretrieve(gravatar_url, f"{email_hash}.jpg")
-            image = f"{email_hash}.jpg"
+    def fetch_gravatar(self, refresh=False):
+        email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
+        email_in_settings = self.email in config_loader(dataset="gravatar_ids")
+        gravatar_path = os.path.join(constants.MSS_CONFIG_PATH, 'gravatars')
+        gravatar = os.path.join(gravatar_path, f"{email_hash}.png")
 
-        pixmap = QtGui.QPixmap(image)
+        if refresh or email_in_settings:
+            if not os.path.exists(gravatar_path):
+                try:
+                    os.makedirs(gravatar_path)
+                except Exception as e:
+                    logging.debug("Error %s", str(e))
+                    show_popup(self.prof_diag, "Error", "Could not create gravatar folder in config folder")
+                    return
+
+            gravatar = os.path.join(gravatar_path, f"{email_hash}.jpg")
+            gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}?s=80&d=404"
+            try:
+                urllib.request.urlretrieve(gravatar_url, gravatar)
+                img = Image.open(gravatar)
+                img.save(gravatar.replace(".jpg", ".png"))
+                os.remove(gravatar)
+                gravatar = gravatar.replace(".jpg", ".png")
+            except urllib.error.HTTPError:
+                if refresh:
+                    show_popup(self.prof_diag, "Error", "Gravatar not found")
+                return
+            except urllib.error.URLError:
+                if refresh:
+                    show_popup(self.prof_diag, "Error", "Could not fetch Gravatar")
+                return
+
+        if refresh and not email_in_settings:
+            show_popup(
+                self.prof_diag,
+                "Information",
+                "Please add your email to the settings under"
+                "gravatar_ids section to automatically fetch your gravatar",
+                icon=1,)
+
+        self.set_gravatar(gravatar)
+
+    def set_gravatar(self, gravatar=None):
+        self.gravatar = gravatar
+        pixmap = QtGui.QPixmap(self.gravatar)
         # check if pixmap has correct image
         if pixmap.isNull():
             user_name = self.user["username"]
-            first_alphabet = user_name[user_name.find(next(filter(str.isalpha, user_name)))].lower()
+            try:
+                # find the first alphabet in the user name to set appropriate gravatar
+                first_alphabet = user_name[user_name.find(next(filter(str.isalpha, user_name)))].lower()
+            except StopIteration:
+                # fallback to default gravatar logo if no alphabets found in the user name
+                first_alphabet = "default"
             pixmap = QtGui.QPixmap(f":/gravatars/default-gravatars/{first_alphabet}.png")
+            self.gravatar = None
         icon = QtGui.QIcon()
         icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
 
@@ -534,7 +576,26 @@ class MSSMscolab(QtCore.QObject):
         if self.prof_diag is not None:
             self.profile_dialog.gravatarLabel.setPixmap(pixmap)
 
+    def remove_gravatar(self):
+        if self.gravatar is None:
+            return
+
+        if os.path.exists(self.gravatar):
+            os.remove(self.gravatar)
+            if self.email in config_loader(dataset="gravatar_ids"):
+                show_popup(
+                    self.prof_diag,
+                    "Information",
+                    "Please remove your Email from gravatar_ids section in"
+                    "the mss_settings to not fetch gravatar automatically",
+                    icon=1,)
+
+        self.set_gravatar()
+
     def open_profile_window(self):
+        def on_context_menu(point):
+            self.gravatar_menu.exec_(self.profile_dialog.gravatarLabel.mapToGlobal(point))
+
         self.prof_diag = QtWidgets.QDialog()
         self.profile_dialog = ui_profile.Ui_ProfileWindow()
         self.profile_dialog.setupUi(self.prof_diag)
@@ -542,10 +603,17 @@ class MSSMscolab(QtCore.QObject):
         self.profile_dialog.usernameLabel_2.setText(self.user['username'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
-        self.profile_dialog.setGravatarBtn.clicked.connect(lambda: self.set_gravatar(refresh=True))
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
+
+        # add context menu for right click on image
+        self.gravatar_menu = QtWidgets.QMenu()
+        self.gravatar_menu.addAction('Fetch Gravatar', lambda: self.fetch_gravatar(refresh=True))
+        self.gravatar_menu.addAction('Remove Gravatar', lambda: self.remove_gravatar())
+        self.profile_dialog.gravatarLabel.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.profile_dialog.gravatarLabel.customContextMenuRequested.connect(on_context_menu)
+
         self.prof_diag.show()
-        self.set_gravatar(refresh=True)
+        self.fetch_gravatar()
 
     def delete_account(self):
         if self.verify_user_token():
@@ -701,6 +769,7 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def close_chat_window(self):
+        self.chat_window.close()
         self.chat_window = None
 
     def open_admin_window(self):
@@ -729,6 +798,7 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def close_admin_window(self):
+        self.admin_window.close()
         self.admin_window = None
 
     def open_version_history_window(self):
@@ -752,15 +822,22 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def close_version_history_window(self):
+        self.version_window.close()
         self.version_window = None
 
     def close_external_windows(self):
+        if self.prof_diag is not None:
+            self.prof_diag.close()
+            self.prof_diag = None
         if self.chat_window is not None:
             self.chat_window.close()
+            self.chat_window = None
         if self.admin_window is not None:
             self.admin_window.close()
+            self.admin_window = None
         if self.version_window is not None:
             self.version_window.close()
+            self.version_window = None
 
     def handle_delete_project(self):
         if self.verify_user_token():
@@ -1350,9 +1427,6 @@ class MSSMscolab(QtCore.QObject):
         self.ui.local_active = True
         self.ui.menu_handler()
         # close all hanging window
-        if self.prof_diag is not None:
-            self.prof_diag.close()
-            self.prof_diag = None
         self.close_external_windows()
         self.hide_project_options()
         # delete token and show login widget-items
@@ -1381,6 +1455,16 @@ class MSSMscolab(QtCore.QObject):
         if self.conn is not None:
             self.conn.disconnect()
             self.conn = None
+
+        # remove temporary gravatar image
+        if (self.gravatar is not None
+            and not self.email in config_loader(dataset="gravatar_ids")
+            and os.path.exists(self.gravatar)):
+            try:
+                os.remove(self.gravatar)
+            except Exception as e:
+                logging.debug(f"Error {e}")
+        self.gravatar = None
 
         # delete mscolab http_auth settings for the url
         if self.mscolab_server_url in self.settings["auth"].keys():

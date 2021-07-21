@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>277</width>
-    <height>187</height>
+    <width>242</width>
+    <height>146</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -89,20 +89,10 @@
         <string/>
        </property>
        <property name="pixmap">
-        <pixmap resource="../resources/resources.qrc">:/gravatars/default-gravatars/default.jpg</pixmap>
+        <pixmap resource="../resources/resources.qrc">:/gravatars/default-gravatars/default.png</pixmap>
        </property>
        <property name="scaledContents">
         <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item alignment="Qt::AlignHCenter">
-      <widget class="QPushButton" name="setGravatarBtn">
-       <property name="text">
-        <string>Set Gravatar</string>
-       </property>
-       <property name="autoDefault">
-        <bool>false</bool>
        </property>
       </widget>
      </item>

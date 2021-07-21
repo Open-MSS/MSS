@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_ProfileWindow(object):
     def setupUi(self, ProfileWindow):
         ProfileWindow.setObjectName("ProfileWindow")
-        ProfileWindow.resize(277, 187)
+        ProfileWindow.resize(242, 146)
         self.gridLayout = QtWidgets.QGridLayout(ProfileWindow)
         self.gridLayout.setObjectName("gridLayout")
         self.infoGl = QtWidgets.QGridLayout()
@@ -53,14 +53,10 @@ class Ui_ProfileWindow(object):
         self.gravatarVl.setObjectName("gravatarVl")
         self.gravatarLabel = QtWidgets.QLabel(ProfileWindow)
         self.gravatarLabel.setText("")
-        self.gravatarLabel.setPixmap(QtGui.QPixmap(":/gravatars/default-gravatars/default.jpg"))
+        self.gravatarLabel.setPixmap(QtGui.QPixmap(":/gravatars/default-gravatars/default.png"))
         self.gravatarLabel.setScaledContents(True)
         self.gravatarLabel.setObjectName("gravatarLabel")
         self.gravatarVl.addWidget(self.gravatarLabel, 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
-        self.setGravatarBtn = QtWidgets.QPushButton(ProfileWindow)
-        self.setGravatarBtn.setAutoDefault(False)
-        self.setGravatarBtn.setObjectName("setGravatarBtn")
-        self.gravatarVl.addWidget(self.setGravatarBtn, 0, QtCore.Qt.AlignHCenter)
         self.gridLayout.addLayout(self.gravatarVl, 0, 1, 2, 1)
         self.buttonBox = QtWidgets.QDialogButtonBox(ProfileWindow)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
@@ -83,7 +79,6 @@ class Ui_ProfileWindow(object):
         self.label.setText(_translate("ProfileWindow", ":"))
         self.label_2.setText(_translate("ProfileWindow", ":"))
         self.label_3.setText(_translate("ProfileWindow", ":"))
-        self.setGravatarBtn.setText(_translate("ProfileWindow", "Set Gravatar"))
         self.deleteAccountBtn.setText(_translate("ProfileWindow", "Delete Account"))
 
 from . import resources_rc

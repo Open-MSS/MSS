@@ -381,15 +381,16 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
-        pytest.skip("To be done")
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
-        u_id = self.window.user['id']
-        QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
+        u_id = self.window.mscolab.user['id']
+        self.window.mscolab.open_profile_window()
+        QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert len(self.window.listProjects) == 0
-        assert self.window.loggedInWidget.isVisible() is False
+        assert self.window.listProjectsMSC.model().rowCount() == 0
+        assert self.window.usernameLabel.isVisible() is False
+        assert self.window.connectBtn.isVisible() is True
         with self.app.app_context():
             assert User.query.filter_by(emailid='something').count() == 0
             assert Permission.query.filter_by(u_id=u_id).count() == 0
@@ -422,6 +423,21 @@ class Test_Mscolab(object):
             self.window.mscolab.create_dir()
             assert mockbox.critical.call_count == 2
             assert mockexit.call_count == 2
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_profile_dialog(self, mockbox):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._login("something@something.org", "something")
+        self.window.mscolab.profile_action.trigger()
+        QtWidgets.QApplication.processEvents()
+        # case: default gravatar is set and no messagebox is called
+        assert mockbox.critical.call_count == 0
+        assert self.window.mscolab.prof_diag is not None
+        # case: trying to fetch non-existing gravatar
+        self.window.mscolab.fetch_gravatar(refresh=True)
+        assert mockbox.critical.call_count == 1
+        assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
 
     def _connect_to_mscolab(self):
         self.window.mscolab.open_connect_window()
