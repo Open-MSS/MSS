@@ -30,7 +30,8 @@
 
 import functools
 import logging
-from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings
+from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings, \
+    get_airports
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
@@ -131,6 +132,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.btLandColour.clicked.connect(functools.partial(self.setColour, "land"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
+        self.btDownload.clicked.connect(lambda: get_airports(True))
 
         # Shows previously selected element in the fontsize comboboxes as the current index.
         for i in range(self.tov_cbtitlesize.count()):

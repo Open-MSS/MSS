@@ -970,19 +970,24 @@ _airports_mtime = 0
 _airspaces_mtime = {}
 
 
-def get_airports(allow_download=True, progress_callback=lambda i: logging.info(f"{int(i * 100)}% Downloaded")):
+def get_airports(force_download=False, progress_callback=lambda i: logging.info(f"{int(i * 100)}% Downloaded")):
     """
     Gets or downloads the airports.csv in ~/.config/mss and returns all airports within
     """
     global _airports, _airports_mtime
     if _airports and os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv")) == _airports_mtime:
         return _airports
-    if os.path.exists(os.path.join(MSS_CONFIG_PATH, "airports.csv")) \
+    if not force_download and os.path.exists(os.path.join(MSS_CONFIG_PATH, "airports.csv")) \
             and (time.time() - os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))) < 60 * 60 * 24 * 60:
         with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r", encoding="utf8") as file:
             _airports_mtime = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
-    elif allow_download:
+    elif QtWidgets.QMessageBox.question(
+            None, "Allow download",
+            f"You selected airports to be {'drawn' if not force_download else 'downloaded (~10MB)'}." +
+            ("\nThe airports file first needs to be downloaded or updated (~10MB)." if not force_download else "") +
+            "\nIs now a good time?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes:
         url = "https://ourairports.com/data/airports.csv"
         with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "wb+") as file:
             logging.info("Downloading airports.csv. This might take a while.")

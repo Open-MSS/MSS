@@ -342,7 +342,7 @@ class MapCanvas(basemap.Basemap):
         """
         if (reload or not value) and self.airports:
             if "OurAirports" in self.crs_text.get_text():
-                self.crs_text.set_text(self.crs_text.get_text().replace(f"Airports provided by OurAirports\n", ""))
+                self.crs_text.set_text(self.crs_text.get_text().replace("Airports provided by OurAirports\n", ""))
             self.airports.remove()
             self.airtext.remove()
             self.airports = None
@@ -357,7 +357,7 @@ class MapCanvas(basemap.Basemap):
         """
         if (reload or not value) and self.airspaces:
             if "openaip.net" in self.crs_text.get_text():
-                self.crs_text.set_text(self.crs_text.get_text().replace(f"Airspaces provided by openaip.net\n", ""))
+                self.crs_text.set_text(self.crs_text.get_text().replace("Airspaces provided by openaip.net\n", ""))
             self.airspaces.remove()
             self.airspacetext.remove()
             self.airspaces = None
@@ -381,13 +381,13 @@ class MapCanvas(basemap.Basemap):
             map_polygon = Polygon([(self.llcrnrx, self.llcrnry), (self.urcrnrx, self.llcrnry),
                                   (self.urcrnrx, self.urcrnry), (self.llcrnrx, self.urcrnry)])
             airspaces = [airspace for airspace in airspaces if
-                        (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1]) and
-                        Polygon(airspace["polygon"]).intersects(map_polygon)]
+                         (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1]) and
+                         Polygon(airspace["polygon"]).intersects(map_polygon)]
             if not airspaces:
                 return
 
             if "openaip.net" not in self.crs_text.get_text():
-                self.crs_text.set_text(f"Airspaces provided by openaip.net\n" + self.crs_text.get_text())
+                self.crs_text.set_text("Airspaces provided by openaip.net\n" + self.crs_text.get_text())
 
             airspaces.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
             max_height = airspaces[-1]["bottom"]
@@ -436,7 +436,7 @@ class MapCanvas(basemap.Basemap):
         if not self.airports:
             airports = get_airports()
             if not airports:
-                logging.error("Tried to draw airports without airports.csv")
+                logging.error("Tried to draw airports but none were found. Try redownloading.")
                 return
 
             lons, lats = self.projtran(*zip(*[(float(airport["longitude_deg"]),
@@ -455,7 +455,7 @@ class MapCanvas(basemap.Basemap):
                 return
 
             if "OurAirports" not in self.crs_text.get_text():
-                self.crs_text.set_text(f"Airports provided by OurAirports\n" + self.crs_text.get_text())
+                self.crs_text.set_text("Airports provided by OurAirports\n" + self.crs_text.get_text())
 
             self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
                                             zorder=5)

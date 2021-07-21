@@ -491,6 +491,19 @@
       </widget>
      </item>
      <item>
+      <widget class="QPushButton" name="btDownload">
+       <property name="minimumSize">
+        <size>
+         <width>135</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Update/Download</string>
+       </property>
+      </widget>
+     </item>
+     <item>
       <spacer name="horizontalSpacer_6">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
