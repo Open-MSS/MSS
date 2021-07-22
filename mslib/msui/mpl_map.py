@@ -390,7 +390,7 @@ class MapCanvas(basemap.Basemap):
                 self.crs_text.set_text("Airspaces provided by openaip.net\n" + self.crs_text.get_text())
 
             airspaces.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
-            max_height = airspaces[-1]["bottom"]
+            max_height = max(airspaces[-1]["bottom"], 0.001)
             cmap = get_cmap("Blues")
             airspace_colors = [cmap(1 - airspaces[i]["bottom"] / max_height) for i in range(len(airspaces))]
 
