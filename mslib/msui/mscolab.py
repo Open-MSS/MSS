@@ -159,6 +159,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         # self.statusIconLabel.setPixmap(self.pixmap)
         # self.statusIconLabel.setAlignment(QtGui.Qt.AlignCenter)
         self.statusLabel.setText(msg)
+        QtWidgets.QApplication.processEvents()
 
     def add_mscolab_urls(self):
         url_list = config_loader(dataset="default_MSCOLAB")
@@ -284,13 +285,15 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             return
 
         if r.text == "False":
-            # popup that has wrong credentials
+            # show status indicating about wrong credentials
             self.set_status("Error", 'Oh no, your credentials were incorrect.')
         elif r.text == "Unauthorized Access":
             # Server auth required for logging in
             self.login_data = [data, r, url, auth]
             self.connectBtn.setEnabled(False)
-            self.stackedWidget.setCurrentWidget(self.wmsAuthPage)
+            self.stackedWidget.setCurrentWidget(self.httpAuthPage)
+            # self.httpBb.accepted.disconnect(self.newuser_server_auth)
+            # self.httpBb.rejected.disconnect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
             self.httpBb.accepted.connect(self.login_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
         else:
@@ -347,7 +350,9 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.stackedWidget.setCurrentWidget(self.loginPage)
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
-            self.stackedWidget.setCurrentWidget(self.wmsAuthPage)
+            self.stackedWidget.setCurrentWidget(self.httpAuthPage)
+            # self.httpBb.accepted.disconnect(self.login_server_auth)
+            # self.httpBb.rejected.disconnect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
             self.httpBb.accepted.connect(self.newuser_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
         else:
@@ -524,6 +529,9 @@ class MSSMscolab(QtCore.QObject):
                     logging.debug("Error %s", str(e))
                     show_popup(self.prof_diag, "Error", "Could not create gravatar folder in config folder")
                     return
+
+            if not refresh and email_in_settings and os.path.exists(gravatar):
+                self.set_gravatar(gravatar)
 
             gravatar = os.path.join(gravatar_path, f"{email_hash}.jpg")
             gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}?s=80&d=404"
@@ -1443,8 +1451,6 @@ class MSSMscolab(QtCore.QObject):
         self.ui.listProjectsMSC.clear()
         # clear mscolab url
         self.mscolab_server_url = None
-        # clear user email
-        self.email = None
         # clear projects list here
         self.ui.mscStatusLabel.setText(self.ui.tr("status: Disconnected"))
         self.ui.usernameLabel.hide()
@@ -1462,8 +1468,11 @@ class MSSMscolab(QtCore.QObject):
                 try:
                     os.remove(self.gravatar)
                 except Exception as e:
-                    logging.debug(f"Error {e}")
+                    logging.debug(f"Error while removing gravatar cache... {e}")
+        # clear gravatar image path
         self.gravatar = None
+        # clear user email
+        self.email = None
 
         # delete mscolab http_auth settings for the url
         if self.mscolab_server_url in self.settings["auth"].keys():

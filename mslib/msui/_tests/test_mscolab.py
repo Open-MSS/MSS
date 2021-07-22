@@ -55,6 +55,7 @@ class Test_Mscolab_connect_window():
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
         self.window.urlCb.setEditText(self.url)
         self.main_window.mscolab.connect_window = self.window
+        self.window.show()
 
     def teardown(self):
         self.window.hide()
@@ -66,6 +67,16 @@ class Test_Mscolab_connect_window():
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
+
+    @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
+    def test_connect(self, mockset):
+        for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
+                    requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
+            with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
+                self.window.connect_handler()
+
+        self._connect_to_mscolab()
+        assert mockset.call_args_list == [mock.call("color: red;") for _ in range(5)] + [mock.call("color: green;")]
 
     def test_disconnect(self):
         self._connect_to_mscolab()
@@ -80,6 +91,7 @@ class Test_Mscolab_connect_window():
         assert self.main_window.usernameLabel.text() == 'a'
         assert self.main_window.connectBtn.isVisible() is False
         assert self.main_window.mscolab.connect_window is None
+        assert self.main_window.local_active is False
         # test project listing visibility
         assert self.main_window.listProjectsMSC.model().rowCount() == 3
         # test logout
@@ -87,14 +99,7 @@ class Test_Mscolab_connect_window():
         QtWidgets.QApplication.processEvents()
         assert self.main_window.listProjectsMSC.model().rowCount() == 0
         assert self.main_window.mscolab.conn is None
-
-        window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
-        for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
-                    requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
-            with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
-                with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
-                    window.connect_handler()
-                    mockset.assert_called_once_with("color: red;")
+        assert self.main_window.local_active is True
 
     def test_add_user(self):
         self._connect_to_mscolab()
@@ -103,6 +108,38 @@ class Test_Mscolab_connect_window():
         self._login("something@something.org", "something")
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
+
+    def test_failed_authorize(self):
+        class response:
+            def __init__(self, code, text):
+                self.status_code = code
+                self.text = text
+
+        # case: connection error when trying to login after connecting to server
+        self._connect_to_mscolab()
+        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
+            with mock.patch("requests.Session.post", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
+                self._login()
+                mockset.assert_has_calls([mock.call("color: red;"), mock.call("color: white;")])
+
+        # case: when the credentials are incorrect for login
+        self._connect_to_mscolab()
+        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
+            with mock.patch("requests.Session.post", return_value=response(201, "False")):
+                self._login()
+                mockset.assert_has_calls([mock.call("color: red;")])
+
+        # case: when http auth fails
+        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
+            with mock.patch("requests.Session.post", return_value=response(401, "Unauthorized Access")):
+                self._login()
+                # check if switched to HTTP Auth Page
+                assert self.window.stackedWidget.currentIndex() == 2
+                # press ok without entering server auth details
+                okWidget = self.window.httpBb.button(self.window.httpBb.Ok)
+                QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
+                QtWidgets.QApplication.processEvents()
+                mockset.assert_has_calls([mock.call("color: red;")])
 
     def _connect_to_mscolab(self):
         self.window.urlCb.setEditText(self.url)
