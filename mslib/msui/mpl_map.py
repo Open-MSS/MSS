@@ -52,6 +52,11 @@ from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.utils import get_airports, get_airspaces
 
 
+OPENAIP_NOTICE = "Airspace data used comes from openAIP.\n" \
+                 "Visit openAIP.net and contribute to better aviation data, free for everyone to use and share."
+OURAIRPORTS_NOTICE = "Airports provided by OurAirports."
+
+
 class MapCanvas(basemap.Basemap):
     """
     Derivative of mpl_toolkits.basemap, providing additional methods to
@@ -341,8 +346,8 @@ class MapCanvas(basemap.Basemap):
         Sets airports to visible or not visible
         """
         if (reload or not value) and self.airports:
-            if "OurAirports" in self.crs_text.get_text():
-                self.crs_text.set_text(self.crs_text.get_text().replace("Airports provided by OurAirports\n", ""))
+            if OURAIRPORTS_NOTICE in self.crs_text.get_text():
+                self.crs_text.set_text(self.crs_text.get_text().replace(f"{OURAIRPORTS_NOTICE}\n", ""))
             self.airports.remove()
             self.airtext.remove()
             self.airports = None
@@ -356,8 +361,8 @@ class MapCanvas(basemap.Basemap):
         Sets airspaces to visible or not visible
         """
         if (reload or not value) and self.airspaces:
-            if "openaip.net" in self.crs_text.get_text():
-                self.crs_text.set_text(self.crs_text.get_text().replace("Airspaces provided by openaip.net\n", ""))
+            if OPENAIP_NOTICE in self.crs_text.get_text():
+                self.crs_text.set_text(self.crs_text.get_text().replace(f"{OPENAIP_NOTICE}\n", ""))
             self.airspaces.remove()
             self.airspacetext.remove()
             self.airspaces = None
@@ -386,8 +391,8 @@ class MapCanvas(basemap.Basemap):
             if not airspaces:
                 return
 
-            if "openaip.net" not in self.crs_text.get_text():
-                self.crs_text.set_text("Airspaces provided by openaip.net\n" + self.crs_text.get_text())
+            if OPENAIP_NOTICE not in self.crs_text.get_text():
+                self.crs_text.set_text(f"{OPENAIP_NOTICE}\n" + self.crs_text.get_text())
 
             airspaces.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
             max_height = max(airspaces[-1]["bottom"], 0.001)
@@ -454,8 +459,8 @@ class MapCanvas(basemap.Basemap):
             if not airports:
                 return
 
-            if "OurAirports" not in self.crs_text.get_text():
-                self.crs_text.set_text("Airports provided by OurAirports\n" + self.crs_text.get_text())
+            if OURAIRPORTS_NOTICE not in self.crs_text.get_text():
+                self.crs_text.set_text(f"{OURAIRPORTS_NOTICE}\n" + self.crs_text.get_text())
 
             self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
                                             zorder=5)
