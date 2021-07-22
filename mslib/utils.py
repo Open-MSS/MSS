@@ -37,6 +37,7 @@ import pint
 from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
+import sys
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -199,7 +200,7 @@ def find_location(lat, lon, tolerance=5):
         return None
 
 
-def save_settings_qsettings(tag, settings):
+def save_settings_qsettings(tag, settings, ignore_test=False):
     """
     Saves a dictionary settings to disk.
 
@@ -209,6 +210,9 @@ def save_settings_qsettings(tag, settings):
     """
     assert isinstance(tag, str)
     assert isinstance(settings, dict)
+    if not ignore_test and "pytest" in sys.modules:
+        return settings
+
     q_settings = QtCore.QSettings("mss", "mss-core")
     file_path = q_settings.fileName()
     logging.debug("storing settings for %s to %s", tag, file_path)
@@ -219,7 +223,7 @@ def save_settings_qsettings(tag, settings):
     return settings
 
 
-def load_settings_qsettings(tag, default_settings=None):
+def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     """
     Loads a dictionary of settings from disk. May supply a dictionary of default settings
     to return in case the settings file is not present or damaged. The default_settings one will
@@ -233,6 +237,9 @@ def load_settings_qsettings(tag, default_settings=None):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
+    if not ignore_test and "pytest" in sys.modules:
+        return default_settings
+
     settings = {}
     q_settings = QtCore.QSettings("mss", "mss-core")
     file_path = q_settings.fileName()

@@ -56,10 +56,10 @@ class TestSettingsSave(object):
 
     def test_save_settings(self):
         settings = {'foo': 'bar'}
-        utils.save_settings_qsettings(self.tag, settings)
+        utils.save_settings_qsettings(self.tag, settings, ignore_test=True)
 
     def test_load_settings(self):
-        settings = utils.load_settings_qsettings(self.tag)
+        settings = utils.load_settings_qsettings(self.tag, ignore_test=True)
         assert isinstance(settings, dict)
         assert settings["foo"] == "bar"
 
