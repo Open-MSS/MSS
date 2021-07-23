@@ -1,8 +1,9 @@
 # (mss)
 from PyQt5 import QtCore, QtWidgets
 
-from qt_json_view import delegate
-from qt_json_view.datatypes import TypeRole
+# (mss)
+from mslib.support.qt_json_view import delegate
+from mslib.support.qt_json_view.datatypes import TypeRole
 
 
 class JsonView(QtWidgets.QTreeView):

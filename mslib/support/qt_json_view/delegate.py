@@ -1,7 +1,8 @@
 # (mss)
 from PyQt5 import QtWidgets, QtCore
 
-from qt_json_view.datatypes import DataType, TypeRole
+# (mss)
+from mslib.support.qt_json_view.datatypes import DataType, TypeRole
 
 
 class JsonDelegate(QtWidgets.QStyledItemDelegate):

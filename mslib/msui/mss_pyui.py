@@ -255,7 +255,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         # # Config
         # self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
-        # self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
+        self.actionConfiguration.triggered.connect(self.open_config_editor)
 
         # Raise Main Window to front with Ctrl/Cmnd + up keyboard shortcut
         self.addAction(self.actionBringMainWindowToFront)
@@ -740,9 +740,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         Opens up a JSON config editor
         """
         if self.config_editor is None:
-            self.config_editor = editor.EditorMainWindow(parent=self)
-            self.config_editor.viewCloses.connect(self.close_config_editor)
-            self.config_editor.restartApplication.connect(self.restart_application)
+            self.config_editor = editor.ConfigurationEditorWindow(parent=self)
+            self.config_editor.show()
+            # self.config_editor = editor.EditorMainWindow(parent=self)
+            # self.config_editor.viewCloses.connect(self.close_config_editor)
+            # self.config_editor.restartApplication.connect(self.restart_application)
         else:
             self.config_editor.showNormal()
             self.config_editor.activateWindow()
