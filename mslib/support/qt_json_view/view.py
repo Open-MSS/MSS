@@ -1,4 +1,5 @@
-from Qt import QtCore, QtWidgets
+# (mss)
+from PyQt5 import QtCore, QtWidgets
 
 from qt_json_view import delegate
 from qt_json_view.datatypes import TypeRole

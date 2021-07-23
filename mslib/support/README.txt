@@ -1,3 +1,10 @@
+Qt-json-view
+======
+
+This directory contains a slightly modified version of Qt-json-view.
+Qt-json-view is subject to the following copyright:
+
+***
 MIT License
 
 Copyright (c) 2018 Paul Schweizer
@@ -19,3 +26,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+The present version of Qt-json-view has been obtained from Github
+(https://github.com/PaulSchweizer/qt-json-view), on 23/7/2021.
+
+NOTE: The files "datatypes.py", "delegate.py", "model.py", "view.py" has been
+modified for the MSS. Changes are marked with "(mss)".

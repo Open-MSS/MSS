@@ -2,7 +2,8 @@ from functools import partial
 import re
 import webbrowser
 
-from Qt import QtCore, QtGui, QtWidgets
+# (mss)
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 TypeRole = QtCore.Qt.UserRole + 1
@@ -11,7 +12,8 @@ TypeRole = QtCore.Qt.UserRole + 1
 class DataType(object):
     """Base class for data types."""
 
-    COLOR = QtCore.Qt.white
+    # (mss)
+    COLOR = QtCore.Qt.black
 
     def matches(self, data):
         """Logic to define whether the given data matches this type."""
@@ -109,7 +111,8 @@ class StrType(DataType):
     """Strings and unicodes"""
 
     def matches(self, data):
-        return isinstance(data, str) or isinstance(data, unicode)
+        # (mss)
+        return isinstance(data, str)
 
 
 class IntType(DataType):
@@ -347,7 +350,8 @@ class UrlType(DataType):
     REGEX = re.compile(r'(?:https?):\/\/|(?:file):\/\/')
 
     def matches(self, data):
-        if isinstance(data, str) or isinstance(data, unicode):
+        # (mss)
+        if isinstance(data, str):
             if self.REGEX.match(data) is not None:
                 return True
         return False
@@ -365,7 +369,8 @@ class FilepathType(DataType):
     REGEX = re.compile(r'(\/.*)|([A-Z]:\\.*)')
 
     def matches(self, data):
-        if isinstance(data, str) or isinstance(data, unicode):
+        # (mss)
+        if isinstance(data, str):
             if self.REGEX.match(data) is not None:
                 return True
         return False

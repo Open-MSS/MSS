@@ -1,4 +1,5 @@
-from Qt import QtWidgets, QtCore
+# (mss)
+from PyQt5 import QtWidgets, QtCore
 
 from qt_json_view.datatypes import DataType, TypeRole
 

@@ -1,4 +1,5 @@
-from Qt import QtGui, QtWidgets
+# (mss)
+from PyQt5 import QtGui, QtCore
 
 from qt_json_view.datatypes import match_type, TypeRole, ListType, DictType
 
@@ -38,7 +39,7 @@ class JsonModel(QtGui.QStandardItemModel):
         return data
 
 
-class JsonSortFilterProxyModel(QtWidgets.QSortFilterProxyModel):
+class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel): # (mss)
     """Show ALL occurences by keeping the parents of each occurence visible."""
 
     def filterAcceptsRow(self, sourceRow, sourceParent):
