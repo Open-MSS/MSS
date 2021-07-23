@@ -91,7 +91,7 @@ class Test_Mscolab_connect_window():
         assert self.main_window.usernameLabel.text() == 'a'
         assert self.main_window.connectBtn.isVisible() is False
         assert self.main_window.mscolab.connect_window is None
-        assert self.main_window.local_active is False
+        assert self.main_window.local_active is True
         # test project listing visibility
         assert self.main_window.listProjectsMSC.model().rowCount() == 3
         # test logout
@@ -256,10 +256,9 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @pytest.mark.parametrize("ext", [".ftml", ".csv"])
+    @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
-        # ToDo for .txt extension
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
