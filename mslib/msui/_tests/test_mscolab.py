@@ -29,7 +29,7 @@ import os
 import fs
 import fs.errors
 import fs.opener.errors
-# import requests.exceptions
+import requests.exceptions
 import mock
 import pytest
 
@@ -55,6 +55,7 @@ class Test_Mscolab_connect_window():
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
         self.window.urlCb.setEditText(self.url)
         self.main_window.mscolab.connect_window = self.window
+        self.window.show()
 
     def teardown(self):
         self.window.hide()
@@ -66,6 +67,16 @@ class Test_Mscolab_connect_window():
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
+
+    @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
+    def test_connect(self, mockset):
+        for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
+                    requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
+            with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
+                self.window.connect_handler()
+
+        self._connect_to_mscolab()
+        assert mockset.call_args_list == [mock.call("color: red;") for _ in range(5)] + [mock.call("color: green;")]
 
     def test_disconnect(self):
         self._connect_to_mscolab()
@@ -80,6 +91,7 @@ class Test_Mscolab_connect_window():
         assert self.main_window.usernameLabel.text() == 'a'
         assert self.main_window.connectBtn.isVisible() is False
         assert self.main_window.mscolab.connect_window is None
+        assert self.main_window.local_active is True
         # test project listing visibility
         assert self.main_window.listProjectsMSC.model().rowCount() == 3
         # test logout
@@ -87,13 +99,7 @@ class Test_Mscolab_connect_window():
         QtWidgets.QApplication.processEvents()
         assert self.main_window.listProjectsMSC.model().rowCount() == 0
         assert self.main_window.mscolab.conn is None
-
-        # ToDo for new connect window
-        # for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
-        #             requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
-        #     with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
-        #         self.window.connect_handler()
-        # assert mockbox.critical.call_count == 5
+        assert self.main_window.local_active is True
 
     def test_add_user(self):
         self._connect_to_mscolab()
@@ -102,6 +108,38 @@ class Test_Mscolab_connect_window():
         self._login("something@something.org", "something")
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
+
+    def test_failed_authorize(self):
+        class response:
+            def __init__(self, code, text):
+                self.status_code = code
+                self.text = text
+
+        # case: connection error when trying to login after connecting to server
+        self._connect_to_mscolab()
+        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
+            with mock.patch("requests.Session.post", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
+                self._login()
+                mockset.assert_has_calls([mock.call("color: red;"), mock.call("color: white;")])
+
+        # case: when the credentials are incorrect for login
+        self._connect_to_mscolab()
+        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
+            with mock.patch("requests.Session.post", return_value=response(201, "False")):
+                self._login()
+                mockset.assert_has_calls([mock.call("color: red;")])
+
+        # case: when http auth fails
+        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
+            with mock.patch("requests.Session.post", return_value=response(401, "Unauthorized Access")):
+                self._login()
+                # check if switched to HTTP Auth Page
+                assert self.window.stackedWidget.currentIndex() == 2
+                # press ok without entering server auth details
+                okWidget = self.window.httpBb.button(self.window.httpBb.Ok)
+                QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
+                QtWidgets.QApplication.processEvents()
+                mockset.assert_has_calls([mock.call("color: red;")])
 
     def _connect_to_mscolab(self):
         self.window.urlCb.setEditText(self.url)
@@ -218,18 +256,16 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @pytest.mark.parametrize("ext", [".ftml", ".csv"])
+    @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
-        # ToDo for .txt extension
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
-        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(fs.path.join(
-                mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
-            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(fs.path.join(
-                    mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'), None)):
+        file_path = fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}')
+        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(file_path, None)):
+            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(file_path, None)):
                 self._connect_to_mscolab()
                 self._login()
                 self._activate_project_at_index(0)
@@ -381,15 +417,16 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
-        pytest.skip("To be done")
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
-        u_id = self.window.user['id']
-        QtTest.QTest.mouseClick(self.window.deleteAccountButton, QtCore.Qt.LeftButton)
+        u_id = self.window.mscolab.user['id']
+        self.window.mscolab.open_profile_window()
+        QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert len(self.window.listProjects) == 0
-        assert self.window.loggedInWidget.isVisible() is False
+        assert self.window.listProjectsMSC.model().rowCount() == 0
+        assert self.window.usernameLabel.isVisible() is False
+        assert self.window.connectBtn.isVisible() is True
         with self.app.app_context():
             assert User.query.filter_by(emailid='something').count() == 0
             assert Permission.query.filter_by(u_id=u_id).count() == 0
@@ -422,6 +459,21 @@ class Test_Mscolab(object):
             self.window.mscolab.create_dir()
             assert mockbox.critical.call_count == 2
             assert mockexit.call_count == 2
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_profile_dialog(self, mockbox):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._login("something@something.org", "something")
+        self.window.mscolab.profile_action.trigger()
+        QtWidgets.QApplication.processEvents()
+        # case: default gravatar is set and no messagebox is called
+        assert mockbox.critical.call_count == 0
+        assert self.window.mscolab.prof_diag is not None
+        # case: trying to fetch non-existing gravatar
+        self.window.mscolab.fetch_gravatar(refresh=True)
+        assert mockbox.critical.call_count == 1
+        assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
 
     def _connect_to_mscolab(self):
         self.window.mscolab.open_connect_window()
