@@ -89,6 +89,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.parent = parent
         self.mscolab = mscolab
 
+        self.setFixedSize(self.size())
         self.stackedWidget.setCurrentWidget(self.loginPage)
 
         # disable widgets in login frame
@@ -119,11 +120,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         # fill value of mscolab url if found in QSettings storage
         self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}, 'server_settings': {}})
 
-        # self.prev_index = 0
-        self.resize(self.sizeHint())
-
-        self.statusIconLabel.hide()
-
     def page_switched(self, index):
         # clear all text in all input
         self.loginEmailLe.setText("")
@@ -141,9 +137,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.connectBtn.setEnabled(False)
         else:
             self.connectBtn.setEnabled(True)
-        self.resize(self.sizeHint())
-
-        # self.prev_index = index
 
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
@@ -153,11 +146,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.statusLabel.setStyleSheet("color: green;")
             msg = "✓ " + msg
         else:
-            self.statusLabel.setStyleSheet("color: white;")
+            self.statusLabel.setStyleSheet("")
             msg = "ⓘ  " + msg
-        # self.pixmap = QtGui.QPixmap(self.style().standardIcon(QtWidgets.QStyle.SP_DialogApplyButton))
-        # self.statusIconLabel.setPixmap(self.pixmap)
-        # self.statusIconLabel.setAlignment(QtGui.Qt.AlignCenter)
         self.statusLabel.setText(msg)
         QtWidgets.QApplication.processEvents()
 
@@ -203,7 +193,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.connectBtn.setText('Disconnect')
                 self.connectBtn.clicked.disconnect(self.connect_handler)
                 self.connectBtn.clicked.connect(self.disconnect_handler)
-                # self.loginEmailLe.setFocus()
             else:
                 self.set_status("Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.SSLError:
@@ -467,6 +456,7 @@ class MSSMscolab(QtCore.QObject):
         self.email = self.connect_window.loginEmailLe.text()
         self.connect_window.close()
         self.connect_window = None
+        QtWidgets.QApplication.processEvents()
         # fill value of mscolab url if found in QSettings storage
         self.settings = load_settings_qsettings('mscolab', default_settings={'auth': {}, 'server_settings': {}})
 
@@ -474,6 +464,19 @@ class MSSMscolab(QtCore.QObject):
         self.token = _json["token"]
         self.user = _json["user"]
         self.mscolab_server_url = url
+
+        # create socket connection here
+        try:
+            self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
+        except Exception as ex:
+            logging.debug(f"Couldn't create a socket connection: {ex}")
+            show_popup(self, "Error", "Couldn't create a socket connection. New Login required!")
+            self.logout()
+        self.conn.signal_reload.connect(self.reload_window)
+        self.conn.signal_new_permission.connect(self.render_new_permission)
+        self.conn.signal_update_permission.connect(self.handle_update_permission)
+        self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
+        self.conn.signal_project_deleted.connect(self.handle_project_deleted)
 
         self.ui.connectBtn.hide()
         # display connection status
@@ -496,20 +499,18 @@ class MSSMscolab(QtCore.QObject):
         # Populate open projects list
         self.add_projects_to_ui()
 
-        # create socket connection here
-        self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
-        self.conn.signal_reload.connect(self.reload_window)
-        self.conn.signal_new_permission.connect(self.render_new_permission)
-        self.conn.signal_update_permission.connect(self.handle_update_permission)
-        self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
-        self.conn.signal_project_deleted.connect(self.handle_project_deleted)
-
     def verify_user_token(self):
         data = {
             "token": self.token
         }
         try:
             r = requests.get(f'{self.mscolab_server_url}/test_authorized', data=data)
+        except requests.exceptions.SSLError:
+            logging.debug("Certificate Verification Failed")
+            return False
+        except requests.exceptions.InvalidSchema:
+            logging.debug("Invalid schema of url")
+            return False
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s", type(ex), ex)
             return False
@@ -554,8 +555,8 @@ class MSSMscolab(QtCore.QObject):
             show_popup(
                 self.prof_diag,
                 "Information",
-                "Please add your email to the settings under"
-                "gravatar_ids section to automatically fetch your gravatar",
+                "Please add your email to the gravatar_ids section in your "
+                "mss_settings.json to automatically fetch your gravatar",
                 icon=1,)
 
         self.set_gravatar(gravatar)
@@ -594,8 +595,8 @@ class MSSMscolab(QtCore.QObject):
                 show_popup(
                     self.prof_diag,
                     "Information",
-                    "Please remove your Email from gravatar_ids section in"
-                    "the mss_settings to not fetch gravatar automatically",
+                    "Please remove your email from gravatar_ids section in your "
+                    "mss_settings.json to not fetch gravatar automatically",
                     icon=1,)
 
         self.set_gravatar()
