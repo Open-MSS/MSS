@@ -169,6 +169,7 @@ for mod in [
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
         "ui_mainwindow",
+        "ui_configuration_editor_window",
         "ui_mscolab_connect_dialog",
         "ui_mscolab_help_dialog",
         "ui_add_project_dialog",

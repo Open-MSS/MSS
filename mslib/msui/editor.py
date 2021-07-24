@@ -29,10 +29,233 @@ import logging
 import json
 
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtGui, QtCore, QtPrintSupport
 from mslib.msui import constants
 from mslib.msui.constants import MSS_CONFIG_PATH, MSS_SETTINGS
 from mslib.msui.icons import icons
+
+from mslib.support.qt_json_view import model
+from mslib.support.qt_json_view.model import JsonModel
+from mslib.support.qt_json_view.view import JsonView
+
+
+class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationEditorWindow):
+    def __init__(self, parent=None):
+        super(ConfigurationEditorWindow, self).__init__(parent)
+        self.setupUi(self)
+
+        self.frame.setStyleSheet("QFrame {border: 0;}")
+
+        settings_options = [
+            "filepicker_default",
+            "import_plugins",
+            "export_plugins",
+            "locations",
+            "predefined_map_sections",
+            "traj_nas_lon_identifier",
+            "traj_nas_lat_identifier",
+            "traj_nas_p_identifier",
+            "new_flighttrack_template",
+            "new_flighttrack_flightlevel",
+            "default_WMS",
+            "default_VSEC_WMS",
+            "WMS_login",
+            "num_interpolation_points",
+            "num_labels",
+            "wms_cache_max_size_bytes",
+            "wms_cache_max_size_bytes",
+        ]
+        for option in settings_options:
+            self.comboBox.addItem(option)
+
+        self.dict_data = {
+            "filepicker_default": "qt",
+            "import_plugins": {
+                "FliteStar": [
+                    "txt",
+                    "mslib.plugins.io.flitestar",
+                    "load_from_flitestar",
+                ],
+                "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
+            },
+            "export_plugins": {
+                "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
+                "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
+            },
+            "locations": {
+                "EDMO": [48.08, 11.28],
+                "Rio Grande": [-53.783, -67.7],
+                "Machu Picchu Base": [-62.091, -58.47],
+                "ElCalafate": [-50.28, -72.05],
+                "Buenos Aires": [-34.82, -58.54],
+                "SanMartin": [-68.13, -67.10],
+                "Marambio Base": [-64.23, -56.616],
+                "Sal": [16.73, -22.93],
+                "Punta Arenas": [-53.16, -70.93],
+                "Ushuaia": [-54.8, -68.28],
+                "256TO": [-53.778, -67.780],
+                "EKIPI": [-53.785, -68.045],
+                "ESBON": [-53.7695, -67.4538],
+                "ESPAT": [-53.788, -68.186],
+                "ILMEN": [-53.6886, -67.4216],
+                "GEDAB": [-53.59, -68.407],
+                "KOVSI": [-53.868, -68.0398],
+                "MUBES": [-52.8025, -68.4792],
+                "PUKOX": [-53.765, -67.3135],
+                "REDET": [-53.701, -68.051],
+                "LOBID": [-53.8526, -67.447],
+            },
+            "predefined_map_sections": {
+                "00 global (cyl)": {
+                    "CRS": "EPSG:4326",
+                    "map": {
+                        "llcrnrlon": -180.0,
+                        "llcrnrlat": -90.0,
+                        "urcrnrlon": 180.0,
+                        "urcrnrlat": 90.0,
+                    },
+                },
+                "01 SADPAP (stereo)": {
+                    "CRS": "EPSG:77890290",
+                    "map": {
+                        "llcrnrlon": -150.0,
+                        "llcrnrlat": -45.0,
+                        "urcrnrlon": -25.0,
+                        "urcrnrlat": -20.0,
+                    },
+                },
+                "02 SADPAP zoom (stereo)": {
+                    "CRS": "EPSG:77890290",
+                    "map": {
+                        "llcrnrlon": -120.0,
+                        "llcrnrlat": -65.0,
+                        "urcrnrlon": -45.0,
+                        "urcrnrlat": -28.0,
+                    },
+                },
+                "03 SADPAP (cyl)": {
+                    "CRS": "EPSG:4326",
+                    "map": {
+                        "llcrnrlon": -100.0,
+                        "llcrnrlat": -75.0,
+                        "urcrnrlon": -30.0,
+                        "urcrnrlat": -30.0,
+                    },
+                },
+                "04 Southern Hemisphere (stereo)": {
+                    "CRS": "EPSG:77889270",
+                    "map": {
+                        "llcrnrlon": 135.0,
+                        "llcrnrlat": 0.0,
+                        "urcrnrlon": -45.0,
+                        "urcrnrlat": 0.0,
+                    },
+                },
+                "05 Europe (cyl)": {
+                    "CRS": "EPSG:4326",
+                    "map": {
+                        "llcrnrlon": -15.0,
+                        "llcrnrlat": 35.0,
+                        "urcrnrlon": 30.0,
+                        "urcrnrlat": 65.0,
+                    },
+                },
+                "06 Germany (cyl)": {
+                    "CRS": "EPSG:4326",
+                    "map": {
+                        "llcrnrlon": 5.0,
+                        "llcrnrlat": 45.0,
+                        "urcrnrlon": 15.0,
+                        "urcrnrlat": 57.0,
+                    },
+                },
+                "07 EDMO-SAL (cyl)": {
+                    "CRS": "EPSG:4326",
+                    "map": {
+                        "llcrnrlon": -40,
+                        "llcrnrlat": 10,
+                        "urcrnrlon": 30,
+                        "urcrnrlat": 60,
+                    },
+                },
+                "08 SAL-BA (cyl)": {
+                    "CRS": "EPSG:4326",
+                    "map": {
+                        "llcrnrlon": -80,
+                        "llcrnrlat": -40,
+                        "urcrnrlon": -10,
+                        "urcrnrlat": 30,
+                    },
+                },
+            },
+            "traj_nas_lon_identifier": ["GPS LON", "LONGITUDE"],
+            "traj_nas_lat_identifier": ["GPS LAT", "LATITUDE"],
+            "traj_nas_p_identifier": ["STATIC PRESSURE"],
+            "new_flighttrack_template": ["Rio Grande", "256TO", "GEDAB", "MUBES"],
+            "new_flighttrack_flightlevel": 351,
+            "default_WMS": [
+                "https://forecast.fz-juelich.de/SouthTrac",
+                "http://mss.pa.op.dlr.de/mss_wms",
+                "https://forecast.fz-juelich.de/campaigns2019",
+                "https://forecast.fz-juelich.de/campaigns2017",
+                "http://eumetview.eumetsat.int/geoserver/wms",
+                "http://osmwms.itc-halle.de/maps/osmfree",
+                "http://localhost:8081",
+                "https://forecast.fz-juelich.de/mssdevju",
+                "https://neowms.sci.gsfc.nasa.gov/wms/wms",
+                "https://firms.modaps.eosdis.nasa.gov/wms/",
+                "http://eumetview.eumetsat.int/geoserver/wms",
+                "https://apps.ecmwf.int/wms/?token=public",
+                "https://maps.dwd.de/geoserver/wms",
+                "http://msgcpp-ogc-realtime.knmi.nl/msgrt.cgi",
+                "http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi",
+            ],
+            "default_VSEC_WMS": [
+                "https://forecast.fz-juelich.de/SouthTrac",
+                "http://mss.pa.op.dlr.de/mss_wms",
+                "https://forecast.fz-juelich.de/campaigns2019",
+                "https://forecast.fz-juelich.de/campaigns2017",
+            ],
+            "WMS_login": {
+                "https://forecast.fz-juelich.de/campaigns2019": ["user", "pwd"],
+                "https://forecast.fz-juelich.de/campaigns2017": ["user", "pwd"],
+                "https://forecast.fz-juelich.de/SouthTrac": ["user", "pwd"],
+                "http://mss.pa.op.dlr.de/mss_wms": ["user", "pwd"],
+            },
+            "num_interpolation_points": 201,
+            "num_labels": 10,
+            "wms_cache_max_size_bytes": 200971520,
+            "wms_cache_max_age_seconds": 432000,
+        }
+
+        self.view = JsonView()
+
+        self.widget.setLayout(QtWidgets.QHBoxLayout())
+        self.widget.layout().addWidget(self.view)
+
+        self.show_all()
+
+        self.comboBox.currentIndexChanged.connect(self.selection_change)
+
+        self.pushButton_2.clicked.connect(self.show_all)
+
+    def show_all(self):
+        self.proxy = model.JsonSortFilterProxyModel()
+        self.json_model = JsonModel(
+            data=self.dict_data, editable_keys=True, editable_values=True
+        )
+        self.proxy.setSourceModel(self.json_model)
+        self.view.setModel(self.proxy)
+
+    def selection_change(self, index):
+        data = {self.comboBox.currentText(): self.dict_data[self.comboBox.currentText()]}
+        self.proxy = model.JsonSortFilterProxyModel()
+        self.json_model = JsonModel(
+            data=data, editable_keys=True, editable_values=True
+        )
+        self.proxy.setSourceModel(self.json_model)
+        self.view.setModel(self.proxy)
 
 
 class EditorMainWindow(QtWidgets.QMainWindow):
