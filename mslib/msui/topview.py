@@ -32,7 +32,9 @@ import functools
 import logging
 from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings, \
     get_airports
+import pycountry
 from PyQt5 import QtGui, QtWidgets, QtCore
+from mslib.utils import _airspace_cache
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -65,7 +67,10 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         """
         super(MSS_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
-        self.label_2.setText(self.label_2.text().replace("MSS_CONFIG_PATH", "file:///" + MSS_CONFIG_PATH))
+        code_to_name = {country.alpha_2.lower(): country.name for country in pycountry.countries}
+        self.cbAirspaces.addItems([f"{code_to_name.get(airspace[0].split('_')[0], 'Unknown')} "
+                                   f"{airspace[0].split('_')[0]}"
+                                   for airspace in _airspace_cache])
 
         if settings_dict is None:
             settings_dict = {"draw_graticule": True,
@@ -77,6 +82,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "draw_airports": False,
                              "airport_type": "small_airport",
                              "draw_airspaces": False,
+                             "airspaces": [],
                              "filter_airspaces": False,
                              "filter_from": 0,
                              "filter_to": 100,
@@ -112,6 +118,11 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawAirports.setChecked(settings_dict["draw_airports"])
         self.cbAirportType.setCurrentIndex(self.cbAirportType.findText(settings_dict["airport_type"]))
         self.cbDrawAirspaces.setChecked(settings_dict["draw_airspaces"])
+        for airspace in settings_dict["airspaces"]:
+            i = self.cbAirspaces.findText(airspace)
+            if i != -1:
+                self.cbAirspaces.model().item(i).setCheckState(QtCore.Qt.Checked)
+        self.cbAirspaces.updateText()
         self.cbFilterAirspaces.setChecked(settings_dict["filter_airspaces"])
         self.sbFrom.setValue(settings_dict["filter_from"])
         self.sbTo.setValue(settings_dict["filter_to"])
@@ -156,6 +167,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "draw_airports": self.cbDrawAirports.isChecked(),
             "airport_type": self.cbAirportType.currentText(),
             "draw_airspaces": self.cbDrawAirspaces.isChecked(),
+            "airspaces": self.cbAirspaces.currentData(),
             "filter_airspaces": self.cbFilterAirspaces.isChecked(),
             "filter_from": self.sbFrom.value(),
             "filter_to": self.sbTo.value(),

@@ -356,7 +356,7 @@ class MapCanvas(basemap.Basemap):
         if value:
             self.draw_airports(port_type)
 
-    def set_draw_airspaces(self, value, range_km=None, reload=True):
+    def set_draw_airspaces(self, value, airspaces=[], range_km=None, reload=True):
         """
         Sets airspaces to visible or not visible
         """
@@ -369,14 +369,15 @@ class MapCanvas(basemap.Basemap):
             self.airspacetext = None
             self.ax.figure.canvas.mpl_disconnect(self.airspace_event)
         if value:
-            self.draw_airspaces(range_km)
+            country_codes = [airspace.split(" ")[-1] for airspace in airspaces]
+            self.draw_airspaces(country_codes, range_km)
 
-    def draw_airspaces(self, range_km=None):
+    def draw_airspaces(self, countries=[], range_km=None):
         """
         Load and draw airspace data
         """
         if not self.airspaces:
-            airspaces = copy.deepcopy(get_airspaces())
+            airspaces = copy.deepcopy(get_airspaces(countries))
             if not airspaces:
                 logging.error("Tried to draw airspaces without .aip files.")
                 return

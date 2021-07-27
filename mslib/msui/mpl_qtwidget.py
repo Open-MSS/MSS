@@ -1190,7 +1190,8 @@ class MplTopViewCanvas(MplCanvas):
             if appearance["draw_airports"]:
                 self.map.set_draw_airports(True, port_type=appearance["airport_type"])
             if appearance["draw_airspaces"]:
-                self.map.set_draw_airspaces(True, (appearance["filter_from"], appearance["filter_to"])
+                self.map.set_draw_airspaces(True, appearance["airspaces"],
+                                            (appearance["filter_from"], appearance["filter_to"])
                                             if appearance["filter_airspaces"] else None)
             try:
                 self.waypoints_interactor = mpl_pi.HPathInteractor(
@@ -1240,8 +1241,9 @@ class MplTopViewCanvas(MplCanvas):
         else:
             self.map.set_draw_airports(False)
         if self.appearance_settings["draw_airspaces"]:
-            self.map.set_draw_airspaces(True, (self.appearance_settings["filter_from"],
-                                               self.appearance_settings["filter_to"])
+            self.map.set_draw_airspaces(True, self.appearance_settings["airspaces"],
+                                        (self.appearance_settings["filter_from"],
+                                         self.appearance_settings["filter_to"])
                                         if self.appearance_settings["filter_airspaces"] else None)
         else:
             self.map.set_draw_airspaces(False)
@@ -1414,6 +1416,7 @@ class MplTopViewCanvas(MplCanvas):
                     "draw_airports": False,
                     "airport_type": "small_airport",
                     "draw_airspaces": False,
+                    "airspaces": [],
                     "filter_airspaces": False,
                     "filter_from": 0,
                     "filter_to": 100,
@@ -1440,7 +1443,8 @@ class MplTopViewCanvas(MplCanvas):
         if self.map is not None:
             self.map.set_coastlines_visible(settings["draw_coastlines"])
             self.map.set_draw_airports(settings["draw_airports"], port_type=settings["airport_type"])
-            self.map.set_draw_airspaces(settings["draw_airspaces"], (settings["filter_from"], settings["filter_to"])
+            self.map.set_draw_airspaces(settings["draw_airspaces"], settings["airspaces"],
+                                        (settings["filter_from"], settings["filter_to"])
                                         if settings["filter_airspaces"] else None)
             self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
                                                 land_color=settings["colour_land"],

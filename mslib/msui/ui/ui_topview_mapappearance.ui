@@ -529,18 +529,30 @@
     <layout class="QHBoxLayout" name="horizontalLayout_7">
      <item>
       <widget class="QCheckBox" name="cbDrawAirspaces">
+       <property name="minimumSize">
+        <size>
+         <width>145</width>
+         <height>0</height>
+        </size>
+       </property>
        <property name="text">
         <string>draw airspaces</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;http://www.openaip.net/user/login&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Login&lt;/span&gt;&lt;/a&gt; then &lt;a href=&quot;http://www.openaip.net/downloads/airspaces&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;Download&lt;/span&gt;&lt;/a&gt; the desired .aip airspace files&lt;/p&gt;&lt;p&gt;Put the downloaded files into &lt;a href=&quot;MSS_CONFIG_PATH&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;this directory&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <widget class="CheckableComboBox" name="cbAirspaces">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
        </property>
-       <property name="openExternalLinks">
-        <bool>true</bool>
+       <property name="minimumSize">
+        <size>
+         <width>160</width>
+         <height>0</height>
+        </size>
        </property>
       </widget>
      </item>
@@ -888,6 +900,13 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CheckableComboBox</class>
+   <extends>QComboBox</extends>
+   <header>mslib.utils</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections>
   <connection>
