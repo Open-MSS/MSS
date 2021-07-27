@@ -35,7 +35,7 @@ from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_session_id
 
-socketio = SocketIO()
+socketio = SocketIO(cors_allowed_origins="*")
 
 
 class SocketsManager(object):
