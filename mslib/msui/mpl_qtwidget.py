@@ -1414,7 +1414,7 @@ class MplTopViewCanvas(MplCanvas):
                     "draw_flighttrack": True,
                     "draw_marker": True,
                     "draw_airports": False,
-                    "airport_type": "small_airport",
+                    "airport_type": ["small_airport"],
                     "draw_airspaces": False,
                     "airspaces": [],
                     "filter_airspaces": False,

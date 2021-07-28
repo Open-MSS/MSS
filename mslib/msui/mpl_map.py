@@ -341,7 +341,7 @@ class MapCanvas(basemap.Basemap):
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
 
-    def set_draw_airports(self, value, port_type="small_airport", reload=True):
+    def set_draw_airports(self, value, port_type=["small_airport"], reload=True):
         """
         Sets airports to visible or not visible
         """
@@ -451,7 +451,7 @@ class MapCanvas(basemap.Basemap):
                 airports[i]["longitude_deg"] = lons[i]
                 airports[i]["latitude_deg"] = lats[i]
 
-            airports = [airport for airport in airports if airport["type"] == port_type and
+            airports = [airport for airport in airports if airport["type"] in port_type and
                         self.llcrnrx <= float(airport["longitude_deg"]) <= self.urcrnrx and
                         self.llcrnry <= float(airport["latitude_deg"]) <= self.urcrnry]
             lons = [float(airport["longitude_deg"]) for airport in airports]

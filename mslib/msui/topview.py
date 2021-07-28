@@ -31,7 +31,7 @@
 import functools
 import logging
 from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings, \
-    get_airports
+    get_airports, update_airspace
 import pycountry
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils import _airspace_cache
@@ -44,7 +44,6 @@ from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
-from mslib.msui.constants import MSS_CONFIG_PATH
 
 # Dock window indices.
 WMS = 0
@@ -71,6 +70,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbAirspaces.addItems([f"{code_to_name.get(airspace[0].split('_')[0], 'Unknown')} "
                                    f"{airspace[0].split('_')[0]}"
                                    for airspace in _airspace_cache])
+        self.cbAirportType.addItems(["small_airport", "medium_airport", "large_airport", "heliport", "balloonport",
+                                     "seaplane_base", "closed"])
 
         if settings_dict is None:
             settings_dict = {"draw_graticule": True,
@@ -80,7 +81,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "draw_flighttrack": True,
                              "draw_marker": True,
                              "draw_airports": False,
-                             "airport_type": "small_airport",
+                             "airport_type": ["small_airport"],
                              "draw_airspaces": False,
                              "airspaces": [],
                              "filter_airspaces": False,
@@ -116,12 +117,15 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
         self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
         self.cbDrawAirports.setChecked(settings_dict["draw_airports"])
-        self.cbAirportType.setCurrentIndex(self.cbAirportType.findText(settings_dict["airport_type"]))
         self.cbDrawAirspaces.setChecked(settings_dict["draw_airspaces"])
         for airspace in settings_dict["airspaces"]:
             i = self.cbAirspaces.findText(airspace)
             if i != -1:
                 self.cbAirspaces.model().item(i).setCheckState(QtCore.Qt.Checked)
+        for airport in settings_dict["airport_type"]:
+            i = self.cbAirportType.findText(airport)
+            if i != -1:
+                self.cbAirportType.model().item(i).setCheckState(QtCore.Qt.Checked)
         self.cbAirspaces.updateText()
         self.cbFilterAirspaces.setChecked(settings_dict["filter_airspaces"])
         self.sbFrom.setValue(settings_dict["filter_from"])
@@ -144,6 +148,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
         self.btDownload.clicked.connect(lambda: get_airports(True))
+        self.btDownloadAsp.clicked.connect(lambda: update_airspace(True, [airspace.split(" ")[-1] for airspace in
+                                                                          self.cbAirspaces.currentData()]))
 
         # Shows previously selected element in the fontsize comboboxes as the current index.
         for i in range(self.tov_cbtitlesize.count()):
@@ -165,7 +171,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "draw_marker": self.cbDrawMarker.isChecked(),
             "draw_airports": self.cbDrawAirports.isChecked(),
-            "airport_type": self.cbAirportType.currentText(),
+            "airport_type": self.cbAirportType.currentData(),
             "draw_airspaces": self.cbDrawAirspaces.isChecked(),
             "airspaces": self.cbAirspaces.currentData(),
             "filter_airspaces": self.cbFilterAirspaces.isChecked(),

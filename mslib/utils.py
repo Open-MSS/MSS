@@ -984,7 +984,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
         self.setEditable(True)
         self.lineEdit().setReadOnly(True)
         # Make the lineedit the same color as QPushButton
-        palette = QtGui.QGuiApplication.palette()
+        palette = QtWidgets.QApplication.palette()
         palette.setBrush(QtGui.QPalette.Base, palette.button())
         self.lineEdit().setPalette(palette)
 
@@ -1007,7 +1007,6 @@ class CheckableComboBox(QtWidgets.QComboBox):
         super().resizeEvent(event)
 
     def eventFilter(self, object, event):
-
         if object == self.lineEdit():
             if event.type() == QtCore.QEvent.MouseButtonRelease:
                 if self.closeOnLineEditClick:
@@ -1163,29 +1162,30 @@ def get_available_airspaces():
         sizes = regex.findall(r".._asp.aip.*?>[ ]*([0-9\.]+[KM]*)[ ]*<\/td", directory.text)
         airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
         return airspaces
-    except (ConnectionError, TimeoutError) as e:
+    except (ConnectionError, TimeoutError):
         return _airspace_cache
 
 
-def update_airspace(force_download=False, country="de"):
+def update_airspace(force_download=False, countries=["de"]):
     """
     Downloads the requested airspaces from their respective country code if it is over a month old
     """
     global _airspaces, _airspaces_mtime
-    location = os.path.join(MSS_CONFIG_PATH, f"{country}_asp.aip")
-    url = f"{_airspace_url}/{country}_asp.aip"
-    data = [airspace for airspace in get_available_airspaces() if airspace[0].startswith(country)][0]
-    file_exists = os.path.exists(location)
+    for country in countries:
+        location = os.path.join(MSS_CONFIG_PATH, f"{country}_asp.aip")
+        url = f"{_airspace_url}/{country}_asp.aip"
+        data = [airspace for airspace in get_available_airspaces() if airspace[0].startswith(country)][0]
+        file_exists = os.path.exists(location)
 
-    is_outdated = not file_exists or (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
+        is_outdated = not file_exists or (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
 
-    if (force_download or is_outdated) \
-            and QtWidgets.QMessageBox.question(None, "Allow download",
-                                               f"The selected {country} airspace need to be downloaded ({data[-1]})"
-                                               f"\nIs now a good time?",
-                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
-            == QtWidgets.QMessageBox.Yes:
-        download_progress(location, url)
+        if (force_download or is_outdated) \
+                and QtWidgets.QMessageBox.question(None, "Allow download",
+                                                   f"The selected {country} airspace need to be downloaded ({data[-1]})"
+                                                   f"\nIs now a good time?",
+                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
+                == QtWidgets.QMessageBox.Yes:
+            download_progress(location, url)
 
 
 def get_airspaces(countries=[]):
@@ -1195,8 +1195,7 @@ def get_airspaces(countries=[]):
     global _airspaces, _airspaces_mtime
     reload = False
     files = [f"{country}_asp.aip" for country in countries]
-    for file in files:
-        update_airspace(country=file.split("_")[0])
+    update_airspace(countries=countries)
 
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:

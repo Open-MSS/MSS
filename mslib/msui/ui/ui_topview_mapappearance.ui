@@ -443,7 +443,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="cbAirportType">
+      <widget class="CheckableComboBox" name="cbAirportType">
        <property name="minimumSize">
         <size>
          <width>135</width>
@@ -453,41 +453,6 @@
        <property name="layoutDirection">
         <enum>Qt::LeftToRight</enum>
        </property>
-       <item>
-        <property name="text">
-         <string>small_airport</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>medium_airport</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>large_airport</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>heliport</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>balloonport</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>seaplane_base</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>closed</string>
-        </property>
-       </item>
       </widget>
      </item>
      <item>
@@ -542,17 +507,24 @@
      </item>
      <item>
       <widget class="CheckableComboBox" name="cbAirspaces">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
        <property name="minimumSize">
         <size>
-         <width>160</width>
+         <width>135</width>
          <height>0</height>
         </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btDownloadAsp">
+       <property name="minimumSize">
+        <size>
+         <width>135</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Update/Download</string>
        </property>
       </widget>
      </item>
