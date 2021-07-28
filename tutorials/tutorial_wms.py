@@ -67,7 +67,7 @@ def call_mss():
 
 def automate_waypoints():
     """
-    This is the main automating script of the MSS waypoints tutorial which will be recorded and saved
+    This is the main automating script of the MSS web map service tutorial which will be recorded and saved
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
