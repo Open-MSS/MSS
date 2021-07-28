@@ -30,11 +30,8 @@
 
 import functools
 import logging
-from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings, \
-    get_airports, update_airspace
-import pycountry
+from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings
 from PyQt5 import QtGui, QtWidgets, QtCore
-from mslib.utils import _airspace_cache
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
@@ -42,6 +39,7 @@ from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
+from mslib.msui import airdata_dockwidget as ad
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -50,6 +48,7 @@ WMS = 0
 SATELLITE = 1
 REMOTESENSING = 2
 KMLOVERLAY = 3
+AIRDATA = 4
 
 
 class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -66,12 +65,6 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         """
         super(MSS_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
-        code_to_name = {country.alpha_2.lower(): country.name for country in pycountry.countries}
-        self.cbAirspaces.addItems([f"{code_to_name.get(airspace[0].split('_')[0], 'Unknown')} "
-                                   f"{airspace[0].split('_')[0]}"
-                                   for airspace in _airspace_cache])
-        self.cbAirportType.addItems(["small_airport", "medium_airport", "large_airport", "heliport", "balloonport",
-                                     "seaplane_base", "closed"])
 
         if settings_dict is None:
             settings_dict = {"draw_graticule": True,
@@ -80,13 +73,6 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "fill_continents": True,
                              "draw_flighttrack": True,
                              "draw_marker": True,
-                             "draw_airports": False,
-                             "airport_type": ["small_airport"],
-                             "draw_airspaces": False,
-                             "airspaces": [],
-                             "filter_airspaces": False,
-                             "filter_from": 0,
-                             "filter_to": 100,
                              "label_flighttrack": True,
                              "tov_plot_title_size": "default",
                              "tov_axes_label_size": "default",
@@ -116,20 +102,6 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
         self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
-        self.cbDrawAirports.setChecked(settings_dict["draw_airports"])
-        self.cbDrawAirspaces.setChecked(settings_dict["draw_airspaces"])
-        for airspace in settings_dict["airspaces"]:
-            i = self.cbAirspaces.findText(airspace)
-            if i != -1:
-                self.cbAirspaces.model().item(i).setCheckState(QtCore.Qt.Checked)
-        for airport in settings_dict["airport_type"]:
-            i = self.cbAirportType.findText(airport)
-            if i != -1:
-                self.cbAirportType.model().item(i).setCheckState(QtCore.Qt.Checked)
-        self.cbAirspaces.updateText()
-        self.cbFilterAirspaces.setChecked(settings_dict["filter_airspaces"])
-        self.sbFrom.setValue(settings_dict["filter_from"])
-        self.sbTo.setValue(settings_dict["filter_to"])
         self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
@@ -147,9 +119,6 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         self.btLandColour.clicked.connect(functools.partial(self.setColour, "land"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
-        self.btDownload.clicked.connect(lambda: get_airports(True))
-        self.btDownloadAsp.clicked.connect(lambda: update_airspace(True, [airspace.split(" ")[-1] for airspace in
-                                                                          self.cbAirspaces.currentData()]))
 
         # Shows previously selected element in the fontsize comboboxes as the current index.
         for i in range(self.tov_cbtitlesize.count()):
@@ -170,13 +139,6 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             "fill_continents": self.cbFillContinents.isChecked(),
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "draw_marker": self.cbDrawMarker.isChecked(),
-            "draw_airports": self.cbDrawAirports.isChecked(),
-            "airport_type": self.cbAirportType.currentData(),
-            "draw_airspaces": self.cbDrawAirspaces.isChecked(),
-            "airspaces": self.cbAirspaces.currentData(),
-            "filter_airspaces": self.cbFilterAirspaces.isChecked(),
-            "filter_from": self.sbFrom.value(),
-            "filter_to": self.sbTo.value(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
             "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
@@ -266,7 +228,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         Initialise GUI elements. (This method is called before signals/slots
         are connected).
         """
-        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay"]
+        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
+                     "Airports/Airspaces"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
@@ -317,6 +280,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             elif index == KMLOVERLAY:
                 title = "KML Overlay"
                 widget = kml.KMLOverlayControlWidget(parent=self, view=self.mpl.canvas)
+            elif index == AIRDATA:
+                title = "Airdata"
+                widget = ad.AirdataDockwidget(parent=self, view=self.mpl.canvas)
             else:
                 raise IndexError("invalid control index")
 

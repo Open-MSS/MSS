@@ -401,7 +401,7 @@ class MapCanvas(basemap.Basemap):
             airspace_colors = [cmap(1 - airspaces[i]["bottom"] / max_height) for i in range(len(airspaces))]
 
             collection = PolyCollection([airspace["polygon"] for airspace in airspaces], alpha=0.5, edgecolor="black",
-                                        zorder=6, facecolors=airspace_colors)
+                                        zorder=5, facecolors=airspace_colors)
             collection.set_pickradius(0)
             self.airspaces = self.ax.add_collection(collection)
             self.airspacetext = self.ax.annotate(airspaces[0]["name"], xy=airspaces[0]["polygon"][0], xycoords="data",
@@ -464,11 +464,11 @@ class MapCanvas(basemap.Basemap):
                 self.crs_text.set_text(f"{OURAIRPORTS_NOTICE}\n" + self.crs_text.get_text())
 
             self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
-                                            zorder=5)
+                                            zorder=6)
             self.airports.set_pickradius(1)
             self.airtext = self.ax.annotate(annotations[0], xy=(lons[0], lats[0]), xycoords="data",
                                             bbox={"boxstyle": "round", "facecolor": "w",
-                                                  "edgecolor": "0.5", "alpha": 0.9}, zorder=7)
+                                                  "edgecolor": "0.5", "alpha": 0.9}, zorder=8)
             self.airtext.set_visible(False)
 
             def update_text(index):
