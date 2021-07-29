@@ -29,6 +29,7 @@ import importlib
 import importlib.machinery
 import os
 import sys
+from PyQt5 import QtWidgets
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -150,6 +151,22 @@ importlib.machinery.SourceFileLoader('mss_wms_settings', constants.SERVER_CONFIG
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 importlib.machinery.SourceFileLoader('mscolab_settings', path).load_module()
 sys.path.insert(0, parent_path)
+
+
+@pytest.fixture(autouse=True)
+def close_open_windows(request):
+    """
+    Closes all windows after every test
+    """
+    yield
+
+    # Try to close all remaining widgets after each test
+    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
+        try:
+            qobject.destroy()
+        # Some objects deny permission, pass in that case
+        except RuntimeError:
+            pass
 
 
 @pytest.fixture(scope="session", autouse=True)
