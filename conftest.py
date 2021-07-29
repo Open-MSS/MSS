@@ -29,6 +29,7 @@ import importlib
 import importlib.machinery
 import os
 import sys
+import mock
 from PyQt5 import QtWidgets
 # Disable pyc files
 sys.dont_write_bytecode = True
@@ -158,7 +159,10 @@ def close_open_windows(request):
     """
     Closes all windows after every test
     """
-    yield
+    # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question"), mock.patch("PyQt5.QtWidgets.QMessageBox.information"), \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.critical"), mock.patch("PyQt5.QtWidgets.QMessageBox.warning"):
+        yield
 
     # Try to close all remaining widgets after each test
     for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
