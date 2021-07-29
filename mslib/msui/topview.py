@@ -242,6 +242,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.update_roundtrip_enabled()
         self.mpl.navbar.push_current()
 
+        self.openTool(WMS + 1)
+
     def update_predefined_maps(self, extra=None):
         self.cbChangeMapSection.clear()
         predefined_map_sections = config_loader(

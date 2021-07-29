@@ -297,6 +297,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
+        self.openTool(WMS + 1)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
