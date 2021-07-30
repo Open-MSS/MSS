@@ -112,6 +112,7 @@ Qt-json-view
 ------------
 
 Author: Paul Schweizer (https://github.com/PaulSchweizer)
+License: https://github.com/PaulSchweizer/qt-json-view/blob/master/LICENSE (MIT License)
 
 Package for working with JSON files in PyQt5.
 Obtained from Github (https://github.com/PaulSchweizer/qt-json-view), on 23/7/2021.

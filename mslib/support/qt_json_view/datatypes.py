@@ -413,7 +413,7 @@ class ChoicesType(DataType):
             model = model.sourceModel()
         data = index.data(QtCore.Qt.UserRole)
         data['value'] = data['choices'][editor.currentIndex()]
-        model.itemFromIndex(index).setData(data['value'] , QtCore.Qt.DisplayRole)
+        model.itemFromIndex(index).setData(data['value'], QtCore.Qt.DisplayRole)
         model.itemFromIndex(index).setData(data, QtCore.Qt.UserRole)
 
     def value_item(self, value, model, key=None):

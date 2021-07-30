@@ -6,60 +6,68 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>524</height>
+    <width>647</width>
+    <height>656</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>ConfigurationEditorWindow</string>
+   <string>MSS Configuration Editor</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout" rowstretch="0,1">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,1,0">
     <item row="0" column="0">
-     <layout class="QGridLayout" name="gridLayout_4" columnstretch="1,1,1">
-      <item row="1" column="1">
-       <widget class="QFrame" name="frame">
-        <property name="frameShape">
-         <enum>QFrame::StyledPanel</enum>
-        </property>
-        <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
-        </property>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QLineEdit" name="lineEdit"/>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label">
+     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1,1,1">
+      <item>
+       <widget class="QLabel" name="optTitleLabel">
         <property name="text">
          <string>Configuration Options:</string>
         </property>
        </widget>
       </item>
-      <item row="1" column="0">
-       <widget class="QComboBox" name="comboBox"/>
+      <item>
+       <widget class="QComboBox" name="optCb"/>
       </item>
-      <item row="1" column="2">
-       <widget class="QPushButton" name="pushButton">
+      <item>
+       <widget class="QPushButton" name="addOptBtn">
         <property name="text">
-         <string>Add to settings</string>
+         <string>+ Add</string>
         </property>
        </widget>
       </item>
-      <item row="2" column="0" alignment="Qt::AlignLeft">
-       <widget class="QPushButton" name="pushButton_2">
+      <item>
+       <widget class="QPushButton" name="removeOptBtn">
         <property name="text">
-         <string>Show all</string>
+         <string>- Remove</string>
         </property>
        </widget>
       </item>
      </layout>
     </item>
     <item row="1" column="0">
-     <widget class="QWidget" name="widget" native="true"/>
+     <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,1">
+      <item row="1" column="0">
+       <widget class="QWidget" name="jsonWidget" native="true"/>
+      </item>
+      <item row="0" column="0" alignment="Qt::AlignRight|Qt::AlignBottom">
+       <widget class="QLabel" name="expandCollapseLabel">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Expand All</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="2" column="0">
+     <widget class="QDialogButtonBox" name="buttonBox">
+      <property name="standardButtons">
+       <set>QDialogButtonBox::Cancel|QDialogButtonBox::Open|QDialogButtonBox::RestoreDefaults|QDialogButtonBox::Save</set>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
