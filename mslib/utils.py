@@ -50,7 +50,7 @@ from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore, QtWidgets
 
-UR = pint.UnitRegistry()
+UR = units
 UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
 UR.define("degrees_north = degrees")
 UR.define("degrees_south = -degrees")

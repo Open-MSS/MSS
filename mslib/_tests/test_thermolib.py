@@ -33,7 +33,7 @@ import mslib.thermolib as tl
 
 
 def test_flightlevel2pressure2flightlevel():
-    fs = np.arange(1, 71000, 1000.) / 30.48 * units.hft
+    fs = (np.arange(1, 71000, 1000.) * units.m).to(units.hft)
     ps = tl.flightlevel2pressure(fs)
     fs_p = tl.pressure2flightlevel(ps).magnitude
     assert fs.magnitude == pytest.approx(fs_p)

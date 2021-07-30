@@ -213,7 +213,7 @@ def omega_to_w(omega, p, t):
 
 # Values according to the 1976 U.S. Standard atmosphere [NOAA1976]_.
 # List of tuples (height, temperature, pressure, temperature gradient)
-standard_atmosphere = [
+_STANDARD_ATMOSPHERE = [
     (0 * units.km, 288.15 * units.K, 101325 * units.Pa, 0.0065 * units.K / units.m),
     (11 * units.km, 216.65 * units.K, 22632.1 * units.Pa, 0 * units.K / units.m),
     (20 * units.km, 216.65 * units.K, 5474.89 * units.Pa, -0.001 * units.K / units.m),
@@ -222,6 +222,7 @@ standard_atmosphere = [
     (51 * units.km, 270.65 * units.K, 66.9389 * units.Pa, 0.0028 * units.K / units.m),
     (71 * units.km, 214.65 * units.K, 3.95642 * units.Pa, float("NaN") * units.K / units.m)
 ]
+_HEIGHT, _TEMPERATURE, _PRESSURE, _TEMPERATURE_GRADIENT = 0, 1, 2, 3
 
 
 @exporter.export
@@ -259,7 +260,8 @@ def flightlevel2pressure(height):
     # Initialize the return array.
     p = numpy.full_like(height, numpy.nan) * units.Pa
 
-    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(standard_atmosphere[:-1], standard_atmosphere[1:])):
+    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
+                                                                   _STANDARD_ATMOSPHERE[1:])):
         indices = (height >= z0) & (height < z1)
         if i == 0:
             indices |= height < z0
@@ -310,8 +312,9 @@ def pressure2flightlevel(pressure):
     # Initialize the return array.
     z = numpy.full_like(pressure, numpy.nan) * units.hft
 
-    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(standard_atmosphere[:-1], standard_atmosphere[1:])):
-        p1 = standard_atmosphere[i + 1][-2]
+    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
+                                                                   _STANDARD_ATMOSPHERE[1:])):
+        p1 = _STANDARD_ATMOSPHERE[i + 1][_PRESSURE]
         indices = (pressure > p1) & (pressure <= p0)
         if i == 0:
             indices |= (pressure >= p0)
@@ -343,7 +346,8 @@ def isa_temperature(height):
     Returns:
         temperature (K)
     """
-    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(standard_atmosphere[:-1], standard_atmosphere[1:])):
+    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
+                                                                   _STANDARD_ATMOSPHERE[1:])):
         if ((i == 0) and (height < z0)) or (z0 <= height < z1):
             return t0 - gamma * (height - z0)
 
