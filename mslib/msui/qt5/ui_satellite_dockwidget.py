@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_satellite_dockwidget.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_satellite_dockwidget.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_SatelliteDockWidget(object):
     def setupUi(self, SatelliteDockWidget):
@@ -49,6 +51,7 @@ class Ui_SatelliteDockWidget(object):
         self.horizontalLayout_7.addWidget(self.cbSatelliteOverpasses)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
         self.label = QtWidgets.QLabel(SatelliteDockWidget)
+        self.label.setOpenExternalLinks(True)
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
@@ -67,5 +70,4 @@ class Ui_SatelliteDockWidget(object):
         self.btLoadFile.setText(_translate("SatelliteDockWidget", "load"))
         self.label_6.setText(_translate("SatelliteDockWidget", "Predicted satellite overpasses:"))
         self.cbSatelliteOverpasses.setToolTip(_translate("SatelliteDockWidget", "Select/unselect a satellite overpass from all available overpasses."))
-        self.label.setText(_translate("SatelliteDockWidget", "Use https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi to generate prediction files."))
-
+        self.label.setText(_translate("SatelliteDockWidget", "<html><head/><body><pre style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'monospace\';\">Use </span><a href=\"https://cloudsgate2.larc.nasa.gov/predict/\"><span style=\" text-decoration: underline; color:#0000ff;\">https://cloudsgate2.larc.nasa.gov/predict</span></a><span style=\" font-family:\'monospace\';\"> to generate prediction files.</span></pre></body></html>"))
