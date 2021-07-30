@@ -50,6 +50,7 @@ import numpy as np
 import datetime
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
+from metpy.units import units
 from PyQt5 import QtCore, QtWidgets
 from mslib.utils import get_distance, find_location, path_points, latlon_points
 from mslib.thermolib import pressure2flightlevel
@@ -697,7 +698,7 @@ class VPathInteractor(PathInteractor):
             return
         y = event.ydata
         wpm = self.waypoints_model
-        flightlevel = float(pressure2flightlevel(y))
+        flightlevel = float(pressure2flightlevel(y * units.Pa).magnitude)
         [lat, lon], best_index = self.get_lat_lon(event)
         loc = find_location(lat, lon)  # skipped tolerance which uses appropriate_epsilon_km
         if loc is not None:

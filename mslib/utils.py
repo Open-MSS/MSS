@@ -32,6 +32,7 @@ import json
 import logging
 import netCDF4 as nc
 import numpy as np
+from metpy.units import units
 import os
 import pint
 from fs import open_fs, errors
@@ -49,7 +50,7 @@ from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore, QtWidgets
 
-UR = pint.UnitRegistry()
+UR = units
 UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
 UR.define("degrees_north = degrees")
 UR.define("degrees_south = -degrees")
@@ -598,9 +599,9 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
     if vertical_axis == "pressure":
         return float(pressure / 100)
     elif vertical_axis == "flight level":
-        return pressure2flightlevel(pressure)
+        return pressure2flightlevel(pressure * units.Pa).magnitude
     elif vertical_axis == "pressure altitude":
-        return pressure2flightlevel(pressure) / 32.8
+        return pressure2flightlevel(pressure * units.Pa).to(units.km).magnitude
     else:
         return pressure
 

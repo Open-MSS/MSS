@@ -29,12 +29,13 @@
 import numpy
 import scipy.integrate
 import logging
+from metpy.package_tools import Exporter
+from metpy.constants import Rd, g
+from metpy.xarray import preprocess_and_wrap
 import metpy.calc as mpcalc
-import metpy.constants as mpconst
-from metpy.units import units
+from metpy.units import units, check_units
 
-g = mpconst.earth_gravity.to("m/s^2").magnitude
-Rd = mpconst.dry_air_gas_constant.to("J/K/kg").magnitude
+exporter = Exporter(globals())
 
 
 class VapourPressureError(Exception):
@@ -210,141 +211,129 @@ def omega_to_w(omega, p, t):
     return om_w
 
 
-# Taken from https://en.wikipedia.org/wiki/U.S._Standard_Atmosphere
-# Better cite needed
-ZTGPS = [(0, 288.15, 6.5e-3, 101325.),
-         (11000, 216.65, 0, 22632.1),
-         (20000, 216.65, -1.0e-3, 5474.89),
-         (32000, 228.65, -2.8e-3, 868.019),
-         (47000, 270.65, 0, 110.906),
-         (51000, 270.65, 2.8e-3, 66.9389),
-         (71000, 214.65, None, 3.95642)]
+# Values according to the 1976 U.S. Standard atmosphere [NOAA1976]_.
+# List of tuples (height, temperature, pressure, temperature gradient)
+_STANDARD_ATMOSPHERE = [
+    (0 * units.km, 288.15 * units.K, 101325 * units.Pa, 0.0065 * units.K / units.m),
+    (11 * units.km, 216.65 * units.K, 22632.1 * units.Pa, 0 * units.K / units.m),
+    (20 * units.km, 216.65 * units.K, 5474.89 * units.Pa, -0.001 * units.K / units.m),
+    (32 * units.km, 228.65 * units.K, 868.019 * units.Pa, -0.0028 * units.K / units.m),
+    (47 * units.km, 270.65 * units.K, 110.906 * units.Pa, 0 * units.K / units.m),
+    (51 * units.km, 270.65 * units.K, 66.9389 * units.Pa, 0.0028 * units.K / units.m),
+    (71 * units.km, 214.65 * units.K, 3.95642 * units.Pa, float("NaN") * units.K / units.m)
+]
+_HEIGHT, _TEMPERATURE, _PRESSURE, _TEMPERATURE_GRADIENT = 0, 1, 2, 3
 
 
-def flightlevel2pressure(flightlevel):
-    """Conversion of flight level (given in hft) to pressure (Pa) with
-       hydrostatic equation, according to the profile of the ICAO
-       standard atmosphere.
-
+@exporter.export
+@preprocess_and_wrap(wrap_like='height')
+@check_units('[length]')
+def flightlevel2pressure(height):
+    r"""
+    Conversion of flight level to pressure (Pa) with
+    hydrostatic equation, according to the profile of the 1976 U.S. Standard atmosphere [NOAA1976]_.
     Reference:
-        For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
-        470pp., Sections II.1.4. and II.6.1.2.
+        H. Kraus, Die Atmosphaere der Erde, Springer, 2001, 470pp., Sections II.1.4. and II.6.1.2.
 
-    Arguments:
-        flightlevel -- flight level in hft
-    Returns:
-        static pressure (Pa)
+    Parameters
+    ----------
+    height : `pint.Quantity` or `xarray.DataArray`
+        Atmospheric height
+
+    Returns
+    -------
+    `pint.Quantity` or `xarray.DataArray`
+        Corresponding pressure value(s) (Pa)
+
+    Notes
+    -----
+    .. math:: p = \begin{cases}
+              p_0 \cdot \left[\frac{T_0 - \Gamma \cdot (Z - Z_0)}{T_0}\right]^{\frac{g}{\Gamma \cdot R}}
+              &\Gamma \neq 0\\
+              p_0 \cdot \exp\left(\frac{-g \cdot (Z - Z_0)}{R \cdot T_0}\right) &\text{else}
+              \end{cases}
     """
-
-    return flightlevel2pressure_a(numpy.asarray([flightlevel]))[0]
-
-
-def pressure2flightlevel(p):
-    """Conversion of pressure (Pa) to flight level (hft) with
-       hydrostatic equation, according to the profile of the ICAO
-       standard atmosphere.
-
-    Reference:
-        For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
-        470pp., Sections II.1.4. and II.6.1.2.
-
-    Arguments:
-        p -- pressure (Pa)
-    Returns:
-        flight level in hft
-    """
-
-    return pressure2flightlevel_a(numpy.asarray([p]))[0]
-
-
-def flightlevel2pressure_a(flightlevel):
-    """
-    Conversion of flight level (given in hft) to pressure (Pa) with
-    hydrostatic equation, according to the profile of the ICAO
-    standard atmosphere.
-
-    Array version, the argument "flightlevel" must be a numpy array.
-
-    Reference:
-        For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
-        470pp., Sections II.1.4. and II.6.1.2.
-
-    Arguments:
-        flightlevel -- numpy array of flight level in hft
-    Returns:
-        static pressure (Pa)
-    """
-    # Make sure flightlevel is a numpy array.
-    if not isinstance(flightlevel, numpy.ndarray):
-        raise ValueError("argument flightlevel must be a numpy array")
-
-    # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 30.48
+    is_array = hasattr(height.magnitude, "__len__")
+    if not is_array:
+        height = [height.magnitude] * height.units
 
     # Initialize the return array.
-    p = numpy.full_like(flightlevel, numpy.nan)
+    p = numpy.full_like(height, numpy.nan) * units.Pa
 
-    for i, ((z0, t0, gamma, p0), (z1, t1, _, p1)) in enumerate(zip(ZTGPS[:-1], ZTGPS[1:])):
-        indices = (z >= z0) & (z < z1)
+    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
+                                                                   _STANDARD_ATMOSPHERE[1:])):
+        indices = (height >= z0) & (height < z1)
         if i == 0:
-            indices |= z < z0
+            indices |= height < z0
         if gamma != 0:
-            p[indices] = p0 * ((t0 - gamma * (z[indices] - z0)) / t0) ** (g / (gamma * Rd))
+            p[indices] = p0 * ((t0 - gamma * (height[indices] - z0)) / t0) ** (g / (gamma * Rd))
         else:
-            p[indices] = p0 * numpy.exp(-g * (z[indices] - z0) / (Rd * t0))
+            p[indices] = p0 * numpy.exp(-g * (height[indices] - z0) / (Rd * t0))
 
     if numpy.isnan(p).any():
         raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 71km")
 
-    return p
+    return p if is_array else p[0]
 
 
-def pressure2flightlevel_a(p):
-    """
-    Conversion of pressure (Pa) to flight level (hft) with
-    hydrostatic equation, according to the profile of the ICAO
-    standard atmosphere.
-
-    Array version, the argument "p" must be a numpy array.
-
+@exporter.export
+@preprocess_and_wrap(wrap_like='pressure')
+@check_units('[pressure]')
+def pressure2flightlevel(pressure):
+    r"""
+    Conversion of pressure to height (hft) with
+    hydrostatic equation, according to the profile of the 1976 U.S. Standard atmosphere [NOAA1976]_.
     Reference:
-        For example, H. Kraus, Die Atmosphaere der Erde, Springer, 2001,
-        470pp., Sections II.1.4. and II.6.1.2.
+        H. Kraus, Die Atmosphaere der Erde, Springer, 2001, 470pp., Sections II.1.4. and II.6.1.2.
 
-    Arguments:
-        p -- numpy array of pressure (Pa)
-        fake_above_32km -- compute values above 54.75 hPa (32km) with the
-                           profile valid for 20..32km. WARNING: This gives
-                           unphysical results. Use this option only for
-                           testing purposes.
-    Returns:
-        flight level in hft
+    Parameters
+    ----------
+    pressure : `pint.Quantity` or `xarray.DataArray`
+        Atmospheric pressure
+
+    Returns
+    -------
+    `pint.Quantity` or `xarray.DataArray`
+        Corresponding height value(s) (hft)
+
+    Notes
+    -----
+    .. math:: Z = \begin{cases}
+              Z_0 + \frac{T_0 - T_0 \cdot \exp\left(\frac{\Gamma \cdot R}{g\cdot\log(\frac{p}{p0})}\right)}{\Gamma}
+              &\Gamma \neq 0\\
+              Z_0 - \frac{R \cdot T_0}{g \cdot \log(\frac{p}{p_0})} &\text{else}
+              \end{cases}
     """
-    # Make sure p is a numpy array.
-    if not isinstance(p, numpy.ndarray):
-        raise ValueError("argument p must be a numpy array")
+    is_array = hasattr(pressure.magnitude, "__len__")
+    if not is_array:
+        pressure = [pressure.magnitude] * pressure.units
 
     # Initialize the return array.
-    z = numpy.full_like(p, numpy.nan)
+    z = numpy.full_like(pressure, numpy.nan) * units.hft
 
-    for i, ((z0, t0, gamma, p0), (z1, t1, _, p1)) in enumerate(zip(ZTGPS[:-1], ZTGPS[1:])):
-        p1 = ZTGPS[i + 1][-1]
-        indices = (p > p1) & (p <= p0)
+    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
+                                                                   _STANDARD_ATMOSPHERE[1:])):
+        p1 = _STANDARD_ATMOSPHERE[i + 1][_PRESSURE]
+        indices = (pressure > p1) & (pressure <= p0)
         if i == 0:
-            indices |= (p >= p0)
+            indices |= (pressure >= p0)
         if gamma != 0:
-            z[indices] = z0 + 1. / gamma * (t0 - t0 * numpy.exp(gamma * Rd / g * numpy.log(p[indices] / p0)))
+            z[indices] = z0 + 1. / gamma * (t0 - t0 * numpy.exp(gamma * Rd / g * numpy.log(pressure[indices] / p0)))
         else:
-            z[indices] = z0 - (Rd * t0) / g * numpy.log(p[indices] / p0)
+            z[indices] = z0 - (Rd * t0) / g * numpy.log(pressure[indices] / p0)
 
     if numpy.isnan(z).any():
         raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 71km")
-    return z / 30.48
+
+    return z if is_array else z[0]
 
 
-def isa_temperature(flightlevel):
+@exporter.export
+@preprocess_and_wrap(wrap_like='height')
+@check_units('[length]')
+def isa_temperature(height):
     """
     International standard atmosphere temperature at the given flight level.
 
@@ -357,12 +346,10 @@ def isa_temperature(flightlevel):
     Returns:
         temperature (K)
     """
-    # Convert flight level (ft) to m (1 ft = 30.48 cm; 1/0.3048m = 3.28...).
-    z = flightlevel * 30.48
-
-    for i, ((z0, t0, gamma, p0), (z1, t1, _, p1)) in enumerate(zip(ZTGPS[:-1], ZTGPS[1:])):
-        if ((i == 0) and (z < z0)) or (z0 <= z < z1):
-            return t0 - gamma * (z - z0)
+    for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
+                                                                   _STANDARD_ATMOSPHERE[1:])):
+        if ((i == 0) and (height < z0)) or (z0 <= height < z1):
+            return t0 - gamma * (height - z0)
 
     raise ValueError("ISA temperature from flight level not "
                      "implemented for z > 71km")

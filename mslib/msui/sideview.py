@@ -28,6 +28,7 @@
 
 import logging
 import functools
+from metpy.units import units
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
 from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_sideview_window as ui
@@ -254,10 +255,10 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             sb.setSuffix(" " + new_unit)
             if new_unit == "hPa":
                 sb.setValue(thermolib.flightlevel2pressure(
-                    convert_to(sb.value(), old_unit, "hft", 1)) / 100)
+                    convert_to(sb.value(), old_unit, "hft", 1) * units.hft).to(units.hPa).magnitude)
             elif old_unit == "hPa":
                 sb.setValue(convert_to(
-                    thermolib.pressure2flightlevel(sb.value() * 100), "hft", new_unit))
+                    thermolib.pressure2flightlevel(sb.value() * units.hPa).magnitude, "hft", new_unit))
             else:
                 sb.setValue(convert_to(sb.value(), old_unit, new_unit, 1))
         self.setBotTopLimits(self.cbVerticalAxis.currentText())
