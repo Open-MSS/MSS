@@ -1106,19 +1106,23 @@ def download_progress(file_path, url, progress_callback=lambda f: logging.info(f
     """
     Downloads the file at the given url to file_path and keeps track of the progress
     """
-    with open(file_path, "wb+") as file:
-        logging.info(f"Downloading to {file_path}. This might take a while.")
-        response = requests.get(url, stream=True)
-        length = response.headers.get("content-length")
-        if length is None:  # no content length header
-            file.write(response.content)
-        else:
-            dl = 0
-            length = int(length)
-            for data in response.iter_content(chunk_size=1024 * 1024):
-                dl += len(data)
-                file.write(data)
-                progress_callback(dl / length)
+    try:
+        with open(file_path, "wb+") as file:
+            logging.info(f"Downloading to {file_path}. This might take a while.")
+            response = requests.get(url, stream=True, timeout=5)
+            length = response.headers.get("content-length")
+            if length is None:  # no content length header
+                file.write(response.content)
+            else:
+                dl = 0
+                length = int(length)
+                for data in response.iter_content(chunk_size=1024 * 1024):
+                    dl += len(data)
+                    file.write(data)
+                    progress_callback(dl / length)
+    except requests.exceptions.RequestException:
+        os.remove(file_path)
+        QtWidgets.QMessageBox.information(None, "Download failed", f"{url} was unreachable, please try again later.")
 
 
 def get_airports(force_download=False):
@@ -1134,7 +1138,7 @@ def get_airports(force_download=False):
     is_outdated = file_exists \
         and (time.time() - os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))) > 60 * 60 * 24 * 30
 
-    if (force_download or is_outdated) \
+    if (force_download or is_outdated or not file_exists) \
             and QtWidgets.QMessageBox.question(None, "Allow download", f"You selected airports to be "
                                                f"{'drawn' if not force_download else 'downloaded (~10MB)'}." +
                                                ("\nThe airports file first needs to be downloaded or updated (~10MB)."
@@ -1142,10 +1146,12 @@ def get_airports(force_download=False):
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
             == QtWidgets.QMessageBox.Yes:
         download_progress(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "https://ourairports.com/data/airports.csv")
-    if file_exists:
+
+    if os.path.exists(os.path.join(MSS_CONFIG_PATH, "airports.csv")):
         with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r", encoding="utf8") as file:
             _airports_mtime = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
+
     else:
         return []
 
@@ -1162,7 +1168,7 @@ def get_available_airspaces():
         sizes = regex.findall(r".._asp.aip.*?>[ ]*([0-9\.]+[KM]*)[ ]*<\/td", directory.text)
         airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
         return airspaces
-    except (ConnectionError, TimeoutError):
+    except requests.exceptions.RequestException:
         return _airspace_cache
 
 
@@ -1177,11 +1183,11 @@ def update_airspace(force_download=False, countries=["de"]):
         data = [airspace for airspace in get_available_airspaces() if airspace[0].startswith(country)][0]
         file_exists = os.path.exists(location)
 
-        is_outdated = not file_exists or (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
+        is_outdated = file_exists and (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
 
-        if (force_download or is_outdated) \
+        if (force_download or is_outdated or not file_exists) \
                 and QtWidgets.QMessageBox.question(None, "Allow download",
-                                                   f"The selected {country} airspace need to be downloaded ({data[-1]})"
+                                                   f"The selected {country} airspace needs to be downloaded ({data[-1]})"
                                                    f"\nIs now a good time?",
                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
                 == QtWidgets.QMessageBox.Yes:
@@ -1196,6 +1202,7 @@ def get_airspaces(countries=[]):
     reload = False
     files = [f"{country}_asp.aip" for country in countries]
     update_airspace(countries=countries)
+    files = [file for file in files if os.path.exists(os.path.join(MSS_CONFIG_PATH, file))]
 
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
