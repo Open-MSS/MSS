@@ -152,6 +152,26 @@
        </property>
       </spacer>
      </item>
+     <item>
+      <widget class="QComboBox" name="cbClock">
+       <property name="minimumSize">
+        <size>
+         <width>120</width>
+         <height>0</height>
+        </size>
+       </property>
+       <item>
+        <property name="text">
+         <string>clockwise</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>anti-clockwise</string>
+        </property>
+       </item>
+      </widget>
+     </item>
     </layout>
    </item>
   </layout>

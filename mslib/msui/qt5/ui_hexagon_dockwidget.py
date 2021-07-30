@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_hexagon_dockwidget.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_hexagon_dockwidget.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_HexagonDockWidget(object):
     def setupUi(self, HexagonDockWidget):
@@ -71,6 +73,12 @@ class Ui_HexagonDockWidget(object):
         self.horizontalLayout_6.addWidget(self.pbRemoveHexagon)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_6.addItem(spacerItem)
+        self.cbClock = QtWidgets.QComboBox(HexagonDockWidget)
+        self.cbClock.setMinimumSize(QtCore.QSize(120, 0))
+        self.cbClock.setObjectName("cbClock")
+        self.cbClock.addItem("")
+        self.cbClock.addItem("")
+        self.horizontalLayout_6.addWidget(self.cbClock)
         self.verticalLayout.addLayout(self.horizontalLayout_6)
 
         self.retranslateUi(HexagonDockWidget)
@@ -89,4 +97,5 @@ class Ui_HexagonDockWidget(object):
         self.dsbHexagonAngle.setSuffix(_translate("HexagonDockWidget", " °"))
         self.pbAddHexagon.setText(_translate("HexagonDockWidget", "Add Hexagon"))
         self.pbRemoveHexagon.setText(_translate("HexagonDockWidget", "Remove Hexagon"))
-
+        self.cbClock.setItemText(0, _translate("HexagonDockWidget", "clockwise"))
+        self.cbClock.setItemText(1, _translate("HexagonDockWidget", "anti-clockwise"))
