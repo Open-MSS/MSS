@@ -30,6 +30,7 @@ import importlib.machinery
 import os
 import sys
 import mock
+import warnings
 from PyQt5 import QtWidgets
 # Disable pyc files
 sys.dont_write_bytecode = True
@@ -155,14 +156,21 @@ sys.path.insert(0, parent_path)
 
 
 @pytest.fixture(autouse=True)
-def close_open_windows(request):
+def close_open_windows():
     """
     Closes all windows after every test
     """
     # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
-    with mock.patch("PyQt5.QtWidgets.QMessageBox.question"), mock.patch("PyQt5.QtWidgets.QMessageBox.information"), \
-            mock.patch("PyQt5.QtWidgets.QMessageBox.critical"), mock.patch("PyQt5.QtWidgets.QMessageBox.warning"):
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.information") as i, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as c, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.warning") as w:
         yield
+        if any(box.call_count > 0 for box in [q, i, c, w]):
+            summary = "\n".join([f"PyQt5.QtWidgets.QMessageBox.{box()._extract_mock_name()}: {box.mock_calls[:-1]}"
+                                 for box in [q, i, c, w] if box.call_count > 0])
+            warnings.warn(f"An unhandled message box popped up during your test!\n{summary}")
+
 
     # Try to close all remaining widgets after each test
     for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
