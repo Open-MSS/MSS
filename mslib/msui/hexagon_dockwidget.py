@@ -38,20 +38,16 @@ class HexagonException(Exception):
         logging.debug("%s", error_string)
 
 
-def create_hexagon(center_lat, center_lon, radius, angle=0.):
-    coords_0 = (radius, 0.)
-    coords_cart_0 = [rotate_point(coords_0, angle=0. + angle),
-                     rotate_point(coords_0, angle=60. + angle),
-                     rotate_point(coords_0, angle=120. + angle),
-                     rotate_point(coords_0, angle=180. + angle),
-                     rotate_point(coords_0, angle=240. + angle),
-                     rotate_point(coords_0, angle=300. + angle),
-                     rotate_point(coords_0, angle=360. + angle)]
-    coords_sphere_rot = [
-        (center_lat + (vec[0] / 110.),
-         center_lon + (vec[1] / (110. * np.cos(np.deg2rad((vec[0] / 110.) + center_lat)))))
-        for vec in coords_cart_0]
-    return coords_sphere_rot
+def create_hexagon(center_lat, center_lon, radius, angle=0., clockwise=True):
+    coords = (radius, 0.)
+    coords_cart = [rotate_point(coords, angle=_a + angle) for _a in range(0, 361, 60)]
+    if not clockwise:
+        coords_cart.reverse()
+    coords_sphere = [
+        (center_lat + (_x / 110.),
+         center_lon + (_y / (110. * np.cos(np.deg2rad((_x / 110.) + center_lat)))))
+        for _x, _y in coords_cart]
+    return coords_sphere
 
 
 class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
@@ -90,7 +86,8 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
             "center_lon": self.dsbHexagonLongitude.value(),
             "center_lat": self.dsbHexagonLatitude.value(),
             "radius": self.dsbHexgaonRadius.value(),
-            "angle": self.dsbHexagonAngle.value()
+            "angle": self.dsbHexagonAngle.value(),
+            "direction": self.cbClock.currentText(),
         }
 
     def _add_hexagon(self):
@@ -102,7 +99,8 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
             QtWidgets.QMessageBox.warning(
                 self, "Add hexagon", "You cannot create a hexagon with zero radius!")
             return
-        points = create_hexagon(params["center_lat"], params["center_lon"], params["radius"], params["angle"])
+        points = create_hexagon(params["center_lat"], params["center_lon"], params["radius"],
+                                params["angle"], params["direction"] == "clockwise")
         index = table_view.currentIndex()
         if not index.isValid():
             row = 0
