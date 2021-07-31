@@ -33,7 +33,7 @@ from PyQt5 import QtWidgets
 from mslib.msui import editor
 from mslib._tests.constants import ROOT_DIR
 
-
+@pytest.mark.skip("To be done for new UI")
 class Test_Editor(object):
     sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
                                   "samples", "config", "mss", "mss_settings.json.sample"))

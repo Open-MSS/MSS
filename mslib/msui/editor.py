@@ -67,7 +67,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
     dict_option_structure = {
         "predefined_map_sections": {
             "new_map_section": {
-                "CRS": "EPSG:",
+                "CRS": "crs_value",
                 "map": {
                     "llcrnrlon": 0.0,
                     "llcrnrlat": 0.0,
@@ -105,7 +105,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         "default_MSCOLAB": ["https://mscolab-server-url.com"],
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
-        "WMS_preload": [],
+        # "WMS_preload": [],
     }
 
     def __init__(self, parent=None):
@@ -130,11 +130,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.path = self.path.replace("\\", "/")
         with open(self.path, "r") as file_obj:
             json_file_data = json.loads(file_obj.read())
-        self.options.update(json_file_data)
-        # for key in list(self.options.keys()):
-        #     if self.options[key] == [] or self.options[key] == {}:
-        #         del self.options[key]
-        # print(json.dumps(self.dict_data, indent = 1))
+        self.update_default_with_user_data(json_file_data)
+        # print(json.dumps(self.options, indent = 1))
 
         self.optCb.addItem("All")
         for option in sorted(self.options.keys(), key=str.lower):
@@ -175,6 +172,78 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.view.header().setSectionResizeMode(1)
         # self.view.header().setSectionResizeMode(0)
 
+    def compare_dicts(self, default, user_data):
+        # If data is neither list not dict type, compare individual type
+        if not isinstance(default, dict) and not isinstance(default, list):
+            if isinstance(default, float) and isinstance(user_data, int):
+                user_data = float(default)
+            if isinstance(match_type(default), type(match_type(user_data))):
+                return user_data, True
+            else:
+                return default, False
+
+        # If data is list type, compare all values in list
+        if isinstance(default, list):
+            if isinstance(user_data, list):
+                if len(default) == len(user_data):
+                    data = copy.deepcopy(default)
+                    trues = []
+                    for i in range(len(default)):
+                        data[i], match = self.compare_dicts(default[i], user_data[i])
+                        trues.append(match)
+                    # if any([type(match_type(data1)) != type(match_type(data2))
+                    #         for data1, data2 in zip(default, user_data)]):
+                    #     return default, False
+                    # else:
+                    #     return user_data, True
+                else:
+                    return default, False
+            else:
+                return default, False
+
+        # If data is dict type, goes through the dict and update
+        elif isinstance(default, dict):
+            data = copy.deepcopy(default)
+            trues = []
+            for key in default:
+                if key in user_data:
+                    data[key], match = self.compare_dicts(default[key], user_data[key])
+                    trues.append(match)
+                else:
+                    trues.append(False)
+
+        return data, all(trues)
+
+    def update_default_with_user_data(self, json_file_data):
+        for key in self.fixed_dict_options:
+            if key in json_file_data:
+                self.options[key] = self.compare_dicts(self.options[key], json_file_data[key])[0]
+
+        dos = copy.deepcopy(self.dict_option_structure)
+        dos["import_plugins"]["plugin-name-a"] = dos["import_plugins"]["plugin-name"][:3]
+        dos["export_plugins"]["plugin-name-a"] = dos["export_plugins"]["plugin-name"][:3]
+        for key in dos:
+            if key in json_file_data:
+                temp_data = {}
+                for option_key in json_file_data[key]:
+                    for dos_key_key in dos[key]:
+                        if isinstance(match_type(option_key), type(match_type(dos_key_key))):
+                            data, match = self.compare_dicts(dos[key][dos_key_key], json_file_data[key][option_key])
+                            if match:
+                                temp_data[option_key] = json_file_data[key][option_key]
+                                break
+                if temp_data != {}:
+                    self.options[key] = temp_data
+                # print(key, json.dumps(temp_data, indent=4), "\n")
+
+        for plugin in self.options["import_plugins"]:
+            if len(self.options["import_plugins"][plugin]) == 3:
+                self.options["import_plugins"][plugin].append("default")
+
+        for plugin in self.options["export_plugins"]:
+            if len(self.options["export_plugins"][plugin]) == 3:
+                self.options["export_plugins"][plugin].append("default")
+
     def show_all(self):
         # self.proxy_model.setFilterKeyColumn(0)
         self.proxy_model.setFilterRegExp("")
@@ -201,9 +270,6 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             item = self.json_model.itemFromIndex(index)
             if item.text() == filter_exp:
                 if isinstance(item.data(), DictType):
-                    # json_data = self.json_model.serialize()[filter_exp]
-                    # key, value = next(iter(json_data.items()))
-                    # json_data = {key: value}
                     if filter_exp in self.dict_option_structure:
                         json_data = self.dict_option_structure[filter_exp]
                     elif filter_exp in self.fixed_dict_options:
@@ -223,16 +289,12 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     else:
                         self.statusbar.showMessage("Sorry, could not recognize config option.")
                         return
-                    # json_data = self.json_model.serialize()[filter_exp]
-                    # json_data = [json_data[0]]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
                     # increase row count in view
                     rows = self.json_model.rowCount(index) - 1
                     new_item = self.json_model.itemFromIndex(self.json_model.index(rows, 0, index))
                     new_item.setData(rows, QtCore.Qt.DisplayRole)
-                    # new_item = self.json_model.itemFromIndex(self.json_model.index(rows, 1, index))
-                    # new_item.setData(None, QtCore.Qt.DisplayRole)
                     self.statusbar.showMessage("")
                     self.view.expandAll()
                 else:
