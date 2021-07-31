@@ -70,7 +70,7 @@ def automate_views():
     """
     This is the main automating script of the MSS views tutorial which will cover all the views(topview, sideview,
     tableview, linear view) in demonstrating how to create a project. This will be recorded and savedto a file having
-     dateframe nomenclature with a .mp4 extension(codec).
+    dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
@@ -157,13 +157,11 @@ def automate_views():
 
         pag.move(-150, 30, duration=1)
         x1, y1 = pag.position()
-        # print(x1, y1)
         pag.click(interval=2)
         pag.sleep(1)
         pag.move(200, 150, duration=1)
         pag.click(interval=2)
         x2, y2 = pag.position()
-        # print(x2, y2)
         pag.sleep(1)
         pag.move(100, -80, duration=1)
         pag.click(interval=2)
@@ -852,7 +850,7 @@ def automate_views():
         pag.sleep(1)
         pag.click(x + 30, y + 50, duration=1)
         pag.sleep(2)
-    except ImageNotFoundException:
+    except (ImageNotFoundException, OSError, Exception):
         print("\n Exception :Sideview's Add Waypoint button could not be located on the screen")
 
     # CLosing Linear View Layer List
@@ -936,7 +934,6 @@ def main():
     p1.join()
     p3.join()
     print("\n\nINFO : Automation Completes Successfully!")
-    # pag.press('q')  # In some cases, recording windows does not closes. So it needs to be there.
     sys.exit()
 
 
