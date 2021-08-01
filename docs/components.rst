@@ -8,5 +8,5 @@ Components
    deployment
    mscolab
    demodata
-   kml_guide
+
 

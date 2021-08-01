@@ -18,17 +18,26 @@ When it is ready the developer version becomes the next stable.
 
 The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhub.net/p/mss>`_
 
+Using our Issue Tracker on github
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Style guide
-~~~~~~~~~~~~~~~~
+How to Report Bugs
+-------------------
 
-We generally follow flake8, with 120 columns instead of 79.
+Please open a new issue in the appropriate GitHub repository `here <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
 
-Output and Logging
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Be sure to include as much information including screenshots, text output, and both your expected and actual results.
 
-When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
-warning for warnings, error for errors, critical for critical errors/states).
+How to Request Enhancements
+---------------------------
+
+First, please refer to the applicable `GitHub repository <https://github.com/Open-MSS/MSS>`_ and search `the repository's GitHub issues <https://github.com/Open-MSS/MSS/issues>`_ to make sure your idea has not been (or is not still) considered.
+
+Then, please `create a new issue <https://github.com/Open-MSS/MSS/issues/new>`_ in the GitHub repository describing your enhancement.
+
+Be sure to include as much detail as possible including step-by-step descriptions, specific examples, screenshots or mockups, and reasoning for why the enhancement might be worthwhile.
+
+
 
 Setting Up a Local Environment
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -89,23 +98,36 @@ Setting up a git remote
 
 3. It will show something like this:
 
-  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
+  ``origin  git@github.com:<your-user-name>/MSS.git`` (fetch)
 
-  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
+  ``origin  git@github.com:<your-user-name>/MSS.git`` (push)
 
-4. Now type the command git remote add upstream ``https://github.com/Open-MSS/MSS.git`` this will set upstream as main directory
+4. Now type the command git remote add upstream ``git@github.com:Open-MSS/MSS.git`` this will set upstream as main directory
+
 
 5. Again type in command git remote -v to check if remote has been set up correctly
 
 6. It should show something like this :
 
-  ``origin  https://github.com/<your-user-name>/MSS.git`` (fetch)
+    ``origin	git@github.com:<your-user-name>/MSS.git (fetch)``
 
-  ``origin  https://github.com/<your-user-name>/MSS.git`` (push)
+    ``origin	git@github.com:<your-user-name>/MSS.git (push)``
 
-  upstream        ``https://github.com/Open-MSS/MSS.git`` (fetch)
+    ``upstream	git@github.com:Open-MSS/MSS.git (fetch)``
 
-  upstream        ``https://github.com/Open-MSS/MSS.git`` (push)
+    ``upstream	git@github.com:Open-MSS/MSS.git (push)``
+
+
+Update local stable branch
+--------------------------
+
+If you don't have a stable branch, create one first or change to that branch::
+
+   git checkout [-b] stable
+   git pull git@github.com:Open-MSS/MSS.git stable
+   git push
+
+
 
 Installing dependencies
 -----------------------
@@ -130,6 +152,143 @@ Create an environment and install the whole mss package dependencies then remove
 You can also use conda to install mss, but mamba is a way faster.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
 
+Setup mswms server
+++++++++++++++++++
+
+In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
+MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
+
+:ref:`demodata` is provided by executing::
+
+   $(mssdev) python mslib/mswms/demodata.py --seed
+
+To use this data add the mss_wms_settings.py in your python path::
+
+   $(mssdev) cd $HOME/PycharmProjects/mss
+   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
+   $(mssdev) python mslib/mswms/mswms.py
+
+Setup mscolab server
+++++++++++++++++++++
+
+The Mscolab server is built using the Flask rest framework which communicates with the PyQt5 frontend of MSS.
+You can view the default configuration of mscolab in the file `mslib/mscolab/conf.py`.
+If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server"
+section in :ref:`mscolab`
+
+When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab db --init`
+to initialise it. The default database is a sqlite3 database.
+You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
+The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
+
+To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the mscolab server on port 8083.
+Going to http://localhost:8083/status should now show "Mscolab server". This means your server has started successfully.
+Now you can use the MSS desktop application to connect to it using the Mscolab window of the application.
+
+Setup local testing
++++++++++++++++++++
+
+With sending a Pull Request our defined CIs do run all tests on github.
+You can do run tests own system too.
+
+For developers we provide additional packages for running tests, activate your env and run::
+
+  $ mamba install --file requirements.d/development.txt
+
+On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager.
+This is used to run tests on a virtual display.
+If you don't want tests redirected to the xvfb display just setup an environment variable::
+
+ $ export TESTS_VISIBLE=TRUE
+
+We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
+in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
+
+
+Setup mss_settings.json for special tests
++++++++++++++++++++++++++++++++++++++++++
+
+On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
+If you want to overwrite this setup and try out a special configuration add an mss_settings.json
+file to the testings base dir in your tmp directory. You call it by the custom `--mss_settings` option
+
+
+Testing
+-------
+
+After you installed the dependencies for testing you could invoke the tests by
+
+Run Tests
++++++++++
+
+Our tests are using the pytest framework. You could run tests serial and parallel
+
+::
+
+   $ pytest mslib
+
+or parallel
+
+::
+
+  $ pytest -n auto --dist loadscope --max-worker-restart 0 mslib
+
+Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
+
+Verify Codestyle
+++++++++++++++++
+
+A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
+
+Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
+
+Coverage
+++++++++
+
+::
+
+   $ pytest --cov mslib
+
+This plugin produces a coverage report, example::
+
+    ----------- coverage: platform linux, python 3.7.3-final-0 -----------
+    Name                                     Stmts   Miss Branch BrPart  Cover
+    --------------------------------------------------------------------------
+    mslib/__init__.py                            2      0      0      0   100%
+    mslib/msui/__init__.py                      23      0      0      0   100%
+    mslib/msui/aircrafts.py                     52      1      8      1    97%
+    mslib/msui/constants.py                     12      2      4      2    75%
+    mslib/msui/flighttrack.py                  383    117    141     16    66%
+
+
+Profiling
++++++++++
+
+Profiling can be done by e.g.::
+
+   $ python -m cProfile  -s time ./mslib/mswms/demodata.py --seed > profile.txt
+
+example::
+
+   /!\ existing server config: "mss_wms_settings.py" for demodata not overwritten!
+
+
+   /!\ existing server auth config: "mss_wms_auth.py" for demodata not overwritten!
+
+
+   To use this setup you need the mss_wms_settings.py in your python path e.g.
+   export PYTHONPATH=~/mss
+         557395 function calls (543762 primitive calls) in 0.980 seconds
+
+   Ordered by: internal time
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       23    0.177    0.008    0.607    0.026 demodata.py:1089(generate_file)
+      631    0.113    0.000    0.230    0.000 demodata.py:769(_generate_3d_data)
+      179    0.077    0.000    0.081    0.000 {method 'createVariable' of 'netCDF4._netCDF4.Dataset' objects}
+
+
+
 Pushing your changes
 --------------------
 
@@ -153,128 +312,23 @@ Fill out the template completely by describing your change, cause of change, iss
 
 After filling the template completely click on Pull request
 
-How to Report Bugs
-~~~~~~~~~~~~~~~~~~
 
-Please open a new issue in the appropriate GitHub repository `here <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
+Guides
+~~~~~~
 
-Be sure to include as much information including screenshots, text output, and both your expected and actual results.
+Coding Style
+------------
 
-How to Request Enhancements
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+We generally follow flake8, with 120 columns instead of 79.
 
-First, please refer to the applicable `GitHub repository <https://github.com/Open-MSS/MSS>`_ and search `the repository's GitHub issues <https://github.com/Open-MSS/MSS/issues>`_ to make sure your idea has not been (or is not still) considered.
+Output and Logging
+------------------
 
-Then, please `create a new issue <https://github.com/Open-MSS/MSS/issues/new>`_ in the GitHub repository describing your enhancement.
-
-Be sure to include as much detail as possible including step-by-step descriptions, specific examples, screenshots or mockups, and reasoning for why the enhancement might be worthwhile.
-
-Setup demodata
-~~~~~~~~~~~~~~
-In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
-MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
-
-:ref:`demodata` is provided by executing::
-
-   $(mssdev) python mslib/mswms/demodata.py --seed
-
-To use this data add the mss_wms_settings.py in your python path::
-
-   $(mssdev) cd $HOME/PycharmProjects/mss
-   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
-   $(mssdev) python mslib/mswms/mswms.py
-
-Developer Documentation of Mscolab
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The Mscolab server is built using the Flask rest framework which communicates with the PyQt5 frontend of MSS.
-You can view the default configuration of mscolab in the file `mslib/mscolab/conf.py`.
-If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server"
-section in :ref:`mscolab`
-
-When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab db --init`
-to initialise it. The default database is a sqlite3 database.
-You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
-The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
-
-To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the mscolab server on port 8083.
-Going to http://localhost:8083/status should now show "Mscolab server". This means your server has started successfully.
-Now you can use the MSS desktop application to connect to it using the Mscolab window of the application.
-
-
-Running tests
-~~~~~~~~~~~~~~~~~~~
-For developers we provide additional packages for running tests, activate your env and run::
-
-  $ mamba install --file requirements.d/development.txt
-
-On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager.
-This is used to run tests on a virtual display.
-If you don't want tests redirected to the xvfb display just setup an environment variable::
-
- $ export TESTS_VISIBLE=TRUE
-
-We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
-in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
-
-::
-
-   $ pytest
-
-
-Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
-
-A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
-
-Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
-
-::
-
-   $ pytest --cov mslib
-
-This plugin produces a coverage report, example::
-
-    ----------- coverage: platform linux, python 3.7.3-final-0 -----------
-    Name                                     Stmts   Miss Branch BrPart  Cover
-    --------------------------------------------------------------------------
-    mslib/__init__.py                            2      0      0      0   100%
-    mslib/msui/__init__.py                      23      0      0      0   100%
-    mslib/msui/aircrafts.py                     52      1      8      1    97%
-    mslib/msui/constants.py                     12      2      4      2    75%
-    mslib/msui/flighttrack.py                  383    117    141     16    66%
-
-
-Profiling can be done by e.g.::
-
-   $ python -m cProfile  -s time ./mslib/mswms/demodata.py > profile.txt
-
-example::
-
-    /!\ existing server config: "mss_wms_settings.py" for demodata not overwritten!
-
-
-    To use this setup you need the mss_wms_settings.py in your python path e.g.
-    export PYTHONPATH=$HOME/mss
-             398119 function calls (389340 primitive calls) in 0.834 seconds
-
-       Ordered by: internal time
-
-       ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-           19    0.124    0.007    0.496    0.026 demodata.py:912(generate_file)
-           19    0.099    0.005    0.099    0.005 {method 'close' of 'netCDF4._netCDF4.Dataset' objects}
-
-
-
-Setup mss_settings.json
-----------------------------
-
-On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
-If you want to overwrite this setup and try out a special configuration add an mss_settings.json
-file to the testings base dir in your tmp directory.
-
+When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
+warning for warnings, error for errors, critical for critical errors/states).
 
 Building the docs with Sphinx
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-----------------------------
 
 The documentation (in reStructuredText format, .rst) is in docs/.
 
@@ -286,18 +340,9 @@ To build the html version of it, you need to have sphinx installed::
 
 Then point a web browser at docs/_build/html/index.html.
 
-Update local stable branch
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If you don't have a stable branch, create one first or change to that branch::
-
-   git checkout [-b] stable
-   git pull git@github.com:Open-MSS/MSS.git stable
-   git push
-
 
 Merging stable into develop
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------
 
 Bug fixes we have done in stable we need to merge regulary into develop too::
 
@@ -317,7 +362,7 @@ regular merge with merge commit. Remove the develop_stable branch if still prese
 
 
 Testing local build
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 We provide in the dir localbuild the setup which will be used as a base on conda-forge to build mss.
 As developer you should copy this directory and adjust the source path, build number.
@@ -347,14 +392,16 @@ Creating a new release
    git tag -s -m "tagged/signed release X.Y.Z" X.Y.Z
    git push origin X.Y.Z
 
+* write a release information on https://github.com/Open-MSS/MSS/releases
 * create a release on anaconda conda-forge
 * announce on:
-* Mailing list
-* Twitter (follow @TheMSSystem for these tweets)
+  * Mailing list
+  * Twitter (follow @TheMSSystem for these tweets)
+
 
 
 Publish on Conda Forge
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 * update a fork of the `mss-feedstock <https://github.com/conda-forge/mss-feedstock>`_
   - set version string
