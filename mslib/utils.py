@@ -33,6 +33,7 @@ import re as regex
 import logging
 import netCDF4 as nc
 import numpy as np
+from metpy.units import units
 import os
 import pint
 from fs import open_fs, errors
@@ -55,7 +56,7 @@ from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.constants import MSS_CONFIG_PATH
 
-UR = pint.UnitRegistry()
+UR = units
 UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
 UR.define("degrees_north = degrees")
 UR.define("degrees_south = -degrees")
@@ -604,9 +605,9 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
     if vertical_axis == "pressure":
         return float(pressure / 100)
     elif vertical_axis == "flight level":
-        return pressure2flightlevel(pressure)
+        return pressure2flightlevel(pressure * units.Pa).magnitude
     elif vertical_axis == "pressure altitude":
-        return pressure2flightlevel(pressure) / 32.8
+        return pressure2flightlevel(pressure * units.Pa).to(units.km).magnitude
     else:
         return pressure
 
@@ -819,6 +820,15 @@ class Updater(QtCore.QObject):
         self.is_git_env = False
         self.new_version = None
         self.old_version = None
+        self.command = "conda"
+
+        # Check if mamba is installed
+        try:
+            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.command = "mamba"
+        except FileNotFoundError:
+            pass
+
         # pyqtSignals don't work without an application eventloop running
         if QtCore.QCoreApplication.startingUp():
             self.on_update_available = NonQtCallback()
@@ -854,17 +864,14 @@ class Updater(QtCore.QObject):
         self.on_status_update.emit("Checking for updates...")
 
         # Check if "search mss" yields a higher version than the currently running one
-        search = self._execute_command("conda search mss")
+        search = self._execute_command(f"{self.command} search mss")
         self.new_version = search.split("\n")[-2].split()[1]
-        c_list = self._execute_command("conda list mss")
+        c_list = self._execute_command(f"{self.command} list mss")
         self.old_version = c_list.split("\n")[-2].split()[1]
         if any(c.isdigit() for c in self.new_version):
             if self.new_version > self.old_version:
                 self.on_status_update.emit("Your version of MSS is outdated!")
                 self.on_update_available.emit(self.old_version, self.new_version)
-                if self.no_signals:
-                    logging.info(f"MSS can be updated from {self.old_version} to {self.new_version}.\n"
-                                 "Run the --update argument to update.")
             else:
                 self.on_status_update.emit("Your MSS is up to date.")
 
@@ -882,15 +889,8 @@ class Updater(QtCore.QObject):
         """
         Execute 'conda/mamba install mss=newest python -y' and return if it worked or not
         """
-        command = "conda"
-        try:
-            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            command = "mamba"
-        except FileNotFoundError:
-            pass
-
         self.on_status_update.emit("Trying to update MSS...")
-        self._execute_command(f"{command} install mss={self.new_version} python -y")
+        self._execute_command(f"{self.command} install mss={self.new_version} python -y")
         if self._verify_newest_mss():
             return True
 
@@ -910,7 +910,7 @@ class Updater(QtCore.QObject):
         """
         Return if the newest mss exists in the environment or not
         """
-        verify = self._execute_command("conda list mss")
+        verify = self._execute_command(f"{self.command} list mss")
         if self.new_version in verify:
             return True
 

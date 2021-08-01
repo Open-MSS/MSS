@@ -41,6 +41,7 @@ import os
 import fs
 import xml.dom.minidom
 import xml.parsers.expat
+from metpy.units import units
 
 from mslib.msui.mss_qt import variant_to_string, variant_to_float
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -106,7 +107,7 @@ class Waypoint(object):
             self.lat = lat
             self.lon = lon
         self.flightlevel = flightlevel
-        self.pressure = thermolib.flightlevel2pressure(flightlevel)
+        self.pressure = thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude
         self.distance_to_prev = 0.
         self.distance_total = 0.
         self.comments = comments
@@ -351,7 +352,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     flightlevel = variant_to_float(value)
-                    pressure = float(thermolib.flightlevel2pressure(flightlevel))
+                    pressure = float(thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
@@ -371,8 +372,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     pressure = variant_to_float(value) * 100  # convert hPa to Pa
                     if pressure > 200000:
                         raise ValueError
-                    flightlevel = float(round(thermolib.pressure2flightlevel(pressure)))
-                    pressure = float(thermolib.flightlevel2pressure(flightlevel))
+                    flightlevel = float(round(thermolib.pressure2flightlevel(pressure * units.Pa).magnitude))
+                    pressure = float(thermolib.flightlevel2pressure(flightlevel * units.hft).magnitude)
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
