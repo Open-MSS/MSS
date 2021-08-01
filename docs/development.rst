@@ -395,6 +395,7 @@ Creating a new release
 * write a release information on https://github.com/Open-MSS/MSS/releases
 * create a release on anaconda conda-forge
 * announce on:
+
   * Mailing list
   * Twitter (follow @TheMSSystem for these tweets)
 
