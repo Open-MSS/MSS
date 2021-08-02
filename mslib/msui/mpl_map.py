@@ -33,10 +33,14 @@
 """
 
 import logging
+import copy
 import numpy as np
+from shapely.geometry import Polygon
 import matplotlib
+from matplotlib.cm import get_cmap
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
+from matplotlib.collections import PolyCollection
 import mpl_toolkits.basemap as basemap
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -45,6 +49,12 @@ except ImportError:
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
+from mslib.utils import get_airports, get_airspaces
+
+
+OPENAIP_NOTICE = "Airspace data used comes from openAIP.\n" \
+                 "Visit openAIP.net and contribute to better aviation data, free for everyone to use and share."
+OURAIRPORTS_NOTICE = "Airports provided by OurAirports."
 
 
 class MapCanvas(basemap.Basemap):
@@ -91,7 +101,6 @@ class MapCanvas(basemap.Basemap):
                               "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.))}
         default_appearance.update(param_appearance)
         self.appearance = default_appearance
-
         # Identifier of this map canvas (used to query data structures that
         # are observed by different views).
         if identifier is not None:
@@ -147,16 +156,20 @@ class MapCanvas(basemap.Basemap):
             self.crs_text = self.ax.figure.text(0, 0, crs_text)
 
         if self.appearance["draw_graticule"]:
-            try:
-                self._draw_auto_graticule()
-            except Exception as ex:
-                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
+            pass
+            # self._draw_auto_graticule() ; It's already called in mpl_qtwidget.py in MplTopviewCanvas init_map().
         else:
             self.map_parallels = None
             self.map_meridians = None
 
         # self.warpimage() # disable fillcontinents when loading bluemarble
         self.ax.set_autoscale_on(False)
+        if not hasattr(self, "airports") or not self.airports:
+            self.airports = None
+            self.airtext = None
+        if not hasattr(self, "airspaces") or not self.airspaces:
+            self.airspaces = None
+            self.airspacetext = None
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -179,7 +192,7 @@ class MapCanvas(basemap.Basemap):
         super(MapCanvas, self).set_axes_limits(ax=ax)
         matplotlib.interactive(intact)
 
-    def _draw_auto_graticule(self):
+    def _draw_auto_graticule(self, font_size=None):
         """
         Draw an automatically spaced graticule on the map.
         """
@@ -283,14 +296,14 @@ class MapCanvas(basemap.Basemap):
         latStart = np.floor((mapLatStart / spacingLat)) * spacingLat
         latStop = np.ceil((mapLatStop / spacingLat)) * spacingLat
 
-        #   d) call the basemap methods to draw the lines in the determined
-        #      range.
+        # d) call the basemap methods to draw the lines in the determined
+        #    range.
         self.map_parallels = self.drawparallels(np.arange(latStart, latStop,
                                                           spacingLat),
-                                                labels=[1, 1, 0, 0], zorder=3)
+                                                labels=[1, 1, 0, 0], fontsize=font_size, zorder=3)
         self.map_meridians = self.drawmeridians(np.arange(lonStart, lonStop,
                                                           spacingLon),
-                                                labels=[0, 0, 0, 1], zorder=3)
+                                                labels=[0, 0, 0, 1], fontsize=font_size, zorder=3)
 
     def set_graticule_visible(self, visible=True):
         """
@@ -327,6 +340,155 @@ class MapCanvas(basemap.Basemap):
             self.map_meridians = None
             # Update the figure canvas.
             self.ax.figure.canvas.draw()
+
+    def set_draw_airports(self, value, port_type=["small_airport"], reload=True):
+        """
+        Sets airports to visible or not visible
+        """
+        if (reload or not value) and self.airports:
+            if OURAIRPORTS_NOTICE in self.crs_text.get_text():
+                self.crs_text.set_text(self.crs_text.get_text().replace(f"{OURAIRPORTS_NOTICE}\n", ""))
+            self.airports.remove()
+            self.airtext.remove()
+            self.airports = None
+            self.airtext = None
+            self.ax.figure.canvas.mpl_disconnect(self.airports_event)
+        if value:
+            self.draw_airports(port_type)
+
+    def set_draw_airspaces(self, value, airspaces=[], range_km=None, reload=True):
+        """
+        Sets airspaces to visible or not visible
+        """
+        if (reload or not value) and self.airspaces:
+            if OPENAIP_NOTICE in self.crs_text.get_text():
+                self.crs_text.set_text(self.crs_text.get_text().replace(f"{OPENAIP_NOTICE}\n", ""))
+            self.airspaces.remove()
+            self.airspacetext.remove()
+            self.airspaces = None
+            self.airspacetext = None
+            self.ax.figure.canvas.mpl_disconnect(self.airspace_event)
+        if value:
+            country_codes = [airspace.split(" ")[-1] for airspace in airspaces]
+            self.draw_airspaces(country_codes, range_km)
+
+    def draw_airspaces(self, countries=[], range_km=None):
+        """
+        Load and draw airspace data
+        """
+        if not self.airspaces:
+            airspaces = copy.deepcopy(get_airspaces(countries))
+            if not airspaces:
+                logging.error("Tried to draw airspaces without .aip files.")
+                return
+
+            for i, airspace in enumerate(airspaces):
+                airspaces[i]["polygon"] = list(zip(*self.projtran(*list(zip(*airspace["polygon"])))))
+            map_polygon = Polygon([(self.llcrnrx, self.llcrnry), (self.urcrnrx, self.llcrnry),
+                                  (self.urcrnrx, self.urcrnry), (self.llcrnrx, self.urcrnry)])
+            airspaces = [airspace for airspace in airspaces if
+                         (not range_km or range_km[0] <= airspace["bottom"] <= range_km[1]) and
+                         Polygon(airspace["polygon"]).intersects(map_polygon)]
+            if not airspaces:
+                return
+
+            if OPENAIP_NOTICE not in self.crs_text.get_text():
+                self.crs_text.set_text(f"{OPENAIP_NOTICE}\n" + self.crs_text.get_text())
+
+            airspaces.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
+            max_height = max(airspaces[-1]["bottom"], 0.001)
+            cmap = get_cmap("Blues")
+            airspace_colors = [cmap(1 - airspaces[i]["bottom"] / max_height) for i in range(len(airspaces))]
+
+            collection = PolyCollection([airspace["polygon"] for airspace in airspaces], alpha=0.5, edgecolor="black",
+                                        zorder=5, facecolors=airspace_colors)
+            collection.set_pickradius(0)
+            self.airspaces = self.ax.add_collection(collection)
+            self.airspacetext = self.ax.annotate(airspaces[0]["name"], xy=airspaces[0]["polygon"][0], xycoords="data",
+                                                 bbox={"boxstyle": "round", "facecolor": "w",
+                                                       "edgecolor": "0.5", "alpha": 0.9}, zorder=7)
+            self.airspacetext.set_visible(False)
+
+            def update_text(index, xydata):
+                self.airspacetext.xy = xydata
+                self.airspacetext.set_position(xydata)
+                self.airspacetext.set_text("\n".join([f"{airspaces[i]['name']}, {airspaces[i]['bottom']} - "
+                                                     f"{airspaces[i]['top']}km" for i in index["ind"]]))
+                highlight_cmap = get_cmap("YlGn")
+                for i in index["ind"]:
+                    airspace_colors[i] = highlight_cmap(1 - airspaces[i]["bottom"] / max_height)
+                self.airspaces.set_facecolor(airspace_colors)
+                for i in index["ind"]:
+                    airspace_colors[i] = cmap(1 - airspaces[i]["bottom"] / max_height)
+
+            def on_move(event):
+                if self.airspaces and event.inaxes == self.ax:
+                    cont, ind = self.airspaces.contains(event)
+                    if cont:
+                        update_text(ind, (event.xdata, event.ydata))
+                        self.airspacetext.set_visible(True)
+                        self.ax.figure.canvas.draw_idle()
+                    elif self.airspacetext.get_visible():
+                        self.airspacetext.set_visible(False)
+                        self.airspaces.set_facecolor(airspace_colors)
+                        self.ax.figure.canvas.draw_idle()
+
+            self.airspace_event = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)
+
+    def draw_airports(self, port_type):
+        """
+        Load and draw airports and their respective name on hover
+        """
+        if not self.airports:
+            airports = get_airports()
+            if not airports:
+                logging.error("Tried to draw airports but none were found. Try redownloading.")
+                return
+
+            lons, lats = self.projtran(*zip(*[(float(airport["longitude_deg"]),
+                                            float(airport["latitude_deg"])) for airport in airports]))
+            for i, airport in enumerate(airports):
+                airports[i]["longitude_deg"] = lons[i]
+                airports[i]["latitude_deg"] = lats[i]
+
+            airports = [airport for airport in airports if airport["type"] in port_type and
+                        self.llcrnrx <= float(airport["longitude_deg"]) <= self.urcrnrx and
+                        self.llcrnry <= float(airport["latitude_deg"]) <= self.urcrnry]
+            lons = [float(airport["longitude_deg"]) for airport in airports]
+            lats = [float(airport["latitude_deg"]) for airport in airports]
+            annotations = [airport["name"] for airport in airports]
+            if not airports:
+                return
+
+            if OURAIRPORTS_NOTICE not in self.crs_text.get_text():
+                self.crs_text.set_text(f"{OURAIRPORTS_NOTICE}\n" + self.crs_text.get_text())
+
+            self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
+                                            zorder=6)
+            self.airports.set_pickradius(1)
+            self.airtext = self.ax.annotate(annotations[0], xy=(lons[0], lats[0]), xycoords="data",
+                                            bbox={"boxstyle": "round", "facecolor": "w",
+                                                  "edgecolor": "0.5", "alpha": 0.9}, zorder=8)
+            self.airtext.set_visible(False)
+
+            def update_text(index):
+                pos = self.airports.get_offsets()[index["ind"][0]]
+                self.airtext.xy = pos
+                self.airtext.set_position(pos)
+                self.airtext.set_text("\n".join([annotations[i] for i in index["ind"]]))
+
+            def on_move(event):
+                if self.airports and event.inaxes == self.ax:
+                    cont, ind = self.airports.contains(event)
+                    if cont:
+                        update_text(ind)
+                        self.airtext.set_visible(True)
+                        self.ax.figure.canvas.draw_idle()
+                    elif self.airtext.get_visible():
+                        self.airtext.set_visible(False)
+                        self.ax.figure.canvas.draw_idle()
+
+            self.airports_event = self.ax.figure.canvas.mpl_connect('motion_notify_event', on_move)
 
     def set_fillcontinents_visible(self, visible=True, land_color=None,
                                    lake_color=None):

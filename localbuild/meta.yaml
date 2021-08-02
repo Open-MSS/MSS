@@ -47,7 +47,7 @@ requirements:
     - skyfield >=1.12
     - skyfield-data
     - tk
-    - owslib <=0.21
+    - owslib >=0.24
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
@@ -78,6 +78,8 @@ requirements:
     - pyperclip
     - geos <3.9.0
     - gpxpy >=1.4.2
+    - metpy
+    - pycountry
 
 test:
   imports:

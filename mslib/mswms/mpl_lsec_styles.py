@@ -36,14 +36,15 @@ class LS_DefaultStyle(AbstractLinearSectionStyle):
     """
     Style for single variables that require no further calculation
     """
-    def __init__(self, driver, variable="air_temperature"):
+    def __init__(self, driver, variable="air_temperature", filetype="ml"):
         super(AbstractLinearSectionStyle, self).__init__(driver=driver)
         self.variable = variable
-        self.required_datafields = [("ml", "air_pressure", "Pa"), ("ml", self.variable, None)]
+        self.required_datafields = [(filetype, self.variable, None)]
+        if filetype != "pl":
+            self.required_datafields.insert(0, (filetype, "air_pressure", "Pa"))
         abbreviation = "".join([text[0] for text in self.variable.split("_")])
         self.name = f"LS_{str.upper(abbreviation)}"
         self.title = f"{self.variable} Linear Plot"
-        self.abstract = f"{self.variable}"
 
 
 class LS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):

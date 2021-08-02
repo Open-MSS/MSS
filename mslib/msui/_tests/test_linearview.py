@@ -41,6 +41,31 @@ from mslib._tests.utils import wait_until_signal
 PORTS = list(range(8106, 8107))
 
 
+class Test_MSS_LV_Options_Dialog(object):
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.window = tv.MSS_LV_Options_Dialog()
+        self.window.show()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        QtWidgets.QApplication.processEvents()
+
+    def teardown(self):
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_show(self, mockcrit):
+        assert mockcrit.critical.call_count == 0
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_get(self, mockcrit):
+        self.window.get_settings()
+        assert mockcrit.critical.call_count == 0
+
+
 class Test_MSSLinearViewWindow(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
@@ -73,8 +98,19 @@ class Test_MSSLinearViewWindow(object):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(20, 20), -1)
+        QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(100, 100), -1)
         QtWidgets.QApplication.processEvents()
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    @mock.patch("mslib.msui.linearview.MSS_LV_Options_Dialog")
+    def test_options(self, mockdlg, mockbox):
+        QtTest.QTest.mouseClick(self.window.lvoptionbtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockbox.critical.call_count == 0
+        assert mockdlg.call_count == 1
+        assert mockdlg.return_value.setModal.call_count == 1
+        assert mockdlg.return_value.exec_.call_count == 1
+        assert mockdlg.return_value.destroy.call_count == 1
 
 
 @pytest.mark.skipif(os.name == "nt",

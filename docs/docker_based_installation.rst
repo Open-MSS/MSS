@@ -1,7 +1,7 @@
 Installation based on Docker
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can use images from the `docker hub <https://hub.docker.com/orgs/openmss/>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_
+You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_
 
 Build settings are based on the stable branch. Our openmss/mss:latest has any update in the stable branch.
 

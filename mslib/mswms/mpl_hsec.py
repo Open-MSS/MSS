@@ -37,11 +37,13 @@ import mss_wms_settings
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import mpl_toolkits.basemap as basemap
+import mpl_toolkits.axes_grid1
 import numpy as np
 import PIL.Image
 
 from mslib.mswms import mss_2D_sections
 from mslib.utils import get_projection_params, convert_to
+from mslib.mswms.utils import make_cbar_labels_readable
 
 
 BASEMAP_CACHE = {}
@@ -62,6 +64,20 @@ class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         Re-implement this function to perform the actual plotting.
         """
         pass
+
+    def add_colorbar(self, contour, label=None, tick_levels=None, width="3%", height="30%", cb_format=None,
+                     fraction=0.05, pad=0.08, shrink=0.7, loc=4, extend="both", tick_position="left"):
+        if not self.noframe:
+            cbar = self.fig.colorbar(contour, fraction=fraction, pad=pad, shrink=shrink)
+            cbar.set_label(label)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                self.bm.ax, width=width, height=height, loc=loc)
+            self.fig.colorbar(
+                contour, cax=axins1, orientation="vertical",
+                ticks=tick_levels, extend=extend, format=cb_format)
+            axins1.yaxis.set_ticks_position(tick_position)
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
@@ -351,6 +367,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         self.fig = fig
         self.shift_data()
         self.mask_data()
+        self.lonmesh, self.latmesh = bm(*np.meshgrid(self.lons, self.lats))
         self._plot_style()
 
         # Set transparency for the output image.

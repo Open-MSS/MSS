@@ -1,10 +1,7 @@
-=============================
-mss - KML Overlay Dock Widget
-=============================
-
 
 KML Overlay Docking Widget
-==========================
+++++++++++++++++++++++++++
+
 
 The TopView has a docking widget that allows the visualization of KML files on top of the map.
 
