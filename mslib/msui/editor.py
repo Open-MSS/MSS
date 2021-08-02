@@ -25,14 +25,14 @@
     limitations under the License.
 """
 import copy
-# import fs
+import fs
 # import logging
 import json
 
 # from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore
-# from mslib.msui import constants
+from mslib.msui import constants
 from mslib.msui.constants import MSS_SETTINGS
 # from mslib.msui.icons import icons
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -51,7 +51,7 @@ class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):
         if accepted:
             return True
 
-        # checking if parent is accepted (works only for 2 levels)
+        # checking if parent is accepted (works only for indexes with depth 2)
         src_model = self.sourceModel()
         index = src_model.index(source_row, self.filterKeyColumn(), source_parent)
         has_parent = src_model.itemFromIndex(index).parent()
@@ -64,6 +64,10 @@ class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
 class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationEditorWindow):
 
+    # Dictionary options with fixed key/value pairs
+    fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
+
+    # Dictionary options with predefined structure
     dict_option_structure = {
         "predefined_map_sections": {
             "new_map_section": {
@@ -92,12 +96,11 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             "plugin-name": ["extension", "module", "function", "default"],
         },
         "proxies": {
-            "https": "proxylink",
+            "https": "https://proxy.com",
         },
     }
 
-    fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
-
+    # List options with predefined structure
     list_option_structure = {
         "default_WMS": ["https://wms-server-url.com"],
         "default_VSEC_WMS": ["https://vsec-wms-server-url.com"],
@@ -105,37 +108,44 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         "default_MSCOLAB": ["https://mscolab-server-url.com"],
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
-        # "WMS_preload": [],
+        "WMS_preload": ["https://wms-preload-url.com"],
     }
 
     def __init__(self, parent=None):
         super(ConfigurationEditorWindow, self).__init__(parent)
         self.setupUi(self)
 
-        self.default = dict(mss_default.__dict__)
+        self.default_options = dict(mss_default.__dict__)
         for key in ["__module__", "__doc__", "__dict__", "__weakref__", "config_descriptions"]:
-            del self.default[key]
-        self.options = copy.deepcopy(self.default)
+            del self.default_options[key]
+        self.options = copy.deepcopy(self.default_options)
 
         # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
-        # self.path = constants.CACHED_CONFIG_FILE
-        # if self.path is not None:
-        #     self.path = self.path.replace("\\", "/")
-        #     dir_name, file_name = fs.path.split(self.path)
-        #     with fs.open_fs(dir_name) as _fs:
-        #         if _fs.exists(file_name):
-        #             json_file_data = json.load(_fs)
-        # else:
-        self.path = MSS_SETTINGS
-        self.path = self.path.replace("\\", "/")
-        with open(self.path, "r") as file_obj:
-            json_file_data = json.loads(file_obj.read())
-        self.update_default_with_user_data(json_file_data)
-        # print(json.dumps(self.options, indent = 1))
+        self.path = constants.CACHED_CONFIG_FILE
+        if self.path is not None:
+            self.path = self.path.replace("\\", "/")
+            dir_name, file_name = fs.path.split(self.path)
+            with fs.open_fs(dir_name) as _fs:
+                if _fs.exists(file_name):
+                    file_content = _fs.readtext(file_name)
+                    json_file_data = json.loads(file_content)
+        else:
+            self.path = MSS_SETTINGS
+            self.path = self.path.replace("\\", "/")
+        if json_file_data:
+            self.update_default_with_user_data(json_file_data)
+        # print(json.dumps(self.options, indent=4))
 
         self.optCb.addItem("All")
         for option in sorted(self.options.keys(), key=str.lower):
             self.optCb.addItem(option)
+
+        self.moveUpTb.setAutoRaise(True)
+        self.moveUpTb.setArrowType(QtCore.Qt.UpArrow)
+        self.moveUpTb.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        self.moveDownTb.setAutoRaise(True)
+        self.moveDownTb.setArrowType(QtCore.Qt.DownArrow)
+        self.moveDownTb.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
 
         self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setText("Save and Restart")
         self.buttonBox.button(QtWidgets.QDialogButtonBox.Open).setText("Import")
@@ -145,6 +155,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         # Create view and place in widget
         self.view = JsonView()
+        self.view.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.jsonWidget.setLayout(QtWidgets.QVBoxLayout())
         self.jsonWidget.layout().setContentsMargins(0, 0, 0, 0)
         self.jsonWidget.layout().addWidget(self.view)
@@ -154,13 +165,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.json_model = JsonModel(data=self.options, editable_keys=True, editable_values=True)
         self.json_model.setHorizontalHeaderLabels(['Option', 'Value'])
 
-        # set tooltip
-        # parent = QtCore.QModelIndex()
-        # for r in range(self.json_model.rowCount(parent)):
-        #     index = self.json_model.index(r, 0, parent)
-        #     item = self.json_model.itemFromIndex(index)
-        #     if item.text() in mss_default.config_descriptions:
-        #         item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
+        self.set_noneditable_items(QtCore.QModelIndex())
 
         # Set view model
         self.proxy_model.setSourceModel(self.json_model)
@@ -172,6 +177,16 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.view.header().setSectionResizeMode(1)
         # self.view.header().setSectionResizeMode(0)
 
+    def set_noneditable_items(self, parent):
+        for r in range(self.json_model.rowCount(parent)):
+            index = self.json_model.index(r, 0, parent)
+            item = self.json_model.itemFromIndex(index)
+            item.setEditable(False)
+            if item.text() in self.fixed_dict_options:
+                self.set_noneditable_items(index)
+            # if item.text() in mss_default.config_descriptions:
+            #     item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
+
     def compare_dicts(self, default, user_data):
         # If data is neither list not dict type, compare individual type
         if not isinstance(default, dict) and not isinstance(default, list):
@@ -182,20 +197,15 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             else:
                 return default, False
 
+        data = copy.deepcopy(default)
+        trues = []
         # If data is list type, compare all values in list
         if isinstance(default, list):
             if isinstance(user_data, list):
                 if len(default) == len(user_data):
-                    data = copy.deepcopy(default)
-                    trues = []
                     for i in range(len(default)):
                         data[i], match = self.compare_dicts(default[i], user_data[i])
                         trues.append(match)
-                    # if any([type(match_type(data1)) != type(match_type(data2))
-                    #         for data1, data2 in zip(default, user_data)]):
-                    #     return default, False
-                    # else:
-                    #     return user_data, True
                 else:
                     return default, False
             else:
@@ -203,8 +213,6 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         # If data is dict type, goes through the dict and update
         elif isinstance(default, dict):
-            data = copy.deepcopy(default)
-            trues = []
             for key in default:
                 if key in user_data:
                     data[key], match = self.compare_dicts(default[key], user_data[key])
@@ -215,11 +223,15 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         return data, all(trues)
 
     def update_default_with_user_data(self, json_file_data):
+        # Check if dictionary options with fixed key/value pairs match data types from default
         for key in self.fixed_dict_options:
             if key in json_file_data:
                 self.options[key] = self.compare_dicts(self.options[key], json_file_data[key])[0]
 
+        # Check if dictionary options with predefined structure match data types from default
         dos = copy.deepcopy(self.dict_option_structure)
+        # adding plugin structure : ["extension", "module", "function"] to recognize
+        # user plugins that don't have optional filepicker option set
         dos["import_plugins"]["plugin-name-a"] = dos["import_plugins"]["plugin-name"][:3]
         dos["export_plugins"]["plugin-name-a"] = dos["export_plugins"]["plugin-name"][:3]
         for key in dos:
@@ -234,28 +246,51 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                                 break
                 if temp_data != {}:
                     self.options[key] = temp_data
-                # print(key, json.dumps(temp_data, indent=4), "\n")
 
+        # add filepicker default to import plugins if missing
         for plugin in self.options["import_plugins"]:
             if len(self.options["import_plugins"][plugin]) == 3:
                 self.options["import_plugins"][plugin].append("default")
 
+        # add filepicker default to export plugins if missing
         for plugin in self.options["export_plugins"]:
             if len(self.options["export_plugins"][plugin]) == 3:
                 self.options["export_plugins"][plugin].append("default")
 
+        # Check if list options with predefined structure match data types from default
+        los = copy.deepcopy(self.list_option_structure)
+        for key in los:
+            if key in json_file_data:
+                temp_data = []
+                for i in range(len(json_file_data[key])):
+                    for los_key_item in los[key]:
+                        data, match = self.compare_dicts(los_key_item, json_file_data[key][i])
+                        if match:
+                            temp_data.append(data)
+                            break
+                if temp_data != []:
+                    self.options[key] = temp_data
+
+        # Check if options with fixed key/value pair structure match data types from default
+        key_value_options = set(self.default_options) \
+            - set(self.fixed_dict_options) \
+            - set(self.dict_option_structure) \
+            - set(self.list_option_structure)
+        for key in key_value_options:
+            if key in json_file_data:
+                data, match = self.compare_dicts(self.default_options[key], json_file_data[key])
+                if match:
+                    self.options[key] = data
+
     def show_all(self):
         # self.proxy_model.setFilterKeyColumn(0)
         self.proxy_model.setFilterRegExp("")
-        # self.view.expandAll()
-        # print(json.dumps(self.json_model.serialize(), indent = 1))
 
     def selection_change(self, index):
-        # self.proxy_model.setFilterKeyColumn(-1)
         if self.optCb.currentText() == "All":
             self.show_all()
             return
-        self.proxy_model.setFilterRegExp(self.optCb.currentText())
+        self.proxy_model.setFilterRegExp(QtCore.QRegExp(f"^{self.optCb.currentText()}$"))
         self.view.expandAll()
 
     def add_option(self):
@@ -264,6 +299,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             self.statusbar.showMessage("Please select an option to add or remove.")
             return
 
+        filter_exp = filter_exp[1:-1]
         parent = QtCore.QModelIndex()
         for r in range(self.json_model.rowCount(parent)):
             index = self.json_model.index(r, 0, parent)
@@ -283,6 +319,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     type_.next(model=self.json_model, data=json_data, parent=item)
                     self.statusbar.showMessage("")
                     self.view.expandAll()
+                    self.view.scrollToBottom()
                 elif isinstance(item.data(), ListType):
                     if filter_exp in self.list_option_structure:
                         json_data = self.list_option_structure[filter_exp]
@@ -297,6 +334,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     new_item.setData(rows, QtCore.Qt.DisplayRole)
                     self.statusbar.showMessage("")
                     self.view.expandAll()
+                    self.view.scrollToBottom()
                 else:
                     self.statusbar.showMessage(
                         "Option already exists. Please change value to your preference or restore to default.")

@@ -387,6 +387,16 @@ class MSSMscolab(QtCore.QObject):
         self.ui.workLocallyCheckbox.stateChanged.connect(self.handle_work_locally_toggle)
         self.ui.serverOptionsCb.currentIndexChanged.connect(self.server_options_handler)
 
+        # set up user menu and add to toolbutton
+        self.user_menu = QtWidgets.QMenu()
+        self.profile_action = self.user_menu.addAction("Profile", self.open_profile_window)
+        self.user_menu.addSeparator()
+        self.logout_action = self.user_menu.addAction("Logout", self.logout)
+        self.ui.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        self.ui.userOptionsTb.setMenu(self.user_menu)
+        # self.ui.userOptionsTb.setAutoRaise(True)
+        # self.ui.userOptionsTb.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+
         # if token is None, not authorized, else authorized
         self.token = None
         # int to store active pid
@@ -484,13 +494,6 @@ class MSSMscolab(QtCore.QObject):
         # display username beside useroptions toolbutton
         self.ui.usernameLabel.setText(f"{self.user['username']}")
         self.ui.usernameLabel.show()
-        # set up user menu and add to toolbutton
-        self.user_menu = QtWidgets.QMenu()
-        self.profile_action = self.user_menu.addAction("Profile", self.open_profile_window)
-        self.user_menu.addSeparator()
-        self.logout_action = self.user_menu.addAction("Logout", self.logout)
-        self.ui.userOptionsTb.setPopupMode(QtWidgets.QToolButton.InstantPopup)
-        self.ui.userOptionsTb.setMenu(self.user_menu)
         self.ui.userOptionsTb.show()
         self.fetch_gravatar()
         # enable add project menu action

@@ -335,11 +335,6 @@
      </property>
      <item>
       <widget class="QLabel" name="statusLabel">
-       <property name="font">
-        <font>
-         <pointsize>14</pointsize>
-        </font>
-       </property>
        <property name="styleSheet">
         <string notr="true"/>
        </property>
