@@ -316,8 +316,8 @@ After filling the template completely click on Pull request
 Guides
 ~~~~~~
 
-Coding Style
-------------
+Code Style
+----------
 
 We generally follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_, with 120 columns instead of 79.
 
