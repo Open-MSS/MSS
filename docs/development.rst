@@ -216,7 +216,7 @@ file to the testings base dir in your tmp directory. You call it by the custom `
 Testing
 -------
 
-After you installed the dependencies for testing you could invoke the tests by
+After you installed the dependencies for testing you could invoke the tests by `pytest` with various options.
 
 Run Tests
 +++++++++
@@ -235,8 +235,8 @@ or parallel
 
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
-Verify Codestyle
-++++++++++++++++
+Verify Code Style
++++++++++++++++++
 
 A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
 
@@ -319,7 +319,7 @@ Guides
 Coding Style
 ------------
 
-We generally follow flake8, with 120 columns instead of 79.
+We generally follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_, with 120 columns instead of 79.
 
 Output and Logging
 ------------------
