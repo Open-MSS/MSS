@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_topview_mapappearance.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_topview_mapappearance.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MapAppearanceDialog(object):
     def setupUi(self, MapAppearanceDialog):
         MapAppearanceDialog.setObjectName("MapAppearanceDialog")
-        MapAppearanceDialog.resize(462, 387)
+        MapAppearanceDialog.resize(394, 332)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -31,7 +31,7 @@ class Ui_MapAppearanceDialog(object):
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.cbFillWaterBodies = QtWidgets.QCheckBox(MapAppearanceDialog)
-        self.cbFillWaterBodies.setEnabled(False)
+        self.cbFillWaterBodies.setEnabled(True)
         self.cbFillWaterBodies.setMinimumSize(QtCore.QSize(145, 0))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(20, 19, 18))
@@ -273,13 +273,3 @@ class Ui_MapAppearanceDialog(object):
         self.tov_cbaxessize.setItemText(14, _translate("MapAppearanceDialog", "30"))
         self.tov_cbaxessize.setItemText(15, _translate("MapAppearanceDialog", "32"))
         self.label.setText(_translate("MapAppearanceDialog", " Plot Title Size"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MapAppearanceDialog = QtWidgets.QDialog()
-    ui = Ui_MapAppearanceDialog()
-    ui.setupUi(MapAppearanceDialog)
-    MapAppearanceDialog.show()
-    sys.exit(app.exec_())
