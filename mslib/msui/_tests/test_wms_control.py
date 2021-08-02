@@ -610,13 +610,11 @@ class TestWMSControlWidgetSetupSimple(object):
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
-        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
-        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == \
-            ['500.0 (hPa)', '600.0 (hPa)', '700.0 (hPa)', '900.0 (hPa)']
-        assert self.window.cbLevel.isEnabled()
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == []
+        assert [self.window.cbLevel.itemText(i) for i in range(self.window.cbLevel.count())] == []
+        assert not self.window.cbLevel.isEnabled()
         assert not self.window.cbValidTime.isEnabled()
-        assert self.window.cbInitTime.isEnabled()
+        assert not self.window.cbInitTime.isEnabled()
 
     def test_xml_onlytimedim(self):
         dimext_time_noext = '<Dimension name="TIME" units="ISO8610"> </Dimension>'
@@ -806,7 +804,5 @@ class TestWMSControlWidgetSetupSimple(object):
             "", self.srs_base, dimext_time_error + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSSWebMapService(None, version='1.1.1', xml=testxml))
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 1
         assert [self.window.cbValidTime.itemText(i) for i in range(self.window.cbValidTime.count())] == []
-        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
-            ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
+        assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == []
