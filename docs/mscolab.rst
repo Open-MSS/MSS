@@ -1,5 +1,5 @@
-Mscolab - A Flight Path Collaboration Tool
-==========================================
+Mscolab - A Flight Path Collaboration Platform
+==============================================
 
 Mscolab has been developed to make mss workable in a collaborative environment, with additional features such as
 chat-messages, keeping track of the made changes, permissions of the collaborators.

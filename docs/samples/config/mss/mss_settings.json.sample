@@ -59,13 +59,6 @@
                                                     "urcrnrlon": -135.0, "urcrnrlat": 0.0}}
     },
 
-    "crs_to_mpl_basemap_table" : {
-        "EPSG:4326": {"basemap": {"projection": "cyl"},
-                      "bbox": "latlon"},
-        "EPSG:77790000": {"basemap": {"projection": "stere", "lat_0": 90.0, "lon_0": 0.0},
-                          "bbox": "latlon"}
-    },
-
    "new_flighttrack_template": ["Kiruna", "Ny-Alesund"],
    "new_flighttrack_flightlevel": 250,
    "num_interpolation_points": 201,
