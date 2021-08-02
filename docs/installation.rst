@@ -93,8 +93,7 @@ search for MSS what you can get ::
    (mssenv) $ mamba search mss
    ...
    $mss_search
-   mss                            4.0.4  py38....._0  conda-forge
-   mss                            4.0.4  py39....._0  conda-forge
+
 
 compare what you have installed ::
 
