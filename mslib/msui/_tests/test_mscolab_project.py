@@ -32,6 +32,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import mscolab_start_server
+from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
 
 
@@ -138,9 +139,10 @@ class Test_MscolabProject(object):
             assert Message.query.filter_by(text='test edit').count() == 0
 
     def _connect_to_mscolab(self):
-        self.window.mscolab.open_connect_window()
-        self.connect_window = self.window.mscolab.connect_window
+        self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
+        self.window.mscolab.connect_window = self.connect_window
         self.connect_window.urlCb.setEditText(self.url)
+        self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
