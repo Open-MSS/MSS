@@ -109,8 +109,9 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
-
         self.lvoptionbtn.clicked.connect(self.set_options)
+
+        self.openTool(WMS + 1)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor

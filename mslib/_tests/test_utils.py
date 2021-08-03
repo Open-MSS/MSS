@@ -56,10 +56,10 @@ class TestSettingsSave(object):
 
     def test_save_settings(self):
         settings = {'foo': 'bar'}
-        utils.save_settings_qsettings(self.tag, settings)
+        utils.save_settings_qsettings(self.tag, settings, ignore_test=True)
 
     def test_load_settings(self):
-        settings = utils.load_settings_qsettings(self.tag)
+        settings = utils.load_settings_qsettings(self.tag, ignore_test=True)
         assert isinstance(settings, dict)
         assert settings["foo"] == "bar"
 
@@ -259,7 +259,7 @@ class TestConverter(object):
     def test_convert_pressure_to_vertical_axis_measure(self):
         assert utils.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
         assert utils.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400
-        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == pytest.approx(2.466631)
+        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == pytest.approx(2.46618)
 
 
 class TestLatLonPoints(object):

@@ -5,10 +5,6 @@ Installation
 .. image:: https://anaconda.org/conda-forge/mss/badges/installer/conda.svg
 
 
-
-Install distributed version by conda
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 `Anaconda <https://www.anaconda.com/>`_ provides an enterprise-ready data analytics
 platform that empowers companies to adopt a modern open data science analytics architecture.
 
@@ -27,15 +23,16 @@ get by the conda installer the mamba installer. Mamba is a fast cross platform i
 Preparations for installing MSS
 +++++++++++++++++++++++++++++++
 
-The fastest way to get the conda installer is to start with Miniconda.
+The fastest way to get the conda installer is to start with Miniconda or Miniforge.
 This is a small subset of the Anaconda package with only the conda installer and its dependencies.
 If you do prefer to use over 7K open-source packages install Anaconda.
 
 We recommend to install this for the local user. This does not require administrator permissions.
 
 
-- `Get miniconda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_
+- `Get Miniconda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_
 - `Get Anaconda <https://docs.continuum.io/anaconda/install/>`_
+- `Get Miniforge <https://github.com/conda-forge/miniforge/>`_
 
 
 conda-forge channel
@@ -47,7 +44,7 @@ Please add the channel conda-forge to your defaults::
 
 The conda-forge channel must be on top of the list before the anaconda default channel.
 
-install
+Install
 +++++++
 
 You must install mss into a new environment to ensure the most recent
@@ -58,17 +55,30 @@ leave out the 'source' here and below). ::
     $ conda activate mssenv
     (mssenv) $ mamba install mss=$mss_version python
 
-
-You need to reactivate after the installation once the environment to setup all needed enironment
-variables. ::
+You need to reactivate after the installation once the environment to setup all needed
+enironment variables. ::
 
     $ conda deactivate
     $ conda activate mssenv
     (mssenv) $ mss
 
-
-update
+Update
 ++++++
+
+builtin update
+--------------
+
+With 5.0 we provide a new feature for updating MSS by the UI or the command line
+After you started the MSS UI it informs you after a while if there is a new update available.
+From the command line you can trigger this update feature by ::
+
+    (mssenv) $ mss --update
+
+
+
+other methods
+-------------
+
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If your current version is not far behind the new version
 you could try the mamba update mss as described.
@@ -83,6 +93,7 @@ search for MSS what you can get ::
    (mssenv) $ mamba search mss
    ...
    $mss_search
+
 
 compare what you have installed ::
 
