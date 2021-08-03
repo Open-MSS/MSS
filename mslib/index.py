@@ -141,7 +141,7 @@ def app_loader(name):
 
     @APP.route("/index")
     def index():
-        return render_template("/index.html", SCRIPT_NAME)
+        return render_template("/index.html")
 
     @APP.route("/mss/about")
     @APP.route("/mss")
