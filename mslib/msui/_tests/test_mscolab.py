@@ -476,9 +476,10 @@ class Test_Mscolab(object):
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
 
     def _connect_to_mscolab(self):
-        self.window.mscolab.open_connect_window()
-        self.connect_window = self.window.mscolab.connect_window
+        self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
+        self.window.mscolab.connect_window = self.connect_window
         self.connect_window.urlCb.setEditText(self.url)
+        self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)

@@ -32,6 +32,7 @@ import mock
 from mslib._tests.utils import mscolab_start_server
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
+from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
 
 
@@ -140,9 +141,10 @@ class Test_MscolabVersionHistory(object):
         assert new_changes_count == changes_count + 2
 
     def _connect_to_mscolab(self):
-        self.window.mscolab.open_connect_window()
-        self.connect_window = self.window.mscolab.connect_window
+        self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
+        self.window.mscolab.connect_window = self.connect_window
         self.connect_window.urlCb.setEditText(self.url)
+        self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)

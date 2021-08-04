@@ -177,6 +177,7 @@ for mod in [
         "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
+        "ui_airdata_dockwidget",
         "ui_sideview_options",
         "ui_sideview_window",
         "ui_tableview_window",
