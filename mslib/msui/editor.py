@@ -111,6 +111,23 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         "WMS_preload": ["https://wms-preload-url.com"],
     }
 
+    # Fixed key/value pair options
+    key_value_options = [
+        'filepicker_default',
+        'mss_dir',
+        'data_dir',
+        'num_labels',
+        'num_interpolation_points',
+        'new_flighttrack_flightlevel',
+        'MSCOLAB_mailid',
+        'MSCOLAB_password',
+        'mscolab_server_url',
+        'wms_cache',
+        'wms_cache_max_size_bytes',
+        'wms_cache_max_age_seconds',
+        'WMS_request_timeout',
+    ]
+
     def __init__(self, parent=None):
         super(ConfigurationEditorWindow, self).__init__(parent)
         self.setupUi(self)
@@ -133,13 +150,15 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             self.path = MSS_SETTINGS
             self.path = self.path.replace("\\", "/")
         if json_file_data:
-            self.update_default_with_user_data(json_file_data)
+            self.merge_data(json_file_data)
         # print(json.dumps(self.options, indent=4))
 
         self.optCb.addItem("All")
         for option in sorted(self.options.keys(), key=str.lower):
             self.optCb.addItem(option)
 
+        self.moveUpTb.hide()
+        self.moveDownTb.hide()
         self.moveUpTb.setAutoRaise(True)
         self.moveUpTb.setArrowType(QtCore.Qt.UpArrow)
         self.moveUpTb.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
@@ -149,8 +168,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setText("Save and Restart")
         self.buttonBox.button(QtWidgets.QDialogButtonBox.Open).setText("Import")
-        self.addOptBtn.clicked.connect(self.add_option)
-        self.removeOptBtn.clicked.connect(self.remove_option)
+        self.addOptBtn.clicked.connect(self.add_option_handler)
+        self.removeOptBtn.clicked.connect(self.remove_option_handler)
         self.optCb.currentIndexChanged.connect(self.selection_change)
 
         # Create view and place in widget
@@ -174,8 +193,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         # Setting proxy model and view attributes
         self.proxy_model.setFilterKeyColumn(0)
         self.view.setAlternatingRowColors(True)
-        self.view.header().setSectionResizeMode(1)
-        # self.view.header().setSectionResizeMode(0)
+        self.view.setColumnWidth(0, self.view.width() // 2)
 
     def set_noneditable_items(self, parent):
         for r in range(self.json_model.rowCount(parent)):
@@ -187,7 +205,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             # if item.text() in mss_default.config_descriptions:
             #     item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
 
-    def compare_dicts(self, default, user_data):
+    def compare_data(self, default, user_data):
         # If data is neither list not dict type, compare individual type
         if not isinstance(default, dict) and not isinstance(default, list):
             if isinstance(default, float) and isinstance(user_data, int):
@@ -204,7 +222,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if isinstance(user_data, list):
                 if len(default) == len(user_data):
                     for i in range(len(default)):
-                        data[i], match = self.compare_dicts(default[i], user_data[i])
+                        data[i], match = self.compare_data(default[i], user_data[i])
                         trues.append(match)
                 else:
                     return default, False
@@ -215,18 +233,18 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         elif isinstance(default, dict):
             for key in default:
                 if key in user_data:
-                    data[key], match = self.compare_dicts(default[key], user_data[key])
+                    data[key], match = self.compare_data(default[key], user_data[key])
                     trues.append(match)
                 else:
                     trues.append(False)
 
         return data, all(trues)
 
-    def update_default_with_user_data(self, json_file_data):
+    def merge_data(self, json_file_data):
         # Check if dictionary options with fixed key/value pairs match data types from default
         for key in self.fixed_dict_options:
             if key in json_file_data:
-                self.options[key] = self.compare_dicts(self.options[key], json_file_data[key])[0]
+                self.options[key] = self.compare_data(self.options[key], json_file_data[key])[0]
 
         # Check if dictionary options with predefined structure match data types from default
         dos = copy.deepcopy(self.dict_option_structure)
@@ -240,7 +258,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 for option_key in json_file_data[key]:
                     for dos_key_key in dos[key]:
                         if isinstance(match_type(option_key), type(match_type(dos_key_key))):
-                            data, match = self.compare_dicts(dos[key][dos_key_key], json_file_data[key][option_key])
+                            data, match = self.compare_data(dos[key][dos_key_key], json_file_data[key][option_key])
                             if match:
                                 temp_data[option_key] = json_file_data[key][option_key]
                                 break
@@ -264,7 +282,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 temp_data = []
                 for i in range(len(json_file_data[key])):
                     for los_key_item in los[key]:
-                        data, match = self.compare_dicts(los_key_item, json_file_data[key][i])
+                        data, match = self.compare_data(los_key_item, json_file_data[key][i])
                         if match:
                             temp_data.append(data)
                             break
@@ -272,13 +290,9 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     self.options[key] = temp_data
 
         # Check if options with fixed key/value pair structure match data types from default
-        key_value_options = set(self.default_options) \
-            - set(self.fixed_dict_options) \
-            - set(self.dict_option_structure) \
-            - set(self.list_option_structure)
-        for key in key_value_options:
+        for key in self.key_value_options:
             if key in json_file_data:
-                data, match = self.compare_dicts(self.default_options[key], json_file_data[key])
+                data, match = self.compare_data(self.default_options[key], json_file_data[key])
                 if match:
                     self.options[key] = data
 
@@ -293,10 +307,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.proxy_model.setFilterRegExp(QtCore.QRegExp(f"^{self.optCb.currentText()}$"))
         self.view.expandAll()
 
-    def add_option(self):
+    def add_option_handler(self):
         filter_exp = self.proxy_model.filterRegExp().pattern()
         if filter_exp == "":
-            self.statusbar.showMessage("Please select an option to add or remove.")
+            self.statusbar.showMessage("Please select an option to add")
             return
 
         filter_exp = filter_exp[1:-1]
@@ -340,5 +354,53 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                         "Option already exists. Please change value to your preference or restore to default.")
                 break
 
-    def remove_option(self):
-        pass
+    def remove_option_handler(self):
+        selection = self.view.selectionModel().selectedRows()
+        if len(selection) == 0:
+            self.statusbar.showMessage("Please select an option to remove")
+            return
+
+        non_removable = []
+        removable_indexes = {}
+        for index in selection:
+            if not index.parent().isValid():
+                # cannot remove root item
+                non_removable.append(index)
+                continue
+
+            # find penultimate option key
+            while index.parent().parent().isValid():
+                index = index.parent()
+            root = index.parent()
+            # enter only if option not in fixed dictionary options
+            if root.data() not in self.fixed_dict_options + self.key_value_options:
+                if root in removable_indexes:
+                    removable_indexes[root].add(index.row())
+                else:
+                    removable_indexes[root] = set([index.row()])
+            else:
+                non_removable.append(index)
+
+        if removable_indexes == {} and non_removable != []:
+            self.statusbar.showMessage("Default options are not removable.")
+            return
+
+        for index in removable_indexes:
+            rows = sorted(list(removable_indexes[index]))
+            for count, row in enumerate(rows):
+                row = row - count
+                self.proxy_model.beginRemoveRows(index, row, row)
+                self.proxy_model.removeRow(row, parent=index)
+                self.proxy_model.endRemoveRows()
+
+            # fix row number in list type options
+            source_index = self.proxy_model.mapToSource(index)
+            source_item = self.json_model.itemFromIndex(source_index)
+            if isinstance(source_item.data(QtCore.Qt.UserRole + 1), ListType):
+                for r in range(self.json_model.rowCount(source_index)):
+                    child_index = self.json_model.index(r, 0, source_index)
+                    item = self.json_model.itemFromIndex(child_index)
+                    item.setData(r, QtCore.Qt.DisplayRole)
+
+        self.view.selectionModel().clear()
+        # print(json.dumps(self.json_model.serialize(), indent=4))
