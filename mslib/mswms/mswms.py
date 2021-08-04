@@ -30,8 +30,6 @@ import logging
 import sys
 
 from mslib import __version__
-from mslib.mswms.wms import mss_wms_settings, server
-from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging, Updater, Worker
 
 
@@ -72,6 +70,9 @@ def main():
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
+
+    from mslib.mswms.wms import mss_wms_settings, server
+    from mslib.mswms.wms import app as application
 
     updater = Updater()
     if args.update:

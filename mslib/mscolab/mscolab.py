@@ -37,11 +37,11 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_project,\
     add_all_users_to_all_projects, delete_user
 from mslib.mscolab.utils import create_files
-from mslib.utils import setup_logging, Worker, Updater
 
 
 def handle_start(args):
     from mslib.mscolab.server import APP, initialize_managers, start_server
+    from mslib.utils import setup_logging
     setup_logging(args)
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
@@ -125,6 +125,8 @@ def main():
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
+
+    from mslib.utils import Worker, Updater
 
     updater = Updater()
     if args.update:
