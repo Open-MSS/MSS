@@ -106,7 +106,17 @@ Author: Jakub Steiner jimmac@gmail.com
 License: https://github.com/freedesktop/tango-icon-library/blob/master/COPYING.PublicDomain
 Further Information: http://tango.freedesktop.org
 
+Airports Data
+-------------
 
+To draw airports on the topview we use the services provided by ourairports
+Further Information: https://ourairports.com/about.html#overview
+
+Airports Data
+-------------
+
+To draw airspaces on the topview we use the services provided by openaip.net
+Further Information: http://www.openaip.net/
 
 Qt-json-view
 ------------
@@ -116,37 +126,3 @@ License: https://github.com/PaulSchweizer/qt-json-view/blob/master/LICENSE (MIT 
 
 Package for working with JSON files in PyQt5.
 Obtained from Github (https://github.com/PaulSchweizer/qt-json-view), on 23/7/2021.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

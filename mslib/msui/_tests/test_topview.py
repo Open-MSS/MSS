@@ -257,6 +257,41 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
+        with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[{"type": "small_airport", "name": "Test",
+                                                                          "latitude_deg": 52, "longitude_deg": 13,
+                                                                          "elevation_ft": 0}]):
+            self.window.mpl.canvas.map.set_draw_airports(True)
+            QtWidgets.QApplication.processEvents()
+            assert mockbox.critical.call_count == 0
+        with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[]):
+            self.window.mpl.canvas.map.set_draw_airports(True)
+            QtWidgets.QApplication.processEvents()
+            assert mockbox.critical.call_count == 0
+        with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[{"type": "small_airport", "name": "Test",
+                                                                          "latitude_deg": -52, "longitude_deg": -13,
+                                                                          "elevation_ft": 0}]):
+            self.window.mpl.canvas.map.set_draw_airports(True)
+            QtWidgets.QApplication.processEvents()
+            assert mockbox.critical.call_count == 0
+
+        with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[{"name": "Test", "top": 1, "bottom": 0,
+                                                                           "polygon": [(13, 52), (14, 53), (13, 52)],
+                                                                           "country": "DE"}]):
+            self.window.mpl.canvas.map.set_draw_airspaces(True)
+            QtWidgets.QApplication.processEvents()
+            assert mockbox.critical.call_count == 0
+        with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[]):
+            self.window.mpl.canvas.map.set_draw_airspaces(True)
+            QtWidgets.QApplication.processEvents()
+            assert mockbox.critical.call_count == 0
+        with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[{"name": "Test", "top": 1, "bottom": 0,
+                                                                           "polygon": [(-13, -52), (-14, -53),
+                                                                                       (-13, -52)],
+                                                                           "country": "DE"}]):
+            self.window.mpl.canvas.map.set_draw_airspaces(True)
+            QtWidgets.QApplication.processEvents()
+            assert mockbox.critical.call_count == 0
+
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")

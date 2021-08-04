@@ -89,6 +89,9 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.parent = parent
         self.mscolab = mscolab
 
+        # initialize server url as none
+        self.mscolab_server_url = None
+
         self.setFixedSize(self.size())
         self.stackedWidget.setCurrentWidget(self.loginPage)
 
