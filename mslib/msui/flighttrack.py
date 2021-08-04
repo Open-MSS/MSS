@@ -41,10 +41,11 @@ import os
 import fs
 import xml.dom.minidom
 import xml.parsers.expat
-from metpy.units import units
+
+from PyQt5 import QtGui, QtCore, QtWidgets
 
 from mslib.msui.mss_qt import variant_to_string, variant_to_float
-from PyQt5 import QtGui, QtCore, QtWidgets
+from mslib.utils.units import units
 from mslib import utils, __version__
 from mslib import thermolib
 from mslib.utils import config_loader, find_location, save_settings_qsettings, load_settings_qsettings

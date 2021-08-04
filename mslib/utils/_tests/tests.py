@@ -68,6 +68,7 @@ class TestConfigLoader(object):
     """
     tests config file for client
     """
+
     def teardown(self):
         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
@@ -252,10 +253,6 @@ class TestAngles(object):
 
 
 class TestConverter(object):
-    def test_convert_pressure_to_altitude(self):
-        assert utils.convertHPAToKM(1013.25) == 0
-        assert int(utils.convertHPAToKM(25) * 1000) == 22415
-
     def test_convert_pressure_to_vertical_axis_measure(self):
         assert utils.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
         assert utils.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400

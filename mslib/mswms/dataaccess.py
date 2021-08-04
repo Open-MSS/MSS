@@ -35,7 +35,7 @@ import numpy as np
 import pint
 
 from mslib import netCDF4tools
-from mslib.utils import UR
+from mslib.utils.units import units
 
 
 class NWPDataAccess(metaclass=ABCMeta):
@@ -289,7 +289,7 @@ class DefaultDataAccess(NWPDataAccess):
                         continue
                     if ncvar.standard_name != "time":
                         try:
-                            UR(ncvar.units)
+                            units(ncvar.units)
                         except (AttributeError, ValueError, pint.UndefinedUnitError, pint.DefinitionSyntaxError):
                             logging.error("Skipping variable '%s' in file '%s': unparseable units attribute '%s'",
                                           ncvarname, filename, ncvar.units)

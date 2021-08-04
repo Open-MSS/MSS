@@ -36,12 +36,12 @@ import six
 import logging
 import numpy as np
 import matplotlib
-from metpy.units import units
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
 from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 import matplotlib.backend_bases
+from mslib.utils.units import units
 from mslib import thermolib
 from mslib.utils import config_loader, FatalUserError
 from mslib.msui import mpl_pathinteractor as mpl_pi

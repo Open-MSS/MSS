@@ -29,13 +29,14 @@ import numpy as np
 
 from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 import mslib.thermolib as thermolib
-from mslib.utils import convert_to
+from mslib.utils.units import convert_to
 
 
 class LS_DefaultStyle(AbstractLinearSectionStyle):
     """
     Style for single variables that require no further calculation
     """
+
     def __init__(self, driver, variable="air_temperature", filetype="ml"):
         super(AbstractLinearSectionStyle, self).__init__(driver=driver)
         self.variable = variable
