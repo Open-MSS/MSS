@@ -37,7 +37,7 @@ import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
-from mslib.utils import convert_to
+from mslib.utils.units import convert_to
 from mslib import thermolib
 
 

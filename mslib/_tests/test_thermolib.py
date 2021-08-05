@@ -27,8 +27,8 @@
 
 import numpy as np
 import pytest
-from metpy.units import units
 
+from mslib.utils.units import units
 import mslib.thermolib as tl
 
 

@@ -39,7 +39,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import mpl_toolkits.axes_grid1
 
 from mslib.mswms import mss_2D_sections
-from mslib.utils import convert_to, UR
+from mslib.utils.units import convert_to, units
 from mslib.mswms.utils import make_cbar_labels_readable
 
 mpl.rcParams['xtick.direction'] = 'out'
@@ -179,14 +179,14 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Provide an air_pressured 2-D field in 'Pa' from vertical axis
         if (("air_pressure" not in self.data) and
-                UR(self.driver.vert_units).check("[pressure]")):
+                units(self.driver.vert_units).check("[pressure]")):
             self.data_units["air_pressure"] = "Pa"
             self.data["air_pressure"] = convert_to(
                 self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
                 self.driver.vert_units, self.data_units["air_pressure"]).repeat(
                     len(self.lats), axis=1)
         if (("air_potential_temperature" not in self.data) and
-                UR(self.driver.vert_units).check("[temperature]")):
+                units(self.driver.vert_units).check("[temperature]")):
             self.data_units["air_potential_temperature"] = "K"
             self.data["air_potential_temperature"] = convert_to(
                 self.driver.vert_data[::-self.driver.vert_order, np.newaxis],

@@ -28,9 +28,11 @@
 
 import logging
 import functools
-from metpy.units import units
-from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
+
 from PyQt5 import QtGui, QtWidgets
+
+from mslib.utils.units import units, convert_to
+from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.msui.mss_qt import ui_sideview_window as ui
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow

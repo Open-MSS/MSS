@@ -29,11 +29,13 @@
 import numpy
 import scipy.integrate
 import logging
+
+from mslib.utils.units import units, check_units
+
 from metpy.package_tools import Exporter
 from metpy.constants import Rd, g
 from metpy.xarray import preprocess_and_wrap
 import metpy.calc as mpcalc
-from metpy.units import units, check_units
 
 exporter = Exporter(globals())
 

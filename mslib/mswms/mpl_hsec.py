@@ -42,7 +42,8 @@ import numpy as np
 import PIL.Image
 
 from mslib.mswms import mss_2D_sections
-from mslib.utils import get_projection_params, convert_to
+from mslib.utils import get_projection_params
+from mslib.utils.units import convert_to
 from mslib.mswms.utils import make_cbar_labels_readable
 
 
