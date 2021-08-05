@@ -79,8 +79,6 @@ class ScreenRecorder:
         cv2.resizeWindow(self.window_name, 480, 480)
         cv2.moveWindow(self.window_name, self.width - 480, 0)
 
-        pyautogui.FAILSAFE = False
-
     def get_fps(self):
         """
         This method helps to get the Frames in one second according to the loop time and your
