@@ -44,13 +44,12 @@ import xml.parsers.expat
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 
-from mslib.msui.mss_qt import variant_to_string, variant_to_float
-from mslib.utils.units import units
 from mslib import utils, __version__
-from mslib import thermolib
-from mslib.utils import config_loader, find_location, save_settings_qsettings, load_settings_qsettings
-from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
+from mslib.utils.units import units
+from mslib.utils import thermolib, config_loader, find_location, save_settings_qsettings, load_settings_qsettings
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.msui.mss_qt import variant_to_string, variant_to_float
+from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
 from mslib.utils import writexml
 xml.dom.minidom.Element.writexml = writexml

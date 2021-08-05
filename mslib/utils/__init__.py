@@ -49,10 +49,11 @@ try:
 except ImportError:
     import pyproj
 
+from PyQt5 import QtCore, QtWidgets, QtGui
+
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.utils.units import units as _units
-from mslib.thermolib import pressure2flightlevel
-from PyQt5 import QtCore, QtWidgets, QtGui
+from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui.constants import MSS_CONFIG_PATH
 
 

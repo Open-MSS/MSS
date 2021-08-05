@@ -27,8 +27,6 @@
 """
 
 import numpy
-import scipy.integrate
-import logging
 
 from mslib.utils.units import units, check_units
 
@@ -40,29 +38,6 @@ import metpy.calc as mpcalc
 exporter = Exporter(globals())
 
 
-class VapourPressureError(Exception):
-    """Exception class to handle error arising during the computation of vapour
-       pressures.
-    """
-
-    def __init__(self, error_string):
-        logging.debug("%s", error_string)
-
-
-def sat_vapour_pressure(t):
-    """Compute saturation vapour presure in Pa from temperature.
-
-    Arguments:
-    t -- temperature in [K]
-
-    Returns: Saturation Vapour Pressure in [Pa], in the same dimensions as the input.
-    """
-    v_pr = mpcalc.saturation_vapor_pressure(t * units.kelvin)
-
-    # Convert return value units from mbar to Pa.
-    return v_pr.to('Pa').magnitude
-
-
 def rel_hum(p, t, q):
     """Compute relative humidity in [%] from pressure, temperature, and
        specific humidity.
@@ -72,84 +47,10 @@ def rel_hum(p, t, q):
     t -- temperature in [K]
     q -- specific humidity in [kg/kg]
 
-    Returns: Relative humidity in [%]. Same dimension as input fields.
+    Returns: Relative humidity in [%].
     """
-    p = units.Quantity(p, "Pa")
-    t = units.Quantity(t, "K")
-    rel_humidity = mpcalc.relative_humidity_from_specific_humidity(p, t, q)
-
-    # Return specific humidity in [%].
-    return rel_humidity * 100
-
-
-def virt_temp(t, q):
-    """
-    Compute virtual temperature in [K] from temperature and
-    specific humidity.
-
-    Arguments:
-    t -- temperature in [K]
-    q -- specific humidity in [kg/kg]
-
-    t and q can be scalars of NumPy arrays. They just have to either all
-    scalars, or all arrays.
-
-    Returns: Virtual temperature in [K]. Same dimension as input fields.
-    """
-    t = units.Quantity(t, "K")
-    mix_rat = mpcalc.mixing_ratio_from_specific_humidity(q)
-    v_temp = mpcalc.virtual_temperature(t, mix_rat)
-    return v_temp
-
-
-def geop_difference(p, t, method='trapz', axis=-1):
-    """Compute geopotential difference in [m**2 s**-2] between the pressure
-       levels given by the first and last element in p (= pressure).
-
-    Implements the hypsometric equation (1.17) from Holton, 3rd edition (or
-    alternatively the integral form of (3.23) in Wallace and Hobbs, 2nd ed.).
-
-    Arguments:
-    p -- pressure in [Pa], needs to be a NumPy array with at least 2 elements.
-    t -- temperature in [K], needs to be a NumPy array with at least 2 elements.
-
-         Both arrays can be multidimensional, in this case pay attention to
-         the 'axis' argument.
-
-    method -- optional keyword to specify the integration method used.
-              Default is 'trapz', which uses the trapezoidal rule.
-              Alternatively, 'simps' causes Simpson's rule to be used.
-              'cumtrapz' returns an array with the integrals between the
-              first value in p and all other values. This is useful, for
-              instance, for computing the geopotential on all model
-              levels.
-
-              See the 'scipy.integrate' documentation for further details.
-
-    axis -- optional keyword to specify the vertical coordinate axis if p, t
-            are multidimensional (e.g. if the axes of p, t specify [time,
-            level, lat, lon] set axis=1). Default is the last dimension.
-
-    Returns: Geopotential difference between p[0] and p[-1] in [m**2 s**-2].
-             If 'cumtrapz' is specified, an array of dimension dim(p)-1
-             will be returned, in which value n represents the geopotential
-             difference between p[0] and p[n+1].
-    """
-
-    # The hypsometric equation integrates over ln(p).
-    lnp = numpy.log(p)
-
-    # Use scipy.intgerate to evaluate the integral. It is
-    #     phi2 - phi1 = Rd * int( T,  d ln(p), p1, p2 ),
-    # where phi denotes the geopotential.
-    if method == 'trapz':
-        return 287.058 * scipy.integrate.trapz(t, lnp, axis=axis)
-    elif method == 'cumtrapz':
-        return 287.058 * scipy.integrate.cumtrapz(t, lnp, axis=axis)
-    elif method == 'simps':
-        return 287.058 * scipy.integrate.simps(t, lnp, axis=axis)
-    else:
-        raise TypeError('integration method for geopotential not understood')
+    return mpcalc.relative_humidity_from_specific_humidity(
+        units.Pa * p, units.K * t, q) * 100
 
 
 def pot_temp(p, t):
@@ -163,12 +64,10 @@ def pot_temp(p, t):
     p and t can be scalars of NumPy arrays. They just have to either both
     scalars, or both arrays.
 
-    Returns: potential temperature in [K]. Same dimensions as the inputs.
+    Returns: potential temperature in [K].
     """
-    p = units.Quantity(p, "Pa")
-    t = units.Quantity(t, "K")
-    potential_temp = mpcalc.potential_temperature(p, t)
-    return potential_temp
+    return mpcalc.potential_temperature(
+        units.Pa * p, units.K * t).to("K").m
 
 
 def eqpt_approx(p, t, q):
@@ -183,14 +82,12 @@ def eqpt_approx(p, t, q):
 
     p, t and q can be scalars or NumPy arrays.
 
-    Returns: equivalent potential temperature in [K]. Same dimensions as
-    the inputs.
+    Returns: equivalent potential temperature in [K].
     """
-    p = units.Quantity(p, "Pa")
-    t = units.Quantity(t, "K")
-    dew_temp = mpcalc.dewpoint_from_specific_humidity(p, t, q)
-    eqpt_temp = mpcalc.equivalent_potential_temperature(p, t, dew_temp)
-    return eqpt_temp.to('K').magnitude
+
+    return mpcalc.equivalent_potential_temperature(
+        units.Pa * p, units.K * t,
+        mpcalc.dewpoint_from_specific_humidity(units.Pa * p, units.K * t, q)).to("K").m
 
 
 def omega_to_w(omega, p, t):
@@ -206,11 +103,8 @@ def omega_to_w(omega, p, t):
 
     Returns the vertical velocity in geometric coordinates, [m/s].
     """
-    omega = units.Quantity(omega, "Pa/s")
-    p = units.Quantity(p, "Pa")
-    t = units.Quantity(t, "K")
-    om_w = mpcalc.vertical_velocity(omega, p, t)
-    return om_w
+    return mpcalc.vertical_velocity(
+        units("Pa/s") * omega, units.Pa * p, units.K * t).to("m/s").m
 
 
 # Values according to the 1976 U.S. Standard atmosphere [NOAA1976]_.

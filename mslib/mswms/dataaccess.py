@@ -34,7 +34,7 @@ import netCDF4
 import numpy as np
 import pint
 
-from mslib import netCDF4tools
+from mslib.utils import netCDF4tools
 from mslib.utils.units import units
 
 

@@ -28,7 +28,7 @@
 import numpy as np
 
 from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
-import mslib.thermolib as thermolib
+import mslib.utils.thermolib as thermolib
 from mslib.utils.units import convert_to
 
 
