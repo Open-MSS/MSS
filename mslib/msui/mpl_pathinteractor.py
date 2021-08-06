@@ -50,11 +50,11 @@ import numpy as np
 import datetime
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
-from metpy.units import units
 from PyQt5 import QtCore, QtWidgets
-from mslib.utils import get_distance, find_location, path_points, latlon_points
-from mslib.thermolib import pressure2flightlevel
 
+from mslib.utils import get_distance, find_location, path_points, latlon_points
+from mslib.utils.units import units
+from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
 
 

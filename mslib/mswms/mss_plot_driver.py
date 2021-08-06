@@ -34,7 +34,7 @@ from abc import ABCMeta, abstractmethod
 
 import numpy as np
 
-from mslib import netCDF4tools
+from mslib.utils import netCDF4tools
 from mslib import utils
 
 

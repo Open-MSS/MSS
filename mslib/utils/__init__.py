@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mss_util
+    mslib.utils
     ~~~~~~~~~~~~~~
 
     Collection of utility routines for the Mission Support System.
@@ -33,9 +33,7 @@ import re as regex
 import logging
 import netCDF4 as nc
 import numpy as np
-from metpy.units import units
 import os
-import pint
 from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
@@ -51,54 +49,12 @@ try:
 except ImportError:
     import pyproj
 
-from mslib.msui import constants, MissionSupportSystemDefaultConfig
-from mslib.thermolib import pressure2flightlevel
 from PyQt5 import QtCore, QtWidgets, QtGui
+
+from mslib.msui import constants, MissionSupportSystemDefaultConfig
+from mslib.utils.units import units as _units
+from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui.constants import MSS_CONFIG_PATH
-
-UR = units
-UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
-UR.define("degrees_north = degrees")
-UR.define("degrees_south = -degrees")
-UR.define("degrees_east = degrees")
-UR.define("degrees_west = -degrees")
-
-UR.define("degrees_N = degrees")
-UR.define("degrees_S = -degrees")
-UR.define("degrees_E = degrees")
-UR.define("degrees_W = -degrees")
-
-UR.define("degreesN = degrees")
-UR.define("degreesS = -degrees")
-UR.define("degreesE = degrees")
-UR.define("degreesW = -degrees")
-
-UR.define("degree_north = degrees")
-UR.define("degree_south = -degrees")
-UR.define("degree_east = degrees")
-UR.define("degree_west = -degrees")
-
-UR.define("degree_N = degrees")
-UR.define("degree_S = -degrees")
-UR.define("degree_E = degrees")
-UR.define("degree_W = -degrees")
-
-UR.define("degreeN = degrees")
-UR.define("degreeS = -degrees")
-UR.define("degreeE = degrees")
-UR.define("degreeW = -degrees")
-
-UR.define("fraction = [] = frac")
-UR.define("sigma = 1 fraction")
-UR.define("level = sigma")
-UR.define("percent = 1e-2 fraction")
-UR.define("permille = 1e-3 fraction")
-UR.define("ppm = 1e-6 fraction")
-UR.define("ppmv = 1e-6 fraction")
-UR.define("ppb = 1e-9 fraction")
-UR.define("ppbv = 1e-9 fraction")
-UR.define("ppt = 1e-12 fraction")
-UR.define("pptv = 1e-12 fraction")
 
 
 def parse_iso_datetime(string):
@@ -309,10 +265,6 @@ def rotate_point(point, angle, origin=(0, 0)):
                   (point[0] - origin[0]) * np.sin(angle) +
                   (point[1] - origin[1]) * np.cos(angle) + origin[1])
     return temp_point
-
-
-def convertHPAToKM(press):
-    return (288.15 / 0.0065) * (1. - (press / 1013.25) ** (1. / 5.255)) / 1000.
 
 
 def get_projection_params(proj):
@@ -611,31 +563,11 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
     if vertical_axis == "pressure":
         return float(pressure / 100)
     elif vertical_axis == "flight level":
-        return pressure2flightlevel(pressure * units.Pa).magnitude
+        return pressure2flightlevel(pressure * _units.Pa).magnitude
     elif vertical_axis == "pressure altitude":
-        return pressure2flightlevel(pressure * units.Pa).to(units.km).magnitude
+        return pressure2flightlevel(pressure * _units.Pa).to(_units.km).magnitude
     else:
         return pressure
-
-
-def convert_to(value, from_unit, to_unit, default=1.):
-    try:
-        value_unit = UR.Quantity(value, from_unit)
-        result = value_unit.to(to_unit).magnitude
-    except pint.UndefinedUnitError:
-        logging.error("Error in unit conversion (undefined) '%s'/'%s'", from_unit, to_unit)
-        result = value * default
-    except pint.DimensionalityError:
-        if UR(to_unit).to_base_units().units == UR.m:
-            try:
-                result = (value_unit / UR.Quantity(9.81, "m s^-2")).to(to_unit).magnitude
-            except pint.DimensionalityError:
-                logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
-                result = value * default
-        else:
-            logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
-            result = value * default
-    return result
 
 
 def setup_logging(args):
@@ -957,6 +889,7 @@ class NonQtCallback:
     Callbacks are run on the same thread as the caller of emit, as opposed to the caller of connect.
     Keep in mind if this causes issues.
     """
+
     def __init__(self):
         self.callbacks = []
 
@@ -1192,10 +1125,11 @@ def update_airspace(force_download=False, countries=["de"]):
         is_outdated = file_exists and (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
 
         if (force_download or is_outdated or not file_exists) \
-                and QtWidgets.QMessageBox.question(None, "Allow download",
-                                                   f"The selected {country} airspace needs to be downloaded ({data[-1]})"
-                                                   f"\nIs now a good time?",
-                                                   QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
+                and QtWidgets.QMessageBox.question(
+                    None, "Allow download",
+                    f"The selected {country} airspace needs to be downloaded ({data[-1]})"
+                    f"\nIs now a good time?",
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
                 == QtWidgets.QMessageBox.Yes:
             download_progress(location, url)
 

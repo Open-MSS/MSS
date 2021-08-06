@@ -36,19 +36,18 @@ import six
 import logging
 import numpy as np
 import matplotlib
-from metpy.units import units
 from fs import open_fs
 from fslib.fs_filepicker import getSaveFileNameAndFilter
 from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 import matplotlib.backend_bases
-from mslib import thermolib
-from mslib.utils import config_loader, FatalUserError
+from PyQt5 import QtCore, QtWidgets, QtGui
+
+from mslib.utils import thermolib, config_loader, FatalUserError, convert_pressure_to_vertical_axis_measure
+from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons
-from PyQt5 import QtCore, QtWidgets, QtGui
-from mslib.utils import convert_pressure_to_vertical_axis_measure
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
