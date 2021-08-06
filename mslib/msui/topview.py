@@ -39,6 +39,7 @@ from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
+from mslib.msui import airdata_dockwidget as ad
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -47,6 +48,7 @@ WMS = 0
 SATELLITE = 1
 REMOTESENSING = 2
 KMLOVERLAY = 3
+AIRDATA = 4
 
 
 class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -63,6 +65,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         """
         super(MSS_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
+
         if settings_dict is None:
             settings_dict = {"draw_graticule": True,
                              "draw_coastlines": True,
@@ -76,7 +79,8 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
                              "colour_water": (0, 0, 0, 0),
                              "colour_land": (0, 0, 0, 0),
                              "colour_ft_vertices": (0, 0, 0, 0),
-                             "colour_ft_waypoints": (0, 0, 0, 0)}
+                             "colour_ft_waypoints": (0, 0, 0, 0)
+                             }
 
         settings_dict["fill_waterbodies"] = True  # removing water bodies does not work properly
 
@@ -224,7 +228,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         Initialise GUI elements. (This method is called before signals/slots
         are connected).
         """
-        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay"]
+        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
+                     "Airports/Airspaces"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
@@ -241,6 +246,8 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.waypoints_model.dataChanged.connect(self.update_roundtrip_enabled)
         self.update_roundtrip_enabled()
         self.mpl.navbar.push_current()
+
+        self.openTool(WMS + 1)
 
     def update_predefined_maps(self, extra=None):
         self.cbChangeMapSection.clear()
@@ -275,6 +282,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
             elif index == KMLOVERLAY:
                 title = "KML Overlay"
                 widget = kml.KMLOverlayControlWidget(parent=self, view=self.mpl.canvas)
+            elif index == AIRDATA:
+                title = "Airdata"
+                widget = ad.AirdataDockwidget(parent=self, view=self.mpl.canvas)
             else:
                 raise IndexError("invalid control index")
 
@@ -325,7 +335,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         settings = self.getView().get_map_appearance()
         dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
-        dlg.setModal(True)
+        dlg.setModal(False)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_map_appearance(settings)

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mss_util
+    mslib.utils
     ~~~~~~~~~~~~~~
 
     Collection of utility routines for the Mission Support System.
@@ -29,69 +29,32 @@
 import datetime
 import isodate
 import json
+import re as regex
 import logging
 import netCDF4 as nc
 import numpy as np
 import os
-import pint
 from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import subprocess
 import sys
+import requests
+import time
+import csv
+import defusedxml.ElementTree as etree
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
 except ImportError:
     import pyproj
 
+from PyQt5 import QtCore, QtWidgets, QtGui
+
 from mslib.msui import constants, MissionSupportSystemDefaultConfig
-from mslib.thermolib import pressure2flightlevel
-from PyQt5 import QtCore, QtWidgets
-
-UR = pint.UnitRegistry()
-UR.define("PVU = 10^-6 m^2 s^-1 K kg^-1")
-UR.define("degrees_north = degrees")
-UR.define("degrees_south = -degrees")
-UR.define("degrees_east = degrees")
-UR.define("degrees_west = -degrees")
-
-UR.define("degrees_N = degrees")
-UR.define("degrees_S = -degrees")
-UR.define("degrees_E = degrees")
-UR.define("degrees_W = -degrees")
-
-UR.define("degreesN = degrees")
-UR.define("degreesS = -degrees")
-UR.define("degreesE = degrees")
-UR.define("degreesW = -degrees")
-
-UR.define("degree_north = degrees")
-UR.define("degree_south = -degrees")
-UR.define("degree_east = degrees")
-UR.define("degree_west = -degrees")
-
-UR.define("degree_N = degrees")
-UR.define("degree_S = -degrees")
-UR.define("degree_E = degrees")
-UR.define("degree_W = -degrees")
-
-UR.define("degreeN = degrees")
-UR.define("degreeS = -degrees")
-UR.define("degreeE = degrees")
-UR.define("degreeW = -degrees")
-
-UR.define("fraction = [] = frac")
-UR.define("sigma = 1 fraction")
-UR.define("level = sigma")
-UR.define("percent = 1e-2 fraction")
-UR.define("permille = 1e-3 fraction")
-UR.define("ppm = 1e-6 fraction")
-UR.define("ppmv = 1e-6 fraction")
-UR.define("ppb = 1e-9 fraction")
-UR.define("ppbv = 1e-9 fraction")
-UR.define("ppt = 1e-12 fraction")
-UR.define("pptv = 1e-12 fraction")
+from mslib.utils.units import units as _units
+from mslib.utils.thermolib import pressure2flightlevel
+from mslib.msui.constants import MSS_CONFIG_PATH
 
 
 def parse_iso_datetime(string):
@@ -202,7 +165,7 @@ def find_location(lat, lon, tolerance=5):
         return None
 
 
-def save_settings_qsettings(tag, settings):
+def save_settings_qsettings(tag, settings, ignore_test=False):
     """
     Saves a dictionary settings to disk.
 
@@ -212,6 +175,9 @@ def save_settings_qsettings(tag, settings):
     """
     assert isinstance(tag, str)
     assert isinstance(settings, dict)
+    if not ignore_test and "pytest" in sys.modules:
+        return settings
+
     q_settings = QtCore.QSettings("mss", "mss-core")
     file_path = q_settings.fileName()
     logging.debug("storing settings for %s to %s", tag, file_path)
@@ -222,7 +188,7 @@ def save_settings_qsettings(tag, settings):
     return settings
 
 
-def load_settings_qsettings(tag, default_settings=None):
+def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     """
     Loads a dictionary of settings from disk. May supply a dictionary of default settings
     to return in case the settings file is not present or damaged. The default_settings one will
@@ -236,6 +202,9 @@ def load_settings_qsettings(tag, default_settings=None):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
+    if not ignore_test and "pytest" in sys.modules:
+        return default_settings
+
     settings = {}
     q_settings = QtCore.QSettings("mss", "mss-core")
     file_path = q_settings.fileName()
@@ -296,10 +265,6 @@ def rotate_point(point, angle, origin=(0, 0)):
                   (point[0] - origin[0]) * np.sin(angle) +
                   (point[1] - origin[1]) * np.cos(angle) + origin[1])
     return temp_point
-
-
-def convertHPAToKM(press):
-    return (288.15 / 0.0065) * (1. - (press / 1013.25) ** (1. / 5.255)) / 1000.
 
 
 def get_projection_params(proj):
@@ -598,31 +563,11 @@ def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
     if vertical_axis == "pressure":
         return float(pressure / 100)
     elif vertical_axis == "flight level":
-        return pressure2flightlevel(pressure)
+        return pressure2flightlevel(pressure * _units.Pa).magnitude
     elif vertical_axis == "pressure altitude":
-        return pressure2flightlevel(pressure) / 32.8
+        return pressure2flightlevel(pressure * _units.Pa).to(_units.km).magnitude
     else:
         return pressure
-
-
-def convert_to(value, from_unit, to_unit, default=1.):
-    try:
-        value_unit = UR.Quantity(value, from_unit)
-        result = value_unit.to(to_unit).magnitude
-    except pint.UndefinedUnitError:
-        logging.error("Error in unit conversion (undefined) '%s'/'%s'", from_unit, to_unit)
-        result = value * default
-    except pint.DimensionalityError:
-        if UR(to_unit).to_base_units().units == UR.m:
-            try:
-                result = (value_unit / UR.Quantity(9.81, "m s^-2")).to(to_unit).magnitude
-            except pint.DimensionalityError:
-                logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
-                result = value * default
-        else:
-            logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
-            result = value * default
-    return result
 
 
 def setup_logging(args):
@@ -813,6 +758,15 @@ class Updater(QtCore.QObject):
         self.is_git_env = False
         self.new_version = None
         self.old_version = None
+        self.command = "conda"
+
+        # Check if mamba is installed
+        try:
+            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            self.command = "mamba"
+        except FileNotFoundError:
+            pass
+
         # pyqtSignals don't work without an application eventloop running
         if QtCore.QCoreApplication.startingUp():
             self.on_update_available = NonQtCallback()
@@ -848,17 +802,14 @@ class Updater(QtCore.QObject):
         self.on_status_update.emit("Checking for updates...")
 
         # Check if "search mss" yields a higher version than the currently running one
-        search = self._execute_command("conda search mss")
+        search = self._execute_command(f"{self.command} search mss")
         self.new_version = search.split("\n")[-2].split()[1]
-        c_list = self._execute_command("conda list mss")
+        c_list = self._execute_command(f"{self.command} list mss")
         self.old_version = c_list.split("\n")[-2].split()[1]
         if any(c.isdigit() for c in self.new_version):
             if self.new_version > self.old_version:
                 self.on_status_update.emit("Your version of MSS is outdated!")
                 self.on_update_available.emit(self.old_version, self.new_version)
-                if self.no_signals:
-                    logging.info(f"MSS can be updated from {self.old_version} to {self.new_version}.\n"
-                                 "Run the --update argument to update.")
             else:
                 self.on_status_update.emit("Your MSS is up to date.")
 
@@ -876,15 +827,8 @@ class Updater(QtCore.QObject):
         """
         Execute 'conda/mamba install mss=newest python -y' and return if it worked or not
         """
-        command = "conda"
-        try:
-            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            command = "mamba"
-        except FileNotFoundError:
-            pass
-
         self.on_status_update.emit("Trying to update MSS...")
-        self._execute_command(f"{command} install mss={self.new_version} python -y")
+        self._execute_command(f"{self.command} install mss={self.new_version} python -y")
         if self._verify_newest_mss():
             return True
 
@@ -904,7 +848,7 @@ class Updater(QtCore.QObject):
         """
         Return if the newest mss exists in the environment or not
         """
-        verify = self._execute_command("conda list mss")
+        verify = self._execute_command(f"{self.command} list mss")
         if self.new_version in verify:
             return True
 
@@ -945,6 +889,7 @@ class NonQtCallback:
     Callbacks are run on the same thread as the caller of emit, as opposed to the caller of connect.
     Keep in mind if this causes issues.
     """
+
     def __init__(self):
         self.callbacks = []
 
@@ -957,3 +902,282 @@ class NonQtCallback:
                 cb(*args)
             except Exception:
                 pass
+
+
+class CheckableComboBox(QtWidgets.QComboBox):
+    """
+    Multiple Choice ComboBox taken from QGIS
+    """
+
+    # Subclass Delegate to increase item height
+    class Delegate(QtWidgets.QStyledItemDelegate):
+        def sizeHint(self, option, index):
+            size = super().sizeHint(option, index)
+            size.setHeight(20)
+            return size
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # Make the combo editable to set a custom text, but readonly
+        self.setEditable(True)
+        self.lineEdit().setReadOnly(True)
+        # Make the lineedit the same color as QPushButton
+        palette = QtWidgets.QApplication.palette()
+        palette.setBrush(QtGui.QPalette.Base, palette.button())
+        self.lineEdit().setPalette(palette)
+
+        # Use custom delegate
+        self.setItemDelegate(CheckableComboBox.Delegate())
+
+        # Update the text when an item is toggled
+        self.model().dataChanged.connect(self.updateText)
+
+        # Hide and show popup when clicking the line edit
+        self.lineEdit().installEventFilter(self)
+        self.closeOnLineEditClick = False
+
+        # Prevent popup from closing when clicking on an item
+        self.view().viewport().installEventFilter(self)
+
+    def resizeEvent(self, event):
+        # Recompute text to elide as needed
+        self.updateText()
+        super().resizeEvent(event)
+
+    def eventFilter(self, object, event):
+        if object == self.lineEdit():
+            if event.type() == QtCore.QEvent.MouseButtonRelease:
+                if self.closeOnLineEditClick:
+                    self.hidePopup()
+                else:
+                    self.showPopup()
+                return True
+            return False
+
+        if object == self.view().viewport():
+            if event.type() == QtCore.QEvent.MouseButtonRelease:
+                index = self.view().indexAt(event.pos())
+                item = self.model().item(index.row())
+
+                if item.checkState() == QtCore.Qt.Checked:
+                    item.setCheckState(QtCore.Qt.Unchecked)
+                else:
+                    item.setCheckState(QtCore.Qt.Checked)
+                return True
+        return False
+
+    def showPopup(self):
+        super().showPopup()
+        # When the popup is displayed, a click on the lineedit should close it
+        self.closeOnLineEditClick = True
+
+    def hidePopup(self):
+        super().hidePopup()
+        # Used to prevent immediate reopening when clicking on the lineEdit
+        self.startTimer(100)
+        # Refresh the display text when closing
+        self.updateText()
+
+    def timerEvent(self, event):
+        # After timeout, kill timer, and reenable click on line edit
+        self.killTimer(event.timerId())
+        self.closeOnLineEditClick = False
+
+    def updateText(self):
+        texts = []
+        for i in range(self.model().rowCount()):
+            if self.model().item(i).checkState() == QtCore.Qt.Checked:
+                texts.append(self.model().item(i).text())
+        text = ", ".join(texts)
+        self.lineEdit().setText(text)
+
+    def addItem(self, text, data=None):
+        item = QtGui.QStandardItem()
+        item.setText(text)
+        if data is None:
+            item.setData(text)
+        else:
+            item.setData(data)
+        item.setFlags(QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
+        item.setData(QtCore.Qt.Unchecked, QtCore.Qt.CheckStateRole)
+        self.model().appendRow(item)
+
+    def addItems(self, texts, datalist=None):
+        for i, text in enumerate(texts):
+            try:
+                data = datalist[i]
+            except (TypeError, IndexError):
+                data = None
+            self.addItem(text, data)
+
+    def currentData(self):
+        # Return the list of selected items data
+        res = []
+        for i in range(self.model().rowCount()):
+            if self.model().item(i).checkState() == QtCore.Qt.Checked:
+                res.append(self.model().item(i).data())
+        return res
+
+
+_airspaces = []
+_airports = []
+_airports_mtime = 0
+_airspaces_mtime = {}
+_airspace_url = "https://www.openaip.net/customer_export_akfshb9237tgwiuvb4tgiwbf"
+# Updated Jul 27 2021
+_airspace_cache = \
+    [('al_asp.aip', '13K'), ('ar_asp.aip', '1.0M'), ('at_asp.aip', '169K'), ('au_asp.aip', '4.7M'),
+     ('ba_asp.aip', '80K'), ('be_asp.aip', '308K'), ('bg_asp.aip', '28K'), ('bh_asp.aip', '76K'),
+     ('br_asp.aip', '853K'), ('ca_asp.aip', '2.9M'), ('ch_asp.aip', '163K'), ('co_asp.aip', '121K'),
+     ('cz_asp.aip', '574K'), ('de_asp.aip', '843K'), ('dk_asp.aip', '120K'), ('ee_asp.aip', '66K'),
+     ('es_asp.aip', '923K'), ('fi_asp.aip', '213K'), ('fr_asp.aip', '1.4M'), ('gb_asp.aip', '1.2M'),
+     ('gr_asp.aip', '164K'), ('hr_asp.aip', '598K'), ('hu_asp.aip', '252K'), ('ie_asp.aip', '205K'),
+     ('is_asp.aip', '33K'), ('it_asp.aip', '1.9M'), ('jp_asp.aip', '1.8M'), ('la_asp.aip', '3.5M'),
+     ('lt_asp.aip', '450K'), ('lu_asp.aip', '45K'), ('lv_asp.aip', '65K'), ('na_asp.aip', '117K'),
+     ('nl_asp.aip', '352K'), ('no_asp.aip', '296K'), ('np_asp.aip', '521K'), ('nz_asp.aip', '656K'),
+     ('pl_asp.aip', '845K'), ('pt_asp.aip', '165K'), ('ro_asp.aip', '240K'), ('rs_asp.aip', '1.4M'),
+     ('se_asp.aip', '263K'), ('si_asp.aip', '80K'), ('sk_asp.aip', '296K'), ('us_asp.aip', '7.0M'),
+     ('za_asp.aip', '197K')]
+
+
+def download_progress(file_path, url, progress_callback=lambda f: logging.info(f"{int(f * 100)}% Downloaded")):
+    """
+    Downloads the file at the given url to file_path and keeps track of the progress
+    """
+    try:
+        with open(file_path, "wb+") as file:
+            logging.info(f"Downloading to {file_path}. This might take a while.")
+            response = requests.get(url, stream=True, timeout=5)
+            length = response.headers.get("content-length")
+            if length is None:  # no content length header
+                file.write(response.content)
+            else:
+                dl = 0
+                length = int(length)
+                for data in response.iter_content(chunk_size=1024 * 1024):
+                    dl += len(data)
+                    file.write(data)
+                    progress_callback(dl / length)
+    except requests.exceptions.RequestException:
+        os.remove(file_path)
+        QtWidgets.QMessageBox.information(None, "Download failed", f"{url} was unreachable, please try again later.")
+
+
+def get_airports(force_download=False):
+    """
+    Gets or downloads the airports.csv in ~/.config/mss and returns all airports within
+    """
+    global _airports, _airports_mtime
+    file_exists = os.path.exists(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
+
+    if _airports and file_exists and os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv")) == _airports_mtime:
+        return _airports
+
+    is_outdated = file_exists \
+        and (time.time() - os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))) > 60 * 60 * 24 * 30
+
+    if (force_download or is_outdated or not file_exists) \
+            and QtWidgets.QMessageBox.question(None, "Allow download", f"You selected airports to be "
+                                               f"{'drawn' if not force_download else 'downloaded (~10MB)'}." +
+                                               ("\nThe airports file first needs to be downloaded or updated (~10MB)."
+                                                if not force_download else "") + "\nIs now a good time?",
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
+            == QtWidgets.QMessageBox.Yes:
+        download_progress(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "https://ourairports.com/data/airports.csv")
+
+    if os.path.exists(os.path.join(MSS_CONFIG_PATH, "airports.csv")):
+        with open(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "r", encoding="utf8") as file:
+            _airports_mtime = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))
+            return list(csv.DictReader(file, delimiter=","))
+
+    else:
+        return []
+
+
+def get_available_airspaces():
+    """
+    Gets and returns all available airspaces and their sizes from openaip
+    """
+    try:
+        directory = requests.get(_airspace_url, timeout=5)
+        if directory.status_code == 404:
+            return _airspace_cache
+        airspaces = regex.findall(r">(.._asp\.aip)<", directory.text)
+        sizes = regex.findall(r".._asp.aip.*?>[ ]*([0-9\.]+[KM]*)[ ]*<\/td", directory.text)
+        airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
+        return airspaces
+    except requests.exceptions.RequestException:
+        return _airspace_cache
+
+
+def update_airspace(force_download=False, countries=["de"]):
+    """
+    Downloads the requested airspaces from their respective country code if it is over a month old
+    """
+    global _airspaces, _airspaces_mtime
+    for country in countries:
+        location = os.path.join(MSS_CONFIG_PATH, f"{country}_asp.aip")
+        url = f"{_airspace_url}/{country}_asp.aip"
+        data = [airspace for airspace in get_available_airspaces() if airspace[0].startswith(country)][0]
+        file_exists = os.path.exists(location)
+
+        is_outdated = file_exists and (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
+
+        if (force_download or is_outdated or not file_exists) \
+                and QtWidgets.QMessageBox.question(
+                    None, "Allow download",
+                    f"The selected {country} airspace needs to be downloaded ({data[-1]})"
+                    f"\nIs now a good time?",
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
+                == QtWidgets.QMessageBox.Yes:
+            download_progress(location, url)
+
+
+def get_airspaces(countries=[]):
+    """
+    Gets the .aip files in ~/.config/mss and returns all airspaces within
+    """
+    global _airspaces, _airspaces_mtime
+    reload = False
+    files = [f"{country}_asp.aip" for country in countries]
+    update_airspace(countries=countries)
+    files = [file for file in files if os.path.exists(os.path.join(MSS_CONFIG_PATH, file))]
+
+    if _airspaces and len(files) == len(_airspaces_mtime):
+        for file in files:
+            if file not in _airspaces_mtime or \
+                    os.path.getmtime(os.path.join(MSS_CONFIG_PATH, file)) != _airspaces_mtime[file]:
+                reload = True
+                break
+        if not reload:
+            return _airspaces
+
+    _airspaces_mtime = {}
+    _airspaces = []
+    for file in files:
+        airspace = etree.parse(os.path.join(MSS_CONFIG_PATH, file))
+        airspace = airspace.find("AIRSPACES")
+        for elem in airspace:
+            airspace_data = {
+                "name": elem.find("NAME").text,
+                "polygon": elem.find("GEOMETRY").find("POLYGON").text,
+                "top": float(elem.find("ALTLIMIT_TOP").find("ALT").text),
+                "top_unit": elem.find("ALTLIMIT_TOP").find("ALT").get("UNIT"),
+                "bottom": float(elem.find("ALTLIMIT_BOTTOM").find("ALT").text),
+                "bottom_unit": elem.find("ALTLIMIT_BOTTOM").find("ALT").get("UNIT"),
+                "country": elem.find("COUNTRY").text
+            }
+            # Convert to kilometers
+            airspace_data["top"] /= 3281 if airspace_data["top_unit"] == "F" else 32.81
+            airspace_data["bottom"] /= 3281 if airspace_data["bottom_unit"] == "F" else 32.81
+            airspace_data["top"] = round(airspace_data["top"], 2)
+            airspace_data["bottom"] = round(airspace_data["bottom"], 2)
+            airspace_data.pop("top_unit")
+            airspace_data.pop("bottom_unit")
+
+            airspace_data["polygon"] = [(float(data.split(" ")[0]), float(data.split(" ")[-1]))
+                                        for data in airspace_data["polygon"].split(", ")]
+            _airspaces.append(airspace_data)
+            _airspaces_mtime[file] = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, file))
+    return _airspaces

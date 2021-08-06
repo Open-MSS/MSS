@@ -28,14 +28,15 @@
 import numpy as np
 
 from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
-import mslib.thermolib as thermolib
-from mslib.utils import convert_to
+import mslib.utils.thermolib as thermolib
+from mslib.utils.units import convert_to
 
 
 class LS_DefaultStyle(AbstractLinearSectionStyle):
     """
     Style for single variables that require no further calculation
     """
+
     def __init__(self, driver, variable="air_temperature", filetype="ml"):
         super(AbstractLinearSectionStyle, self).__init__(driver=driver)
         self.variable = variable
@@ -45,7 +46,6 @@ class LS_DefaultStyle(AbstractLinearSectionStyle):
         abbreviation = "".join([text[0] for text in self.variable.split("_")])
         self.name = f"LS_{str.upper(abbreviation)}"
         self.title = f"{self.variable} Linear Plot"
-        self.abstract = f"{self.variable}"
 
 
 class LS_RelativeHumdityStyle_01(AbstractLinearSectionStyle):

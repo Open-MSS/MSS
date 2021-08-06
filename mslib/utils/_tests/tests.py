@@ -56,10 +56,10 @@ class TestSettingsSave(object):
 
     def test_save_settings(self):
         settings = {'foo': 'bar'}
-        utils.save_settings_qsettings(self.tag, settings)
+        utils.save_settings_qsettings(self.tag, settings, ignore_test=True)
 
     def test_load_settings(self):
-        settings = utils.load_settings_qsettings(self.tag)
+        settings = utils.load_settings_qsettings(self.tag, ignore_test=True)
         assert isinstance(settings, dict)
         assert settings["foo"] == "bar"
 
@@ -68,6 +68,7 @@ class TestConfigLoader(object):
     """
     tests config file for client
     """
+
     def teardown(self):
         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
@@ -252,14 +253,10 @@ class TestAngles(object):
 
 
 class TestConverter(object):
-    def test_convert_pressure_to_altitude(self):
-        assert utils.convertHPAToKM(1013.25) == 0
-        assert int(utils.convertHPAToKM(25) * 1000) == 22415
-
     def test_convert_pressure_to_vertical_axis_measure(self):
         assert utils.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
         assert utils.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400
-        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == 2.4668986099864068
+        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == pytest.approx(2.46618)
 
 
 class TestLatLonPoints(object):

@@ -263,6 +263,32 @@ class Test_Mscolab(object):
         self._create_project("/", "Description Alpha")
         assert mockbox.return_value.showMessage.call_count == 5
         assert self.window.listProjects.model().rowCount() == 1
+        self._create_project("reproduce-test", "Description Test")
+        assert self.window.listProjects.model().rowCount() == 2
+        self._activate_project_at_index(0)
+        assert self.window.active_project_name == "Alpha"
+        self._activate_project_at_index(1)
+        assert self.window.active_project_name == "reproduce-test"
+
+    @mock.patch("mslib.msui.mscolab.MSCOLAB_AuthenticationDialog.exec_", return_value=QtWidgets.QDialog.Accepted)
+    @mock.patch("PyQt5.QtWidgets.QErrorMessage")
+    def test_failed_authorize(self, mockbox, mockauth):
+        class response:
+            def __init__(self, code, text):
+                self.status_code = code
+                self.text = text
+
+        self._connect_to_mscolab()
+        with mock.patch("requests.Session.post", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
+            self._login()
+        with mock.patch("requests.Session.post", return_value=response(201, "False")):
+            self._login()
+        with mock.patch("requests.Session.post", return_value=response(401, "False")):
+            self._login()
+
+        # No return after self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
+        # causes 4 instead of 3 messages, I am not sure if this is on purpose.
+        assert mockbox.return_value.showMessage.call_count == 4
 
     @mock.patch("mslib.msui.mscolab.MSCOLAB_AuthenticationDialog.exec_", return_value=QtWidgets.QDialog.Accepted)
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")

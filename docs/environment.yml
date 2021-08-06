@@ -1,0 +1,25 @@
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - pip
+  - pip:
+      - flask
+      - flask-httpauth
+      - chameleon
+      - multidict
+      - isodate
+      - scipy
+      - metpy
+      - markdown
+      - xstatic
+      - defusedxml
+      - sphinx_rtd_theme
+      - sphinx
+      - fs
+      - netCDF4
+      - future
+      - pint
+      - PyQt5
+      - owslib
+  - basemap

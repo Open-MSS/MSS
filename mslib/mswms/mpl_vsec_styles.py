@@ -37,8 +37,8 @@ import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
-from mslib.utils import convert_to
-from mslib import thermolib
+from mslib.utils import thermolib
+from mslib.utils.units import convert_to
 
 
 class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
@@ -643,18 +643,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Specific humdity (g/kg)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Specific humdity (g/kg)")
 
 
 class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -736,18 +725,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Vertical velocity (cm/s)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Vertical velocity (cm/s)")
 
 
 class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -834,18 +812,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Horizontal wind speed (m/s)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Horizontal wind speed (m/s)")
 
 
 # POTENTIAL VORTICITY
@@ -1085,21 +1052,8 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            if self.style.upper() == "SH":
-                cbar.set_label("Negative Potential vorticity (PVU)")
-            else:
-                cbar.set_label("Potential vorticity (PVU)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Negative Potential vorticity (PVU)" if self.style.upper() == "SH"
+                          else "Potential vorticity (PVU)")
 
 
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
@@ -1188,18 +1142,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Probability of WCB (%)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Probability of WCB (%)")
 
 
 class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
@@ -1252,18 +1195,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Cirrus density")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Cirrus density")
 
 
 class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
@@ -1336,14 +1268,4 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            cbar = self.fig.colorbar(cs, fraction=0.08, pad=0.01)
-            cbar.set_label("Eyjafjallajokull Tracer (relative)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Eyjafjallajokull Tracer (relative)")

@@ -29,10 +29,11 @@ from __future__ import division
 
 import numpy as np
 import os
+from fs import open_fs
 
 import mslib.msui.flighttrack as ft
-from mslib import thermolib
-from fs import open_fs
+from mslib.utils import thermolib
+from mslib.utils.units import units
 
 
 def load_from_flitestar(filename):
@@ -70,7 +71,7 @@ def load_from_flitestar(filename):
                 wp.lat = float(lat)
                 wp.lon = float(lon)
                 wp.flightlevel = float(alt)
-                wp.pressure = thermolib.flightlevel2pressure(float(wp.flightlevel))
+                wp.pressure = thermolib.flightlevel2pressure(float(wp.flightlevel) * units.hft).magnitude
                 waypoints.append(wp)
 
     name = os.path.basename(filename).strip('.txt')

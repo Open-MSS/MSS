@@ -32,10 +32,12 @@ from builtins import str
 
 import logging
 import codecs
-import mslib.msui.flighttrack as ft
-from mslib import thermolib
 import os
 from fs import open_fs
+
+import mslib.msui.flighttrack as ft
+from mslib.utils.units import units
+from mslib.utils import thermolib
 
 
 def save_to_txt(filename, name, waypoints):
@@ -113,8 +115,8 @@ def load_from_txt(filename):
                 else:
                     if i == 5:
                         logging.debug('calculate pressure from FL ' + str(
-                            thermolib.flightlevel2pressure(float(wp.flightlevel))))
+                            thermolib.flightlevel2pressure(float(wp.flightlevel) * units.hft).magnitude))
                         setattr(wp, attr_names[i - 1],
-                                thermolib.flightlevel2pressure(float(wp.flightlevel)))
+                                thermolib.flightlevel2pressure(float(wp.flightlevel) * units.hft).magnitude)
             waypoints.append(wp)
     return name, waypoints

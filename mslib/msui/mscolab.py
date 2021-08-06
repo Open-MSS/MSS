@@ -817,6 +817,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.listProjects)
             widgetItem.p_id = project["p_id"]
             widgetItem.access_level = project["access_level"]
+            widgetItem.project_path = project["path"]
             if widgetItem.p_id == self.active_pid:
                 selectedProject = widgetItem
             self.listProjects.addItem(widgetItem)
@@ -846,7 +847,7 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             # set active_pid here
             self.active_pid = item.p_id
             self.access_level = item.access_level
-            self.active_project_name = item.text().split("-")[0].strip()
+            self.active_project_name = item.project_path
             self.waypoints_model = None
             # set active flightpath here
             self.load_wps_from_server()
@@ -1168,12 +1169,9 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             for i in range(self.listProjects.count()):
                 item = self.listProjects.item(i)
                 if item.p_id == p_id:
-                    desc = item.text().split(' - ')
-                    project_name = desc[0]
-                    desc[-1] = access_level
-                    desc = ' - '.join(desc)
-                    item.setText(desc)
+                    project_name = item.project_path
                     item.access_level = access_level
+                    item.setText(f'{project_name} - {item.access_level}')
                     break
             if project_name is not None:
                 show_popup(self, "Permission Updated",
@@ -1215,10 +1213,11 @@ class MSSMscolabWindow(QtWidgets.QMainWindow, ui.Ui_MSSMscolabWindow):
             item = self.listProjects.item(i)
             if item.p_id == p_id:
                 remove_item = item
+                break
         if remove_item is not None:
-            logging.debug("remove_item: %s" % remove_item)
+            logging.debug("remove_item: %s", remove_item)
             self.listProjects.takeItem(self.listProjects.row(remove_item))
-            return remove_item.text().split(' - ')[0]
+            return remove_item.project_path
 
     @QtCore.Slot(int, int)
     def handle_revoke_permission(self, p_id, u_id):

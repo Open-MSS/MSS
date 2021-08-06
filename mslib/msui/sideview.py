@@ -28,14 +28,16 @@
 
 import logging
 import functools
-from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
+
 from PyQt5 import QtGui, QtWidgets
+
 from mslib.msui.mss_qt import ui_sideview_window as ui
 from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
-from mslib import thermolib
+from mslib.utils import thermolib, config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils.units import units, convert_to
 
 # Dock window indices.
 WMS = 0
@@ -254,10 +256,10 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             sb.setSuffix(" " + new_unit)
             if new_unit == "hPa":
                 sb.setValue(thermolib.flightlevel2pressure(
-                    convert_to(sb.value(), old_unit, "hft", 1)) / 100)
+                    convert_to(sb.value(), old_unit, "hft", 1) * units.hft).to(units.hPa).magnitude)
             elif old_unit == "hPa":
                 sb.setValue(convert_to(
-                    thermolib.pressure2flightlevel(sb.value() * 100), "hft", new_unit))
+                    thermolib.pressure2flightlevel(sb.value() * units.hPa).magnitude, "hft", new_unit))
             else:
                 sb.setValue(convert_to(sb.value(), old_unit, new_unit, 1))
         self.setBotTopLimits(self.cbVerticalAxis.currentText())
@@ -296,6 +298,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
+        self.openTool(WMS + 1)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
