@@ -290,26 +290,6 @@ class Test_Mscolab(object):
         # causes 4 instead of 3 messages, I am not sure if this is on purpose.
         assert mockbox.return_value.showMessage.call_count == 4
 
-    @mock.patch("mslib.msui.mscolab.MSCOLAB_AuthenticationDialog.exec_", return_value=QtWidgets.QDialog.Accepted)
-    @mock.patch("PyQt5.QtWidgets.QErrorMessage")
-    def test_failed_authorize(self, mockbox, mockauth):
-        class response:
-            def __init__(self, code, text):
-                self.status_code = code
-                self.text = text
-
-        self._connect_to_mscolab()
-        with mock.patch("requests.Session.post", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
-            self._login()
-        with mock.patch("requests.Session.post", return_value=response(201, "False")):
-            self._login()
-        with mock.patch("requests.Session.post", return_value=response(401, "False")):
-            self._login()
-
-        # No return after self.error_dialog.showMessage('Oh no, server authentication were incorrect.')
-        # causes 4 instead of 3 messages, I am not sure if this is on purpose.
-        assert mockbox.return_value.showMessage.call_count == 4
-
     def test_add_user(self):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")

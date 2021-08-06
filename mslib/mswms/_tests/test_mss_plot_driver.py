@@ -54,18 +54,6 @@ def is_image_transparent(img):
         return False
 
 
-def is_image_transparent(img):
-    with Image.open(io.BytesIO(img)) as image:
-        if image.mode == "P":
-            transparent = image.info.get("transparency", -1)
-            for _, index in image.getcolors():
-                if index == transparent:
-                    return True
-        elif image.mode == "RGBA":
-            return image.getextrema()[3][0] < 255
-        return False
-
-
 class Test_VSec(object):
     def setup(self):
         p1 = [45.00, 8.]
