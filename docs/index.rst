@@ -16,10 +16,11 @@ Topics
    :maxdepth: 2
 
    about
+   components
+   gallery/index
    dependencies
    installation
    docker_based_installation
-   components
    development
    authors
    help

@@ -1,6 +1,49 @@
 Changelog
 =========
 
+Version 5.0.0
+~~~~~~~~~~~~~
+
+This release brings many improvements to the WMS Server along with new features for the UI.
+On demand a WMS server can show what kind of view graphics are provided.
+Optional the source for creating the graphics can be published over the web service too.
+By this any existing server shows examples how to create graphics. Have a look on
+our documentation on https://mss.readthedocs.io/en/stable/gallery/index.html for this feature.
+
+The linear styles got improved to work also on .ml files
+
+We refactored some of our oldest code in thermolib and moved to the famous metpy module.
+A new docking widget for topview was introduced for integrating airbase data by openaip.net and ourairports.com
+
+Newer versions than 5.0.0 can now use the built-in update feature on command line or by the UI.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/59?closed=1
+
+Version 4.0.4
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/63?closed=1
+
+Version 4.0.3
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/62?closed=1
+
+Version 4.0.2
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/60?closed=1
+
 Version 4.0.1
 ~~~~~~~~~~~~~
 

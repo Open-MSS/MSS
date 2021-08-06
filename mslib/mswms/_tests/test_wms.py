@@ -26,10 +26,19 @@
     limitations under the License.
 """
 
+import os
+from shutil import move
+
 import mock
+from nco import Nco
+import pytest
+
+import mslib.mswms.wms
+import mslib.mswms.gallery_builder
 import mslib.mswms.mswms as mswms
 from importlib import reload
 from mslib._tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
+from mslib._tests.constants import DATA_DIR
 
 
 class Test_WMS(object):
@@ -367,7 +376,6 @@ class Test_WMS(object):
         callback_ok_xml(result.status, result.headers)
 
     def test_import_error(self):
-        import mslib.mswms.wms
         with mock.patch.dict("sys.modules", {"mss_wms_settings": None, "mss_wms_auth": None}):
             reload(mslib.mswms.wms)
             assert mslib.mswms.wms.mss_wms_settings.__file__ is None
@@ -375,3 +383,80 @@ class Test_WMS(object):
         reload(mslib.mswms.wms)
         assert mslib.mswms.wms.mss_wms_settings.__file__ is not None
         assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
+
+    def test_files_changed(self):
+        def do_test():
+            environ = {
+                'wsgi.url_scheme': 'http',
+                'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
+                'QUERY_STRING':
+                'layers=ecmwf_EUR_LL015.PLDiv01&styles=&elevation=200&crs=EPSG%3A4326&format=image%2Fpng&'
+                'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
+                'version=1.3.0&bbox=20.0%2C-50.0%2C75.0%2C20.0&time=2012-10-17T12%3A00%3A00Z&'
+                'exceptions=XML&transparent=FALSE'}
+            pl_file = next(file for file in os.listdir(DATA_DIR) if ".pl" in file)
+
+            self.client = mswms.application.test_client()
+            result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+
+            # Assert modified file was reloaded and now looks different
+            nco = Nco()
+            nco.ncap2(input=os.path.join(DATA_DIR, pl_file), output=os.path.join(DATA_DIR, pl_file),
+                      options=["-s \"geopotential_height*=2\""])
+            result2 = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+            nco.ncap2(input=os.path.join(DATA_DIR, pl_file), output=os.path.join(DATA_DIR, pl_file),
+                      options=["-s \"geopotential_height/=2\""])
+            assert result.data != result2.data
+
+            # Assert moved file was reloaded and now looks like the first image
+            move(os.path.join(DATA_DIR, pl_file), os.path.join(DATA_DIR, pl_file + "2"))
+            result3 = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
+            move(os.path.join(DATA_DIR, pl_file + "2"), os.path.join(DATA_DIR, pl_file))
+            assert result.data == result3.data
+
+        with pytest.raises(AssertionError):
+            do_test()
+
+        watch_access = mslib.mswms.dataaccess.WatchModificationDataAccess(
+            mslib.mswms.wms.mss_wms_settings._datapath, "EUR_LL015")
+        watch_access.setup()
+        with mock.patch.object(
+            mslib.mswms.wms.server.hsec_layer_registry["ecmwf_EUR_LL015"]["PLDiv01"].driver,
+            "data_access", new=watch_access):
+            do_test()
+
+    def test_gallery(self, tmpdir):
+        tempdir = tmpdir.mkdir("static")
+        docsdir = tmpdir.mkdir("docs")
+        mslib.mswms.wms.STATIC_LOCATION = tempdir
+        mslib.mswms.gallery_builder.STATIC_LOCATION = tempdir
+        mslib.mswms.wms.DOCS_LOCATION = docsdir
+        mslib.mswms.gallery_builder.DOCS_LOCATION = docsdir
+        linear_plots = [[mslib.mswms.wms.server.lsec_drivers, mslib.mswms.wms.server.lsec_layer_registry]]
+
+        mslib.mswms.wms.server.generate_gallery(generate_code=True, plot_list=linear_plots)
+        assert os.path.exists(os.path.join(tempdir, "plots"))
+        assert os.path.exists(os.path.join(tempdir, "code"))
+        assert os.path.exists(os.path.join(tempdir, "plots.html"))
+
+        mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
+        assert not os.path.exists(os.path.join(tempdir, "code"))
+
+        file = os.path.join(tempdir, "plots", os.listdir(os.path.join(tempdir, "plots"))[0])
+        file2 = os.path.join(tempdir, "plots", os.listdir(os.path.join(tempdir, "plots"))[1])
+        modified_at = os.path.getmtime(file2)
+        os.remove(file)
+        assert not os.path.exists(file)
+        mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
+        assert not os.path.exists(os.path.join(tempdir, "code"))
+        assert os.path.exists(file)
+        assert modified_at == os.path.getmtime(file2)
+
+        mslib.mswms.wms.server.generate_gallery(clear=True, create=True, plot_list=linear_plots)
+        assert modified_at != os.path.getmtime(file2)
+
+        mslib.mswms.wms.server.generate_gallery(clear=True, generate_code=True, sphinx=True,
+                                                plot_list=linear_plots)
+        assert os.path.exists(os.path.join(docsdir, "plots"))
+        assert os.path.exists(os.path.join(docsdir, "code"))
+        assert os.path.exists(os.path.join(docsdir, "plots.html"))
