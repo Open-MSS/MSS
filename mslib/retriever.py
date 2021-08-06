@@ -34,16 +34,15 @@ import xml
 import requests
 from fs import open_fs
 import PIL.Image
-from metpy.units import units
+import matplotlib.pyplot as plt
 
 import mslib
 import mslib.utils
+from mslib.utils import thermolib
+from mslib.utils.units import units
 import mslib.msui
 import mslib.msui.mpl_map
 import mslib.msui.mss_qt
-import mslib.thermolib
-
-import matplotlib.pyplot as plt
 
 
 TEXT_CONFIG = {
@@ -144,7 +143,7 @@ def main():
         params["basemap"].update(config["predefined_map_sections"][section]["map"])
         wps = load_from_ftml(filename)
         wp_lats, wp_lons, wp_locs = [[x[i] for x in wps] for i in [0, 1, 3]]
-        wp_presss = [mslib.thermolib.flightlevel2pressure(wp[2] * units.hft).magnitude for wp in wps]
+        wp_presss = [thermolib.flightlevel2pressure(wp[2] * units.hft).magnitude for wp in wps]
         for url, layer, style, elevation in config["automated_plotting"]["hsecs"]:
             fig.clear()
             ax = fig.add_subplot(111, zorder=99)

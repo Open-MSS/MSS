@@ -74,7 +74,7 @@ from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
-from mslib import thermolib
+from mslib.utils import thermolib
 from mslib.utils.units import convert_to
 
 
