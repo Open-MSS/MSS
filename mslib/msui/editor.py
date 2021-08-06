@@ -139,6 +139,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
         self.path = constants.CACHED_CONFIG_FILE
+        json_file_data = {}
         if self.path is not None:
             self.path = self.path.replace("\\", "/")
             dir_name, file_name = fs.path.split(self.path)
@@ -381,17 +382,29 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             else:
                 non_removable.append(index)
 
+        data = self.json_model.serialize()
+        removable_data = {}
+        for index in removable_indexes:
+            index_data = index.data()
+            if isinstance(data[index_data], list):
+                removable_data[index_data] = [data[index_data][r] for r in removable_indexes[index]]
+            else:
+                removable_data[index_data] = {}
+                for r in removable_indexes[index]:
+                    child_index = self.proxy_model.index(r, 0, index)
+                    child_data = child_index.data()
+                    removable_data[index_data][child_data] = data[index_data][child_data]
+
         if removable_indexes == {} and non_removable != []:
             self.statusbar.showMessage("Default options are not removable.")
             return
 
+        self.view.selectionModel().clearSelection()
         for index in removable_indexes:
             rows = sorted(list(removable_indexes[index]))
             for count, row in enumerate(rows):
                 row = row - count
-                self.proxy_model.beginRemoveRows(index, row, row)
                 self.proxy_model.removeRow(row, parent=index)
-                self.proxy_model.endRemoveRows()
 
             # fix row number in list type options
             source_index = self.proxy_model.mapToSource(index)
@@ -402,5 +415,9 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     item = self.json_model.itemFromIndex(child_index)
                     item.setData(r, QtCore.Qt.DisplayRole)
 
-        self.view.selectionModel().clear()
         # print(json.dumps(self.json_model.serialize(), indent=4))
+
+        # dialog_box = QtWidgets.QMessageBox.question(self, "Invalid options detected", "The following options were invalid\npredefined_map_sections:new_location", QtWidgets.QMessageBox.Ok)
+        # if dialog_box == QtWidgets.QMessageBox.Ok:
+        #     pass
+

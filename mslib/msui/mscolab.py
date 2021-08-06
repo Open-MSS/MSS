@@ -378,6 +378,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.userOptionsTb.hide()
         self.ui.actionAddProject.setEnabled(False)
         self.hide_project_options()
+        self.ui.actionEditProject.setVisible(False)
 
         # connect project options menu actions
         self.ui.actionAddProject.triggered.connect(self.add_project_handler)
