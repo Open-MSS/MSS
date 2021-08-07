@@ -486,7 +486,6 @@ class Test_HSec(object):
         pytest.skip('Test can be biased. In pytest-reverse when there is not a plot_examples it can''t import')
         # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
-        assert templates_location == ""
         sys.path.append(templates_location)
         from HS_template import HS_Template
 
