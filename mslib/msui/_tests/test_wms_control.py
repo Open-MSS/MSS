@@ -174,7 +174,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
             pass
         assert mockbox.critical.call_count == 0
 
-    def test_server_abort_getmap(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    def test_server_abort_getmap(self, mockbox):
         """
         assert that an aborted getmap call does not change the displayed image
         """
@@ -318,9 +319,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
+    @pytest.mark.skip("Fails testing reverse order")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_filter_handling(self, mockbox):
-        pytest.skip('Test fails in reverse order, see ToDo')
         self.query_server(f"http://127.0.0.1:{self.port}")
         server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
                                                               QtCore.Qt.MatchFixedString)[0]
