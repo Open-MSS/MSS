@@ -120,7 +120,7 @@ class MissionSupportSystemDefaultConfig(object):
     # password to sign in
     MSCOLAB_password = ""
 
-    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")]
+    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")}
     MSC_login = {}
 
     # timeout of Url request
@@ -128,7 +128,7 @@ class MissionSupportSystemDefaultConfig(object):
 
     WMS_preload = []
 
-    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")]
+    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")}
     WMS_login = {}
 
     # WMS image cache settings:
@@ -209,36 +209,36 @@ class MissionSupportSystemDefaultConfig(object):
                   "axes_label_size": 10}
 
     config_descriptions = {
-        "filepicker_default": "General file picker to access locations on remote machines"
-        "facilitating collaboration on campaigns. Possible Options: qt, fs",
-        "data_dir": "Directory for storing MSS data",
-        "predefined_map_sections": "",
-        "num_interpolation_points": "",
-        "num_labels": "",
-        "default_WMS": "",
-        "default_VSEC_WMS": "",
-        "default_LSEC_WMS": "",
-        "default_MSCOLAB": "",
-        "MSCOLAB_mailid": "",
-        "MSCOLAB_password": "",
-        "MSC_login": "",
-        "WMS_request_timeout": "",
-        "WMS_preload": "",
-        "WMS_login": "",
-        "wms_cache": "",
-        "wms_cache_max_size_bytes": "",
-        "wms_cache_max_age_seconds": "",
-        "wms_prefetch": "",
-        "locations": "",
-        "new_flighttrack_template": "",
-        "new_flighttrack_flightlevel": "",
-        "proxies": "",
-        "mscolab_server_url": "",
-        "mss_dir": "",
-        "gravatar_ids": "",
-        "export_plugins": "",
-        "import_plugins": "",
-        "topview": "",
-        "sideview": "",
-        "linearview": "",
+        "filepicker_default": "Documentation Required",
+        "data_dir": "Documentation Required",
+        "predefined_map_sections": "Documentation Required",
+        "num_interpolation_points": "Documentation Required",
+        "num_labels": "Documentation Required",
+        "default_WMS": "Documentation Required",
+        "default_VSEC_WMS": "Documentation Required",
+        "default_LSEC_WMS": "Documentation Required",
+        "default_MSCOLAB": "Documentation Required",
+        "MSCOLAB_mailid": "Documentation Required",
+        "MSCOLAB_password": "Documentation Required",
+        "MSC_login": "Documentation Required",
+        "WMS_request_timeout": "Documentation Required",
+        "WMS_preload": "Documentation Required",
+        "WMS_login": "Documentation Required",
+        "wms_cache": "Documentation Required",
+        "wms_cache_max_size_bytes": "Documentation Required",
+        "wms_cache_max_age_seconds": "Documentation Required",
+        "wms_prefetch": "Documentation Required",
+        "locations": "Documentation Required",
+        "new_flighttrack_template": "Documentation Required",
+        "new_flighttrack_flightlevel": "Documentation Required",
+        "proxies": "Documentation Required",
+        "mscolab_server_url": "Documentation Required",
+        "mss_dir": "Documentation Required",
+        "gravatar_ids": "Documentation Required",
+        "export_plugins": "Documentation Required",
+        "import_plugins": "Documentation Required",
+        "layout": "Documentation Required",
+        "topview": "Documentation Required",
+        "sideview": "Documentation Required",
+        "linearview": "Documentation Required",
     }
