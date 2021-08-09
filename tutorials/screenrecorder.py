@@ -40,7 +40,7 @@ class ScreenRecorder:
     """
     This is the screen recording class which helps to record the screen.
     """
-    def __init__(self):
+    def __init__(self, x_start=None, y_start=None, sc_width=None, sc_height=None):
         """
         The constructor sets the FPS, codecs, VideoWriter object, filename, and directory
         for the recording of the screen.
@@ -48,8 +48,18 @@ class ScreenRecorder:
         self.record = True
         self.app = QtWidgets.QApplication(sys.argv)
         screen = self.app.primaryScreen()
-        self.width = screen.size().width()
-        self.height = screen.size().height()
+        if x_start is None and y_start is None:
+            self.x_start = 0
+            self.y_start = 0
+        else:
+            self.x_start = x_start
+            self.y_start = y_start
+        if sc_width is None and sc_height is None:
+            self.width = screen.size().width()
+            self.height = screen.size().height()
+        else:
+            self.width = sc_width
+            self.height = sc_height
         self.fps = self.get_fps()
         self.codec = cv2.VideoWriter_fourcc(*"mp4v")
         current_time = datetime.datetime.now().strftime('%d-%m-%Y %H-%M-%S')
@@ -62,7 +72,8 @@ class ScreenRecorder:
             final_path = os.path.join(path, self.file_name)
         except OSError:
             print("Directory \"Recordings\" cannot be created")
-        self.recorded_video = cv2.VideoWriter(final_path, self.codec, self.fps, (self.width, self.height))
+        self.recorded_video = cv2.VideoWriter(final_path, self.codec, self.fps, ((self.width - self.x_start),
+                                                                                 (self.height - self.y_start)))
         self.window_name = "Screen Recorder : MSS"
         cv2.namedWindow(self.window_name, cv2.WINDOW_NORMAL)
         cv2.resizeWindow(self.window_name, 480, 480)
@@ -74,7 +85,8 @@ class ScreenRecorder:
         screen refresh rate of your monitor (if considerable in the program) and sets the FPS.
         """
         with mss.mss() as sct:
-            bbox = {"top": 0, "left": 0, "width": self.width, "height": self.height}
+            bbox = {"top": self.x_start, "left": self.y_start, "width": self.width - self.x_start,
+                    "height": self.height}
             fps = 0
             last_time = time.time()
             while time.time() - last_time < 1:
@@ -105,7 +117,8 @@ class ScreenRecorder:
             mouse_pointer = None
             width, height = None, None
         with mss.mss() as sct:
-            bbox = {"top": 0, "left": 0, "width": self.width, "height": self.height}
+            bbox = {"top": self.x_start, "left": self.y_start, "width": self.width - self.x_start,
+                    "height": self.height}
             self.start_rec_time = time.time()
             frame_time_ms = 1000 / self.fps
             frames = 0
@@ -122,36 +135,6 @@ class ScreenRecorder:
                     # is throwing some untraceable error in Linux.
                 img = Image.frombytes("RGBA", sct.grab(bbox).size, sct.grab(bbox).bgra, "raw", "RGBA")
                 img.paste(mouse_pointer, (x, y, x + width, y + height), mask=mouse_pointer)
-                img_np = np.array(img)
-                img_final = cv2.cvtColor(img_np, cv2.COLOR_RGBA2RGB)
-                cv2.imshow(self.window_name, img_final)
-                self.recorded_video.write(img_final)
-                frames += 1
-                expected_frames = ((time.time() - self.start_rec_time) * 1000) / frame_time_ms
-                surplus = frames - expected_frames
-
-                # Duplicate previous frame to meet FPS quota. Consider lowering the FPS instead!
-                if int(surplus) <= -1:
-                    frames -= int(surplus)
-                    for i in range(int(-surplus)):
-                        self.recorded_video.write(img_final)
-                # Exits the screen capturing when user press 'q'
-                if cv2.waitKey(max(int(surplus * frame_time_ms), 1)) & 0xFF == ord('q'):
-                    break
-
-    def capture2(self):
-        """
-        Captures the frames of the screen at the rate of fps frames/second and writes into the
-        video writer object with the defined fourcc, codec and colour format.
-        """
-        with mss.mss() as sct:
-            bbox = {"top": 0, "left": 0, "width": self.width, "height": self.height}
-            self.start_rec_time = time.time()
-            frame_time_ms = 1000 / self.fps
-            frames = 0
-            print(f"Starting to record with FPS value {self.fps} ...")
-            while self.record:
-                img = sct.grab(bbox)
                 img_np = np.array(img)
                 img_final = cv2.cvtColor(img_np, cv2.COLOR_RGBA2RGB)
                 cv2.imshow(self.window_name, img_final)
