@@ -179,8 +179,6 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         super(ConfigurationEditorWindow, self).__init__(parent)
         self.setupUi(self)
 
-        self.options = copy.deepcopy(default_options)
-
         # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
         self.path = constants.CACHED_CONFIG_FILE
         json_file_data = {}
@@ -195,7 +193,12 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             self.path = MSS_SETTINGS
             self.path = self.path.replace("\\", "/")
         if json_file_data:
-            self.merge_data(json_file_data)
+            self.options = self.merge_data(copy.deepcopy(default_options), json_file_data)
+            logging.info("Merged default and user settings")
+        else:
+            self.options = copy.deepcopy(default_options)
+            logging.info("No user settings found, using default settings")
+        self.last_saved = copy.deepcopy(self.options)
         # print(json.dumps(self.options, indent=4))
 
         self.optCb.addItem("All")
@@ -226,20 +229,17 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.view.setAlternatingRowColors(True)
         self.view.setColumnWidth(0, self.view.width() // 2)
 
-        # Buttonbox signals
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).setText("Save and Restart")
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Open).setText("Import")
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Save).clicked.connect(self.save_and_restart)
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Open).clicked.connect(self.import_config)
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.Cancel).clicked.connect(self.cancel_handler)
-        self.buttonBox.button(QtWidgets.QDialogButtonBox.RestoreDefaults).clicked.connect(self.restore_defaults)
-
         # Option signals
         self.addOptBtn.clicked.connect(self.add_option_handler)
         self.removeOptBtn.clicked.connect(self.remove_option_handler)
         self.optCb.currentIndexChanged.connect(self.selection_change)
         self.moveUpTb.clicked.connect(lambda: self.move_option(move=1))
         self.moveDownTb.clicked.connect(lambda: self.move_option(move=-1))
+        self.restoreDefaultsBtn.clicked.connect(self.restore_defaults)
+        self.importBtn.clicked.connect(self.import_config)
+        self.saveBtn.clicked.connect(self.cancel_handler)
+        self.saveAsBtn.clicked.connect(self.cancel_handler)
+        self.cancelBtn.clicked.connect(self.cancel_handler)
 
         self.moveUpTb.hide()
         self.moveDownTb.hide()
@@ -299,15 +299,11 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
     def move_option(self, move=None):
         if move not in [1, -1]:
-            logging.error("Invalid move value passed to move_option method")
+            logging.debug("Invalid move value passed to move_option method")
             return
         selection = self.view.selectionModel().selectedRows()
-        if len(selection) == 0:
-            logging.debug("No options selected when trying to move")
-            self.statusbar.showMessage("Please select an option to move")
-            return
-        elif len(selection) > 1:
-            logging.debug("Multiple options selected when trying to move")
+        if len(selection) == 0 and len(selection) > 1:
+            logging.debug("No/multiple options selected when trying to move")
             self.statusbar.showMessage("Please select a single option to move")
             return
 
@@ -351,11 +347,11 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         return data, all(trues)
 
-    def merge_data(self, json_file_data):
+    def merge_data(self, options, json_file_data):
         # Check if dictionary options with fixed key/value pairs match data types from default
         for key in fixed_dict_options:
             if key in json_file_data:
-                self.options[key] = self.compare_data(self.options[key], json_file_data[key])[0]
+                options[key] = self.compare_data(options[key], json_file_data[key])[0]
 
         # Check if dictionary options with predefined structure match data types from default
         dos = copy.deepcopy(dict_option_structure)
@@ -374,17 +370,17 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                             temp_data[option_key] = json_file_data[key][option_key]
                             break
                 if temp_data != {}:
-                    self.options[key] = temp_data
+                    options[key] = temp_data
 
         # add filepicker default to import plugins if missing
-        for plugin in self.options["import_plugins"]:
-            if len(self.options["import_plugins"][plugin]) == 3:
-                self.options["import_plugins"][plugin].append("default")
+        for plugin in options["import_plugins"]:
+            if len(options["import_plugins"][plugin]) == 3:
+                options["import_plugins"][plugin].append("default")
 
         # add filepicker default to export plugins if missing
-        for plugin in self.options["export_plugins"]:
-            if len(self.options["export_plugins"][plugin]) == 3:
-                self.options["export_plugins"][plugin].append("default")
+        for plugin in options["export_plugins"]:
+            if len(options["export_plugins"][plugin]) == 3:
+                options["export_plugins"][plugin].append("default")
 
         # Check if list options with predefined structure match data types from default
         los = copy.deepcopy(list_option_structure)
@@ -398,15 +394,16 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                             temp_data.append(data)
                             break
                 if temp_data != []:
-                    self.options[key] = temp_data
+                    options[key] = temp_data
 
         # Check if options with fixed key/value pair structure match data types from default
         for key in key_value_options:
             if key in json_file_data:
-                data, match = self.compare_data(default_options[key], json_file_data[key])
+                data, match = self.compare_data(options[key], json_file_data[key])
                 if match:
-                    self.options[key] = data
-        logging.info("Merged default and user settings")
+                    options[key] = data
+
+        return options
 
     def show_all(self):
         # self.proxy_model.setFilterKeyColumn(0)
@@ -438,12 +435,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                         "Option already exists. Please change value to your preference or restore to default.")
                     return
                 elif option in dict_option_structure:
-                    self.statusbar.showMessage("")
                     json_data = dict_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
                 elif option in list_option_structure:
-                    self.statusbar.showMessage("")
                     json_data = list_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
@@ -451,6 +446,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     rows = self.json_model.rowCount(index) - 1
                     new_item = self.json_model.itemFromIndex(self.json_model.index(rows, 0, index))
                     new_item.setData(rows, QtCore.Qt.DisplayRole)
+                self.statusbar.showMessage("")
                 # expand root item
                 proxy_index = self.proxy_model.mapFromSource(index)
                 self.view.expand(proxy_index)
@@ -462,12 +458,14 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 self.view.scrollTo(proxy_index)
                 self.view.selectionModel().select(
                     proxy_index, QtCore.QItemSelectionModel.ClearAndSelect | QtCore.QItemSelectionModel.Rows)
+                logging.debug(f"Added new value for {option}")
                 break
 
     def remove_option_handler(self):
         selection = self.view.selectionModel().selectedRows()
         if len(selection) == 0:
-            self.statusbar.showMessage("Please select an option to remove")
+            logging.debug("zero selections while trying to remove option")
+            self.statusbar.showMessage("Please select one/more options to remove")
             return
 
         non_removable = []
@@ -517,6 +515,9 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             self.statusbar.showMessage("Default options are not removable.")
             return
 
+        options = "\n".join([index.data() for index in removable_indexes])
+        logging.debug(f"Trying to remove the following options\n{options}")
+
         self.view.selectionModel().clearSelection()
         for index in removable_indexes:
             rows = sorted(list(removable_indexes[index]))
@@ -536,11 +537,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
     def restore_defaults(self):
         def update(data, option, value):
             for k, v in data.items():
-                if k == option[0]:
-                    if option[1] is None:
-                        data[k] = value
-                    else:
-                        data[k][option[1]] = value
+                if k == option:
+                    data[k] = value
                     break
                 if isinstance(v, collections.abc.Mapping):
                     data[k] = update(data.get(k, {}), option, value)
@@ -548,7 +546,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         selection = self.view.selectionModel().selectedRows()
         if len(selection) == 0:
-            logging.debug("zero selections while trying to restore defaults")
+            logging.debug("no selections while trying to restore defaults")
             self.statusbar.showMessage("Please select one/more options to restore defaults")
             return
 
@@ -567,10 +565,12 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if not added:
                 selected_indexes.add(index)
 
+        options = "\n".join([index.data() for index in selected_indexes])
+        logging.debug(f"Trying to restore defaults for the following options\n{options}")
+
         for index in selected_indexes:
-            parent = QtCore.QModelIndex()
             if not index.parent().isValid() and index.data() in key_value_options:
-                value_index = self.json_model.index(index.row(), 1, parent)
+                value_index = self.json_model.index(index.row(), 1, QtCore.QModelIndex())
                 value_item = self.json_model.itemFromIndex(value_index)
                 value_item.setData(default_options[index.data()], QtCore.Qt.DisplayRole)
                 continue
@@ -582,31 +582,20 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 if index == root_index:
                     json_data = default_options[option]
                 else:
-                    list_index = None
                     key = None
                     value = copy.deepcopy(default_options)
                     for parent in parent_list + [index]:
                         parent_data = parent.data()
                         if isinstance(value, list):
                             break
-                            # parent_data = int(parent.data())
-                            # list_index = parent_data
                         key = parent_data
                         value = value[parent_data]
-                    json_data = update(model_data[option], (key, list_index), value)
-                    # key = index.data() if list_index is None else index.parent().data()
-                    # key = index.parent().data() if index.parent().parent().isValid() else index.data()
-                    # if index.parent().isValid():
-                    #     key = index.data() if list_index is None else index.parent().data()
-                    #     json_data = update(model_data[option], (key, list_index), value)
-                    # else:
-                    #     key = index.data()
-                    #     json_data = update(model_data, (key, list_index), value)[option]
+                    data = copy.deepcopy(model_data[option])
+                    json_data = update(data, key, value)
             else:
                 json_data = default_options[option]
-            # print(json_data)
-            # if json_data == default_options[option]:
-            #     continue
+            if model_data[option] == json_data:
+                continue
             # remove all rows
             for row in range(self.proxy_model.rowCount(root_index)):
                 self.proxy_model.removeRow(0, parent=root_index)
@@ -616,6 +605,9 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             type_ = match_type(json_data)
             type_.next(model=self.json_model, data=json_data, parent=source_item)
         self.view.clearSelection()
+
+    def check_modified(self):
+        return not self.last_saved == self.json_model.serialize()
 
     def save_and_restart(self):
         json_data = self.json_model.serialize()
@@ -634,9 +626,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 del save_data[key]
 
         for key in key_value_options + list(dict_option_structure) + list(list_option_structure):
-            if json_data[key] == default_options[key]:
+            if json_data[key] == default_options[key] or json_data[key] == {} or json_data[key] == []:
                 del save_data[key]
-
 #         print(json.dumps(save_data, indent=4))
 
         dir_name, file_name = fs.path.split(self.path)
