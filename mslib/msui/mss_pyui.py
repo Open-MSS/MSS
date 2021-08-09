@@ -272,12 +272,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         picker_default = config_loader(dataset="filepicker_default")
         self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Import")
         self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Export")
-        self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
-        self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
-        self.import_plugins = {"csv": load_from_csv}
-        self.export_plugins = {"csv": save_to_csv}
-        self.add_import_plugins(picker_default)
-        self.add_export_plugins(picker_default)
+        self.add_plugins()
 
         preload_urls = config_loader(dataset="WMS_preload")
         self.preload_wms(preload_urls)
@@ -347,6 +342,15 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # enable/disable flight track menus
         self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
         self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
+
+    def add_plugins(self):
+        picker_default = config_loader(dataset="filepicker_default")
+        self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
+        self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
+        self.import_plugins = {"csv": load_from_csv}
+        self.export_plugins = {"csv": save_to_csv}
+        self.add_import_plugins(picker_default)
+        self.add_export_plugins(picker_default)
 
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
         if plugin_type == "Import":
@@ -741,15 +745,15 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         if self.config_editor is None:
             self.config_editor = editor.ConfigurationEditorWindow(parent=self)
+            self.config_editor.viewCloses.connect(self.close_config_editor)
+            self.config_editor.restartApplication.connect(self.restart_application)
             self.config_editor.show()
-            # self.config_editor = editor.EditorMainWindow(parent=self)
-            # self.config_editor.viewCloses.connect(self.close_config_editor)
-            # self.config_editor.restartApplication.connect(self.restart_application)
         else:
             self.config_editor.showNormal()
             self.config_editor.activateWindow()
 
     def close_config_editor(self):
+        self.config_editor.close()
         self.config_editor = None
 
     def show_online_help(self):

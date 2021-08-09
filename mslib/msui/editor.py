@@ -30,10 +30,10 @@ import fs
 import logging
 import json
 
-# from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
-from mslib.msui import constants
+# from mslib.msui import constants
 from mslib.msui.constants import MSS_SETTINGS
 # from mslib.msui.icons import icons
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
@@ -41,7 +41,7 @@ from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.support.qt_json_view import delegate
 from mslib.support.qt_json_view.view import JsonView
 from mslib.support.qt_json_view.model import JsonModel
-from mslib.support.qt_json_view.datatypes import match_type, DataType, TypeRole, ListType, DictType
+from mslib.support.qt_json_view.datatypes import match_type, DataType, TypeRole, ListType
 
 
 # system default options as dictionary
@@ -122,12 +122,13 @@ class JsonDelegate(delegate.JsonDelegate):
             return super(JsonDelegate, self).paint(painter, option, index)
 
         if index.data() is not None:
-            proxy_model = index.model()
-            parents = [proxy_model.index(index.row(), 0, index.parent())]
+            model = index.model()
+            parents = [model.index(index.row(), 0, index.parent())]
             while parents[0].parent().isValid():
                 parents.insert(0, parents[0].parent())
-            if parents[0].data() in fixed_dict_options:
-                default_data = default_options[parents[0].data()]
+            root_option = parents[0].data()
+            if root_option in fixed_dict_options:
+                default_data = default_options[root_option]
                 for parent in parents[1:]:
                     parent_data = parent.data()
                     if isinstance(default_data, list):
@@ -135,8 +136,14 @@ class JsonDelegate(delegate.JsonDelegate):
                     default_data = default_data[parent_data]
                 if default_data != index.data():
                     option.font.setWeight(QtGui.QFont.Bold)
-            elif parents[0].data() in key_value_options:
-                if default_options[parents[0].data()] != index.data():
+            elif root_option in key_value_options:
+                if default_options[root_option] != index.data():
+                    option.font.setWeight(QtGui.QFont.Bold)
+            elif root_option in dict_option_structure or root_option in list_option_structure:
+                if isinstance(model, QtCore.QAbstractProxyModel):
+                    model = model.sourceModel()
+                source_data = model.serialize()
+                if source_data[root_option] != default_options[root_option]:
                     option.font.setWeight(QtGui.QFont.Bold)
 
         type_ = index.data(TypeRole)
@@ -173,36 +180,33 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
     name = "MSSEditor"
     identifier = None
 
-    # restartApplication = QtCore.pyqtSignal(name="restartApplication")
+    viewCloses = QtCore.pyqtSignal(name="viewCloses")
+    restartApplication = QtCore.pyqtSignal(name="restartApplication")
 
     def __init__(self, parent=None):
         super(ConfigurationEditorWindow, self).__init__(parent)
         self.setupUi(self)
 
         # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
-        self.path = constants.CACHED_CONFIG_FILE
+        self.path = MSS_SETTINGS
         json_file_data = {}
-        if self.path is not None:
-            self.path = self.path.replace("\\", "/")
-            dir_name, file_name = fs.path.split(self.path)
-            with fs.open_fs(dir_name) as _fs:
-                if _fs.exists(file_name):
-                    file_content = _fs.readtext(file_name)
-                    json_file_data = json.loads(file_content)
-        else:
-            self.path = MSS_SETTINGS
-            self.path = self.path.replace("\\", "/")
+        self.path = self.path.replace("\\", "/")
+        dir_name, file_name = fs.path.split(self.path)
+        with fs.open_fs(dir_name) as _fs:
+            if _fs.exists(file_name):
+                file_content = _fs.readtext(file_name)
+                json_file_data = json.loads(file_content)
         if json_file_data:
-            self.options = self.merge_data(copy.deepcopy(default_options), json_file_data)
+            options = self.merge_data(copy.deepcopy(default_options), json_file_data)
             logging.info("Merged default and user settings")
         else:
-            self.options = copy.deepcopy(default_options)
+            options = copy.deepcopy(default_options)
             logging.info("No user settings found, using default settings")
-        self.last_saved = copy.deepcopy(self.options)
-        # print(json.dumps(self.options, indent=4))
+        self.last_saved = copy.deepcopy(options)
+        # print(json.dumps(options, indent=4))
 
         self.optCb.addItem("All")
-        for option in sorted(self.options.keys(), key=str.lower):
+        for option in sorted(options.keys(), key=str.lower):
             self.optCb.addItem(option)
 
         # Create view and place in widget
@@ -215,9 +219,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         # Create proxy model for filtering
         self.proxy_model = JsonSortFilterProxyModel()
-        self.json_model = JsonModel(data=self.options, editable_keys=True, editable_values=True)
+        self.json_model = JsonModel(data=options, editable_keys=True, editable_values=True)
         self.json_model.setHorizontalHeaderLabels(['Option', 'Value'])
 
+        # set tooltip and make keys non-editable
         self.set_noneditable_items(QtCore.QModelIndex())
 
         # Set view model
@@ -229,7 +234,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.view.setAlternatingRowColors(True)
         self.view.setColumnWidth(0, self.view.width() // 2)
 
-        # Option signals
+        # Connecting signals
         self.addOptBtn.clicked.connect(self.add_option_handler)
         self.removeOptBtn.clicked.connect(self.remove_option_handler)
         self.optCb.currentIndexChanged.connect(self.selection_change)
@@ -237,9 +242,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.moveDownTb.clicked.connect(lambda: self.move_option(move=-1))
         self.restoreDefaultsBtn.clicked.connect(self.restore_defaults)
         self.importBtn.clicked.connect(self.import_config)
-        self.saveBtn.clicked.connect(self.cancel_handler)
-        self.saveAsBtn.clicked.connect(self.cancel_handler)
-        self.cancelBtn.clicked.connect(self.cancel_handler)
+        self.exportBtn.clicked.connect(self.export_config)
+        self.saveBtn.clicked.connect(self.save_config)
+        self.cancelBtn.clicked.connect(lambda: self.close())
+        self.view.selectionModel().selectionChanged.connect(self.tree_selection_changed)
 
         self.moveUpTb.hide()
         self.moveDownTb.hide()
@@ -249,11 +255,12 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.moveDownTb.setAutoRaise(True)
         self.moveDownTb.setArrowType(QtCore.Qt.DownArrow)
         self.moveDownTb.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+
         self.moveUpTb.setEnabled(False)
         self.moveDownTb.setEnabled(False)
         self.addOptBtn.setEnabled(False)
         self.removeOptBtn.setEnabled(False)
-        self.view.selectionModel().selectionChanged.connect(self.tree_selection_changed)
+        self.restoreDefaultsBtn.setEnabled(False)
 
     def get_root_index(self, index, parents=False):
         parent_list = []
@@ -278,7 +285,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
     def tree_selection_changed(self, selected, deselected):
         selection = self.view.selectionModel().selectedRows()
         # if no selection
-        add, remove, move = [False] * 3
+        add, remove, restore_defaults, move = [False] * 4
         if len(selection) == 1:
             index = selection[0]
             if not index.parent().isValid():
@@ -287,6 +294,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if index.data() not in fixed_dict_options + key_value_options:
                 add, move = True, True
         if len(selection) >= 1:
+            restore_defaults = True
             for index in selection:
                 index = self.get_root_index(index)
                 if index.data() not in fixed_dict_options + key_value_options and self.proxy_model.rowCount(index) > 0:
@@ -294,6 +302,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     break
         self.addOptBtn.setEnabled(add)
         self.removeOptBtn.setEnabled(remove)
+        self.restoreDefaultsBtn.setEnabled(restore_defaults)
         self.moveUpTb.setEnabled(move)
         self.moveDownTb.setEnabled(move)
 
@@ -491,25 +500,11 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 else:
                     non_removable.append(index)
 
-        data = self.json_model.serialize()
-        removable_data = {}
-        for index in removable_indexes:
-            index_data = index.data()
-            if isinstance(data[index_data], list):
-                removable_data[index_data] = [data[index_data][r] for r in removable_indexes[index]]
-            else:
-                removable_data[index_data] = {}
-                for r in removable_indexes[index]:
-                    child_index = self.proxy_model.index(r, 0, index)
-                    child_data = child_index.data()
-                    removable_data[index_data][child_data] = data[index_data][child_data]
-
-        # self.error_dialog = QtWidgets.QErrorMessage()
-        # self.error_dialog.showMessage('Path can\'t be empty')
-        # dialog_box = QtWidgets.QMessageBox.question(self, "Invalid options detected",
-        # "The following options were invalid\npredefined_map_sections:new_location", QtWidgets.QMessageBox.Ok)
-        # if dialog_box == QtWidgets.QMessageBox.Ok:
-        #     pass
+        # dialog_box = QtWidgets.QMessageBox.question(self, 'Remove option',
+        #                 'Are you sure about removing the selected options?',
+        #                 QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        # if dialog_box == QtWidgets.QMessageBox.No:
+        #     return
 
         if removable_indexes == {} and non_removable != []:
             self.statusbar.showMessage("Default options are not removable.")
@@ -549,6 +544,12 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             logging.debug("no selections while trying to restore defaults")
             self.statusbar.showMessage("Please select one/more options to restore defaults")
             return
+
+        # dialog_box = QtWidgets.QMessageBox.question(self, 'Remove option',
+        #                 'Are you sure about restoring default values for the selected options?',
+        #                 QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        # if dialog_box == QtWidgets.QMessageBox.No:
+        #     return
 
         model_data = self.json_model.serialize()
         selected_indexes = set()
@@ -604,14 +605,49 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             source_item = self.json_model.itemFromIndex(source_index)
             type_ = match_type(json_data)
             type_.next(model=self.json_model, data=json_data, parent=source_item)
+        self.statusbar.showMessage("Defaults restored for selected options")
         self.view.clearSelection()
+
+    def import_config(self):
+        file_path = get_open_filename(self, "Import config", "", ';;'.join(["*.json", "*.*"]))
+        if not file_path:
+            return
+
+        # load data from selected file
+        dir_name, file_name = fs.path.split(file_path)
+        with fs.open_fs(dir_name) as _fs:
+            if _fs.exists(file_name):
+                file_content = _fs.readtext(file_name)
+                try:
+                    json_file_data = json.loads(file_content)
+                except Exception as e:
+                    self.statusbar.showMessage("Unexpected error while loading data from file")
+                    logging.error(f"Couldn't load json data\n Error:\n{e}")
+                    return
+
+        if json_file_data:
+            logging.debug("Merging default and JSON data from file")
+            json_model_data = self.json_model.serialize()
+            options = self.merge_data(copy.deepcopy(json_model_data), json_file_data)
+            if options == json_model_data:
+                self.statusbar.showMessage("No option with new values found")
+                return
+            # replace existing data with new ones
+            self.json_model.init(options, editable_keys=True, editable_values=True)
+            self.view.setColumnWidth(0, self.view.width() // 2)
+            self.set_noneditable_items(QtCore.QModelIndex())
+            self.statusbar.showMessage("Successfully imported config")
+        else:
+            self.statusbar.showMessage("No data found in the file")
+            logging.debug("No data found in the file, using existing settings")
 
     def check_modified(self):
         return not self.last_saved == self.json_model.serialize()
 
-    def save_and_restart(self):
-        json_data = self.json_model.serialize()
-        save_data = copy.deepcopy(json_data)
+    def _save_to_path(self, filename):
+        self.last_saved = self.json_model.serialize()
+        json_data = copy.deepcopy(self.last_saved)
+        save_data = copy.deepcopy(self.last_saved)
 
         # saving only diff from default
         for key in fixed_dict_options:
@@ -628,14 +664,46 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         for key in key_value_options + list(dict_option_structure) + list(list_option_structure):
             if json_data[key] == default_options[key] or json_data[key] == {} or json_data[key] == []:
                 del save_data[key]
-#         print(json.dumps(save_data, indent=4))
 
-        dir_name, file_name = fs.path.split(self.path)
+        dir_name, file_name = fs.path.split(filename)
         with fs.open_fs(dir_name) as _fs:
             _fs.writetext(file_name, json.dumps(save_data, indent=4))
 
-    def import_config(self):
-        pass
+    def save_config(self):
+        if self.check_modified():
+            logging.debug("saving config file to: %s", self.path)
+            self._save_to_path(self.path)
+            ret = QtWidgets.QMessageBox.warning(
+                self, self.tr("Mission Support System"),
+                self.tr("Do you want to restart the application?\n"
+                        "(This is necessary to apply changes)"),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Yes:
+                self.restartApplication.emit()
+                self.close()
+        else:
+            self.statusbar.showMessage("No values changed")
 
-    def cancel_handler(self):
-        pass
+    def export_config(self):
+        if self.json_model.serialize() == default_options:
+            # Todo - notify user about no non-default values
+            # return
+            pass
+        path = get_save_filename(self, "Export config", "mss_settings", "Json files (*.json)")
+        if path:
+            self._save_to_path(path)
+
+    def closeEvent(self, event):
+        if self.check_modified():
+            ret = QtWidgets.QMessageBox.question(
+                self, self.tr("Mission Support System"),
+                self.tr("Save Changes to default mss_settings.json?\n"
+                        "You need to restart the gui for changes to take effect."),
+                QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+
+            if ret == QtWidgets.QMessageBox.Yes:
+                self.save_config()
+        else:
+            self.viewCloses.emit()
+            event.accept()

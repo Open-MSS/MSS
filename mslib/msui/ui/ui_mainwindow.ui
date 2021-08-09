@@ -59,7 +59,11 @@
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="listViews"/>
+        <widget class="QListWidget" name="listViews">
+         <property name="toolTip">
+          <string>Double-click a view to bring it to the front.</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
@@ -91,6 +95,9 @@
       </item>
       <item alignment="Qt::AlignRight">
        <widget class="QToolButton" name="userOptionsTb">
+        <property name="toolTip">
+         <string>Profile options</string>
+        </property>
         <property name="styleSheet">
          <string notr="true">::menu-indicator { image: none; }</string>
         </property>
@@ -141,6 +148,9 @@
        </item>
        <item row="3" column="0">
         <widget class="QCheckBox" name="workLocallyCheckbox">
+         <property name="toolTip">
+          <string>Check to work asynchronously from the server</string>
+         </property>
          <property name="text">
           <string>Work Asynchronously</string>
          </property>
@@ -154,10 +164,17 @@
         </widget>
        </item>
        <item row="1" column="0" colspan="2">
-        <widget class="QListWidget" name="listProjectsMSC"/>
+        <widget class="QListWidget" name="listProjectsMSC">
+         <property name="toolTip">
+          <string>List of mscolab projects.</string>
+         </property>
+        </widget>
        </item>
        <item row="3" column="1">
         <widget class="QComboBox" name="serverOptionsCb">
+         <property name="toolTip">
+          <string>Fetch/Save Server options</string>
+         </property>
          <item>
           <property name="text">
            <string>Server Options</string>
@@ -204,7 +221,13 @@
         </widget>
        </item>
        <item>
-        <widget class="QListWidget" name="listFlightTracks"/>
+        <widget class="QListWidget" name="listFlightTracks">
+         <property name="toolTip">
+          <string>List of open flight tracks.
+Double-click a flight track to activate it.
+Save a flight track to name it.</string>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>
