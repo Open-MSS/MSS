@@ -24,70 +24,49 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
-import requests
-import json
-import sys
-import pytest
-
-from werkzeug.urls import url_join
-from PyQt5 import QtWidgets, QtTest
-from mslib.mscolab.models import User, MessageType, Message
+from flask import Flask
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.models import db, User, MessageType, Message
 from mslib.mscolab.chat_manager import ChatManager
-from mslib.msui.mscolab import MSSMscolabWindow
-from mslib._tests.utils import mscolab_start_server
+from mslib.mscolab.seed import add_user, add_project, add_user_to_project, delete_user, delete_project
+from mslib.mscolab.mscolab import handle_db_seed
 
 
-PORTS = list(range(9321, 9340))
-
-
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Chat_Manager(object):
     def setup(self):
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        handle_db_seed()
+        self.app = Flask(__name__, static_url_path='')
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        db.init_app(self.app)
         self.cm = ChatManager()
-        self.room_name = "europe"
-        data = {
-            'email': 'a',
-            'password': 'a'
-        }
-        r = requests.post(self.url + '/token', data=data)
-        self.token = json.loads(r.text)['token']
-        with self.app.app_context():
-            self.user = User.query.filter_by(id=8).first()
 
-        data = {
-            "token": self.token,
-            "path": self.room_name,
-            "description": "test description"
-        }
-        url = url_join(self.url, 'create_project')
-        requests.post(url, data=data)
+        self.room_name = "europe"
+        self.userdata = "va6@v6", "va6", "va6"
+
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_project(self.room_name, "test europe")
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        self.user = User(self.userdata[0], self.userdata[1], self.userdata[2])
 
     def teardown(self):
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+        assert delete_user(self.userdata[0])
+        assert delete_project(self.room_name)
 
     def test_add_message(self):
         with self.app.app_context():
-            message = self.cm.add_message(self.user, 'some message', self.room_name, message_type=MessageType.TEXT,
+
+            message = self.cm.add_message(self.user, 'some message',
+                                          self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)
             assert message.text == 'some message'
 
     def test_edit_messages(self):
         with self.app.app_context():
-            message = self.cm.add_message(self.user, 'some test message', self.room_name, message_type=MessageType.TEXT,
+            message = self.cm.add_message(self.user, 'some test message',
+                                          self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)
             new_message_text = "Wonderland"
             self.cm.edit_message(message.id, new_message_text)

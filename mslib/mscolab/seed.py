@@ -103,10 +103,13 @@ def delete_user(email):
     with app.app_context():
         user = User.query.filter_by(emailid=str(email)).first()
         if user:
-            print(f"User: {email} deleted from db")
+            logging.info(f"User: {email} deleted from db")
             db.session.delete(user)
             db.session.commit()
+            db.session.close()
+            return True
         db.session.close()
+        return False
 
 
 def add_user(email, username, password):
@@ -129,10 +132,77 @@ def add_user(email, username, password):
             db.session.add(db_user)
             db.session.commit()
             db.session.close()
-            print(f"Userdata: {email} {username} {password}")
-            print(template)
+            logging.info(f"Userdata: {email} {username} {password}")
+            logging.info(template)
+            return True
         else:
-            print(f"{user_name_exists} already in db")
+            logging.info(f"{user_name_exists} already in db")
+    return False
+
+
+def add_project(project_name, description):
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    with app.app_context():
+        project_available = Project.query.filter_by(path=project_name).first()
+        if not project_available:
+            project = Project(project_name, description)
+            db.session.add(project)
+            db.session.commit()
+            with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+                if not file_dir.exists(project_name):
+                    file_dir.makedir(project_name)
+                    file_dir.writetext(f'{project_name}/main.ftml', mscolab_settings.STUB_CODE)
+                    # initiate git
+                    r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', project_name))
+                    r.git.clear_cache()
+                    r.index.add(['main.ftml'])
+                    r.index.commit("initial commit")
+            return True
+        else:
+            return False
+
+
+def delete_project(project_name):
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    with app.app_context():
+        project = Project.query.filter_by(path=project_name).first()
+        if project:
+            db.session.delete(project)
+            db.session.commit()
+            db.session.close()
+            return True
+        db.session.close()
+        return False
+
+
+def add_user_to_project(path=None, access_level='admin', emailid=None):
+    """ on db level we add all users to the project TEMPLATE for user handling"""
+    if None in (path, emailid):
+        return False
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    db.init_app(app)
+    with app.app_context():
+        project = Project.query.filter_by(path=path).first()
+        if project:
+
+            user = User.query.filter_by(emailid=emailid).first()
+            if user:
+                new_permissions = [Permission(user.id, project.id, access_level)]
+                db.session.add_all(new_permissions)
+                try:
+                    db.session.commit()
+                    return True
+                except IntegrityError as err:
+                    db.session.rollback()
+                    logging.debug(f"Error writing to db: {err}")
+                db.session.close()
+    return False
 
 
 def seed_data():
