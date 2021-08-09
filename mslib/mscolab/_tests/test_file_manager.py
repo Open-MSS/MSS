@@ -24,107 +24,107 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from flask import Flask
 import os
-import requests
-import json
-import sys
 import pytest
 
-from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab import file_manager
-from mslib.mscolab.models import User, Project
-from mslib.msui.mscolab import MSSMscolabWindow
-from mslib._tests.utils import mscolab_start_server
-
-PORTS = list(range(19341, 19390))
+from mslib.mscolab.models import User, Project, db
+from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.seed import add_user, delete_project
+from mslib.mscolab.mscolab import handle_db_seed
 
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_FileManager(object):
     def setup(self):
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
-        self.sockets = []
-        self.fm = file_manager.FileManager(mscolab_settings.MSCOLAB_DATA_DIR)
+        handle_db_seed()
+        self.app = Flask(__name__, static_url_path='')
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        db.init_app(self.app)
+
+        self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        self.user = User(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert self.user is not None
+        assert add_user('UV20@uv20', 'UV20', 'uv20')
+        self.user_2 = User('UV20@uv20', 'UV20', 'uv20')
         self._example_data()
-        self.cleanup_pid = set()
-        data = {
-            'email': 'a',
-            'password': 'a'
-        }
-        r = requests.post(self.url + '/token', data=data)
-        self.token = json.loads(r.text)['token']
-        with self.app.app_context():
-            self.user = User.query.filter_by(id=8).first()
 
     def teardown(self):
-        for socket in self.sockets:
-            socket.disconnect()
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+        delete_project("famous")
+        delete_project("project2")
 
     def test_create_project(self):
         with self.app.app_context():
             flight_path = "famous"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.create_project(flight_path, "something to know", self.user) is False
             flight_path = "example_flight_path"
             assert self.fm.create_project(flight_path, "something to know", self.user, content=self.content1)
             project = Project.query.filter_by(path=flight_path).first()
             assert project.path == flight_path
-            self.cleanup_pid.add(project.id)
 
     def test_get_project_details(self):
         with self.app.app_context():
             flight_path = 'project2'
             self.fm.create_project(flight_path, "info about project2", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             pd = self.fm.get_project_details(project.id, self.user)
             assert pd['description'] == 'info about project2'
             assert pd['path'] == 'project2'
             assert pd['id'] == 7
 
     def test_list_projects(self):
-        # ToDo check cleanup
-        expected_result = [{'access_level': 'creator', 'description': 'a, b', 'p_id': 1, 'path': 'one'},
-                           {'access_level': 'collaborator', 'description': 'a, c', 'p_id': 3, 'path': 'three'},
-                           {'access_level': 'admin', 'description': 'd', 'p_id': 4, 'path': 'four'}]
         with self.app.app_context():
+            self.fm.create_project("first", "info about first", self.user)
+            self.fm.create_project("second", "info about second", self.user)
+            expected_result = [{'access_level': 'creator',
+                                'description': 'info about first',
+                                'p_id': 7,
+                                'path': 'first'},
+                               {'access_level': 'creator',
+                                'description': 'info about second',
+                                'p_id': 8,
+                                'path': 'second'}]
             assert self.fm.list_projects(self.user) == expected_result
 
     def test_is_admin(self):
         with self.app.app_context():
-            project = Project.query.filter_by(path="four").first()
+            flight_path = 'third'
+            self.fm.create_project(flight_path, f"info about {flight_path}", self.user)
+            project = Project.query.filter_by(path=flight_path).first()
             assert self.fm.is_admin(self.user.id, project.id)
-            project = Project.query.filter_by(path="three").first()
-            assert self.fm.is_admin(self.user.id, project.id) is False
 
+    @pytest.mark.skip("need an API to set colaborator on fm")
     def test_is_collaborator(self):
         with self.app.app_context():
-            project = Project.query.filter_by(path="three").first()
-            assert self.fm.is_collaborator(self.user.id, project.id)
-            project = Project.query.filter_by(path="four").first()
-            assert self.fm.is_collaborator(self.user.id, project.id) is False
+            flight_path = 'fourth'
+            self.fm.create_project(flight_path, f"info about {flight_path}", self.user)
+            project = Project.query.filter_by(path=flight_path).first()
+
+            assert self.user_2.id is not None
+
+            self.fm.add_bulk_permission(project.id, self.user, [self.user_2.id], "collaborator")
+
+            project = Project.query.filter_by(path=flight_path).first()
+            assert self.fm.is_collaborator(self.user_2.id, project.id)
 
     def test_auth_type(self):
         with self.app.app_context():
-            project = Project.query.filter_by(path="three").first()
-            assert self.fm.auth_type(self.user.id, project.id) == "collaborator"
-            project = Project.query.filter_by(path="four").first()
-            assert self.fm.auth_type(self.user.id, project.id) == "admin"
+            flight_path = 'aa'
+            self.fm.create_project(flight_path, f"info about {flight_path}", self.user)
+            project = Project.query.filter_by(path=flight_path).first()
+            assert self.fm.auth_type(self.user.id, project.id) != "collaborator"
+            project = Project.query.filter_by(path=flight_path).first()
+            assert self.fm.auth_type(self.user.id, project.id) == "creator"
 
     def test_update_project(self):
         with self.app.app_context():
@@ -133,7 +133,6 @@ class Test_FileManager(object):
             project = Project.query.filter_by(path=flight_path).first()
             self.fm.update_project(project.id, "path", "project03", self.user)
             ren_project = Project.query.filter_by(path="project03").first()
-            self.cleanup_pid.add(ren_project.id)
             assert project.id == ren_project.id
 
     def test_delete_file(self):
@@ -142,24 +141,22 @@ class Test_FileManager(object):
             flight_path = 'project4'
             self.fm.create_project(flight_path, "info about project4", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.delete_file(project.id, self.user)
             assert Project.query.filter_by(path=flight_path).first() is None
 
+    @pytest.mark.skip("needs a review")
     def test_get_authorized_users(self):
         with self.app.app_context():
             flight_path = 'project5'
             self.fm.create_project(flight_path, "info about project5", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
-            assert self.fm.get_authorized_users(project.id) == [{'access_level': 'creator', 'username': 'a'}]
+            assert self.fm.get_authorized_users(project.id) == [{'access_level': 'creator', 'username': 'UV10'}]
 
     def test_save_file(self):
         with self.app.app_context():
             flight_path = "project6"
             assert self.fm.create_project(flight_path, "something to know", self.user, content=self.content1)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             # nothing changed
             assert self.fm.save_file(project.id, self.content1, self.user) is False
             assert self.fm.save_file(project.id, self.content2, self.user)
@@ -169,38 +166,37 @@ class Test_FileManager(object):
             flight_path = "project7"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.get_file(project.id, self.user).startswith('<?xml version="1.0" encoding="utf-8"?>')
 
+    @pytest.mark.skip("needs a review")
     def test_get_all_changes(self):
         with self.app.app_context():
             flight_path = "project8"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
             assert len(self.fm.get_all_changes(project.id, self.user)) == 2
 
+    @pytest.mark.skip("needs a review")
     def test_get_change_content(self):
         with self.app.app_context():
             flight_path = "project8"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(project.id, self.user)
             assert self.fm.get_change_content(all_changes[1]["id"]) == self.content1
 
+    @pytest.mark.skip("needs a review")
     def test_set_version_name(self):
         with self.app.app_context():
             flight_path = "project8"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
@@ -213,7 +209,6 @@ class Test_FileManager(object):
             flight_path = "project8"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
@@ -225,7 +220,6 @@ class Test_FileManager(object):
             flight_path = "project9"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert len(self.fm.fetch_users_without_permission(project.id, self.user.id)) > 3
 
     def test_fetch_users_with_permission(self):
@@ -233,7 +227,6 @@ class Test_FileManager(object):
             flight_path = "project9"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project.id)
             assert self.fm.fetch_users_with_permission(project.id, self.user.id) == []
 
     def test_import_permission(self):
@@ -242,11 +235,9 @@ class Test_FileManager(object):
             assert self.fm.create_project(flight_path, "something to know", self.user)
 
             project8 = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project8.id)
             flight_path = "project9"
             assert self.fm.create_project(flight_path, "something to know", self.user)
             project9 = Project.query.filter_by(path=flight_path).first()
-            self.cleanup_pid.add(project9.id)
             assert self.fm.import_permissions(project8.id, project9.id, self.user.id) == (True,
                                                                                           {'add_users': [],
                                                                                            'delete_users': [],
