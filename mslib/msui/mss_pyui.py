@@ -724,21 +724,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.remove_plugins()
         self.add_plugins()
 
-    def load_config_file(self):
-        """
-        Loads a config file and potentially restarts the application
-        """
-        ret = QtWidgets.QMessageBox.warning(
-            self, self.tr("Mission Support System"),
-            self.tr("Opening a config file will reset application. Continue?"),
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-        if ret == QtWidgets.QMessageBox.Yes:
-            filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)")
-            if filename is not None:
-                constants.CACHED_CONFIG_FILE = filename
-                self.restart_application()
-
     def open_config_editor(self):
         """
         Opens up a JSON config editor

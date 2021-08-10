@@ -121,8 +121,10 @@ class JsonDelegate(delegate.JsonDelegate):
         if index.column() == 0:
             return super(JsonDelegate, self).paint(painter, option, index)
 
+        # Bold the value if not default
         if index.data() is not None:
             model = index.model()
+            # Get root parent of the index
             parents = [model.index(index.row(), 0, index.parent())]
             while parents[0].parent().isValid():
                 parents.insert(0, parents[0].parent())
@@ -140,6 +142,7 @@ class JsonDelegate(delegate.JsonDelegate):
                 if default_options[root_option] != index.data():
                     option.font.setWeight(QtGui.QFont.Bold)
             elif root_option in dict_option_structure or root_option in list_option_structure:
+                # get source model if sortfilterproxymodel is used, for serializing data
                 if isinstance(model, QtCore.QAbstractProxyModel):
                     model = model.sourceModel()
                 source_data = model.serialize()
@@ -161,7 +164,6 @@ class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):
     def filterAcceptsRow(self, source_row, source_parent):
         # check if an item is currently accepted
         accepted = super(JsonSortFilterProxyModel, self).filterAcceptsRow(source_row, source_parent)
-
         if accepted:
             return True
 
@@ -177,6 +179,9 @@ class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
 
 class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationEditorWindow):
+    """MSUI configuration editor class. Provides user interface elements for editing mss_settings.json
+    """
+
     name = "MSSEditor"
     identifier = None
 
@@ -300,6 +305,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 if index.data() not in fixed_dict_options + key_value_options and self.proxy_model.rowCount(index) > 0:
                     remove = True
                     break
+
         self.addOptBtn.setEnabled(add)
         self.removeOptBtn.setEnabled(remove)
         self.restoreDefaultsBtn.setEnabled(restore_defaults)
@@ -322,6 +328,13 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 self.proxy_model.moveRow(index.parent(), index.row(), index.parent(), index.row() + move)
 
     def compare_data(self, default, user_data):
+        """Recursively compares two dictionaries based on qt_json_view datatypes
+           and returns default or user_data appropriately.
+
+        Arguments:
+        default -- Dict to return if datatype not matching
+        user_data -- Dict to return if datatype is matching
+        """
         # If data is neither list not dict type, compare individual type
         if not isinstance(default, dict) and not isinstance(default, list):
             if isinstance(default, float) and isinstance(user_data, int):
@@ -357,6 +370,13 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         return data, all(trues)
 
     def merge_data(self, options, json_file_data):
+        """Merge two dictionaries by comparing all the options from
+           the MissionSupportSystemDefaultConfig class
+
+        Arguments:
+        options -- Dict to merge options into
+        json_file_data -- Dict with new values
+        """
         # Check if dictionary options with fixed key/value pairs match data types from default
         for key in fixed_dict_options:
             if key in json_file_data:
@@ -511,7 +531,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             return
 
         options = "\n".join([index.data() for index in removable_indexes])
-        logging.debug(f"Trying to remove the following options\n{options}")
+        logging.debug(f"Attempting to remove the following options\n{options}")
 
         self.view.selectionModel().clearSelection()
         for index in removable_indexes:
@@ -529,7 +549,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     item = self.json_model.itemFromIndex(child_index)
                     item.setData(r, QtCore.Qt.DisplayRole)
 
+        self.statusbar.showMessage("Successfully removed values selected options")
+
     def restore_defaults(self):
+        # function to update dict at a depth
         def update(data, option, value):
             for k, v in data.items():
                 if k == option:
@@ -551,6 +574,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         # if dialog_box == QtWidgets.QMessageBox.No:
         #     return
 
+        # get list of distinct indexes to restore
         model_data = self.json_model.serialize()
         selected_indexes = set()
         for index in selection:
@@ -567,9 +591,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 selected_indexes.add(index)
 
         options = "\n".join([index.data() for index in selected_indexes])
-        logging.debug(f"Trying to restore defaults for the following options\n{options}")
+        logging.debug(f"Attempting to restore defaults for the following options\n{options}")
 
         for index in selected_indexes:
+            # check if root option and present in key_value_options
             if not index.parent().isValid() and index.data() in key_value_options:
                 value_index = self.json_model.index(index.row(), 1, QtCore.QModelIndex())
                 value_item = self.json_model.itemFromIndex(value_index)
@@ -605,6 +630,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             source_item = self.json_model.itemFromIndex(source_index)
             type_ = match_type(json_data)
             type_.next(model=self.json_model, data=json_data, parent=source_item)
+
         self.statusbar.showMessage("Defaults restored for selected options")
         self.view.clearSelection()
 
@@ -626,17 +652,17 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     return
 
         if json_file_data:
-            logging.debug("Merging default and JSON data from file")
             json_model_data = self.json_model.serialize()
             options = self.merge_data(copy.deepcopy(json_model_data), json_file_data)
             if options == json_model_data:
                 self.statusbar.showMessage("No option with new values found")
                 return
-            # replace existing data with new ones
+            # replace existing data with new data
             self.json_model.init(options, editable_keys=True, editable_values=True)
             self.view.setColumnWidth(0, self.view.width() // 2)
             self.set_noneditable_items(QtCore.QModelIndex())
             self.statusbar.showMessage("Successfully imported config")
+            logging.debug("Imported new config data from file")
         else:
             self.statusbar.showMessage("No data found in the file")
             logging.debug("No data found in the file, using existing settings")
@@ -649,7 +675,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         json_data = copy.deepcopy(self.last_saved)
         save_data = copy.deepcopy(self.last_saved)
 
-        # saving only diff from default
+        # saving only diff from the default values
         for key in fixed_dict_options:
             if isinstance(json_data[key], dict):
                 for key_key in json_data[key]:
