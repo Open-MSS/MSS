@@ -24,123 +24,109 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import mslib
+import mock
+from flask import Flask
 import os
-import io
-import sys
+import fs
 import pytest
-from pathlib import Path
-from flask import json
-from werkzeug.urls import url_join
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab import server
-from mslib.msui.mscolab import MSSMscolabWindow
-from mslib.mscolab.models import User
-from mslib._tests.utils import (mscolab_register_user,
-                                mscolab_register_and_login, mscolab_create_content,
-                                mscolab_create_project,
-                                mscolab_delete_user, mscolab_login, mscolab_start_server)
-from PyQt5 import QtWidgets, QtTest
 
-PORTS = list(range(10481, 10530))
+from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.models import Project, db
+from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.seed import add_user, get_user
+from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab import server
+
+from mslib.mscolab.server import initialize_managers, check_login, register_user, hello, get_auth_token
+
 
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Init_Server(object):
     def setup(self):
-        self.process, self.url, self.app, self.sockio, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        handle_db_seed()
+        self.app = Flask(__name__, static_url_path='')
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        db.init_app(self.app)
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        self.user = get_user(self.userdata[0])
 
     def teardown(self):
-        # to disconnect connections, and clear token
-        # Not logging out since it pops up a dialog
-        # self.window.logout()
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+        pass
 
     def test_initialize_managers(self):
-        assert self.app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
-        assert 'Create a Flask-SocketIO server.' in self.sockio.__doc__
-        assert 'Class with handler functions for chat related functionalities' in self.cm.__doc__
-        assert 'Class with handler functions for file related functionalities' in self.fm.__doc__
+        app, sockio, cm, fm = initialize_managers(self.app)
+        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+        assert 'Create a Flask-SocketIO server.' in sockio.__doc__
+        assert 'Class with handler functions for chat related functionalities' in cm.__doc__
+        assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
+    def test_check_login(self):
+        with self.app.app_context():
+            user = check_login('UV10@uv10', 'uv10')
+            assert user.id == self.user.id
+            user = check_login('UV10@uv10', 'invalid_password')
+            assert user is False
+            user = check_login('not_existing', 'beta')
+            assert user is False
+
+    def test_register_user(self):
+        with self.app.app_context():
+            assert register_user('alpha@alpha.org', 'abcdef', 'alpha@alpha.org') == \
+                   {'message': 'Oh no, your username cannot contain @ symbol!', 'success': False}
+            assert register_user('alpha@alpha.org', 'abcdef', 'alpha') == {"success": True}
+            assert register_user('alpha@alpha.org', 'abcdef', 'alpha') == \
+                   {'message': 'Oh no, this email ID is already taken!', 'success': False}
+            assert register_user('alpha2a@alpha.org', 'abcdef', 'alpha') == \
+                   {'message': 'Oh no, this username is already registered', 'success': False}
+
+    def test_hello(self):
+        with self.app.app_context():
+            assert hello() == "Mscolab server"
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Server(object):
     def setup(self):
-        mscolab_settings.enable_basic_http_authentication = False
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS, mscolab_settings)
-        QtTest.QTest.qWait(100)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        handle_db_seed()
+        self.app = Flask(__name__, static_url_path='',
+                         template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'))
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        self.app.config["TESTING"] = True
+        db.init_app(self.app)
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        self.user = get_user(self.userdata[0])
 
     def teardown(self):
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+        pass
 
-    def test_check_login(self):
-        with self.app.app_context():
-            user = server.check_login('a', 'a')
-            assert user.id == 8
-            user = server.check_login('a', 'invalid_password')
-            assert user is False
-            user = server.check_login('not_existing', 'beta')
-            assert user is False
 
-    def test_register_user(self):
-        with self.app.app_context():
-            assert server.register_user('alpha@alpha.org', 'abcdef', 'alpha@alpha.org') == \
-                   {'message': 'Oh no, your username cannot contain @ symbol!', 'success': False}
-            assert server.register_user('alpha@alpha.org', 'abcdef', 'alpha') == {"success": True}
-            assert server.register_user('alpha@alpha.org', 'abcdef', 'alpha') == \
-                   {'message': 'Oh no, this email ID is already taken!', 'success': False}
-            assert server.register_user('alpha2a@alpha.org', 'abcdef', 'alpha') == \
-                   {'message': 'Oh no, this username is already registered', 'success': False}
 
+    @pytest.mark.skip('needs a different solution')
     def test_home(self):
-        pytest.skip("Application is not able to create a URL adapter without SERVER_NAME")
         with self.app.app_context():
             result = server.home()
             assert "!DOCTYPE html" in result
 
-    def test_status(self):
+
+
+    @mock.patch('flask.request.form')
+    def test_get_auth_token(self, mocked_form):
+        mocked_form.return_value = mock.Mock(form=lambda : {"email": self.user.email, "password": "uv10"})
         with self.app.app_context():
-            assert server.hello() == "Mscolab server"
+            token = get_auth_token()
 
-    def test_get_auth_token(self):
-        data = {
-            'email': 'a',
-            'password': 'a'
-        }
-        url = url_join(self.url, 'token')
-        response = self.app.test_client().post(url, data=data)
-        assert response.status == '200 OK'
-        data = json.loads(response.get_data(as_text=True))
-        assert 'token' in data
-        assert 'user' in data
 
-        data = {
-            'email': 'a',
-            'password': 'wrong password'
-        }
-        response = self.app.test_client().post(url, data=data)
-        assert response.status == '200 OK'
-        assert response.get_data(as_text=True) == "False"
 
     def test_authorized(self):
         # ToDo Token needs to be checked for the user
