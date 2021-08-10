@@ -35,7 +35,7 @@ from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
 # from mslib.msui import constants
 from mslib.msui.constants import MSS_SETTINGS
-# from mslib.msui.icons import icons
+from mslib.msui.icons import icons
 from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 from mslib.support.qt_json_view import delegate
@@ -227,17 +227,28 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.json_model = JsonModel(data=options, editable_keys=True, editable_values=True)
         self.json_model.setHorizontalHeaderLabels(['Option', 'Value'])
 
-        # set tooltip and make keys non-editable
-        self.set_noneditable_items(QtCore.QModelIndex())
-
         # Set view model
         self.proxy_model.setSourceModel(self.json_model)
         self.view.setModel(self.proxy_model)
 
         # Setting proxy model and view attributes
         self.proxy_model.setFilterKeyColumn(0)
-        self.view.setAlternatingRowColors(True)
-        self.view.setColumnWidth(0, self.view.width() // 2)
+
+        # Add actions to toolbar
+        self.import_file_action = QtWidgets.QAction(
+            QtGui.QIcon(icons("config_editor", "Folder-new.svg")), "Import config", self)
+        self.import_file_action.setStatusTip("Import an external configuration file")
+        self.toolBar.addAction(self.import_file_action)
+
+        self.save_file_action = QtWidgets.QAction(
+            QtGui.QIcon(icons("config_editor", "Document-save.svg")), "Save config", self)
+        self.save_file_action.setStatusTip("Save current configuration")
+        self.toolBar.addAction(self.save_file_action)
+
+        self.export_file_action = QtWidgets.QAction(
+            QtGui.QIcon(icons("config_editor", "Document-save-as.svg")), "Export config", self)
+        self.export_file_action.setStatusTip("Export current configuration")
+        self.toolBar.addAction(self.export_file_action)
 
         # Connecting signals
         self.addOptBtn.clicked.connect(self.add_option_handler)
@@ -246,10 +257,9 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.moveUpTb.clicked.connect(lambda: self.move_option(move=1))
         self.moveDownTb.clicked.connect(lambda: self.move_option(move=-1))
         self.restoreDefaultsBtn.clicked.connect(self.restore_defaults)
-        self.importBtn.clicked.connect(self.import_config)
-        self.exportBtn.clicked.connect(self.export_config)
-        self.saveBtn.clicked.connect(self.save_config)
-        self.cancelBtn.clicked.connect(lambda: self.close())
+        self.import_file_action.triggered.connect(self.import_config)
+        self.save_file_action.triggered.connect(self.save_config)
+        self.export_file_action.triggered.connect(self.export_config)
         self.view.selectionModel().selectionChanged.connect(self.tree_selection_changed)
 
         self.moveUpTb.hide()
@@ -266,6 +276,13 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.addOptBtn.setEnabled(False)
         self.removeOptBtn.setEnabled(False)
         self.restoreDefaultsBtn.setEnabled(False)
+
+        # set tooltip and make keys non-editable
+        self.set_noneditable_items(QtCore.QModelIndex())
+
+        # json view attributes
+        self.view.setAlternatingRowColors(True)
+        self.view.setColumnWidth(0, self.view.width() // 2)
 
     def get_root_index(self, index, parents=False):
         parent_list = []
@@ -635,7 +652,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.view.clearSelection()
 
     def import_config(self):
-        file_path = get_open_filename(self, "Import config", "", ';;'.join(["*.json", "*.*"]))
+        file_path = get_open_filename(self, "Import config", "", ";;".join(["JSON Files (*.json)", "All Files (*.*)"]))
         if not file_path:
             return
 
@@ -716,7 +733,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             # Todo - notify user about no non-default values
             # return
             pass
-        path = get_save_filename(self, "Export config", "mss_settings", "Json files (*.json)")
+        path = get_save_filename(self, "Export config", "mss_settings", "JSON files (*.json)")
         if path:
             self._save_to_path(path)
 

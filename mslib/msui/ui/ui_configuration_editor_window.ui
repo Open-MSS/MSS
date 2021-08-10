@@ -6,17 +6,24 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>593</width>
-    <height>656</height>
+    <width>639</width>
+    <height>676</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MSS Configuration Editor</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1,0">
+   <layout class="QVBoxLayout" name="verticalLayout" stretch="0,1">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1,1,1,0,0">
+     <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,1,1,1,1,0,0">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Filter :</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QComboBox" name="optCb">
         <property name="toolTip">
@@ -72,57 +79,6 @@
     </item>
     <item>
      <widget class="QWidget" name="jsonWidget" native="true"/>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
-      <item>
-       <widget class="QPushButton" name="importBtn">
-        <property name="toolTip">
-         <string>Import new configuration</string>
-        </property>
-        <property name="text">
-         <string>Import</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="exportBtn">
-        <property name="toolTip">
-         <string>Export current configuration</string>
-        </property>
-        <property name="text">
-         <string>Export</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="Line" name="line_2">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="cancelBtn">
-        <property name="toolTip">
-         <string>Close editor window</string>
-        </property>
-        <property name="text">
-         <string>Cancel</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="saveBtn">
-        <property name="toolTip">
-         <string>Save current configuration to mss_settings.json</string>
-        </property>
-        <property name="text">
-         <string>Save</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
     </item>
    </layout>
   </widget>
