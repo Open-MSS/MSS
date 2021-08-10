@@ -140,6 +140,11 @@ def add_user(email, username, password):
     return False
 
 
+def get_user(email):
+    with app.app_context():
+        return User.query.filter_by(emailid=str(email)).first()
+
+
 def add_project(project_name, description):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

@@ -29,9 +29,9 @@ import os
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import User, Project, db
+from mslib.mscolab.models import Project, db
 from mslib.mscolab.file_manager import FileManager
-from mslib.mscolab.seed import add_user, delete_project
+from mslib.mscolab.seed import add_user, get_user, delete_project
 from mslib.mscolab.mscolab import handle_db_seed
 
 
@@ -51,10 +51,10 @@ class Test_FileManager(object):
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
 
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        self.user = User(self.userdata[0], self.userdata[1], self.userdata[2])
+        self.user = get_user(self.userdata[0])
         assert self.user is not None
         assert add_user('UV20@uv20', 'UV20', 'uv20')
-        self.user_2 = User('UV20@uv20', 'UV20', 'uv20')
+        self.user_2 = get_user('UV20@uv20')
         self._example_data()
 
     def teardown(self):

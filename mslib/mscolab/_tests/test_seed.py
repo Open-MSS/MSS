@@ -28,7 +28,7 @@ from flask import Flask
 from mslib.mscolab.models import User, Project, db
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.seed import add_user, add_project, add_user_to_project,\
+from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project,\
     delete_user, delete_project, add_all_users_default_project
 from mslib.mscolab.mscolab import handle_db_seed
 
@@ -134,6 +134,13 @@ class Test_Seed():
         self.app.app_context().push()
         assert add_user("UV2@v2", "V2", "v2")
         assert add_user("UV2@v2", "V2", "v2") is False
+
+    def test_get_user(self):
+        self.app.app_context().push()
+        assert add_user("UV2@v2", "V2", "v2")
+        user = get_user("UV2@v2")
+        assert user.id is not None
+        assert user.emailid == "UV2@v2"
 
     def test_add_user_to_project(self):
         with self.app.app_context():

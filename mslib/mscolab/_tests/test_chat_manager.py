@@ -26,9 +26,9 @@
 """
 from flask import Flask
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, User, MessageType, Message
+from mslib.mscolab.models import db, MessageType, Message
 from mslib.mscolab.chat_manager import ChatManager
-from mslib.mscolab.seed import add_user, add_project, add_user_to_project, delete_user, delete_project
+from mslib.mscolab.seed import add_user, add_project, add_user_to_project, delete_user, delete_project, get_user
 from mslib.mscolab.mscolab import handle_db_seed
 
 
@@ -49,7 +49,7 @@ class Test_Chat_Manager(object):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_project(self.room_name, "test europe")
         assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
-        self.user = User(self.userdata[0], self.userdata[1], self.userdata[2])
+        self.user = get_user(self.userdata[0])
 
     def teardown(self):
         assert delete_user(self.userdata[0])
