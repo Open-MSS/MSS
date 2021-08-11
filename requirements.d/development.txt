@@ -18,3 +18,4 @@ gitpython
 gevent
 pynco
 conda-verify
+Flask-Testing
