@@ -31,12 +31,13 @@ from __future__ import division
 from builtins import str
 
 import logging
-from metpy.units import units
 import codecs
-import mslib.msui.flighttrack as ft
-from mslib import thermolib
 import os
 from fs import open_fs
+
+import mslib.msui.flighttrack as ft
+from mslib.utils.units import units
+from mslib.utils import thermolib
 
 
 def save_to_txt(filename, name, waypoints):

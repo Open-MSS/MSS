@@ -27,7 +27,36 @@
 """
 
 import pytest
-from mslib.utils import convert_to
+from mslib.utils.units import convert_to, units
+
+
+def test_units():
+    assert units("10 degree_north").to("degree").m == 10
+    assert units("10 degrees_north").to("degree").m == 10
+    assert units("10 degreeN").to("degree").m == 10
+    assert units("10 degree_N").to("degree").m == 10
+    assert units("-10 degree_south").to("degree").m == 10
+    assert units("-10 degrees_south").to("degree").m == 10
+    assert units("-10 degreeS").to("degree").m == 10
+    assert units("-10 degree_S").to("degree").m == 10
+    assert units("10 degree_east").to("degree").m == 10
+    assert units("10 degrees_east").to("degree").m == 10
+    assert units("10 degreeE").to("degree").m == 10
+    assert units("10 degree_E").to("degree").m == 10
+    assert units("-10 degree_west").to("degree").m == 10
+    assert units("-10 degrees_west").to("degree").m == 10
+    assert units("-10 degreeW").to("degree").m == 10
+    assert units("-10 degree_W").to("degree").m == 10
+    assert units("1 percent"). to("dimensionless").m == 0.01
+    assert units("1 permille"). to("dimensionless").m == 0.001
+    assert units("1 ppm"). to("dimensionless").m == pytest.approx(1e-6)
+    assert units("1 ppb"). to("dimensionless").m == pytest.approx(1e-9)
+    assert units("1 ppt"). to("dimensionless").m == pytest.approx(1e-12)
+    assert units("1 ppmv"). to("dimensionless").m == pytest.approx(1e-6)
+    assert units("1 ppbv"). to("dimensionless").m == pytest.approx(1e-9)
+    assert units("1 pptv"). to("dimensionless").m == pytest.approx(1e-12)
+
+    assert units("1 PVU").to_base_units().m == pytest.approx(units("1E-6 m^2 s^-1 K kg^-1").to_base_units().m)
 
 
 def test_convert_to():

@@ -41,18 +41,17 @@ import defusedxml.ElementTree as etree
 from mslib.utils import config_loader
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import mslib.ogcwms
 import owslib.util
 from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
 
+from mslib.msui import constants, wms_capabilities
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
-from mslib.msui import wms_capabilities
-from mslib.msui import constants
-from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings, Worker
-from mslib.ogcwms import openURL, removeXMLNamespace
 from mslib.msui.multilayers import Multilayers, Layer
+from mslib.utils import (
+    ogcwms, parse_iso_datetime, parse_iso_duration, load_settings_qsettings,
+    save_settings_qsettings, Worker)
 
 
 WMS_SERVICE_CACHE = {}
@@ -65,7 +64,7 @@ def add_wms_urls(combo_box, url_list):
         combo_box.addItem(url)
 
 
-class MSSWebMapService(mslib.ogcwms.WebMapService):
+class MSSWebMapService(ogcwms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 
         added parameters are
@@ -201,8 +200,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # not considered. For some reason, the check below doesn't work, though..
         proxies = config_loader(dataset="proxies")
 
-        u = openURL(base_url, data, method,
-                    username=self.auth.username, password=self.auth.password, proxies=proxies)
+        u = ogcwms.openURL(base_url, data, method,
+                           username=self.auth.username, password=self.auth.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -215,7 +214,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
             # Remove namespaces in the response, otherwise this code might fail
-            removeXMLNamespace(se_tree)
+            # (mslib) add ogcwms
+            ogcwms.removeXMLNamespace(se_tree)
             err_message = str(se_tree.find('ServiceException').text).strip()
             raise owslib.util.ServiceException(err_message, se_xml)
         return u

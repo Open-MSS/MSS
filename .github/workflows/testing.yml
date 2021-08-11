@@ -39,9 +39,9 @@ jobs:
       run: |
         source /opt/conda/bin/activate mssenv \
         && cd $GITHUB_WORKSPACE \
-        && pytest --cov=mslib mslib \
+        && pytest -v --durations=20 --cov=mslib mslib \
         || (for i in {1..5} \
-          ; do pytest mslib --last-failed --lfnf=none \
+          ; do pytest mslib -v --durations=0 --last-failed --lfnf=none \
           && break \
         ; done)
 
