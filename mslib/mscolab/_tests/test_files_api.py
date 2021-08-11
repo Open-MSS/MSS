@@ -204,7 +204,7 @@ class Test_Files(object):
             project = Project.query.filter_by(path=flight_path).first()
             assert project is None
 
-    def test_get_all_change(self):
+    def test_get_all_changes(self):
         with self.app.app_context():
             flight_path = "V11"
             assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user, content='initial')

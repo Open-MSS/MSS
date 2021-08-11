@@ -24,7 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import mslib
+
 from flask import Flask
 from flask_testing import TestCase
 import os
@@ -33,15 +33,13 @@ import json
 import io
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, User
-from mslib.mscolab.seed import add_user, get_user
+from mslib.mscolab.models import db, User, Project
 from mslib.mscolab.mscolab import handle_db_seed
 from mslib.mscolab.server import initialize_managers, check_login, register_user, hello, APP
+from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.seed import add_user, get_user
+import mslib
 
-from werkzeug.urls import url_join
-from mslib._tests.utils import (mscolab_register_and_login, mscolab_create_project, mscolab_create_content,
-                                mscolab_login, mscolab_delete_user)
-from pathlib import Path
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
 
@@ -114,6 +112,7 @@ class Test_Server(TestCase):
         return app
 
     def test_home(self):
+        # we switched templates off
         response = self.client.get('/')
         assert response.status_code == 200
         assert b"" in response.data
@@ -130,11 +129,7 @@ class Test_Server(TestCase):
         assert add_user(userdata[0], userdata[1], userdata[2])
         with self.app.test_client() as test_client:
             db.init_app(self.app)
-            response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
-            assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["user"]["username"] == userdata[1]
-            token = data["token"]
+            token = self._get_token(test_client, userdata)
             assert User.verify_auth_token(token)
             response = test_client.post('/token', data={"email": userdata[0], "password": "fail"})
             assert response.status_code == 200
@@ -146,11 +141,7 @@ class Test_Server(TestCase):
         assert add_user(userdata[0], userdata[1], userdata[2])
         with self.app.test_client() as test_client:
             db.init_app(self.app)
-            response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
-            assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["user"]["username"] == userdata[1]
-            token = data["token"]
+            token = self._get_token(test_client, userdata)
             response = test_client.get('/test_authorized', data={"token": token})
             assert response.status_code == 200
             assert response.data.decode('utf-8') == "True"
@@ -177,11 +168,7 @@ class Test_Server(TestCase):
         assert add_user(userdata[0], userdata[1], userdata[2])
         with self.app.test_client() as test_client:
             db.init_app(self.app)
-            response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
-            assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["user"]["username"] == userdata[1]
-            token = data["token"]
+            token = self._get_token(test_client, userdata)
             response = test_client.get('/user', data={"token": token})
             data = json.loads(response.data.decode('utf-8'))
             assert data["user"]["username"] == userdata[1]
@@ -192,11 +179,7 @@ class Test_Server(TestCase):
         assert add_user(userdata[0], userdata[1], userdata[2])
         with self.app.test_client() as test_client:
             db.init_app(self.app)
-            response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
-            assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["user"]["username"] == userdata[1]
-            token = data["token"]
+            token = self._get_token(test_client, userdata)
             response = test_client.post('/delete_user', data={"token": token})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
@@ -205,434 +188,283 @@ class Test_Server(TestCase):
             assert response.status_code == 200
             assert response.data.decode('utf-8') == "False"
 
-    @pytest.mark.skip("to be refactored")
     def test_messages(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            url = url_join(self.url, 'messages')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            response = test_client.get('/messages', data={"token": token,
+                                                          "p_id": project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
             assert data["messages"] == []
 
-    @pytest.mark.skip("to be refactored")
     def test_message_attachment(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, self.url, response,
-                                                    path='f3', description='f3 test example')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            projects = json.loads(response.get_data(as_text=True))
-            assert projects == {'projects': [{'access_level': 'creator',
-                                              'description': 'f3 test example',
-                                              'p_id': 7,
-                                              'path': 'f3'}]}
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            attachment = io.BytesIO(b"this is a test")
+            response = test_client.post('/message_attachment', data={"token": token,
+                                                                     "p_id": project.id,
+                                                                     "file": (attachment, 'test.txt'),
+                                                                     "message_type": "3"})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            pfn = data["path"]
+            assert "txt" in pfn
+            assert "uploads" in pfn
 
-            data['p_id'] = projects['projects'][0]['p_id']
-            data["message_type"] = 0
-            file_name = "fake-text-stream.txt"
-            data["file"] = (io.BytesIO(b"some initial text data"), file_name)
-
-            url = url_join(self.url, 'message_attachment')
-            response = self.app.test_client().post(url, data=data)
-            # Todo Example upload
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            assert data['success'] is True
-
-    @pytest.mark.skip("to be refactored")
     def test_uploads(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, self.url, response,
-                                                    path='f4', description='f4 test example')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            projects = json.loads(response.get_data(as_text=True))
-            data['p_id'] = projects['projects'][0]['p_id']
-            p_id = data['p_id']
-            data["message_type"] = 0
-            file_name = "fake-text-stream.txt"
-            data["file"] = (io.BytesIO(b"some initial text data"), file_name)
-            url = url_join(self.url, 'message_attachment')
-            response = self.app.test_client().post(url, data=data)
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            assert data['success'] is True
-            fn = Path(data['path']).name
-            url = "%s/uploads/%s/%s" % (self.url, p_id, fn)
-            response = self.app.test_client().get(url)
-            data = response.get_data(as_text=True)
-            assert data == "some initial text data"
-            url = "%s/uploads/%s" % (self.url, p_id)
-            response = self.app.test_client().get(url)
-            result = response.get_data(as_text=True)
-            assert "404" in result
-            url = "%s/uploads/" % (self.url)
-            response = self.app.test_client().get(url)
-            result = response.get_data(as_text=True)
-            assert "404" in result
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            text = b"this is a test"
+            attachment = io.BytesIO(text)
+            response = test_client.post('/message_attachment', data={"token": token,
+                                                                     "p_id": project.id,
+                                                                     "file": (attachment, 'test.txt'),
+                                                                     "message_type": "3"})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            pfn = data["path"]
+            response = test_client.get(f'{pfn}')
+            assert response.status_code == 200
+            assert response.data == text
 
-    @pytest.mark.skip("to be refactored")
     def test_create_project(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, self.url, response,
-                                                    path='f1', description='f1 test example')
-            assert response.status == '200 OK'
-            data = response.get_data(as_text=True)
-            assert data == 'True'
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            assert project is not None
+            assert token is not None
 
-    @pytest.mark.skip("to be refactored")
-    def test_get_project(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            content = """\
-<?xml version="1.0" encoding="utf-8"?>
-  <FlightTrack>
-    <Name>F5 test example</Name>
-    <ListOfWaypoints>
-      <Waypoint flightlevel="0.0" lat="55.15" location="A1" lon="-23.74">
-        <Comments>Takeoff</Comments>
-      </Waypoint>
-      <Waypoint flightlevel="350" lat="42.99" location="A2" lon="-12.1">
-        <Comments></Comments>
-      </Waypoint>
-      </ListOfWaypoints>
-  </FlightTrack>"""
+    def test_get_project_by_id(self):
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            response = test_client.get('/get_project_by_id', data={"token": token,
+                                                                   "p_id": project.id})
+            assert response.status_code == 200
+            assert "<ListOfWaypoints>" in response.data.decode('utf-8')
 
-            data["path"] = 'f5'
-            data['description'] = 'f5 test example'
-            data['content'] = content
-            url = url_join(self.url, 'create_project')
-            response = self.app.test_client().post(url, data=data)
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f5':
-                    data['p_id'] = p['p_id']
-                    break
-            url = url_join(self.url, 'get_project_by_id')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            assert 'F5 test example' in data['content']
-
-    @pytest.mark.skip("to be refactored")
-    def test_get_all_changes(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='f14')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f14':
-                    data['p_id'] = p['p_id']
-                    break
-
-            url = url_join(self.url, 'get_all_changes')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            assert data['success'] is True
-            # ToDo check 2 changes
-            assert data['changes'] == []
-
-    @pytest.mark.skip("to be refactored")
-    def test_get_change_content(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='f15')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f15':
-                    data['p_id'] = p['p_id']
-                    break
-
-            url = url_join(self.url, 'get_change_content')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = response.get_data(as_text=True)
-            # ToDo add a test with two revisions
-            assert response == 'False'
-
-    @pytest.mark.skip("to be refactored")
-    def test_authorized_users(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            auth_data = data
-            response = mscolab_create_content(self.app, self.url, data, path_name='f10')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f10':
-                    auth_data['p_id'] = p['p_id']
-                    break
-
-            url = url_join(self.url, 'authorized_users')
-            response = self.app.test_client().get(url, data=auth_data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            assert response['users'] == [{'access_level': 'creator', 'username': 'alpha'}]
-
-    @pytest.mark.skip("to be refactored")
     def test_get_projects(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='f7')
-            assert response.status == '200 OK'
-            response = mscolab_create_content(self.app, self.url, data, path_name='f8')
-            assert response.status == '200 OK'
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            self._create_project(test_client, userdata, path="firstflightpath1")
+            project, token = self._create_project(test_client, userdata, path="firstflightpath2")
+            response = test_client.get('/projects', data={"token": token})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert len(data["projects"]) == 2
+            assert data["projects"][0]["path"] == "firstflightpath1"
+            assert data["projects"][1]["path"] == "firstflightpath2"
 
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            response = json.loads(response.get_data(as_text=True))
-            assert len(response['projects']) == 2
+    def test_get_all_changes(self):
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            fm, user = self._save_content(project, userdata)
+            fm.save_file(project.id, "content2", user)
+            response = test_client.get('/get_all_changes', data={"token": token,
+                                                                 "p_id": project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert len(data["changes"]) == 2
 
-    @pytest.mark.skip("to be refactored")
+    def test_get_change_content(self):
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            fm, user = self._save_content(project, userdata)
+            fm.save_file(project.id, "content2", user)
+            all_changes = fm.get_all_changes(project.id, user)
+            response = test_client.get('/get_change_content', data={"token": token,
+                                                                    "ch_id": all_changes[1]["id"]})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data == {'content': 'content1'}
+
+    def test_set_version_name(self):
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            fm, user = self._save_content(project, userdata)
+            fm.save_file(project.id, "content2", user)
+            all_changes = fm.get_all_changes(project.id, user)
+            ch_id = all_changes[1]["id"]
+            version_name = "THIS"
+            response = test_client.post('/set_version_name', data={"token": token,
+                                                                   "ch_id": ch_id,
+                                                                   "p_id": project.id,
+                                                                   "version_name": version_name})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True
+
+    def test_authorized_users(self):
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            response = test_client.get('/authorized_users', data={"token": token,
+                                                                  "p_id": project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["users"] == [{'access_level': 'creator', 'username': userdata[1]}]
+
     def test_delete_project(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            auth_data = data
-            response = mscolab_create_content(self.app, self.url, data, path_name='f12')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f12':
-                    auth_data['p_id'] = p['p_id']
-                    break
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            response = test_client.post('/delete_project', data={"token": token,
+                                                                 "p_id": project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True
 
-            url = url_join(self.url, 'delete_project')
-            response = self.app.test_client().post(url, data=auth_data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            assert response['success'] is True
-
-    @pytest.mark.skip("to be refactored")
     def test_update_project(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='f16')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f16':
-                    data['p_id'] = p['p_id']
-                    break
-            data['attribute'] = 'path'
-            data['value'] = 'example_flight_path'
-            url = url_join(self.url, 'update_project')
-            response = self.app.test_client().post(url, data=data)
-            assert response.status == '200 OK'
-            content = """\
-                    <?xml version="1.0" encoding="utf-8"?>
-                      <FlightTrack>
-                        <Name>F14 test example</Name>
-                        <ListOfWaypoints>
-                          <Waypoint flightlevel="100.0" lat="55.15" location="A1" lon="-25.74">
-                            <Comments>Takeoff</Comments>
-                          </Waypoint>
-                          <Waypoint flightlevel="350" lat="42.99" location="A2" lon="-12.1">
-                            <Comments></Comments>
-                          </Waypoint>
-                          </ListOfWaypoints>
-                      </FlightTrack>"""
-            # not sure if the update API should do this
-            # data['attribute'] = "content"
-            # data['value'] = content
-            # url = url_join(self.url, 'update_project')
-            # response = self.app.test_client().post(url, data=data)
-            # assert response.status == '200 OK'
-            user = User.query.filter_by(emailid='alpha@alpha.org').first()
-            self.fm.save_file(int(data['p_id']), content, user, "new")
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            response = test_client.post('/update_project', data={"token": token,
+                                                                 "p_id": project.id,
+                                                                 "attribute": "path",
+                                                                 "value": "newflight"})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
+            response = test_client.post('/update_project', data={"token": token,
+                                                                 "p_id": project.id,
+                                                                 "attribute": "description",
+                                                                 "value": "sunday start"})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
 
-    @pytest.mark.skip("to be refactored")
     def test_get_project_details(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            auth_data = data
-            response = mscolab_create_content(self.app, self.url, data, path_name='f13')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f13':
-                    auth_data['p_id'] = p['p_id']
-                    break
-            url = url_join(self.url, 'project_details')
-            response = self.app.test_client().get(url, data=auth_data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            assert response == {'description': 'f13', 'id': auth_data['p_id'], 'path': 'f13'}
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            path = "flp1"
+            project, token = self._create_project(test_client, userdata, path=path)
+            response = test_client.get('/project_details', data={"token": token,
+                                                                 "p_id": project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["path"] == path
 
-    @pytest.mark.skip("to be refactored")
     def test_get_users_without_permission(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='f15')
-            assert response.status == '200 OK'
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        unprevileged_user = 'UV20@uv20', 'UV20', 'uv20'
+        assert add_user(unprevileged_user[0], unprevileged_user[1], unprevileged_user[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            response = test_client.get('/users_without_permission', data={"token": token,
+                                                                          "p_id": project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            # ToDo after cleanup pf database use absolute values
+            assert data["users"][-1][0] == unprevileged_user[1]
 
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f15':
-                    data['p_id'] = p['p_id']
-                    break
-
-            url = url_join(self.url, 'users_without_permission')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            assert response['success'] is True
-            assert len(response['users']) > 1
-
-    @pytest.mark.skip("to be refactored")
     def test_get_users_with_permission(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='f15')
-            assert response.status == '200 OK'
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        another_user = 'UV20@uv20', 'UV20', 'uv20'
+        assert add_user(another_user[0], another_user[1], another_user[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            project, token = self._create_project(test_client, userdata)
+            response = test_client.get('/users_with_permission', data={"token": token,
+                                                                       "p_id": project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            # creator is not listed
+            assert data["users"] == []
 
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'f15':
-                    data['p_id'] = p['p_id']
-                    break
-
-            url = url_join(self.url, 'users_with_permission')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            assert response['success'] is True
-            assert response['users'] == []
-
-    @pytest.mark.skip("to be refactored")
     def test_import_permissions(self):
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='p1')
-            assert response.status == '200 OK'
-            response = mscolab_create_content(self.app, self.url, data, path_name='p2')
-            assert response.status == '200 OK'
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        assert add_user(userdata[0], userdata[1], userdata[2])
+        another_user = 'UV20@uv20', 'UV20', 'uv20'
+        assert add_user(another_user[0], another_user[1], another_user[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            import_project, token = self._create_project(test_client, userdata, path="import")
+            user = get_user(userdata[0])
+            another = get_user(another_user[0])
+            fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+            fm.add_bulk_permission(import_project.id, user, [another.id], "viewer")
+            current_project, token = self._create_project(test_client, userdata, path="current")
+            response = test_client.post('/import_permissions', data={"token": token,
+                                                                     "import_p_id": import_project.id,
+                                                                     "current_p_id": current_project.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            # creator is not listed
+            assert data["success"] is True
 
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            for p in response['projects']:
-                if p['path'] == 'p1':
-                    data['import_p_id'] = p['p_id']
-                if p['path'] == 'p2':
-                    data['current_p_id'] = p['p_id']
-            url = url_join(self.url, 'import_permissions')
-            response = self.app.test_client().post(url, data=data)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            assert response["success"] is True
+    def _create_project(self, test_client, userdata, path="firstflight", description="simple test"):
+        response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
+        data = json.loads(response.data.decode('utf-8'))
+        token = data["token"]
+        response = test_client.post('/create_project', data={"token": token,
+                                                             "path": path,
+                                                             "description": description})
+        assert response.status_code == 200
+        assert response.data.decode('utf-8') == "True"
+        project = Project.query.filter_by(path=path).first()
+        return project, token
 
-    @pytest.mark.skip("to be refactored")
-    def test_uniqueness_of_user_id(self):
-        """
-        creates a user, creates a project, removes the user
-        creates a different new user, checks for projects
-        should not find anything
-        """
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'alpha@alpha.org', 'abcdef', 'alpha')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data, path_name='owns_alpha')
-            assert response.status == '200 OK'
-            mscolab_delete_user(self.app, self.url, 'alpha@alpha.org', 'abcdef')
-            response = mscolab_register_and_login(self.app, self.url, 'delta@delta.org', 'abcdef', 'delta')
-            assert response.status == '200 OK'
-            data = json.loads(response.get_data(as_text=True))
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data)
-            response = json.loads(response.get_data(as_text=True))
-            assert len(response['projects']) == 0
+    def _get_token(self, test_client, userdata):
+        response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
+        assert response.status_code == 200
+        data = json.loads(response.data.decode('utf-8'))
+        assert data["user"]["username"] == userdata[1]
+        token = data["token"]
+        return token
 
-    @pytest.mark.skip("to be refactored")
-    def test_token_dependency_to_project(self):
-        """
-        creates a user, creates a project, checks that there is only 1 project
-        fetches a valid token from an other user
-        replaces the token by keeping the user information
-        finds only projects related to the changed token
-        """
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'user@alpha.org', 'user', 'user')
-            assert response.status == '200 OK'
-            data_1 = json.loads(response.get_data(as_text=True))
-            response = mscolab_create_content(self.app, self.url, data_1, path_name='data_1')
-            assert response.status == '200 OK'
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data_1)
-            assert response.status == '200 OK'
-            response = json.loads(response.get_data(as_text=True))
-            assert len(response['projects']) == 1
-            response = mscolab_login(self.app, self.url, 'a', 'a')
-            data_a = json.loads(response.get_data(as_text=True))
-            data_1['token'] = data_a['token']
-            url = url_join(self.url, 'projects')
-            response = self.app.test_client().get(url, data=data_1)
-            response = json.loads(response.get_data(as_text=True))
-            assert len(response['projects']) == 3
+    def _save_content(self, project, userdata):
+        user = get_user(userdata[0])
+        fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+        fm.save_file(project.id, "content1", user)
+        return fm, user
