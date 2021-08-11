@@ -56,6 +56,7 @@ class Test_MscolabVersionHistory(object):
         self.window.actionVersionHistory.trigger()
         QtWidgets.QApplication.processEvents()
         self.version_window = self.window.mscolab.version_window
+        assert self.version_window is not None
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
@@ -144,6 +145,7 @@ class Test_MscolabVersionHistory(object):
     def _connect_to_mscolab(self):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
         self.window.mscolab.connect_window = self.connect_window
+        assert self.connect_window is not None
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
@@ -151,6 +153,7 @@ class Test_MscolabVersionHistory(object):
         QtTest.QTest.qWait(500)
 
     def _login(self):
+        assert self.connect_window is not None
         self.connect_window.loginEmailLe.setText('a')
         self.connect_window.loginPasswordLe.setText('a')
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
@@ -158,6 +161,7 @@ class Test_MscolabVersionHistory(object):
         QtTest.QTest.qWait(500)
 
     def _activate_project_at_index(self, index):
+        assert index < self.window.listProjectsMSC.count()
         item = self.window.listProjectsMSC.item(index)
         point = self.window.listProjectsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
