@@ -120,7 +120,7 @@ class Test_Mscolab_connect_window():
         with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
             with mock.patch("requests.Session.post", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
                 self._login()
-                mockset.assert_has_calls([mock.call("color: red;"), mock.call("color: white;")])
+                mockset.assert_has_calls([mock.call("color: red;"), mock.call("")])
 
         # case: when the credentials are incorrect for login
         self._connect_to_mscolab()

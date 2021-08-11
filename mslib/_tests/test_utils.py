@@ -193,8 +193,8 @@ class TestGetDistance(object):
             assert int(utils.get_distance(coord1, coord2)) == distance
 
     def test_find_location(self):
-        assert utils.find_location(50.92, 6.36) == ((50.92, 6.36), 'Juelich')
-        assert utils.find_location(50.9200002, 6.36) == ((50.92, 6.36), 'Juelich')
+        assert utils.find_location(50.92, 6.36) == ([50.92, 6.36], 'Juelich')
+        assert utils.find_location(50.9200002, 6.36) == ([50.92, 6.36], 'Juelich')
 
 
 class TestProjections(object):

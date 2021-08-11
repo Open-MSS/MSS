@@ -57,10 +57,10 @@ class MissionSupportSystemDefaultConfig(object):
     data_dir = "~/mssdata"
 
     # layout of different views, with immutable they can't resized
-    layout = {"topview": (963, 702),
-              "sideview": (913, 557),
-              "linearview": (913, 557),
-              "tableview": (1236, 424),
+    layout = {"topview": [963, 702],
+              "sideview": [913, 557],
+              "linearview": [913, 557],
+              "tableview": [1236, 424],
               "immutable": False}
 
     # Predefined map regions to be listed in the corresponding topview combobox
@@ -97,8 +97,9 @@ class MissionSupportSystemDefaultConfig(object):
     # Also set the location of the image file cache and its size.
 
     # URLs of default WMS servers.
-    default_WMS = ["http://localhost:8081/",
-                   ]
+    default_WMS = [
+        "http://localhost:8081/"
+    ]
 
     default_VSEC_WMS = [
         "http://localhost:8081/"
@@ -119,7 +120,7 @@ class MissionSupportSystemDefaultConfig(object):
     # password to sign in
     MSCOLAB_password = ""
 
-    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")]
+    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")}
     MSC_login = {}
 
     # timeout of Url request
@@ -127,7 +128,7 @@ class MissionSupportSystemDefaultConfig(object):
 
     WMS_preload = []
 
-    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")]
+    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")}
     WMS_login = {}
 
     # WMS image cache settings:
@@ -147,24 +148,24 @@ class MissionSupportSystemDefaultConfig(object):
     }
 
     locations = {
-        "EDMO": (48.08, 11.28),
-        "Hannover": (52.37, 9.74),
-        "Hamburg": (53.55, 9.99),
-        "Juelich": (50.92, 6.36),
-        "Leipzig": (51.34, 12.37),
-        "Muenchen": (48.14, 11.57),
-        "Stuttgart": (48.78, 9.18),
-        "Wien": (48.20833, 16.373064),
-        "Zugspitze": (47.42, 10.98),
-        "Kiruna": (67.821, 20.336),
-        "Ny-Alesund": (78.928, 11.986),
-        "Zhukovsky": (55.6, 38.116),
-        "Paphos": (34.775, 32.425),
-        "Sharjah": (25.35, 55.65),
-        "Brindisi": (40.658, 17.947),
-        "Nagpur": (21.15, 79.083),
-        "Mumbai": (19.089, 72.868),
-        "Delhi": (28.566, 77.103),
+        "EDMO": [48.08, 11.28],
+        "Hannover": [52.37, 9.74],
+        "Hamburg": [53.55, 9.99],
+        "Juelich": [50.92, 6.36],
+        "Leipzig": [51.34, 12.37],
+        "Muenchen": [48.14, 11.57],
+        "Stuttgart": [48.78, 9.18],
+        "Wien": [48.20833, 16.373064],
+        "Zugspitze": [47.42, 10.98],
+        "Kiruna": [67.821, 20.336],
+        "Ny-Alesund": [78.928, 11.986],
+        "Zhukovsky": [55.6, 38.116],
+        "Paphos": [34.775, 32.425],
+        "Sharjah": [25.35, 55.65],
+        "Brindisi": [40.658, 17.947],
+        "Nagpur": [21.15, 79.083],
+        "Mumbai": [19.089, 72.868],
+        "Delhi": [28.566, 77.103],
     }
 
     # Main application: Template for new flight tracks
@@ -206,3 +207,38 @@ class MissionSupportSystemDefaultConfig(object):
 
     linearview = {"plot_title_size": 10,
                   "axes_label_size": 10}
+
+    config_descriptions = {
+        "filepicker_default": "Documentation Required",
+        "data_dir": "Documentation Required",
+        "predefined_map_sections": "Documentation Required",
+        "num_interpolation_points": "Documentation Required",
+        "num_labels": "Documentation Required",
+        "default_WMS": "Documentation Required",
+        "default_VSEC_WMS": "Documentation Required",
+        "default_LSEC_WMS": "Documentation Required",
+        "default_MSCOLAB": "Documentation Required",
+        "MSCOLAB_mailid": "Documentation Required",
+        "MSCOLAB_password": "Documentation Required",
+        "MSC_login": "Documentation Required",
+        "WMS_request_timeout": "Documentation Required",
+        "WMS_preload": "Documentation Required",
+        "WMS_login": "Documentation Required",
+        "wms_cache": "Documentation Required",
+        "wms_cache_max_size_bytes": "Documentation Required",
+        "wms_cache_max_age_seconds": "Documentation Required",
+        "wms_prefetch": "Documentation Required",
+        "locations": "Documentation Required",
+        "new_flighttrack_template": "Documentation Required",
+        "new_flighttrack_flightlevel": "Documentation Required",
+        "proxies": "Documentation Required",
+        "mscolab_server_url": "Documentation Required",
+        "mss_dir": "Documentation Required",
+        "gravatar_ids": "Documentation Required",
+        "export_plugins": "Documentation Required",
+        "import_plugins": "Documentation Required",
+        "layout": "Documentation Required",
+        "topview": "Documentation Required",
+        "sideview": "Documentation Required",
+        "linearview": "Documentation Required",
+    }
