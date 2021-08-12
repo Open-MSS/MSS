@@ -174,7 +174,6 @@ def main():
     rec = ScreenRecorder()
     rec.capture()
     rec.stop_capture()
-    print(pyautogui.size())
 
 
 if __name__ == '__main__':
