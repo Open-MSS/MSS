@@ -108,7 +108,6 @@ class Test_FileManager(TestCase):
             flight_path, project = self._create_project(flight_path='third')
             assert self.fm.is_admin(self.user.id, project.id)
 
-    @pytest.mark.skip("need an API to set colaborator on fm")
     def test_is_collaborator(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path='fourth')
@@ -132,18 +131,17 @@ class Test_FileManager(TestCase):
             assert ren_project.path == rename_to
 
     def test_delete_file(self):
-        # Todo rename to project
+        # Todo rename "file" to project
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path='project4')
             assert self.fm.delete_file(project.id, self.user)
             assert Project.query.filter_by(path=flight_path).first() is None
 
-    @pytest.mark.skip("needs a review")
     def test_get_authorized_users(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path='project5')
             assert self.fm.get_authorized_users(project.id) == [{'access_level': 'creator',
-                                                                 'username': self.userdata[2]}]
+                                                                 'username': self.userdata[1]}]
 
     def test_save_file(self):
         with self.app.test_client():
@@ -157,16 +155,15 @@ class Test_FileManager(TestCase):
             flight_path, project = self._create_project(flight_path="project7")
             assert self.fm.get_file(project.id, self.user).startswith('<?xml version="1.0" encoding="utf-8"?>')
 
-    @pytest.mark.skip("needs a review")
     def test_get_all_changes(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path="project8")
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
-            assert len(self.fm.get_all_changes(project.id, self.user)) == 2
+            changes = self.fm.get_all_changes(project.id, self.user)
+            assert len(changes) == 2
 
-    @pytest.mark.skip("needs a review")
     def test_get_change_content(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path="project8")
@@ -176,7 +173,6 @@ class Test_FileManager(TestCase):
             all_changes = self.fm.get_all_changes(project.id, self.user)
             assert self.fm.get_change_content(all_changes[1]["id"]) == self.content1
 
-    @pytest.mark.skip("needs a review")
     def test_set_version_name(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path="project8")
@@ -187,7 +183,6 @@ class Test_FileManager(TestCase):
             assert self.fm.set_version_name(all_changes[1]["id"], project.id, self.user.id, "THIS")
 
     def test_undo(self):
-        pytest.skip('timing problem')
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path="project8")
             assert self.fm.get_all_changes(project.id, self.user) == []
