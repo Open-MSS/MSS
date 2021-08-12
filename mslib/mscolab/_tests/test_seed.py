@@ -24,51 +24,60 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask import Flask
-from mslib.mscolab.models import User, Project, db
-from mslib.mscolab.file_manager import FileManager
+from flask_testing import TestCase
+
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project,\
-    delete_user, delete_project, add_all_users_default_project
+from mslib.mscolab.models import db, User, Project
 from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.server import APP
+from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.seed import (add_user, get_user, add_project, add_user_to_project,
+                                delete_user, delete_project, add_all_users_default_project)
 
 
-class Test_Seed():
-    def setup(self):
+class Test_Seed(TestCase):
+    render_templates = False
+
+    def create_app(self):
+        app = APP
+        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config["TESTING"] = True
+        app.config['LIVESERVER_TIMEOUT'] = 10
+        app.config['LIVESERVER_PORT'] = 0
+        return app
+
+    def setUp(self):
         handle_db_seed()
-        self.app = Flask(__name__, static_url_path='')
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         db.init_app(self.app)
-
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
         self.room_name = "XYZ"
         self.description = "Template"
-        self.userdata = 'UV0@uv0', 'UV0', 'uv0'
+        self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0'
+        self.userdata_1 = "UV1@uv1", "UV1", "UV1"
+        self.userdata_2 = "UV2@v2", "V2", "v2"
 
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
         assert add_project(self.room_name, self.description)
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
-        self.user = User(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata_0[0])
+        self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
 
-    def teardown(self):
-        delete_user("UV0@uv0")
-        delete_user("UV1@uv1")
-        delete_user("UV2@uv2")
-        delete_project("a1")
-        delete_project("XYZ")
-        delete_project("UXYZ")
+    def tearDown(self):
+        pass
+        # review later when handle_db does not seed for tests
+        # db.session.remove()
+        # db.drop_all()
 
     def test_add_project(self):
-        with self.app.app_context():
+        with self.app.test_client():
             assert add_project("a1", "description")
             project = Project.query.filter_by(path="a1").first()
             assert project.id > 0
 
     def test_delete_project(self):
-        with self.app.app_context():
+        with self.app.test_client():
             assert add_project("todelete", "description")
             project = Project.query.filter_by(path="todelete").first()
             assert project.id > 0
@@ -77,12 +86,12 @@ class Test_Seed():
             assert project is None
 
     def test_add_all_users_default_project_viewer(self):
-        with self.app.app_context():
-            assert add_user("UV1@uv1", "UV1", "UV1")
+        with self.app.test_client():
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # viewer
             add_all_users_default_project(path='XYZ', description="Project to keep all users", access_level='viewer')
             expected_result = [{'access_level': 'viewer', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
             result = self.fm.list_projects(user)
             # we don't care here for p_id
@@ -90,13 +99,13 @@ class Test_Seed():
             assert result == expected_result
 
     def test_add_all_users_default_project_collaborator(self):
-        with self.app.app_context():
+        with self.app.test_client():
             # collaborator
-            assert add_user("UV1@uv1", "UV1", "UV1")
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             add_all_users_default_project(path='XYZ', description="Project to keep all users",
                                           access_level='collaborator')
             expected_result = [{'access_level': 'collaborator', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
             result = self.fm.list_projects(user)
             # we don't care here for p_id
@@ -104,55 +113,55 @@ class Test_Seed():
             assert result == expected_result
 
     def test_add_all_users_default_project_creator(self):
-        with self.app.app_context():
-            assert add_user("UV1@uv1", "UV1", "UV1")
+        with self.app.test_client():
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # creator
             add_all_users_default_project(path='XYZ', description="Project to keep all users",
                                           access_level='creator')
             expected_result = [{'access_level': 'creator', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_projects(user)
             # we don't care here for p_id
             expected_result[0]['p_id'] = result[0]['p_id']
             assert result == expected_result
 
     def test_add_all_users_default_project_creator_unknown_project(self):
-        with self.app.app_context():
-            assert add_user("UV1@uv1", "UV1", "UV1")
+        with self.app.test_client():
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # creator added to new project
             add_all_users_default_project(path='UVXYZ', description="Project to keep all users",
                                           access_level='creator')
             expected_result = [{'access_level': 'creator', 'description': 'Project to keep all users',
                                 'p_id': 7, 'path': 'UVXYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_projects(user)
             # we don't care here for p_id
             expected_result[0]['p_id'] = result[0]['p_id']
             assert result == expected_result
 
     def test_add_user(self):
-        self.app.app_context().push()
-        assert add_user("UV2@v2", "V2", "v2")
-        assert add_user("UV2@v2", "V2", "v2") is False
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2]) is False
 
     def test_get_user(self):
-        self.app.app_context().push()
-        assert add_user("UV2@v2", "V2", "v2")
-        user = get_user("UV2@v2")
-        assert user.id is not None
-        assert user.emailid == "UV2@v2"
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            user = get_user(self.userdata_2[0])
+            assert user.id is not None
+            assert user.emailid == self.userdata_2[0]
 
     def test_add_user_to_project(self):
-        with self.app.app_context():
-            assert add_user("V2@V2", "V2", "v2")
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
             assert add_project("project2", "description")
-            assert add_user_to_project(path="project2", access_level='admin', emailid="V2@V2")
+            assert add_user_to_project(path="project2", access_level='admin', emailid=self.userdata_2[0])
 
     def test_delete_user(self,):
-        self.app.app_context().push()
-        assert add_user("UV2@v2", "V2", "v2")
-        user = User.query.filter_by(emailid="UV2@v2").first()
-        assert user is not None
-        assert delete_user("UV2@v2")
-        user = User.query.filter_by(emailid="UV2@v2").first()
-        assert user is None
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            user = User.query.filter_by(emailid=self.userdata_2[0]).first()
+            assert user is not None
+            assert delete_user(self.userdata_2[0])
+            user = User.query.filter_by(emailid=self.userdata_2[0]).first()
+            assert user is None
