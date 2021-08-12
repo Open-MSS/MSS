@@ -57,6 +57,7 @@ class Test_Server(TestCase):
 
     def setUp(self):
         handle_db_seed()
+        db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
 
     def tearDown(self):
@@ -87,7 +88,6 @@ class Test_Server(TestCase):
 
     def test_register_user(self):
         with self.app.test_client():
-            db.init_app(self.app)
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
             assert result["success"] is True
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -102,7 +102,6 @@ class Test_Server(TestCase):
 
     def test_check_login(self):
         with self.app.test_client():
-            db.init_app(self.app)
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
             assert result["success"] is True
             result = check_login(self.userdata[0], self.userdata[1])
@@ -115,7 +114,6 @@ class Test_Server(TestCase):
     def test_get_auth_token(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             token = self._get_token(test_client, self.userdata)
             assert User.verify_auth_token(token)
             response = test_client.post('/token', data={"email": self.userdata[0], "password": "fail"})
@@ -125,7 +123,6 @@ class Test_Server(TestCase):
     def test_authorized(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             token = self._get_token(test_client, self.userdata)
             response = test_client.get('/test_authorized', data={"token": token})
             assert response.status_code == 200
@@ -135,7 +132,6 @@ class Test_Server(TestCase):
 
     def test_user_register_handler(self):
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             response = test_client.post('/register', data={"email": self.userdata[0],
                                                            "password": self.userdata[2],
                                                            "username": self.userdata[1]})
@@ -148,7 +144,6 @@ class Test_Server(TestCase):
     def test_get_user(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             token = self._get_token(test_client, self.userdata)
             response = test_client.get('/user', data={"token": token})
             data = json.loads(response.data.decode('utf-8'))
@@ -157,7 +152,6 @@ class Test_Server(TestCase):
     def test_delete_user(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             token = self._get_token(test_client, self.userdata)
             response = test_client.post('/delete_user', data={"token": token})
             assert response.status_code == 200
@@ -170,7 +164,6 @@ class Test_Server(TestCase):
     def test_messages(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             response = test_client.get('/messages', data={"token": token,
                                                           "p_id": project.id})
@@ -181,7 +174,6 @@ class Test_Server(TestCase):
     def test_message_attachment(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             attachment = io.BytesIO(b"this is a test")
             response = test_client.post('/message_attachment', data={"token": token,
@@ -197,7 +189,6 @@ class Test_Server(TestCase):
     def test_uploads(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             text = b"this is a test"
             attachment = io.BytesIO(text)
@@ -215,7 +206,6 @@ class Test_Server(TestCase):
     def test_create_project(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             assert project is not None
             assert token is not None
@@ -223,7 +213,6 @@ class Test_Server(TestCase):
     def test_get_project_by_id(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             response = test_client.get('/get_project_by_id', data={"token": token,
                                                                    "p_id": project.id})
@@ -233,7 +222,6 @@ class Test_Server(TestCase):
     def test_get_projects(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             self._create_project(test_client, self.userdata, path="firstflightpath1")
             project, token = self._create_project(test_client, self.userdata, path="firstflightpath2")
             response = test_client.get('/projects', data={"token": token})
@@ -246,7 +234,6 @@ class Test_Server(TestCase):
     def test_get_all_changes(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             fm, user = self._save_content(project, self.userdata)
             fm.save_file(project.id, "content2", user)
@@ -259,7 +246,6 @@ class Test_Server(TestCase):
     def test_get_change_content(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             fm, user = self._save_content(project, self.userdata)
             fm.save_file(project.id, "content2", user)
@@ -273,7 +259,6 @@ class Test_Server(TestCase):
     def test_set_version_name(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             fm, user = self._save_content(project, self.userdata)
             fm.save_file(project.id, "content2", user)
@@ -291,7 +276,6 @@ class Test_Server(TestCase):
     def test_authorized_users(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             response = test_client.get('/authorized_users', data={"token": token,
                                                                   "p_id": project.id})
@@ -302,7 +286,6 @@ class Test_Server(TestCase):
     def test_delete_project(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             response = test_client.post('/delete_project', data={"token": token,
                                                                  "p_id": project.id})
@@ -313,7 +296,6 @@ class Test_Server(TestCase):
     def test_update_project(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             response = test_client.post('/update_project', data={"token": token,
                                                                  "p_id": project.id,
@@ -333,7 +315,6 @@ class Test_Server(TestCase):
     def test_get_project_details(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             path = "flp1"
             project, token = self._create_project(test_client, self.userdata, path=path)
             response = test_client.get('/project_details', data={"token": token,
@@ -347,7 +328,6 @@ class Test_Server(TestCase):
         unprevileged_user = 'UV20@uv20', 'UV20', 'uv20'
         assert add_user(unprevileged_user[0], unprevileged_user[1], unprevileged_user[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             response = test_client.get('/users_without_permission', data={"token": token,
                                                                           "p_id": project.id})
@@ -361,7 +341,6 @@ class Test_Server(TestCase):
         another_user = 'UV20@uv20', 'UV20', 'uv20'
         assert add_user(another_user[0], another_user[1], another_user[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             project, token = self._create_project(test_client, self.userdata)
             response = test_client.get('/users_with_permission', data={"token": token,
                                                                        "p_id": project.id})
@@ -375,7 +354,6 @@ class Test_Server(TestCase):
         another_user = 'UV20@uv20', 'UV20', 'uv20'
         assert add_user(another_user[0], another_user[1], another_user[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             import_project, token = self._create_project(test_client, self.userdata, path="import")
             user = get_user(self.userdata[0])
             another = get_user(another_user[0])
