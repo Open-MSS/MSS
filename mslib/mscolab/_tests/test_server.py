@@ -113,15 +113,47 @@ class Test_Server(TestCase):
 
     def test_home(self):
         # we switched templates off
-        response = self.client.get('/')
-        assert response.status_code == 200
-        assert b"" in response.data
+        with self.app.test_client() as test_client:
+            response = test_client.get('/')
+            assert response.status_code == 200
+            assert b"" in response.data
 
     def test_hello(self):
         with self.app.test_client() as test_client:
             response = test_client.get('/status')
             assert response.status_code == 200
             assert b"Mscolab server" in response.data
+
+    def test_register_user(self):
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        with self.app.test_client():
+            db.init_app(self.app)
+            result = register_user(userdata[0], userdata[1], userdata[2])
+            assert result["success"] is True
+            result = register_user(userdata[0], userdata[1], userdata[2])
+            assert result["success"] is False
+            assert result["message"] == "Oh no, this email ID is already taken!"
+            result = register_user("UV", userdata[1], userdata[2])
+            assert result["success"] is False
+            assert result["message"] == "Oh no, your email ID is not valid!"
+            result = register_user(userdata[0], userdata[1], userdata[0])
+            assert result["success"] is False
+            assert result["message"] == "Oh no, your username cannot contain @ symbol!"
+
+    def test_check_login(self):
+        handle_db_seed()
+        userdata = 'UV10@uv10', 'UV10', 'uv10'
+        with self.app.test_client():
+            db.init_app(self.app)
+            result = register_user(userdata[0], userdata[1], userdata[2])
+            assert result["success"] is True
+            result = check_login(userdata[0], userdata[1])
+            user = User.query.filter_by(emailid=str(userdata[0])).first()
+            assert user is not None
+            assert result == user
+            result = check_login('UV20@uv20', userdata[1])
+            assert result is False
 
     def test_get_auth_token(self):
         handle_db_seed()

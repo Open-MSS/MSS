@@ -103,7 +103,7 @@ _app, sockio, cm, fm = initialize_managers(APP)
 
 def check_login(emailid, password):
     user = User.query.filter_by(emailid=str(emailid)).first()
-    if user:
+    if user is not None:
         if user.verify_password(password):
             return user
     return False
