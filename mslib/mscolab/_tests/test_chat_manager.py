@@ -66,12 +66,6 @@ class Test_Chat_Manager(TestCase):
         # db.session.remove()
         # db.drop_all()
 
-    def teardown(self):
-        pass
-        # review later when handle_db does not seed for tests
-        # db.session.remove()
-        # db.drop_all()
-
     def test_add_message(self):
         with self.app.test_client():
             message = self.cm.add_message(self.user, 'some message',
