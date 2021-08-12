@@ -19,3 +19,4 @@ gevent
 pynco
 conda-verify
 Flask-Testing
+pytest-reverse
