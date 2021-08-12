@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-from flask import Flask
 from flask_testing import TestCase
 import os
 import pytest
@@ -35,62 +34,9 @@ import io
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project
 from mslib.mscolab.mscolab import handle_db_seed
-from mslib.mscolab.server import initialize_managers, check_login, register_user, hello, APP
+from mslib.mscolab.server import initialize_managers, check_login, register_user, APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
-import mslib
-
-
-DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
-
-
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_Init_Server(object):
-    def setup(self):
-        handle_db_seed()
-        self.app = Flask(__name__, static_url_path='')
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        db.init_app(self.app)
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        self.user = get_user(self.userdata[0])
-
-    def teardown(self):
-        pass
-
-    def test_initialize_managers(self):
-        app, sockio, cm, fm = initialize_managers(self.app)
-        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
-        assert 'Create a Flask-SocketIO server.' in sockio.__doc__
-        assert 'Class with handler functions for chat related functionalities' in cm.__doc__
-        assert 'Class with handler functions for file related functionalities' in fm.__doc__
-
-    def test_check_login(self):
-        with self.app.app_context():
-            user = check_login('UV10@uv10', 'uv10')
-            assert user.id == self.user.id
-            user = check_login('UV10@uv10', 'invalid_password')
-            assert user is False
-            user = check_login('not_existing', 'beta')
-            assert user is False
-
-    def test_register_user(self):
-        with self.app.app_context():
-            assert register_user('alpha@alpha.org', 'abcdef', 'alpha@alpha.org') == \
-                   {'message': 'Oh no, your username cannot contain @ symbol!', 'success': False}
-            assert register_user('alpha@alpha.org', 'abcdef', 'alpha') == {"success": True}
-            assert register_user('alpha@alpha.org', 'abcdef', 'alpha') == \
-                   {'message': 'Oh no, this email ID is already taken!', 'success': False}
-            assert register_user('alpha2a@alpha.org', 'abcdef', 'alpha') == \
-                   {'message': 'Oh no, this username is already registered', 'success': False}
-
-    def test_hello(self):
-        with self.app.app_context():
-            assert hello() == "Mscolab server"
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -110,6 +56,13 @@ class Test_Server(TestCase):
         app.config['LIVESERVER_PORT'] = 0
 
         return app
+
+    def test_initialize_managers(self):
+        app, sockio, cm, fm = initialize_managers(self.app)
+        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+        assert 'Create a Flask-SocketIO server.' in sockio.__doc__
+        assert 'Class with handler functions for chat related functionalities' in cm.__doc__
+        assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
     def test_home(self):
         # we switched templates off
