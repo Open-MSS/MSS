@@ -125,10 +125,11 @@ class Test_FileManager(TestCase):
     def test_update_project(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path='project3')
-            self.fm.update_project(project.id, "path", "project03", self.user)
-            ren_project = Project.query.filter_by(path="project03").first()
+            rename_to = "project03"
+            self.fm.update_project(project.id, "path", rename_to, self.user)
+            ren_project = Project.query.filter_by(path=rename_to).first()
             assert ren_project.id == project.id
-            assert ren_project.path == "project03"
+            assert ren_project.path == rename_to
 
     def test_delete_file(self):
         # Todo rename to project
@@ -141,7 +142,8 @@ class Test_FileManager(TestCase):
     def test_get_authorized_users(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path='project5')
-            assert self.fm.get_authorized_users(project.id) == [{'access_level': 'creator', 'username': 'UV10'}]
+            assert self.fm.get_authorized_users(project.id) == [{'access_level': 'creator',
+                                                                 'username': self.userdata[2]}]
 
     def test_save_file(self):
         with self.app.test_client():
