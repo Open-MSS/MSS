@@ -75,24 +75,19 @@ class Test_FileManager(TestCase):
 
     def test_create_project(self):
         with self.app.test_client():
-            flight_path = "famous"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="famous")
+            assert project.path == flight_path
             assert self.fm.create_project(flight_path, "something to know", self.user) is False
-            flight_path = "example_flight_path"
-            assert self.fm.create_project(flight_path, "something to know", self.user, content=self.content1)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="example_flight_path", content=self.content1)
             assert project.path == flight_path
 
     def test_get_project_details(self):
         with self.app.test_client():
-            flight_path = 'project2'
-            self.fm.create_project(flight_path, "info about project2", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path='project2')
             pd = self.fm.get_project_details(project.id, self.user)
-            assert pd['description'] == 'info about project2'
-            assert pd['path'] == 'project2'
-            assert pd['id'] == 7
+            assert pd['description'] == project.description
+            assert pd['path'] == project.path
+            assert pd['id'] == project.id
 
     def test_list_projects(self):
         with self.app.test_client():
@@ -110,79 +105,60 @@ class Test_FileManager(TestCase):
 
     def test_is_admin(self):
         with self.app.test_client():
-            flight_path = 'third'
-            self.fm.create_project(flight_path, f"info about {flight_path}", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path='third')
             assert self.fm.is_admin(self.user.id, project.id)
 
     @pytest.mark.skip("need an API to set colaborator on fm")
     def test_is_collaborator(self):
         with self.app.test_client():
-            flight_path = 'fourth'
-            self.fm.create_project(flight_path, f"info about {flight_path}", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path='fourth')
             assert self.anotheruser.id is not None
             self.fm.add_bulk_permission(project.id, self.user, [self.anotheruser.id], "collaborator")
-            project = Project.query.filter_by(path=flight_path).first()
             assert self.fm.is_collaborator(self.anotheruser.id, project.id)
 
     def test_auth_type(self):
         with self.app.test_client():
-            flight_path = 'aa'
-            self.fm.create_project(flight_path, f"info about {flight_path}", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="aa")
             assert self.fm.auth_type(self.user.id, project.id) != "collaborator"
-            project = Project.query.filter_by(path=flight_path).first()
             assert self.fm.auth_type(self.user.id, project.id) == "creator"
 
     def test_update_project(self):
         with self.app.test_client():
-            flight_path = 'project3'
-            self.fm.create_project(flight_path, "info about project3", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path='project3')
             self.fm.update_project(project.id, "path", "project03", self.user)
             ren_project = Project.query.filter_by(path="project03").first()
-            assert project.id == ren_project.id
+            assert ren_project.id == project.id
+            assert ren_project.path == "project03"
 
     def test_delete_file(self):
         # Todo rename to project
         with self.app.test_client():
-            flight_path = 'project4'
-            self.fm.create_project(flight_path, "info about project4", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path='project4')
             assert self.fm.delete_file(project.id, self.user)
             assert Project.query.filter_by(path=flight_path).first() is None
 
     @pytest.mark.skip("needs a review")
     def test_get_authorized_users(self):
         with self.app.test_client():
-            flight_path = 'project5'
-            self.fm.create_project(flight_path, "info about project5", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path='project5')
             assert self.fm.get_authorized_users(project.id) == [{'access_level': 'creator', 'username': 'UV10'}]
 
     def test_save_file(self):
         with self.app.test_client():
-            flight_path = "project6"
-            assert self.fm.create_project(flight_path, "something to know", self.user, content=self.content1)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project6", content=self.content1)
             # nothing changed
             assert self.fm.save_file(project.id, self.content1, self.user) is False
             assert self.fm.save_file(project.id, self.content2, self.user)
 
     def test_get_file(self):
         with self.app.test_client():
-            flight_path = "project7"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project7")
             assert self.fm.get_file(project.id, self.user).startswith('<?xml version="1.0" encoding="utf-8"?>')
 
     @pytest.mark.skip("needs a review")
     def test_get_all_changes(self):
         with self.app.test_client():
-            flight_path = "project8"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project8")
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
@@ -191,9 +167,7 @@ class Test_FileManager(TestCase):
     @pytest.mark.skip("needs a review")
     def test_get_change_content(self):
         with self.app.test_client():
-            flight_path = "project8"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project8")
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
@@ -203,9 +177,7 @@ class Test_FileManager(TestCase):
     @pytest.mark.skip("needs a review")
     def test_set_version_name(self):
         with self.app.test_client():
-            flight_path = "project8"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project8")
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
@@ -215,9 +187,7 @@ class Test_FileManager(TestCase):
     def test_undo(self):
         pytest.skip('timing problem')
         with self.app.test_client():
-            flight_path = "project8"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project8")
             assert self.fm.get_all_changes(project.id, self.user) == []
             assert self.fm.save_file(project.id, self.content1, self.user)
             assert self.fm.save_file(project.id, self.content2, self.user)
@@ -226,27 +196,18 @@ class Test_FileManager(TestCase):
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
-            flight_path = "project9"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project9")
             assert len(self.fm.fetch_users_without_permission(project.id, self.user.id)) > 3
 
     def test_fetch_users_with_permission(self):
         with self.app.test_client():
-            flight_path = "project9"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+            flight_path, project = self._create_project(flight_path="project9")
             assert self.fm.fetch_users_with_permission(project.id, self.user.id) == []
 
     def test_import_permission(self):
         with self.app.test_client():
-            flight_path = "project8"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-
-            project8 = Project.query.filter_by(path=flight_path).first()
-            flight_path = "project9"
-            assert self.fm.create_project(flight_path, "something to know", self.user)
-            project9 = Project.query.filter_by(path=flight_path).first()
+            flight_path8, project8 = self._create_project(flight_path="project8")
+            flight_path9, project9 = self._create_project(flight_path="project9")
             assert self.fm.import_permissions(project8.id, project9.id, self.user.id) == (True,
                                                                                           {'add_users': [],
                                                                                            'delete_users': [],
@@ -288,3 +249,10 @@ class Test_FileManager(TestCase):
       </Waypoint>
       </ListOfWaypoints>
   </FlightTrack>"""
+
+    def _create_project(self, flight_path="firstflight", user=None, content=None):
+        if user is None:
+            user = self.user
+        self.fm.create_project(flight_path, f"info about {flight_path}", user, content=content)
+        project = Project.query.filter_by(path=flight_path).first()
+        return flight_path, project
