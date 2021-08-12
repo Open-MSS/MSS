@@ -24,13 +24,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask import Flask
+from flask_testing import TestCase
 import os
 import fs
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Project, db
+from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.mscolab import handle_db_seed
@@ -38,14 +39,22 @@ from mslib.mscolab.mscolab import handle_db_seed
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_Files(object):
-    def setup(self):
+class Test_Files(TestCase):
+    render_templates = False
+
+    def create_app(self):
+        app = APP
+        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config["TESTING"] = True
+        app.config['LIVESERVER_TIMEOUT'] = 10
+        app.config['LIVESERVER_PORT'] = 0
+        return app
+
+    def setUp(self):
         handle_db_seed()
-        self.app = Flask(__name__, static_url_path='')
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         db.init_app(self.app)
 
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
@@ -57,11 +66,14 @@ class Test_Files(object):
         assert add_user('UV20@uv20', 'UV20', 'uv20')
         self.user_2 = get_user('UV20@uv20')
 
-    def teardown(self):
+    def tearDown(self):
         pass
+        # review later when handle_db does not seed for tests
+        # db.session.remove()
+        # db.drop_all()
 
     def test_create_project(self):
-        with self.app.app_context():
+        with self.app.test_client():
             flight_path = "f3"
             project = Project.query.filter_by(path=flight_path).first()
             assert project is None
@@ -71,7 +83,7 @@ class Test_Files(object):
             assert project.path == "f3"
 
     def test_list_projects(self):
-        with self.app.app_context():
+        with self.app.test_client():
             projects = ["alpha", "beta", "gamma"]
             for fp in projects:
                 assert self.fm.create_project(fp, f"{fp} test example", self.user)
@@ -82,48 +94,39 @@ class Test_Files(object):
             assert projects == all_projects
 
     def test_get_project_details(self):
-        with self.app.app_context():
-            flight_path = "V1"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            description = "test example"
+            flight_path, project = self._create_project(flight_path="V1", description=description)
             details = self.fm.get_project_details(project.id, self.user)
-            assert details["description"] == f"{flight_path} test example"
+            assert details["description"] == description
             assert details["path"] == flight_path
             assert details["id"] == project.id
 
     def test_get_authorized_users(self):
-        with self.app.app_context():
-            flight_path = "V1"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V1")
             users = self.fm.get_authorized_users(project.id)
             assert users[0] == {'username': 'UV10', 'access_level': 'creator'}
 
     def test_fetch_users_without_permission(self):
-        with self.app.app_context():
-            flight_path = "V2"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V2")
             assert self.fm.fetch_users_without_permission(project.id, self.user_2.id) is False
             without_permission = self.fm.fetch_users_without_permission(project.id, self.user.id)
             # ToDo after seeding removed use absolut comparison
             assert without_permission[-1] == [self.user_2.username, self.user_2.id]
 
     def test_fetch_users_with_permission(self):
-        with self.app.app_context():
-            flight_path = "V3"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V3")
             assert self.fm.fetch_users_with_permission(project.id, self.user_2.id) is False
             # we look in the query only on others than creator
             with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
             assert with_permission == []
 
     def test_add_bulk_permissions(self):
-        with self.app.app_context():
-            flight_path = "V4"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V4")
             with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
             assert with_permission == []
             self.fm.add_bulk_permission(project.id, self.user, [self.user_2.id], "viewer")
@@ -131,10 +134,8 @@ class Test_Files(object):
             assert with_permission == [[self.user_2.username, 'viewer', self.user_2.id]]
 
     def test_modify_bulk_permissions(self):
-        with self.app.app_context():
-            flight_path = "V5"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V5")
             with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
             assert with_permission == []
             self.fm.add_bulk_permission(project.id, self.user, [self.user_2.id], "viewer")
@@ -145,10 +146,8 @@ class Test_Files(object):
             assert with_permission == [[self.user_2.username, 'collaborator', self.user_2.id]]
 
     def test_delete_bulk_permissions(self):
-        with self.app.app_context():
-            flight_path = "V6"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V6")
             with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
             assert with_permission == []
             self.fm.add_bulk_permission(project.id, self.user, [self.user_2.id], "viewer")
@@ -159,17 +158,13 @@ class Test_Files(object):
             assert with_permission == []
 
     def test_import_permissions(self):
-        with self.app.app_context():
-            flight_path = "V7"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project_1 = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project_1 = self._create_project(flight_path="V7")
             with_permission = self.fm.fetch_users_with_permission(project_1.id, self.user.id)
             assert with_permission == []
             self.fm.add_bulk_permission(project_1.id, self.user, [self.user_2.id], "viewer")
 
-            flight_path = "V8"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project_2 = Project.query.filter_by(path=flight_path).first()
+            flight_path, project_2 = self._create_project(flight_path="V8")
             with_permission = self.fm.fetch_users_with_permission(project_2.id, self.user.id)
             assert with_permission == []
 
@@ -178,10 +173,8 @@ class Test_Files(object):
             assert with_permission == [[self.user_2.username, 'viewer', self.user_2.id]]
 
     def test_update_project(self):
-        with self.app.app_context():
-            flight_path = "V9"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V9")
             new_flight_path = 'NEW_V9'
             assert self.fm.update_project(project.id, 'path', new_flight_path, self.user)
             project = Project.query.filter_by(path=new_flight_path).first()
@@ -195,30 +188,24 @@ class Test_Files(object):
 
     def test_delete_file(self):
         # ToDo rename to project
-        with self.app.app_context():
-            flight_path = "V10"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V10")
             assert project.path == flight_path
             assert self.fm.delete_file(project.id, self.user)
             project = Project.query.filter_by(path=flight_path).first()
             assert project is None
 
     def test_get_all_changes(self):
-        with self.app.app_context():
-            flight_path = "V11"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user, content='initial')
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V11")
             assert self.fm.save_file(project.id, "content1", self.user)
             assert self.fm.save_file(project.id, "content2", self.user)
             all_changes = self.fm.get_all_changes(project.id, self.user)
             assert len(all_changes) == 2
 
     def test_get_change_content(self):
-        with self.app.app_context():
-            flight_path = "V12"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user, content='initial')
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V12", content='initial')
             assert self.fm.save_file(project.id, "content1", self.user)
             assert self.fm.save_file(project.id, "content2", self.user)
             assert self.fm.save_file(project.id, "content3", self.user)
@@ -229,10 +216,8 @@ class Test_Files(object):
             assert previous_change == "content2"
 
     def test_set_version_name(self):
-        with self.app.app_context():
-            flight_path = "V13"
-            assert self.fm.create_project(flight_path, f"{flight_path} test example", self.user, content='initial')
-            project = Project.query.filter_by(path=flight_path).first()
+        with self.app.test_client():
+            flight_path, project = self._create_project(flight_path="V13", content='initial')
             assert self.fm.save_file(project.id, "content1", self.user)
             all_changes = self.fm.get_all_changes(project.id, self.user)
             ch_id = all_changes[-1]["id"]
@@ -240,3 +225,10 @@ class Test_Files(object):
             all_changes = self.fm.get_all_changes(project.id, self.user)
             version_name = all_changes[-1]["version_name"]
             assert version_name == "berlin"
+
+    def _create_project(self, flight_path="firstflight", description="example", user=None, content=None):
+        if user is None:
+            user = self.user
+        self.fm.create_project(flight_path, description, user, content=content)
+        project = Project.query.filter_by(path=flight_path).first()
+        return flight_path, project
