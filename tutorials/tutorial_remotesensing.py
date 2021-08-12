@@ -288,7 +288,6 @@ def automate_rs():
             pag.press('q')
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
-    pag.press('q')
 
 
 def main():

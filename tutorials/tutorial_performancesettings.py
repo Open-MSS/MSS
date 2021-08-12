@@ -1,8 +1,9 @@
 """
-    mss.tutorials.tutorial_satellitetrack
+    mss.tutorials.tutorial_performancesettings
     ~~~~~~~~~~~~~~~~~~~
 
-    This python script generates an automatic demonstration of how to work with remote sensing tool in topview.
+    This python script generates an automatic demonstration of how to change the performance of flight track in table
+    view such as managing fuel capacity, etc.
     This file is part of mss.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
@@ -47,7 +48,7 @@ def initial_ops():
         print("\n INFO : Automation is running on Mac OS..\n")
     elif platform == "win32":
         pag.hotkey('win', 'd')
-        print("\n INFO : Automation is running on Windows OS..\n")
+        print("\nINFO : Automation is running on Windows OS..\n")
     else:
         pag.alert(text="Sorry, no support on this platform!", title="Platform Exception", button='OK')
 
@@ -56,7 +57,7 @@ def call_recorder():
     """
     Calls the screen recorder class to start the recording of the automation.
     """
-    rec = sr.ScreenRecorder(0, 0, int(pag.size()[0] / 1.5) - 100, int(pag.size()[1] - 100))
+    rec = sr.ScreenRecorder(0, 0, int(pag.size()[0] - 400), int(pag.size()[1] - 150))
     rec.capture()
     rec.stop_capture()
 
@@ -68,10 +69,10 @@ def call_mss():
     mss_pyui.main()
 
 
-def automate_rs():
+def automate_performance():
     """
-    This is the main automating script of the MSS remote sensing tutorial which will be recorded and saved
-    to a file having dateframe nomenclature with a .mp4 extension(codec).
+    This is the main automating script of the performance settings of table view tutorial which will be recorded and
+    saved to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
@@ -80,24 +81,24 @@ def automate_rs():
     if platform == 'linux' or platform == 'linux2':
         enter = 'enter'
         wms_path = 'pictures/tutorial_wms/linux/'
-        st_path = 'pictures/satellite_track/linux/'
+        ps_path = 'pictures/performance_settings/linux/'
         win = 'winleft'
         ctrl = 'ctrl'
     elif platform == 'win32':
         enter = 'enter'
         wms_path = 'pictures/tutorial_wms/win32/'
-        st_path = 'pictures/satellite_track/win32/'
+        ps_path = 'pictures/performance_settings/linux/'
         win = 'win'
         ctrl = 'ctrl'
     elif platform == 'darwin':
         enter = 'return'
         wms_path = 'pictures/tutorial_wms/linux/'
-        st_path = 'pictures/satellite_track/linux/'
+        ps_path = 'pictures/performance_settings/linux/'
         ctrl = 'command'
 
     # Satellite Predictor file path
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    satellite_path = os.path.join(path, 'docs/samples/satellite_tracks/satellite_predictor.txt')
+    ps_file_path = os.path.join(path, 'docs/samples/config/mss/performance_simple.json')
 
     # Maximizing the window
     try:
@@ -105,11 +106,19 @@ def automate_rs():
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
     pag.sleep(2)
-    pag.hotkey('ctrl', 'h')
+    pag.hotkey('ctrl', 't')
     pag.sleep(3)
 
-    # Opening Satellite Track dockwidget
+    # Opening Performance Settings dockwidget
     try:
+        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
+        # Relocating the table view window
+        pag.moveTo(x, y - 462, duration=1)
+        if platform == 'linux' or platform == 'linux2':
+            pag.dragRel(10, 100, duration=3)
+        elif platform == 'win32' or platform == 'darwin':
+            pag.dragRel(10, 10, duration=2)
+        pag.sleep(2)
         x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
         pag.click(x, y, interval=2)
         pag.sleep(1)
@@ -120,75 +129,83 @@ def automate_rs():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'select to open control\' button/option not found on the screen.")
 
-    # Loading the file:
+    # Exploring through the file system and loading the performance settings json file for a dummy aircraft.
     try:
-        x, y = pag.locateCenterOnScreen(f'{st_path}load.png')
+        x, y = pag.locateCenterOnScreen(f'{ps_path}select.png')
+        pag.click(x, y, duration=2)
         pag.sleep(1)
-        pag.click(x - 150, y, duration=2)
+        pag.typewrite(ps_file_path, interval=0.1)
         pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite(satellite_path, interval=0.1)
-        pag.sleep(1)
-        pag.click(x, y, duration=1)
         pag.press(enter)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Load\' button not found on the screen.")
-
-    # Switching between different date and time of satellite overpass.
-    try:
-        x, y = pag.locateCenterOnScreen(f'{st_path}predicted_satellite_overpasses.png')
-        pag.click(x + 200, y, duration=1)
-        for _ in range(10):
-            pag.click(x + 200, y, duration=1)
-            pag.sleep(1)
-            pag.press('down')
-            pag.sleep(1)
-            pag.press(enter)
-            pag.sleep(2)
-        pag.click(x + 200, y, duration=1)
-        pag.press('up', presses=3, interval=1)
-        pag.press(enter)
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Predicted Satellite Overpass\' dropdown menu not found on the screen.")
-
-    # Changing map to global
-    try:
-        if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            x, y = pag.locateCenterOnScreen('pictures/europe(cyl).PNG')
-            pag.click(x, y, interval=2)
-        elif platform == 'win32':
-            x, y = pag.locateCenterOnScreen('pictures/europe(cyl)win.PNG')
-            pag.click(x, y, interval=2)
-        pag.press('down', presses=2, interval=0.5)
-        pag.press(enter, interval=1)
-        pag.sleep(5)
-    except ImageNotFoundException:
-        print("\n Exception : Map change dropdown could not be located on the screen")
-
-    # Adding waypoints for demonstrating remote sensing
-    try:
-        x, y = pag.locateCenterOnScreen('pictures/add_waypoint.PNG')
-        pag.click(x, y, interval=2)
-        pag.move(111, 153, duration=2)
-        pag.click(duration=2)
-        pag.move(36, 82, duration=2)
-        pag.click(duration=2)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
-        print("\nException : Add waypoint button in topview not found on the screen.")
+        print("\nException :\'Select\' button (for loading performance_settings.json file) not found on the screen.")
 
-    # Zooming into the map
+    # Checking the Show Performance checkbox to display the settings file in the table view
     try:
-        x, y = pag.locateCenterOnScreen('pictures/zoom.PNG')
-        pag.click(x, y, interval=2)
-        pag.move(260, 130, duration=1)
-        pag.dragRel(184, 135, duration=2)
-        pag.sleep(5)
-    except ImageNotFoundException:
-        print("\n Exception : Zoom button could not be located on the screen")
-    pag.sleep(1)
+        x, y = pag.locateCenterOnScreen(f'{ps_path}show_performance.png')
+        pag.click(x, y, duration=2)
+        pag.sleep(3)
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException :\'Show Performance\' checkbox not found on the screen.")
+
+    # Changing the maximum take off weight
+    try:
+        x, y = pag.locateCenterOnScreen(f'{ps_path}maximum_takeoff_weight.png')
+        pag.click(x + 318, y, duration=2)
+        pag.sleep(4)
+        pag.hotkey(ctrl, 'a')
+        pag.sleep(1)
+        pag.typewrite('87000', interval=0.3)
+        pag.sleep(1)
+        pag.press(enter)
+        pag.sleep(2)
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException :\'Maximum Takeoff Weight\' fill box not found on the screen.")
+
+    # Changing the aircraft weight of the dummy aircraft
+    try:
+        x, y = pag.locateCenterOnScreen(f'{ps_path}aircraft_weight.png')
+        pag.click(x + 300, y, duration=2)
+        pag.sleep(4)
+        pag.hotkey(ctrl, 'a')
+        pag.sleep(1)
+        pag.typewrite('48000', interval=0.3)
+        pag.sleep(1)
+        pag.press(enter)
+        pag.sleep(2)
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException :\'Aircraft weight\' fill box not found on the screen.")
+
+    # Changing the take off time of the dummy aircraft
+    try:
+        x, y = pag.locateCenterOnScreen(f'{ps_path}take_off_time.png')
+        pag.click(x + 410, y, duration=2)
+        pag.sleep(4)
+        pag.hotkey(ctrl, 'a')
+        pag.sleep(1)
+        for _ in range(5):
+            pag.press('up')
+            pag.sleep(2)
+        pag.typewrite('04', interval=0.5)
+        pag.press(enter)
+        pag.sleep(2)
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException :\'Take off time\' fill box not found on the screen.")
+
+    # Showing and hiding the performance settings
+    try:
+        x, y = pag.locateCenterOnScreen(f'{ps_path}show_performance.png')
+        pag.click(x, y, duration=2)
+        pag.sleep(3)
+
+        pag.click(x, y, duration=2)
+        pag.sleep(3)
+
+        pag.click(x, y, duration=2)
+        pag.sleep(3)
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException :\'Show Performance\' checkbox not found on the screen.")
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 
@@ -237,7 +254,7 @@ def main():
     controlled from here. (This is the main process.)
     """
     p1 = multiprocessing.Process(target=call_mss)
-    p2 = multiprocessing.Process(target=automate_rs)
+    p2 = multiprocessing.Process(target=automate_performance)
     p3 = multiprocessing.Process(target=call_recorder)
 
     print("\nINFO : Starting Automation.....\n")
