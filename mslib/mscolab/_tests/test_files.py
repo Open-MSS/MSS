@@ -34,7 +34,7 @@ from mslib.mscolab.models import User, Project, Permission, Change, Message, db
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.utils import get_recent_pid
 
 
@@ -55,7 +55,7 @@ class Test_Files(TestCase):
         return app
 
     def setUp(self):
-        handle_db_seed()
+        handle_db_reset()
         db.init_app(self.app)
 
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
@@ -73,9 +73,6 @@ class Test_Files(TestCase):
 
     def tearDown(self):
         pass
-        # review later when handle_db does not seed for tests
-        # db.session.remove()
-        # db.drop_all()
 
     def test_create_project(self):
         with self.app.test_client():
@@ -142,7 +139,7 @@ class Test_Files(TestCase):
             self._create_project(flight_path="project9")
             p_id = get_recent_pid(self.fm, self.user)
             assert self.fm.get_file(p_id, self.user) is not False
-            user2 = User.query.filter_by(id=9).first()
+            user2 = User.query.filter_by(emailid=self.userdata2[0]).first()
             assert self.fm.get_file(p_id, user2) is False
 
     def test_authorized_users(self):

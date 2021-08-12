@@ -28,7 +28,7 @@ from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import (add_user, get_user, add_project, add_user_to_project,
@@ -50,7 +50,7 @@ class Test_Seed(TestCase):
         return app
 
     def setUp(self):
-        handle_db_seed()
+        handle_db_reset()
         db.init_app(self.app)
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
         self.room_name = "XYZ"
@@ -66,9 +66,6 @@ class Test_Seed(TestCase):
 
     def tearDown(self):
         pass
-        # review later when handle_db does not seed for tests
-        # db.session.remove()
-        # db.drop_all()
 
     def test_add_project(self):
         with self.app.test_client():

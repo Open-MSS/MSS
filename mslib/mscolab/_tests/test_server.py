@@ -33,7 +33,7 @@ import io
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, User, Project
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import initialize_managers, check_login, register_user, APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -56,15 +56,12 @@ class Test_Server(TestCase):
         return app
 
     def setUp(self):
-        handle_db_seed()
+        handle_db_reset()
         db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
 
     def tearDown(self):
         pass
-        # review later when handle_db does not seed for tests
-        # db.session.remove()
-        # db.drop_all()
 
     def test_initialize_managers(self):
         app, sockio, cm, fm = initialize_managers(self.app)

@@ -33,7 +33,7 @@ from mslib.mscolab.models import Project, db
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.mscolab import handle_db_reset
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -53,7 +53,7 @@ class Test_FileManager(TestCase):
         return app
 
     def setUp(self):
-        handle_db_seed()
+        handle_db_reset()
         db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
@@ -69,9 +69,6 @@ class Test_FileManager(TestCase):
 
     def tearDown(self):
         pass
-        # review later when handle_db does not seed for tests
-        # db.session.remove()
-        # db.drop_all()
 
     def test_create_project(self):
         with self.app.test_client():
@@ -95,11 +92,11 @@ class Test_FileManager(TestCase):
             self.fm.create_project("second", "info about second", self.user)
             expected_result = [{'access_level': 'creator',
                                 'description': 'info about first',
-                                'p_id': 7,
+                                'p_id': 1,
                                 'path': 'first'},
                                {'access_level': 'creator',
                                 'description': 'info about second',
-                                'p_id': 8,
+                                'p_id': 2,
                                 'path': 'second'}]
             assert self.fm.list_projects(self.user) == expected_result
 
@@ -194,7 +191,7 @@ class Test_FileManager(TestCase):
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
             flight_path, project = self._create_project(flight_path="project9")
-            assert len(self.fm.fetch_users_without_permission(project.id, self.user.id)) > 3
+            assert len(self.fm.fetch_users_without_permission(project.id, self.user.id)) == 1
 
     def test_fetch_users_with_permission(self):
         with self.app.test_client():
