@@ -24,47 +24,63 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask import Flask
+
+from flask_testing import TestCase
+
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, MessageType, Message
-from mslib.mscolab.chat_manager import ChatManager
-from mslib.mscolab.seed import add_user, add_project, add_user_to_project, delete_user, delete_project, get_user
+from mslib.mscolab.models import Message, MessageType
 from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.server import APP
+from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
+from mslib.mscolab.sockets_manager import setup_managers
 
 
-class Test_Chat_Manager(object):
-    def setup(self):
+class Test_Chat_Manager(TestCase):
+    render_templates = False
+
+    def create_app(self):
+        app = APP
+        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config["TESTING"] = True
+        app.config['LIVESERVER_TIMEOUT'] = 10
+        app.config['LIVESERVER_PORT'] = 0
+        return app
+
+    def setUp(self):
         handle_db_seed()
-        self.app = Flask(__name__, static_url_path='')
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        self.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        db.init_app(self.app)
-        self.cm = ChatManager()
-
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.room_name = "europe"
-        self.userdata = "va6@v6", "va6", "va6"
-
+        socketio, self.cm, self.fm = setup_managers(self.app)
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_project(self.room_name, "test europe")
         assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
+    def tearDown(self):
+        pass
+        # review later when handle_db does not seed for tests
+        # db.session.remove()
+        # db.drop_all()
+
     def teardown(self):
-        assert delete_user(self.userdata[0])
-        assert delete_project(self.room_name)
+        pass
+        # review later when handle_db does not seed for tests
+        # db.session.remove()
+        # db.drop_all()
 
     def test_add_message(self):
-        with self.app.app_context():
-
+        with self.app.test_client():
             message = self.cm.add_message(self.user, 'some message',
                                           self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)
             assert message.text == 'some message'
 
     def test_edit_messages(self):
-        with self.app.app_context():
+        with self.app.test_client():
             message = self.cm.add_message(self.user, 'some test message',
                                           self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)
@@ -74,7 +90,7 @@ class Test_Chat_Manager(object):
             assert message.text == new_message_text
 
     def test_delete_messages(self):
-        with self.app.app_context():
+        with self.app.test_client():
             message = self.cm.add_message(self.user, 'some test example message',
                                           self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)
