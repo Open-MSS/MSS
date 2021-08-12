@@ -82,13 +82,13 @@ class SocketsManager(object):
         if s_id is not None:
             leave_room(str(p_id), sid=s_id, namespace='/')
 
-    def handle_start_event(self, json):
+    def handle_start_event(self, json_config):
         """
         json is a dictionary version of data sent to backend
         """
-        logging.info('received json: ' + str(json))
+        logging.info('received json: ' + str(json_config))
         # authenticate socket
-        token = json['token']
+        token = json_config['token']
         user = User.verify_auth_token(token)
         if not user:
             return
