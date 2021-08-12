@@ -57,7 +57,7 @@ def call_recorder():
     """
     Calls the screen recorder class to start the recording of the automation.
     """
-    rec = sr.ScreenRecorder(sc_width=(pag.size()[0]), sc_height=(pag.size()[1] - 100))
+    rec = sr.ScreenRecorder(80, 20, pag.size()[0], pag.size()[1] - 150)
     rec.capture()
     rec.stop_capture()
 
@@ -126,8 +126,8 @@ def automate_hexagoncontrol():
     try:
         x, y = pag.locateCenterOnScreen('pictures/zoom.PNG')
         pag.click(x, y, interval=2)
-        pag.move(382, 285, duration=1)
-        pag.dragRel(80, 72, duration=2)
+        pag.move(379, 205, duration=1)
+        pag.dragRel(70, 75, duration=2)
         pag.sleep(5)
     except ImageNotFoundException:
         print("\n Exception : Zoom button could not be located on the screen")
@@ -165,10 +165,10 @@ def automate_hexagoncontrol():
             pag.keyUp('command')
         pag.sleep(1)
         if platform == 'win32' or platform == 'darwin':
-            pag.dragRel(None, -600, duration=2)
+            pag.dragRel(None, -700, duration=2)
             tv_x, tv_y = pag.position()
         elif platform == 'linux' or platform == 'linux2':
-            pag.dragRel(None, -750, duration=2)
+            pag.dragRel(None, -850, duration=2)
             tv_x, tv_y = pag.position()
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : TableView's Select to open Control option not found on the screen.")

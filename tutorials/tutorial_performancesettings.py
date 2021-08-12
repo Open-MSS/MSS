@@ -57,7 +57,7 @@ def call_recorder():
     """
     Calls the screen recorder class to start the recording of the automation.
     """
-    rec = sr.ScreenRecorder(0, 0, int(pag.size()[0] - 400), int(pag.size()[1] - 150))
+    rec = sr.ScreenRecorder(80, 80, int(pag.size()[0]) - 400, int(pag.size()[1]) - 150)
     rec.capture()
     rec.stop_capture()
 
