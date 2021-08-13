@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_waypoints
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to play with and use waypoints
     for activating/creating a flight track.

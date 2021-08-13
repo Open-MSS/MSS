@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_remotesensing
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to work with remote sensing tool in topview.
     This file is part of mss.

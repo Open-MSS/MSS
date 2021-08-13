@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_kml
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to overlay kml flles on top of the map in topview.
     kml(key hole markup language) is an XML based file format for demonstrating geographical context. This will

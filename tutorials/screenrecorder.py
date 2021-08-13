@@ -1,6 +1,6 @@
 """
     mss.tutorials.screenrecorder
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script is meant for recording the screens while automated  tutorials are running.
 

@@ -1,6 +1,6 @@
 """
     mss.tutorials.cursor
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~
 
     This python script generates the png image of the cursor for linux systems and store it in
     'tutorials/cursor_image.png.' Then, this image is used inside screenrecorder.py file. This displays

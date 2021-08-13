@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_hexagoncontrol.py
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to create a hexagon flightrack with the waypoints.
     Placing a centre waypoint, how we can draw a perfect hexagon flight path around it with variable radius of
@@ -57,7 +57,7 @@ def call_recorder():
     """
     Calls the screen recorder class to start the recording of the automation.
     """
-    rec = sr.ScreenRecorder(80, 20, pag.size()[0], pag.size()[1] - 150)
+    rec = sr.ScreenRecorder(0, 0, pag.size()[0], pag.size()[1] - 150)
     rec.capture()
     rec.stop_capture()
 
@@ -76,6 +76,8 @@ def automate_hexagoncontrol():
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
+    tv_x = None
+    tv_y = None
 
     # Platform specific things
     if platform == 'linux' or platform == 'linux2':
@@ -144,7 +146,7 @@ def automate_hexagoncontrol():
         x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
         pag.moveTo(x, y - 462, duration=1)
         if platform == 'linux' or platform == 'linux2':
-            pag.dragRel(649, 887, duration=3)
+            pag.dragRel(649, 787, duration=3)
         elif platform == 'win32' or platform == 'darwin':
             pag.dragRel(200, 487, duration=2)
         pag.sleep(2)
@@ -168,23 +170,20 @@ def automate_hexagoncontrol():
             pag.dragRel(None, -700, duration=2)
             tv_x, tv_y = pag.position()
         elif platform == 'linux' or platform == 'linux2':
-            pag.dragRel(None, -850, duration=2)
+            pag.dragRel(None, -750, duration=2)
             tv_x, tv_y = pag.position()
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : TableView's Select to open Control option not found on the screen.")
 
     # Opening Hexagon Control dockwidget
-    try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png', region=(int(sc_width / 2) - 350,
-                                                                                      0, int(sc_width / 2), sc_height))
-        pag.click(x, y, interval=2)
+    if tv_x is not None and tv_y is not None:
+        pag.moveTo(tv_x, tv_y + 462, duration=2)
+        pag.click(duration=2)
         pag.sleep(1)
         pag.press('down')
         pag.sleep(1)
         pag.press(enter)
         pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control(table view)\' button/option not found on the screen.")
 
     # Entering Centre Latitude and Centre Longitude of Delhi around which hexagon will be drawn
     try:

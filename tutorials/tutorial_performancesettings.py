@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_performancesettings
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to change the performance of flight track in table
     view such as managing fuel capacity, etc.

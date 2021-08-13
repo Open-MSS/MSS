@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_views
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to use the top view, side view, table view and
     linear view section of Mission Support System in creating a project and planning the flightrack.
