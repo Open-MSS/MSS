@@ -29,10 +29,11 @@ If you do prefer to use over 7K open-source packages install Anaconda.
 
 We recommend to install this for the local user. This does not require administrator permissions.
 
-
+As **Beginner** start with an installation of Miniconda
 - `Get Miniconda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_
-- `Get Anaconda <https://docs.continuum.io/anaconda/install/>`_
-- `Get Miniforge <https://github.com/conda-forge/miniforge/>`_
+
+If you are an Advanced User you know that `Anaconda <https://docs.continuum.io/anaconda/install/>`_
+or `Miniforge <https://github.com/conda-forge/miniforge/>`_ are compatible too.
 
 
 conda-forge channel
