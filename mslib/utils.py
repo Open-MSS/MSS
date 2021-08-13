@@ -101,6 +101,19 @@ UR.define("ppt = 1e-12 fraction")
 UR.define("pptv = 1e-12 fraction")
 
 
+def windows_subprocess_startupinfo():
+    """
+    config options to hide windows terminals on subprocess call
+    """
+    startupinfo = ""
+    if os.name == 'nt':
+        # thx to https://gist.github.com/nitely/3862493
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+    return startupinfo
+
+
 def parse_iso_datetime(string):
     try:
         result = isodate.parse_datetime(string)
@@ -830,7 +843,11 @@ class Updater(QtCore.QObject):
 
         # Check if mamba is installed
         try:
-            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            if os.name == 'nt':
+                subprocess.run(["mamba"], startupinfo=windows_subprocess_startupinfo(),
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            else:
+                subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.command = "mamba"
         except FileNotFoundError:
             pass
@@ -854,8 +871,14 @@ class Updater(QtCore.QObject):
         """
         # Don't notify on updates if mss is in a git repo, as you are most likely a developer
         try:
-            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT, encoding="utf8")
+            if os.name == 'nt':
+                git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"],
+                                     startupinfo=windows_subprocess_startupinfo(),
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT, encoding="utf8")
+            else:
+                git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT, encoding="utf8")
             if "true" in git.stdout:
                 self.is_git_env = True
         except FileNotFoundError:
@@ -863,7 +886,11 @@ class Updater(QtCore.QObject):
 
         # Return if conda is not installed
         try:
-            subprocess.run(["conda"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            if os.name == 'nt':
+                subprocess.run(["conda"], startupinfo=windows_subprocess_startupinfo(),
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            else:
+                subprocess.run(["conda"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except FileNotFoundError:
             return
 
@@ -926,7 +953,17 @@ class Updater(QtCore.QObject):
         """
         Handles proper execution of conda subprocesses and logging
         """
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
+        if os.name == 'nt':
+            process = subprocess.Popen(command.split(),
+                                       startupinfo=windows_subprocess_startupinfo(),
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT,
+                                       encoding="utf8")
+        else:
+            process = subprocess.Popen(command.split(),
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.STDOUT,
+                                       encoding="utf8")
         self.on_log_update.emit(" ".join(process.args) + "\n")
 
         text = ""
@@ -1193,7 +1230,8 @@ def update_airspace(force_download=False, countries=["de"]):
 
         if (force_download or is_outdated or not file_exists) \
                 and QtWidgets.QMessageBox.question(None, "Allow download",
-                                                   f"The selected {country} airspace needs to be downloaded ({data[-1]})"
+                                                   f"The selected {country} airspace "
+                                                   f"needs to be downloaded ({data[-1]})"
                                                    f"\nIs now a good time?",
                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
                 == QtWidgets.QMessageBox.Yes:
