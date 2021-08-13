@@ -115,6 +115,7 @@ class Test_Chat(object):
         sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
+        # ToDo same message gets twice emmitted, why? (use a helper function)
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
@@ -148,6 +149,7 @@ class Test_Chat(object):
         sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
+        # ToDo same message gets twice emmitted, why?
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],

@@ -103,7 +103,7 @@ _app, sockio, cm, fm = initialize_managers(APP)
 
 def check_login(emailid, password):
     user = User.query.filter_by(emailid=str(emailid)).first()
-    if user:
+    if user is not None:
         if user.verify_password(password):
             return user
     return False
@@ -231,6 +231,7 @@ def message_attachment():
     p_id = request.form.get("p_id", None)
     message_type = MessageType(int(request.form.get("message_type")))
     user = g.user
+    # ToDo review
     users = fm.fetch_users_without_permission(int(p_id), user.id)
     if users is False:
         return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
