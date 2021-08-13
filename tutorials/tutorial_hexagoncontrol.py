@@ -98,9 +98,6 @@ def automate_hexagoncontrol():
         hc_path = 'pictures/hexagon_control/linux/'
         ctrl = 'command'
 
-    # Screen Resolutions
-    sc_width, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
-
     # Maximizing the window
     try:
         pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
@@ -144,9 +141,9 @@ def automate_hexagoncontrol():
     # Relocating Tableview by performing operations on table view
     try:
         x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
-        pag.moveTo(x, y - 462, duration=1)
+        pag.moveTo(x + 250, y - 462, duration=1)
         if platform == 'linux' or platform == 'linux2':
-            pag.dragRel(649, 787, duration=3)
+            pag.dragRel(649, 700, duration=3)
         elif platform == 'win32' or platform == 'darwin':
             pag.dragRel(200, 487, duration=2)
         pag.sleep(2)
@@ -170,14 +167,14 @@ def automate_hexagoncontrol():
             pag.dragRel(None, -700, duration=2)
             tv_x, tv_y = pag.position()
         elif platform == 'linux' or platform == 'linux2':
-            pag.dragRel(None, -750, duration=2)
+            pag.dragRel(None, -630, duration=2)
             tv_x, tv_y = pag.position()
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : TableView's Select to open Control option not found on the screen.")
 
     # Opening Hexagon Control dockwidget
     if tv_x is not None and tv_y is not None:
-        pag.moveTo(tv_x, tv_y + 462, duration=2)
+        pag.moveTo(tv_x - 250, tv_y + 462, duration=2)
         pag.click(duration=2)
         pag.sleep(1)
         pag.press('down')
