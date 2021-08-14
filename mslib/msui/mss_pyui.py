@@ -235,6 +235,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir")
 
+        # bind keyboard shortcuts to view actions
+        self.actionTopView.setShortcut(QtGui.QKeySequence("Ctrl+h"))
+        self.actionSideView.setShortcut(QtGui.QKeySequence("Ctrl+v"))
+        self.actionTableView.setShortcut(QtGui.QKeySequence("Ctrl+t"))
+        self.actionLinearView.setShortcut(QtGui.QKeySequence("Ctrl+l"))
+
         # File menu.
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
         self.actionSaveActiveFlightTrack.triggered.connect(self.save_handler)
@@ -730,7 +736,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         if self.config_editor is None:
             self.config_editor = editor.ConfigurationEditorWindow(parent=self)
-            self.config_editor.viewCloses.connect(self.close_config_editor)
+            self.config_editor.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.config_editor.destroyed.connect(self.close_config_editor)
+            # self.config_editor.viewCloses.connect(self.close_config_editor)
             self.config_editor.restartApplication.connect(self.restart_application)
             self.config_editor.show()
         else:
@@ -738,7 +746,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.config_editor.activateWindow()
 
     def close_config_editor(self):
-        self.config_editor.close()
         self.config_editor = None
 
     def show_online_help(self):
@@ -792,7 +799,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listFlightTracks.clear()
             # close configuration editor
             if self.config_editor is not None:
+                self.config_editor.restart_on_save = False
                 self.config_editor.close()
+                if self.config_editor is not None:
+                    self.statusBar.showMessage("Save your config changes and try quitting MSS")
+                    event.ignore()
+                    return
             event.accept()
         else:
             event.ignore()

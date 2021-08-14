@@ -387,32 +387,20 @@ Save a flight track to name it.</string>
    <property name="text">
     <string>&amp;Top View (Horizontal Section)</string>
    </property>
-   <property name="shortcut">
-    <string>Meta+H</string>
-   </property>
   </action>
   <action name="actionSideView">
    <property name="text">
     <string>&amp;Side View (Vertical Section)</string>
-   </property>
-   <property name="shortcut">
-    <string>Meta+V</string>
    </property>
   </action>
   <action name="actionTableView">
    <property name="text">
     <string>&amp;Table View</string>
    </property>
-   <property name="shortcut">
-    <string>Meta+T</string>
-   </property>
   </action>
   <action name="actionLinearView">
    <property name="text">
     <string>&amp;Linear View</string>
-   </property>
-   <property name="shortcut">
-    <string>Meta+L</string>
    </property>
   </action>
   <action name="actionChat">
