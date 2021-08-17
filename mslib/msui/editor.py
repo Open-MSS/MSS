@@ -814,16 +814,15 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 "Please correct the invalid values (keys colored in red) to be able to save.")
             self.statusbar.showMessage("Please correct the values and try saving again")
             return False
-        if dummy:
-            dialog_box = QtWidgets.QMessageBox.question(
-                self,
-                "Dummy values detected",
-                "Dummy values detected (keys colored in gray.)\n"
-                "Since they are dummy values you might face issues later on while working."
-                "\n\nDo you still want to continue to save?",
-                QtWidgets.QMessageBox.Yes,
+        if dummy and self.check_modified():
+            ret = QtWidgets.QMessageBox.warning(
+                self, self.tr("Dummy values detected"),
+                self.tr("Dummy values detected (keys colored in gray.)\n"
+                        "Since they are dummy values you might face issues later on while working."
+                        "\n\nDo you still want to continue to save?"),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
-            if dialog_box == QtWidgets.QMessageBox.No:
+            if ret == QtWidgets.QMessageBox.No:
                 self.statusbar.showMessage("Please correct the values and try saving again")
                 return False
 
@@ -839,6 +838,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     QtWidgets.QMessageBox.No)
                 if ret == QtWidgets.QMessageBox.Yes:
                     self.restartApplication.emit()
+                    self.restart_on_save = False
                     self.close()
             self.restart_on_save = True
         else:
@@ -864,22 +864,21 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             msg = self.tr(
                 "Save Changes to default mss_settings.json?\nYou need to restart the gui for changes to take effect.")
         if msg != "":
-            ret = QtWidgets.QMessageBox.question(
-                self, self.tr("Mission Support System"), msg,
-                QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
-
+            ret = QtWidgets.QMessageBox.warning(
+                self, self.tr("Mission Support System"), self.tr(msg),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:
                 if not self.save_config():
                     event.ignore()
                     return
         elif self.restart_on_save:
-            dialog_box = QtWidgets.QMessageBox.question(
-                self,
-                "Close Config Editor",
-                "Do you want to close the config editor?",
-                QtWidgets.QMessageBox.Yes,
+            ret = QtWidgets.QMessageBox.warning(
+                self, self.tr("Mission Support System"),
+                self.tr("Do you want to close the config editor?"),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
-            if dialog_box == QtWidgets.QMessageBox.No:
+            if ret == QtWidgets.QMessageBox.No:
                 event.ignore()
                 return
 
