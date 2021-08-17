@@ -160,36 +160,6 @@ class JsonDelegate(delegate.JsonDelegate):
 
             return super(JsonDelegate, self).paint(painter, option, index)
 
-#         # Bold the value if not default
-#         if index.data() is not None:
-#             model = index.model()
-#             # Get root parent of the index
-#             parent_index = model.index(index.row(), 0, index.parent())
-#             root_index, parents = get_root_index(parent_index, parents=True)
-#             parents.append(parent_index)
-#             root_option = root_index.data()
-#             if root_option in fixed_dict_options:
-#                 default_data = default_options[root_option]
-#                 for parent in parents[1:]:
-#                     parent_data = parent.data()
-#                     if isinstance(default_data, list):
-#                         parent_data = int(parent.data())
-#                     default_data = default_data[parent_data]
-#                 if index.data() != default_data:
-#                     option.font.setWeight(QtGui.QFont.Bold)
-#             elif root_option in key_value_options:
-#                 if default_options[root_option] != index.data():
-#                     option.font.setWeight(QtGui.QFont.Bold)
-#             elif root_option in dict_option_structure or root_option in list_option_structure:
-#                 # get source model if proxy model is used, for serializing data
-#                 if isinstance(model, QtCore.QAbstractProxyModel):
-#                     model = model.sourceModel()
-#                 source_data = model.serialize()
-#                 if source_data[root_option] != default_options[root_option]:
-#                     option.font.setWeight(QtGui.QFont.Bold)
-#             else:
-#                 option.font.setWeight(QtGui.QFont.Normal)
-
         type_ = index.data(TypeRole)
         if isinstance(type_, DataType):
             try:
@@ -341,15 +311,15 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
     def dict_raise_on_duplicates_empty(self, ordered_pairs):
         """Reject duplicate and empty keys."""
-        d = {}
-        for k, v in ordered_pairs:
-            if k in d:
-                raise ValueError(f"duplicate key: {k}")
-            elif k == "":
-                raise ValueError(f"empty key: {k}")
+        accepted = {}
+        for key, value in ordered_pairs:
+            if key in accepted:
+                raise ValueError(f"duplicate key: {key}")
+            elif key == "":
+                raise ValueError(f"empty key: {key}")
             else:
-                d[k] = v
-        return d
+                accepted[key] = value
+        return accepted
 
     def set_noneditable_items(self, parent):
         for r in range(self.json_model.rowCount(parent)):
@@ -410,16 +380,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             root_index = source_model.index(r, 0, parent)
             root_item = source_model.itemFromIndex(root_index)
 
-            if root_item.data(InvalidityRole) is None:
-                root_item.setData([False, False, False], InvalidityRole)
-            if root_item.data(DummyRole) is None:
-                root_item.setData(False, DummyRole)
-
+            empty, duplicate, invalid, dummy = [False] * 4
             color = QtCore.Qt.transparent
             key = root_index.data()
             if key in dict_option_structure:
-                # check for empty values
-                empty = False
                 child_keys = set()
                 rows = source_model.rowCount(root_index)
                 for row in range(rows):
@@ -429,7 +393,6 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                         empty = True
 
                 # check for dummy values
-                dummy = False
                 default = dict_option_structure[key]
                 values_dict = data[key]
                 for value in values_dict:
@@ -439,34 +402,32 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                             color = QtCore.Qt.gray
                             break
 
-                # condition for checking duplicate and empty
-                duplicate = False
+                # condition for checking duplicate and empty keys
                 if len(child_keys) != rows or empty:
                     duplicate = True
                     color = QtCore.Qt.red
-                root_item.setData([empty, duplicate, False], InvalidityRole)
-                root_item.setData(dummy, DummyRole)
             elif key in list_option_structure:
-                empty, duplicate, dummy = [False] * 3
                 values_list = data[key]
-                if any([values_list[i] == list_option_structure[key][0] for i in range(len(values_list))]):
+                # check if any dummy values
+                if any([value == list_option_structure[key][0] for value in values_list]):
                     dummy = True
                     color = QtCore.Qt.gray
-                # check if any empty keys
+                # check if any empty values
                 if any([value == "" for value in values_list]):
                     empty = True
                     color = QtCore.Qt.red
-                # check if any duplicate keys
+                # check if any duplicate values
                 if len(set(values_list)) != len(values_list):
                     duplicate = True
                     color = QtCore.Qt.red
-                root_item.setData([empty, duplicate, False], InvalidityRole)
-                root_item.setData(dummy, DummyRole)
             elif key == 'filepicker_default':
                 if data[key] not in ['default', 'qt', 'fs']:
+                    invalid = True
                     color = QtCore.Qt.red
-                    root_item.setData([False, False, True], InvalidityRole)
 
+            # set invalidityroles and dummyrole for key
+            root_item.setData([empty, duplicate, invalid], InvalidityRole)
+            root_item.setData(dummy, DummyRole)
             # set color for column 1
             item = source_model.itemFromIndex(root_index)
             item.setBackground(color)
@@ -474,21 +435,6 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             source_index = source_model.index(r, 1, parent)
             item = source_model.itemFromIndex(source_index)
             item.setBackground(color)
-
-    def move_option(self, move=None):
-        if move not in [1, -1]:
-            logging.debug("Invalid move value passed to move_option method")
-            return
-        selection = self.view.selectionModel().selectedRows()
-        if len(selection) == 0 and len(selection) > 1:
-            logging.debug("No/multiple options selected when trying to move")
-            self.statusbar.showMessage("Please select a single option to move")
-            return
-
-        index = selection[0]
-        if not index.parent().isValid():
-            if index.data() not in fixed_dict_options + key_value_options:
-                self.proxy_model.moveRow(index.parent(), index.row(), index.parent(), index.row() + move)
 
     def compare_data(self, default, user_data):
         """Recursively compares two dictionaries based on qt_json_view datatypes
@@ -686,12 +632,11 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 else:
                     non_removable.append(index)
 
-        # self.error_dialog = QtWidgets.QErrorMessage()
-        # self.error_dialog.showMessage('Are you sure about removing the selected options?')
-
         if removable_indexes == {} and non_removable != []:
             self.statusbar.showMessage("Default options are not removable.")
             return
+
+        # ToDo add confirmation dialog here
 
         options = "\n".join([index.data() for index in removable_indexes])
         logging.debug(f"Attempting to remove the following options\n{options}")
@@ -747,6 +692,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     break
             if not added:
                 selected_indexes.add(index)
+
+        # ToDo add confirmation dialog here
 
         options = "\n".join([index.data() for index in selected_indexes])
         logging.debug(f"Attempting to restore defaults for the following options\n{options}")
@@ -850,10 +797,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         for r in range(self.json_model.rowCount(parent)):
             index = self.json_model.index(r, 0, parent)
             item = self.json_model.itemFromIndex(index)
-            if any(item.data(InvalidityRole)):
-                invalid = True
-            if item.data(DummyRole):
-                dummy = True
+            invalid |= any(item.data(InvalidityRole))
+            dummy |= item.data(DummyRole)
 
         return invalid, dummy
 
@@ -902,25 +847,40 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
     def export_config(self):
         if self.json_model.serialize() == default_options:
-            # Todo - notify user about no non-default values
-            # return
+            # ToDo notify user about no non-default values
             pass
         path = get_save_filename(self, "Export config", "mss_settings", "JSON files (*.json)")
         if path:
             self._save_to_path(path)
 
     def closeEvent(self, event):
+        msg = ""
         invalid, dummy = self.validate_data()
-        if invalid or dummy or self.check_modified():
+        if invalid:
+            msg = self.tr("Invalid keys/values found in config.\nDo you want to rectify and save changes?")
+        elif dummy and not self.check_modified:
+            msg = self.tr("Dummy keys/values found in config.\nDo you want to rectify and save changes?")
+        elif self.check_modified():
+            msg = self.tr(
+                "Save Changes to default mss_settings.json?\nYou need to restart the gui for changes to take effect.")
+        if msg != "":
             ret = QtWidgets.QMessageBox.question(
-                self, self.tr("Mission Support System"),
-                self.tr("Save Changes to default mss_settings.json?\n"
-                        "You need to restart the gui for changes to take effect."),
+                self, self.tr("Mission Support System"), msg,
                 QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
 
             if ret == QtWidgets.QMessageBox.Yes:
                 if not self.save_config():
                     event.ignore()
                     return
+        elif self.restart_on_save:
+            dialog_box = QtWidgets.QMessageBox.question(
+                self,
+                "Close Config Editor",
+                "Do you want to close the config editor?",
+                QtWidgets.QMessageBox.Yes,
+                QtWidgets.QMessageBox.No)
+            if dialog_box == QtWidgets.QMessageBox.No:
+                event.ignore()
+                return
 
         event.accept()
