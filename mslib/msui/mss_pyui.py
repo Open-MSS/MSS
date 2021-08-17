@@ -235,9 +235,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir")
 
-        # bind keyboard shortcuts to view actions
+        # bind meta (ctrl in macOS) to override automatic translation of ctrl to command by qt
         if sys.platform == 'darwin':
-            self.actionTopView.setShortcut(QtGui.QKeySequence("Ctrl+shift+h"))
+            self.actionTopView.setShortcut(QtGui.QKeySequence("Meta+h"))
+            self.actionSideView.setShortcut(QtGui.QKeySequence("Meta+v"))
+            self.actionTableView.setShortcut(QtGui.QKeySequence("Meta+t"))
+            self.actionLinearView.setShortcut(QtGui.QKeySequence("Meta+l"))
 
         # File menu.
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
