@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_wms
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to use the web map service section of Mission
     Support System and plan flighttracks accordingly.

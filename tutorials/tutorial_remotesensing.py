@@ -1,6 +1,6 @@
 """
     mss.tutorials.tutorial_remotesensing
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to work with remote sensing tool in topview.
     This file is part of mss.
@@ -55,7 +55,7 @@ def call_recorder():
     """
     Calls the screen recorder class to start the recording of the automation.
     """
-    rec = sr.ScreenRecorder(0, 0, int(pag.size()[0] / 1.5), int(pag.size()[1]))
+    rec = sr.ScreenRecorder(80, 20, int(pag.size()[0] / 1.5), int(pag.size()[1]))
     rec.capture()
     rec.stop_capture()
 
@@ -288,7 +288,6 @@ def automate_rs():
             pag.press('q')
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
-    pag.press('q')
 
 
 def main():

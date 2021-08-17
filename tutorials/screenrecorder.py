@@ -1,6 +1,6 @@
 """
     mss.tutorials.screenrecorder
-    ~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script is meant for recording the screens while automated  tutorials are running.
 
@@ -85,8 +85,8 @@ class ScreenRecorder:
         screen refresh rate of your monitor (if considerable in the program) and sets the FPS.
         """
         with mss.mss() as sct:
-            bbox = {"top": self.x_start, "left": self.y_start, "width": self.width - self.x_start,
-                    "height": self.height}
+            bbox = {"top": self.y_start, "left": self.x_start, "width": self.width - self.x_start,
+                    "height": self.height - self.y_start}
             fps = 0
             last_time = time.time()
             while time.time() - last_time < 1:
@@ -117,8 +117,8 @@ class ScreenRecorder:
             mouse_pointer = None
             width, height = None, None
         with mss.mss() as sct:
-            bbox = {"top": self.x_start, "left": self.y_start, "width": self.width - self.x_start,
-                    "height": self.height}
+            bbox = {"top": self.y_start, "left": self.x_start, "width": self.width - self.x_start,
+                    "height": self.height - self.y_start}
             self.start_rec_time = time.time()
             frame_time_ms = 1000 / self.fps
             frames = 0
