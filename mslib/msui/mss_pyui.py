@@ -58,7 +58,7 @@ from mslib.utils import config_loader, setup_logging, Worker, Updater
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
-from PyQt5 import QtGui, QtCore, QtWidgets
+from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
@@ -234,6 +234,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir")
+
+        # bind meta (ctrl in macOS) to override automatic translation of ctrl to command by qt
+        if sys.platform == 'darwin':
+            self.actionTopView.setShortcut(QtGui.QKeySequence("Meta+h"))
+            self.actionSideView.setShortcut(QtGui.QKeySequence("Meta+v"))
+            self.actionTableView.setShortcut(QtGui.QKeySequence("Meta+t"))
+            self.actionLinearView.setShortcut(QtGui.QKeySequence("Meta+l"))
 
         # File menu.
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
@@ -730,7 +737,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """
         if self.config_editor is None:
             self.config_editor = editor.ConfigurationEditorWindow(parent=self)
-            self.config_editor.viewCloses.connect(self.close_config_editor)
+            self.config_editor.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.config_editor.destroyed.connect(self.close_config_editor)
             self.config_editor.restartApplication.connect(self.restart_application)
             self.config_editor.show()
         else:
@@ -738,7 +746,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.config_editor.activateWindow()
 
     def close_config_editor(self):
-        self.config_editor.close()
         self.config_editor = None
 
     def show_online_help(self):
@@ -792,7 +799,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listFlightTracks.clear()
             # close configuration editor
             if self.config_editor is not None:
+                self.config_editor.restart_on_save = False
                 self.config_editor.close()
+                QtTest.QTest.qWait(5)
+                if self.config_editor is not None:
+                    self.statusBar.showMessage("Save your config changes and try closing again")
+                    event.ignore()
+                    return
             event.accept()
         else:
             event.ignore()

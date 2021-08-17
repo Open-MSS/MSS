@@ -388,7 +388,7 @@ Save a flight track to name it.</string>
     <string>&amp;Top View (Horizontal Section)</string>
    </property>
    <property name="shortcut">
-    <string>Meta+H</string>
+    <string>Ctrl+H</string>
    </property>
   </action>
   <action name="actionSideView">
@@ -396,7 +396,7 @@ Save a flight track to name it.</string>
     <string>&amp;Side View (Vertical Section)</string>
    </property>
    <property name="shortcut">
-    <string>Meta+V</string>
+    <string>Ctrl+V</string>
    </property>
   </action>
   <action name="actionTableView">
@@ -404,7 +404,7 @@ Save a flight track to name it.</string>
     <string>&amp;Table View</string>
    </property>
    <property name="shortcut">
-    <string>Meta+T</string>
+    <string>Ctrl+T</string>
    </property>
   </action>
   <action name="actionLinearView">
@@ -412,7 +412,7 @@ Save a flight track to name it.</string>
     <string>&amp;Linear View</string>
    </property>
    <property name="shortcut">
-    <string>Meta+L</string>
+    <string>Ctrl+L</string>
    </property>
   </action>
   <action name="actionChat">
