@@ -253,7 +253,6 @@ class Ui_MSSMainWindow(object):
         self.actionCloseSelectedFlightTrack.setText(_translate("MSSMainWindow", "&Close Selected Local Flight Track"))
         self.actionUpdater.setText(_translate("MSSMainWindow", "&Updater"))
         self.actionConfiguration.setText(_translate("MSSMainWindow", "&Configuration"))
-        self.actionConfiguration.setShortcut(_translate("MSSMainWindow", "Ctrl+,"))
         self.actionTopView.setText(_translate("MSSMainWindow", "&Top View (Horizontal Section)"))
         self.actionTopView.setShortcut(_translate("MSSMainWindow", "Ctrl+H"))
         self.actionSideView.setText(_translate("MSSMainWindow", "&Side View (Vertical Section)"))

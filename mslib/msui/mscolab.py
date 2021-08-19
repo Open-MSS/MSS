@@ -58,7 +58,7 @@ from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 from mslib.msui import constants
-from mslib.utils import config_loader
+from mslib.utils.config import config_loader
 
 
 class MscolabHelpDialog(QtWidgets.QDialog, msc_help_dialog.Ui_mscolabHelpDialog):
