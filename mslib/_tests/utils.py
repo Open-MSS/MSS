@@ -36,7 +36,7 @@ from flask import json
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers, start_server
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.mscolab import handle_db_init
 
 
 def callback_ok_image(status, response_headers):
@@ -178,7 +178,7 @@ def mscolab_check_free_port(all_ports, port):
 
 
 def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
-    handle_db_seed()
+    handle_db_init()
     port = mscolab_check_free_port(all_ports, all_ports.pop())
 
     url = f"http://localhost:{port}"
