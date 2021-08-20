@@ -211,8 +211,7 @@ class SocketsManager(object):
                 new_message_dict = get_message_dict(new_message)
                 socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
                 # emit file-changed event to trigger reload of flight track
-                socketio.emit('file-changed',
-                              json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
+                socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
         else:
             logging.debug(f'login expired for {user.username}, state unauthorized!')
 
@@ -237,8 +236,7 @@ class SocketsManager(object):
 
         socketio.emit('update-permission', json.dumps({"p_id": p_id,
                                                        "u_id": u_id,
-                                                       "access_level": access_level}),
-                      room=str(p_id))
+                                                       "access_level": access_level}), room=str(p_id))
 
     def emit_revoke_permission(self, u_id, p_id):
         socketio.emit("revoke-permission", json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
@@ -262,7 +260,6 @@ def setup_managers(app):
     fm = FileManager(app.config["MSCOLAB_DATA_DIR"])
     sm = SocketsManager(cm, fm)
     # sockets related handlers
-
     socketio.on_event('connect', sm.handle_connect)
     socketio.on_event('start', sm.handle_start_event)
     socketio.on_event('disconnect', sm.handle_disconnect)

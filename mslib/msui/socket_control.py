@@ -55,6 +55,7 @@ class ConnectionManager(QtCore.QObject):
         self.sio = socketio.Client(reconnection_attempts=5)
         self.sio.connect(self.mscolab_server_url)
 
+        self.sio.on('file-changed', handler=self.handle_file_change)
         # on chat message recive
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
         self.sio.on('chat-message-reply-client', handler=self.handle_incoming_message_reply)
