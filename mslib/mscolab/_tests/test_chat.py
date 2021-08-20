@@ -79,16 +79,16 @@ class Test_Chat(object):
             msg = json.loads(msg)
             messages.append(msg)
 
-        sio.on('chat-message-client', handler=handle_incoming_message, namespace="/")
-        sio.connect(self.url, namespaces=["/"])
-        sio.emit('start', response, namespace="/")
+        sio.on('chat-message-client', handler=handle_incoming_message)
+        sio.connect(self.url)
+        sio.emit('start', response)
         sio.sleep(2)
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
             "message_text": "message from 1",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.sleep(2)
         # testing non-ascii message
         sio.emit("chat-message", {
@@ -96,7 +96,7 @@ class Test_Chat(object):
             "token": response['token'],
             "message_text": "® non ascii",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.sleep(2)
         assert messages[0]["text"] == "message from 1"
         assert messages[1]["text"] == "® non ascii"
@@ -112,8 +112,8 @@ class Test_Chat(object):
         response = self._login()
         sio = socketio.Client()
         self.sockets.append(sio)
-        sio.connect(self.url, namespaces=["/"])
-        sio.emit('start', response, namespace="/")
+        sio.connect(self.url)
+        sio.emit('start', response)
         sio.sleep(2)
         # ToDo same message gets twice emmitted, why? (use a helper function)
         sio.emit("chat-message", {
@@ -121,13 +121,13 @@ class Test_Chat(object):
             "token": response['token'],
             "message_text": "message from 1",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
             "message_text": "message from 1",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.sleep(2)
         with self.app.app_context():
             messages = self.cm.get_messages(1)
@@ -146,8 +146,8 @@ class Test_Chat(object):
         response = self._login()
         sio = socketio.Client()
         self.sockets.append(sio)
-        sio.connect(self.url, namespaces=["/"])
-        sio.emit('start', response, namespace="/")
+        sio.connect(self.url)
+        sio.emit('start', response)
         sio.sleep(2)
         # ToDo same message gets twice emmitted, why?
         sio.emit("chat-message", {
@@ -155,13 +155,13 @@ class Test_Chat(object):
             "token": response['token'],
             "message_text": "message from 1",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
             "message_text": "message from 1",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.sleep(2)
 
         token = response["token"]
@@ -190,16 +190,16 @@ class Test_Chat(object):
             msg = json.loads(msg)
             edited_messages.append(msg)
 
-        sio.on('edit-message-client', handler=handle_message_edited, namespace="/")
-        sio.connect(self.url, namespaces=["/"])
-        sio.emit('start', response, namespace="/")
+        sio.on('edit-message-client', handler=handle_message_edited)
+        sio.connect(self.url)
+        sio.emit('start', response)
         sio.sleep(2)
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
             "message_text": "Edit this message",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.sleep(2)
         with self.app.app_context():
             message = Message.query.filter_by(text="Edit this message").first()
@@ -208,7 +208,7 @@ class Test_Chat(object):
             "new_message_text": "I have updated the message",
             "p_id": message.p_id,
             "token": response["token"]
-        }, namespace="/")
+        })
         sio.sleep(2)
         assert len(edited_messages) == 1
         assert edited_messages[0]["new_message_text"] == "I have updated the message"
@@ -223,16 +223,16 @@ class Test_Chat(object):
             msg = json.loads(msg)
             deleted_messages.append(msg)
 
-        sio.on('delete-message-client', handler=handle_message_deleted, namespace="/")
-        sio.connect(self.url, namespaces=["/"])
-        sio.emit('start', response, namespace="/")
+        sio.on('delete-message-client', handler=handle_message_deleted)
+        sio.connect(self.url)
+        sio.emit('start', response)
         sio.sleep(2)
         sio.emit("chat-message", {
             "p_id": 1,
             "token": response['token'],
             "message_text": "delete this message",
             "reply_id": -1
-        }, namespace="/")
+        })
         sio.sleep(2)
         with self.app.app_context():
             message = Message.query.filter_by(text="delete this message").first()
@@ -240,7 +240,7 @@ class Test_Chat(object):
             'message_id': message.id,
             'p_id': 1,
             'token': response["token"]
-        }, namespace="/")
+        })
         sio.sleep(2)
         assert len(deleted_messages) == 1
         assert deleted_messages[0]["message_id"] == message.id
@@ -258,9 +258,9 @@ class Test_Chat(object):
             msg = json.loads(msg)
             message_recv.append(msg)
 
-        sio.on('chat-message-client', handler=handle_incoming_message, namespace="/")
-        sio.connect(self.url, namespaces=["/"])
-        sio.emit('start', response, namespace="/")
+        sio.on('chat-message-client', handler=handle_incoming_message)
+        sio.connect(self.url)
+        sio.emit('start', response)
         sio.sleep(1)
         files = {'file': open(icons('16x16'), 'rb')}
         data = {

@@ -75,12 +75,12 @@ class SocketsManager(object):
         """
         s_id = get_session_id(self.sockets, u_id)
         if s_id is not None:
-            join_room(str(p_id), sid=s_id, namespace='/')
+            join_room(str(p_id), sid=s_id)
 
     def remove_collaborator_from_room(self, u_id, p_id):
         s_id = get_session_id(self.sockets, u_id)
         if s_id is not None:
-            leave_room(str(p_id), sid=s_id, namespace='/')
+            leave_room(str(p_id), sid=s_id)
 
     def handle_start_event(self, json_config):
         """
@@ -136,10 +136,9 @@ class SocketsManager(object):
                 new_message = self.cm.add_message(user, _json['message_text'], str(p_id), reply_id=reply_id)
                 new_message_dict = get_message_dict(new_message)
                 if reply_id == -1:
-                    socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id), namespace="/")
+                    socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
                 else:
-                    socketio.emit('chat-message-reply-client', json.dumps(new_message_dict), room=str(p_id),
-                                  namespace="/")
+                    socketio.emit('chat-message-reply-client', json.dumps(new_message_dict), room=str(p_id))
 
     def handle_message_edit(self, socket_message):
         message_id = socket_message["message_id"]
@@ -153,7 +152,7 @@ class SocketsManager(object):
                 socketio.emit('edit-message-client', json.dumps({
                     "message_id": message_id,
                     "new_message_text": new_message_text
-                }), room=str(p_id), namespace="/")
+                }), room=str(p_id))
 
     def handle_message_delete(self, socket_message):
         message_id = socket_message["message_id"]
@@ -163,8 +162,7 @@ class SocketsManager(object):
             perm = self.permission_check_emit(user.id, int(p_id))
             if perm:
                 self.cm.delete_message(message_id)
-                socketio.emit('delete-message-client', json.dumps({"message_id": message_id}), room=str(p_id),
-                              namespace="/")
+                socketio.emit('delete-message-client', json.dumps({"message_id": message_id}), room=str(p_id))
 
     def permission_check_emit(self, u_id, p_id):
         """
@@ -211,23 +209,22 @@ class SocketsManager(object):
                 message_ = f"[service message] **{user.username}** saved changes"
                 new_message = self.cm.add_message(user, message_, str(p_id), message_type=MessageType.SYSTEM_MESSAGE)
                 new_message_dict = get_message_dict(new_message)
-                socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id), namespace="/")
+                socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
                 # emit file-changed event to trigger reload of flight track
                 socketio.emit('file-changed',
-                              json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id),
-                              namespace="/")
+                              json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
         else:
             logging.debug(f'login expired for {user.username}, state unauthorized!')
 
     def emit_file_change(self, p_id):
-        socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id), namespace="/")
+        socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id))
 
     def emit_new_permission(self, u_id, p_id):
         """
         to refresh project list of u_id
         and to refresh collaborators' list
         """
-        socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id), namespace="/")
+        socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
 
     def emit_update_permission(self, u_id, p_id, access_level=None):
         """
@@ -241,16 +238,16 @@ class SocketsManager(object):
         socketio.emit('update-permission', json.dumps({"p_id": p_id,
                                                        "u_id": u_id,
                                                        "access_level": access_level}),
-                      room=str(p_id), namespace="/")
+                      room=str(p_id))
 
     def emit_revoke_permission(self, u_id, p_id):
-        socketio.emit("revoke-permission", json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id), namespace="/")
+        socketio.emit("revoke-permission", json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
 
     def emit_project_permissions_updated(self, u_id, p_id):
-        socketio.emit("project-permissions-updated", json.dumps({"u_id": u_id}), room=str(p_id), namespace="/")
+        socketio.emit("project-permissions-updated", json.dumps({"u_id": u_id}), room=str(p_id))
 
     def emit_project_delete(self, p_id):
-        socketio.emit("project-deleted", json.dumps({"p_id": p_id}), room=str(p_id), namespace="/")
+        socketio.emit("project-deleted", json.dumps({"p_id": p_id}), room=str(p_id))
 
 
 def setup_managers(app):
@@ -266,13 +263,13 @@ def setup_managers(app):
     sm = SocketsManager(cm, fm)
     # sockets related handlers
 
-    socketio.on_event('connect', sm.handle_connect, namespace="/")
-    socketio.on_event('start', sm.handle_start_event, namespace="/")
-    socketio.on_event('disconnect', sm.handle_disconnect, namespace="/")
-    socketio.on_event('chat-message', sm.handle_message, namespace="/")
-    socketio.on_event('edit-message', sm.handle_message_edit, namespace="/")
-    socketio.on_event('delete-message', sm.handle_message_delete, namespace="/")
-    socketio.on_event('file-save', sm.handle_file_save, namespace="/")
-    socketio.on_event('add-user-to-room', sm.join_creator_to_room, namespace="/")
+    socketio.on_event('connect', sm.handle_connect)
+    socketio.on_event('start', sm.handle_start_event)
+    socketio.on_event('disconnect', sm.handle_disconnect)
+    socketio.on_event('chat-message', sm.handle_message)
+    socketio.on_event('edit-message', sm.handle_message_edit)
+    socketio.on_event('delete-message', sm.handle_message_delete)
+    socketio.on_event('file-save', sm.handle_file_save)
+    socketio.on_event('add-user-to-room', sm.join_creator_to_room)
     socketio.sm = sm
     return socketio, cm, fm

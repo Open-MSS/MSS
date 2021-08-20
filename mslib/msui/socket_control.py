@@ -53,27 +53,27 @@ class ConnectionManager(QtCore.QObject):
         if token is not None:
             logging.getLogger("engineio.client").addFilter(filter=lambda record: token not in record.getMessage())
         self.sio = socketio.Client(reconnection_attempts=5)
-        self.sio.connect(self.mscolab_server_url, namespaces=["/"])
+        self.sio.connect(self.mscolab_server_url)
 
         # on chat message recive
-        self.sio.on('chat-message-client', handler=self.handle_incoming_message, namespace="/")
-        self.sio.on('chat-message-reply-client', handler=self.handle_incoming_message_reply, namespace="/")
+        self.sio.on('chat-message-client', handler=self.handle_incoming_message)
+        self.sio.on('chat-message-reply-client', handler=self.handle_incoming_message_reply)
         # on message edit
-        self.sio.on('edit-message-client', handler=self.handle_message_edited, namespace="/")
+        self.sio.on('edit-message-client', handler=self.handle_message_edited)
         # on message delete
-        self.sio.on('delete-message-client', handler=self.handle_message_deleted, namespace="/")
+        self.sio.on('delete-message-client', handler=self.handle_message_deleted)
         # on new permission
-        self.sio.on('new-permission', handler=self.handle_new_permission, namespace="/")
+        self.sio.on('new-permission', handler=self.handle_new_permission)
         # on update of permission
-        self.sio.on('update-permission', handler=self.handle_update_permission, namespace="/")
+        self.sio.on('update-permission', handler=self.handle_update_permission)
         # on revoking project permission
-        self.sio.on('revoke-permission', handler=self.handle_revoke_permission, namespace="/")
+        self.sio.on('revoke-permission', handler=self.handle_revoke_permission)
         # on updating project permissions in admin window
-        self.sio.on('project-permissions-updated', handler=self.handle_project_permissions_updated, namespace="/")
+        self.sio.on('project-permissions-updated', handler=self.handle_project_permissions_updated)
         # On Project Delete
-        self.sio.on('project-deleted', handler=self.handle_project_deleted, namespace="/")
+        self.sio.on('project-deleted', handler=self.handle_project_deleted)
 
-        self.sio.emit('start', {'token': token}, namespace="/")
+        self.sio.emit('start', {'token': token})
 
     def handle_update_permission(self, message):
         """
@@ -135,7 +135,7 @@ class ConnectionManager(QtCore.QObject):
         logging.debug("adding user to new room")
         self.sio.emit('add-user-to-room', {
                       "p_id": p_id,
-                      "token": self.token}, namespace="/")
+                      "token": self.token})
 
     def send_message(self, message_text, p_id, reply_id):
         logging.debug("sending message")
@@ -143,7 +143,7 @@ class ConnectionManager(QtCore.QObject):
                       "p_id": p_id,
                       "token": self.token,
                       "message_text": message_text,
-                      "reply_id": reply_id}, namespace="/")
+                      "reply_id": reply_id})
 
     def edit_message(self, message_id, new_message_text, p_id):
         self.sio.emit('edit-message', {
@@ -151,14 +151,14 @@ class ConnectionManager(QtCore.QObject):
             "new_message_text": new_message_text,
             "p_id": p_id,
             "token": self.token
-        }, namespace="/")
+        })
 
     def delete_message(self, message_id, p_id):
         self.sio.emit('delete-message', {
             'message_id': message_id,
             'p_id': p_id,
             'token': self.token
-        }, namespace="/")
+        })
 
     def save_file(self, token, p_id, content, comment=None):
         # ToDo refactor API
@@ -167,7 +167,7 @@ class ConnectionManager(QtCore.QObject):
                       "p_id": p_id,
                       "token": self.token,
                       "content": content,
-                      "comment": comment}, namespace="/")
+                      "comment": comment})
 
     def disconnect(self):
         self.sio.disconnect()

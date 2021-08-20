@@ -78,8 +78,8 @@ class Test_Sockets(object):
         def handle_chat_message(message):
             self.chat_messages_counter_a += 1
 
-        sio.on('chat-message-client', handler=handle_chat_message, namespace="/")
-        sio.connect(self.url, namespaces="/")
+        sio.on('chat-message-client', handler=handle_chat_message)
+        sio.connect(self.url)
         sio.emit('start', response)
         sio.sleep(2)
         sio.emit("chat-message", {
