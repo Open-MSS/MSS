@@ -2,7 +2,7 @@
     mss.tutorials.audio
     ~~~~~~~~~~~~~~~~~~~
 
-    This python script is meant for generating audio of our choice from text files describing the tuutorial.
+    This python script is meant for generating audio of our choice from text files describing the tutorial.
 
     This file is part of mss.
 

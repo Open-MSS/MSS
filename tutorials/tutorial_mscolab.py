@@ -40,7 +40,7 @@ def initial_ops():
     Executes the initial operations such as closing all opened windows and showing the desktop.
     """
     pag.sleep(5)
-    if platform == "linux" or platform == "linux2":
+    if platform in ('linux', 'linux2'):
         pag.hotkey('winleft', 'd')
         print("\n INFO : Automation is running on Linux system..\n")
     elif platform == "darwin":
@@ -78,7 +78,7 @@ def automate_mscolab():
     pag.sleep(5)
 
     # Platform specific things
-    if platform == 'linux' or platform == 'linux2':
+    if platform in ('linux', 'linux2'):
         enter = 'enter'
         mscolab_path = 'pictures/mscolab/linux/'
         win = 'winleft'
