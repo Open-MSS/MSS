@@ -175,7 +175,7 @@ def get_auth_token():
 
 @APP.route('/test_authorized')
 def authorized():
-    token = request.values['token']
+    token = request.form['token']
     user = User.verify_auth_token(token)
     if user:
         return "True"
@@ -275,9 +275,9 @@ def error413(error):
 @APP.route('/create_project', methods=["POST"])
 @verify_user
 def create_project():
-    path = request.values['path']
-    description = request.values['description']
-    content = request.values.get('content', None)
+    path = request.form['path']
+    content = request.form.get('content', None)
+    description = request.form.get('description', None)
     user = g.user
     return str(fm.create_project(path, description, user, content=content))
 
@@ -285,7 +285,7 @@ def create_project():
 @APP.route('/get_project_by_id', methods=['GET'])
 @verify_user
 def get_project_by_id():
-    p_id = request.values.get('p_id', None)
+    p_id = request.form.get('p_id', None)
     user = g.user
     result = fm.get_file(int(p_id), user)
     if result is False:
@@ -296,7 +296,7 @@ def get_project_by_id():
 @APP.route('/get_all_changes', methods=['GET'])
 @verify_user
 def get_all_changes():
-    p_id = request.values.get('p_id', None)
+    p_id = request.form.get('p_id', None)
     named_version = request.args.get('named_version')
     user = g.user
     result = fm.get_all_changes(int(p_id), user, named_version)
@@ -308,7 +308,7 @@ def get_all_changes():
 @APP.route('/get_change_content', methods=['GET'])
 @verify_user
 def get_change_content():
-    ch_id = int(request.values.get('ch_id', 0))
+    ch_id = int(request.form.get('ch_id', 0))
     result = fm.get_change_content(ch_id)
     if result is False:
         return "False"
@@ -332,7 +332,7 @@ def set_version_name():
 @APP.route('/authorized_users', methods=['GET'])
 @verify_user
 def authorized_users():
-    p_id = request.values.get('p_id', None)
+    p_id = request.form.get('p_id', None)
     return json.dumps({"users": fm.get_authorized_users(int(p_id))})
 
 

@@ -75,12 +75,12 @@ class SocketsManager(object):
         """
         s_id = get_session_id(self.sockets, u_id)
         if s_id is not None:
-            join_room(str(p_id), sid=s_id, namespace='/')
+            join_room(str(p_id), sid=s_id)
 
     def remove_collaborator_from_room(self, u_id, p_id):
         s_id = get_session_id(self.sockets, u_id)
         if s_id is not None:
-            leave_room(str(p_id), sid=s_id, namespace='/')
+            leave_room(str(p_id), sid=s_id)
 
     def handle_start_event(self, json_config):
         """
