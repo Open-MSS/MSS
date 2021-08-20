@@ -35,10 +35,9 @@ from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
 from mslib.msui.constants import MSS_SETTINGS
 from mslib.msui.icons import icons
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import show_popup
-from mslib.utils.config import (config_loader, fixed_dict_options, key_value_options, dict_option_structure,
-                                list_option_structure, dict_raise_on_duplicates_empty, merge_data)
+from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_data
 
 
 from mslib.support.qt_json_view import delegate
@@ -77,10 +76,12 @@ class JsonDelegate(delegate.JsonDelegate):
             root_index, parents = get_root_index(index, parents=True)
             parents.append(index)
             key = root_index.data()
-            if key in list_option_structure or key in dict_option_structure or key in key_value_options:
+            if key in mss_default.list_option_structure or key \
+                in mss_default.dict_option_structure or key \
+                in mss_default.key_value_options:
                 if root_index == index and data[key] != default_options[key]:
                     option.font.setWeight(QtGui.QFont.Bold)
-            elif key in fixed_dict_options:
+            elif key in mss_default.fixed_dict_options:
                 model_data = data[key]
                 default_data = default_options[key]
                 for parent in parents[1:]:
@@ -227,7 +228,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             index = self.json_model.index(r, 0, parent)
             item = self.json_model.itemFromIndex(index)
             item.setEditable(False)
-            if item.text() in fixed_dict_options:
+            if item.text() in mss_default.fixed_dict_options:
                 self.set_noneditable_items(index)
             if item.text() in mss_default.config_descriptions:
                 item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
@@ -241,7 +242,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if not index.parent().isValid():
                 move = True
             root_index = get_root_index(index)
-            if root_index.data() not in fixed_dict_options + key_value_options:
+            if root_index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
                 add, move = True, True
 
             # display error message if key has invalid values
@@ -263,7 +264,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             restore_defaults = True
             for index in selection:
                 index = get_root_index(index)
-                if index.data() not in fixed_dict_options + key_value_options and self.proxy_model.rowCount(index) > 0:
+                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options \
+                    and self.proxy_model.rowCount(index) > 0:
                     remove = True
                     break
 
@@ -284,7 +286,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             empty, duplicate, invalid, dummy = [False] * 4
             color = QtCore.Qt.transparent
             key = root_index.data()
-            if key in dict_option_structure:
+            if key in mss_default.dict_option_structure:
                 child_keys = set()
                 rows = source_model.rowCount(root_index)
                 for row in range(rows):
@@ -294,7 +296,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                         empty = True
 
                 # check for dummy values
-                default = dict_option_structure[key]
+                default = mss_default.dict_option_structure[key]
                 values_dict = data[key]
                 for value in values_dict:
                     if value in default:
@@ -307,10 +309,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 if len(child_keys) != rows or empty:
                     duplicate = True
                     color = QtCore.Qt.red
-            elif key in list_option_structure:
+            elif key in mss_default.list_option_structure:
                 values_list = data[key]
                 # check if any dummy values
-                if any([value == list_option_structure[key][0] for value in values_list]):
+                if any([value == mss_default.list_option_structure[key][0] for value in values_list]):
                     dummy = True
                     color = QtCore.Qt.gray
                 # check if any empty values
@@ -338,7 +340,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             item.setBackground(color)
 
     def show_all(self):
-        # self.proxy_model.setFilterKeyColumn(0)
+        # By default FilterKeyColumn of the proxy model is set to 0
         self.proxy_model.setFilterRegExp("")
 
     def selection_change(self, index):
@@ -362,16 +364,16 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             index = self.json_model.index(r, 0, parent)
             item = self.json_model.itemFromIndex(index)
             if index.data() == option:
-                if option in fixed_dict_options + key_value_options:
+                if option in mss_default.fixed_dict_options + mss_default.key_value_options:
                     self.statusbar.showMessage(
                         "Option already exists. Please change value to your preference or restore to default.")
                     return
-                elif option in dict_option_structure:
-                    json_data = dict_option_structure[option]
+                elif option in mss_default.dict_option_structure:
+                    json_data = mss_default.dict_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
-                elif option in list_option_structure:
-                    json_data = list_option_structure[option]
+                elif option in mss_default.list_option_structure:
+                    json_data = mss_default.list_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
                     # increase row count in view
@@ -405,7 +407,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         removable_indexes = {}
         for index in selection:
             if not index.parent().isValid():
-                if index.data() not in fixed_dict_options + key_value_options:
+                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
                     removable_indexes[index] = set(range(self.proxy_model.rowCount(index)))
                 else:
                     # cannot remove root item
@@ -416,7 +418,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     index = index.parent()
                 root = index.parent()
                 # enter only if root option not in fixed dictionary / key value options
-                if root.data() not in fixed_dict_options + key_value_options:
+                if root.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
                     if root in removable_indexes:
                         removable_indexes[root].add(index.row())
                     else:
@@ -491,8 +493,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         logging.debug(f"Attempting to restore defaults for the following options\n{options}")
 
         for index in selected_indexes:
-            # check if root option and present in key_value_options
-            if not index.parent().isValid() and index.data() in key_value_options:
+            # check if root option and present in mss_default.key_value_options
+            if not index.parent().isValid() and index.data() in mss_default.key_value_options:
                 value_index = self.json_model.index(index.row(), 1, QtCore.QModelIndex())
                 value_item = self.json_model.itemFromIndex(value_index)
                 value_item.setData(default_options[index.data()], QtCore.Qt.DisplayRole)
@@ -501,7 +503,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             root_index, parent_list = get_root_index(index, parents=True)
             option = root_index.data()
             model_data = self.json_model.serialize()
-            if option in fixed_dict_options:
+            if option in mss_default.fixed_dict_options:
                 if index == root_index:
                     json_data = default_options[option]
                 else:

@@ -286,7 +286,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.preload_wms(preload_urls)
 
         # Status Bar
-        # self.statusBar.showMessage(self.status())
+        self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
         self.mscolab = mscolab.MSSMscolab(parent=self, data_dir=mscolab_data_dir)
@@ -769,13 +769,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
-    # def status(self):
-    #     if constants.CACHED_CONFIG_FILE is None:
-    #         return ("Status : System Configuration")
-    #     else:
-    #         filename = constants.CACHED_CONFIG_FILE
-    #         head_filename, tail_filename = os.path.split(filename)
-    #         return("Status : User Configuration '" + tail_filename + "' loaded")
+    def status(self):
+        if config_loader() != config_loader(default=True):
+            return ("Status : System Configuration")
+        else:
+            return (f"Status : User Configuration '{constants.MSS_SETTINGS}' loaded")
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
