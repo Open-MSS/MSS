@@ -29,6 +29,7 @@ class Ui_mscolabHelpDialog(object):
         self.verticalLayout_3 = QtWidgets.QVBoxLayout()
         self.verticalLayout_3.setObjectName("verticalLayout_3")
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_8.setContentsMargins(-1, 10, -1, 10)
         self.horizontalLayout_8.setObjectName("horizontalLayout_8")
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_8.addItem(spacerItem)
@@ -73,6 +74,7 @@ class Ui_mscolabHelpDialog(object):
         self.textEdit_18.setObjectName("textEdit_18")
         self.verticalLayout_3.addWidget(self.textEdit_18)
         self.horizontalLayout_10 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_10.setContentsMargins(-1, -1, -1, 8)
         self.horizontalLayout_10.setObjectName("horizontalLayout_10")
         spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem4)
@@ -85,20 +87,8 @@ class Ui_mscolabHelpDialog(object):
         spacerItem5 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_10.addItem(spacerItem5)
         self.verticalLayout_3.addLayout(self.horizontalLayout_10)
-        self.textEdit_19 = QtWidgets.QTextEdit(self.connectingTab)
-        self.textEdit_19.setEnabled(True)
-        self.textEdit_19.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.textEdit_19.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        self.textEdit_19.setUndoRedoEnabled(False)
-        self.textEdit_19.setReadOnly(True)
-        self.textEdit_19.setObjectName("textEdit_19")
-        self.verticalLayout_3.addWidget(self.textEdit_19)
-        self.verticalLayout_3.setStretch(0, 1)
         self.verticalLayout_3.setStretch(1, 1)
-        self.verticalLayout_3.setStretch(2, 1)
-        self.verticalLayout_3.setStretch(3, 3)
-        self.verticalLayout_3.setStretch(4, 1)
-        self.verticalLayout_3.setStretch(5, 1)
+        self.verticalLayout_3.setStretch(3, 1)
         self.gridLayout_4.addLayout(self.verticalLayout_3, 0, 0, 1, 1)
         self.tabWidget.addTab(self.connectingTab, "")
         self.createProjectTab = QtWidgets.QWidget()
@@ -270,20 +260,16 @@ class Ui_mscolabHelpDialog(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">We suggest you go through this guide before you start using mscolab to understand all the features it has to offer.<br /><br />1. To get started, click on the &quot;Connect to MSColab&quot; button on the main window.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. In the connect window that appears, enter your mscolab server url and press connect.</span></p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">We suggest you go through this guide before you start using mscolab to understand all the features it has to offer.<br /><br />1. To get started, click on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Connect to MSColab</span><span style=\" font-family:\'.SF NS Text\';\"> button on the main window.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. In the connect window that appears, enter your MSColab Server URL and press the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Connect</span><span style=\" font-family:\'.SF NS Text\';\"> button.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p></body></html>"))
         self.textEdit_18.setHtml(_translate("mscolabHelpDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">If you\'re using MSColab for the first time, click on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Add User&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> button after connecting and register yourself by filling the required details. </span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">If you\'re using mscolab for the first time, click on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Add User&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> button after connecting and register yourself by filling the required details. After registering you can log in to your account.</span></p></body></html>"))
-        self.textEdit_19.setHtml(_translate("mscolabHelpDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
-"<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
-"p, li { white-space: pre-wrap; }\n"
-"</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p align=\"center\" style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
-"<p align=\"center\" style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You\'re now connected to your mscolab server and logged in!</span></p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">The status bar will notify if/not the new user is registered on the server. If successfully registered, you\'ll be taken to the login page where you can login with the new user credentials.</span></p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.connectingTab), _translate("mscolabHelpDialog", "Connecting"))
         self.textEdit_20.setHtml(_translate("mscolabHelpDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
