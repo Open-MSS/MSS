@@ -25,9 +25,18 @@
 import os
 import time
 import playsound
-import googletrans as gt
-from gtts import gTTS
 from glob import glob
+
+# ToDo We have to add translation services
+# e.g. https://cloud.google.com/translate/docs, https://www.deepl.com/pro?cta=menu-plans/
+
+"""
+Please import here, the modules you need for text translations (tt) and text-to-speech conversions (t2s).
+Example:
+        import xyz as tt                # For translating text
+        from zyx import abc as t2s      # For converting text to speech
+"""
+# xyz don't add credential of API keys here, this has to be done later as secret for a CI call
 
 
 class TutorialAudio:
@@ -38,7 +47,8 @@ class TutorialAudio:
         """
             The constructor sets the translator object and audio path for storing the audios.
         """
-        self.translate = gt.Translator()
+        # Use here instead of None the function of the translator for eg tt.Translator() if xyz is googletrans
+        self.translate = None
         self.audio_path = os.path.join(os.getcwd(), "Audio Files")
         os.makedirs(self.audio_path, exist_ok=True)
 
@@ -52,7 +62,7 @@ class TutorialAudio:
     def text_to_audio(self, source_lang, destination_lang):
         """
         This function is used to convert text file into speech of selected choice passed as parameter and store the
-        audio files and playing them. It converts all text files one by one present in the textfiles folder.
+        audio files and playing them. It converts all text files one by one present in the "tutorials/textfiles" folder.
         """
         for f in glob("textfiles/*.txt"):
             print(f"\nINFO : Please wait, the text file {f} is being converted to audio file...\n")
@@ -62,7 +72,11 @@ class TutorialAudio:
                     destination_text = source_text
                 else:
                     destination_text = self.translate_text(source_text, source_lang, destination_lang)
-                destination_speech = gTTS(destination_text, lang=destination_lang, tld="com", slow=False)
+                print(destination_text)
+                # Use here instead of None the function of the speech converter t2s() for eg if from gtts, we import
+                # gTTs as t2s, then t2s(destination_text, destination_lang)
+                # add the function to translate text to speech (input parameters are destination_text, destination_lang)
+                destination_speech = None
             pathstring = os.path.splitext(f)[0]
             pathstring_list = pathstring.split("/")
             audio_file = pathstring_list[len(pathstring_list) - 1] + f"_{destination_lang}_" + ".mp3"
