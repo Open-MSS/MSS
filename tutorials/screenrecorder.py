@@ -127,7 +127,8 @@ class ScreenRecorder:
                 if platform == 'win32' or platform == 'darwin':
                     x, y = pyautogui.position()
                 elif platform == 'linux':
-                    x, y = 1000, 500  # Fixed mouse pointer in linux at this coordinate. Throwing error of some kind.
+                    x, y = pyautogui.size()[0] - 1, pyautogui.size()[1] - 1
+                    # Fixed mouse pointer in linux at this coordinate. Throwing error of some kind.
                     # Hence, the mouse pointer is not visible in the recordings but is at a fixed place.
                     # Alternatively if you just record anything running screenrecorder.py directly this
                     # pyautogui.position() works perfectly in any operating system.(ofcourse you need to change the
