@@ -38,7 +38,7 @@ import requests
 import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
-from mslib.utils import config_loader
+from mslib.utils.config import config_loader
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import owslib.util

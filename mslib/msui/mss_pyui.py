@@ -54,10 +54,11 @@ from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
 from mslib.msui.updater import UpdaterUI
-from mslib.utils import config_loader, setup_logging, Worker, Updater
+from mslib.utils import setup_logging, Worker, Updater
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -241,6 +242,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.actionSideView.setShortcut(QtGui.QKeySequence("Meta+v"))
             self.actionTableView.setShortcut(QtGui.QKeySequence("Meta+t"))
             self.actionLinearView.setShortcut(QtGui.QKeySequence("Meta+l"))
+            self.actionConfiguration.setShortcut(QtGui.QKeySequence("Ctrl+,"))
 
         # File menu.
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
@@ -261,7 +263,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
         # # Config
-        # self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
         self.actionConfiguration.triggered.connect(self.open_config_editor)
 
         # Raise Main Window to front with Ctrl/Cmnd + up keyboard shortcut
@@ -284,7 +285,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         preload_urls = config_loader(dataset="WMS_preload")
         self.preload_wms(preload_urls)
 
-        # # Status Bar
+        # Status Bar
         self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
@@ -730,6 +731,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.listViews.clear()
         self.remove_plugins()
         self.add_plugins()
+        if self.mscolab.token is not None:
+            self.mscolab.logout()
+        read_config_file()
 
     def open_config_editor(self):
         """
@@ -768,12 +772,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.exec_()
 
     def status(self):
-        if constants.CACHED_CONFIG_FILE is None:
+        if config_loader() != config_loader(default=True):
             return ("Status : System Configuration")
         else:
-            filename = constants.CACHED_CONFIG_FILE
-            head_filename, tail_filename = os.path.split(filename)
-            return("Status : User Configuration '" + tail_filename + "' loaded")
+            return (f"Status : User Configuration '{constants.MSS_SETTINGS}' loaded")
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -890,6 +892,8 @@ def main():
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
+
+    read_config_file()
     logging.info("Launching user interface...")
 
     application = QtWidgets.QApplication(sys.argv)

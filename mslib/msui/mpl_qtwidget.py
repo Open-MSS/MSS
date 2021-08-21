@@ -43,7 +43,8 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanva
 import matplotlib.backend_bases
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from mslib.utils import thermolib, config_loader, FatalUserError, convert_pressure_to_vertical_axis_measure
+from mslib.utils import thermolib, FatalUserError, convert_pressure_to_vertical_axis_measure
+from mslib.utils.config import config_loader
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map

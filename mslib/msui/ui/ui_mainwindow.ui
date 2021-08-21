@@ -379,9 +379,6 @@ Save a flight track to name it.</string>
    <property name="text">
     <string>&amp;Configuration</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+,</string>
-   </property>
   </action>
   <action name="actionTopView">
    <property name="text">

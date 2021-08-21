@@ -35,7 +35,8 @@ import traceback
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
 from PyQt5 import QtCore, QtWidgets  # noqa
 
-from mslib.utils import config_loader, FatalUserError
+from mslib.utils import FatalUserError
+from mslib.utils.config import config_loader
 
 
 def get_open_filename_qt(*args):

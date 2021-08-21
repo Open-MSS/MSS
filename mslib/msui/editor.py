@@ -33,89 +33,22 @@ import json
 from mslib.msui.mss_qt import get_open_filename, get_save_filename
 from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
-# from mslib.msui import constants
 from mslib.msui.constants import MSS_SETTINGS
 from mslib.msui.icons import icons
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils import show_popup
+from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_data
+
 
 from mslib.support.qt_json_view import delegate
 from mslib.support.qt_json_view.view import JsonView
 from mslib.support.qt_json_view.model import JsonModel
-from mslib.support.qt_json_view.datatypes import match_type, DataType, TypeRole, ListType, UrlType, StrType
+from mslib.support.qt_json_view.datatypes import match_type, DataType, TypeRole, ListType
 
 
 InvalidityRole = TypeRole + 1
 DummyRole = TypeRole + 2
-
-# system default options as dictionary
-default_options = dict(mss_default.__dict__)
-for key in ["__module__", "__doc__", "__dict__", "__weakref__", "config_descriptions"]:
-    del default_options[key]
-
-# Dictionary options with fixed key/value pairs
-fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
-
-# Fixed key/value pair options
-key_value_options = [
-    'filepicker_default',
-    'mss_dir',
-    'data_dir',
-    'num_labels',
-    'num_interpolation_points',
-    'new_flighttrack_flightlevel',
-    'MSCOLAB_mailid',
-    'MSCOLAB_password',
-    'mscolab_server_url',
-    'wms_cache',
-    'wms_cache_max_size_bytes',
-    'wms_cache_max_age_seconds',
-    'WMS_request_timeout',
-]
-
-# Dictionary options with predefined structure
-dict_option_structure = {
-    "predefined_map_sections": {
-        "new_map_section": {
-            "CRS": "crs_value",
-            "map": {
-                "llcrnrlon": 0.0,
-                "llcrnrlat": 0.0,
-                "urcrnrlon": 0.0,
-                "urcrnrlat": 0.0,
-            },
-        }
-    },
-    "MSC_login": {
-        "http://www.your-mscolab-server.de": ["yourusername", "yourpassword"],
-    },
-    "WMS_login": {
-        "http://www.your-wms-server.de": ["yourusername", "yourpassword"],
-    },
-    "locations": {
-        "new-location": [0.0, 0.0],
-    },
-    "export_plugins": {
-        "plugin-name": ["extension", "module", "function", "default"],
-    },
-    "import_plugins": {
-        "plugin-name": ["extension", "module", "function", "default"],
-    },
-    "proxies": {
-        "https": "https://proxy.com",
-    },
-}
-
-# List options with predefined structure
-list_option_structure = {
-    "default_WMS": ["https://wms-server-url.com"],
-    "default_VSEC_WMS": ["https://vsec-wms-server-url.com"],
-    "default_LSEC_WMS": ["https://lsec-wms-server-url.com"],
-    "default_MSCOLAB": ["https://mscolab-server-url.com"],
-    "new_flighttrack_template": ["new-location"],
-    "gravatar_ids": ["example@email.com"],
-    "WMS_preload": ["https://wms-preload-url.com"],
-}
+default_options = config_loader(default=True)
 
 
 def get_root_index(index, parents=False):
@@ -143,10 +76,12 @@ class JsonDelegate(delegate.JsonDelegate):
             root_index, parents = get_root_index(index, parents=True)
             parents.append(index)
             key = root_index.data()
-            if key in list_option_structure or key in dict_option_structure or key in key_value_options:
+            if key in mss_default.list_option_structure or key \
+                in mss_default.dict_option_structure or key \
+                in mss_default.key_value_options:
                 if root_index == index and data[key] != default_options[key]:
                     option.font.setWeight(QtGui.QFont.Bold)
-            elif key in fixed_dict_options:
+            elif key in mss_default.fixed_dict_options:
                 model_data = data[key]
                 default_data = default_options[key]
                 for parent in parents[1:]:
@@ -201,30 +136,9 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         self.restart_on_save = True
 
-        # Load mss_settings.json (if already exists), change \\ to / so fs can work with it
+        options = config_loader()
         self.path = MSS_SETTINGS
-        self.path = self.path.replace("\\", "/")
-        dir_name, file_name = fs.path.split(self.path)
-        json_file_data = {}
-        with fs.open_fs(dir_name) as _fs:
-            if _fs.exists(file_name):
-                file_content = _fs.readtext(file_name)
-                try:
-                    json_file_data = json.loads(file_content, object_pairs_hook=self.dict_raise_on_duplicates_empty)
-                except json.JSONDecodeError as e:
-                    show_popup(self, "Error while loading file", e)
-                    logging.error(f"Error while loading json file {e}")
-                except ValueError as e:
-                    show_popup(self, "Invalid keys detected", e)
-                    logging.error(f"Error while loading json file {e}")
-        if json_file_data:
-            options = self.merge_data(copy.deepcopy(default_options), json_file_data)
-            logging.info("Merged default and user settings")
-        else:
-            options = copy.deepcopy(default_options)
-            logging.info("No user settings found, using default settings")
         self.last_saved = copy.deepcopy(options)
-        # print(json.dumps(options, indent=4))
 
         self.optCb.addItem("All")
         for option in sorted(options.keys(), key=str.lower):
@@ -309,24 +223,12 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         # Add invalidity roles and update status of keys
         self.update_view()
 
-    def dict_raise_on_duplicates_empty(self, ordered_pairs):
-        """Reject duplicate and empty keys."""
-        accepted = {}
-        for key, value in ordered_pairs:
-            if key in accepted:
-                raise ValueError(f"duplicate key: {key}")
-            elif key == "":
-                raise ValueError(f"empty key: {key}")
-            else:
-                accepted[key] = value
-        return accepted
-
     def set_noneditable_items(self, parent):
         for r in range(self.json_model.rowCount(parent)):
             index = self.json_model.index(r, 0, parent)
             item = self.json_model.itemFromIndex(index)
             item.setEditable(False)
-            if item.text() in fixed_dict_options:
+            if item.text() in mss_default.fixed_dict_options:
                 self.set_noneditable_items(index)
             if item.text() in mss_default.config_descriptions:
                 item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
@@ -340,7 +242,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if not index.parent().isValid():
                 move = True
             root_index = get_root_index(index)
-            if root_index.data() not in fixed_dict_options + key_value_options:
+            if root_index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
                 add, move = True, True
 
             # display error message if key has invalid values
@@ -362,7 +264,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             restore_defaults = True
             for index in selection:
                 index = get_root_index(index)
-                if index.data() not in fixed_dict_options + key_value_options and self.proxy_model.rowCount(index) > 0:
+                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options \
+                    and self.proxy_model.rowCount(index) > 0:
                     remove = True
                     break
 
@@ -383,7 +286,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             empty, duplicate, invalid, dummy = [False] * 4
             color = QtCore.Qt.transparent
             key = root_index.data()
-            if key in dict_option_structure:
+            if key in mss_default.dict_option_structure:
                 child_keys = set()
                 rows = source_model.rowCount(root_index)
                 for row in range(rows):
@@ -393,7 +296,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                         empty = True
 
                 # check for dummy values
-                default = dict_option_structure[key]
+                default = mss_default.dict_option_structure[key]
                 values_dict = data[key]
                 for value in values_dict:
                     if value in default:
@@ -406,10 +309,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 if len(child_keys) != rows or empty:
                     duplicate = True
                     color = QtCore.Qt.red
-            elif key in list_option_structure:
+            elif key in mss_default.list_option_structure:
                 values_list = data[key]
                 # check if any dummy values
-                if any([value == list_option_structure[key][0] for value in values_list]):
+                if any([value == mss_default.list_option_structure[key][0] for value in values_list]):
                     dummy = True
                     color = QtCore.Qt.gray
                 # check if any empty values
@@ -436,117 +339,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             item = source_model.itemFromIndex(source_index)
             item.setBackground(color)
 
-    def compare_data(self, default, user_data):
-        """Recursively compares two dictionaries based on qt_json_view datatypes
-           and returns default or user_data appropriately.
-
-        Arguments:
-        default -- Dict to return if datatype not matching
-        user_data -- Dict to return if datatype is matching
-        """
-        # If data is neither list not dict type, compare individual type
-        if not isinstance(default, dict) and not isinstance(default, list):
-            if isinstance(default, float) and isinstance(user_data, int):
-                user_data = float(default)
-            if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
-                return user_data, True
-            if isinstance(match_type(default), type(match_type(user_data))):
-                return user_data, True
-            else:
-                return default, False
-
-        data = copy.deepcopy(default)
-        trues = []
-        # If data is list type, compare all values in list
-        if isinstance(default, list):
-            if isinstance(user_data, list):
-                if len(default) == len(user_data):
-                    for i in range(len(default)):
-                        data[i], match = self.compare_data(default[i], user_data[i])
-                        trues.append(match)
-                else:
-                    return default, False
-            else:
-                return default, False
-
-        # If data is dict type, goes through the dict and update
-        elif isinstance(default, dict):
-            for key in default:
-                if key in user_data:
-                    data[key], match = self.compare_data(default[key], user_data[key])
-                    trues.append(match)
-                else:
-                    trues.append(False)
-
-        return data, all(trues)
-
-    def merge_data(self, options, json_file_data):
-        """Merge two dictionaries by comparing all the options from
-           the MissionSupportSystemDefaultConfig class
-
-        Arguments:
-        options -- Dict to merge options into
-        json_file_data -- Dict with new values
-        """
-        # Check if dictionary options with fixed key/value pairs match data types from default
-        for key in fixed_dict_options:
-            if key in json_file_data:
-                options[key] = self.compare_data(options[key], json_file_data[key])[0]
-
-        # Check if dictionary options with predefined structure match data types from default
-        dos = copy.deepcopy(dict_option_structure)
-        # adding plugin structure : ["extension", "module", "function"] to recognize
-        # user plugins that don't have optional filepicker option set
-        dos["import_plugins"]["plugin-name-a"] = dos["import_plugins"]["plugin-name"][:3]
-        dos["export_plugins"]["plugin-name-a"] = dos["export_plugins"]["plugin-name"][:3]
-        for key in dos:
-            if key in json_file_data:
-                temp_data = {}
-                for option_key in json_file_data[key]:
-                    for dos_key_key in dos[key]:
-                        # if isinstance(match_type(option_key), type(match_type(dos_key_key))):
-                        data, match = self.compare_data(dos[key][dos_key_key], json_file_data[key][option_key])
-                        if match:
-                            temp_data[option_key] = json_file_data[key][option_key]
-                            break
-                if temp_data != {}:
-                    options[key] = temp_data
-
-        # add filepicker default to import plugins if missing
-        for plugin in options["import_plugins"]:
-            if len(options["import_plugins"][plugin]) == 3:
-                options["import_plugins"][plugin].append("default")
-
-        # add filepicker default to export plugins if missing
-        for plugin in options["export_plugins"]:
-            if len(options["export_plugins"][plugin]) == 3:
-                options["export_plugins"][plugin].append("default")
-
-        # Check if list options with predefined structure match data types from default
-        los = copy.deepcopy(list_option_structure)
-        for key in los:
-            if key in json_file_data:
-                temp_data = []
-                for i in range(len(json_file_data[key])):
-                    for los_key_item in los[key]:
-                        data, match = self.compare_data(los_key_item, json_file_data[key][i])
-                        if match:
-                            temp_data.append(data)
-                            break
-                if temp_data != []:
-                    options[key] = temp_data
-
-        # Check if options with fixed key/value pair structure match data types from default
-        for key in key_value_options:
-            if key in json_file_data:
-                data, match = self.compare_data(options[key], json_file_data[key])
-                if match:
-                    options[key] = data
-
-        return options
-
     def show_all(self):
-        # self.proxy_model.setFilterKeyColumn(0)
+        # By default FilterKeyColumn of the proxy model is set to 0
         self.proxy_model.setFilterRegExp("")
 
     def selection_change(self, index):
@@ -570,16 +364,16 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             index = self.json_model.index(r, 0, parent)
             item = self.json_model.itemFromIndex(index)
             if index.data() == option:
-                if option in fixed_dict_options + key_value_options:
+                if option in mss_default.fixed_dict_options + mss_default.key_value_options:
                     self.statusbar.showMessage(
                         "Option already exists. Please change value to your preference or restore to default.")
                     return
-                elif option in dict_option_structure:
-                    json_data = dict_option_structure[option]
+                elif option in mss_default.dict_option_structure:
+                    json_data = mss_default.dict_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
-                elif option in list_option_structure:
-                    json_data = list_option_structure[option]
+                elif option in mss_default.list_option_structure:
+                    json_data = mss_default.list_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
                     # increase row count in view
@@ -613,7 +407,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         removable_indexes = {}
         for index in selection:
             if not index.parent().isValid():
-                if index.data() not in fixed_dict_options + key_value_options:
+                if index.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
                     removable_indexes[index] = set(range(self.proxy_model.rowCount(index)))
                 else:
                     # cannot remove root item
@@ -624,7 +418,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     index = index.parent()
                 root = index.parent()
                 # enter only if root option not in fixed dictionary / key value options
-                if root.data() not in fixed_dict_options + key_value_options:
+                if root.data() not in mss_default.fixed_dict_options + mss_default.key_value_options:
                     if root in removable_indexes:
                         removable_indexes[root].add(index.row())
                     else:
@@ -699,8 +493,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         logging.debug(f"Attempting to restore defaults for the following options\n{options}")
 
         for index in selected_indexes:
-            # check if root option and present in key_value_options
-            if not index.parent().isValid() and index.data() in key_value_options:
+            # check if root option and present in mss_default.key_value_options
+            if not index.parent().isValid() and index.data() in mss_default.key_value_options:
                 value_index = self.json_model.index(index.row(), 1, QtCore.QModelIndex())
                 value_item = self.json_model.itemFromIndex(value_index)
                 value_item.setData(default_options[index.data()], QtCore.Qt.DisplayRole)
@@ -709,7 +503,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             root_index, parent_list = get_root_index(index, parents=True)
             option = root_index.data()
             model_data = self.json_model.serialize()
-            if option in fixed_dict_options:
+            if option in mss_default.fixed_dict_options:
                 if index == root_index:
                     json_data = default_options[option]
                 else:
@@ -751,7 +545,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if _fs.exists(file_name):
                 file_content = _fs.readtext(file_name)
                 try:
-                    json_file_data = json.loads(file_content, object_pairs_hook=self.dict_raise_on_duplicates_empty)
+                    json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
                 except json.JSONDecodeError as e:
                     show_popup(self, "Error while loading file", e)
                     logging.error(f"Error while loading json file {e}")
@@ -763,7 +557,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         if json_file_data:
             json_model_data = self.json_model.serialize()
-            options = self.merge_data(copy.deepcopy(json_model_data), json_file_data)
+            options = merge_data(copy.deepcopy(json_model_data), json_file_data)
             if options == json_model_data:
                 self.statusbar.showMessage("No option with new values found")
                 return
@@ -823,33 +617,54 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.No:
-                self.statusbar.showMessage("Please correct the values and try saving again")
+                self.statusbar.showMessage("Please correct the values and try saving")
                 return False
 
         if self.check_modified():
-            logging.debug("saving config file to: %s", self.path)
-            self._save_to_path(self.path)
             if self.restart_on_save:
                 ret = QtWidgets.QMessageBox.warning(
                     self, self.tr("Mission Support System"),
                     self.tr("Do you want to restart the application?\n"
-                            "(This is necessary to apply changes)"),
+                            "(This is necessary to apply changes)\n\n"
+                            "Please note that clicking No will not save the current configuration"),
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                     QtWidgets.QMessageBox.No)
                 if ret == QtWidgets.QMessageBox.Yes:
+                    logging.debug(f"saving config file to: {self.path} and restarting MSS")
+                    self._save_to_path(self.path)
                     self.restartApplication.emit()
                     self.restart_on_save = False
                     self.close()
+                else:
+                    return
             self.restart_on_save = True
+            logging.debug(f"saving config file to: {self.path}")
+            self._save_to_path(self.path)
         else:
             self.statusbar.showMessage("No values changed")
         return True
 
     def export_config(self):
+        invalid, dummy = self.validate_data()
+        if invalid:
+            show_popup(
+                self,
+                "Invalid values detected",
+                "Please correct the invalid values (keys colored in red) to be able to save.")
+            self.statusbar.showMessage("Please correct the values and try exporting")
+            return False
+
         if self.json_model.serialize() == default_options:
-            # ToDo notify user about no non-default values
-            pass
-        path = get_save_filename(self, "Export config", "mss_settings", "JSON files (*.json)")
+            msg = """Since the current configuration matches the default configuration, \
+only an empty json file would be exported.\nDo you still want to continue?"""
+            ret = QtWidgets.QMessageBox.warning(
+                self, self.tr("Mission Support System"), self.tr(msg),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.No:
+                return
+
+        path = get_save_filename(self, "Export configuration", "mss_settings", "JSON files (*.json)")
         if path:
             self._save_to_path(path)
 
