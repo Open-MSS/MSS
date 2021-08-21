@@ -341,14 +341,14 @@ user_options = copy.deepcopy(default_options)
 
 def read_config_file(path=constants.MSS_SETTINGS):
     """
-    reads a config file
+    reads a config file and updates global user_options
 
     Args:
-        config_file: name of config file
+        path: path of config file
 
-    Returns: a dictionary
+    Note:
+        sole purpose of the path argument is to be able to test with example config files
     """
-    # path = constants.MSS_SETTINGS
     path = path.replace("\\", "/")
     dir_name, file_name = fs.path.split(path)
     json_file_data = {}
