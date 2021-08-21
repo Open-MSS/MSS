@@ -47,7 +47,7 @@ class TutorialAudio:
         """
             The constructor sets the translator object and audio path for storing the audios.
         """
-        # Use here instead of None the function of the translator for eg tt.Translator() if xyz is googletrans
+        # Use here instead of None the function of the translator for eg tt.Translator()
         self.translate = None
         self.audio_path = os.path.join(os.getcwd(), "Audio Files")
         os.makedirs(self.audio_path, exist_ok=True)
@@ -73,8 +73,7 @@ class TutorialAudio:
                 else:
                     destination_text = self.translate_text(source_text, source_lang, destination_lang)
                 print(destination_text)
-                # Use here instead of None the function of the speech converter t2s() for eg if from gtts, we import
-                # gTTs as t2s, then t2s(destination_text, destination_lang)
+                # Use here instead of None the function of the speech converter t2s()
                 # add the function to translate text to speech (input parameters are destination_text, destination_lang)
                 destination_speech = None
             pathstring = os.path.splitext(f)[0]
