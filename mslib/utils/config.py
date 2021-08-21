@@ -372,10 +372,10 @@ def read_config_file(path=constants.MSS_SETTINGS):
 
     global user_options
     if json_file_data:
-        user_options = merge_data(copy.deepcopy(user_options), json_file_data)
+        user_options = merge_data(copy.deepcopy(default_options), json_file_data)
         logging.debug("Merged default and user settings")
     else:
-        user_options = copy.deepcopy(user_options)
+        user_options = copy.deepcopy(default_options)
         logging.debug("No user settings found, using default settings")
 
 

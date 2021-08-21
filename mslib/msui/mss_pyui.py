@@ -731,6 +731,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.listViews.clear()
         self.remove_plugins()
         self.add_plugins()
+        if self.mscolab.token is not None:
+            self.mscolab.logout()
         read_config_file()
 
     def open_config_editor(self):

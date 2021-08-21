@@ -621,20 +621,25 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 return False
 
         if self.check_modified():
-            logging.debug("saving config file to: %s", self.path)
-            self._save_to_path(self.path)
             if self.restart_on_save:
                 ret = QtWidgets.QMessageBox.warning(
                     self, self.tr("Mission Support System"),
                     self.tr("Do you want to restart the application?\n"
-                            "(This is necessary to apply changes)"),
+                            "(This is necessary to apply changes)\n\n"
+                            "Please note that clicking No will not save the current configuration"),
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                     QtWidgets.QMessageBox.No)
                 if ret == QtWidgets.QMessageBox.Yes:
+                    logging.debug(f"saving config file to: {self.path} and restarting MSS")
+                    self._save_to_path(self.path)
                     self.restartApplication.emit()
                     self.restart_on_save = False
                     self.close()
+                else:
+                    return
             self.restart_on_save = True
+            logging.debug(f"saving config file to: {self.path}")
+            self._save_to_path(self.path)
         else:
             self.statusbar.showMessage("No values changed")
         return True
