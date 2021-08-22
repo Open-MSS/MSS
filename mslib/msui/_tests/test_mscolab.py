@@ -73,6 +73,7 @@ class Test_Mscolab(object):
     def test_url_combo(self):
         assert self.window.url.count() >= 1
 
+    @pytest.mark.skip("based on handle_db_seed")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_login(self, mockbox):
         self._connect_to_mscolab()
@@ -101,6 +102,7 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
         assert self.window.mscolab_server_url is None
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_activate_project(self):
         self._connect_to_mscolab()
         self._login()
@@ -108,6 +110,7 @@ class Test_Mscolab(object):
         self._activate_project_at_index(0)
         assert self.window.active_pid is not None
 
+    @pytest.mark.skip("based on handle_db_seed")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_view_open(self, mockbox):
         self._connect_to_mscolab()
@@ -148,6 +151,7 @@ class Test_Mscolab(object):
         assert tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
+    @pytest.mark.skip("based on handle_db_seed and prior test")
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
     def test_handle_export(self, mockbox):
@@ -250,6 +254,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listProjects.model().rowCount() == 1
 
+    @pytest.mark.skip("based on handle_db_seed")
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")
     def test_add_project(self, mockbox):
         self._connect_to_mscolab()

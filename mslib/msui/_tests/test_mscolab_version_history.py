@@ -86,6 +86,7 @@ class Test_MscolabVersionHistory(object):
         len_after = self.version_window.changes.count()
         assert len_prev == (len_after - 2)
 
+    @pytest.mark.skip("based on handle_db_seed")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_set_version_name(self, mockbox):
         self._change_version_filter(1)
@@ -103,6 +104,7 @@ class Test_MscolabVersionHistory(object):
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
         assert self.version_window.changes.count() == 1
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_version_name_delete(self):
         pytest.skip("skipped because the next line triggers an assert")
         self._activate_change_at_index(0)
@@ -111,6 +113,7 @@ class Test_MscolabVersionHistory(object):
         QtTest.QTest.qWait(100)
         assert self.version_window.changes.count() == 0
 
+    @pytest.mark.skip("based on handle_db_seed")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo(self, mockbox):
         self._change_version_filter(1)
@@ -129,6 +132,7 @@ class Test_MscolabVersionHistory(object):
         new_changes_count = self.version_window.changes.count()
         assert changes_count + 1 == new_changes_count
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_refresh(self):
         self._change_version_filter(1)
         changes_count = self.version_window.changes.count()

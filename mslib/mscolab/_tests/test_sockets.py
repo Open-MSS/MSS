@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,46 +24,36 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import multiprocessing
 import socketio
-from functools import partial
-import requests
-import json
-import time
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Message, Project
-from mslib._tests.constants import MSCOLAB_URL_TEST
-from mslib.mscolab.server import db, APP, initialize_managers, start_server
+from mslib._tests.utils import mscolab_check_free_port, LiveSocketTestCase
+from mslib.mscolab.server import db, APP, initialize_managers
 from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project, get_project
 from mslib.mscolab.mscolab import handle_db_reset
 
-def start_mscolab_server(port):
-    """
-    testserver
-    """
-    _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    _app, sockio, cm, fm = initialize_managers(_app)
-    process = multiprocessing.Process(
-        target=start_server,
-        args=(_app, sockio, cm, fm,),
-        kwargs={'port': port})
-    process.start()
-    time.sleep(2)
-    return process
 
-class Test_Sockets(object):
+PORTS = list(range(9521, 9540))
+
+
+class Test_Sockets(LiveSocketTestCase):
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
     chat_messages_counter_a = 0  # only for first test
 
-    def setup(self):
+    def create_app(self):
+        app = APP
+        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        app.config["TESTING"] = True
+        app.config['LIVESERVER_TIMEOUT'] = 1
+        app.config['LIVESERVER_PORT'] = mscolab_check_free_port(PORTS, PORTS.pop())
+        return app
+
+    def setUp(self):
         handle_db_reset()
-        self.process = start_mscolab_server(8084)
         self.sockets = []
-        self.app = APP
+        # self.app = APP
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, cm, _ = initialize_managers(self.app)
@@ -78,28 +68,26 @@ class Test_Sockets(object):
         self.user = get_user(self.userdata[0])
         self.token = self.user.generate_auth_token()
         self.project = get_project(self.room_name)
+        self.url = self.get_server_url()
 
-    def teardown(self):
+    def tearDown(self):
         for socket in self.sockets:
             socket.disconnect()
-        self.process.terminate()
+        self._process.terminate()
 
     def test_chat_message_emit(self):
         sio = socketio.Client()
+
         def handle_chat_message(message):
             self.chat_messages_counter_a += 1
 
         sio.on('chat-message-client', handler=handle_chat_message)
-        sio.connect(MSCOLAB_URL_TEST)
+        sio.connect(self.url)
         sio.emit('start', {'token': self.token})
         sio.sleep(2)
         self.sockets.append(sio)
-        sio.emit("chat-message", {
-            "p_id": self.project.id,
-            "token": self.token,
-            "message_text": "message from 1",
-            "reply_id": -1
-        })
+        sio.emit("chat-message", {"p_id": self.project.id, "token": self.token,
+                                  "message_text": "message from 1", "reply_id": -1}
+                 )
         sio.sleep(2)
         assert self.chat_messages_counter_a == 1
-

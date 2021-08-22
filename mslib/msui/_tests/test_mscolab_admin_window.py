@@ -64,6 +64,7 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Change filter to viewer
@@ -79,6 +80,7 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_text_search_filter(self):
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
@@ -103,6 +105,7 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_permission_and_text_together(self):
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "test4")
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
@@ -114,6 +117,7 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 0
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_add_permissions(self):
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
@@ -130,6 +134,7 @@ class Test_MscolabAdminWindow(object):
         assert len_unadded_users - 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_modify_permissions(self):
         users = ["test2", "test3"]
         # Select users in the add users table
@@ -146,6 +151,7 @@ class Test_MscolabAdminWindow(object):
         # Check if the permission has been updated
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_delete_permissions(self):
         # Select users in the add users table
         users = ["test2", "test3"]
@@ -165,6 +171,7 @@ class Test_MscolabAdminWindow(object):
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
+    @pytest.mark.skip("based on handle_db_seed")
     def test_import_permissions(self):
         index = self.admin_window.importPermissionsCB.findText("three", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)

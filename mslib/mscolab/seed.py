@@ -144,6 +144,7 @@ def get_user(email):
     with app.app_context():
         return User.query.filter_by(emailid=str(email)).first()
 
+
 def get_project(project_name):
     with app.app_context():
         return Project.query.filter_by(path=project_name).first()

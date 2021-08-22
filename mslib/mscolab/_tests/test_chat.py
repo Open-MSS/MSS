@@ -40,42 +40,22 @@ from mslib.mscolab.models import Message, MessageType
 from mslib.msui.icons import icons
 from mslib.msui.mscolab import MSSMscolabWindow
 from mslib._tests.utils import mscolab_start_server
-from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.seed import add_user
-from flask_testing import TestCase
-from mslib.mscolab.sockets_manager import setup_managers
-from mslib.mscolab.server import APP
+
+
 PORTS = list(range(9300, 9320))
 
 
+@pytest.mark.skip("needs to become refactored for LiveSocketTestCase")
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_Chat(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
+class Test_Chat(object):
     def setup(self):
-        handle_db_reset()
-        self.socketio, self.cm, self.fm = setup_managers(self.app)
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
                                        mscolab_server_url=self.url)
         self.sockets = []
-        self.user = get_user(self.userdata[0])
 
     def teardown(self):
         for socket in self.sockets:
@@ -118,7 +98,7 @@ class Test_Chat(TestCase):
             "message_text": "® non ascii",
             "reply_id": -1
         })
-        sio.sleep(4)
+        sio.sleep(2)
         assert messages[0]["text"] == "message from 1"
         assert messages[1]["text"] == "® non ascii"
         with self.app.app_context():
@@ -135,7 +115,7 @@ class Test_Chat(TestCase):
         self.sockets.append(sio)
         sio.connect(self.url)
         sio.emit('start', response)
-        sio.sleep(4)
+        sio.sleep(2)
         # ToDo same message gets twice emmitted, why? (use a helper function)
         sio.emit("chat-message", {
             "p_id": 1,
@@ -298,8 +278,8 @@ class Test_Chat(TestCase):
     def _login(self):
         url = url_join(self.url, 'token')
         r = requests.post(url, data={
-            'email': self.userdata[0],
-            'password': self.userdata[2]
+            'email': 'a',
+            'password': 'a'
         })
         response = json.loads(r.text)
         return response
