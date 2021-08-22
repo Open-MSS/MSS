@@ -1,4 +1,4 @@
-This is the Performance Settings dockwidget opened in the Table view of the MSS software where by putting and changing some parameters, we can evaluate the performance of the flight track.
+This is the Performance Settings dockwidget opened in the Table view of the MSS software where by putting and changing some parameters, we can evaluate the performance of the aircraft.
 
 
  Parameters like Flight Altitude, Aviation fuel, Aircraft weight, Maximum take off weight from one point to other in flight planning, etcetera, can be evaluated. 
@@ -31,16 +31,16 @@ Giving some examples, things like the change in flight time, fuel, aircraft weig
 There are options in the panel like take off time, maximum take off weight and aircraft weight without fuel.
 
 
-We can change these settings to see the how the performnace data changes.
+We can change these settings to see the how the performance data changes.
 
 
 Like, we now changed the maximum take off weight from ninety one thousands to eighty seven thousand kilograms.
 
 And the aircraft weight without fuel from fifty six thousands to forty eight thousands kilograms.
 
-Then we can uncheck the box of show Performance and the click it again and there you can see the changes in the performance settings.
-
 Here you can see we changed the take off time from 6th August 2021 to 4th August 2021.
+
+Then we can uncheck the box of show Performance and then click it again and there you can see the changes in the performance settings.
 
 
 It just shows and hides the performance data.
@@ -49,11 +49,11 @@ Now we are going to close the topview.
 
 It asks for confirmation whether we want to close it or not.
 
-We select yes in the conformation and it closes.
+We select yes in the confirmation dialogue and it closes.
 
 Next, we close the MSS main window.
 
 
-It asks for confirmation whether to close it or not.
+It asks for confirmation whether to close it or not, again.
 
 We then give the response as a yes, and thus the window closes!
