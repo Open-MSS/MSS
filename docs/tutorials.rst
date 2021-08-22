@@ -38,16 +38,34 @@ Other important files with their functions are as follows:
 
 * audio.py which translates and converts into speech the texts and saves them as .mp3 files.
 
+System Requirements
+===================
+Keep the following things in mind before running a script
+
+* You should have only an **US keyboard layout**. If you have a different keyboard layout, you just need to change it to
+  US keyboard!
+* The **cursor.py** python file will run only on Linux and not on Windows for grabbing the mouse pointer image.
+
+* The screenrecorder.py works only in **Full HD Screens**.
+
+* The screen recording starts as the recording window appears and ends when you quit the recording window by pressing
+  'q' when the window is being displayed in the foreground.
+
+* The **audio.py** file should have translation APIs and text-to-speech (t2s) APIs written at specified places inside it
+  to run successfully! It has a #ToDo to read.
+
+
 Getting Started..
 =================
 
 On the Anaconda terminal, type the following ::
 
  cd ..../MSS/$
+ $ export PYTHONPATH=.../MSS        # Path of MSS
  $ conda activate mssdev
 
 
- (mssdev)$ conda install --file requirements.d/tutorials.txt
+ (mssdev)$ mamba install --file requirements.d/tutorials.txt
  (mssdev)$ conda deactivate
  (base)$ conda activate mssdev
 
@@ -66,19 +84,6 @@ This will install all the dependencies required for running of the tutorials.
 Now, just go into the _../MSS/tutorials/_ directory ::
 
     $ cd ../MSS/tutorials/
-
-
-Keep the following things in mind before running a script
-
-* You should have only an **US keyboard layout**. If you have a different keyboard layout, you just need to change it to
-  US keyboard!
-* The **cursor.py** python file will run only on Linux and not on Windows for grabbing the mouse pointer image.
-
-* The screen recording starts as the recording window appears and ends when you quit the recording window by pressing
-  'q' when the window is being displayed in the foreground.
-
-* The **audio.py** file should have translation APIs and text-to-speech (t2s) APIs written at specified places inside it
-  to run successfully! It has a #ToDo to read.
 
 
 In Linux for making the cursor visible as a highlighter, perform the following
@@ -102,7 +107,7 @@ When you have to stop just open that terminal again and type **CTRL + C**
 
 For more details in its customization, you can visit https://github.com/swillner/highlight-pointer
 
-THE RUNNING OF THE SCRIPTS
+The Running of the Scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 Each python file inside MSS/tutorials can be run directly like ::
 

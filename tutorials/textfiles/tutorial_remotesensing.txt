@@ -1,0 +1,33 @@
+This is the REMOTE SENSING SECTION of the TOP VIEW. It shows the position and angle of the flight from any particular object in the sky.
+
+AZIMUTH is the forward direction line of the flight. If we go above tHE AZIMUTH, angle is in positive, and if we descend down, angle is negative.
+
+The TOP VIEW will be used to see what REMOTE SENSING is. From SELECT TO OPEN CONTROL, we select- REMOTE SENSING.
+
+Our main objective here is to find our the disturbance in visibility due to light source from any iluminating object like sun.
+
+The solar angle colour in dark to light is 0 to15 for RED and 15 to 45 for violet and 45-180 for green.
+
+We can show angle of SUN, VENUS, MOON. 
+
+TOTAL HORIZON  is the light of the surroundings of the flight.
+
+We add some WAY POINTS No. 2,3,4,5. After clicking on SHOW ANGLES, the way points colour has changed to green or light green.
+
+The flight is at 90° from azimuth and -1 shows that flight is descended down from azimuth. Show, green colour here shows that our solar angle is in range from 45 to 180.
+
+We will now look for MOON. There is no significant change. And for VENUS, the colour of way point changed to light green.
+
+Changing TOTAL HORIZON to TOTAL changes the colour of way point from green to violet.
+
+Changing TOTAL HORIZON to ELEVATION changes the colour of way point from green to red.
+
+Now for VENUS, after changing the angle from 90 to 45, it changed to light green. Changing ELEVATION from -1 to -2 or -3 doesn't bring any significant change in colour of the way point.
+
+We will now look for DRAW TANGENT POINTS. We can chose colors for the TANGENT POINTS. We keep it red for clear vision.
+
+KILOMETERS can also be changed to know the distance of tangent point.
+
+We zoom it for for more understanding. The flight patch is able to view a distance of 20 km from the help of TANGENT POINT.
+
+The tangent lines changes its direction on changing angle to 120°(changes clockwise on increasing) or 75°(changes anticlockwise on decreasing).
