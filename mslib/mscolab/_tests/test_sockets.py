@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2020 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,137 +24,82 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
+import multiprocessing
 import socketio
 from functools import partial
 import requests
 import json
-import sys
-import pytest
+import time
 
-from PyQt5 import QtWidgets, QtTest
 from mslib.mscolab.conf import mscolab_settings
-from mslib.msui.mscolab import MSSMscolabWindow
-from mslib._tests.utils import mscolab_start_server
+from mslib.mscolab.models import Message, Project
+from mslib._tests.constants import MSCOLAB_URL_TEST
+from mslib.mscolab.server import db, APP, initialize_managers, start_server
+from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project, get_project
+from mslib.mscolab.mscolab import handle_db_reset
 
+def start_mscolab_server(port):
+    """
+    testserver
+    """
+    _app = APP
+    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    _app, sockio, cm, fm = initialize_managers(_app)
+    process = multiprocessing.Process(
+        target=start_server,
+        args=(_app, sockio, cm, fm,),
+        kwargs={'port': port})
+    process.start()
+    time.sleep(2)
+    return process
 
-PORTS = list(range(9521, 9540))
-
-
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Sockets(object):
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
     chat_messages_counter_a = 0  # only for first test
 
     def setup(self):
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        handle_db_reset()
+        self.process = start_mscolab_server(8084)
         self.sockets = []
+        self.app = APP
+        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        self.app, _, cm, _ = initialize_managers(self.app)
+        self.cm = cm
+        db.init_app(self.app)
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
+        self.room_name = "europe"
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_project(self.room_name, "test europe")
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        self.user = get_user(self.userdata[0])
+        self.token = self.user.generate_auth_token()
+        self.project = get_project(self.room_name)
 
     def teardown(self):
         for socket in self.sockets:
             socket.disconnect()
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
-    def test_connect(self):
-        r = requests.post(self.url + "/token", data={
-                          'email': 'a',
-                          'password': 'a'
-                          })
-        response = json.loads(r.text)
+    def test_chat_message_emit(self):
         sio = socketio.Client()
-        self.sockets.append(sio)
-
         def handle_chat_message(message):
             self.chat_messages_counter_a += 1
 
         sio.on('chat-message-client', handler=handle_chat_message)
-        sio.connect(self.url)
-        sio.emit('start', response)
+        sio.connect(MSCOLAB_URL_TEST)
+        sio.emit('start', {'token': self.token})
         sio.sleep(2)
+        self.sockets.append(sio)
         sio.emit("chat-message", {
-            "p_id": 1,
-            "token": response['token'],
+            "p_id": self.project.id,
+            "token": self.token,
             "message_text": "message from 1",
             "reply_id": -1
         })
         sio.sleep(2)
         assert self.chat_messages_counter_a == 1
 
-    @pytest.mark.skip("needs a review, because of KeyError: 'PYTEST_CURRENT_TEST")
-    def test_emit_permissions(self):
-        r = requests.post(self.url + "/token", data={
-                          'email': 'a',
-                          'password': 'a'
-                          })
-        response1 = json.loads(r.text)
-        r = requests.post(self.url + "/token", data={
-                          'email': 'b',
-                          'password': 'b'
-                          })
-        response2 = json.loads(r.text)
-        r = requests.post(self.url + "/token", data={
-                          'email': 'c',
-                          'password': 'c'
-                          })
-        response3 = json.loads(r.text)
-
-        def handle_chat_message(sno, message):
-            self.chat_messages_counter[sno - 1] += 1
-
-        sio1 = socketio.Client()
-        sio2 = socketio.Client()
-        sio3 = socketio.Client()
-        self.sockets.append(sio1)
-        self.sockets.append(sio2)
-        self.sockets.append(sio3)
-
-        sio1.on('chat-message-client', handler=partial(handle_chat_message, 1))
-        sio2.on('chat-message-client', handler=partial(handle_chat_message, 2))
-        sio3.on('chat-message-client', handler=partial(handle_chat_message, 3))
-        sio1.connect(self.url)
-        sio2.connect(self.url)
-        sio3.connect(self.url)
-
-        sio1.emit('start', response1)
-        sio2.emit('start', response2)
-        sio3.emit('start', response3)
-        QtTest.QTest.qWait(100)
-        sio1.emit('chat-message', {
-            "p_id": 1,
-            "token": response1['token'],
-            "message_text": "message from 1",
-            "reply_id": -1
-        })
-
-        sio3.emit('chat-message', {
-            "p_id": 1,
-            "token": response3['token'],
-            "message_text": "message from 3 - 1",
-            "reply_id": -1
-        })
-
-        sio3.emit('chat-message', {
-            "p_id": 3,
-            "token": response3['token'],
-            "message_text": "message from 3 - 2",
-            "reply_id": -1
-        })
-
-        sio1.sleep(1)
-        sio2.sleep(1)
-        sio3.sleep(1)
-
-        assert self.chat_messages_counter[0] == 2
-        assert self.chat_messages_counter[1] == 1
-        assert self.chat_messages_counter[2] == 2
