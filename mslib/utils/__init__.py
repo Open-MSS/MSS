@@ -57,6 +57,19 @@ from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui.constants import MSS_CONFIG_PATH
 
 
+def subprocess_startupinfo():
+    """
+    config options to hide windows terminals on subprocess call
+    """
+    startupinfo = None
+    if os.name == 'nt':
+        # thx to https://gist.github.com/nitely/3862493
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+    return startupinfo
+
+
 def parse_iso_datetime(string):
     try:
         result = isodate.parse_datetime(string)
@@ -762,7 +775,8 @@ class Updater(QtCore.QObject):
 
         # Check if mamba is installed
         try:
-            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            subprocess.run(["mamba"], startupinfo=subprocess_startupinfo(),
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.command = "mamba"
         except FileNotFoundError:
             pass
@@ -786,7 +800,9 @@ class Updater(QtCore.QObject):
         """
         # Don't notify on updates if mss is in a git repo, as you are most likely a developer
         try:
-            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
+            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"],
+                                 startupinfo=subprocess_startupinfo(),
+                                 stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, encoding="utf8")
             if "true" in git.stdout:
                 self.is_git_env = True
@@ -795,7 +811,8 @@ class Updater(QtCore.QObject):
 
         # Return if conda is not installed
         try:
-            subprocess.run(["conda"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            subprocess.run(["conda"], startupinfo=subprocess_startupinfo(),
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except FileNotFoundError:
             return
 
@@ -858,7 +875,11 @@ class Updater(QtCore.QObject):
         """
         Handles proper execution of conda subprocesses and logging
         """
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
+        process = subprocess.Popen(command.split(),
+                                   startupinfo=subprocess_startupinfo(),
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   encoding="utf8")
         self.on_log_update.emit(" ".join(process.args) + "\n")
 
         text = ""
