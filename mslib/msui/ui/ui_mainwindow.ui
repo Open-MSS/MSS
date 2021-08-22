@@ -286,7 +286,7 @@ Save a flight track to name it.</string>
      <string>&amp;Help</string>
     </property>
     <addaction name="actionShortcuts"/>
-    <addaction name="actionMSColab"/>
+    <addaction name="actionMSColabHelp"/>
     <addaction name="actionUpdater"/>
     <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
@@ -427,7 +427,7 @@ Save a flight track to name it.</string>
     <string>&amp;Manage Users</string>
    </property>
   </action>
-  <action name="actionMSColab">
+  <action name="actionMSColabHelp">
    <property name="text">
     <string>&amp;MSColab</string>
    </property>

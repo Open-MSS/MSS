@@ -61,19 +61,6 @@ from mslib.msui import constants
 from mslib.utils.config import config_loader
 
 
-class MscolabHelpDialog(QtWidgets.QDialog, msc_help_dialog.Ui_mscolabHelpDialog):
-
-    viewCloses = QtCore.pyqtSignal(name="viewCloses")
-
-    def __init__(self, parent=None):
-        super(MscolabHelpDialog, self).__init__(parent)
-        self.setupUi(self)
-        self.okayBtn.clicked.connect(lambda: self.close())
-
-    def closeEvent(self, event):
-        self.viewCloses.emit()
-
-
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
     """MSColab connect window class. Provides user interface elements to connect/disconnect,
        login, add new user to an MSColab Server. Also implements HTTP Server Authentication prompt.
@@ -373,6 +360,9 @@ class MSSMscolab(QtCore.QObject):
         super(MSSMscolab, self).__init__(parent)
         self.ui = parent
 
+        # connect mscolab help action from help menu
+        self.ui.actionMSColabHelp.triggered.connect(self.open_help_dialog)
+
         # hide mscolab related widgets
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
@@ -460,6 +450,19 @@ class MSSMscolab(QtCore.QObject):
             _dir = os.path.expanduser(self.data_dir)
             if not os.path.exists(_dir):
                 os.makedirs(_dir)
+
+    def close_help_dialog(self):
+        self.help_dialog = None
+
+    def open_help_dialog(self):
+        if self.help_dialog is not None:
+            self.help_dialog.raise_()
+            self.help_dialog.activateWindow()
+        else:
+            self.help_dialog = MscolabHelpDialog(self.ui)
+            self.help_dialog.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.help_dialog.destroyed.connect(self.close_help_dialog)
+            self.help_dialog.show()
 
     def open_connect_window(self):
         self.connect_window = MSColab_ConnectDialog(parent=self.ui, mscolab=self)
@@ -1564,3 +1567,11 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, merge_wp_ui.Ui_MergeWaypoin
 
     def get_values(self):
         return self.xml_content
+
+
+class MscolabHelpDialog(QtWidgets.QDialog, msc_help_dialog.Ui_mscolabHelpDialog):
+
+    def __init__(self, parent=None):
+        super(MscolabHelpDialog, self).__init__(parent)
+        self.setupUi(self)
+        self.okayBtn.clicked.connect(lambda: self.close())
