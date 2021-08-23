@@ -24,69 +24,56 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
-import requests
-import json
-import sys
-import pytest
 
-from werkzeug.urls import url_join
-from PyQt5 import QtWidgets, QtTest
-from mslib.mscolab.models import User, MessageType, Message
+from flask_testing import TestCase
+
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.chat_manager import ChatManager
-from mslib._tests.utils import mscolab_start_server
-import mslib.msui.mss_pyui as mss_pyui
+from mslib.mscolab.models import Message, MessageType
+from mslib.mscolab.mscolab import handle_db_reset
+from mslib.mscolab.server import APP
+from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
+from mslib.mscolab.sockets_manager import setup_managers
 
 
-PORTS = list(range(9321, 9340))
+class Test_Chat_Manager(TestCase):
+    render_templates = False
 
+    def create_app(self):
+        app = APP
+        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config["TESTING"] = True
+        app.config['LIVESERVER_TIMEOUT'] = 10
+        app.config['LIVESERVER_PORT'] = 0
+        return app
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_Chat_Manager(object):
-    def setup(self):
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
-        self.cm = ChatManager()
+    def setUp(self):
+        handle_db_reset()
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.room_name = "europe"
-        data = {
-            'email': 'a',
-            'password': 'a'
-        }
-        r = requests.post(self.url + '/token', data=data)
-        self.token = json.loads(r.text)['token']
-        with self.app.app_context():
-            self.user = User.query.filter_by(id=8).first()
+        socketio, self.cm, self.fm = setup_managers(self.app)
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_project(self.room_name, "test europe")
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        self.user = get_user(self.userdata[0])
 
-        data = {
-            "token": self.token,
-            "path": self.room_name,
-            "description": "test description"
-        }
-        url = url_join(self.url, 'create_project')
-        requests.post(url, data=data)
-
-    def teardown(self):
-        if self.window.mscolab.version_window:
-            self.window.mscolab.version_window.close()
-        if self.window.mscolab.conn:
-            self.window.mscolab.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+    def tearDown(self):
+        pass
 
     def test_add_message(self):
-        with self.app.app_context():
-            message = self.cm.add_message(self.user, 'some message', self.room_name, message_type=MessageType.TEXT,
+        with self.app.test_client():
+            message = self.cm.add_message(self.user, 'some message',
+                                          self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)
             assert message.text == 'some message'
 
     def test_edit_messages(self):
-        with self.app.app_context():
-            message = self.cm.add_message(self.user, 'some test message', self.room_name, message_type=MessageType.TEXT,
+        with self.app.test_client():
+            message = self.cm.add_message(self.user, 'some test message',
+                                          self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)
             new_message_text = "Wonderland"
             self.cm.edit_message(message.id, new_message_text)
@@ -94,7 +81,7 @@ class Test_Chat_Manager(object):
             assert message.text == new_message_text
 
     def test_delete_messages(self):
-        with self.app.app_context():
+        with self.app.test_client():
             message = self.cm.add_message(self.user, 'some test example message',
                                           self.room_name, message_type=MessageType.TEXT,
                                           reply_id=None)

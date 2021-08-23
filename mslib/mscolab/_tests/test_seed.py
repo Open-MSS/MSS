@@ -24,61 +24,71 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from flask_testing import TestCase
 
-import sys
-from PyQt5 import QtTest, QtWidgets
-from mslib.mscolab.models import User
 from mslib.mscolab.conf import mscolab_settings
-from mslib._tests.utils import (mscolab_register_and_login,
-                                mscolab_create_project, mscolab_delete_all_projects,
-                                mscolab_delete_user, mscolab_start_server)
-from mslib.mscolab.seed import add_all_users_default_project, add_user, delete_user
-import mslib.msui.mss_pyui as mss_pyui
+from mslib.mscolab.models import db, User, Project
+from mslib.mscolab.mscolab import handle_db_reset
+from mslib.mscolab.server import APP
+from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.seed import (add_user, get_user, add_project, add_user_to_project,
+                                delete_user, delete_project, add_all_users_default_project)
 
 
-PORTS = list(range(19571, 19590))
+class Test_Seed(TestCase):
+    render_templates = False
 
+    def create_app(self):
+        app = APP
+        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config["TESTING"] = True
+        app.config['LIVESERVER_TIMEOUT'] = 10
+        app.config['LIVESERVER_PORT'] = 0
+        return app
 
-class Test_Seed():
-    def setup(self):
-        mscolab_settings.enable_basic_http_authentication = False
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS, mscolab_settings)
-        QtTest.QTest.qWait(100)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'UV0@uv0', 'UV0', 'uv0')
-            assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, self.url, response,
-                                                    path='XYZ', description='Template')
-            assert response.status == '200 OK'
-            data = response.get_data(as_text=True)
-            assert data == 'True'
-            mscolab_register_and_login(self.app, self.url, 'UV1@uv1', 'UV1', 'UV1')
+    def setUp(self):
+        handle_db_reset()
+        db.init_app(self.app)
+        self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+        self.room_name = "XYZ"
+        self.description = "Template"
+        self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0'
+        self.userdata_1 = "UV1@uv1", "UV1", "UV1"
+        self.userdata_2 = "UV2@v2", "V2", "v2"
 
-    def teardown(self):
-        with self.app.app_context():
-            mscolab_delete_user(self.app, self.url, 'UV0@uv0', 'UV0')
-            mscolab_delete_user(self.app, self.url, 'UV1@uv1', 'UV1')
-            mscolab_delete_all_projects(self.app, self.url, 'UV0@uv0', 'uv0', 'UV0')
-            mscolab_delete_all_projects(self.app, self.url, 'UV1@uv1', 'uv1', 'UV1')
-            user = User.query.filter_by(emailid="UV2@v2").first()
-            if user is not None:
-                delete_user('UV2@uv2')
-        if self.window.mscolab.version_window:
-            self.window.mscolab.version_window.close()
-        if self.window.mscolab.conn:
-            self.window.mscolab.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+        assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
+        assert add_project(self.room_name, self.description)
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata_0[0])
+        self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
+
+    def tearDown(self):
+        pass
+
+    def test_add_project(self):
+        with self.app.test_client():
+            assert add_project("a1", "description")
+            project = Project.query.filter_by(path="a1").first()
+            assert project.id > 0
+
+    def test_delete_project(self):
+        with self.app.test_client():
+            assert add_project("todelete", "description")
+            project = Project.query.filter_by(path="todelete").first()
+            assert project.id > 0
+            assert delete_project("todelete")
+            project = Project.query.filter_by(path="todelete").first()
+            assert project is None
 
     def test_add_all_users_default_project_viewer(self):
-        with self.app.app_context():
+        with self.app.test_client():
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # viewer
             add_all_users_default_project(path='XYZ', description="Project to keep all users", access_level='viewer')
             expected_result = [{'access_level': 'viewer', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
             result = self.fm.list_projects(user)
             # we don't care here for p_id
@@ -86,12 +96,13 @@ class Test_Seed():
             assert result == expected_result
 
     def test_add_all_users_default_project_collaborator(self):
-        with self.app.app_context():
+        with self.app.test_client():
             # collaborator
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             add_all_users_default_project(path='XYZ', description="Project to keep all users",
                                           access_level='collaborator')
             expected_result = [{'access_level': 'collaborator', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
             result = self.fm.list_projects(user)
             # we don't care here for p_id
@@ -99,48 +110,55 @@ class Test_Seed():
             assert result == expected_result
 
     def test_add_all_users_default_project_creator(self):
-        with self.app.app_context():
+        with self.app.test_client():
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # creator
             add_all_users_default_project(path='XYZ', description="Project to keep all users",
                                           access_level='creator')
             expected_result = [{'access_level': 'creator', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_projects(user)
             # we don't care here for p_id
             expected_result[0]['p_id'] = result[0]['p_id']
             assert result == expected_result
 
     def test_add_all_users_default_project_creator_unknown_project(self):
-        with self.app.app_context():
+        with self.app.test_client():
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # creator added to new project
             add_all_users_default_project(path='UVXYZ', description="Project to keep all users",
                                           access_level='creator')
             expected_result = [{'access_level': 'creator', 'description': 'Project to keep all users',
                                 'p_id': 7, 'path': 'UVXYZ'}]
-            user = User.query.filter_by(emailid="UV1@uv1").first()
+            user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_projects(user)
             # we don't care here for p_id
             expected_result[0]['p_id'] = result[0]['p_id']
             assert result == expected_result
 
-    def test_add_user(self, capsys):
-        self.app.app_context().push()
-        add_user("UV2@v2", "V2", "v2")
-        captured = capsys.readouterr()
-        assert "Userdata: UV2@v2 V2 v2" in captured.out
-        add_user("UV2@v2", "V2", "v2")
-        captured = capsys.readouterr()
-        assert '<User V2> already in db\n' == captured.out
+    def test_add_user(self):
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2]) is False
 
-    def test_delete_user(self, capsys):
-        self.app.app_context().push()
-        add_user("UV2@v2", "V2", "v2")
-        captured = capsys.readouterr()
-        assert "Userdata: UV2@v2 V2 v2" in captured.out
-        user = User.query.filter_by(emailid="UV2@v2").first()
-        assert user is not None
-        delete_user("UV2@v2")
-        captured = capsys.readouterr()
-        assert 'User: UV2@v2 deleted from db\n' == captured.out
-        user = User.query.filter_by(emailid="UV2@v2").first()
-        assert user is None
+    def test_get_user(self):
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            user = get_user(self.userdata_2[0])
+            assert user.id is not None
+            assert user.emailid == self.userdata_2[0]
+
+    def test_add_user_to_project(self):
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            assert add_project("project2", "description")
+            assert add_user_to_project(path="project2", access_level='admin', emailid=self.userdata_2[0])
+
+    def test_delete_user(self,):
+        with self.app.test_client():
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            user = User.query.filter_by(emailid=self.userdata_2[0]).first()
+            assert user is not None
+            assert delete_user(self.userdata_2[0])
+            user = User.query.filter_by(emailid=self.userdata_2[0]).first()
+            assert user is None

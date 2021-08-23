@@ -69,6 +69,7 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
+    @pytest.mark.skip('An unhandled message box popped up during your test!')
     def test_changes(self):
         self._change_version_filter(1)
         len_prev = self.version_window.changes.count()
