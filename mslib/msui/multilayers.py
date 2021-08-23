@@ -369,8 +369,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if widget.is_invalid:
                 widget.setDisabled(True)
                 return
-            self.current_layer = widget
-            self.listLayers.setCurrentItem(widget)
+
+            if not self.current_layer:
+                self.current_layer = widget
+                self.listLayers.setCurrentItem(widget)
 
     def multilayer_clicked(self, item):
         """
