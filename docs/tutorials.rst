@@ -81,9 +81,18 @@ This will install all the dependencies required for running of the tutorials.
     $ sudo apt-get install libx11-dev libxext-dev libxfixes-dev libxi-dev
 
 
-Now, just go into the _../MSS/tutorials/_ directory ::
+Now, just go into the **../MSS/tutorials/** directory ::
 
     $ cd ../MSS/tutorials/
+
+
+**Note**
+
+You must go into the tutorials directcory and then run the .py files. And always remember to add the PYTHONPATH to
+........../MSS/ directory.
+You cannot just do like this ::
+
+    $ python MSS/tutorials/sreenrecorder.py     # This will be problematic.
 
 
 In Linux for making the cursor visible as a highlighter, perform the following
@@ -113,7 +122,7 @@ Each python file inside MSS/tutorials can be run directly like ::
 
 (mssdev)~/..MSS/tutorials/ $ python screenrecorder.py
 
-For recording anything on your screen. The videos will be then saved to `MSS/tutorials/Screen Recorders/`
+For recording anything on your screen. The videos will be then saved to `MSS/tutorials/Screen Recordings/`
 
 For all the tutorials, you can do the same, example ::
 
@@ -122,7 +131,7 @@ For all the tutorials, you can do the same, example ::
 (mssdev)~/..MSS/tutorials/ $ python tutorial_hexagoncontrol.py
 
 The `MSS/tutorials/textfiles` contain descriptions of the tutorial videos in text format, these later can be
-converted to audio files by `audio.py` script after adding certain #ToDOs.
+converted to audio files by `audio.py` script after adding certain #ToDOs there.
 
 **Note**
 In  tutorials development, when creating a class of Screen Recorder as ::
