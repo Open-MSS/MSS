@@ -271,8 +271,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.login_data = [data, r, url, auth]
             self.connectBtn.setEnabled(False)
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
-            # self.httpBb.accepted.disconnect(self.newuser_server_auth)
-            # self.httpBb.rejected.disconnect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
+            # ToDo disconnect functions already connected to httpBb buttonBox
             self.httpBb.accepted.connect(self.login_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
         else:
@@ -330,12 +329,15 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
-            # self.httpBb.accepted.disconnect(self.login_server_auth)
-            # self.httpBb.rejected.disconnect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
+            # ToDo disconnect functions already connected to httpBb buttonBox
             self.httpBb.accepted.connect(self.newuser_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
         else:
-            error_msg = json.loads(r.text)["message"]
+            try:
+                error_msg = json.loads(r.text)["message"]
+            except Exception as e:
+                logging.debug(f"Unexpected error occured {e}")
+                error_msg = "Unexpected error occured. Please try again."
             self.set_status("Error", error_msg)
 
     def newuser_server_auth(self):
@@ -368,7 +370,6 @@ class MSSMscolab(QtCore.QObject):
         self.ui.userOptionsTb.hide()
         self.ui.actionAddProject.setEnabled(False)
         self.hide_project_options()
-        self.ui.actionEditProject.setVisible(False)
 
         # connect project options menu actions
         self.ui.actionAddProject.triggered.connect(self.add_project_handler)
@@ -487,7 +488,7 @@ class MSSMscolab(QtCore.QObject):
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
         except Exception as ex:
             logging.debug(f"Couldn't create a socket connection: {ex}")
-            show_popup(self, "Error", "Couldn't create a socket connection. New Login required!")
+            show_popup(self.ui, "Error", "Couldn't create a socket connection. New Login required!")
             self.logout()
         self.conn.signal_reload.connect(self.reload_window)
         self.conn.signal_new_permission.connect(self.render_new_permission)
@@ -900,8 +901,8 @@ class MSSMscolab(QtCore.QObject):
                 )
                 self.ui.workingStatusLabel.setText(
                     self.ui.tr(
-                        "Working On: Local File.\nYour changes are only available to you."
-                        'To save your changes with everyone, use the "Save to Server" button.')
+                        "Working Asynchronously.\nYour changes are only available to you. "
+                        "Use the 'Server Options' drop-down menu below to Save to or Fetch from the server.")
                 )
                 self.ui.serverOptionsCb.show()
                 self.reload_local_wp()
@@ -909,8 +910,8 @@ class MSSMscolab(QtCore.QObject):
                 self.local_ftml_file = None
                 self.ui.workingStatusLabel.setText(
                     self.ui.tr(
-                        "Working On: Shared File.\nAll your changes will be shared with everyone."
-                        "Turn on work locally to work on local flight track file")
+                        "Working Online.\nAll your changes will be shared with everyone. "
+                        "You can work on the project asynchronously by checking the 'Work Asynchronously' box.")
                 )
                 self.ui.serverOptionsCb.hide()
                 self.waypoints_model = None
@@ -1181,10 +1182,8 @@ class MSSMscolab(QtCore.QObject):
             # display working status
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
-                    "Working On: Shared File.\n"
-                    "All your changes will be shared with everyone."
-                    "Turn on work locally to work on local flight track file"
-                )
+                    "Working Online.\nAll your changes will be shared with everyone. "
+                    "You can work on the project asynchronously by checking the 'Work Asynchronously' box.")
             )
             # self.ui.workingStatusLabel.show()
             # enable access level specific widgets
@@ -1472,6 +1471,10 @@ class MSSMscolab(QtCore.QObject):
         if self.conn is not None:
             self.conn.disconnect()
             self.conn = None
+        # Turn off work locally toggle
+        self.ui.workLocallyCheckbox.blockSignals(True)
+        self.ui.workLocallyCheckbox.setChecked(False)
+        self.ui.workLocallyCheckbox.blockSignals(False)
 
         # remove temporary gravatar image
         if self.gravatar is not None:
