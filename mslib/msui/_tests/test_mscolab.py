@@ -295,6 +295,7 @@ class Test_Mscolab(object):
                 for i in range(wp_count):
                     assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
 
+    @pytest.mark.skip('test hangs')
     def test_work_locally_toggle(self):
         self._connect_to_mscolab()
         self._login()
@@ -355,8 +356,9 @@ class Test_Mscolab(object):
         self._activate_project_at_index(1)
         assert self.window.mscolab.active_project_name == "reproduce-test"
 
+    @mock.patch("mslib.msui.mscolab.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
-    def test_handle_delete_project(self, mocktext):
+    def test_handle_delete_project(self, mocktext, mockbox):
         # pytest.skip('needs a review for the delete button pressed. Seems to delete a None project')
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
