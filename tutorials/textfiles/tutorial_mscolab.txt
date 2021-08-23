@@ -1,13 +1,13 @@
-mission support collaboration
+Mission Support Collaboration
 
-MS Colab stores data in an online server, and can be used to access the data remotely as also working in a team where everyone contributes his part. It is used for collaborating with the users as a team together and working on a shared MScolab project. 
+MSColab stores data in an online server, and can be used to access the data remotely as also working in a team where everyone contributes his part. It is used for collaborating with the users as a team together and working on a shared MScolab project. 
 
 
-to start with, click on Connect to MS Colab, 
+to start with, click on Connect to MSColab, 
 
 in the window opened, enter MSColab url and click on connect.
 
-"successfully connected to the ms colab server"
+"successfully connected to the MSColab server"
 
 
 we can enter Email id and Password for an existing user, else we can click on Add user to register a new user.
@@ -25,9 +25,9 @@ Now the user John Doe is logged in to MScolab.
 
 He can now start working on shared project.
 
-go to File  and then  new  and then M S Colab Project option.
+go to File  and then  new  and then MSColab Project option.
 
-Add mscolab project
+Add MSColab project
 
 MSS project window opens
 
@@ -87,7 +87,7 @@ go to Project and then Chat option.
 
 Click on it.
 
-MsColab chat window pops up.
+MSColab chat window pops up.
 
 the left pan shows the list of people who have access to this project.
 
@@ -194,6 +194,6 @@ We can see his email and server its connected to!
 
 Now, we log the user out.
 
-We close the MScolab window and it asks for confirmation.
+We close the MSColab window and it asks for confirmation.
 
-This is all about MScolab.
+This is all about MSColab.
