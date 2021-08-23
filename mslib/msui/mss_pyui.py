@@ -790,6 +790,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
+            if self.mscolab.help_dialog is not None:
+                self.mscolab.help_dialog.close()
             # cleanup mscolab widgets
             if self.mscolab.token is not None:
                 self.mscolab.logout()

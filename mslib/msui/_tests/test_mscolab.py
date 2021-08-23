@@ -434,18 +434,18 @@ class Test_Mscolab(object):
             assert Permission.query.filter_by(u_id=u_id).count() == 0
 
     def test_open_help_dialog(self):
-        pytest.skip("To be done")
-        QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
+        self.window.actionMSColabHelp.trigger()
         QtWidgets.QApplication.processEvents()
-        assert self.window.help_dialog is not None
+        assert self.window.mscolab.help_dialog is not None
         self.window.close()
 
-    def test_close_help_dialog(self):
-        pytest.skip("To be done")
-        QtTest.QTest.mouseClick(self.window.helpBtn, QtCore.Qt.LeftButton)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
+    def test_close_help_dialog(self, mockwarn):
+        self.window.actionMSColabHelp.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.close()
-        assert self.window.help_dialog is None
+        QtTest.QTest.qWait(50)
+        assert self.window.mscolab.help_dialog is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("sys.exit")
