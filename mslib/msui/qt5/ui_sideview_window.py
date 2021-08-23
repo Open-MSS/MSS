@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui/ui_sideview_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_sideview_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_SideViewWindow(object):
     def setupUi(self, SideViewWindow):
@@ -61,6 +63,5 @@ class Ui_SideViewWindow(object):
         self.cbTools.setItemText(0, _translate("SideViewWindow", "(select to open control)"))
         self.cbTools.setItemText(1, _translate("SideViewWindow", "WMS"))
         self.actionCloseWindow.setText(_translate("SideViewWindow", "CloseWindow"))
-        self.actionCloseWindow.setShortcut(_translate("SideViewWindow", "Ctrl+W"))
-
+        self.actionCloseWindow.setShortcut(_translate("SideViewWindow", "Ctrl+Shift+W"))
 from mslib.msui.mpl_qtwidget import MplSideViewWidget

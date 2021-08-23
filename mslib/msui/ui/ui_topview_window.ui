@@ -230,7 +230,7 @@
     <string>CloseWindow</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+W</string>
+    <string>Ctrl+Shift+W</string>
    </property>
   </action>
   <addaction name="actionCloseWindow"/>

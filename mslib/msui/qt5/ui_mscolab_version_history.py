@@ -158,4 +158,4 @@ class Ui_MscolabVersionHistory(object):
         self.checkoutBtn.setToolTip(_translate("MscolabVersionHistory", "Checkout to the selected version"))
         self.checkoutBtn.setText(_translate("MscolabVersionHistory", "Checkout"))
         self.actionCloseWindow.setText(_translate("MscolabVersionHistory", "actionCloseWindow"))
-        self.actionCloseWindow.setShortcut(_translate("MscolabVersionHistory", "Ctrl+W"))
+        self.actionCloseWindow.setShortcut(_translate("MscolabVersionHistory", "Ctrl+Shift+W"))

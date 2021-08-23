@@ -86,4 +86,4 @@ class Ui_TableViewWindow(object):
         self.btInvertDirection.setText(_translate("TableViewWindow", "reverse"))
         self.btRoundtrip.setText(_translate("TableViewWindow", "make roundtrip"))
         self.actionCloseWindow.setText(_translate("TableViewWindow", "Close Window"))
-        self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+W"))
+        self.actionCloseWindow.setShortcut(_translate("TableViewWindow", "Ctrl+Shift+W"))

@@ -218,4 +218,4 @@ class Ui_MscolabAdminWindow(object):
         self.deleteUsersBtn.setToolTip(_translate("MscolabAdminWindow", "Delete access permission of selected users"))
         self.deleteUsersBtn.setText(_translate("MscolabAdminWindow", "Delete"))
         self.actionCloseWindow.setText(_translate("MscolabAdminWindow", "actionCloseWindow"))
-        self.actionCloseWindow.setShortcut(_translate("MscolabAdminWindow", "Ctrl+W"))
+        self.actionCloseWindow.setShortcut(_translate("MscolabAdminWindow", "Ctrl+Shift+W"))

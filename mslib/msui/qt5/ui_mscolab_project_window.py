@@ -2,11 +2,13 @@
 
 # Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_project_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MscolabProject(object):
     def setupUi(self, MscolabProject):
@@ -155,5 +157,4 @@ class Ui_MscolabProject(object):
         self.editMessageBtn.setText(_translate("MscolabProject", "Update"))
         self.cancelBtn.setText(_translate("MscolabProject", "Cancel"))
         self.actionCloseWindow.setText(_translate("MscolabProject", "CloseWindow"))
-        self.actionCloseWindow.setShortcut(_translate("MscolabProject", "Ctrl+W"))
-
+        self.actionCloseWindow.setShortcut(_translate("MscolabProject", "Ctrl+Shift+W"))

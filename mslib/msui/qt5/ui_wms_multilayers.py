@@ -117,4 +117,4 @@ class Ui_MultilayersDialog(object):
         self.pbViewCapabilities.setToolTip(_translate("MultilayersDialog", "Show information on the selected WMS server."))
         self.pbViewCapabilities.setText(_translate("MultilayersDialog", "view"))
         self.actionCloseWindow.setText(_translate("MultilayersDialog", "Close Window"))
-        self.actionCloseWindow.setShortcut(_translate("MultilayersDialog", "Ctrl+W"))
+        self.actionCloseWindow.setShortcut(_translate("MultilayersDialog", "Ctrl+Shift+W"))

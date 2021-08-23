@@ -154,7 +154,7 @@ Save a flight track to name it.</string>
     <string>&amp;Quit</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+Q</string>
+    <string>Ctrl+Shift+Q</string>
    </property>
   </action>
   <action name="actionNewFlightTrack">
@@ -162,7 +162,7 @@ Save a flight track to name it.</string>
     <string>&amp;New Flight Track</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+N</string>
+    <string>Ctrl+Shift+N</string>
    </property>
   </action>
   <action name="actionOpenFlightTrack">
@@ -170,7 +170,7 @@ Save a flight track to name it.</string>
     <string>&amp;Open Flight Track...</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+O</string>
+    <string>Ctrl+Shift+O</string>
    </property>
   </action>
   <action name="actionSaveActiveFlightTrack">
@@ -178,7 +178,7 @@ Save a flight track to name it.</string>
     <string>&amp;Save Active Flight Track</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+S</string>
+    <string>Ctrl+Shift+S</string>
    </property>
   </action>
   <action name="actionSaveActiveFlightTrackAs">
@@ -199,7 +199,7 @@ Save a flight track to name it.</string>
     <string>&amp;Top View (Horizontal Section)</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+H</string>
+    <string>Ctrl+Shift+H</string>
    </property>
   </action>
   <action name="actionSideView">
@@ -207,7 +207,7 @@ Save a flight track to name it.</string>
     <string>&amp;Side View (Vertical Section)</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+V</string>
+    <string>Ctrl+Shift+V</string>
    </property>
   </action>
   <action name="actionTableView">
@@ -215,7 +215,7 @@ Save a flight track to name it.</string>
     <string>T&amp;able View</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+T</string>
+    <string>Ctrl+Shift+T</string>
    </property>
   </action>
   <action name="actionAboutMSUI">
@@ -265,7 +265,7 @@ Save a flight track to name it.</string>
     <string>Linear View</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+L</string>
+    <string>Ctrl+Shift+L</string>
    </property>
   </action>
   <action name="actionShortcuts">

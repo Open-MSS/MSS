@@ -304,4 +304,4 @@ class Ui_MSSMscolabWindow(object):
         self.deleteProjectBtn.setToolTip(_translate("MSSMscolabWindow", "Delete selected project"))
         self.deleteProjectBtn.setText(_translate("MSSMscolabWindow", "Delete"))
         self.actionCloseWindow.setText(_translate("MSSMscolabWindow", "CloseWindow"))
-        self.actionCloseWindow.setShortcut(_translate("MSSMscolabWindow", "Ctrl+W"))
+        self.actionCloseWindow.setShortcut(_translate("MSSMscolabWindow", "Ctrl+Shift+W"))

@@ -110,5 +110,5 @@ class Ui_TopViewWindow(object):
         self.cbChangeMapSection.setItemText(5, _translate("TopViewWindow", "Europe (cyl)"))
         self.cbChangeMapSection.setItemText(6, _translate("TopViewWindow", "Germany (cyl)"))
         self.actionCloseWindow.setText(_translate("TopViewWindow", "CloseWindow"))
-        self.actionCloseWindow.setShortcut(_translate("TopViewWindow", "Ctrl+W"))
+        self.actionCloseWindow.setShortcut(_translate("TopViewWindow", "Ctrl+Shift+W"))
 from mslib.msui.mpl_qtwidget import MplTopViewWidget
