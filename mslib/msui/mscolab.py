@@ -48,16 +48,15 @@ from mslib.msui import sideview, tableview, topview, linearview
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.msui.mss_qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_add_project_dialog as add_project_ui
 from mslib.msui.qt5 import ui_add_user_dialog as add_user_ui
 from mslib.msui.qt5 import ui_mscolab_window as ui
 from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog
-from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
+from mslib.utils.config import load_settings_qsettings, save_settings_qsettings, config_loader
 from mslib.msui import constants
-from mslib.utils import config_loader
 
 MSCOLAB_URL_LIST = QtGui.QStandardItemModel()
 

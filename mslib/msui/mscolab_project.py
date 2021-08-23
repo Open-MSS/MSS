@@ -34,9 +34,9 @@ from werkzeug.urls import url_join
 
 from mslib.mscolab.models import MessageType
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.msui.mss_qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_project_window as ui
-from mslib.utils import config_loader, show_popup
+from mslib.utils.config import config_loader
 
 
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.

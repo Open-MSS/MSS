@@ -29,7 +29,7 @@ import logging
 import mslib.msui.wms_control
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import ui_wms_multilayers as ui
-from mslib.utils import save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 
 
 class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):

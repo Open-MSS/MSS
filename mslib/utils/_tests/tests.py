@@ -29,7 +29,11 @@ import pytest
 import os
 import fs
 import datetime
-from mslib import utils
+import mslib.utils.time as time
+import mslib.utils.config as config
+import mslib.utils.coordinate as coordinate
+import mslib.utils.thermolib as thermolib
+import mslib.utils as utils
 import multidict
 import werkzeug
 from mslib._tests.constants import MSS_CONFIG_PATH
@@ -41,10 +45,10 @@ LOGGER = logging.getLogger(__name__)
 
 class TestParseTime(object):
     def test_parse_iso_datetime(self):
-        assert utils.parse_iso_datetime("2009-05-28T16:15:00") == datetime.datetime(2009, 5, 28, 16, 15)
+        assert time.parse_iso_datetime("2009-05-28T16:15:00") == datetime.datetime(2009, 5, 28, 16, 15)
 
     def test_parse_iso_duration(self):
-        assert utils.parse_iso_duration('P01W') == datetime.timedelta(days=7)
+        assert time.parse_iso_duration('P01W') == datetime.timedelta(days=7)
 
 
 class TestSettingsSave(object):
@@ -56,10 +60,10 @@ class TestSettingsSave(object):
 
     def test_save_settings(self):
         settings = {'foo': 'bar'}
-        utils.save_settings_qsettings(self.tag, settings, ignore_test=True)
+        config.save_settings_qsettings(self.tag, settings, ignore_test=True)
 
     def test_load_settings(self):
-        settings = utils.load_settings_qsettings(self.tag, ignore_test=True)
+        settings = config.load_settings_qsettings(self.tag, ignore_test=True)
         assert isinstance(settings, dict)
         assert settings["foo"] == "bar"
 
@@ -74,40 +78,40 @@ class TestConfigLoader(object):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
 
     def test_default_config(self):
-        data = utils.config_loader()
+        data = config.config_loader()
         assert isinstance(data, dict)
         assert data["num_labels"] == 10
         assert data["num_interpolation_points"] == 201
 
     def test_default_config_dataset(self):
-        data = utils.config_loader(dataset="num_labels")
+        data = config.config_loader(dataset="num_labels")
         assert data == 10
         # defined value and not a default one
-        data = utils.config_loader(dataset="num_labels")
+        data = config.config_loader(dataset="num_labels")
         assert data == 10
 
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
         with pytest.raises(utils.FatalUserError):
-            utils.config_loader(config_file="foo.json")
+            config.config_loader(config_file="foo.json")
 
     def test_sample_config_file(self):
         utils_path = os.path.dirname(os.path.abspath(utils.__file__))
         config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss', 'mss_settings.json.sample')
-        data = utils.config_loader(config_file=config_file, dataset="new_flighttrack_flightlevel")
+        data = config.config_loader(config_file=config_file, dataset="new_flighttrack_flightlevel")
         assert data == 250
         with pytest.raises(KeyError):
-            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(utils.FatalUserError):
             config_file = os.path.join(utils_path, '../', 'docs', 'samples', 'config', 'mss',
                                        'not_existing_mss_settings.json.sample')
-            utils.config_loader(config_file=config_file)
+            config.config_loader(config_file=config_file)
 
     def test_config_file_cached(self, caplog):
         with caplog.at_level(logging.INFO):
-            utils.config_loader()
+            config.config_loader()
         assert 'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html' \
                in caplog.text
         assert constants.CACHED_CONFIG_FILE is None
@@ -123,17 +127,17 @@ class TestConfigLoader(object):
             file_content = file_dir.readtext("mss_settings.json")
         assert ":" not in file_content
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
-        data = utils.config_loader(config_file=config_file)
+        data = config.config_loader(config_file=config_file)
         assert data["num_labels"] == 10
-        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         # this overwrites the builtin default value
-        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         with pytest.raises(KeyError):
-            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
 
     def test_existing_config_file_different_parameters(self):
         """
@@ -146,18 +150,18 @@ class TestConfigLoader(object):
             file_content = file_dir.readtext("mss_settings.json")
         assert "num_labels" not in file_content
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
-        data = utils.config_loader(config_file=config_file)
+        data = config.config_loader(config_file=config_file)
         assert data["num_labels"] == 10
-        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
-        num_interpolation_points = utils.config_loader(config_file=config_file, dataset="num_interpolation_points")
+        num_interpolation_points = config.config_loader(config_file=config_file, dataset="num_interpolation_points")
         assert num_interpolation_points == 20
-        data = utils.config_loader(config_file=config_file)
+        data = config.config_loader(config_file=config_file)
         assert data["num_interpolation_points"] == 20
         with pytest.raises(KeyError):
-            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
 
     def test_existing_config_file_defined_parameters(self):
         """
@@ -170,15 +174,15 @@ class TestConfigLoader(object):
             file_content = file_dir.readtext("mss_settings.json")
         assert "num_labels" in file_content
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
-        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         # this overwrites the given value
-        num_labels = utils.config_loader(config_file=config_file, dataset="num_labels")
+        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
         assert num_labels == 10
         with pytest.raises(KeyError):
-            utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config.config_loader(config_file=config_file, dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert utils.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
 
 
 class TestGetDistance(object):
@@ -191,22 +195,22 @@ class TestGetDistance(object):
         coordinates_distance = [((50.355136, 7.566077), (50.353968, 4.577915), 212),
                                 ((-5.135943, -42.792442), (4.606085, 120.028077), 18130)]
         for coord1, coord2, distance in coordinates_distance:
-            assert int(utils.get_distance(coord1, coord2)) == distance
+            assert int(coordinate.get_distance(coord1, coord2)) == distance
 
     def test_find_location(self):
-        assert utils.find_location(50.92, 6.36) == ((50.92, 6.36), 'Juelich')
-        assert utils.find_location(50.9200002, 6.36) == ((50.92, 6.36), 'Juelich')
+        assert coordinate.find_location(50.92, 6.36) == ((50.92, 6.36), 'Juelich')
+        assert coordinate.find_location(50.9200002, 6.36) == ((50.92, 6.36), 'Juelich')
 
 
 class TestProjections(object):
     def test_get_projection_params(self):
-        assert utils.get_projection_params("epsg:4839") == {'basemap': {'epsg': '4839'}, 'bbox': 'meter(10.5,51)'}
+        assert coordinate.get_projection_params("epsg:4839") == {'basemap': {'epsg': '4839'}, 'bbox': 'meter(10.5,51)'}
         with pytest.raises(ValueError):
-            utils.get_projection_params('auto2:42005')
+            coordinate.get_projection_params('auto2:42005')
         with pytest.raises(ValueError):
-            utils.get_projection_params('auto:42001')
+            coordinate.get_projection_params('auto:42001')
         with pytest.raises(ValueError):
-            utils.get_projection_params('crs:84')
+            coordinate.get_projection_params('crs:84')
 
 
 class TestTimes(object):
@@ -215,20 +219,20 @@ class TestTimes(object):
     """
 
     def test_datetime_to_jsec(self):
-        assert utils.datetime_to_jsec(datetime.datetime(2000, 2, 1, 0, 0, 0, 0)) == 2678400.0
-        assert utils.datetime_to_jsec(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)) == 0
-        assert utils.datetime_to_jsec(datetime.datetime(1995, 1, 1, 0, 0, 0, 0)) == -157766400.0
+        assert time.datetime_to_jsec(datetime.datetime(2000, 2, 1, 0, 0, 0, 0)) == 2678400.0
+        assert time.datetime_to_jsec(datetime.datetime(2000, 1, 1, 0, 0, 0, 0)) == 0
+        assert time.datetime_to_jsec(datetime.datetime(1995, 1, 1, 0, 0, 0, 0)) == -157766400.0
 
     def test_jsec_to_datetime(self):
-        assert utils.jsec_to_datetime(0) == datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
-        assert utils.jsec_to_datetime(3600) == datetime.datetime(2000, 1, 1, 1, 0, 0, 0)
-        assert utils.jsec_to_datetime(-157766400.0) == datetime.datetime(1995, 1, 1, 0, 0, 0, 0)
+        assert time.jsec_to_datetime(0) == datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
+        assert time.jsec_to_datetime(3600) == datetime.datetime(2000, 1, 1, 1, 0, 0, 0)
+        assert time.jsec_to_datetime(-157766400.0) == datetime.datetime(1995, 1, 1, 0, 0, 0, 0)
 
     def test_compute_hour_of_day(self):
-        assert utils.compute_hour_of_day(0) == 0
-        assert utils.compute_hour_of_day(86400) == 0
-        assert utils.compute_hour_of_day(3600) == 1
-        assert utils.compute_hour_of_day(82800) == 23
+        assert time.compute_hour_of_day(0) == 0
+        assert time.compute_hour_of_day(86400) == 0
+        assert time.compute_hour_of_day(3600) == 1
+        assert time.compute_hour_of_day(82800) == 23
 
 
 class TestAngles(object):
@@ -237,26 +241,26 @@ class TestAngles(object):
     """
 
     def test_normalize_angle(self):
-        assert utils.fix_angle(0) == 0
-        assert utils.fix_angle(180) == 180
-        assert utils.fix_angle(270) == 270
-        assert utils.fix_angle(-90) == 270
-        assert utils.fix_angle(-180) == 180
-        assert utils.fix_angle(-181) == 179
-        assert utils.fix_angle(420) == 60
+        assert coordinate.fix_angle(0) == 0
+        assert coordinate.fix_angle(180) == 180
+        assert coordinate.fix_angle(270) == 270
+        assert coordinate.fix_angle(-90) == 270
+        assert coordinate.fix_angle(-180) == 180
+        assert coordinate.fix_angle(-181) == 179
+        assert coordinate.fix_angle(420) == 60
 
     def test_rotate_point(self):
-        assert utils.rotate_point([0, 0], 0) == (0.0, 0.0)
-        assert utils.rotate_point([0, 0], 180) == (0.0, 0.0)
-        assert utils.rotate_point([1, 0], 0) == (1.0, 0.0)
-        assert utils.rotate_point([100, 90], 90) == (-90, 100)
+        assert coordinate.rotate_point([0, 0], 0) == (0.0, 0.0)
+        assert coordinate.rotate_point([0, 0], 180) == (0.0, 0.0)
+        assert coordinate.rotate_point([1, 0], 0) == (1.0, 0.0)
+        assert coordinate.rotate_point([100, 90], 90) == (-90, 100)
 
 
 class TestConverter(object):
     def test_convert_pressure_to_vertical_axis_measure(self):
-        assert utils.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
-        assert utils.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400
-        assert utils.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == pytest.approx(2.46618)
+        assert thermolib.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
+        assert thermolib.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400
+        assert thermolib.convert_pressure_to_vertical_axis_measure('pressure altitude', 75000) == pytest.approx(2.46618)
 
 
 class TestLatLonPoints(object):
@@ -265,9 +269,9 @@ class TestLatLonPoints(object):
         ref_lats = [0, 10]
         ref_lons = [0, 0]
 
-        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                numpoints=2, connection="linear")
+        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                     numpoints=2, connection="linear")
         assert len(lats) == len(ref_lats)
         assert all(lats == ref_lats)
         assert len(lons) == len(ref_lons)
@@ -275,9 +279,9 @@ class TestLatLonPoints(object):
         assert len(times) == len(ref_times)
         assert all(times == ref_times)
 
-        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                numpoints=3, connection="linear")
+        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                     numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
         assert len(times) == 3
@@ -285,9 +289,9 @@ class TestLatLonPoints(object):
 
         ref_lats = [0, 0]
         ref_lons = [0, 10]
-        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                numpoints=3, connection="linear")
+        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                     numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
         assert len(times) == 3
@@ -295,9 +299,9 @@ class TestLatLonPoints(object):
         assert times[1] - times[0] == times[2] - times[1]
 
         ref_times = [datetime.datetime(2012, 7, 12, 10, 30), datetime.datetime(2012, 7, 12, 10, 30)]
-        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                numpoints=3, connection="linear")
+        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                     numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
         assert len(times) == 3
@@ -310,9 +314,9 @@ class TestLatLonPoints(object):
         ref_lats = [0, 10]
         ref_lons = [0, 0]
 
-        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                numpoints=2, connection="greatcircle")
+        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                     numpoints=2, connection="greatcircle")
         assert len(lats) == len(ref_lats)
         assert all(lats == ref_lats)
         assert len(lons) == len(ref_lons)
@@ -320,9 +324,9 @@ class TestLatLonPoints(object):
         assert len(times) == len(ref_times)
         assert all(times == ref_times)
 
-        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                numpoints=3, connection="linear")
+        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                     numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
         assert len(times) == 3
@@ -330,9 +334,9 @@ class TestLatLonPoints(object):
 
         ref_lats = [0, 0]
         ref_lons = [0, 10]
-        lats, lons, times = utils.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                numpoints=3, connection="linear")
+        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
+                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
+                                                     numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
         assert len(times) == 3
@@ -345,32 +349,32 @@ def test_pathpoints():
     p2 = [10, 10, datetime.datetime(2012, 7, 1, 10, 40)]
     p3 = [-20, 20, datetime.datetime(2012, 7, 1, 10, 40)]
 
-    result = utils.path_points([p1, p1], 100, "linear")
+    result = coordinate.path_points([p1, p1], 100, "linear")
     assert all(len(_x) == 100 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p1[i] for i in range(3))
 
-    result = utils.path_points([p1, p1], 100, "greatcircle")
+    result = coordinate.path_points([p1, p1], 100, "greatcircle")
     assert all(len(_x) == 100 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p1[i] for i in range(3))
 
-    result = utils.path_points([p1, p2], 200, "linear")
+    result = coordinate.path_points([p1, p2], 200, "linear")
     assert all(len(_x) == 200 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p2[i] for i in range(3))
 
-    result = utils.path_points([p1, p2], 200, "greatcircle")
+    result = coordinate.path_points([p1, p2], 200, "greatcircle")
     assert all(len(_x) == 200 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p2[i] for i in range(3))
 
-    result = utils.path_points([p1, p2, p3], 100, "linear")
+    result = coordinate.path_points([p1, p2, p3], 100, "linear")
     assert all(len(_x) == 100 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p3[i] for i in range(3))
 
-    result = utils.path_points([p1, p2, p3], 100, "greatcircle")
+    result = coordinate.path_points([p1, p2, p3], 100, "greatcircle")
     assert all(len(_x) == 100 for _x in result)
     assert all(result[i][0] == p1[i] for i in range(3))
     assert all(result[i][-1] == p3[i] for i in range(3))
