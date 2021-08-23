@@ -308,7 +308,6 @@ Save a flight track to name it.</string>
      <property name="title">
       <string>Project Properties</string>
      </property>
-     <addaction name="actionEditProject"/>
      <addaction name="actionDeleteProject"/>
     </widget>
     <addaction name="actionChat"/>
@@ -430,11 +429,6 @@ Save a flight track to name it.</string>
   <action name="actionMSColabHelp">
    <property name="text">
     <string>&amp;MSColab</string>
-   </property>
-  </action>
-  <action name="actionEditProject">
-   <property name="text">
-    <string>&amp;Edit Project</string>
    </property>
   </action>
   <action name="actionDeleteProject">
