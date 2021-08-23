@@ -315,7 +315,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             icon = QtGui.QIcon(icons("64x64", "bin.png"))
             header.setIcon(0, icon)
 
-    def add_multilayer(self, name, wms):
+    def add_multilayer(self, name, wms, auto_select=False):
         """
         Adds a layer to the multilayer list, with the wms url as a parent
         """
@@ -370,7 +370,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 widget.setDisabled(True)
                 return
 
-            if not self.current_layer:
+            if not self.current_layer or auto_select:
                 self.current_layer = widget
                 self.listLayers.setCurrentItem(widget)
 
