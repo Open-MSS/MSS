@@ -215,7 +215,7 @@ class WMSServer(object):
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
     def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
-                         all_plots=False, url_prefix=""):
+                         all_plots=False, url_prefix="", levels=""):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
@@ -303,14 +303,18 @@ class WMSServer(object):
                                                                     level=elevation)
                                     bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
                                             max(plot_driver.lon_data), max(plot_driver.lat_data)]
-                                    # Create square bbox for better images
-                                    # if abs(bbox[0] - bbox[2]) > abs(bbox[1] - bbox[3]):
-                                    #     bbox[2] = bbox[0] + abs(bbox[1] - bbox[3])
-                                    # else:
-                                    #     bbox[3] = bbox[1] + abs(bbox[0] - bbox[2])
                                     plot_driver.update_plot_parameters(bbox=bbox)
-                                add_image(plot_driver.plot(), plot_object, generate_code, sphinx, url_prefix=url_prefix,
-                                          dataset=dataset if multiple_datasets else "")
+
+                                    for level in [float(elev) for elev in
+                                                  (levels.split(",") if (levels != "all" and levels != "") else
+                                                  elevations if levels == "all" else [elevation])]:
+                                        plot_driver.update_plot_parameters(level=level)
+                                        add_image(plot_driver.plot(), plot_object, generate_code, sphinx,
+                                                  url_prefix=url_prefix, dataset=dataset if multiple_datasets else "",
+                                                  level=str(level))
+                                    continue
+                                add_image(plot_driver.plot(), plot_object, generate_code, sphinx,
+                                          url_prefix=url_prefix, dataset=dataset if multiple_datasets else "")
                             else:
                                 # Plot already exists, skip generation
                                 add_image(None, plot_object, generate_code, sphinx, url_prefix=url_prefix,

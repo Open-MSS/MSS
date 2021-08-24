@@ -55,6 +55,8 @@ def main():
                          help="Deletes all plots and corresponding code")
     gallery.add_argument("--refresh", action="store_true", default=False,
                          help="Deletes all plots and regenerates them, a mix of --clear and --create")
+    gallery.add_argument("--levels", default="", help="A comma-separated list of all levels visible on the gallery. "
+                                                      "Use \"all\" to include all levels.")
     gallery.add_argument("--show-code", action="store_true", default=False,
                          help="Generates plots of all layers not already present, "
                               "and generates code snippets for each plot when clicking on the image")
@@ -88,7 +90,7 @@ def main():
     if args.action == "gallery":
         create = args.create or args.refresh
         clear = args.clear or args.refresh
-        server.generate_gallery(create, clear, args.show_code, url_prefix=args.url_prefix)
+        server.generate_gallery(create, clear, args.show_code, url_prefix=args.url_prefix, levels=args.levels)
         logging.info("Gallery generation done.")
         sys.exit()
 

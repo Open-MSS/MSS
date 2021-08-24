@@ -218,6 +218,13 @@ function openTab(evt, tabName) {
     evt.currentTarget.className += " active";
   }
 }
+
+function changeImage(select){
+    var id = select.id.split("level-").pop();
+    var value = select.value;
+    document.getElementById(id).src = document.getElementById(id).src.replace(document.getElementById(id).src.split("-")
+    .pop(), value+".png");
+}
 </script>
 </body>
 </html>
@@ -230,10 +237,11 @@ def image_md(image_location, caption="", link=None, tooltip=""):
     """
     image = f"""
     <a href="{link}">
-     <img src="{image_location}" alt="{tooltip}" style="width:100%"/>
-    </a>""" if link else f"""<img src="{image_location}" style="width: 100 % "/>"""
+     <img src="{image_location}" alt="{tooltip}" style="width:100%" id="{"".join(image_location.split("-")[:-1])}"/>
+    </a>""" if link else f"""<img src="{image_location}" style="width: 100 % " 
+    id="{"".join(image_location.split("-")[:-1])}"/>"""
     return f"""<div class="gallery">
-                 {image}
+                 {image} <!-- Options -->
                  <div class="gtooltip">
                   {caption}<span class="gtooltiptext">{tooltip}</span>
                  </div>
@@ -491,7 +499,7 @@ def create_linear_plot(xml, file_location):
     plt.close(fig)
 
 
-def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="", dataset=None):
+def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="", dataset=None, level=None):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
@@ -509,21 +517,37 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
         if not os.path.exists(os.path.join(location, "plots")):
             os.mkdir(os.path.join(location, "plots"))
         if l_type == "Linear":
-            create_linear_plot(etree.fromstring(plot), os.path.join(location, "plots", l_type + "_" + dataset +
-                                                                    plot_object.name + ".png"))
+            create_linear_plot(etree.fromstring(plot), os.path.join(location, "plots", f"{l_type}_{dataset}"
+                                                                                       f"{plot_object.name}-"
+                                                                                       f"{level}.png"))
         else:
             with Image.open(io.BytesIO(plot)) as image:
-                image.save(os.path.join(location, "plots", l_type + "_" + dataset + plot_object.name + ".png"),
+                image.save(os.path.join(location, "plots", f"{l_type}_{dataset}{plot_object.name}-{level}.png"),
                            format="PNG")
 
-    img_path = f"../_images/{l_type}_{dataset}{plot_object.name}.png" if sphinx \
-        else f"{url_prefix}/static/plots/{l_type}_{dataset}{plot_object.name}.png"
+    img_path = f"../_images/{l_type}_{dataset}{plot_object.name}-{level}.png" if sphinx \
+        else f"{url_prefix}/static/plots/{l_type}_{dataset}{plot_object.name}-{level}.png"
     code_path = f"code/{l_type}_{dataset}{plot_object.name}.html" if sphinx \
         else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{dataset}{plot_object.name}.md"
 
-    if generate_code:
-        write_plot_details(plot_object, l_type, sphinx, img_path, code_path, dataset)
-
-    plots[l_type].append(image_md(img_path, plot_object.name, code_path if generate_code else None,
-                                  f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
-                                                            if plot_object.abstract else "")))
+    id = img_path.split(f"-{level}")[0]
+    if not any([id in html for html in plots[l_type]]):
+        plots[l_type].append(image_md(img_path, plot_object.name, code_path if generate_code else None,
+                                      f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
+                                                                if plot_object.abstract else "")))
+        if generate_code:
+            write_plot_details(plot_object, l_type, sphinx, img_path, code_path, dataset)
+    else:
+        for i, html in enumerate(plots[l_type]):
+            if id in html:
+                if "</select>" not in html:
+                    plots[l_type][i] = plots[l_type][i].replace("<!-- Options -->", f'Level: <select name="levels" '
+                                                                                    f'id="level-{id}" '
+                                                                                    f'onchange="changeImage(this)">'
+                                                                                    f'</select><br>')
+                    first_level = html.split(".png")[0].split("-")[-1]
+                    plots[l_type][i] = \
+                        plots[l_type][i].replace("</select>", f"<option value=\"{first_level}\">"
+                                                              f"{first_level}</option></select>")
+                plots[l_type][i] = \
+                    plots[l_type][i].replace("</select>", f"<option value=\"{level}\">{level}</option></select>")
