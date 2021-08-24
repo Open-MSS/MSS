@@ -1,0 +1,33 @@
+Hexagon control can be used to place six waypoints around a centre in a hexagonal manner. This can be used  to place the waypoints more precisely.
+
+Opening MSS
+
+
+Top view windows opens.
+
+We select the global (cyl) for the world map.
+
+
+Zooming in for the required region.
+
+
+Assuming Delhi as the center we are to place waypoints around it in a hexagonal fashion. 
+
+
+
+Opening table view. It contains the latitudinal and longitudinal locations of waypoints. 
+
+
+Doing this manually will not be perfect and hence, hexagon control!
+
+
+Clicking on (Select to open control), and selecting (hexagonal control)
+
+
+This screen can be  used to place the latitude and longitude of center, and radius of hexagon. 
+
+
+We can see the changes in the top view. 
+
+
+Angle of first point can also be changed, which is by default set at 0.

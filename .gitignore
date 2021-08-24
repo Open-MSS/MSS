@@ -1,6 +1,7 @@
 .cache/
 .idea/
 .vscode/
+.DS_Store
 *.pyc
 *.swp
 *.patch

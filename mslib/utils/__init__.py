@@ -28,13 +28,11 @@
 
 import datetime
 import isodate
-import json
 import re as regex
 import logging
 import netCDF4 as nc
 import numpy as np
 import os
-from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import subprocess
@@ -51,7 +49,6 @@ except ImportError:
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.utils.units import units as _units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui.constants import MSS_CONFIG_PATH
@@ -91,62 +88,6 @@ class FatalUserError(Exception):
         logging.debug("%s", error_string)
 
 
-def read_config_file(config_file=None):
-    """
-    reads a config file
-
-    Args:
-        config_file: name of config file
-
-    Returns: a dictionary
-    """
-    user_config = {}
-    if config_file is not None:
-        _dirname, _name = os.path.split(config_file)
-        _fs = open_fs(_dirname)
-        try:
-            with _fs.open(_name, 'r') as source:
-                user_config = json.load(source)
-        except errors.ResourceNotFound:
-            error_message = f"MSS config File '{config_file}' not found"
-            raise FatalUserError(error_message)
-        except ValueError as ex:
-            error_message = f"MSS config File '{config_file}' has a syntax error:\n\n'{ex}'"
-            raise FatalUserError(error_message)
-    return user_config
-
-
-def config_loader(config_file=None, dataset=None):
-    """
-    Function for loading json config data
-
-    Args:
-        config_file: json file, parameters for initializing mss,
-        dataset: section to pull from json file
-
-    Returns: a the dataset value or the config as dictionary
-
-    """
-    default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
-    if dataset is not None and dataset not in default_config:
-        raise KeyError(f"requested dataset '{dataset}' not in defaults!")
-    if config_file is None:
-        config_file = constants.CACHED_CONFIG_FILE
-    if config_file is None:
-        logging.info(
-            'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html')
-        if dataset is None:
-            return default_config
-        else:
-            return default_config[dataset]
-    user_config = read_config_file(config_file)
-    if dataset is not None:
-        return user_config.get(dataset, default_config[dataset])
-    else:
-        default_config.update(user_config)
-        return default_config
-
-
 def get_distance(coord0, coord1):
     """
     Computes the distance between two points on the Earth surface
@@ -169,6 +110,7 @@ def find_location(lat, lon, tolerance=5):
     :param tolerance: maximum distance between location and coordinates in km
     :return: None or lat/lon, name
     """
+    from mslib.utils.config import config_loader
     locations = config_loader(dataset='locations')
     distances = sorted([(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
                         for loc, (loc_lat, loc_lon) in locations.items()])
