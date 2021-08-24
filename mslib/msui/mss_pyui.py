@@ -353,6 +353,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
         self.actionShortcuts.triggered.connect(self.show_shortcuts)
         self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+        self.actionSearch.triggered.connect(lambda: self.show_shortcuts(True))
+        self.actionSearch.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
         # Config
         self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
@@ -850,14 +852,26 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
-    def show_shortcuts(self):
+    def show_shortcuts(self, search_mode=False):
         """Show the shortcuts dialog to the user.
         """
         self.shortcuts_dlg = MSS_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
-        self.shortcuts_dlg.setModal(True)
+
+        # In case the dialog gets deleted by QT, recreate it
+        try:
+            self.shortcuts_dlg.setModal(True)
+        except RuntimeError:
+            self.shortcuts_dlg = MSS_ShortcutsDialog()
+
         self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
         self.shortcuts_dlg.fill_list()
         self.shortcuts_dlg.show()
+        if search_mode:
+            self.shortcuts_dlg.cbDisplayType.setCurrentIndex(1)
+            self.shortcuts_dlg.leShortcutFilter.setText("")
+            self.shortcuts_dlg.cbAdvanced.setCheckState(2)
+            self.shortcuts_dlg.cbNoShortcut.setCheckState(2)
+            self.shortcuts_dlg.leShortcutFilter.setFocus()
 
     def status(self):
         if constants.CACHED_CONFIG_FILE is None:

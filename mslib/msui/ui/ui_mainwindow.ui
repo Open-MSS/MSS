@@ -137,6 +137,7 @@ Save a flight track to name it.</string>
     <addaction name="actionAboutMSUI"/>
     <addaction name="actionShortcuts"/>
     <addaction name="actionUpdater"/>
+    <addaction name="actionSearch"/>
    </widget>
    <widget class="QMenu" name="menu_Mscolab">
     <property name="title">
@@ -285,6 +286,17 @@ Save a flight track to name it.</string>
    </property>
    <property name="toolTip">
     <string>Open the Updater Dialog</string>
+   </property>
+  </action>
+  <action name="actionSearch">
+   <property name="text">
+    <string>Search</string>
+   </property>
+   <property name="toolTip">
+    <string>Search for interactive text in the UI</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
    </property>
   </action>
  </widget>
