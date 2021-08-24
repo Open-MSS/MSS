@@ -91,7 +91,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Choose FTML File (Optional)</string>
+    <string>Choose Flighttrack File (Optional)</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
