@@ -1,6 +1,5 @@
 .. _development:
 
-===========
 Development
 ===========
 
@@ -133,6 +132,7 @@ Installing dependencies
 -----------------------
 
 MSS is based on the software of the conda-forge channel located, so we have to add this channel to the default::
+
 
   $ conda config --add channels conda-forge
 
