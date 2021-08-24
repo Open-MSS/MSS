@@ -63,7 +63,7 @@ from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils import parse_iso_datetime
 from mslib.index import app_loader
-from mslib.mswms.gallery_builder import add_image, write_html, write_doc_index, STATIC_LOCATION, DOCS_LOCATION
+from mslib.mswms.gallery_builder import add_image, write_html, add_levels, write_doc_index, STATIC_LOCATION, DOCS_LOCATION
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -266,59 +266,63 @@ class WMSServer(object):
                             "Side" if driver == self.vsec_drivers else "Top"
 
                         try:
-                            if not os.path.exists(os.path.join(location, "plots",
-                                                               f"{l_type}_{dataset if multiple_datasets else ''}"
-                                                               f"{plot_object.name}.png")):
-                                # Plot doesn't already exist, generate it
-                                file_types = [field[0] for field in plot_object.required_datafields
-                                              if field[0] != "sfc"]
-                                file_type = file_types[0] if file_types else "sfc"
-                                init_time = plot_driver.get_init_times()[-1]
-                                valid_time = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
-                                                                         file_type, init_time)[-1]
-                                style = plot_object.styles[0][0] if plot_object.styles else None
-                                kwargs = {"plot_object": plot_object,
-                                          "init_time": init_time,
-                                          "valid_time": valid_time}
-                                if driver == self.lsec_drivers:
-                                    plot_driver.set_plot_parameters(**kwargs, lsec_path=[[0, 0, 20000], [1, 1, 20000]],
-                                                                    lsec_numpoints=201, lsec_path_connection="linear")
-                                    path = [[min(plot_driver.lat_data), min(plot_driver.lon_data), 20000],
-                                            [max(plot_driver.lat_data), max(plot_driver.lon_data), 20000]]
-                                    plot_driver.update_plot_parameters(lsec_path=path)
-                                elif driver == self.vsec_drivers:
-                                    plot_driver.set_plot_parameters(**kwargs, vsec_path=[[0, 0], [1, 1]],
-                                                                    vsec_numpoints=201, figsize=[800, 600],
-                                                                    vsec_path_connection="linear", style=style,
-                                                                    noframe=False, bbox=[101, 1050, 10, 180])
-                                    path = [[min(plot_driver.lat_data), min(plot_driver.lon_data)],
-                                            [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
-                                    plot_driver.update_plot_parameters(vsec_path=path)
-                                elif driver == self.hsec_drivers:
-                                    elevations = plot_object.get_elevations()
-                                    elevation = float(elevations[len(elevations) // 2]) if len(elevations) > 0 else None
-                                    plot_driver.set_plot_parameters(**kwargs, noframe=False, figsize=[800, 600],
-                                                                    crs="EPSG:4326", style=style,
-                                                                    bbox=[-15, 35, 30, 65],
-                                                                    level=elevation)
-                                    bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
-                                            max(plot_driver.lon_data), max(plot_driver.lat_data)]
-                                    plot_driver.update_plot_parameters(bbox=bbox)
+                            file_types = [field[0] for field in plot_object.required_datafields
+                                          if field[0] != "sfc"]
+                            file_type = file_types[0] if file_types else "sfc"
+                            init_time = plot_driver.get_init_times()[-1]
+                            valid_time = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
+                                                                     file_type, init_time)[-1]
+                            style = plot_object.styles[0][0] if plot_object.styles else None
+                            kwargs = {"plot_object": plot_object,
+                                      "init_time": init_time,
+                                      "valid_time": valid_time}
+                            exists = os.path.exists(os.path.join(location, "plots",
+                                                    f"{l_type}_{dataset if multiple_datasets else ''}"
+                                                    f"{plot_object.name}-None.png"))
+                            if driver == self.lsec_drivers and not exists:
+                                plot_driver.set_plot_parameters(**kwargs, lsec_path=[[0, 0, 20000], [1, 1, 20000]],
+                                                                lsec_numpoints=201, lsec_path_connection="linear")
+                                path = [[min(plot_driver.lat_data), min(plot_driver.lon_data), 20000],
+                                        [max(plot_driver.lat_data), max(plot_driver.lon_data), 20000]]
+                                plot_driver.update_plot_parameters(lsec_path=path)
+                            elif driver == self.vsec_drivers and not exists:
+                                plot_driver.set_plot_parameters(**kwargs, vsec_path=[[0, 0], [1, 1]],
+                                                                vsec_numpoints=201, figsize=[800, 600],
+                                                                vsec_path_connection="linear", style=style,
+                                                                noframe=False, bbox=[101, 1050, 10, 180])
+                                path = [[min(plot_driver.lat_data), min(plot_driver.lon_data)],
+                                        [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
+                                plot_driver.update_plot_parameters(vsec_path=path)
+                            elif driver == self.hsec_drivers:
+                                elevations = plot_object.get_elevations()
+                                elevation = float(elevations[len(elevations) // 2]) if len(elevations) > 0 else None
+                                plot_driver.set_plot_parameters(**kwargs, noframe=False, figsize=[800, 600],
+                                                                crs="EPSG:4326", style=style,
+                                                                bbox=[-15, 35, 30, 65],
+                                                                level=elevation)
+                                bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
+                                        max(plot_driver.lon_data), max(plot_driver.lat_data)]
+                                vert_units = plot_driver.vert_units
+                                plot_driver.update_plot_parameters(bbox=bbox)
+                                rendered_levels = [float(elev) for elev in
+                                                   (levels.split(",") if (levels != "all" and levels != "") else
+                                                    elevations if levels == "all" else [elevation])]
 
-                                    for level in [float(elev) for elev in
-                                                  (levels.split(",") if (levels != "all" and levels != "") else
-                                                  elevations if levels == "all" else [elevation])]:
-                                        plot_driver.update_plot_parameters(level=level)
-                                        add_image(plot_driver.plot(), plot_object, generate_code, sphinx,
-                                                  url_prefix=url_prefix, dataset=dataset if multiple_datasets else "",
-                                                  level=str(level))
-                                    continue
-                                add_image(plot_driver.plot(), plot_object, generate_code, sphinx,
-                                          url_prefix=url_prefix, dataset=dataset if multiple_datasets else "")
-                            else:
-                                # Plot already exists, skip generation
-                                add_image(None, plot_object, generate_code, sphinx, url_prefix=url_prefix,
-                                          dataset=dataset if multiple_datasets else "")
+                                for level in rendered_levels:
+                                    plot_driver.update_plot_parameters(level=level)
+                                    exists = os.path.exists(os.path.join(location, "plots",
+                                                                         f"{l_type}_"
+                                                                         f"{dataset if multiple_datasets else ''}"
+                                                                         f"{plot_object.name}-{level}{vert_units}.png"))
+                                    add_image(None if exists else plot_driver.plot(), plot_object, generate_code,
+                                              sphinx, url_prefix=url_prefix,
+                                              dataset=dataset if multiple_datasets else "", level=str(level) +
+                                                                                        vert_units)
+                                add_levels([f"{level}{vert_units}" for level in rendered_levels])
+                                continue
+
+                            add_image(None if exists else plot_driver.plot(), plot_object, generate_code, sphinx,
+                                      url_prefix=url_prefix, dataset=dataset if multiple_datasets else "")
 
                         except Exception as e:
                             traceback.print_exc()

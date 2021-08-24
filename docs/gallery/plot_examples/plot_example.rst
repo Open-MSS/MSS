@@ -8,7 +8,7 @@ This is an example of a Top-View plot class
 
 It produces the following plot, filled with a temperature colourmap and geopotential_height contour lines
 
-.. image:: ../plots/Top_HSTemplate.png
+.. image:: ../plots/Top_HSTemplate-None.png
 
 ----
 

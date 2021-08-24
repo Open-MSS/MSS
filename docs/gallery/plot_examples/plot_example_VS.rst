@@ -8,7 +8,7 @@ This is an example of a Side-View plot class
 
 It produces the following plot, filled with a temperature colourmap and contour lines
 
-.. image:: ../plots/Side_VSTemplate.png
+.. image:: ../plots/Side_VSTemplate-None.png
 
 ----
 
