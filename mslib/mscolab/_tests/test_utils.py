@@ -23,22 +23,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+from flask_testing import TestCase
 import os
-import sys
 import pytest
+import json
+
 from fs.tempfs import TempFS
-
-from PyQt5 import QtWidgets, QtTest
-
-from mslib.mscolab.models import User, MessageType
-from mslib.mscolab.utils import get_recent_pid, get_session_id, get_message_dict, create_files, os_fs_create_dir
 from mslib.mscolab.conf import mscolab_settings
-from mslib.msui.mscolab import MSSMscolabWindow
-from mslib._tests.utils import (mscolab_start_server, mscolab_create_project, mscolab_register_and_login,
-                                mscolab_delete_user, mscolab_delete_all_projects)
-from mslib.mscolab.server import register_user
-
-PORTS = list(range(9561, 9580))
+from mslib.mscolab.models import db, Project, MessageType
+from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
+from mslib.mscolab.server import APP
+from mslib.mscolab.seed import add_user, get_user
+from mslib.mscolab.utils import get_recent_pid, get_session_id, get_message_dict, create_files, os_fs_create_dir
+from mslib.mscolab.sockets_manager import setup_managers
 
 
 class Message():
@@ -59,51 +56,55 @@ class Message():
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_Utils_with_Projects(object):
-    def setup(self):
-        self.process, self.url, self.app, self.sio, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+class Test_Utils(TestCase):
+    render_templates = False
 
-        with self.app.app_context():
-            response = mscolab_register_and_login(self.app, self.url, 'a1a@a1a', 'a1a', 'a1a')
-            _ = mscolab_create_project(self.app, self.url, response, path='f3', description='f3 test example')
-            self.user = User.query.filter_by(emailid="a1a@a1a").first()
-            self.test_p_id = get_recent_pid(self.fm, self.user)
-            self.test_sid = 25
-            socket_storage = {
-                's_id': self.test_sid,
-                'u_id': self.user.id
-            }
-            self.sockets = [socket_storage]
+    def create_app(self):
+        app = APP
+        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        app.config["TESTING"] = True
+        app.config['LIVESERVER_TIMEOUT'] = 10
+        app.config['LIVESERVER_PORT'] = 0
+        return app
 
-    def teardown(self):
-        with self.app.app_context():
-            mscolab_delete_all_projects(self.app, self.url, 'a1a@a1a', 'a1a', 'a1a')
-            mscolab_delete_user(self.app, self.url, 'a1a@a1a', 'a1a')
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+    def setUp(self):
+        handle_db_init()
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
+        socketio, cm, self.fm = setup_managers(self.app)
+
+    def tearDown(self):
+        handle_db_reset()
 
     def test_get_recent_pid(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-            assert p_id == self.test_p_id
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
+        with self.app.test_client() as test_client:
+            db.init_app(self.app)
+            user = get_user(self.userdata[0])
+            anotheruser = get_user(self.anotheruserdata[0])
+            project, token = self._create_project(test_client, self.userdata)
+            p_id = get_recent_pid(self.fm, user)
+            assert p_id == project.id
+            p_id = get_recent_pid(self.fm, anotheruser)
+            assert p_id is None
 
     def test_get_session_id(self):
-        with self.app.app_context():
-            s_id = get_session_id(self.sockets, self.user.id)
-            assert s_id == self.test_sid
+        sockets = [{"u_id": 5, "s_id": 100}]
+        assert get_session_id(sockets, 5) == 100
 
     def test_get_message_dict(self):
         result = get_message_dict(Message())
         assert result["message_type"] == MessageType.TEXT
+
+    def test_os_fs_create_dir(self):
+        _fs = TempFS(identifier="mss")
+        _dir = _fs.getsyspath("")
+        os_fs_create_dir(_dir)
+        assert os.path.exists(_dir)
 
     def test_create_file(self):
         create_files()
@@ -111,37 +112,16 @@ class Test_Utils_with_Projects(object):
         assert os.path.exists(mscolab_settings.MSCOLAB_DATA_DIR)
         assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
 
-
-class Test_Utils_No_Project(object):
-    def setup(self):
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
-        QtTest.QTest.qWait(100)
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
-        with self.app.app_context():
-            register_user('sdf@s.com', 'sdf', 'sdf')
-            self.user = User.query.filter_by(emailid="sdf@s.com").first()
-
-    def teardown(self):
-        with self.app.app_context():
-            mscolab_delete_user(self.app, self.url, 'sdf@s.com', 'sdf')
-        if self.window.version_window:
-            self.window.version_window.close()
-        if self.window.conn:
-            self.window.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
-
-    def test_get_recent_pid(self):
-        with self.app.app_context():
-            p_id = get_recent_pid(self.fm, self.user)
-            assert p_id is None
-
-
-def test_os_fs_create_dir():
-    _fs = TempFS(identifier="mss")
-    _dir = _fs.getsyspath("")
-    os_fs_create_dir(_dir)
-    assert os.path.exists(_dir)
+    def _create_project(self, test_client, userdata=None, path="firstflight", description="simple test"):
+        if userdata is None:
+            userdata = self.userdata
+        response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
+        data = json.loads(response.data.decode('utf-8'))
+        token = data["token"]
+        response = test_client.post('/create_project', data={"token": token,
+                                                             "path": path,
+                                                             "description": description})
+        assert response.status_code == 200
+        assert response.data.decode('utf-8') == "True"
+        project = Project.query.filter_by(path=path).first()
+        return project, token

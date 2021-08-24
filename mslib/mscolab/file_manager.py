@@ -78,6 +78,7 @@ class FileManager(object):
         p_id: project id
         user: authenticated user
         """
+        # ToDo check need for user
         project = Project.query.filter_by(id=p_id).first()
         project = {
             "id": project.id,
@@ -196,6 +197,7 @@ class FileManager(object):
         content: content of the file to be saved
         # ToDo save change in schema
         """
+        # ToDo use comment
         project = Project.query.filter_by(id=p_id).first()
         if not project:
             return False

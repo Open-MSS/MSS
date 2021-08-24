@@ -28,13 +28,11 @@
 
 import datetime
 import isodate
-import json
 import re as regex
 import logging
 import netCDF4 as nc
 import numpy as np
 import os
-from fs import open_fs, errors
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 import subprocess
@@ -51,10 +49,22 @@ except ImportError:
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from mslib.msui import constants, MissionSupportSystemDefaultConfig
 from mslib.utils.units import units as _units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui.constants import MSS_CONFIG_PATH
+
+
+def subprocess_startupinfo():
+    """
+    config options to hide windows terminals on subprocess call
+    """
+    startupinfo = None
+    if os.name == 'nt':
+        # thx to https://gist.github.com/nitely/3862493
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
+    return startupinfo
 
 
 def parse_iso_datetime(string):
@@ -76,62 +86,6 @@ def parse_iso_duration(string):
 class FatalUserError(Exception):
     def __init__(self, error_string):
         logging.debug("%s", error_string)
-
-
-def read_config_file(config_file=None):
-    """
-    reads a config file
-
-    Args:
-        config_file: name of config file
-
-    Returns: a dictionary
-    """
-    user_config = {}
-    if config_file is not None:
-        _dirname, _name = os.path.split(config_file)
-        _fs = open_fs(_dirname)
-        try:
-            with _fs.open(_name, 'r') as source:
-                user_config = json.load(source)
-        except errors.ResourceNotFound:
-            error_message = f"MSS config File '{config_file}' not found"
-            raise FatalUserError(error_message)
-        except ValueError as ex:
-            error_message = f"MSS config File '{config_file}' has a syntax error:\n\n'{ex}'"
-            raise FatalUserError(error_message)
-    return user_config
-
-
-def config_loader(config_file=None, dataset=None):
-    """
-    Function for loading json config data
-
-    Args:
-        config_file: json file, parameters for initializing mss,
-        dataset: section to pull from json file
-
-    Returns: a the dataset value or the config as dictionary
-
-    """
-    default_config = dict(MissionSupportSystemDefaultConfig.__dict__)
-    if dataset is not None and dataset not in default_config:
-        raise KeyError(f"requested dataset '{dataset}' not in defaults!")
-    if config_file is None:
-        config_file = constants.CACHED_CONFIG_FILE
-    if config_file is None:
-        logging.info(
-            'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html')
-        if dataset is None:
-            return default_config
-        else:
-            return default_config[dataset]
-    user_config = read_config_file(config_file)
-    if dataset is not None:
-        return user_config.get(dataset, default_config[dataset])
-    else:
-        default_config.update(user_config)
-        return default_config
 
 
 def get_distance(coord0, coord1):
@@ -156,6 +110,7 @@ def find_location(lat, lon, tolerance=5):
     :param tolerance: maximum distance between location and coordinates in km
     :return: None or lat/lon, name
     """
+    from mslib.utils.config import config_loader
     locations = config_loader(dataset='locations')
     distances = sorted([(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
                         for loc, (loc_lat, loc_lon) in locations.items()])
@@ -762,7 +717,8 @@ class Updater(QtCore.QObject):
 
         # Check if mamba is installed
         try:
-            subprocess.run(["mamba"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            subprocess.run(["mamba"], startupinfo=subprocess_startupinfo(),
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             self.command = "mamba"
         except FileNotFoundError:
             pass
@@ -786,7 +742,9 @@ class Updater(QtCore.QObject):
         """
         # Don't notify on updates if mss is in a git repo, as you are most likely a developer
         try:
-            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], stdout=subprocess.PIPE,
+            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"],
+                                 startupinfo=subprocess_startupinfo(),
+                                 stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT, encoding="utf8")
             if "true" in git.stdout:
                 self.is_git_env = True
@@ -795,7 +753,8 @@ class Updater(QtCore.QObject):
 
         # Return if conda is not installed
         try:
-            subprocess.run(["conda"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            subprocess.run(["conda"], startupinfo=subprocess_startupinfo(),
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except FileNotFoundError:
             return
 
@@ -858,7 +817,11 @@ class Updater(QtCore.QObject):
         """
         Handles proper execution of conda subprocesses and logging
         """
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, encoding="utf8")
+        process = subprocess.Popen(command.split(),
+                                   startupinfo=subprocess_startupinfo(),
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.STDOUT,
+                                   encoding="utf8")
         self.on_log_update.emit(" ".join(process.args) + "\n")
 
         text = ""

@@ -28,11 +28,12 @@ import os
 import sys
 import pytest
 
-from mslib.msui.mscolab import MSSMscolabWindow
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import mscolab_start_server
+from mslib.msui import mscolab
+import mslib.msui.mss_pyui as mss_pyui
 
 
 PORTS = list(range(9571, 9590))
@@ -53,24 +54,24 @@ class Test_MscolabProject(object):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = MSSMscolabWindow(data_dir=mscolab_settings.MSCOLAB_DATA_DIR,
-                                       mscolab_server_url=self.url)
+        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
+        # connect and login to mscolab
         self._connect_to_mscolab()
         self._login()
+        # activate project and open chat window
         self._activate_project_at_index(0)
-        # activate project window here by clicking button
-        QtTest.QTest.mouseClick(self.window.chatWindowBtn, QtCore.Qt.LeftButton)
+        self.window.actionChat.trigger()
         QtWidgets.QApplication.processEvents()
-        self.chat_window = self.window.chat_window
+        self.chat_window = self.window.mscolab.chat_window
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
-        if self.window.chat_window:
-            self.window.chat_window.hide()
-        if self.window.conn:
-            self.window.conn.disconnect()
+        if self.window.mscolab.chat_window:
+            self.window.mscolab.chat_window.hide()
+        if self.window.mscolab.conn:
+            self.window.mscolab.conn.disconnect()
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -87,15 +88,16 @@ class Test_MscolabProject(object):
         self._send_message("**test message**")
         self._send_message("**test message**")
         message_index = self.chat_window.messageList.count() - 1
-        self.window.chat_window.searchMessageLineEdit.setText("test message")
+        # self.window.chat_window.searchMessageLineEdit.setText("test message")
+        self.chat_window.searchMessageLineEdit.setText("test message")
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index).isSelected() is True
-        QtTest.QTest.mouseClick(self.window.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index - 1).isSelected() is True
-        QtTest.QTest.mouseClick(self.window.chat_window.searchNextBtn, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.chat_window.searchNextBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index).isSelected() is True
 
@@ -137,23 +139,27 @@ class Test_MscolabProject(object):
             assert Message.query.filter_by(text='test edit').count() == 0
 
     def _connect_to_mscolab(self):
-        self.window.url.setEditText(self.url)
-        QtTest.QTest.mouseClick(self.window.toggleConnectionBtn, QtCore.Qt.LeftButton)
+        self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
+        self.window.mscolab.connect_window = self.connect_window
+        self.connect_window.urlCb.setEditText(self.url)
+        self.connect_window.show()
+        QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _login(self):
-        # login
-        self.window.emailid.setText('a')
-        self.window.password.setText('a')
-        QtTest.QTest.mouseClick(self.window.loginButton, QtCore.Qt.LeftButton)
+        self.connect_window.loginEmailLe.setText('a')
+        self.connect_window.loginPasswordLe.setText('a')
+        QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(500)
 
     def _activate_project_at_index(self, index):
-        item = self.window.listProjects.item(index)
-        point = self.window.listProjects.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
+        item = self.window.listProjectsMSC.item(index)
+        point = self.window.listProjectsMSC.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjects.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
     def _activate_context_menu_action(self, action_index):

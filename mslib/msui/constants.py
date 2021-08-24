@@ -51,11 +51,6 @@ MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_sett
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}
 
-CACHED_CONFIG_FILE = None
-
-if os.path.exists(MSS_SETTINGS):
-    CACHED_CONFIG_FILE = MSS_SETTINGS
-
 POSIX = {"application_destination": os.path.join(HOME, ".local/share/applications/mss{}.desktop"),
          "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/mss-logo{}.png"),
          "desktop": """[Desktop Entry]
