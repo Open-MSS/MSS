@@ -50,19 +50,22 @@ sys.path.insert(0, os.path.join(os.path.expanduser("~"), "mss"))
 
 import mslib.mswms.wms
 import mslib.mswms.gallery_builder
+import importlib
 
 # Generate template plots
 from docs.gallery.plot_examples import HS_template, VS_template
+from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
 dataset = [next(iter(mslib.mswms.wms.mss_wms_settings.data))]
 mslib.mswms.wms.mss_wms_settings.register_horizontal_layers = [(HS_template.HS_Template, dataset)]
 mslib.mswms.wms.mss_wms_settings.register_vertical_layers = [(VS_template.VS_Template, dataset)]
-mslib.mswms.wms.mss_wms_settings.register_linear_layers = []
+mslib.mswms.wms.mss_wms_settings.register_linear_layers = [(LS_DefaultStyle, dataset)]
 mslib.mswms.wms.server.__init__()
-mslib.mswms.wms.server.generate_gallery(sphinx=True, create=True, clear=True, levels="all")
-mslib.mswms.gallery_builder.plots = {"Top": [], "Side": [], "Linear": []}
+mslib.mswms.wms.server.generate_gallery(sphinx=True, create=True, clear=True, simple_naming=True)
+importlib.reload(mslib.mswms.gallery_builder)
 
 # Generate all other plots
-mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True, levels="all")
+mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True, levels="3,4,200,300",
+                                        vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
 
 # readthedocs has no past.builtins
 try:
