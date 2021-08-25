@@ -147,6 +147,16 @@ begin = """
   font-size: 17px;
 }
 
+.tab select{
+  float: right;
+  padding: 6px;
+  border: 2px solid #DDDDFF;
+  background-color: #F7F7F7;
+  margin-top: 8px;
+  margin-right: 16px;
+  font-size: 17px;
+}
+
 /* Style the tab content */
 .tabcontent {
   display: none;
@@ -202,7 +212,7 @@ div.gallery img {
   <button class="tablinks active" onclick="openTab(event, 'Top-View')">Top Views</button>
   <button class="tablinks" onclick="openTab(event, 'Side-View')">Side Views</button>
   <button class="tablinks" onclick="openTab(event, 'Linear-View')">Linear Views</button>
-  Level: <select name="levels" id="level-select" onchange="changeImages()"></select>
+  <select name="levels" id="level-select" onchange="changeImages()"></select>
   <input type="text" placeholder="Search..." id="gallery-filter" oninput="filterContent()"></input>
 </div>
 """
@@ -230,16 +240,30 @@ function openTab(evt, tabName) {
   }
 }
 
+function imageExists(image_url){
+    var http = new XMLHttpRequest();
+
+    http.open('HEAD', image_url, false);
+    http.send();
+
+    return http.status != 404;
+}
+
 function changeImages(){
     var value = document.getElementById("level-select").value;
     hrefs = document.getElementsByName("gallery-href");
     images = document.getElementsByName("gallery-image");
-    for(var image of images){
-        image.src = image.src.replace(image.src.split("-").pop(), value+".png");
-    }
-    for(var link of hrefs){
-        level = link.href.split("-").pop();
-        link.href = link.href.replace(level, value + (level.includes(".md") ? ".md" : ".html"));
+    for(var i = 0; i < images.length; i++){
+        image = images[i];
+        exists = imageExists(image.src.replace(image.src.split("-").pop(), value+".png"));
+        if(exists){
+            image.src = image.src.replace(image.src.split("-").pop(), value+".png");
+        }
+        if(hrefs.length == images.length && exists){
+            link = hrefs[i];
+            level = link.href.split("-").pop();
+            link.href = link.href.replace(level, value + (level.includes(".md") ? ".md" : ".html"));
+        }
     }
 }
 
@@ -441,7 +465,7 @@ def write_plot_details(plot_object, l_type="top", sphinx=False, image_path="", c
 
     if sphinx:
         write_plot_details_sphinx(plot_object, l_type, layer, code_path, dataset,
-                                  float(image_path.split("-")[-1].split(".png")[0]))
+                                  image_path.split("-")[-1].split(".png")[0])
         return
 
     with open(os.path.join(location, "code", code_path.split('/')[-1]), "w+") as md:
