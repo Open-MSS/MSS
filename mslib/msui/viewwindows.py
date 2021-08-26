@@ -43,7 +43,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     # views for mscolab
-    viewClosesId = QtCore.Signal(int, name="viewClosesId")
+    # viewClosesId = QtCore.Signal(int, name="viewClosesId")
 
     def __init__(self, parent=None, model=None, _id=None):
         super(MSSViewWindow, self).__init__(parent)
@@ -55,9 +55,9 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         # in proper size in derived classes!
         self.docks = []
 
-        # emit _id if not none
-        logging.debug(_id)
-        self._id = _id
+        # # emit _id if not none
+        # logging.debug(_id)
+        # self._id = _id
         # Used to force close window without the dialog popping up
         self.force_close = False
         # Flag variable to check whether tableview window exists or not.
@@ -84,9 +84,9 @@ class MSSViewWindow(QtWidgets.QMainWindow):
                                                 QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
-            if self._id is not None:
-                self.viewClosesId.emit(self._id)
-                logging.debug(self._id)
+            # if self._id is not None:
+            #     self.viewClosesId.emit(self._id)
+            #     logging.debug(self._id)
             # sets flag as False which shows tableview window had been closed.
             self.tv_window_exists = False
             self.viewCloses.emit()

@@ -27,7 +27,8 @@
 
 from mslib.msui.mss_qt import get_open_filename
 from PyQt5 import QtCore, QtWidgets
-from mslib.utils import config_loader, FatalUserError
+from mslib.utils import FatalUserError
+from mslib.utils.config import config_loader
 from mslib.msui import aircrafts
 from mslib.msui import constants
 from mslib.msui.mss_qt import ui_performance_dockwidget as ui_dw
