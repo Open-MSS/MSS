@@ -32,14 +32,7 @@
     limitations under the License.
 """
 import logging
-import pytest
-import os
-import fs
 import mslib.utils.config as config
-import mslib.utils as utils
-from mslib._tests.constants import MSS_CONFIG_PATH
-from mslib._tests.utils import create_mss_settings_file
-from mslib._tests import constants
 import os
 import fs
 import pytest
