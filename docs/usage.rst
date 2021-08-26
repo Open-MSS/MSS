@@ -253,3 +253,6 @@ Some public accessible WMS Servers
  * http://osmwms.itc-halle.de/maps/osmfree
  * http://ows.terrestris.de/osm/service
  * https://firms.modaps.eosdis.nasa.gov/wms
+
+
+.. include:: kml_guide.rst

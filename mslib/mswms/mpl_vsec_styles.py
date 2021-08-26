@@ -74,21 +74,18 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         curtain_t = self.data["air_temperature"]
         curtain_pt = self.data["air_potential_temperature"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Filled contour plot of temperature.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs = ax.contourf(self.horizontal_coordinate,
                          curtain_p, curtain_t, np.arange(180, 250, 2))  # 180-200, gist_earth Greens
         # Contour line plot of temperature.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 330, 4),
                           colors='orange', linestyles='solid', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, 10), colors='grey',
                            linestyles='dashed', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
@@ -104,10 +101,8 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
             cbar.set_label("Temperature (K)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="30%", loc=1)
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
             make_cbar_labels_readable(self.fig, axins1)
@@ -121,29 +116,11 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         ("auto", "auto colour scale"),
         ("autolog", "auto log colour scale"), ]
 
-    def _prepare_datafields(self):
-        if self.name[-2:] == "pl":
-            self.data["air_pressure"] = np.empty_like(self.data[self.dataname])
-            self.data["air_pressure"][:] = convert_to(
-                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
-                self.driver.vert_units, "Pa")
-            self.data_units["air_pressure"] = "Pa"
-        elif self.name[-2:] == "tl":
-            self.data["air_potential_temperature"] = np.empty_like(self.data[self.dataname])
-            self.data["air_potential_temperature"][:] = convert_to(
-                self.driver.vert_data[::-self.driver.vert_order, np.newaxis],
-                self.driver.vert_units, "K")
-            self.data_units["air_potential_temperature"] = "K"
-
     def _plot_style(self):
         ax = self.ax
         curtain_cc = self.data[self.dataname]
         curtain_cc = np.ma.masked_invalid(curtain_cc)
         curtain_p = self.data["air_pressure"]
-
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-        curtain_lat = self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose()
 
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
@@ -160,15 +137,18 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
             self.dataname, self.style, cmin, cmax, curtain_cc[visible])
 
-        cs = ax.contourf(curtain_lat, curtain_p, curtain_cc, clevs, cmap=cmap, extend="both", norm=norm)
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_cc,
+                         clevs, cmap=cmap, extend="both", norm=norm)
 
         # Contour lines
         for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
             if cont_levels is None:
-                pl_cont = ax.plot(self.lat_inds, self.data[cont_data].reshape(-1), "o", color=cont_colour, zorder=100)
-                plt.setp(pl_cont, path_effects=[patheffects.withStroke(linewidth=4, foreground="w")])
+                pl_cont = ax.plot(self.lat_inds, self.data[cont_data].reshape(-1),
+                                  "o", color=cont_colour, zorder=100)
+                plt.setp(pl_cont, path_effects=[
+                    patheffects.withStroke(linewidth=4, foreground="w")])
             else:
-                cs_pv = ax.contour(curtain_lat, curtain_p, self.data[cont_data], cont_levels,
+                cs_pv = ax.contour(self.horizontal_coordinate, curtain_p, self.data[cont_data], cont_levels,
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
                 plt.setp(cs_pv.collections,
                          path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
@@ -355,33 +335,29 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         curtain_pt = self.data["air_potential_temperature"]
         curtain_cc = self.data["cloud_area_fraction_in_atmosphere_layer"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
         # Filled contour plot of cloud cover.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_cc, np.arange(0.2, 1.1, 0.1), cmap=plt.cm.winter)
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_cc,
+                         np.arange(0.2, 1.1, 0.1), cmap=plt.cm.winter)
         # Contour line plot of temperature.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_t, [234],
+        cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_t, np.arange(160, 232, delta_t),
+        cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t,
+                          np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='grey',
+        cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
+                           np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
 
@@ -396,10 +372,8 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
             cbar.set_label("Cloud cover (0-1)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="30%", loc=1)
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
             make_cbar_labels_readable(self.fig, axins1)
@@ -444,27 +418,24 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         curtain_cc = self.data["cloud_area_fraction_in_atmosphere_layer"]
         curtain_v = self.data["horizontal_wind"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing for temperature lines.
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
         wind_contours = np.arange(20, 70, 10)
 
         # Filled contour plot of cloud cover.
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_cc, np.arange(0.2, 1.1, 0.1), cmap=plt.cm.winter)
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_cc,
+                         np.arange(0.2, 1.1, 0.1), cmap=plt.cm.winter)
 
         # Contour line plot of wind speed.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_v, wind_contours,
-                          colors='red', linestyles='solid', linewidths=2)  # gist_earth
+        cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_v,
+                          wind_contours, colors='red', linestyles='solid',
+                          linewidths=2)  # gist_earth
         ax.clabel(cs_t, fontsize=12, fmt='%i')
 
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='0.40',
+        cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
+                           np.arange(200, 700, delta_pt), colors='0.40',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=12, fmt='%i')
 
@@ -479,10 +450,8 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
             cbar.set_label("Cloud cover (0-1)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="30%", loc=1)
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
             make_cbar_labels_readable(self.fig, axins1)
@@ -526,9 +495,6 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         curtain_pt = self.data["air_potential_temperature"]
         curtain_rh = self.data["relative_humidity"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
@@ -539,32 +505,30 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         # Filled contour plot of relative humidity.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_rh,
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_rh,
                          filled_contours, cmap=plt.cm.winter_r)
         # Contour line plot of relative humidity.
-        cs_rh1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_rh1 = ax.contour(self.horizontal_coordinate,
                             curtain_p, curtain_rh, thin_contours,
                             colors="grey", linestyles="solid", linewidths=0.5)  # gist_earth
         ax.clabel(cs_rh1, fontsize=8, fmt='%i')
-        ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        ax.contour(self.horizontal_coordinate,
                    curtain_p, curtain_rh, np.arange(100, 170, 15),
                    colors="yellow", linestyles="solid", linewidths=1)  # gist_earth
         # Contour line plot of temperature.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_t, [234],
+        cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='orange',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
@@ -580,10 +544,8 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
             cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
             cbar.set_label("Relative humdity (%)")
         else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="30%", loc=1)
             cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
             axins1.yaxis.set_ticks_position("left")
             make_cbar_labels_readable(self.fig, axins1)
@@ -626,9 +588,6 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         curtain_pt = self.data["air_potential_temperature"]
         curtain_q = self.data["specific_humidity"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing.
         vertical_log_extent = (np.log(self.p_bot) - np.log(self.p_top))
 
@@ -649,37 +608,34 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         # Filled contour plot of specific humidity.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_q,
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_q,
                          filled_contours, cmap=plt.cm.YlGnBu)  # YlGnBu
-        cs_q = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_q,
+        cs_q = ax.contour(self.horizontal_coordinate, curtain_p, curtain_q,
                           filled_contours, colors="c", linestyles="solid", linewidths=1)
         ax.clabel(cs_q, fontsize=8, fmt='%.2f')
 
         # Contour line plot of northward wind (v).
-        # cs_v = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_v = ax.contour(self.horizontal_coordinate,
         #                  curtain_p, curtain_v, np.arange(5,15,2.5),
         #                  colors="black", linestyles="solid", linewidths=1)
         # ax.clabel(cs_v, fontsize=8, fmt='%.1f')
 
         # Contour line plot of temperature.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_t, [234],
+        cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
 
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='orange',
+        cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
+                           np.arange(200, 700, delta_pt), colors='orange',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%.1f')
 
@@ -687,20 +643,7 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Specific humdity (g/kg)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Specific humdity (g/kg)")
 
 
 class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -743,9 +686,6 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         curtain_pt = self.data["air_potential_temperature"]
         curtain_w = self.data["upward_wind"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
@@ -755,32 +695,29 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         # Filled contour plot of relative humidity.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_w,
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_w,
                          upward_contours, cmap=plt.cm.bwr)
         # Contour line plot of relative humidity.
-        ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                   curtain_p, curtain_w, [2],
+        ax.contour(self.horizontal_coordinate, curtain_p, curtain_w, [2],
                    colors="red", linestyles="solid", linewidths=0.5)
-        ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                   curtain_p, curtain_w, [-2],
+        ax.contour(self.horizontal_coordinate, curtain_p, curtain_w, [-2],
                    colors="blue", linestyles="solid", linewidths=0.5)
         # Contour line plot of temperature.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='green', linestyles='solid', linewidths=1)
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, [234],
                           colors='green', linestyles='solid', linewidths=2)
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='green', linestyles='dashed', linewidths=1)
         ax.clabel(cs_t, fontsize=8, fmt='%i')
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='grey',
+        cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
+                           np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
 
@@ -788,20 +725,7 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Vertical velocity (cm/s)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Vertical velocity (cm/s)")
 
 
 class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
@@ -846,9 +770,6 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         curtain_pt = self.data["air_potential_temperature"]
         curtain_v = self.data["horizontal_wind"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing for temperature lines.
         delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
@@ -858,34 +779,32 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         # Filled contour plot of relative humidity.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_v,
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_v,
                          wind_contours, cmap=plt.cm.hot_r)
         # Contour line plot of relative humidity.
-        cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_v, np.arange(5, 90, 5),
                            colors="orange", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%i')
-        cs_v2 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v2 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_v, np.arange(95, 150, 5),
                            colors="black", linestyles="solid", linewidths=0.5)
         ax.clabel(cs_v2, fontsize=8, fmt='%i')
         # Contour line plot of temperature.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='green', linestyles='solid', linewidths=1)
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_t, [234],
+        cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='green', linestyles='solid', linewidths=2)
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='green', linestyles='dashed', linewidths=1)
         ax.clabel(cs_t, fontsize=8, fmt='%i')
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='grey',
+        cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
+                           np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
 
@@ -893,20 +812,7 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Horizontal wind speed (m/s)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Horizontal wind speed (m/s)")
 
 
 # POTENTIAL VORTICITY
@@ -1083,9 +989,6 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         curtain_clwc = self.data["specific_cloud_liquid_water_content"]
         curtain_ciwc = self.data["specific_cloud_ice_water_content"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing for temperature lines.
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
@@ -1099,48 +1002,48 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
 
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs = ax.contourf(self.horizontal_coordinate,
                          curtain_p, curtain_pv,
                          pv_contours, cmap=pv_eth_cmap_1)
 
         # Contour line plot of horizontal wind.
-        # cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_v1 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(5, 90, 5),
         #                     colors="green", linestyles="solid", linewidths=2)
         # ax.clabel(cs_v1, fontsize=8, fmt='%i')
-        # cs_v2 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_v2 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(95, 150, 5),
         #                     colors="black", linestyles="solid", linewidths=0.5)
         # ax.clabel(cs_v2, fontsize=8, fmt='%i')
 
         # [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0]
 
-        cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_clwc, [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0],
                            colors="blue", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%.1f')
 
-        cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_ciwc, [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0],
                            colors="white", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%.1f')
 
         # Contour line plot of temperature.
-        # cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_t = ax.contour(self.horizontal_coordinate,
         #                   curtain_p, curtain_t, np.arange(236, 330, delta_t),
         #                   colors='green', linestyles='solid', linewidths=1)
         # ax.clabel(cs_t, fontsize=8, fmt='%i')
-        # cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_t = ax.contour(self.horizontal_coordinate,
         #                   curtain_p, curtain_t, [234],
         #                   colors='green', linestyles='solid', linewidths=2)
         # ax.clabel(cs_t, fontsize=8, fmt='%i')
-        # cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_t = ax.contour(self.horizontal_coordinate,
         #                   curtain_p, curtain_t, np.arange(160, 232, delta_t),
         #                   colors='green', linestyles='dashed', linewidths=1)
         # ax.clabel(cs_t, fontsize=8, fmt='%i')
 
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='black',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
@@ -1149,23 +1052,8 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            if self.style.upper() == "SH":
-                cbar.set_label("Negative Potential vorticity (PVU)")
-            else:
-                cbar.set_label("Potential vorticity (PVU)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Negative Potential vorticity (PVU)" if self.style.upper() == "SH"
+                          else "Potential vorticity (PVU)")
 
 
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
@@ -1212,9 +1100,6 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         curtain_clwc = self.data["specific_cloud_liquid_water_content"]
         curtain_ciwc = self.data["specific_cloud_ice_water_content"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Contour spacing for temperature lines.
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
@@ -1222,34 +1107,33 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
 
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_pwcb,
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_pwcb,
                          pwcb_contours, cmap=plt.cm.pink_r)
 
         # Contour line plot of horizontal wind.
-        # cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_v1 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(5, 90, 5),
         #                     colors="green", linestyles="solid", linewidths=2)
         # ax.clabel(cs_v1, fontsize=8, fmt='%i')
-        # cs_v2 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # cs_v2 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(95, 150, 5),
         #                     colors="black", linestyles="solid", linewidths=0.5)
         # ax.clabel(cs_v2, fontsize=8, fmt='%i')
 
         # [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0]
 
-        cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_clwc, [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0],
                            colors="blue", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%.1f')
 
-        cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_ciwc, [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0],
                            colors="white", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%.1f')
 
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='black',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
@@ -1258,20 +1142,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Probability of WCB (%)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Probability of WCB (%)")
 
 
 class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
@@ -1303,23 +1174,19 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
         curtain_insitu = 1.E6 * self.data["number_of_insitu_trajectories"]
         curtain_mix = 1.E6 * self.data["number_of_mix_trajectories"]
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         thin_contours = [0.1, 0.5, 1., 2., 3., 4., 5., 6., 7., 8.]
 
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                         curtain_p, curtain_wcb,
+        cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_wcb,
                          thin_contours, cmap=plt.cm.gist_ncar_r, extend="max")
 
-        cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_insitu, thin_contours,
                            colors="red", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%.1f')
 
-        cs_v1 = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_mix, thin_contours,
                            colors="darkblue", linestyles="solid", linewidths=1)
         ax.clabel(cs_v1, fontsize=8, fmt='%.1f')
@@ -1328,20 +1195,7 @@ class VS_LagrantoTrajStyle_PL_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Cirrus density")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Cirrus density")
 
 
 class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
@@ -1383,34 +1237,30 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         delta_t = 2 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 4
         delta_pt = 5 if (np.log(self.p_bot) - np.log(self.p_top)) < 2.2 else 10
 
-        numlevel = curtain_p.shape[0]
-        numpoints = len(self.lats)
-
         # Filled contour plot of volcanic ash.
         # INFO on COLORMAPS:
         #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs = ax.contourf(self.horizontal_coordinate,
                          curtain_p, curtain_cc, np.arange(1, 101, 1), cmap=plt.cm.hot_r,
                          norm=matplotlib.colors.LogNorm(vmin=1., vmax=100.))
-        # csl = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        # csl = ax.contour(self.horizontal_coordinate,
         #                 curtain_p, curtain_cc, np.arange(1, 101, 1), colors="k", linewidths=1)
         # ax.clabel(csl, fontsize=8, fmt='%i')
         # Contour line plot of temperature.
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                          curtain_p, curtain_t, [234],
+        cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
-        cs_t = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
+        cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
         ax.clabel(cs_t, fontsize=8, fmt='%i')
         # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.lat_inds.repeat(numlevel).reshape((numpoints, numlevel)).transpose(),
-                           curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='grey',
+        cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
+                           np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
         ax.clabel(cs_pt, fontsize=8, fmt='%i')
 
@@ -1418,16 +1268,4 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
         self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            cbar = self.fig.colorbar(cs, fraction=0.08, pad=0.01)
-            cbar.set_label("Eyjafjallajokull Tracer (relative)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(ax,
-                                                                      width="1%",  # width = % of parent_bbox width
-                                                                      height="30%",  # height : %
-                                                                      loc=1)  # 4 = lr, 3 = ll, 2 = ul, 1 = ur
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
+        self.add_colorbar(cs, "Eyjafjallajokull Tracer (relative)")

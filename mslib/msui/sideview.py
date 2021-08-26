@@ -28,6 +28,7 @@
 
 import logging
 import functools
+from metpy.units import units
 from mslib.utils import config_loader, save_settings_qsettings, load_settings_qsettings, convert_to
 from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_sideview_window as ui
@@ -60,6 +61,8 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "vertical_extent": (1050, 180),
             "vertical_axis": "pressure",
             "secondary_axis": "no secondary axis",
+            "plot_title_size": "default",
+            "axes_label_size": "default",
             "flightlevels": [300, 320, 340],
             "draw_flightlevels": True,
             "draw_flighttrack": True,
@@ -97,6 +100,14 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         for i in range(self.cbVerticalAxis2.count()):
             if self.cbVerticalAxis2.itemText(i) == settings_dict["secondary_axis"]:
                 self.cbVerticalAxis2.setCurrentIndex(i)
+
+        # Shows previously selected element in the fontsize comboboxes as the current index.
+        for i in range(self.cbtitlesize.count()):
+            if self.cbtitlesize.itemText(i) == settings_dict["plot_title_size"]:
+                self.cbtitlesize.setCurrentIndex(i)
+        for i in range(self.cbaxessize.count()):
+            if self.cbaxessize.itemText(i) == settings_dict["axes_label_size"]:
+                self.cbaxessize.setCurrentIndex(i)
 
         self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
         self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
@@ -213,6 +224,8 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "vertical_extent": (float(self.sbPbot.value()), float(self.sbPtop.value())),
             "vertical_axis": self.cbVerticalAxis.currentText(),
             "secondary_axis": self.cbVerticalAxis2.currentText(),
+            "plot_title_size": self.cbtitlesize.currentText(),
+            "axes_label_size": self.cbaxessize.currentText(),
             "flightlevels": self.get_flight_levels(),
             "draw_ceiling": self.cbDrawCeiling.isChecked(),
             "draw_verticals": self.cbVerticalLines.isChecked(),
@@ -242,10 +255,10 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             sb.setSuffix(" " + new_unit)
             if new_unit == "hPa":
                 sb.setValue(thermolib.flightlevel2pressure(
-                    convert_to(sb.value(), old_unit, "hft", 1)) / 100)
+                    convert_to(sb.value(), old_unit, "hft", 1) * units.hft).to(units.hPa).magnitude)
             elif old_unit == "hPa":
                 sb.setValue(convert_to(
-                    thermolib.pressure2flightlevel(sb.value() * 100), "hft", new_unit))
+                    thermolib.pressure2flightlevel(sb.value() * units.hPa).magnitude, "hft", new_unit))
             else:
                 sb.setValue(convert_to(sb.value(), old_unit, new_unit, 1))
         self.setBotTopLimits(self.cbVerticalAxis.currentText())
@@ -284,6 +297,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
+        self.openTool(WMS + 1)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor

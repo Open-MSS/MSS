@@ -39,7 +39,12 @@ jobs:
       run: |
         source /opt/conda/bin/activate mssenv \
         && cd $GITHUB_WORKSPACE \
-        && pytest --cov=mslib mslib
+        && pytest --cov=mslib mslib \
+        || (for i in {1..5} \
+          ; do pytest mslib --last-failed --lfnf=none \
+          && break \
+        ; done)
+
         
     - name: coveralls
       if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/develop' }}

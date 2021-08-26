@@ -55,6 +55,8 @@ import mslib.mswms
 # SETTINGS                                  ###
 #
 
+# Path to store an optional gallery
+_gallerypath = r"/path/to/data/mss/gallery"
 
 # Paths to data directories. Process callables (the functions that are
 # executed by the dispatcher system) can access these paths, hence
