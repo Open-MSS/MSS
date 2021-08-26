@@ -46,10 +46,10 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 
 from mslib import __version__
 from mslib.utils.units import units
-from mslib.utils import thermolib
 from mslib.utils.coordinate import find_location, path_points, get_distance
+from mslib.utils import thermolib
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
 from mslib.msui.mss_qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
@@ -166,10 +166,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         # If a filename is passed to the constructor, load data from this file.
         if filename is not None:
-            if filename.endswith(".ftml"):
-                self.load_from_ftml(filename)
-            else:
-                logging.debug("No known file extension! '%s'", filename)
+            self.load_from_ftml(filename)
 
         # If xml string is passed to constructor, load data from that
         elif xml_content is not None:

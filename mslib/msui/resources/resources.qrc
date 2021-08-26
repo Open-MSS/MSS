@@ -1,11 +1,40 @@
 <RCC>
-  <qresource prefix="images">
-    <file>mscolab-help/connect.png</file>
-    <file>mscolab-help/chat-window.png</file>
-    <file>mscolab-help/add-user.png</file>
-    <file>mscolab-help/merge-window.png</file>
-    <file>mscolab-help/admin-window.png</file>
-    <file>mscolab-help/version-window.png</file>
-    <file>mscolab-help/add-project.png</file>
-  </qresource>
+    <qresource prefix="/images">
+        <file>mscolab-help/connect.png</file>
+        <file>mscolab-help/chat-window.png</file>
+        <file>mscolab-help/add-user.png</file>
+        <file>mscolab-help/merge-window.png</file>
+        <file>mscolab-help/admin-window.png</file>
+        <file>mscolab-help/version-window.png</file>
+        <file>mscolab-help/add-project.png</file>
+    </qresource>
+    <qresource prefix="/gravatars">
+        <file>default-gravatars/a.png</file>
+        <file>default-gravatars/b.png</file>
+        <file>default-gravatars/c.png</file>
+        <file>default-gravatars/d.png</file>
+        <file>default-gravatars/e.png</file>
+        <file>default-gravatars/f.png</file>
+        <file>default-gravatars/g.png</file>
+        <file>default-gravatars/h.png</file>
+        <file>default-gravatars/i.png</file>
+        <file>default-gravatars/j.png</file>
+        <file>default-gravatars/k.png</file>
+        <file>default-gravatars/l.png</file>
+        <file>default-gravatars/m.png</file>
+        <file>default-gravatars/n.png</file>
+        <file>default-gravatars/o.png</file>
+        <file>default-gravatars/p.png</file>
+        <file>default-gravatars/q.png</file>
+        <file>default-gravatars/r.png</file>
+        <file>default-gravatars/s.png</file>
+        <file>default-gravatars/t.png</file>
+        <file>default-gravatars/u.png</file>
+        <file>default-gravatars/v.png</file>
+        <file>default-gravatars/w.png</file>
+        <file>default-gravatars/x.png</file>
+        <file>default-gravatars/y.png</file>
+        <file>default-gravatars/z.png</file>
+        <file>default-gravatars/default.png</file>
+    </qresource>
 </RCC>

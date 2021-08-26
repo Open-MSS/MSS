@@ -585,6 +585,12 @@ for mod in [
         "ui_kmloverlay_dockwidget",
         "ui_customize_kml",
         "ui_mainwindow",
+        "ui_configuration_editor_window",
+        "ui_mscolab_connect_dialog",
+        "ui_mscolab_help_dialog",
+        "ui_add_project_dialog",
+        "ui_mscolab_merge_waypoints_dialog",
+        "ui_mscolab_profile_dialog",
         "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
@@ -596,9 +602,9 @@ for mod in [
         "ui_topview_window",
         "ui_linearview_options",
         "ui_linearview_window",
+        "ui_wms_password_dialog",
         "ui_wms_capabilities",
         "ui_wms_dockwidget",
-        "ui_wms_password_dialog",
         "ui_wms_multilayers"]:
     globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
 

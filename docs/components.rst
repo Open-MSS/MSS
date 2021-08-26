@@ -8,5 +8,6 @@ Components
    deployment
    mscolab
    demodata
+   tutorials
 
 

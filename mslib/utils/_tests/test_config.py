@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 """
 
+<<<<<<< HEAD
     mslib.utils._tests.test_config
     ~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.utils.config
+=======
+    mslib._tests.test_config
+    ~~~~~~~~~~~~~~~~~~~~~~~
+
+    This module provides pytest functions to test mslib.utils.config
+>>>>>>> upstream/develop
 
     This file is part of mss.
 
@@ -33,6 +40,14 @@ import mslib.utils as utils
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
 from mslib._tests import constants
+import os
+import fs
+import pytest
+
+from mslib import utils
+from mslib.utils.config import config_loader, get_default_config, read_config_file
+from mslib._tests.constants import MSS_CONFIG_PATH
+from mslib._tests.utils import create_mss_settings_file
 
 LOGGER = logging.getLogger(__name__)
 
@@ -64,44 +79,53 @@ class TestConfigLoader(object):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
 
     def test_default_config(self):
-        data = config.config_loader()
+        data = config_loader(default=True)
         assert isinstance(data, dict)
+        assert data == get_default_config()
         assert data["num_labels"] == 10
         assert data["num_interpolation_points"] == 201
 
     def test_default_config_dataset(self):
-        data = config.config_loader(dataset="num_labels")
-        assert data == 10
-        # defined value and not a default one
-        data = config.config_loader(dataset="num_labels")
-        assert data == 10
+        default_data = get_default_config()
+        num_labels = config_loader(dataset="num_labels", default=True)
+        assert num_labels == default_data["num_labels"]
 
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
         with pytest.raises(utils.FatalUserError):
-            config.config_loader(config_file="foo.json")
+            read_config_file(path="foo.json")
 
     def test_sample_config_file(self):
         utils_path = os.path.dirname(os.path.abspath(utils.__file__))
-        config_file = os.path.join(utils_path, '..', '..', 'docs', 'samples', 'config', 'mss',
-                                   'mss_settings.json.sample')
-        data = config.config_loader(config_file=config_file, dataset="new_flighttrack_flightlevel")
+        config_file = os.path.join(
+            utils_path,
+            '../',
+            '../',
+            'docs',
+            'samples',
+            'config',
+            'mss',
+            'mss_settings.json.sample',
+        )
+        read_config_file(path=config_file)
+        data = config_loader(dataset="new_flighttrack_flightlevel")
         assert data == 250
         with pytest.raises(KeyError):
-            config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config_loader(dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config_loader(dataset="UNDEFINED")
         with pytest.raises(utils.FatalUserError):
-            config_file = os.path.join(utils_path, '..', '..', 'docs', 'samples', 'config', 'mss',
-                                       'not_existing_mss_settings.json.sample')
-            config.config_loader(config_file=config_file)
-
-    def test_config_file_cached(self, caplog):
-        with caplog.at_level(logging.INFO):
-            config.config_loader()
-        assert 'Default MSS configuration in place, no user settings, see http://mss.rtfd.io/en/stable/usage.html' \
-               in caplog.text
-        assert constants.CACHED_CONFIG_FILE is None
+            config_file = os.path.join(
+                utils_path,
+                '../',
+                '../',
+                'docs',
+                'samples',
+                'config',
+                'mss',
+                'non_existent_mss_settings.json.sample',
+            )
+            read_config_file(config_file)
 
     def test_existing_empty_config_file(self):
         """
@@ -113,18 +137,17 @@ class TestConfigLoader(object):
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("mss_settings.json")
         assert ":" not in file_content
+        default_data = get_default_config()
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
-        data = config.config_loader(config_file=config_file)
-        assert data["num_labels"] == 10
-        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
-        assert num_labels == 10
-        # this overwrites the builtin default value
-        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
-        assert num_labels == 10
+        read_config_file(path=config_file)
+        data = config_loader()
+        assert data["num_labels"] == default_data["num_labels"]
+        num_labels = config_loader(dataset="num_labels")
+        assert num_labels == default_data["num_labels"]
         with pytest.raises(KeyError):
-            config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config_loader(dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config_loader(dataset="UNDEFINED")
 
     def test_existing_config_file_different_parameters(self):
         """
@@ -136,19 +159,20 @@ class TestConfigLoader(object):
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("mss_settings.json")
         assert "num_labels" not in file_content
+        default_data = get_default_config()
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
-        data = config.config_loader(config_file=config_file)
-        assert data["num_labels"] == 10
-        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
-        assert num_labels == 10
-        num_interpolation_points = config.config_loader(config_file=config_file, dataset="num_interpolation_points")
+        read_config_file(path=config_file)
+        data = config_loader()
+        assert data["num_labels"] == default_data["num_labels"]
+        num_labels = config_loader(dataset="num_labels")
+        assert num_labels == default_data["num_labels"]
+        num_interpolation_points = config_loader(dataset="num_interpolation_points")
         assert num_interpolation_points == 20
-        data = config.config_loader(config_file=config_file)
         assert data["num_interpolation_points"] == 20
         with pytest.raises(KeyError):
-            config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config_loader(dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config_loader(dataset="UNDEFINED")
 
     def test_existing_config_file_defined_parameters(self):
         """
@@ -161,12 +185,33 @@ class TestConfigLoader(object):
             file_content = file_dir.readtext("mss_settings.json")
         assert "num_labels" in file_content
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
-        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
-        assert num_labels == 10
-        # this overwrites the given value
-        num_labels = config.config_loader(config_file=config_file, dataset="num_labels")
+        read_config_file(path=config_file)
+        num_labels = config_loader(dataset="num_labels")
         assert num_labels == 10
         with pytest.raises(KeyError):
-            config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            config_loader(dataset="UNDEFINED")
         with pytest.raises(KeyError):
-            assert config.config_loader(config_file=config_file, dataset="UNDEFINED")
+            assert config_loader(dataset="UNDEFINED")
+
+    def test_existing_config_file_invalid_parameters(self):
+        """
+        on a user defined mss_settings_json with duplicate and empty keys should raise FatalUserError
+        """
+        create_mss_settings_file('{"num_interpolation_points": 201, "num_interpolation_points": 10 }')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("mss_settings.json")
+        assert "num_interpolation_points" in file_content
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        with pytest.raises(utils.FatalUserError):
+            read_config_file(path=config_file)
+
+        create_mss_settings_file('{"": 201, "num_labels": 10 }')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("mss_settings.json")
+        assert "num_labels" in file_content
+        with pytest.raises(utils.FatalUserError):
+            read_config_file(path=config_file)
