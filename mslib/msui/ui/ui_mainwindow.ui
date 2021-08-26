@@ -6,54 +6,58 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>442</width>
-    <height>636</height>
+    <width>738</width>
+    <height>736</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>507</width>
+    <height>736</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Mission Support System</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QGroupBox" name="groupBox_3">
-      <property name="title">
-       <string>Open Flight Tracks:</string>
-      </property>
-      <property name="flat">
-       <bool>true</bool>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_6">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0" columnstretch="1,1">
+    <property name="leftMargin">
+     <number>8</number>
+    </property>
+    <property name="topMargin">
+     <number>8</number>
+    </property>
+    <property name="rightMargin">
+     <number>8</number>
+    </property>
+    <property name="bottomMargin">
+     <number>8</number>
+    </property>
+    <property name="spacing">
+     <number>2</number>
+    </property>
+    <item row="2" column="0">
+     <widget class="QGroupBox" name="openViewsGb">
+      <layout class="QVBoxLayout" name="openViewsVL">
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+       <property name="rightMargin">
+        <number>8</number>
+       </property>
+       <property name="bottomMargin">
+        <number>8</number>
+       </property>
        <item>
-        <widget class="QListWidget" name="listFlightTracks">
-         <property name="toolTip">
-          <string>List of open flight tracks.
-Double-click a flight track to activate it.
-Save a flight track to name it.</string>
-         </property>
-         <property name="alternatingRowColors">
-          <bool>false</bool>
-         </property>
-         <property name="textElideMode">
-          <enum>Qt::ElideNone</enum>
+        <widget class="QLabel" name="openViewsLabel">
+         <property name="text">
+          <string>Open Views:</string>
          </property>
         </widget>
        </item>
-      </layout>
-     </widget>
-    </item>
-    <item>
-     <widget class="QGroupBox" name="groupBox">
-      <property name="title">
-       <string>Open Views:</string>
-      </property>
-      <property name="flat">
-       <bool>true</bool>
-      </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
-      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
         <widget class="QListWidget" name="listViews">
          <property name="toolTip">
@@ -64,14 +68,168 @@ Save a flight track to name it.</string>
       </layout>
      </widget>
     </item>
-    <item>
-     <widget class="QLabel" name="labelStatusbar">
-      <property name="text">
-       <string>Status : </string>
+    <item row="0" column="0" colspan="2">
+     <layout class="QHBoxLayout" name="userOptionsHL" stretch="1,0,0,0">
+      <property name="leftMargin">
+       <number>0</number>
       </property>
-      <property name="scaledContents">
-       <bool>false</bool>
+      <property name="rightMargin">
+       <number>0</number>
       </property>
+      <item>
+       <widget class="QLabel" name="mscStatusLabel">
+        <property name="text">
+         <string>Status: Disconnected</string>
+        </property>
+        <property name="wordWrap">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignRight">
+       <widget class="QLabel" name="usernameLabel">
+        <property name="text">
+         <string>User</string>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignRight">
+       <widget class="QToolButton" name="userOptionsTb">
+        <property name="toolTip">
+         <string>Profile options</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">::menu-indicator { image: none; }</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item alignment="Qt::AlignRight">
+       <widget class="QPushButton" name="connectBtn">
+        <property name="toolTip">
+         <string>Connect to an MSColab Server</string>
+        </property>
+        <property name="text">
+         <string>Connect to MSColab</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="1" rowspan="2">
+     <widget class="QGroupBox" name="openProjectsGb">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+       <property name="rightMargin">
+        <number>8</number>
+       </property>
+       <property name="bottomMargin">
+        <number>8</number>
+       </property>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLabel" name="workingStatusLabel">
+         <property name="text">
+          <string>No projects selected</string>
+         </property>
+         <property name="wordWrap">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QCheckBox" name="workLocallyCheckbox">
+         <property name="toolTip">
+          <string>Check to work asynchronously from the server</string>
+         </property>
+         <property name="text">
+          <string>Work Asynchronously</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="openProjectsMSCLabel">
+         <property name="text">
+          <string>Open Projects:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QListWidget" name="listProjectsMSC">
+         <property name="toolTip">
+          <string>List of mscolab projects.</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="serverOptionsCb">
+         <property name="toolTip">
+          <string>Fetch/Save Server options</string>
+         </property>
+         <item>
+          <property name="text">
+           <string>Server Options</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Fetch From Server</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Save To Server</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QGroupBox" name="openFlightTracksGb">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+       <property name="rightMargin">
+        <number>8</number>
+       </property>
+       <property name="bottomMargin">
+        <number>8</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="openFlightTracksLabel">
+         <property name="text">
+          <string>Open Flight Tracks:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listFlightTracks">
+         <property name="toolTip">
+          <string>List of open flight tracks.
+Double-click a flight track to activate it.
+Save a flight track to name it.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
      </widget>
     </item>
    </layout>
@@ -81,99 +239,90 @@ Save a flight track to name it.</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>442</width>
+     <width>738</width>
      <height>20</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
     <bool>false</bool>
    </property>
-   <widget class="QMenu" name="menu_File">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
     </property>
-    <widget class="QMenu" name="menuImport_Flight_Track">
+    <widget class="QMenu" name="menuImportFlightTrack">
      <property name="title">
       <string>Import Flight Track</string>
      </property>
     </widget>
-    <widget class="QMenu" name="menuExport_Active_Flight_Track">
+    <widget class="QMenu" name="menuExportActiveFlightTrack">
      <property name="title">
-      <string>Export Active Flight Track</string>
+      <string>Export Flight Track</string>
      </property>
     </widget>
-    <addaction name="actionNewFlightTrack"/>
-    <addaction name="actionOpenFlightTrack"/>
-    <addaction name="separator"/>
-    <addaction name="actionActivateSelectedFlightTrack"/>
+    <widget class="QMenu" name="menuNew">
+     <property name="title">
+      <string>New</string>
+     </property>
+     <addaction name="actionNewFlightTrack"/>
+     <addaction name="actionAddProject"/>
+    </widget>
+    <addaction name="menuNew"/>
+    <addaction name="menuImportFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
     <addaction name="separator"/>
     <addaction name="actionCloseSelectedFlightTrack"/>
     <addaction name="separator"/>
-    <addaction name="menuImport_Flight_Track"/>
-    <addaction name="menuExport_Active_Flight_Track"/>
+    <addaction name="menuExportActiveFlightTrack"/>
     <addaction name="separator"/>
-    <addaction name="actionLoadConfigurationFile"/>
-    <addaction name="actionConfigurationEditor"/>
+    <addaction name="actionConfiguration"/>
     <addaction name="separator"/>
-    <addaction name="action_Quit"/>
+    <addaction name="actionQuit"/>
    </widget>
-   <widget class="QMenu" name="menu_View">
+   <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>&amp;Views</string>
+     <string>&amp;Help</string>
+    </property>
+    <addaction name="actionShortcuts"/>
+    <addaction name="actionMSColabHelp"/>
+    <addaction name="actionUpdater"/>
+    <addaction name="actionOnlineHelp"/>
+    <addaction name="actionAboutMSUI"/>
+    <addaction name="actionSearch"/>
+   </widget>
+   <widget class="QMenu" name="menuViews">
+    <property name="title">
+     <string>Views</string>
     </property>
     <addaction name="actionTopView"/>
     <addaction name="actionSideView"/>
     <addaction name="actionTableView"/>
     <addaction name="actionLinearView"/>
    </widget>
-   <widget class="QMenu" name="menu_Help">
+   <widget class="QMenu" name="menuProject">
     <property name="title">
-     <string>&amp;Help</string>
+     <string>Project</string>
     </property>
-    <addaction name="actionOnlineHelp"/>
-    <addaction name="actionAboutMSUI"/>
-    <addaction name="actionShortcuts"/>
-    <addaction name="actionUpdater"/>
-    <addaction name="actionSearch"/>
+    <widget class="QMenu" name="menuProjectProperties">
+     <property name="title">
+      <string>Project Properties</string>
+     </property>
+     <addaction name="actionDeleteProject"/>
+    </widget>
+    <addaction name="actionChat"/>
+    <addaction name="actionVersionHistory"/>
+    <addaction name="actionManageUsers"/>
+    <addaction name="separator"/>
+    <addaction name="menuProjectProperties"/>
    </widget>
-   <widget class="QMenu" name="menu_Mscolab">
-    <property name="title">
-     <string>&amp;Mscolab</string>
-    </property>
-    <addaction name="actionMscolabProjects"/>
-   </widget>
-   <addaction name="menu_File"/>
-   <addaction name="menu_View"/>
-   <addaction name="menu_Mscolab"/>
-   <addaction name="menu_Help"/>
+   <addaction name="menuFile"/>
+   <addaction name="menuViews"/>
+   <addaction name="menuProject"/>
+   <addaction name="menuHelp"/>
   </widget>
-  <action name="action_Quit">
-   <property name="text">
-    <string>&amp;Quit</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Q</string>
-   </property>
-  </action>
-  <action name="actionNewFlightTrack">
-   <property name="text">
-    <string>&amp;New Flight Track</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
-   </property>
-  </action>
-  <action name="actionOpenFlightTrack">
-   <property name="text">
-    <string>&amp;Open Flight Track...</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+O</string>
-   </property>
-  </action>
+  <widget class="QStatusBar" name="statusBar"/>
   <action name="actionSaveActiveFlightTrack">
    <property name="text">
     <string>&amp;Save Active Flight Track</string>
@@ -184,15 +333,51 @@ Save a flight track to name it.</string>
   </action>
   <action name="actionSaveActiveFlightTrackAs">
    <property name="text">
-    <string>Save Active Flight Track &amp;As...</string>
+    <string>Save Active Flight Track As</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+S</string>
+   </property>
+  </action>
+  <action name="actionAboutMSUI">
+   <property name="text">
+    <string>&amp;About MSUI</string>
+   </property>
+  </action>
+  <action name="actionOnlineHelp">
+   <property name="text">
+    <string>&amp;Online Help</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>&amp;Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="actionShortcuts">
+   <property name="text">
+    <string>&amp;Shortcuts</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+S</string>
    </property>
   </action>
   <action name="actionCloseSelectedFlightTrack">
    <property name="text">
-    <string>&amp;Close Selected Flight Track</string>
+    <string>&amp;Close Selected Local Flight Track</string>
    </property>
-   <property name="shortcut">
-    <string/>
+  </action>
+  <action name="actionUpdater">
+   <property name="text">
+    <string>&amp;Updater</string>
+   </property>
+  </action>
+  <action name="actionConfiguration">
+   <property name="text">
+    <string>&amp;Configuration</string>
    </property>
   </action>
   <action name="actionTopView">
@@ -213,79 +398,61 @@ Save a flight track to name it.</string>
   </action>
   <action name="actionTableView">
    <property name="text">
-    <string>T&amp;able View</string>
+    <string>&amp;Table View</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+T</string>
-   </property>
-  </action>
-  <action name="actionAboutMSUI">
-   <property name="text">
-    <string>&amp;About MSS</string>
-   </property>
-  </action>
-  <action name="actionConfigurationEditor">
-   <property name="text">
-    <string>Configuration Editor</string>
-   </property>
-   <property name="toolTip">
-    <string>Start the configuration editor.</string>
-   </property>
-  </action>
-  <action name="actionOnlineHelp">
-   <property name="text">
-    <string>Online &amp;Help</string>
-   </property>
-  </action>
-  <action name="actionActivateSelectedFlightTrack">
-   <property name="text">
-    <string>Activate Selected Flight Track</string>
-   </property>
-   <property name="shortcut">
-    <string/>
-   </property>
-  </action>
-  <action name="actionMscolabProjects">
-   <property name="text">
-    <string>Mscolab projects</string>
-   </property>
-  </action>
-  <action name="actionLoadConfigurationFile">
-   <property name="text">
-    <string>Load Configuration File</string>
-   </property>
-   <property name="toolTip">
-    <string>Load a JSON configuration file</string>
    </property>
   </action>
   <action name="actionLinearView">
    <property name="text">
     <string>&amp;Linear View</string>
    </property>
-   <property name="toolTip">
-    <string>Linear View</string>
-   </property>
    <property name="shortcut">
     <string>Ctrl+L</string>
    </property>
   </action>
-  <action name="actionShortcuts">
+  <action name="actionChat">
    <property name="text">
-    <string>Shortcuts</string>
-   </property>
-   <property name="toolTip">
-    <string>Show Current Shortcuts</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+S</string>
+    <string>&amp;Chat</string>
    </property>
   </action>
-  <action name="actionUpdater">
+  <action name="actionVersionHistory">
    <property name="text">
-    <string>Updater</string>
+    <string>&amp;Version History</string>
    </property>
-   <property name="toolTip">
-    <string>Open the Updater Dialog</string>
+  </action>
+  <action name="actionManageUsers">
+   <property name="text">
+    <string>&amp;Manage Users</string>
+   </property>
+  </action>
+  <action name="actionMSColabHelp">
+   <property name="text">
+    <string>&amp;MSColab</string>
+   </property>
+  </action>
+  <action name="actionDeleteProject">
+   <property name="text">
+    <string>&amp;Delete Project</string>
+   </property>
+  </action>
+  <action name="actionBringMainWindowToFront">
+   <property name="text">
+    <string>Bring Main Window To Front</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Up</string>
+   </property>
+  </action>
+  <action name="actionNewFlightTrack">
+   <property name="text">
+    <string>&amp;Local Flight Track</string>
+   </property>
+  </action>
+  <action name="actionAddProject">
+   <property name="text">
+    <string>&amp;MSColab Project</string>
    </property>
   </action>
   <action name="actionSearch">
@@ -300,10 +467,19 @@ Save a flight track to name it.</string>
    </property>
   </action>
  </widget>
+ <tabstops>
+  <tabstop>connectBtn</tabstop>
+  <tabstop>userOptionsTb</tabstop>
+  <tabstop>listFlightTracks</tabstop>
+  <tabstop>listViews</tabstop>
+  <tabstop>listProjectsMSC</tabstop>
+  <tabstop>workLocallyCheckbox</tabstop>
+  <tabstop>serverOptionsCb</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>
-   <sender>action_Quit</sender>
+   <sender>actionQuit</sender>
    <signal>triggered()</signal>
    <receiver>MSSMainWindow</receiver>
    <slot>close()</slot>
@@ -313,8 +489,8 @@ Save a flight track to name it.</string>
      <y>-1</y>
     </hint>
     <hint type="destinationlabel">
-     <x>399</x>
-     <y>299</y>
+     <x>253</x>
+     <y>367</y>
     </hint>
    </hints>
   </connection>
