@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-<<<<<<< HEAD
     mslib.utils._tests.test_config
     ~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests mslib.utils.config
-=======
-    mslib._tests.test_config
-    ~~~~~~~~~~~~~~~~~~~~~~~
-
     This module provides pytest functions to test mslib.utils.config
->>>>>>> upstream/develop
 
     This file is part of mss.
 
