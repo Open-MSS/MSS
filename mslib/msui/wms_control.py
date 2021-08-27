@@ -745,13 +745,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
+        selected = self.multilayers.current_layer.text(0) if self.multilayers.current_layer else None
         if not cache and wms.url in self.multilayers.layers and \
                 wms.capabilities_document.decode("utf-8") != \
                 self.multilayers.layers[wms.url]["wms"].capabilities_document.decode("utf-8"):
             self.multilayers.delete_server(self.multilayers.layers[wms.url]["header"])
         self.multilayers.add_wms(wms)
         for layer in filtered_layers:
-            self.multilayers.add_multilayer(layer, wms)
+            self.multilayers.add_multilayer(layer, wms, layer == selected)
         self.multilayers.filter_multilayers()
         self.multilayers.update_checkboxes()
         self.multilayers.pbViewCapabilities.setEnabled(True)
