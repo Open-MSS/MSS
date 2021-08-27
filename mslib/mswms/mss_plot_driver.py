@@ -35,7 +35,7 @@ from abc import ABCMeta, abstractmethod
 import numpy as np
 
 from mslib.utils import netCDF4tools
-from mslib import utils
+import mslib.utils.coordinate as coordinate
 
 
 class MSSPlotDriver(metaclass=ABCMeta):
@@ -422,7 +422,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         logging.debug("computing %i interpolation points, connection: %s",
                       vsec_numpoints, vsec_path_connection)
         now = datetime.now()
-        self.lats, self.lons, _ = utils.path_points(
+        self.lats, self.lons, _ = coordinate.path_points(
             [(_x, _y, now) for _x, _y in vsec_path],
             numpoints=vsec_numpoints, connection=vsec_path_connection)
         self.vsec_path = vsec_path
@@ -479,8 +479,7 @@ class VerticalSectionDriver(MSSPlotDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
-            data[name] = utils.interpolate_vertsec(var_data, self.lat_data, lon_data,
-                                                   self.lats, self.lons)
+            data[name] = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
             # Free memory.
             del var_data
 
@@ -726,7 +725,7 @@ class LinearSectionDriver(VerticalSectionDriver):
         logging.debug("computing %i interpolation points, connection: %s",
                       lsec_numpoints, lsec_path_connection)
         now = datetime.now()
-        self.lats, self.lons, self.alts, _ = utils.path_points(
+        self.lats, self.lons, self.alts, _ = coordinate.path_points(
             [(_x, _y, _z, now) for _x, _y, _z in lsec_path],
             numpoints=lsec_numpoints, connection=lsec_path_connection, contains_altitude=True)
         self.lsec_path = lsec_path
@@ -793,7 +792,7 @@ class LinearSectionDriver(VerticalSectionDriver):
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
 
-            cross_section = utils.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
+            cross_section = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
             # Create vertical interpolation factors and indices for subsequent variables
             # TODO: Improve performance for this interpolation in general
             if len(factors) == 0:

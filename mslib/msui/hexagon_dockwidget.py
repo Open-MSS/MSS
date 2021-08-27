@@ -30,7 +30,7 @@ import logging
 from PyQt5 import QtWidgets
 from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
-from mslib.utils import rotate_point
+from mslib.utils.coordinate import rotate_point
 from mslib.utils.config import config_loader
 
 

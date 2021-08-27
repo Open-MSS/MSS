@@ -36,8 +36,8 @@ from mslib.msui.mss_qt import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
-from mslib.utils import thermolib, save_settings_qsettings, load_settings_qsettings
-from mslib.utils.config import config_loader
+from mslib.utils import thermolib
+from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.units import units, convert_to
 
 # Dock window indices.

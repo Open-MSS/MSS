@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.thermolib
+    mslib.utils.thermolib
     ~~~~~~~~~~~~~~~~
 
     Collection of thermodynamic functions.
@@ -249,3 +249,20 @@ def isa_temperature(height):
 
     raise ValueError("ISA temperature from flight level not "
                      "implemented for z > 71km")
+
+
+def convert_pressure_to_vertical_axis_measure(vertical_axis, pressure):
+    """
+    vertical_axis can take following values
+    - pressure altitude
+    - flight level
+    - pressure
+    """
+    if vertical_axis == "pressure":
+        return float(pressure / 100)
+    elif vertical_axis == "flight level":
+        return pressure2flightlevel(pressure * units.Pa).magnitude
+    elif vertical_axis == "pressure altitude":
+        return pressure2flightlevel(pressure * units.Pa).to(units.km).magnitude
+    else:
+        return pressure

@@ -50,15 +50,14 @@ from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.msui.mss_qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.mss_qt import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
 from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
-from mslib.utils import load_settings_qsettings, save_settings_qsettings, dropEvent, dragEnterEvent, show_popup
 from mslib.msui import constants
-from mslib.utils.config import config_loader
+from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib._tests.test_config
+    mslib.utils._tests.test_config
     ~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to test mslib.utils.config
@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
+import mslib.utils.config as config
 import os
 import fs
 import pytest
@@ -32,6 +34,25 @@ from mslib import utils
 from mslib.utils.config import config_loader, get_default_config, read_config_file
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
+
+LOGGER = logging.getLogger(__name__)
+
+
+class TestSettingsSave(object):
+    """
+    tests save_settings_qsettings and load_settings_qsettings from ./utils.py
+    # TODO make sure do a clean setup, not inside the 'mss' config file.
+    """
+    tag = "test_automated"
+
+    def test_save_settings(self):
+        settings = {'foo': 'bar'}
+        config.save_settings_qsettings(self.tag, settings, ignore_test=True)
+
+    def test_load_settings(self):
+        settings = config.load_settings_qsettings(self.tag, ignore_test=True)
+        assert isinstance(settings, dict)
+        assert settings["foo"] == "bar"
 
 
 class TestConfigLoader(object):
