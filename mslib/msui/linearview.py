@@ -25,8 +25,7 @@
     limitations under the License.
 """
 
-from mslib.utils import save_settings_qsettings, load_settings_qsettings
-from mslib.utils.config import config_loader
+from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_linearview_window as ui
 from mslib.msui.mss_qt import ui_linearview_options as ui_opt

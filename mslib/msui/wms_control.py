@@ -38,7 +38,7 @@ import requests
 import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
-from mslib.utils.config import config_loader
+from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import owslib.util
@@ -48,10 +48,10 @@ from PIL import Image, ImageOps
 from mslib.msui import constants, wms_capabilities
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
+from mslib.msui.mss_qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
-from mslib.utils import (
-    ogcwms, parse_iso_datetime, parse_iso_duration, load_settings_qsettings,
-    save_settings_qsettings, Worker)
+import mslib.utils.ogcwms as ogcwms
+from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 
 
 WMS_SERVICE_CACHE = {}
