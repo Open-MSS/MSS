@@ -20,4 +20,3 @@ pynco
 conda-verify
 Flask-Testing
 pytest-reverse
-eventlet
