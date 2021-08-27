@@ -68,7 +68,7 @@ from owslib.util import ServiceException
 from owslib.etree import ParseError
 from owslib.map import wms111, wms130, common
 from owslib.util import ResponseWrapper, Authentication, strip_bom
-from mslib.utils import config_loader
+from mslib.utils.config import config_loader
 
 
 def openURL(url_base, data=None, method='Get', cookies=None,

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.units
+    mslib.utils.units
     ~~~~~~~~~~~~~~
 
     Collection of unit conversion related routines for the Mission Support System.

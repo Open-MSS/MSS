@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.netCDF4tools
+    mslib.utils.netCDF4tools
     ~~~~~~~~~~~~~~~~~~
 
     Some useful functions for handling NetCDF files with the netCDF4 library.

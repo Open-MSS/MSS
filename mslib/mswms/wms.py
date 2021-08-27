@@ -61,7 +61,7 @@ from flask import request, make_response, render_template
 from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
-from mslib.utils import parse_iso_datetime
+from mslib.utils.time import parse_iso_datetime
 from mslib.index import app_loader
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
     write_doc_index, STATIC_LOCATION, DOCS_LOCATION
@@ -133,7 +133,7 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
         return authfunc(username, password)
 
 from mslib.mswms import mss_plot_driver
-from mslib.utils import get_projection_params
+from mslib.utils.coordinate import get_projection_params
 
 # Logging the Standard Output, which will be added to the Apache Log Files
 logging.basicConfig(level=logging.DEBUG,
