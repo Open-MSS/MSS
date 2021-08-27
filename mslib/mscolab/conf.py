@@ -37,6 +37,9 @@ except ImportError as ex:
         import os
         import logging
 
+        # Which origins are allowed to communicate with your server
+        CORS_ORIGINS = ["*"]
+
         # dir where mss output files are stored
         BASE_DIR = os.path.expanduser("~")
 

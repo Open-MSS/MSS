@@ -46,7 +46,7 @@ from mslib.utils import conditional_decorator
 from mslib.index import app_loader
 
 APP = app_loader(__name__)
-CORS(APP)
+CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
 
 # set the project root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder
