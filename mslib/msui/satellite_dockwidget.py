@@ -34,7 +34,7 @@ import numpy as np
 from mslib.msui.mss_qt import get_open_filename
 from mslib.msui.mss_qt import ui_satellite_dockwidget as ui
 from PyQt5 import QtWidgets
-from mslib.utils import save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from fs import open_fs
 
 

@@ -37,7 +37,8 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_project,\
     add_all_users_to_all_projects, delete_user
 from mslib.mscolab.utils import create_files
-from mslib.utils import setup_logging, Worker, Updater
+from mslib.utils import setup_logging
+from mslib.msui.mss_qt import Worker, Updater
 
 
 def handle_start(args):

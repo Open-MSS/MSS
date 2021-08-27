@@ -49,7 +49,7 @@ except ImportError:
     import pyproj
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
-from mslib.utils import get_airports, get_airspaces
+from mslib.utils.airdata import get_airports, get_airspaces
 
 
 OPENAIP_NOTICE = "Airspace data used comes from openAIP.\n" \

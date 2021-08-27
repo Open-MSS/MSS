@@ -248,7 +248,7 @@
   <customwidget>
    <class>CheckableComboBox</class>
    <extends>QComboBox</extends>
-   <header>mslib.utils</header>
+   <header>mslib.msui.mss_qt</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -81,6 +81,12 @@ class WMSControlWidgetSetup(object):
             self.window = wc.VSecWMSControlWidget(
                 view=self.view, wms_cache=self.tempdir, waypoints_model=waypoints_model)
         self.window.show()
+
+        # Remove all previous cached URLs
+        for url in self.window.multilayers.layers.copy():
+            server = self.window.multilayers.listLayers.findItems(url, QtCore.Qt.MatchFixedString)[0]
+            self.window.multilayers.delete_server(server)
+
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -567,6 +573,12 @@ class TestWMSControlWidgetSetupSimple(object):
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
         self.window.show()
+
+        # Remove all previous cached URLs
+        for url in self.window.multilayers.layers.copy():
+            server = self.window.multilayers.listLayers.findItems(url, QtCore.Qt.MatchFixedString)[0]
+            self.window.multilayers.delete_server(server)
+
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):

@@ -2,9 +2,9 @@
 """
 
     mslib.utils.config
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~
 
-    Collection of config functions.
+    Collection of functions all around config handling.
 
     This file is part of mss.
 
@@ -25,6 +25,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+
+import sys
+from PyQt5 import QtCore
 
 import copy
 import json
@@ -401,6 +404,60 @@ def config_loader(dataset=None, default=False):
         if default:
             return default_options
         return user_options
+
+
+def save_settings_qsettings(tag, settings, ignore_test=False):
+    """
+    Saves a dictionary settings to disk.
+
+    :param tag: string specifying the settings
+    :param settings: dictionary of settings
+    :return: None
+    """
+    assert isinstance(tag, str)
+    assert isinstance(settings, dict)
+    if not ignore_test and "pytest" in sys.modules:
+        return settings
+
+    q_settings = QtCore.QSettings("mss", "mss-core")
+    file_path = q_settings.fileName()
+    logging.debug("storing settings for %s to %s", tag, file_path)
+    try:
+        q_settings.setValue(tag, QtCore.QVariant(settings))
+    except (OSError, IOError) as ex:
+        logging.warning("Problems storing %s settings (%s: %s).", tag, type(ex), ex)
+    return settings
+
+
+def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
+    """
+    Loads a dictionary of settings from disk. May supply a dictionary of default settings
+    to return in case the settings file is not present or damaged. The default_settings one will
+    be updated by the restored one so one may rely on all keys of the default_settings dictionary
+    being present in the returned dictionary.
+
+    :param tag: string specifying the settings
+    :param default_settings: dictionary of settings or None
+    :return: dictionary of settings
+    """
+    if default_settings is None:
+        default_settings = {}
+    assert isinstance(default_settings, dict)
+    if not ignore_test and "pytest" in sys.modules:
+        return default_settings
+
+    settings = {}
+    q_settings = QtCore.QSettings("mss", "mss-core")
+    file_path = q_settings.fileName()
+    logging.debug("loading settings for %s from %s", tag, file_path)
+    try:
+        settings = q_settings.value(tag)
+    except Exception as ex:
+        logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
+                      tag, type(ex), ex)
+    if isinstance(settings, dict):
+        default_settings.update(settings)
+    return default_settings
 
 
 def merge_data(options, json_file_data):

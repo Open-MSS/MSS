@@ -38,7 +38,7 @@ import requests
 import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
-from mslib.utils.config import config_loader
+from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 import owslib.util
@@ -48,10 +48,10 @@ from PIL import Image, ImageOps
 from mslib.msui import constants, wms_capabilities
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
+from mslib.msui.mss_qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
-from mslib.utils import (
-    ogcwms, parse_iso_datetime, parse_iso_duration, load_settings_qsettings,
-    save_settings_qsettings, Worker)
+import mslib.utils.ogcwms as ogcwms
+from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 
 
 WMS_SERVICE_CACHE = {}
@@ -745,13 +745,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
+        selected = self.multilayers.current_layer.text(0) if self.multilayers.current_layer else None
         if not cache and wms.url in self.multilayers.layers and \
                 wms.capabilities_document.decode("utf-8") != \
                 self.multilayers.layers[wms.url]["wms"].capabilities_document.decode("utf-8"):
             self.multilayers.delete_server(self.multilayers.layers[wms.url]["header"])
         self.multilayers.add_wms(wms)
         for layer in filtered_layers:
-            self.multilayers.add_multilayer(layer, wms)
+            self.multilayers.add_multilayer(layer, wms, layer == selected)
         self.multilayers.filter_multilayers()
         self.multilayers.update_checkboxes()
         self.multilayers.pbViewCapabilities.setEnabled(True)

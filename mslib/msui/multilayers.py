@@ -29,7 +29,7 @@ import logging
 import mslib.msui.wms_control
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import ui_wms_multilayers as ui
-from mslib.utils import save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 
 
 class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
@@ -315,7 +315,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             icon = QtGui.QIcon(icons("64x64", "bin.png"))
             header.setIcon(0, icon)
 
-    def add_multilayer(self, name, wms):
+    def add_multilayer(self, name, wms, auto_select=False):
         """
         Adds a layer to the multilayer list, with the wms url as a parent
         """
@@ -369,8 +369,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if widget.is_invalid:
                 widget.setDisabled(True)
                 return
-            self.current_layer = widget
-            self.listLayers.setCurrentItem(widget)
+
+            if not self.current_layer or auto_select:
+                self.current_layer = widget
+                self.listLayers.setCurrentItem(widget)
 
     def multilayer_clicked(self, item):
         """

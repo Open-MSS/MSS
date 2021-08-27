@@ -30,12 +30,11 @@ import fs
 import logging
 import json
 
-from mslib.msui.mss_qt import get_open_filename, get_save_filename
+from mslib.msui.mss_qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
 from mslib.msui.constants import MSS_SETTINGS
 from mslib.msui.icons import icons
-from mslib.utils import show_popup
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_data
 
