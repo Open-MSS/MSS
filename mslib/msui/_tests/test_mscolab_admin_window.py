@@ -33,6 +33,8 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import mscolab_start_server
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
+from mslib.mscolab.mscolab import handle_db_reset
+from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
 
 
 PORTS = list(range(9531, 9550))
@@ -42,14 +44,28 @@ PORTS = list(range(9531, 9550))
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabAdminWindow(object):
     def setup(self):
+        handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.room_name = "europe"
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_project(self.room_name, "test europe")
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        self.user = get_user(self.userdata[0])
+        assert add_user("collaborator@example.de", "example", "example")
+        assert add_user_to_project(path=self.room_name, emailid="collaborator@example.de", access_level="collaborator")
+        assert add_user("viewer@example.de", "viewer", "viewer")
+        assert add_user_to_project(path=self.room_name, emailid="viewer@example.de", access_level="viewer")
+        assert add_user("name1@example.de", "name1", "name1")
+        assert add_user("name2@example.de", "name2", "name2")
+
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
-        self._login()
+        self._login(emailid=self.userdata[0], password=self.userdata[2])
         # activate project and open chat window
         self._activate_project_at_index(0)
         self.window.actionManageUsers.trigger()
@@ -67,7 +83,6 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
-    @pytest.mark.skip("based on handle_db_seed")
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Change filter to viewer
@@ -83,12 +98,11 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
 
-    @pytest.mark.skip("based on handle_db_seed")
     def test_text_search_filter(self):
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Text Search in add users Table
-        QtTest.QTest.keyClicks(self.admin_window.addUsersSearch, "test2")
+        QtTest.QTest.keyClicks(self.admin_window.addUsersSearch, "name1")
         QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.addUsersTable)
         assert visible_row_count == 1
@@ -98,7 +112,7 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.addUsersTable)
         assert visible_row_count == len_unadded_users
         # Text Search in modify users Table
-        QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "test4")
+        QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "example")
         QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 1
@@ -108,9 +122,8 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
 
-    @pytest.mark.skip("based on handle_db_seed")
     def test_permission_and_text_together(self):
-        QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "test4")
+        QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "viewer")
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
         QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
@@ -120,11 +133,10 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 0
 
-    @pytest.mark.skip("based on handle_db_seed")
     def test_add_permissions(self):
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
-        users = ["test2", "test3"]
+        users = ["name1", "name2"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
         index = self.admin_window.addUsersPermission.findText("admin", QtCore.Qt.MatchFixedString)
@@ -137,9 +149,8 @@ class Test_MscolabAdminWindow(object):
         assert len_unadded_users - 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
-    @pytest.mark.skip("based on handle_db_seed")
     def test_modify_permissions(self):
-        users = ["test2", "test3"]
+        users = ["name1", "name2"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
@@ -154,10 +165,9 @@ class Test_MscolabAdminWindow(object):
         # Check if the permission has been updated
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
-    @pytest.mark.skip("based on handle_db_seed")
     def test_delete_permissions(self):
         # Select users in the add users table
-        users = ["test2", "test3"]
+        users = ["name1", "name2"]
         self._select_users(self.admin_window.addUsersTable, users)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -174,14 +184,13 @@ class Test_MscolabAdminWindow(object):
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
-    @pytest.mark.skip("based on handle_db_seed")
     def test_import_permissions(self):
-        index = self.admin_window.importPermissionsCB.findText("three", QtCore.Qt.MatchFixedString)
+        index = self.admin_window.importPermissionsCB.findText("name1", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
-        assert self.admin_window.modifyUsersTable.rowCount() == 5
+        assert self.admin_window.modifyUsersTable.rowCount() == 2
 
     def _connect_to_mscolab(self):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
@@ -192,9 +201,9 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
-    def _login(self):
-        self.connect_window.loginEmailLe.setText('test1')
-        self.connect_window.loginPasswordLe.setText('test1')
+    def _login(self, emailid, password):
+        self.connect_window.loginEmailLe.setText(emailid)
+        self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)

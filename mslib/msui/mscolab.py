@@ -971,7 +971,8 @@ class MSSMscolab(QtCore.QObject):
         if self.verify_user_token():
             server_xml = self.request_wps_from_server()
             server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-            self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, parent=self.ui)
+            self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model,
+                                                            server_waypoints_model, parent=self.ui)
             self.merge_dialog.saveBtn.setDisabled(True)
             if self.merge_dialog.exec_():
                 xml_content = self.merge_dialog.get_values()
