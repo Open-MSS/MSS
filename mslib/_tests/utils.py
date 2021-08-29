@@ -25,6 +25,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import requests
 import time
 import fs
 import socket
@@ -181,14 +182,14 @@ def mscolab_check_free_port(all_ports, port):
 
 
 def mscolab_ping_server(port):
-    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    url = f"http://127.0.0.1:{port}/status"
     try:
-        _s.bind(("127.0.0.1", port))
-    except (socket.error, IOError):
+        r = requests.get(url)
+        if r.text == "Mscolab server":
+            return True
+    except requests.exceptions.ConnectionError:
         return False
-    else:
-        _s.close()
-    return True
+    return False
 
 
 def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=5):
