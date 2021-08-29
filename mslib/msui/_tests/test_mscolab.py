@@ -278,7 +278,7 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    # @pytest.mark.skip("fails on github")
+    @pytest.mark.skip("fails on github with WebSocket transport is not available")
     @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
