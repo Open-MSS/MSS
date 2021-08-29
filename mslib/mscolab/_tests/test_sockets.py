@@ -26,16 +26,22 @@
 """
 import pytest
 import socketio
+import datetime
+import requests
+import json
+import fs
 
+from werkzeug.urls import url_join
+from mslib.msui.icons import icons
 from mslib.mscolab.conf import mscolab_settings
 from mslib._tests.utils import mscolab_check_free_port, LiveSocketTestCase
 from mslib.mscolab.server import db, APP, initialize_managers
 from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project, get_project
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.sockets_manager import SocketsManager
-from mslib.mscolab.models import Permission, User
+from mslib.mscolab.models import Permission, User, Message, MessageType
 
-PORTS = list(range(9521, 9540))
+PORTS = list(range(39521, 39540))
 
 
 class Test_Sockets(LiveSocketTestCase):
@@ -146,6 +152,7 @@ class Test_Sockets(LiveSocketTestCase):
 
     def test_chat_message_emit(self):
         sio = socketio.Client()
+        self.sockets.append(sio)
         assert self.chat_messages_counter_a == 0
 
         def handle_chat_message(message):
@@ -166,3 +173,177 @@ class Test_Sockets(LiveSocketTestCase):
                  )
         sio.sleep(1)
         assert self.chat_messages_counter_a == 2
+
+    def test_send_message(self):
+        sio = self._connect()
+        sio.emit('start', {'token': self.token})
+        sio.sleep(1)
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
+        sio.sleep(1)
+        # testing non-ascii message
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "® non ascii",
+            "reply_id": -1
+        })
+        sio.sleep(1)
+
+        with self.app.app_context():
+            message = Message.query.filter_by(text="message from 1").first()
+            assert message.p_id == self.project.id
+            assert message.u_id == self.user.id
+
+            message = Message.query.filter_by(text="® non ascii").first()
+            assert message is not None
+
+    def test_get_messages(self):
+        sio = self._connect()
+        sio.emit('start', {'token': self.token})
+        sio.sleep(1)
+        # ToDo same message gets twice emmitted, why? (use a helper function)
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
+        sio.sleep(1)
+        with self.app.app_context():
+            messages = self.cm.get_messages(1)
+            assert messages[0]["text"] == "message from 1"
+            assert len(messages) == 2
+            assert messages[0]["u_id"] == self.user.id
+            timestamp = datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+            messages = self.cm.get_messages(1, timestamp)
+            assert len(messages) == 2
+            assert messages[0]["u_id"] == self.user.id
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
+            messages = self.cm.get_messages(1, timestamp)
+            assert len(messages) == 0
+
+    def test_get_messages_api(self):
+        sio = self._connect()
+        sio.emit('start', {'token': self.token})
+        sio.sleep(1)
+        # ToDo same message gets twice emmitted, why?
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "message from 1",
+            "reply_id": -1
+        })
+        sio.sleep(1)
+
+        token = self.token
+        data = {
+            "token": token,
+            "p_id": self.project.id,
+            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+        }
+        # returns an array of messages
+        url = url_join(self.url, 'messages')
+        res = requests.get(url, data=data).json()
+        assert len(res["messages"]) == 2
+
+        data["token"] = "dummy"
+        # returns False due to bad authorization
+        r = requests.get(url, data=data)
+        assert r.text == "False"
+
+    def test_edit_message(self):
+        sio = self._connect()
+        sio.emit('start', {'token': self.token})
+        sio.sleep(1)
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "Edit this message",
+            "reply_id": -1
+        })
+        sio.sleep(1)
+        with self.app.app_context():
+            message = Message.query.filter_by(text="Edit this message").first()
+        sio.emit('edit-message', {
+            "message_id": message.id,
+            "new_message_text": "I have updated the message",
+            "p_id": message.p_id,
+            "token": self.token
+        })
+        sio.sleep(1)
+        token = self.token
+        data = {
+            "token": token,
+            "p_id": self.project.id,
+            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+        }
+        # returns an array of messages
+        url = url_join(self.url, 'messages')
+        res = requests.get(url, data=data).json()
+        assert len(res["messages"]) == 1
+        messages = res["messages"][0]
+        assert messages["text"] == "I have updated the message"
+
+    def test_delete_message(self):
+        sio = self._connect()
+        sio.emit('start', {'token': self.token})
+        sio.sleep(1)
+        sio.emit("chat-message", {
+            "p_id": self.project.id,
+            "token": self.token,
+            "message_text": "delete this message",
+            "reply_id": -1
+        })
+        sio.sleep(1)
+        with self.app.app_context():
+            message = Message.query.filter_by(text="delete this message").first()
+        sio.emit('delete-message', {
+            'message_id': message.id,
+            'p_id': self.project.id,
+            'token': self.token
+        })
+        sio.sleep(1)
+
+        with self.app.app_context():
+            assert Message.query.filter_by(text="delete this message").count() == 0
+
+    def test_upload_file(self):
+        sio = self._connect()
+        sio.emit('start', {'token': self.token})
+        sio.sleep(1)
+        message_recv = []
+
+        def handle_incoming_message(msg):
+            msg = json.loads(msg)
+            message_recv.append(msg)
+
+        sio.on('chat-message-client', handler=handle_incoming_message)
+
+        files = {'file': open(icons('16x16'), 'rb')}
+        data = {
+            "token": self.token,
+            "p_id": self.project.id,
+            "message_type": int(MessageType.IMAGE)
+        }
+        url = url_join(self.url, 'message_attachment')
+        requests.post(url, data=data, files=files)
+        sio.sleep(1)
+        assert len(message_recv) == 1
+        assert fs.path.join("uploads", "1", "mss-logo") in message_recv[0]["text"]
