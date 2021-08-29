@@ -30,7 +30,6 @@ import fs
 import socket
 import multiprocessing
 
-import socketserver
 from flask_testing import LiveServerTestCase
 
 from PyQt5 import QtTest
@@ -253,27 +252,6 @@ class LiveSocketTestCase(LiveServerTestCase):
     def _spawn_live_server(self):
         self._process = None
         port_value = self._port_value
-
-        def worker(app, port):
-            # Based on solution: http://stackoverflow.com/a/27598916
-            # Monkey-patch the server_bind so we can determine the port bound by Flask.
-            # This handles the case where the port specified is `0`, which means that
-            # the OS chooses the port. This is the only known way (currently) of getting
-            # the port out of Flask once we call `run`.
-            original_socket_bind = socketserver.TCPServer.server_bind
-
-            def socket_bind_wrapper(self):
-                ret = original_socket_bind(self)
-
-                # Get the port and save it into the port_value, so the parent process
-                # can read it.
-                (_, port) = self.socket.getsockname()
-                port_value.value = port
-                socketserver.TCPServer.server_bind = original_socket_bind
-                return ret
-
-            socketserver.TCPServer.server_bind = socket_bind_wrapper
-
         app, sockio, cm, fm = initialize_managers(self.app)
         self._process = multiprocessing.Process(
             target=start_server,
