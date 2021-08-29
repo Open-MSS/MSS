@@ -49,8 +49,9 @@ class TestSettingsSave(object):
         settings = {'foo': 'bar'}
         config.save_settings_qsettings(self.tag, settings, ignore_test=True)
 
-    # @pytest.mark.skip("fails on github")
     def test_load_settings(self):
+        settings = {'foo': 'bar'}
+        config.save_settings_qsettings(self.tag, settings, ignore_test=True)
         settings = config.load_settings_qsettings(self.tag, ignore_test=True)
         assert isinstance(settings, dict)
         assert settings["foo"] == "bar"
