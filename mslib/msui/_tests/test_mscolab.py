@@ -92,7 +92,7 @@ class Test_Mscolab_connect_window():
         QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
         assert self.window.mscolab_server_url is None
 
-    @pytest.mark.skip("fails on github")
+    # @pytest.mark.skip("fails on github")
     def test_login(self):
         self._connect_to_mscolab()
         self._login(self.userdata[0], self.userdata[2])
@@ -111,7 +111,7 @@ class Test_Mscolab_connect_window():
         assert self.main_window.mscolab.conn is None
         assert self.main_window.local_active is True
 
-    @pytest.mark.skip("fails on github")
+    # @pytest.mark.skip("fails on github")
     def test_add_user(self):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
@@ -120,7 +120,7 @@ class Test_Mscolab_connect_window():
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
 
-    @pytest.mark.skip("fails on github")
+    # @pytest.mark.skip("fails on github")
     def test_failed_authorize(self):
         class response:
             def __init__(self, code, text):
@@ -278,7 +278,7 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @pytest.mark.skip("fails on github")
+    # @pytest.mark.skip("fails on github")
     @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
@@ -318,7 +318,7 @@ class Test_Mscolab(object):
                 for i in range(wp_count):
                     assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
 
-    @pytest.mark.skip("fails on github")
+    # @pytest.mark.skip("fails on github")
     def test_work_locally_toggle(self):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
@@ -336,7 +336,7 @@ class Test_Mscolab(object):
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
-    @pytest.mark.skip("fails on github")
+    # @pytest.mark.skip("fails on github")
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
     def test_browse_add_project(self, mockopen, mockmessage):
@@ -358,7 +358,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listProjectsMSC.model().rowCount() == 1
 
-    @pytest.mark.skip("fails on github")
+    # @pytest.mark.skip("fails on github")
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")
     def test_add_project(self, mockbox):
         self._connect_to_mscolab()
