@@ -180,7 +180,18 @@ def mscolab_check_free_port(all_ports, port):
     return port
 
 
-def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
+def mscolab_ping_server(port):
+    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        _s.bind(("127.0.0.1", port))
+    except (socket.error, IOError):
+        return False
+    else:
+        _s.close()
+    return True
+
+
+def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=5):
     handle_db_init()
     port = mscolab_check_free_port(all_ports, all_ports.pop())
 
@@ -202,6 +213,17 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
         args=(_app, sockio, cm, fm,),
         kwargs={'port': port})
     process.start()
+    start_time = time.time()
+    while True:
+        elapsed_time = (time.time() - start_time)
+        if elapsed_time > timeout:
+            raise RuntimeError(
+                "Failed to start the server after %d seconds. " % timeout
+            )
+
+        if mscolab_ping_server(port):
+            break
+
     return process, url, _app, sockio, cm, fm
 
 
