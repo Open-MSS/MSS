@@ -43,6 +43,7 @@ from mslib.mscolab.models import Permission, User, Message, MessageType
 PORTS = list(range(39021, 39540))
 
 
+@pytest.mark.skip("skipped for now")
 class Test_Socket_Manager(LiveSocketTestCase):
     run_gc_after_test = True
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
@@ -83,7 +84,6 @@ class Test_Socket_Manager(LiveSocketTestCase):
     def tearDown(self):
         for socket in self.sockets:
             socket.disconnect()
-        # self._process.terminate()
 
     def _connect(self):
         sio = socketio.Client(reconnection_attempts=5)
