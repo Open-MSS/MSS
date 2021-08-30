@@ -34,6 +34,8 @@ from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
+from mslib.mscolab.mscolab import handle_db_reset
+from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
 
 
 PORTS = list(range(9591, 9620))
@@ -43,14 +45,21 @@ PORTS = list(range(9591, 9620))
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabVersionHistory(object):
     def setup(self):
+        handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.room_name = "europe"
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_project(self.room_name, "test europe")
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
-        self._login()
+        self._login(self.userdata[0], self.userdata[2])
         # activate project and open chat window
         self._activate_project_at_index(0)
         self.window.actionVersionHistory.trigger()
@@ -69,7 +78,6 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
-    @pytest.mark.skip('An unhandled message box popped up during your test!')
     def test_changes(self):
         self._change_version_filter(1)
         len_prev = self.version_window.changes.count()
@@ -87,28 +95,21 @@ class Test_MscolabVersionHistory(object):
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_set_version_name(self, mockbox):
-        self._change_version_filter(1)
-        # make a changes
-        self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        self.version_window.load_all_changes()
-        QtWidgets.QApplication.processEvents()
-        self._activate_change_at_index(0)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
+        self._set_version_name()
         QtTest.QTest.qWait(100)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
         assert self.version_window.changes.count() == 1
 
-    def test_version_name_delete(self):
-        pytest.skip("skipped because the next line triggers an assert")
-        self._activate_change_at_index(0)
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
+    def test_version_name_delete(self, mockbox):
+        self._set_version_name()
+        QtTest.QTest.qWait(100)
+        assert self.version_window.changes.currentItem().version_name == "MyVersionName"
         QtTest.QTest.mouseClick(self.version_window.deleteVersionNameBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        assert self.version_window.changes.count() == 0
+        QtTest.QTest.qWait(500)
+        assert self.version_window.changes.count() == 1
+        assert self.version_window.changes.currentItem().version_name is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo(self, mockbox):
@@ -153,10 +154,10 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
-    def _login(self):
+    def _login(self, emailid, password):
         assert self.connect_window is not None
-        self.connect_window.loginEmailLe.setText('a')
-        self.connect_window.loginPasswordLe.setText('a')
+        self.connect_window.loginEmailLe.setText(emailid)
+        self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
@@ -188,3 +189,16 @@ class Test_MscolabVersionHistory(object):
         self.version_window.versionFilterCB.currentIndexChanged.emit(index)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
+
+    def _set_version_name(self):
+        self._change_version_filter(1)
+        # make a changes
+        self.window.mscolab.waypoints_model.invert_direction()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(100)
+        self.version_window.load_all_changes()
+        QtWidgets.QApplication.processEvents()
+        self._activate_change_at_index(0)
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
