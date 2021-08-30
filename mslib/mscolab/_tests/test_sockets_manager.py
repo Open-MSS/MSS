@@ -44,6 +44,7 @@ PORTS = list(range(39021, 39540))
 
 
 class Test_Socket_Manager(LiveSocketTestCase):
+    run_gc_after_test = True
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
     chat_messages_counter_a = 0  # only for first test
 
@@ -309,7 +310,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
         }
         url = url_join(self.url, 'message_attachment')
         requests.post(url, data=data, files=files)
-        upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, '1')
+        upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, str(self.user.id))
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]
         assert 'mss-logo' in file
