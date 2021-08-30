@@ -24,12 +24,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import pytest
 import socketio
 import datetime
 import requests
-import json
-import fs
 
 from werkzeug.urls import url_join
 from mslib.msui.icons import icons
@@ -44,7 +43,6 @@ from mslib.mscolab.models import Permission, User, Message, MessageType
 PORTS = list(range(39021, 39540))
 
 
-@pytest.mark.skip("skipped for now")
 class Test_Socket_Manager(LiveSocketTestCase):
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
     chat_messages_counter_a = 0  # only for first test
@@ -87,7 +85,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
         self._process.terminate()
 
     def _connect(self):
-        sio = socketio.Client()
+        sio = socketio.Client(reconnection_attempts=5)
         self.sockets.append(sio)
         assert self._can_ping_server()
         sio.connect(self.url)
@@ -150,28 +148,6 @@ class Test_Socket_Manager(LiveSocketTestCase):
         json_config = {"token": self.token}
         assert User.verify_auth_token(self.token) is not False
         sio.emit('start', json_config)
-
-    def test_chat_message_emit(self):
-        sio = self._connect()
-        sio.emit('start', {'token': self.token})
-        sio.sleep(1)
-
-        def handle_chat_message(message):
-            self.chat_messages_counter_a += 1
-
-        sio.on('chat-message-client', handler=handle_chat_message)
-
-        sio.sleep(1)
-
-        sio.emit("chat-message", {"p_id": self.project.id, "token": self.token,
-                                  "message_text": "message from 1", "reply_id": -1}
-                 )
-        assert self.chat_messages_counter_a == 1
-        sio.emit("chat-message", {"p_id": self.project.id, "token": self.token,
-                                  "message_text": "message from 1", "reply_id": -1}
-                 )
-        sio.sleep(1)
-        assert self.chat_messages_counter_a == 2
 
     def test_send_message(self):
         sio = self._connect()
@@ -325,15 +301,6 @@ class Test_Socket_Manager(LiveSocketTestCase):
     def test_upload_file(self):
         sio = self._connect()
         sio.emit('start', {'token': self.token})
-
-        message_recv = []
-
-        def handle_incoming_message(msg):
-            msg = json.loads(msg)
-            message_recv.append(msg)
-
-        sio.on('chat-message-client', handler=handle_incoming_message)
-
         files = {'file': open(icons('16x16'), 'rb')}
         data = {
             "token": self.token,
@@ -342,6 +309,8 @@ class Test_Socket_Manager(LiveSocketTestCase):
         }
         url = url_join(self.url, 'message_attachment')
         requests.post(url, data=data, files=files)
-        sio.sleep(1)
-        assert len(message_recv) == 1
-        assert fs.path.join("uploads", "1", "mss-logo") in message_recv[0]["text"]
+        upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, '1')
+        assert os.path.exists(upload_dir)
+        file = os.listdir(upload_dir)[0]
+        assert 'mss-logo' in file
+        assert 'png' in file
