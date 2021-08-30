@@ -184,7 +184,6 @@ class Test_MscolabAdminWindow(object):
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
-    # @pytest.mark.skip("fails on github")
     def test_import_permissions(self):
         index = self.admin_window.importPermissionsCB.findText("name1", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
