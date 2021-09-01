@@ -213,10 +213,14 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                 header.setExpanded(True)
                 header.setSelected(True)
                 self.treeWidget.setCurrentItem(header)
-            for description, shortcut in self.current_shortcuts[widget].items():
+            for objectName in self.current_shortcuts[widget].keys():
+                description, text, _, shortcut, obj = self.current_shortcuts[widget][objectName]
                 item = QtWidgets.QTreeWidgetItem(header)
-                item.source_object = shortcut[-1]
-                item.setText(0, f"{description}: {shortcut[0]}")
+                item.source_object = obj
+                itemText = description if self.cbDisplayType.currentText() == 'Tooltip' \
+                    else text if self.cbDisplayType.currentText() == 'Text' else objectName
+                item.setText(0, f"{itemText}: {shortcut}")
+                item.setToolTip(0, f"ToolTip: {description}\nText: {text}\nObjectName: {objectName}")
                 header.addChild(item)
         self.filter_shortcuts(self.leShortcutFilter.text())
 
@@ -224,35 +228,32 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         Iterates through all top level widgets and puts their shortcuts in a dictionary
         """
-        d_type = self.cbDisplayType.currentText()
         shortcuts = {}
         for qobject in QtWidgets.QApplication.topLevelWidgets():
-            actions = [(qobject.window(), "Show Current Shortcuts", "Alt+S", None)]
+            actions = [(qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts", "Show Current Shortcuts",
+                        "Alt+S", None)]
             actions.extend([
-                (action.parent().window(), action.objectName() if d_type == "ObjectName" else action.toolTip(),
+                (action.parent().window(), action.toolTip(), action.toolTip(), action.objectName(),
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
                 for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
                 self.cbNoShortcut.checkState()])
-            actions.extend([(shortcut.parentWidget().window(), shortcut.objectName() if d_type == "ObjectName" else
-                            shortcut.whatsThis(), shortcut.key().toString(), shortcut)
+            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
+                             shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
-            actions.extend([(button.window(), button.toolTip() if d_type == "Tooltip" else button.text() if
-                            d_type == "Text" else button.objectName(),
+            actions.extend([(button.window(), button.toolTip(), button.text().replace("&&", "%%").replace("&", "")
+                             .replace("%%", "&"), button.objectName(),
                              button.shortcut().toString() if button.shortcut() else "", button)
                             for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut() or
                             self.cbNoShortcut.checkState()])
 
             # Additional objects which have no shortcuts, if requested
-            actions.extend([(obj.window(), obj.toolTip() if d_type == "Tooltip" else obj.currentText() if
-                            d_type == "Text" else obj.objectName(), "", obj)
+            actions.extend([(obj.window(), obj.toolTip(), obj.currentText(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QComboBox) if self.cbNoShortcut.checkState()])
-            actions.extend([(obj.window(), obj.toolTip() if d_type == "Tooltip" else obj.text() if
-                            d_type == "Text" else obj.objectName(), "", obj)
+            actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QAbstractSpinBox) +
                             qobject.findChildren(QtWidgets.QLineEdit)
                             if self.cbNoShortcut.checkState()])
-            actions.extend([(obj.window(), obj.toolTip() if d_type == "Tooltip" else obj.toPlainText() if
-                            d_type == "Text" else obj.objectName(), "", obj)
+            actions.extend([(obj.window(), obj.toolTip(), obj.toPlainText(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QPlainTextEdit) +
                             qobject.findChildren(QtWidgets.QTextEdit)
                             if self.cbNoShortcut.checkState()])
@@ -260,7 +261,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
             for item in actions:
                 if item[0] not in shortcuts:
                     shortcuts[item[0]] = {}
-                shortcuts[item[0]][item[1].replace(f"({item[2]})", "").strip()] = [item[2], item[3]]
+                shortcuts[item[0]][item[3].strip()] = item[1:]
 
         return shortcuts
 

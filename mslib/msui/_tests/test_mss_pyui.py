@@ -80,9 +80,9 @@ class Test_MSS_ShortcutDialog():
 
         # Assert changing display type works
         self.shortcuts.cbAdvanced.click()
-        old_list = self.shortcuts.current_shortcuts
+        old_text = self.shortcuts.treeWidget.topLevelItem(0).child(1).text(0)
         self.shortcuts.cbDisplayType.setCurrentIndex(2)
-        assert self.shortcuts.current_shortcuts != old_list
+        assert self.shortcuts.treeWidget.topLevelItem(0).child(1).text(0) != old_text
 
         # Assert double clicking works
         self.shortcuts.cbNoShortcut.setCheckState(True)
