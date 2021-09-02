@@ -37,7 +37,7 @@ import mslib.msui.mss_pyui as mss_pyui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
 
-PORTS = list(range(9571, 9590))
+PORTS = list(range(22000, 22500))
 
 
 class Actions(object):

@@ -40,7 +40,7 @@ import mslib.msui.mss_pyui as mss_pyui
 from mslib.mscolab.mscolab import handle_db_reset
 
 
-PORTS = list(range(9551, 9570))
+PORTS = list(range(23000, 23500))
 
 
 @pytest.mark.skipif(os.name == "nt",

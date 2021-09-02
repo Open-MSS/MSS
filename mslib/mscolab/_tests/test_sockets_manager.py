@@ -40,7 +40,7 @@ from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.sockets_manager import SocketsManager
 from mslib.mscolab.models import Permission, User, Message, MessageType
 
-PORTS = list(range(39021, 39540))
+PORTS = list(range(27000, 27500))
 
 
 @pytest.mark.skip("skipped for now")

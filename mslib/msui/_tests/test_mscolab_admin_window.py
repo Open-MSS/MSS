@@ -37,7 +37,7 @@ from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
 
 
-PORTS = list(range(9531, 9550))
+PORTS = list(range(24000, 24500))
 
 
 @pytest.mark.skipif(os.name == "nt",

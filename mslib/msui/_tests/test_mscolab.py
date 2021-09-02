@@ -43,7 +43,7 @@ from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
 
-PORTS = list(range(9481, 9530))
+PORTS = list(range(25000, 25500))
 
 
 class Test_Mscolab_connect_window():

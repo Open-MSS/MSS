@@ -32,7 +32,7 @@ from mslib.msui import flighttrack as ft
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
-PORTS = list(range(29551, 29570))
+PORTS = list(range(21000, 21500))
 
 
 # ToDo Understand why this needs to be skipped, it runs when direct called

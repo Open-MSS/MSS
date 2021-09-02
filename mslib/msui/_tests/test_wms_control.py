@@ -41,7 +41,7 @@ from mslib.msui.mss_pyui import MSSMainWindow
 from mslib._tests.utils import wait_until_signal
 
 
-PORTS = list(range(8107, 8125))
+PORTS = list(range(18000, 18500))
 
 
 class HSecViewMockup(mock.Mock):
