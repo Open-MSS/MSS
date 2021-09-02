@@ -379,7 +379,7 @@ class WMSServer(object):
                                                                                                 f"{vert_units}",
                                                       itime=str(itime), vtime=str(vtime), simple_naming=simple_naming)
                                             if level:
-                                                add_levels([f"{level}{vert_units}"])
+                                                add_levels([f"{level} {vert_units}"], vert_units)
                                             add_times(itime, [vtime])
                                         continue
 

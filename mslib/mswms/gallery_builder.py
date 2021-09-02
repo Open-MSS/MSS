@@ -204,9 +204,13 @@ div.gallery img {
 }
 </style>
 </head>
-<body onload="hideEmptySelects(); document.getElementById('level-select').options[0].selected = 'selected';
-              document.getElementById('time-select').options[0].selected = 'selected';
-              document.getElementById('gallery-filter').value = '';">
+<body onload="hideEmptySelects(); 
+              if(document.getElementById('level-select').options.length > 0)
+                document.getElementById('level-select').options[0].selected = 'selected';
+              if(document.getElementById('time-select').options.length > 0)
+                document.getElementById('time-select').options[0].selected = 'selected';
+              document.getElementById('gallery-filter').value = '';
+              changeImages();">
 
 <h3>Plot Gallery</h3>
 
@@ -260,24 +264,40 @@ function imageExists(image_url){
     return files.includes(image_url.split("/").pop());
 }
 
-function changeImages(){
+function changeImages(from_filter=false){
+    if(!from_filter){
+        filterContent();
+        return;
+    }
+    
     var value = document.getElementById("level-select").value;
+    var selected = document.getElementById("level-select")
+                    .options[document.getElementById("level-select").selectedIndex];
+    var unit = selected.parentNode.label;
     var vtime = document.getElementById("time-select").value
                 .replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
-    var selected = document.getElementById("time-select").options[document.getElementById("time-select").selectedIndex]
+    selected = document.getElementById("time-select").options[document.getElementById("time-select").selectedIndex]
     var itime = selected.parentNode.label.replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
 
     hrefs = document.getElementsByName("gallery-href");
     images = document.getElementsByName("gallery-image");
     for(var i = 0; i < images.length; i++){
         var image = images[i];
-        var tmpLevel = value;
+        var tmpLevel = value.replaceAll(" ", "");
         var new_location = image.src.replace(image.src.split("-").pop(), `${tmpLevel}it${itime}vt${vtime}.png`);
+        var parentNode = hrefs.length == images.length ? image.parentNode.parentNode : image.parentNode;
+        
+        parentNode.style.display = "block";
+        
         if(!imageExists(new_location)){
+            if(image.src.includes("Top")){
+                parentNode.style.display = "none";
+                continue;
+            }
             tmpLevel = image.src.split("-").pop().split("it")[0];
             new_location = image.src.replace(image.src.split("-").pop(), `${tmpLevel}it${itime}vt${vtime}.png`)
         }
-        exists = imageExists(new_location);
+        var exists = imageExists(new_location);
         if(exists){
             image.src = new_location;
         }
@@ -304,6 +324,8 @@ function filterContent(){
             }
         }
     }
+    
+    changeImages(true);
 }
 </script>
 </body>
@@ -628,11 +650,14 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
                                                                 if plot_object.abstract else "")))
 
 
-def add_levels(levels):
+def add_levels(levels, l_type):
     global begin
     level_select = begin.split("name=\"levels\"")[-1].split("</select>")[0]
-    begin = begin.replace(level_select, level_select + "".join([f"<option value='{level}'>{level}</option>" for level
-                                                                in levels if f"value='{level}'" not in level_select]))
+    if f"optgroup label=\"{l_type}\"" not in level_select:
+        begin = begin.replace(level_select, level_select + f"<optgroup label=\"{l_type}\" id=\"{l_type}\"></optgroup>")
+    opt_group = begin.split(f"label=\"{l_type}\"")[-1].split("</optgroup>")[0]
+    begin = begin.replace(opt_group, opt_group + "".join([f"<option value='{level}'>{level}</option>" for level
+                                                          in levels if f"value='{level}'" not in opt_group]))
 
 
 def add_times(itime, vtimes):
