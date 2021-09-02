@@ -43,7 +43,6 @@ from mslib.mscolab.models import Permission, User, Message, MessageType
 PORTS = list(range(27000, 27500))
 
 
-@pytest.mark.skip("skipped for now")
 class Test_Socket_Manager(LiveSocketTestCase):
     run_gc_after_test = True
     chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
