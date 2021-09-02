@@ -67,7 +67,6 @@ code_header = """\"\"\"
 
 """
 
-
 begin = """
 <!DOCTYPE html>
 <html>
@@ -204,7 +203,7 @@ div.gallery img {
 }
 </style>
 </head>
-<body onload="hideEmptySelects(); 
+<body onload="hideEmptySelects();
               if(document.getElementById('level-select').options.length > 0)
                 document.getElementById('level-select').options[0].selected = 'selected';
               if(document.getElementById('time-select').options.length > 0)
@@ -225,6 +224,7 @@ div.gallery img {
 """
 
 plots = {"Top": [], "Side": [], "Linear": []}
+plot_htmls = {}
 
 end = """
 <script>
@@ -269,15 +269,17 @@ function changeImages(from_filter=false){
         filterContent();
         return;
     }
-    
+
     var value = document.getElementById("level-select").value;
-    var selected = document.getElementById("level-select")
-                    .options[document.getElementById("level-select").selectedIndex];
-    var unit = selected.parentNode.label;
+    value = value != "" ? value : "None";
     var vtime = document.getElementById("time-select").value
                 .replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
-    selected = document.getElementById("time-select").options[document.getElementById("time-select").selectedIndex]
-    var itime = selected.parentNode.label.replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
+    vtime = vtime != "" ? vtime : "None";
+    var itime = "None";
+    if(vtime != "None"){
+        selected = document.getElementById("time-select").options[document.getElementById("time-select").selectedIndex]
+        var itime = selected.parentNode.label.replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
+    }
 
     hrefs = document.getElementsByName("gallery-href");
     images = document.getElementsByName("gallery-image");
@@ -286,9 +288,9 @@ function changeImages(from_filter=false){
         var tmpLevel = value.replaceAll(" ", "");
         var new_location = image.src.replace(image.src.split("-").pop(), `${tmpLevel}it${itime}vt${vtime}.png`);
         var parentNode = hrefs.length == images.length ? image.parentNode.parentNode : image.parentNode;
-        
+
         parentNode.style.display = "block";
-        
+
         if(!imageExists(new_location)){
             if(image.src.includes("Top")){
                 parentNode.style.display = "none";
@@ -300,12 +302,6 @@ function changeImages(from_filter=false){
         var exists = imageExists(new_location);
         if(exists){
             image.src = new_location;
-        }
-        if(hrefs.length == images.length && exists){
-            var link = hrefs[i];
-            var level = link.href.split("-").pop();
-            link.href = link.href.replace(level, `${tmpLevel}it${itime}vt${vtime}` +
-            (level.includes(".md") ? ".md" : ".html"));
         }
     }
 }
@@ -324,12 +320,60 @@ function filterContent(){
             }
         }
     }
-    
+
     changeImages(true);
 }
 </script>
 </body>
 </html>
+"""
+
+plot_html_begin = """
+   <select name="levels" id="level-select" onchange="changeImages()"></select>
+   <select name="times" id="time-select" onchange="changeImages()"></select>
+   <script>
+   hideEmptySelects();
+   if(document.getElementById('level-select').options.length > 0)
+      document.getElementById('level-select').options[0].selected = 'selected';
+   if(document.getElementById('time-select').options.length > 0)
+      document.getElementById('time-select').options[0].selected = 'selected';
+   changeImages();
+
+   function hideEmptySelects(){
+      levels = document.getElementById("level-select");
+      times = document.getElementById("time-select");
+      selects = [levels, times];
+      for(var select of selects){
+         if(select && select.children.length == 0){
+            select.style.display = "none";
+         }
+      }
+   }
+
+   function changeImages(){
+       var value = document.getElementById("level-select").value;
+       value = value != "" ? value : "None";
+       var vtime = document.getElementById("time-select").value
+                   .replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
+       vtime = vtime != "" ? vtime : "None";
+       var itime = "None";
+       if(vtime != "None"){
+         selected = document.getElementById("time-select").options[document.getElementById("time-select").selectedIndex]
+         var itime = selected.parentNode.label.replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
+       }
+
+       images = document.getElementsByTagName("img");
+       for(var i = 0; i < images.length; i++){
+           var image = images[i];
+           if(image.src.includes("Top_") || image.src.includes("Side_") || image.src.includes("Linear_")){
+              var tmpLevel = value.replaceAll(" ", "");
+              var new_location = image.src.replace(image.src.split("-").pop(), `${tmpLevel}it${itime}vt${vtime}.png`);
+              new_location = new_location.replace("_images", "_static");
+              image.src = new_location;
+           }
+       }
+   }</script>
+
 """
 
 
@@ -366,6 +410,22 @@ Code Examples
 
 {files}
 """)
+
+
+def write_code_pages(sphinx=False, url_prefix=None):
+    """
+    Writes the .html, .rst or .md files containing the code examples for the plots
+    """
+    from mslib.index import SCRIPT_NAME
+    for layer in plot_htmls:
+        code_path = f"code/{layer}.html" if sphinx \
+            else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{layer}.md"
+        if not sphinx:
+            with open(os.path.join(STATIC_LOCATION, "code", code_path.split('/')[-1]), "w+") as f:
+                f.write(plot_htmls[layer])
+        else:
+            with open(os.path.join(DOCS_LOCATION, "code", code_path.split('/')[-1].replace("html", "rst")), "w+") as f:
+                f.write(f""".. raw:: html\n\n{plot_htmls[layer]}""")
 
 
 def write_html(sphinx=False):
@@ -497,9 +557,9 @@ def source_and_import(plot_object, l_type, layer, dataset=""):
     return source, import_text, import_text_native
 
 
-def write_plot_details(plot_object, l_type="top", sphinx=False, image_path="", code_path="", dataset=""):
+def get_plot_details(plot_object, l_type="top", sphinx=False, image_path="", code_path="", dataset=""):
     """
-    Extracts and writes the plots code files at static/code/*
+    Returns the .rst or .md file contents containing the plot examples
     """
     layer = "horizontal" if l_type == "Top" else "vertical" if l_type == "Side" else "linear"
     location = DOCS_LOCATION if sphinx else STATIC_LOCATION
@@ -508,58 +568,57 @@ def write_plot_details(plot_object, l_type="top", sphinx=False, image_path="", c
         os.mkdir(os.path.join(location, "code"))
 
     if sphinx:
-        write_plot_details_sphinx(plot_object, l_type, layer, code_path, dataset,
-                                  image_path.split("-")[-1].split(".png")[0])
-        return
+        return get_plot_details_sphinx(plot_object, l_type, layer, dataset, image_path.split("-")[-1].split(".png")[0])
 
-    with open(os.path.join(location, "code", code_path.split('/')[-1]), "w+") as md:
-        md.write(f"![]({image_path})\n\n")
-        source, instructions, instructions_native = source_and_import(plot_object, l_type, layer, dataset)
-        if instructions:
-            md.write(f"**How to use this plot**  \n"
-                     f"Make sure you have the required datafields "
-                     f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n")
-            if instructions_native:
-                md.write("You can use it as is by appending this code into your `mss_wms_settings.py`:  \n")
-                md.write(f"---\n```python\n{instructions_native}\n```"
-                         f"\n---\n")
-                if source:
-                    md.write("**If you want to modify the plot**  \n")
+    text = ""
+    text += f"![]({image_path})\n\n"
+    source, instructions, instructions_native = source_and_import(plot_object, l_type, layer, dataset)
+    if instructions:
+        text += f"**How to use this plot**  \n" \
+                f"Make sure you have the required datafields " \
+                f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n"
+        if instructions_native:
+            text += "You can use it as is by appending this code into your `mss_wms_settings.py`:  \n"
+            text += f"---\n```python\n{instructions_native}\n```" \
+                    f"\n---\n"
             if source:
-                md.write(f"1. [Download this file]({code_path}?download=True)  \n"
-                         f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n"
-                         f"3. Append this code into your `mss_wms_settings.py`:  \n")
-                md.write(f"---\n```python\n{instructions}\n```\n---\n")
-                md.write(f"<details><summary>{l_type}_{dataset}{plot_object.name}.py</summary>\n```python\n" + source +
-                         "\n```\n</details>")
+                text += "**If you want to modify the plot**  \n"
+        if source:
+            text += f"1. [Download this file]({code_path}?download=True)  \n" \
+                    f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n" \
+                    f"3. Append this code into your `mss_wms_settings.py`:  \n"
+            text += f"---\n```python\n{instructions}\n```\n---\n"
+            text += f"<details><summary>{l_type}_{dataset}{plot_object.name}.py</summary>\n```python\n" + source + \
+                    "\n```\n</details>"
+    return text
 
 
-def write_plot_details_sphinx(plot_object, l_type, layer, code_path="", dataset="", image_details=None):
+def get_plot_details_sphinx(plot_object, l_type, layer, dataset="", image_details=None):
     """
-    Write .rst files with plot code example for the sphinx docs
+    Write .py example files and returns the .rst file content for the sphinx docs
     """
     if not os.path.exists(os.path.join(DOCS_LOCATION, "code", "downloads")):
         os.mkdir(os.path.join(DOCS_LOCATION, "code", "downloads"))
 
-    with open(os.path.join(DOCS_LOCATION, "code", code_path.split('/')[-1].replace("html", "rst")), "w+") as md:
-        source, instructions, instructions_native = source_and_import(plot_object, l_type, layer, dataset)
-        md.write(f"{l_type}_{plot_object.name}\n" + "-" * len(f"{l_type}_{plot_object.name}") + "\n")
-        md.write(f".. image:: ../plots/{l_type}_{dataset}{plot_object.name}-{image_details}.png\n\n")
-        md.write(f"""**How to use this plot**
+    text = ""
+    source, instructions, instructions_native = source_and_import(plot_object, l_type, layer, dataset)
+    text += f"{l_type}_{plot_object.name}\n" + "-" * len(f"{l_type}_{plot_object.name}") + "\n"
+    text += f".. image:: ../plots/{l_type}_{dataset}{plot_object.name}-{image_details}.png\n\n"
+    text += f"""**How to use this plot**
 
 Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field in plot_object.required_datafields)})
 
-""")
-        if instructions_native:
-            md.write(f"""You can use it as is by appending this code into your `mss_wms_settings.py`:
+"""
+    if instructions_native:
+        text += f"""You can use it as is by appending this code into your `mss_wms_settings.py`:
 
 .. code-block:: python
 
     {"    ".join(instructions_native.splitlines(True))}
 
-{"**If you want to modify the plot**" if source else ""}""")
-        if source:
-            md.write(f"""
+{"**If you want to modify the plot**" if source else ""}"""
+    if source:
+        text += f"""
 
 1. Download this :download:`file <downloads/{l_type}_{dataset}{plot_object.name}.py>`
 
@@ -581,10 +640,11 @@ Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field 
 .. raw:: html
 
    </details>
-            """)
-            with open(os.path.join(DOCS_LOCATION, "code", "downloads",
-                                   f"{l_type}_{dataset}{plot_object.name}.py"), "w+") as py:
-                py.write(source)
+"""
+        with open(os.path.join(DOCS_LOCATION, "code", "downloads",
+                               f"{l_type}_{dataset}{plot_object.name}.py"), "w+") as py:
+            py.write(source)
+    return text
 
 
 def create_linear_plot(xml, file_location):
@@ -635,13 +695,21 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
 
     end = end.replace("files = [", f"files = [\"{filename}.png\",")\
         .replace(",];", "];")
-    img_path = f"../_images/{filename}.png" if sphinx \
+    img_path = f"../_static/{filename}.png" if sphinx \
         else f"{url_prefix}/static/plots/{filename}.png"
-    code_path = f"code/{filename}.html" if sphinx \
-        else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{filename}.md"
+    code_path = f"code/{l_type}_{dataset}{plot_object.name}.html" if sphinx \
+        else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{dataset}{plot_object.name}.md"
 
     if generate_code:
-        write_plot_details(plot_object, l_type, sphinx, img_path, code_path, dataset)
+        if f"{l_type}_{dataset}{plot_object.name}" not in plot_htmls:
+            plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = \
+                plot_html_begin + get_plot_details(plot_object, l_type, sphinx, img_path, code_path, dataset)
+        markdown = plot_htmls[f"{l_type}_{dataset}{plot_object.name}"]
+        if level:
+            markdown = add_levels([level], None, markdown)
+        if vtime:
+            markdown = add_times(itime, [vtime], markdown)
+        plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = markdown
 
     id = img_path.split(f"-{level}")[0]
     if not any([id in html for html in plots[l_type]]):
@@ -650,21 +718,37 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
                                                                 if plot_object.abstract else "")))
 
 
-def add_levels(levels, l_type):
+def add_levels(levels, l_type=None, text=None):
     global begin
-    level_select = begin.split("name=\"levels\"")[-1].split("</select>")[0]
-    if f"optgroup label=\"{l_type}\"" not in level_select:
-        begin = begin.replace(level_select, level_select + f"<optgroup label=\"{l_type}\" id=\"{l_type}\"></optgroup>")
-    opt_group = begin.split(f"label=\"{l_type}\"")[-1].split("</optgroup>")[0]
-    begin = begin.replace(opt_group, opt_group + "".join([f"<option value='{level}'>{level}</option>" for level
-                                                          in levels if f"value='{level}'" not in opt_group]))
+    replace_begin = not text
+    if replace_begin:
+        text = begin
+
+    level_select = text.split("name=\"levels\"")[-1].split("</select>")[0]
+    if l_type:
+        if f"optgroup label=\"{l_type}\"" not in level_select:
+            text = text.replace(level_select, level_select + f"<optgroup label=\"{l_type}\" id=\"{l_type}\"></optgroup>")
+        level_select = text.split(f"label=\"{l_type}\"")[-1].split("</optgroup>")[0]
+    text = text.replace(level_select, level_select + "".join([f"<option value='{level}'>{level}</option>" for level
+                                                              in levels if f"value='{level}'" not in level_select]))
+    if replace_begin:
+        begin = text
+    return text
 
 
-def add_times(itime, vtimes):
+def add_times(itime, vtimes, text=None):
     global begin
-    time_select = begin.split("name=\"times\"")[-1].split("</select>")[0]
+    replace_begin = not text
+    if replace_begin:
+        text = begin
+
+    time_select = text.split("name=\"times\"")[-1].split("</select>")[0]
     if f"optgroup label=\"{itime}\"" not in time_select:
-        begin = begin.replace(time_select, time_select + f"<optgroup label=\"{itime}\" id=\"{itime}\"></optgroup>")
-    opt_group = begin.split(f"label=\"{itime}\"")[-1].split("</optgroup>")[0]
-    begin = begin.replace(opt_group, opt_group + "".join([f"<option value='{time}'>{time}</option>" for time
-                                                          in vtimes if f"value='{time}'" not in opt_group]))
+        text = text.replace(time_select, time_select + f"<optgroup label=\"{itime}\" id=\"{itime}\"></optgroup>")
+    opt_group = text.split(f"label=\"{itime}\"")[-1].split("</optgroup>")[0]
+    text = text.replace(opt_group, opt_group + "".join([f"<option value='{time}'>{time}</option>" for time
+                                                        in vtimes if f"value='{time}'" not in opt_group]))
+
+    if replace_begin:
+        begin = text
+    return text

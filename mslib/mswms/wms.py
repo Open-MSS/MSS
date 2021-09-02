@@ -64,7 +64,7 @@ from mslib.utils import conditional_decorator
 from mslib.utils.time import parse_iso_datetime
 from mslib.index import app_loader
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
-    write_doc_index, STATIC_LOCATION, DOCS_LOCATION
+    write_doc_index, write_code_pages, STATIC_LOCATION, DOCS_LOCATION
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
@@ -394,8 +394,10 @@ class WMSServer(object):
                             logging.error("%s %s %s", plot_object.name, type(e), e)
 
             write_html(sphinx)
-            if sphinx and generate_code:
-                write_doc_index()
+            if generate_code:
+                write_code_pages(sphinx, url_prefix)
+                if sphinx:
+                    write_doc_index()
 
     def register_hsec_layer(self, datasets, layer_class):
         """
