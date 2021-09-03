@@ -393,7 +393,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("file io plugin error import plugins"),
                     self.tr(f"ERROR: Configuration\n\n{plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
             try:
