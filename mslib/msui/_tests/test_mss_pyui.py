@@ -257,6 +257,7 @@ class Test_MSSSideViewWindow(object):
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
+    @pytest.mark.skip("needs to be refactored to become independent")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.mss_pyui.config_loader", return_value=export_plugins)
     def test_add_plugins(self, mockopen, mockbox):

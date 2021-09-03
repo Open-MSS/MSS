@@ -38,7 +38,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib._tests.utils import wait_until_signal
 
-PORTS = list(range(8095, 8106))
+PORTS = list(range(19000, 19500))
 
 
 class Test_MSS_SV_OptionsDialog(object):

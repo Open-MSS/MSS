@@ -34,9 +34,10 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import mscolab_start_server
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
+from mslib.mscolab.mscolab import handle_db_reset
+from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
 
-
-PORTS = list(range(9571, 9590))
+PORTS = list(range(22000, 22500))
 
 
 class Actions(object):
@@ -51,14 +52,21 @@ class Actions(object):
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabProject(object):
     def setup(self):
+        handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.room_name = "europe"
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_project(self.room_name, "test europe")
+        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
-        self._login()
+        self._login(self.userdata[0], self.userdata[2])
         # activate project and open chat window
         self._activate_project_at_index(0)
         self.window.actionChat.trigger()
@@ -147,9 +155,9 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
-    def _login(self):
-        self.connect_window.loginEmailLe.setText('a')
-        self.connect_window.loginPasswordLe.setText('a')
+    def _login(self, emailid, password):
+        self.connect_window.loginEmailLe.setText(emailid)
+        self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)

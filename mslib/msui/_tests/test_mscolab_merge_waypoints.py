@@ -37,15 +37,17 @@ from mslib._tests.utils import (mscolab_start_server, mscolab_register_and_login
                                 mscolab_delete_all_projects, mscolab_delete_user)
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
+from mslib.mscolab.mscolab import handle_db_reset
 
 
-PORTS = list(range(9551, 9570))
+PORTS = list(range(23000, 23500))
 
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints(object):
     def setup(self):
+        handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
@@ -110,11 +112,10 @@ class Test_Mscolab_Merge_Waypoints(object):
             QtWidgets.QApplication.processEvents()
 
 
+@pytest.mark.skip("timeout on github")
 class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
-    @pytest.mark.skip("skipped because of unhandled message box")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_overwrite_to_server(self, mockbox):
-        pytest.skip("probably a timing problem, fails sometimes")
         self.emailid = "save_overwrite@alpha.org"
         self._create_user_data(emailid=self.emailid)
         wp_server_before = self.window.mscolab.waypoints_model.waypoint_data(0)
@@ -153,7 +154,6 @@ class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
 
 
 class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
-    @pytest.mark.skip("skipped because of unhandled message box")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_keep_server_points(self, mockbox):
         self.emailid = "save_keepe@alpha.org"
@@ -196,7 +196,6 @@ class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
 
 
 class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
-    @pytest.mark.skip("skipped because of unhandled message box")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_fetch_from_server(self, mockbox):
         self.emailid = "fetch_from_server@alpha.org"
