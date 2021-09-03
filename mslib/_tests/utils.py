@@ -25,10 +25,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import requests
 import time
 import fs
 import socket
 import multiprocessing
+
+from flask_testing import LiveServerTestCase
+
 from PyQt5 import QtTest
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
@@ -36,7 +40,7 @@ from flask import json
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers, start_server
-from mslib.mscolab.mscolab import handle_db_seed
+from mslib.mscolab.mscolab import handle_db_init
 
 
 def callback_ok_image(status, response_headers):
@@ -177,8 +181,19 @@ def mscolab_check_free_port(all_ports, port):
     return port
 
 
-def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
-    handle_db_seed()
+def mscolab_ping_server(port):
+    url = f"http://127.0.0.1:{port}/status"
+    try:
+        r = requests.get(url)
+        if r.text == "Mscolab server":
+            return True
+    except requests.exceptions.ConnectionError:
+        return False
+    return False
+
+
+def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=5):
+    handle_db_init()
     port = mscolab_check_free_port(all_ports, all_ports.pop())
 
     url = f"http://localhost:{port}"
@@ -199,6 +214,17 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings):
         args=(_app, sockio, cm, fm,),
         kwargs={'port': port})
     process.start()
+    start_time = time.time()
+    while True:
+        elapsed_time = (time.time() - start_time)
+        if elapsed_time > timeout:
+            raise RuntimeError(
+                "Failed to start the server after %d seconds. " % timeout
+            )
+
+        if mscolab_ping_server(port):
+            break
+
     return process, url, _app, sockio, cm, fm
 
 
@@ -242,3 +268,32 @@ class ExceptionMock:
 
     def raise_exc(self, *args, **kwargs):
         raise self.exc
+
+
+class LiveSocketTestCase(LiveServerTestCase):
+
+    def _spawn_live_server(self):
+        self._process = None
+        port_value = self._port_value
+        app, sockio, cm, fm = initialize_managers(self.app)
+        self._process = multiprocessing.Process(
+            target=start_server,
+            args=(app, sockio, cm, fm,),
+            kwargs={'port': port_value.value})
+
+        self._process.start()
+
+        # We must wait for the server to start listening, but give up
+        # after a specified maximum timeout
+        timeout = self.app.config.get('LIVESERVER_TIMEOUT', 5)
+        start_time = time.time()
+
+        while True:
+            elapsed_time = (time.time() - start_time)
+            if elapsed_time > timeout:
+                raise RuntimeError(
+                    "Failed to start the server after %d seconds. " % timeout
+                )
+
+            if self._can_ping_server():
+                break
