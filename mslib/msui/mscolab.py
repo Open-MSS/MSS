@@ -377,6 +377,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionManageUsers.triggered.connect(self.project_options_handler)
         self.ui.actionDeleteProject.triggered.connect(self.project_options_handler)
 
+        self.ui.filterCategoryCb.currentIndexChanged.connect(self.project_category_handler)
         # connect slot for handling project options combobox
         self.ui.workLocallyCheckbox.stateChanged.connect(self.handle_work_locally_toggle)
         self.ui.serverOptionsCb.currentIndexChanged.connect(self.server_options_handler)
@@ -425,6 +426,7 @@ class MSSMscolab(QtCore.QObject):
         self.mscolab_server_url = None
         # User email
         self.email = None
+        self.selected_category = "ANY"
 
         # set data dir, uri
         if data_dir is None:
@@ -508,6 +510,9 @@ class MSSMscolab(QtCore.QObject):
 
         # Populate open projects list
         self.add_projects_to_ui()
+
+        # Show category list
+        self.show_categories_to_ui()
 
     def verify_user_token(self):
         data = {
@@ -654,7 +659,9 @@ class MSSMscolab(QtCore.QObject):
     def add_project_handler(self):
         if self.verify_user_token():
             def check_and_enable_project_accept():
-                if self.add_proj_dialog.path.text() != "" and self.add_proj_dialog.description.toPlainText() != "":
+                if (self.add_proj_dialog.path.text() != "" and
+                        self.add_proj_dialog.description.toPlainText() != "" and
+                        self.add_proj_dialog.category.text() != ""):
                     self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(True)
                 else:
                     self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
@@ -687,7 +694,7 @@ class MSSMscolab(QtCore.QObject):
             self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
             self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
             self.add_proj_dialog.path.textChanged.connect(check_and_enable_project_accept)
-            self.add_proj_dialog.description.textChanged.connect(check_and_enable_project_accept)
+            self.add_proj_dialog.category.textChanged.connect(check_and_enable_project_accept)
             self.add_proj_dialog.browse.clicked.connect(browse)
             self.proj_diag.show()
         else:
@@ -697,6 +704,7 @@ class MSSMscolab(QtCore.QObject):
     def add_project(self):
         path = self.add_proj_dialog.path.text()
         description = self.add_proj_dialog.description.toPlainText()
+        category = self.add_proj_dialog.category.text()
         if not path:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t be empty')
@@ -704,6 +712,10 @@ class MSSMscolab(QtCore.QObject):
         elif not description:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Description can\'t be empty')
+            return
+        elif not category:
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog.showMessage('Category can\'t be empty')
             return
         # regex checks if the whole path from beginning to end only contains alphanumerical characters or _ and -
         elif not re.match("^[a-zA-Z0-9_-]*$", path):
@@ -714,7 +726,8 @@ class MSSMscolab(QtCore.QObject):
         data = {
             "token": self.token,
             "path": path,
-            "description": description
+            "description": description,
+            "category": category
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
@@ -723,6 +736,7 @@ class MSSMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your project was created successfully')
             self.add_projects_to_ui()
+            self.project_category_handler()
             p_id = self.get_recent_pid()
             self.conn.handle_new_room(p_id)
         else:
@@ -936,6 +950,20 @@ class MSSMscolab(QtCore.QObject):
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
+    def project_category_handler(self):
+        self.selected_category = self.ui.filterCategoryCb.currentText()
+        if self.selected_category != "ANY":
+            self.add_projects_to_ui()
+            items = [self.ui.listProjectsMSC.item(i) for i in range(self.ui.listProjectsMSC.count())]
+            row = 0
+            for item in items:
+                if item.project_category != self.selected_category:
+                    self.ui.listProjectsMSC.takeItem(row)
+                else:
+                    row += 1
+        else:
+            self.add_projects_to_ui()
+
     def server_options_handler(self, index):
         selected_option = self.ui.serverOptionsCb.currentText()
         self.ui.serverOptionsCb.blockSignals(True)
@@ -1123,6 +1151,24 @@ class MSSMscolab(QtCore.QObject):
         project_name = self.delete_project_from_list(p_id)
         show_popup(self.ui, "Success", f'Project "{project_name}" was deleted!', icon=1)
 
+    def show_categories_to_ui(self):
+        if self.verify_user_token():
+            data = {
+                "token": self.token
+            }
+            r = requests.get(f'{self.mscolab_server_url}/projects', data=data)
+            if r.text != "False":
+                _json = json.loads(r.text)
+                projects = _json["projects"]
+                self.ui.filterCategoryCb.clear()
+                categories = set(["ANY"])
+                for project in projects:
+                    categories.add(project["category"])
+                categories.remove("ANY")
+                categories = list(categories)
+                categories.insert(0, "ANY")
+                self.ui.filterCategoryCb.addItems(categories)
+
     def add_projects_to_ui(self):
         if self.verify_user_token():
             data = {
@@ -1142,6 +1188,7 @@ class MSSMscolab(QtCore.QObject):
                     widgetItem.p_id = project["p_id"]
                     widgetItem.access_level = project["access_level"]
                     widgetItem.project_path = project["path"]
+                    widgetItem.project_category = project["category"]
                     if widgetItem.p_id == self.active_pid:
                         selectedProject = widgetItem
                     self.ui.listProjectsMSC.addItem(widgetItem)

@@ -91,10 +91,12 @@ class Test_FileManager(TestCase):
             self.fm.create_project("first", "info about first", self.user)
             self.fm.create_project("second", "info about second", self.user)
             expected_result = [{'access_level': 'creator',
+                                'category': 'default',
                                 'description': 'info about first',
                                 'p_id': 1,
                                 'path': 'first'},
                                {'access_level': 'creator',
+                                'category': 'default',
                                 'description': 'info about second',
                                 'p_id': 2,
                                 'path': 'second'}]
