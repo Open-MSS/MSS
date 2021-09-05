@@ -714,9 +714,10 @@ class MSSMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Description can\'t be empty')
             return
-        elif not category:
+        # same regex as for path validation
+        elif not re.match("^[a-zA-Z0-9_-]*$", category):
             self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('Category can\'t be empty')
+            self.error_dialog.showMessage('Category can\'t contain spaces or special characters')
             return
         # regex checks if the whole path from beginning to end only contains alphanumerical characters or _ and -
         elif not re.match("^[a-zA-Z0-9_-]*$", path):
