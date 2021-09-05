@@ -129,6 +129,9 @@ class MissionSupportSystemDefaultConfig(object):
     # password to sign in
     MSCOLAB_password = ""
 
+    # category for MSC projects
+    MSCOLAB_category = "default"
+
     # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")}
     MSC_login = {}
 
@@ -230,6 +233,7 @@ class MissionSupportSystemDefaultConfig(object):
         'new_flighttrack_flightlevel',
         'MSCOLAB_mailid',
         'MSCOLAB_password',
+        'MSCOLAB_category',
         'mscolab_server_url',
         'wms_cache',
         'wms_cache_max_size_bytes',

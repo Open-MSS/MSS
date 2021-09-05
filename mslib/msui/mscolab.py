@@ -696,6 +696,7 @@ class MSSMscolab(QtCore.QObject):
             self.add_proj_dialog.path.textChanged.connect(check_and_enable_project_accept)
             self.add_proj_dialog.category.textChanged.connect(check_and_enable_project_accept)
             self.add_proj_dialog.browse.clicked.connect(browse)
+            self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
             self.proj_diag.show()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -736,7 +737,12 @@ class MSSMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your project was created successfully')
             self.add_projects_to_ui()
+            selected_category = self.ui.filterCategoryCb.currentText()
+            self.show_categories_to_ui()
             self.project_category_handler()
+            index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
+            if index >= 0:
+                self.ui.filterCategoryCb.setCurrentIndex(index)
             p_id = self.get_recent_pid()
             self.conn.handle_new_room(p_id)
         else:
