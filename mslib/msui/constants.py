@@ -48,6 +48,14 @@ else:
 
 MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
 
+if '://' in MSS_SETTINGS:
+    if not _fs.exists('mss_settings.json'):
+        _fs.writetext("mss_settings.json", "{}")
+else:
+    if not os.path.exists(MSS_SETTINGS):
+        with open(MSS_SETTINGS, 'w') as fid:
+            fid.write("{}")
+
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}
 
