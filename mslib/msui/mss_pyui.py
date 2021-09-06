@@ -57,7 +57,7 @@ from mslib.msui.updater import UpdaterUI
 from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.msui.mss_qt import get_open_filename, get_save_filename, Worker, Updater, show_popup
+from mslib.msui.mss_qt import get_open_filename, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
