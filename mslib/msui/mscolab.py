@@ -46,7 +46,6 @@ from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_project as mp
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
-# from mslib.msui import sideview, tableview, topview, linearview
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -694,6 +693,7 @@ class MSSMscolab(QtCore.QObject):
             self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
             self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
             self.add_proj_dialog.path.textChanged.connect(check_and_enable_project_accept)
+            self.add_proj_dialog.description.textChanged.connect(check_and_enable_project)
             self.add_proj_dialog.category.textChanged.connect(check_and_enable_project_accept)
             self.add_proj_dialog.browse.clicked.connect(browse)
             self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
