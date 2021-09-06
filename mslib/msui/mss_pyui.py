@@ -894,11 +894,11 @@ def main():
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
 
-    message = None
     try:
         read_config_file()
     except FileNotFoundError as ex:
         message = f"Setup your configuration.\nUse the comfortable editor in the File menu.\n{ex}"
+        logging.info(message)
 
     application = QtWidgets.QApplication(sys.argv)
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
@@ -908,8 +908,6 @@ def main():
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()
-    if message is not None:
-        show_popup(mainwindow, "See File -> Configuration", message)
     sys.exit(application.exec_())
 
 
