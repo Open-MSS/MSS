@@ -369,7 +369,8 @@ def read_config_file(path=constants.MSS_SETTINGS):
                 error_message = f"Invalid keys detected in config\n{e}"
                 raise FatalUserError(error_message)
         else:
-            logging.info(f"MSS config File '{path}' not found")
+            error_message = f"MSS config File '{path}' not found"
+            raise FileNotFoundError(error_message)
 
     global user_options
     if json_file_data:
