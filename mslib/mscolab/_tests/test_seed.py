@@ -87,7 +87,8 @@ class Test_Seed(TestCase):
             assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # viewer
             add_all_users_default_project(path='XYZ', description="Project to keep all users", access_level='viewer')
-            expected_result = [{'access_level': 'viewer', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
+            expected_result = [{'access_level': 'viewer', 'category': 'default',
+                                'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
             result = self.fm.list_projects(user)
@@ -101,7 +102,8 @@ class Test_Seed(TestCase):
             assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             add_all_users_default_project(path='XYZ', description="Project to keep all users",
                                           access_level='collaborator')
-            expected_result = [{'access_level': 'collaborator', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
+            expected_result = [{'access_level': 'collaborator', 'category': 'default',
+                                'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
             result = self.fm.list_projects(user)
@@ -115,7 +117,8 @@ class Test_Seed(TestCase):
             # creator
             add_all_users_default_project(path='XYZ', description="Project to keep all users",
                                           access_level='creator')
-            expected_result = [{'access_level': 'creator', 'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
+            expected_result = [{'access_level': 'creator', 'category': 'default',
+                                'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_projects(user)
             # we don't care here for p_id
@@ -128,7 +131,8 @@ class Test_Seed(TestCase):
             # creator added to new project
             add_all_users_default_project(path='UVXYZ', description="Project to keep all users",
                                           access_level='creator')
-            expected_result = [{'access_level': 'creator', 'description': 'Project to keep all users',
+            expected_result = [{'access_level': 'creator', 'category': 'default',
+                                'description': 'Project to keep all users',
                                 'p_id': 7, 'path': 'UVXYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_projects(user)

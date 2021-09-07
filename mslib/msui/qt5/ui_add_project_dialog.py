@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_add_project.ui'
+# Form implementation generated from reading ui file 'ui_add_project.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -13,9 +13,9 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_addProjectDialog(object):
     def setupUi(self, addProjectDialog):
         addProjectDialog.setObjectName("addProjectDialog")
-        addProjectDialog.resize(467, 256)
+        addProjectDialog.resize(467, 303)
         self.buttonBox = QtWidgets.QDialogButtonBox(addProjectDialog)
-        self.buttonBox.setGeometry(QtCore.QRect(280, 210, 171, 32))
+        self.buttonBox.setGeometry(QtCore.QRect(280, 250, 171, 32))
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.buttonBox.setObjectName("buttonBox")
@@ -29,19 +29,25 @@ class Ui_addProjectDialog(object):
         self.description.setGeometry(QtCore.QRect(110, 60, 341, 59))
         self.description.setObjectName("description")
         self.browse = QtWidgets.QPushButton(addProjectDialog)
-        self.browse.setGeometry(QtCore.QRect(350, 150, 100, 30))
+        self.browse.setGeometry(QtCore.QRect(350, 210, 100, 30))
         self.browse.setObjectName("browse")
         self.label_3 = QtWidgets.QLabel(addProjectDialog)
-        self.label_3.setGeometry(QtCore.QRect(20, 134, 201, 16))
+        self.label_3.setGeometry(QtCore.QRect(20, 180, 201, 16))
         self.label_3.setObjectName("label_3")
         self.label_2 = QtWidgets.QLabel(addProjectDialog)
         self.label_2.setGeometry(QtCore.QRect(20, 60, 80, 16))
         self.label_2.setObjectName("label_2")
         self.selectedFile = QtWidgets.QLineEdit(addProjectDialog)
         self.selectedFile.setEnabled(False)
-        self.selectedFile.setGeometry(QtCore.QRect(20, 150, 320, 30))
+        self.selectedFile.setGeometry(QtCore.QRect(20, 210, 320, 30))
         self.selectedFile.setReadOnly(True)
         self.selectedFile.setObjectName("selectedFile")
+        self.label_4 = QtWidgets.QLabel(addProjectDialog)
+        self.label_4.setGeometry(QtCore.QRect(40, 130, 60, 16))
+        self.label_4.setObjectName("label_4")
+        self.category = QtWidgets.QLineEdit(addProjectDialog)
+        self.category.setGeometry(QtCore.QRect(110, 130, 341, 23))
+        self.category.setObjectName("category")
 
         self.retranslateUi(addProjectDialog)
         self.buttonBox.accepted.connect(addProjectDialog.accept)
@@ -55,6 +61,9 @@ class Ui_addProjectDialog(object):
         self.path.setPlaceholderText(_translate("addProjectDialog", "Project Name (No spaces or special characters)"))
         self.description.setPlaceholderText(_translate("addProjectDialog", "Project Descriptions"))
         self.browse.setText(_translate("addProjectDialog", "browse..."))
-        self.label_3.setText(_translate("addProjectDialog", "Choose Flighttrack File (Optional)"))
-        self.label_2.setText(_translate("addProjectDialog", "Description"))
+        self.label_3.setText(_translate("addProjectDialog", "Choose Flighttrack File (Optional):"))
+        self.label_2.setText(_translate("addProjectDialog", "Description:"))
         self.selectedFile.setPlaceholderText(_translate("addProjectDialog", "(use browse to pick a file)"))
+        self.label_4.setText(_translate("addProjectDialog", "Category:"))
+        self.category.setText(_translate("addProjectDialog", "default"))
+        self.category.setPlaceholderText(_translate("addProjectDialog", "Category (ANY)"))
