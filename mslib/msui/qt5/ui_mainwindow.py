@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -63,12 +63,6 @@ class Ui_MSSMainWindow(object):
         self.workingStatusLabel.setWordWrap(True)
         self.workingStatusLabel.setObjectName("workingStatusLabel")
         self.gridLayout_3.addWidget(self.workingStatusLabel, 2, 0, 1, 2)
-        self.workLocallyCheckbox = QtWidgets.QCheckBox(self.openProjectsGb)
-        self.workLocallyCheckbox.setObjectName("workLocallyCheckbox")
-        self.gridLayout_3.addWidget(self.workLocallyCheckbox, 3, 0, 1, 1)
-        self.openProjectsMSCLabel = QtWidgets.QLabel(self.openProjectsGb)
-        self.openProjectsMSCLabel.setObjectName("openProjectsMSCLabel")
-        self.gridLayout_3.addWidget(self.openProjectsMSCLabel, 0, 0, 1, 1)
         self.listProjectsMSC = QtWidgets.QListWidget(self.openProjectsGb)
         self.listProjectsMSC.setObjectName("listProjectsMSC")
         self.gridLayout_3.addWidget(self.listProjectsMSC, 1, 0, 1, 2)
@@ -77,7 +71,22 @@ class Ui_MSSMainWindow(object):
         self.serverOptionsCb.addItem("")
         self.serverOptionsCb.addItem("")
         self.serverOptionsCb.addItem("")
-        self.gridLayout_3.addWidget(self.serverOptionsCb, 3, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.serverOptionsCb, 6, 1, 1, 1)
+        self.openProjectsMSCLabel = QtWidgets.QLabel(self.openProjectsGb)
+        self.openProjectsMSCLabel.setObjectName("openProjectsMSCLabel")
+        self.gridLayout_3.addWidget(self.openProjectsMSCLabel, 0, 0, 1, 1)
+        self.categoryLabel = QtWidgets.QLabel(self.openProjectsGb)
+        self.categoryLabel.setObjectName("categoryLabel")
+        self.gridLayout_3.addWidget(self.categoryLabel, 5, 0, 1, 1)
+        self.workLocallyCheckbox = QtWidgets.QCheckBox(self.openProjectsGb)
+        self.workLocallyCheckbox.setObjectName("workLocallyCheckbox")
+        self.gridLayout_3.addWidget(self.workLocallyCheckbox, 6, 0, 1, 1)
+        self.filterCategoryCb = QtWidgets.QComboBox(self.openProjectsGb)
+        self.filterCategoryCb.setAutoFillBackground(False)
+        self.filterCategoryCb.setEditable(False)
+        self.filterCategoryCb.setObjectName("filterCategoryCb")
+        self.filterCategoryCb.addItem("")
+        self.gridLayout_3.addWidget(self.filterCategoryCb, 5, 1, 1, 1)
         self.gridLayout.addWidget(self.openProjectsGb, 1, 1, 2, 1)
         self.openFlightTracksGb = QtWidgets.QGroupBox(self.centralwidget)
         self.openFlightTracksGb.setTitle("")
@@ -96,7 +105,7 @@ class Ui_MSSMainWindow(object):
         self.gridLayout.setColumnStretch(1, 1)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 738, 22))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 738, 20))
         self.menubar.setNativeMenuBar(False)
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
@@ -197,6 +206,7 @@ class Ui_MSSMainWindow(object):
         self.menubar.addAction(self.menuHelp.menuAction())
 
         self.retranslateUi(MSSMainWindow)
+        self.filterCategoryCb.setCurrentIndex(0)
         self.actionQuit.triggered.connect(MSSMainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MSSMainWindow)
         MSSMainWindow.setTabOrder(self.connectBtn, self.userOptionsTb)
@@ -217,14 +227,18 @@ class Ui_MSSMainWindow(object):
         self.connectBtn.setToolTip(_translate("MSSMainWindow", "Connect to an MSColab Server"))
         self.connectBtn.setText(_translate("MSSMainWindow", "Connect to MSColab"))
         self.workingStatusLabel.setText(_translate("MSSMainWindow", "No projects selected"))
-        self.workLocallyCheckbox.setToolTip(_translate("MSSMainWindow", "Check to work asynchronously from the server"))
-        self.workLocallyCheckbox.setText(_translate("MSSMainWindow", "Work Asynchronously"))
-        self.openProjectsMSCLabel.setText(_translate("MSSMainWindow", "Open Projects:"))
         self.listProjectsMSC.setToolTip(_translate("MSSMainWindow", "List of mscolab projects."))
         self.serverOptionsCb.setToolTip(_translate("MSSMainWindow", "Fetch/Save Server options"))
         self.serverOptionsCb.setItemText(0, _translate("MSSMainWindow", "Server Options"))
         self.serverOptionsCb.setItemText(1, _translate("MSSMainWindow", "Fetch From Server"))
         self.serverOptionsCb.setItemText(2, _translate("MSSMainWindow", "Save To Server"))
+        self.openProjectsMSCLabel.setText(_translate("MSSMainWindow", "Open Projects:"))
+        self.categoryLabel.setText(_translate("MSSMainWindow", "Category:"))
+        self.workLocallyCheckbox.setToolTip(_translate("MSSMainWindow", "Check to work asynchronously from the server"))
+        self.workLocallyCheckbox.setText(_translate("MSSMainWindow", "Work Asynchronously"))
+        self.filterCategoryCb.setWhatsThis(_translate("MSSMainWindow", "filter by project category"))
+        self.filterCategoryCb.setCurrentText(_translate("MSSMainWindow", "ANY"))
+        self.filterCategoryCb.setItemText(0, _translate("MSSMainWindow", "ANY"))
         self.openFlightTracksLabel.setText(_translate("MSSMainWindow", "Open Flight Tracks:"))
         self.listFlightTracks.setToolTip(_translate("MSSMainWindow", "List of open flight tracks.\n"
 "Double-click a flight track to activate it.\n"
