@@ -896,9 +896,10 @@ def main():
 
     try:
         read_config_file()
-    except FileNotFoundError as ex:
-        message = f"Setup your configuration.\nUse the comfortable editor in the File menu.\n{ex}"
-        logging.info(message)
+    except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
+        message = f'\n\nFix the setup of your "MSS_SETTINGS" configuration.\n{ex}'
+        logging.error(message)
+        sys.exit()
 
     application = QtWidgets.QApplication(sys.argv)
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
