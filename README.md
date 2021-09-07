@@ -10,6 +10,20 @@ computer.
 Installing MSS
 ==============
 
+Automatically
+-------------
+
+- For **Windows**, go [here](installer/Windows.bat?raw=1)
+    - Right click on the webpage and select "Save as..." to download the file
+    - Double click the downloaded file and follow further instructions
+- For **Linux/Mac**, go [here](installer/LinuxMac.sh?raw=1)
+    - Right click on the webpage and select "Save as..." to download the file
+    - Make it executable via `chmod +x LinuxMac.sh`
+    - Execute it and follow further instructions `./LinuxMac.sh`
+
+Manually
+--------
+
 Installing `MSS` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
 
 
