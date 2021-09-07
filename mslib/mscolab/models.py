@@ -117,18 +117,21 @@ class Project(db.Model):
     __tablename__ = "projects"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     path = db.Column(db.String(255), unique=True)
+    category = db.Column(db.String(255))
     description = db.Column(db.String(255))
 
-    def __init__(self, path, description):
+    def __init__(self, path, description, category="default"):
         """
         path: path to the project
         description: small description of project
+        category: name of category
         """
         self.path = path
         self.description = description
+        self.category = category
 
     def __repr__(self):
-        return f'<Project path: {self.path}, desc: {self.description}>'
+        return f'<Project path: {self.path}, desc: {self.description}, cat: {self.category}>'
 
 
 class MessageType(enum.IntEnum):

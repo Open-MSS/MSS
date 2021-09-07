@@ -278,8 +278,9 @@ def create_project():
     path = request.form['path']
     content = request.form.get('content', None)
     description = request.form.get('description', None)
+    category = request.form.get('category', "default")
     user = g.user
-    return str(fm.create_project(path, description, user, content=content))
+    return str(fm.create_project(path, description, user, content=content, category=category))
 
 
 @APP.route('/get_project_by_id', methods=['GET'])

@@ -345,6 +345,8 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.description.setText(str("example"))
         QtWidgets.QApplication.processEvents()
+        self.window.mscolab.add_proj_dialog.category.setText(str("example"))
+        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mscolab.add_proj_dialog.browse, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         okWidget = self.window.mscolab.add_proj_dialog.buttonBox.button(
@@ -535,6 +537,8 @@ class Test_Mscolab(object):
         self.window.mscolab.add_proj_dialog.path.setText(str(path))
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.description.setText(str(description))
+        QtWidgets.QApplication.processEvents()
+        self.window.mscolab.add_proj_dialog.category.setText("example")
         QtWidgets.QApplication.processEvents()
         okWidget = self.window.mscolab.add_proj_dialog.buttonBox.button(
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
