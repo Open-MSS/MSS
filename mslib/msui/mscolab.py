@@ -693,7 +693,7 @@ class MSSMscolab(QtCore.QObject):
             self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
             self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
             self.add_proj_dialog.path.textChanged.connect(check_and_enable_project_accept)
-            self.add_proj_dialog.description.textChanged.connect(check_and_enable_project)
+            self.add_proj_dialog.description.textChanged.connect(check_and_enable_project_accept)
             self.add_proj_dialog.category.textChanged.connect(check_and_enable_project_accept)
             self.add_proj_dialog.browse.clicked.connect(browse)
             self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
