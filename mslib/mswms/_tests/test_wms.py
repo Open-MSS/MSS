@@ -438,6 +438,7 @@ class Test_WMS(object):
         assert os.path.exists(os.path.join(tempdir, "plots"))
         assert os.path.exists(os.path.join(tempdir, "code"))
         assert os.path.exists(os.path.join(tempdir, "plots.html"))
+        mslib.mswms.gallery_builder.plot_htmls = {}
 
         mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
         assert not os.path.exists(os.path.join(tempdir, "code"))
@@ -454,9 +455,11 @@ class Test_WMS(object):
 
         mslib.mswms.wms.server.generate_gallery(clear=True, create=True, plot_list=linear_plots)
         assert modified_at != os.path.getmtime(file2)
+        mslib.mswms.gallery_builder.plot_htmls = {}
 
         mslib.mswms.wms.server.generate_gallery(clear=True, generate_code=True, sphinx=True,
                                                 plot_list=linear_plots)
         assert os.path.exists(os.path.join(docsdir, "plots"))
         assert os.path.exists(os.path.join(docsdir, "code"))
         assert os.path.exists(os.path.join(docsdir, "plots.html"))
+        mslib.mswms.gallery_builder.plot_htmls = {}
