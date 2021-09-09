@@ -102,16 +102,15 @@ class MSSPlotDriver(metaclass=ABCMeta):
             self.vert_units = None
             return
 
-        if fc_time < init_time:
-            msg = "Forecast valid time cannot be earlier than " \
-                  "initialisation time."
-            logging.error(msg)
-            raise ValueError(msg)
-        fc_step = fc_time - init_time
-        fc_step = fc_step.days * 24 + (fc_step.seconds // 3600)
+        if self.uses_inittime_dimension():
+            logging.debug("\trequested initialisation time %s", init_time)
+            if fc_time < init_time:
+                msg = "Forecast valid time cannot be earlier than " \
+                      "initialisation time."
+                logging.error(msg)
+                raise ValueError(msg)
         self.fc_time = fc_time
-        logging.debug("\trequested initialisation time %s", init_time)
-        logging.debug("\trequested forecast valid time %s (step %s hrs)", fc_time, fc_step)
+        logging.debug("\trequested forecast valid time %s", fc_time)
 
         # Check if a dataset is open and if it contains the requested times.
         # (a dataset will only be open if the used layer has not changed,

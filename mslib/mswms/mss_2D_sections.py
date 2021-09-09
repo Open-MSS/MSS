@@ -140,7 +140,7 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
 
         Currently redirected to check for valid_time.
         """
-        return self.driver.uses_validtime_dimension() if self.driver is not None else False
+        return self.driver.uses_inittime_dimension() if self.driver is not None else False
 
     def uses_validtime_dimension(self):
         """
@@ -151,7 +151,7 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         Currently implemented by testing whether the style requires data fields
         from the ECMWF forecast.
         """
-        return self.driver.uses_inittime_dimension() if self.driver is not None else False
+        return self.driver.uses_validtime_dimension() if self.driver is not None else False
 
     def get_elevations(self):
         """
