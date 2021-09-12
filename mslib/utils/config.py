@@ -129,7 +129,7 @@ class MissionSupportSystemDefaultConfig(object):
     # password to sign in
     MSCOLAB_password = ""
 
-    # category for MSC projects
+    # category for MSC operations
     MSCOLAB_category = "default"
 
     # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")}

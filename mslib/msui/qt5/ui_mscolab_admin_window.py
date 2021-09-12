@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_admin_window.ui'
+# Form implementation generated from reading ui file 'ui_mscolab_admin_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -33,9 +33,9 @@ class Ui_MscolabAdminWindow(object):
         self.usernameLabel = QtWidgets.QLabel(self.centralwidget)
         self.usernameLabel.setObjectName("usernameLabel")
         self.horizontalLayout_7.addWidget(self.usernameLabel)
-        self.projectNameLabel = QtWidgets.QLabel(self.centralwidget)
-        self.projectNameLabel.setObjectName("projectNameLabel")
-        self.horizontalLayout_7.addWidget(self.projectNameLabel)
+        self.operationNameLabel = QtWidgets.QLabel(self.centralwidget)
+        self.operationNameLabel.setObjectName("operationNameLabel")
+        self.horizontalLayout_7.addWidget(self.operationNameLabel)
         self.verticalLayout.addLayout(self.horizontalLayout_7)
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setObjectName("label")
@@ -183,7 +183,7 @@ class Ui_MscolabAdminWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MscolabAdminWindow.setWindowTitle(_translate("MscolabAdminWindow", "Admin Window"))
         self.usernameLabel.setText(_translate("MscolabAdminWindow", "Logged In: "))
-        self.projectNameLabel.setText(_translate("MscolabAdminWindow", "Project: "))
+        self.operationNameLabel.setText(_translate("MscolabAdminWindow", "Project: "))
         self.label.setText(_translate("MscolabAdminWindow", "All Users Without Permission:"))
         self.addUsersSearch.setPlaceholderText(_translate("MscolabAdminWindow", "Search User"))
         self.selectAllAddBtn.setText(_translate("MscolabAdminWindow", "Select All"))
@@ -193,10 +193,10 @@ class Ui_MscolabAdminWindow(object):
         self.addUsersPermission.setItemText(0, _translate("MscolabAdminWindow", "admin"))
         self.addUsersPermission.setItemText(1, _translate("MscolabAdminWindow", "collaborator"))
         self.addUsersPermission.setItemText(2, _translate("MscolabAdminWindow", "viewer"))
-        self.addUsersBtn.setToolTip(_translate("MscolabAdminWindow", "Add the selected users to the project"))
+        self.addUsersBtn.setToolTip(_translate("MscolabAdminWindow", "Add the selected users to the operation"))
         self.addUsersBtn.setText(_translate("MscolabAdminWindow", "Add"))
         self.label_3.setText(_translate("MscolabAdminWindow", "Clone Project Permissions:"))
-        self.importPermissionsBtn.setToolTip(_translate("MscolabAdminWindow", "Import permissions from another project"))
+        self.importPermissionsBtn.setToolTip(_translate("MscolabAdminWindow", "Import permissions from another operation"))
         self.importPermissionsBtn.setText(_translate("MscolabAdminWindow", "Clone"))
         self.label_2.setText(_translate("MscolabAdminWindow", "All Users With Permission:"))
         self.modifyUsersSearch.setPlaceholderText(_translate("MscolabAdminWindow", "Search User"))

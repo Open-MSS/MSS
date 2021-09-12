@@ -4,7 +4,7 @@
     mslib.msui.mscolab
     ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Window to display authentication and project details for mscolab
+    Window to display authentication and operation details for mscolab
 
 
     To better understand of the code, look at the 'ships' example from
@@ -43,7 +43,7 @@ from PIL import Image
 from werkzeug.urls import url_join
 
 from mslib.msui import flighttrack as ft
-from mslib.msui import mscolab_project as mp
+from mslib.msui import mscolab_operation as mp
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
@@ -51,7 +51,7 @@ from mslib.msui import socket_control as sc
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.msui.mss_qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.mss_qt import ui_mscolab_help_dialog as msc_help_dialog
-from mslib.msui.mss_qt import ui_add_project_dialog as add_project_ui
+from mslib.msui.mss_qt import ui_add_operation_dialog as add_operation_ui
 from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
@@ -366,18 +366,18 @@ class MSSMscolab(QtCore.QObject):
         # hide mscolab related widgets
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
-        self.ui.actionAddProject.setEnabled(False)
-        self.hide_project_options()
+        self.ui.actionAddOperation.setEnabled(False)
+        self.hide_operation_options()
 
-        # connect project options menu actions
-        self.ui.actionAddProject.triggered.connect(self.add_project_handler)
-        self.ui.actionChat.triggered.connect(self.project_options_handler)
-        self.ui.actionVersionHistory.triggered.connect(self.project_options_handler)
-        self.ui.actionManageUsers.triggered.connect(self.project_options_handler)
-        self.ui.actionDeleteProject.triggered.connect(self.project_options_handler)
+        # connect operation options menu actions
+        self.ui.actionAddOperation.triggered.connect(self.add_operation_handler)
+        self.ui.actionChat.triggered.connect(self.operation_options_handler)
+        self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
+        self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
+        self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
 
-        self.ui.filterCategoryCb.currentIndexChanged.connect(self.project_category_handler)
-        # connect slot for handling project options combobox
+        self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
+        # connect slot for handling operation options combobox
         self.ui.workLocallyCheckbox.stateChanged.connect(self.handle_work_locally_toggle)
         self.ui.serverOptionsCb.currentIndexChanged.connect(self.server_options_handler)
 
@@ -397,19 +397,19 @@ class MSSMscolab(QtCore.QObject):
         self.active_pid = None
         # storing access_level to save network call
         self.access_level = None
-        # storing project_name to save network call
-        self.active_project_name = None
-        # Storing project list to pass to admin window
-        self.projects = None
+        # storing operation_name to save network call
+        self.active_operation_name = None
+        # Storing operation list to pass to admin window
+        self.operations = None
         # store active_flight_path here as object
         self.waypoints_model = None
-        # Store active project's file path
+        # Store active operation's file path
         self.local_ftml_file = None
         # connection object to interact with sockets
         self.conn = None
         # assign ids to view-window
         # self.view_id = 0
-        # project window
+        # operation window
         self.chat_window = None
         # Admin Window
         self.admin_window = None
@@ -494,7 +494,7 @@ class MSSMscolab(QtCore.QObject):
         self.conn.signal_new_permission.connect(self.render_new_permission)
         self.conn.signal_update_permission.connect(self.handle_update_permission)
         self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
-        self.conn.signal_project_deleted.connect(self.handle_project_deleted)
+        self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
 
         self.ui.connectBtn.hide()
         # display connection status
@@ -504,11 +504,11 @@ class MSSMscolab(QtCore.QObject):
         self.ui.usernameLabel.show()
         self.ui.userOptionsTb.show()
         self.fetch_gravatar()
-        # enable add project menu action
-        self.ui.actionAddProject.setEnabled(True)
+        # enable add operation menu action
+        self.ui.actionAddOperation.setEnabled(True)
 
-        # Populate open projects list
-        self.add_projects_to_ui()
+        # Populate open operations list
+        self.add_operations_to_ui()
 
         # Show category list
         self.show_categories_to_ui()
@@ -655,9 +655,9 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
         self.logout()
 
-    def add_project_handler(self):
+    def add_operation_handler(self):
         if self.verify_user_token():
-            def check_and_enable_project_accept():
+            def check_and_enable_operation_accept():
                 if (self.add_proj_dialog.path.text() != "" and
                         self.add_proj_dialog.description.toPlainText() != "" and
                         self.add_proj_dialog.category.text() != ""):
@@ -687,14 +687,14 @@ class MSSMscolab(QtCore.QObject):
                     self.add_proj_dialog.selectedFile.setText(file_name)
 
             self.proj_diag = QtWidgets.QDialog()
-            self.add_proj_dialog = add_project_ui.Ui_addProjectDialog()
+            self.add_proj_dialog = add_operation_ui.Ui_addOperationDialog()
             self.add_proj_dialog.setupUi(self.proj_diag)
             self.add_proj_dialog.f_content = None
-            self.add_proj_dialog.buttonBox.accepted.connect(self.add_project)
+            self.add_proj_dialog.buttonBox.accepted.connect(self.add_operation)
             self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
-            self.add_proj_dialog.path.textChanged.connect(check_and_enable_project_accept)
-            self.add_proj_dialog.description.textChanged.connect(check_and_enable_project_accept)
-            self.add_proj_dialog.category.textChanged.connect(check_and_enable_project_accept)
+            self.add_proj_dialog.path.textChanged.connect(check_and_enable_operation_accept)
+            self.add_proj_dialog.description.textChanged.connect(check_and_enable_operation_accept)
+            self.add_proj_dialog.category.textChanged.connect(check_and_enable_operation_accept)
             self.add_proj_dialog.browse.clicked.connect(browse)
             self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
             self.proj_diag.show()
@@ -702,7 +702,7 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def add_project(self):
+    def add_operation(self):
         path = self.add_proj_dialog.path.text()
         description = self.add_proj_dialog.description.toPlainText()
         category = self.add_proj_dialog.category.text()
@@ -733,19 +733,19 @@ class MSSMscolab(QtCore.QObject):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post(f'{self.mscolab_server_url}/create_project', data=data)
+        r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data)
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('Your project was created successfully')
-            self.add_projects_to_ui()
+            self.error_dialog.showMessage('Your operation was created successfully')
+            self.add_operations_to_ui()
             selected_category = self.ui.filterCategoryCb.currentText()
             self.show_categories_to_ui()
-            self.project_category_handler()
+            self.operation_category_handler()
             index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
             if index >= 0:
                 self.ui.filterCategoryCb.setCurrentIndex(index)
-            p_id = self.get_recent_pid()
-            self.conn.handle_new_room(p_id)
+            op_id = self.get_recent_pid()
+            self.conn.handle_new_room(op_id)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
@@ -753,34 +753,34 @@ class MSSMscolab(QtCore.QObject):
     def get_recent_pid(self):
         if self.verify_user_token():
             """
-            get most recent project's p_id
+            get most recent operation's op_id
             """
             data = {
                 "token": self.token
             }
-            r = requests.get(self.mscolab_server_url + '/projects', data=data)
+            r = requests.get(self.mscolab_server_url + '/operations', data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
-                projects = _json["projects"]
-                p_id = None
-                if projects:
-                    p_id = projects[-1]["p_id"]
-                return p_id
+                operations = _json["operations"]
+                op_id = None
+                if operations:
+                    op_id = operations[-1]["op_id"]
+                return op_id
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def project_options_handler(self):
+    def operation_options_handler(self):
         if self.sender() == self.ui.actionChat:
             self.open_chat_window()
         elif self.sender() == self.ui.actionVersionHistory:
             self.open_version_history_window()
         elif self.sender() == self.ui.actionManageUsers:
             self.open_admin_window()
-        elif self.sender() == self.ui.actionDeleteProject:
-            self.handle_delete_project()
+        elif self.sender() == self.ui.actionDeleteOperation:
+            self.handle_delete_operation()
 
     def open_chat_window(self):
         if self.verify_user_token():
@@ -791,11 +791,11 @@ class MSSMscolab(QtCore.QObject):
                 self.chat_window.activateWindow()
                 return
 
-            self.chat_window = mp.MSColabProjectWindow(
+            self.chat_window = mp.MSColabOperationWindow(
                 self.token,
                 self.active_pid,
                 self.user,
-                self.active_project_name,
+                self.active_operation_name,
                 self.access_level,
                 self.conn,
                 mscolab_server_url=self.mscolab_server_url,
@@ -825,8 +825,8 @@ class MSSMscolab(QtCore.QObject):
                 self.token,
                 self.active_pid,
                 self.user,
-                self.active_project_name,
-                self.projects,
+                self.active_operation_name,
+                self.operations,
                 self.conn,
                 mscolab_server_url=self.mscolab_server_url,
             )
@@ -851,7 +851,7 @@ class MSSMscolab(QtCore.QObject):
                 return
 
             self.version_window = mvh.MSColabVersionHistory(self.token, self.active_pid, self.user,
-                                                            self.active_project_name, self.conn,
+                                                            self.active_operation_name, self.conn,
                                                             mscolab_server_url=self.mscolab_server_url)
             self.version_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
             self.version_window.viewCloses.connect(self.close_version_history_window)
@@ -879,31 +879,31 @@ class MSSMscolab(QtCore.QObject):
             self.version_window.close()
             self.version_window = None
 
-    def handle_delete_project(self):
+    def handle_delete_operation(self):
         if self.verify_user_token():
-            entered_project_name, ok = QtWidgets.QInputDialog.getText(
+            entered_operation_name, ok = QtWidgets.QInputDialog.getText(
                 self.ui,
-                self.ui.tr("Delete Project"),
+                self.ui.tr("Delete Operation"),
                 self.ui.tr(
-                    f"You're about to delete the project - '{self.active_project_name}'. "
-                    f"Enter the project name to confirm: "
+                    f"You're about to delete the operation - '{self.active_operation_name}'. "
+                    f"Enter the operation name to confirm: "
                 ),
             )
             if ok:
-                if entered_project_name == self.active_project_name:
+                if entered_operation_name == self.active_operation_name:
                     data = {
                         "token": self.token,
-                        "p_id": self.active_pid
+                        "op_id": self.active_pid
                     }
-                    url = url_join(self.mscolab_server_url, 'delete_project')
+                    url = url_join(self.mscolab_server_url, 'delete_operation')
                     try:
                         res = requests.post(url, data=data)
                         res.raise_for_status()
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
-                        show_popup(self.ui, "Error", "Some error occurred! Could not delete project.")
+                        show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
                 else:
-                    show_popup(self.ui, "Error", "Entered project name did not match!")
+                    show_popup(self.ui, "Error", "Entered operation name did not match!")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -913,11 +913,12 @@ class MSSMscolab(QtCore.QObject):
             if self.ui.workLocallyCheckbox.isChecked():
                 if self.version_window is not None:
                     self.version_window.close()
-                self.create_local_project_file()
+                self.create_local_operation_file()
                 self.local_ftml_file = fs.path.combine(
                     self.data_dir,
                     fs.path.join(
-                        "local_mscolab_data", self.user["username"], self.active_project_name, "mscolab_project.ftml"),
+                        "local_mscolab_data", self.user["username"],
+                        self.active_operation_name, "mscolab_operation.ftml"),
                 )
                 self.ui.workingStatusLabel.setText(
                     self.ui.tr(
@@ -931,21 +932,21 @@ class MSSMscolab(QtCore.QObject):
                 self.ui.workingStatusLabel.setText(
                     self.ui.tr(
                         "Working Online.\nAll your changes will be shared with everyone. "
-                        "You can work on the project asynchronously by checking the 'Work Asynchronously' box.")
+                        "You can work on the operation asynchronously by checking the 'Work Asynchronously' box.")
                 )
                 self.ui.serverOptionsCb.hide()
                 self.waypoints_model = None
                 self.load_wps_from_server()
-            self.show_project_options()
+            self.show_operation_options()
             self.reload_view_windows()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def create_local_project_file(self):
+    def create_local_operation_file(self):
         with open_fs(self.data_dir) as mss_dir:
             rel_file_path = fs.path.join('local_mscolab_data', self.user['username'],
-                                         self.active_project_name, 'mscolab_project.ftml')
+                                         self.active_operation_name, 'mscolab_operation.ftml')
             if mss_dir.exists(rel_file_path) is True:
                 return
             mss_dir.makedirs(fs.path.dirname(rel_file_path))
@@ -957,19 +958,19 @@ class MSSMscolab(QtCore.QObject):
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
-    def project_category_handler(self):
+    def operation_category_handler(self):
         self.selected_category = self.ui.filterCategoryCb.currentText()
         if self.selected_category != "ANY":
-            self.add_projects_to_ui()
-            items = [self.ui.listProjectsMSC.item(i) for i in range(self.ui.listProjectsMSC.count())]
+            self.add_operations_to_ui()
+            items = [self.ui.listOperationsMSC.item(i) for i in range(self.ui.listOperationsMSC.count())]
             row = 0
             for item in items:
-                if item.project_category != self.selected_category:
-                    self.ui.listProjectsMSC.takeItem(row)
+                if item.operation_category != self.selected_category:
+                    self.ui.listOperationsMSC.takeItem(row)
                 else:
                     row += 1
         else:
-            self.add_projects_to_ui()
+            self.add_operations_to_ui()
 
     def server_options_handler(self, index):
         selected_option = self.ui.serverOptionsCb.currentText()
@@ -1024,22 +1025,22 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def get_recent_project(self):
+    def get_recent_operation(self):
+        """
+        get most recent operation
+        """
         if self.verify_user_token():
-            """
-            get most recent project
-            """
             data = {
                 "token": self.token
             }
-            r = requests.get(self.mscolab_server_url + '/projects', data=data)
+            r = requests.get(self.mscolab_server_url + '/operations', data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
-                projects = _json["projects"]
-                recent_project = None
-                if projects:
-                    recent_project = projects[-1]
-                return recent_project
+                operations = _json["operations"]
+                recent_operation = None
+                if operations:
+                    recent_operation = operations[-1]
+                return recent_operation
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
         else:
@@ -1057,9 +1058,9 @@ class MSSMscolab(QtCore.QObject):
         self.reload_window(self.active_pid)
 
     @QtCore.Slot(int, int)
-    def render_new_permission(self, p_id, u_id):
+    def render_new_permission(self, op_id, u_id):
         """
-        p_id: project id
+        op_id: operation id
         u_id: user id
 
         to render new permission if added
@@ -1071,12 +1072,12 @@ class MSSMscolab(QtCore.QObject):
         if r.text != "False":
             _json = json.loads(r.text)
             if _json['user']['id'] == u_id:
-                project = self.get_recent_project()
-                project_desc = f'{project["path"]} - {project["access_level"]}'
-                widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.ui.listProjectsMSC)
-                widgetItem.p_id = project["p_id"]
-                widgetItem.access_level = project["access_level"]
-                self.ui.listProjectsMSC.addItem(widgetItem)
+                operation = self.get_recent_operation()
+                operation_desc = f'{operation["path"]} - {operation["access_level"]}'
+                widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
+                widgetItem.op_id = operation["op_id"]
+                widgetItem.access_level = operation["access_level"]
+                self.ui.listOperationsMSC.addItem(widgetItem)
             if self.chat_window is not None:
                 self.chat_window.load_users()
         else:
@@ -1084,33 +1085,33 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     @QtCore.Slot(int, int, str)
-    def handle_update_permission(self, p_id, u_id, access_level):
+    def handle_update_permission(self, op_id, u_id, access_level):
         """
-        p_id: project id
+        op_id: operation id
         u_id: user id
         access_level: updated access level
 
         function updates existing permissions and related control availability
         """
         if u_id == self.user["id"]:
-            # update table of projects
-            project_name = None
-            for i in range(self.ui.listProjectsMSC.count()):
-                item = self.ui.listProjectsMSC.item(i)
-                if item.p_id == p_id:
-                    project_name = item.project_path
+            # update table of operations
+            operation_name = None
+            for i in range(self.ui.listOperationsMSC.count()):
+                item = self.ui.listOperationsMSC.item(i)
+                if item.op_id == op_id:
+                    operation_name = item.operation_path
                     item.access_level = access_level
-                    item.setText(f'{project_name} - {item.access_level}')
+                    item.setText(f'{operation_name} - {item.access_level}')
                     break
-            if project_name is not None:
+            if operation_name is not None:
                 show_popup(self.ui, "Permission Updated",
-                           f"Your access level to project - {project_name} was updated to {access_level}!", 1)
-            if p_id != self.active_pid:
+                           f"Your access level to operation - {operation_name} was updated to {access_level}!", 1)
+            if op_id != self.active_pid:
                 return
 
             self.access_level = access_level
             # Close mscolab windows based on new access_level and update their buttons
-            self.show_project_options()
+            self.show_operation_options()
 
             # update view window nav elements if open
             for window in self.ui.get_active_views():
@@ -1124,85 +1125,89 @@ class MSSMscolab(QtCore.QObject):
         if self.chat_window is not None:
             self.chat_window.load_users()
 
-    def delete_project_from_list(self, p_id):
-        logging.debug('delete project p_id: %s and active_id is: %s' % (p_id, self.active_pid))
-        if self.active_pid == p_id:
-            logging.debug('delete_project_from_list doing: %s' % p_id)
+    def delete_operation_from_list(self, op_id):
+        logging.debug('delete operation op_id: %s and active_id is: %s' % (op_id, self.active_pid))
+        if self.active_pid == op_id:
+            logging.debug('delete_operation_from_list doing: %s' % op_id)
             self.active_pid = None
             self.access_level = None
-            self.active_project_name = None
+            self.active_operation_name = None
             # self.ui.workingStatusLabel.setEnabled(False)
             self.close_external_windows()
-            self.hide_project_options()
+            self.hide_operation_options()
 
-        # Update project list
+        # Update operation list
         remove_item = None
-        for i in range(self.ui.listProjectsMSC.count()):
-            item = self.ui.listProjectsMSC.item(i)
-            if item.p_id == p_id:
+        for i in range(self.ui.listOperationsMSC.count()):
+            item = self.ui.listOperationsMSC.item(i)
+            if item.op_id == op_id:
                 remove_item = item
                 break
         if remove_item is not None:
             logging.debug(f"remove_item: {remove_item}")
-            self.ui.listProjectsMSC.takeItem(self.ui.listProjectsMSC.row(remove_item))
-            return remove_item.project_path
+            self.ui.listOperationsMSC.takeItem(self.ui.listOperationsMSC.row(remove_item))
+            return remove_item.operation_path
 
     @QtCore.Slot(int, int)
-    def handle_revoke_permission(self, p_id, u_id):
+    def handle_revoke_permission(self, op_id, u_id):
         if u_id == self.user["id"]:
-            project_name = self.delete_project_from_list(p_id)
-            show_popup(self.ui, "Permission Revoked", f'Your access to project - "{project_name}" was revoked!', icon=1)
+            operation_name = self.delete_operation_from_list(op_id)
+            show_popup(self.ui, "Permission Revoked",
+                       f'Your access to operation - "{operation_name}" was revoked!', icon=1)
 
     @QtCore.Slot(int)
-    def handle_project_deleted(self, p_id):
-        project_name = self.delete_project_from_list(p_id)
-        show_popup(self.ui, "Success", f'Project "{project_name}" was deleted!', icon=1)
+    def handle_operation_deleted(self, op_id):
+        operation_name = self.delete_operation_from_list(op_id)
+        show_popup(self.ui, "Success", f'Operation "{operation_name}" was deleted!', icon=1)
 
     def show_categories_to_ui(self):
+        """
+        adds the list of operation categories to the UI
+        """
         if self.verify_user_token():
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/projects', data=data)
+            r = requests.get(f'{self.mscolab_server_url}/operations', data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
-                projects = _json["projects"]
+                operations = _json["operations"]
                 self.ui.filterCategoryCb.clear()
                 categories = set(["ANY"])
-                for project in projects:
-                    categories.add(project["category"])
+                for operation in operations:
+                    categories.add(operation["category"])
                 categories.remove("ANY")
                 categories = list(categories)
                 categories.insert(0, "ANY")
                 self.ui.filterCategoryCb.addItems(categories)
 
-    def add_projects_to_ui(self):
+    def add_operations_to_ui(self):
         if self.verify_user_token():
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/projects', data=data)
+            r = requests.get(f'{self.mscolab_server_url}/operations', data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
-                self.projects = _json["projects"]
-                logging.debug("adding projects to ui")
-                projects = sorted(self.projects, key=lambda k: k["path"].lower())
-                self.ui.listProjectsMSC.clear()
-                selectedProject = None
-                for project in projects:
-                    project_desc = f'{project["path"]} - {project["access_level"]}'
-                    widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.ui.listProjectsMSC)
-                    widgetItem.p_id = project["p_id"]
-                    widgetItem.access_level = project["access_level"]
-                    widgetItem.project_path = project["path"]
-                    widgetItem.project_category = project["category"]
-                    if widgetItem.p_id == self.active_pid:
-                        selectedProject = widgetItem
-                    self.ui.listProjectsMSC.addItem(widgetItem)
-                if selectedProject is not None:
-                    self.ui.listProjectsMSC.setCurrentItem(selectedProject)
-                    self.ui.listProjectsMSC.itemActivated.emit(selectedProject)
-                self.ui.listProjectsMSC.itemActivated.connect(self.set_active_pid)
+                self.operations = _json["operations"]
+                logging.debug("adding operations to ui")
+                operations = sorted(self.operations, key=lambda k: k["path"].lower())
+                self.ui.listOperationsMSC.clear()
+                selectedOperation = None
+                for operation in operations:
+                    operation_desc = f'{operation["path"]} - {operation["access_level"]}'
+                    widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
+                    widgetItem.op_id = operation["op_id"]
+                    widgetItem.access_level = operation["access_level"]
+                    widgetItem.operation_path = operation["path"]
+                    widgetItem.operation_category = operation["category"]
+                    if widgetItem.op_id == self.active_pid:
+                        selectedOperation = widgetItem
+                    self.ui.listOperationsMSC.addItem(widgetItem)
+                if selectedOperation is not None:
+                    self.ui.listOperationsMSC.setCurrentItem(selectedOperation)
+                    self.ui.listOperationsMSC.itemActivated.emit(selectedOperation)
+                self.ui.listOperationsMSC.itemActivated.connect(self.set_active_pid)
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
                 self.logout()
@@ -1213,12 +1218,12 @@ class MSSMscolab(QtCore.QObject):
     def set_active_pid(self, item):
         if self.verify_user_token():
             if not self.ui.local_active:
-                if item.p_id == self.active_pid:
+                if item.op_id == self.active_pid:
                     return
 
             # close all hanging window
             self.close_external_windows()
-            self.hide_project_options()
+            self.hide_operation_options()
 
             # Turn off work locally toggle
             self.ui.workLocallyCheckbox.blockSignals(True)
@@ -1226,9 +1231,9 @@ class MSSMscolab(QtCore.QObject):
             self.ui.workLocallyCheckbox.blockSignals(False)
 
             # set active_pid here
-            self.active_pid = item.p_id
+            self.active_pid = item.op_id
             self.access_level = item.access_level
-            self.active_project_name = item.project_path
+            self.active_operation_name = item.operation_path
             self.waypoints_model = None
 
             # set active flightpath here
@@ -1237,16 +1242,16 @@ class MSSMscolab(QtCore.QObject):
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
                     "Working Online.\nAll your changes will be shared with everyone. "
-                    "You can work on the project asynchronously by checking the 'Work Asynchronously' box.")
+                    "You can work on the operation asynchronously by checking the 'Work Asynchronously' box.")
             )
             # self.ui.workingStatusLabel.show()
             # enable access level specific widgets
-            self.show_project_options()
+            self.show_operation_options()
 
             # change font style for selected
             font = QtGui.QFont()
-            for i in range(self.ui.listProjectsMSC.count()):
-                self.ui.listProjectsMSC.item(i).setFont(font)
+            for i in range(self.ui.listOperationsMSC.count()):
+                self.ui.listOperationsMSC.item(i).setFont(font)
             font.setBold(True)
             item.setFont(font)
 
@@ -1265,22 +1270,22 @@ class MSSMscolab(QtCore.QObject):
             if self.verify_user_token():
                 # change font style for selected
                 font = QtGui.QFont()
-                for i in range(self.ui.listProjectsMSC.count()):
-                    self.ui.listProjectsMSC.item(i).setFont(font)
+                for i in range(self.ui.listOperationsMSC.count()):
+                    self.ui.listOperationsMSC.item(i).setFont(font)
 
-                # close all hanging project option windows
+                # close all hanging operation option windows
                 self.close_external_windows()
-                self.hide_project_options()
+                self.hide_operation_options()
                 self.ui.menu_handler()
             else:
                 show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                 self.logout()
 
-    def show_project_options(self):
+    def show_operation_options(self):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProjectProperties.setEnabled(False)
+        self.ui.menuProperties.setEnabled(False)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
@@ -1307,27 +1312,27 @@ class MSSMscolab(QtCore.QObject):
                 self.admin_window.close()
 
         if self.access_level in ["creator"]:
-            self.ui.menuProjectProperties.setEnabled(True)
+            self.ui.menuProperties.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 
-    def hide_project_options(self):
+    def hide_operation_options(self):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProjectProperties.setEnabled(False)
+        self.ui.menuProperties.setEnabled(False)
         self.ui.workLocallyCheckbox.setEnabled(False)
         self.ui.serverOptionsCb.hide()
         # change working status label
-        self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Project Selected"))
+        self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Operation Selected"))
 
     def request_wps_from_server(self):
         if self.verify_user_token():
             data = {
                 "token": self.token,
-                "p_id": self.active_pid
+                "op_id": self.active_pid
             }
-            r = requests.get(self.mscolab_server_url + '/get_project_by_id', data=data)
+            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data)
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
                 return xml_content
@@ -1414,7 +1419,7 @@ class MSSMscolab(QtCore.QObject):
                 return
 
             # Setting default filename path for filedialogue
-            default_filename = f'{self.active_project_name}.{extension}'
+            default_filename = f'{self.active_operation_name}.{extension}'
             file_name = get_save_filename(
                 self.ui, "Export From Server",
                 default_filename, f"Flight track (*.{extension})",
@@ -1439,7 +1444,7 @@ class MSSMscolab(QtCore.QObject):
             if self.active_pid is None:
                 return
 
-            self.waypoints_model.name = self.active_project_name
+            self.waypoints_model.name = self.active_operation_name
             view_window = self.ui.create_view(_type, self.waypoints_model)
 
             # disable navbar actions in the view for viewer
@@ -1500,27 +1505,27 @@ class MSSMscolab(QtCore.QObject):
         self.ui.menu_handler()
         # close all hanging window
         self.close_external_windows()
-        self.hide_project_options()
+        self.hide_operation_options()
         # delete token and show login widget-items
         self.token = None
-        # delete active-project-id
+        # delete active-operation-id
         self.active_pid = None
         # delete active access_level
         self.access_level = None
-        # delete active project_name
-        self.active_project_name = None
+        # delete active operation_name
+        self.active_operation_name = None
         # delete local file name
         self.local_ftml_file = None
-        # clear project listing
-        self.ui.listProjectsMSC.clear()
+        # clear operation listing
+        self.ui.listOperationsMSC.clear()
         # clear mscolab url
         self.mscolab_server_url = None
-        # clear projects list here
+        # clear operations list here
         self.ui.mscStatusLabel.setText(self.ui.tr("status: Disconnected"))
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.connectBtn.show()
-        self.ui.actionAddProject.setEnabled(False)
+        self.ui.actionAddOperation.setEnabled(False)
         # disconnect socket
         if self.conn is not None:
             self.conn.disconnect()

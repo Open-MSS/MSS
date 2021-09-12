@@ -4,7 +4,7 @@
     mslib.msui._tests.test_mscolab_merge_waypoints.Test_Save_Merge_Points
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module is used to test mscolab-project related gui.
+    This module is used to test mscolab-operation related gui.
 
     This file is part of mss.
 

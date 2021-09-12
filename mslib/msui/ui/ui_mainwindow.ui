@@ -147,7 +147,7 @@
         </widget>
        </item>
        <item row="1" column="0" colspan="2">
-        <widget class="QListWidget" name="listProjectsMSC">
+        <widget class="QListWidget" name="listOperationsMSC">
          <property name="toolTip">
           <string>List of mscolab projects.</string>
          </property>
@@ -176,9 +176,9 @@
         </widget>
        </item>
        <item row="0" column="0">
-        <widget class="QLabel" name="openProjectsMSCLabel">
+        <widget class="QLabel" name="openOperationsMSCLabel">
          <property name="text">
-          <string>Open Projects:</string>
+          <string>Operations:</string>
          </property>
         </widget>
        </item>
@@ -247,7 +247,7 @@
        <item>
         <widget class="QLabel" name="openFlightTracksLabel">
          <property name="text">
-          <string>Open Flight Tracks:</string>
+          <string>Flight Tracks:</string>
          </property>
         </widget>
        </item>
@@ -296,7 +296,7 @@ Save a flight track to name it.</string>
       <string>New</string>
      </property>
      <addaction name="actionNewFlightTrack"/>
-     <addaction name="actionAddProject"/>
+     <addaction name="actionAddOperation"/>
     </widget>
     <addaction name="menuNew"/>
     <addaction name="menuImportFlightTrack"/>
@@ -331,25 +331,25 @@ Save a flight track to name it.</string>
     <addaction name="actionTableView"/>
     <addaction name="actionLinearView"/>
    </widget>
-   <widget class="QMenu" name="menuProject">
+   <widget class="QMenu" name="menuOperation">
     <property name="title">
-     <string>Project</string>
+     <string>Operation</string>
     </property>
-    <widget class="QMenu" name="menuProjectProperties">
+    <widget class="QMenu" name="menuProperties">
      <property name="title">
-      <string>Project Properties</string>
+      <string>Properties</string>
      </property>
-     <addaction name="actionDeleteProject"/>
+     <addaction name="actionDeleteOperation"/>
     </widget>
     <addaction name="actionChat"/>
     <addaction name="actionVersionHistory"/>
     <addaction name="actionManageUsers"/>
     <addaction name="separator"/>
-    <addaction name="menuProjectProperties"/>
+    <addaction name="menuProperties"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuViews"/>
-   <addaction name="menuProject"/>
+   <addaction name="menuOperation"/>
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
@@ -462,9 +462,9 @@ Save a flight track to name it.</string>
     <string>&amp;MSColab</string>
    </property>
   </action>
-  <action name="actionDeleteProject">
+  <action name="actionDeleteOperation">
    <property name="text">
-    <string>&amp;Delete Project</string>
+    <string>&amp;Delete Operation</string>
    </property>
   </action>
   <action name="actionBringMainWindowToFront">
@@ -480,9 +480,9 @@ Save a flight track to name it.</string>
     <string>&amp;Local Flight Track</string>
    </property>
   </action>
-  <action name="actionAddProject">
+  <action name="actionAddOperation">
    <property name="text">
-    <string>&amp;MSColab Project</string>
+    <string>&amp;MSColab Operation</string>
    </property>
   </action>
  </widget>
@@ -491,7 +491,7 @@ Save a flight track to name it.</string>
   <tabstop>userOptionsTb</tabstop>
   <tabstop>listFlightTracks</tabstop>
   <tabstop>listViews</tabstop>
-  <tabstop>listProjectsMSC</tabstop>
+  <tabstop>listOperationsMSC</tabstop>
   <tabstop>workLocallyCheckbox</tabstop>
   <tabstop>serverOptionsCb</tabstop>
  </tabstops>

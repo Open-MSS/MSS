@@ -81,6 +81,11 @@ class MplCanvas(FigureCanvasQTAgg):
         super(MplCanvas, self).updateGeometry()
 
     def get_default_filename(self):
+        """
+        defines the image file name for storing from a view
+
+        return: default png filename of a view
+        """
         result = self.basename + self.default_filename
         if len(result) > 100:
             result = result[:100]
@@ -169,6 +174,9 @@ save_figure_original = NavigationToolbar2QT.save_figure
 
 
 def save_figure(self, *args):
+    """
+    saves the figure dependent to the filepicker_default
+    """
     picker_type = config_loader(dataset="filepicker_default")
     if picker_type in ["default", "qt"]:
         save_figure_original(self, *args)
@@ -1256,7 +1264,7 @@ class MplTopViewCanvas(MplCanvas):
         self.draw()
         self.repaint()
 
-        # Update in case of a projection change
+        # Update in case of a operationion change
         self.waypoints_interactor.update()
 
         self.pdlg.setValue(10)

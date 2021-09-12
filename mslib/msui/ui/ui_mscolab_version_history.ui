@@ -39,7 +39,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="projectNameLabel">
+         <widget class="QLabel" name="operationNameLabel">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
             <horstretch>0</horstretch>

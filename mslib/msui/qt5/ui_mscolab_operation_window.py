@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_project_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_operation_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.9.2
 #
@@ -8,14 +8,14 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-class Ui_MscolabProject(object):
-    def setupUi(self, MscolabProject):
-        MscolabProject.setObjectName("MscolabProject")
-        MscolabProject.setWindowModality(QtCore.Qt.NonModal)
-        MscolabProject.setEnabled(True)
-        MscolabProject.resize(867, 687)
-        MscolabProject.setMinimumSize(QtCore.QSize(600, 400))
-        self.centralwidget = QtWidgets.QWidget(MscolabProject)
+class Ui_MscolabOperation(object):
+    def setupUi(self, MscolabOperation):
+        MscolabOperation.setObjectName("MscolabOperation")
+        MscolabOperation.setWindowModality(QtCore.Qt.NonModal)
+        MscolabOperation.setEnabled(True)
+        MscolabOperation.resize(867, 687)
+        MscolabOperation.setMinimumSize(QtCore.QSize(600, 400))
+        self.centralwidget = QtWidgets.QWidget(MscolabOperation)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
@@ -131,29 +131,29 @@ class Ui_MscolabProject(object):
         self.horizontalLayout_4.setStretch(1, 1)
         self.verticalLayout_4.addLayout(self.horizontalLayout_4)
         self.gridLayout.addLayout(self.verticalLayout_4, 0, 0, 1, 1)
-        MscolabProject.setCentralWidget(self.centralwidget)
-        self.actionCloseWindow = QtWidgets.QAction(MscolabProject)
+        MscolabOperation.setCentralWidget(self.centralwidget)
+        self.actionCloseWindow = QtWidgets.QAction(MscolabOperation)
         self.actionCloseWindow.setObjectName("actionCloseWindow")
-        MscolabProject.addAction(self.actionCloseWindow)
+        MscolabOperation.addAction(self.actionCloseWindow)
 
-        self.retranslateUi(MscolabProject)
-        self.actionCloseWindow.triggered.connect(MscolabProject.close)
-        QtCore.QMetaObject.connectSlotsByName(MscolabProject)
+        self.retranslateUi(MscolabOperation)
+        self.actionCloseWindow.triggered.connect(MscolabOperation.close)
+        QtCore.QMetaObject.connectSlotsByName(MscolabOperation)
 
-    def retranslateUi(self, MscolabProject):
+    def retranslateUi(self, MscolabOperation):
         _translate = QtCore.QCoreApplication.translate
-        MscolabProject.setWindowTitle(_translate("MscolabProject", "Mscolab Project Chat"))
-        self.user_info.setText(_translate("MscolabProject", "Logged In: "))
-        self.proj_info.setText(_translate("MscolabProject", "Project:"))
-        self.searchMessageLineEdit.setPlaceholderText(_translate("MscolabProject", "Search Message"))
-        self.searchPrevBtn.setText(_translate("MscolabProject", "Previous"))
-        self.searchNextBtn.setText(_translate("MscolabProject", "Next"))
-        self.previewBtn.setText(_translate("MscolabProject", "Preview"))
-        self.sendMessageBtn.setText(_translate("MscolabProject", "send"))
-        self.uploadBtn.setToolTip(_translate("MscolabProject", "Upload image or file"))
-        self.uploadBtn.setText(_translate("MscolabProject", "Upload"))
-        self.editMessageBtn.setText(_translate("MscolabProject", "Update"))
-        self.cancelBtn.setText(_translate("MscolabProject", "Cancel"))
-        self.actionCloseWindow.setText(_translate("MscolabProject", "CloseWindow"))
-        self.actionCloseWindow.setShortcut(_translate("MscolabProject", "Ctrl+W"))
+        MscolabOperation.setWindowTitle(_translate("MscolabOperation", "Mscolab Operation Chat"))
+        self.user_info.setText(_translate("MscolabOperation", "Logged In: "))
+        self.proj_info.setText(_translate("MscolabOperation", "Operation:"))
+        self.searchMessageLineEdit.setPlaceholderText(_translate("MscolabOperation", "Search Message"))
+        self.searchPrevBtn.setText(_translate("MscolabOperation", "Previous"))
+        self.searchNextBtn.setText(_translate("MscolabOperation", "Next"))
+        self.previewBtn.setText(_translate("MscolabOperation", "Preview"))
+        self.sendMessageBtn.setText(_translate("MscolabOperation", "send"))
+        self.uploadBtn.setToolTip(_translate("MscolabOperation", "Upload image or file"))
+        self.uploadBtn.setText(_translate("MscolabOperation", "Upload"))
+        self.editMessageBtn.setText(_translate("MscolabOperation", "Update"))
+        self.cancelBtn.setText(_translate("MscolabOperation", "Cancel"))
+        self.actionCloseWindow.setText(_translate("MscolabOperation", "CloseWindow"))
+        self.actionCloseWindow.setShortcut(_translate("MscolabOperation", "Ctrl+W"))
 

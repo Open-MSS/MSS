@@ -30,7 +30,7 @@ import os
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import User, Project, Permission, Change, Message, db
+from mslib.mscolab.models import User, Operation, Permission, Change, Message, db
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -74,105 +74,105 @@ class Test_Files(TestCase):
     def tearDown(self):
         pass
 
-    def test_create_project(self):
+    def test_create_operation(self):
         with self.app.test_client():
             # test for blank character in path
-            assert self.fm.create_project('test path', 'test desc.', self.user) is False
+            assert self.fm.create_operation('test path', 'test desc.', self.user) is False
             # test for normal path
-            assert self.fm.create_project('test_path', 'test desc.', self.user) is True
+            assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
             # test for '/' in path
-            assert self.fm.create_project('test/path', 'sth', self.user) is False
+            assert self.fm.create_operation('test/path', 'sth', self.user) is False
             # check file existence
             assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_path')) is True
             # check creation in db
-            p = Project.query.filter_by(path="test_path").first()
+            p = Operation.query.filter_by(path="test_path").first()
             assert p is not None
             # check permission for author
-            perms = Permission.query.filter_by(p_id=p.id, access_level="creator").all()
+            perms = Permission.query.filter_by(op_id=p.id, access_level="creator").all()
             assert len(perms) == 1
             assert perms[0].u_id == self.user.id
 
-    def test_projects(self):
+    def test_operations(self):
         with self.app.test_client():
-            projects = self.fm.list_projects(self.user)
-            assert len(projects) == 0
-            assert self.fm.create_project('test_path', 'test desc.', self.user) is True
-            projects = self.fm.list_projects(self.user)
-            assert len(projects) == 1
+            operations = self.fm.list_operations(self.user)
+            assert len(operations) == 0
+            assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
+            operations = self.fm.list_operations(self.user)
+            assert len(operations) == 1
 
     def test_is_admin(self):
         with self.app.test_client():
-            assert self.fm.create_project('test_path', 'test desc.', self.user) is True
-            p_id = get_recent_pid(self.fm, self.user)
+            assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
+            op_id = get_recent_pid(self.fm, self.user)
             u_id = self.user.id
-            assert self.fm.is_admin(u_id, p_id) is True
-            undefined_p_id = 123
-            assert self.fm.is_admin(u_id, undefined_p_id) is False
-            no_perm_p_id = 2
-            assert self.fm.is_admin(u_id, no_perm_p_id) is False
+            assert self.fm.is_admin(u_id, op_id) is True
+            undefined_op_id = 123
+            assert self.fm.is_admin(u_id, undefined_op_id) is False
+            no_perm_op_id = 2
+            assert self.fm.is_admin(u_id, no_perm_op_id) is False
 
     def test_file_save(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="project77")
-            assert self.fm.save_file(project.id, "beta", self.user)
-            assert self.fm.get_file(project.id, self.user) == "beta"
-            assert self.fm.save_file(project.id, "gamma", self.user)
-            assert self.fm.get_file(project.id, self.user) == "gamma"
+            flight_path, operation = self._create_operation(flight_path="operation77")
+            assert self.fm.save_file(operation.id, "beta", self.user)
+            assert self.fm.get_file(operation.id, self.user) == "beta"
+            assert self.fm.save_file(operation.id, "gamma", self.user)
+            assert self.fm.get_file(operation.id, self.user) == "gamma"
             # check if change is saved properly
-            changes = self.fm.get_all_changes(project.id, self.user)
+            changes = self.fm.get_all_changes(operation.id, self.user)
             assert len(changes) == 2
 
     def test_undo(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="project7", content="alpha")
-            assert self.fm.save_file(project.id, "beta", self.user)
-            assert self.fm.save_file(project.id, "gamma", self.user)
-            changes = Change.query.filter_by(p_id=project.id).all()
+            flight_path, operation = self._create_operation(flight_path="operation7", content="alpha")
+            assert self.fm.save_file(operation.id, "beta", self.user)
+            assert self.fm.save_file(operation.id, "gamma", self.user)
+            changes = Change.query.filter_by(op_id=operation.id).all()
             assert changes is not None
             assert changes[0].id == 1
             assert self.fm.undo(changes[0].id, self.user) is True
-            assert len(self.fm.get_all_changes(project.id, self.user)) == 3
-            assert "beta" in self.fm.get_file(project.id, self.user)
+            assert len(self.fm.get_all_changes(operation.id, self.user)) == 3
+            assert "beta" in self.fm.get_file(operation.id, self.user)
 
-    def test_get_project(self):
+    def test_get_operation(self):
         with self.app.test_client():
-            self._create_project(flight_path="project9")
-            p_id = get_recent_pid(self.fm, self.user)
-            assert self.fm.get_file(p_id, self.user) is not False
+            self._create_operation(flight_path="operation9")
+            op_id = get_recent_pid(self.fm, self.user)
+            assert self.fm.get_file(op_id, self.user) is not False
             user2 = User.query.filter_by(emailid=self.userdata2[0]).first()
-            assert self.fm.get_file(p_id, user2) is False
+            assert self.fm.get_file(op_id, user2) is False
 
     def test_authorized_users(self):
         with self.app.test_client():
-            self._create_project(flight_path="project10", content=self.content1)
-            p_id = get_recent_pid(self.fm, self.user)
-            assert len(self.fm.get_authorized_users(p_id)) == 1
+            self._create_operation(flight_path="operation10", content=self.content1)
+            op_id = get_recent_pid(self.fm, self.user)
+            assert len(self.fm.get_authorized_users(op_id)) == 1
 
-    def test_modify_project(self):
+    def test_modify_operation(self):
         with self.app.test_client():
-            self._create_project(flight_path="path")
-            p_id = get_recent_pid(self.fm, self.user)
+            self._create_operation(flight_path="path")
+            op_id = get_recent_pid(self.fm, self.user)
             # testing for wrong characters in path like ' ', '/'
-            assert self.fm.update_project(p_id, 'path', 'dummy wrong', self.user) is False
-            assert self.fm.update_project(p_id, 'path', 'dummy/wrong', self.user) is False
-            assert self.fm.update_project(p_id, 'path', 'dummy', self.user) is True
+            assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
+            assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
+            assert self.fm.update_operation(op_id, 'path', 'dummy', self.user) is True
             assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'dummy'))
-            assert self.fm.update_project(p_id, 'description', 'dummy', self.user) is True
+            assert self.fm.update_operation(op_id, 'description', 'dummy', self.user) is True
 
-    def test_delete_project(self):
+    def test_delete_operation(self):
         with self.app.test_client():
-            self._create_project(flight_path="f3")
-            p_id = get_recent_pid(self.fm, self.user)
-            assert self.fm.delete_file(p_id, self.user2) is False
-            assert self.fm.delete_file(p_id, self.user) is True
-            assert self.fm.delete_file(p_id, self.user) is False
-            permissions = Permission.query.filter_by(p_id=p_id).all()
+            self._create_operation(flight_path="f3")
+            op_id = get_recent_pid(self.fm, self.user)
+            assert self.fm.delete_file(op_id, self.user2) is False
+            assert self.fm.delete_file(op_id, self.user) is True
+            assert self.fm.delete_file(op_id, self.user) is False
+            permissions = Permission.query.filter_by(op_id=op_id).all()
             assert len(permissions) == 0
-            projects_db = Project.query.filter_by(id=p_id).all()
-            assert len(projects_db) == 0
-            changes = Change.query.filter_by(p_id=p_id).all()
+            operations_db = Operation.query.filter_by(id=op_id).all()
+            assert len(operations_db) == 0
+            changes = Change.query.filter_by(op_id=op_id).all()
             assert len(changes) == 0
-            messages = Message.query.filter_by(p_id=p_id).all()
+            messages = Message.query.filter_by(op_id=op_id).all()
             assert len(messages) == 0
 
     def _example_data(self):
@@ -212,9 +212,9 @@ class Test_Files(TestCase):
           </ListOfWaypoints>
       </FlightTrack>"""
 
-    def _create_project(self, flight_path="firstflight", user=None, content=None):
+    def _create_operation(self, flight_path="firstflight", user=None, content=None):
         if user is None:
             user = self.user
-        self.fm.create_project(flight_path, f"info about {flight_path}", user, content=content)
-        project = Project.query.filter_by(path=flight_path).first()
-        return flight_path, project
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
+        operation = Operation.query.filter_by(path=flight_path).first()
+        return flight_path, operation
