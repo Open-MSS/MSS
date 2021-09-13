@@ -112,7 +112,7 @@ def send_email(to, subject, template):
     try:
         mail.send(msg)
     except IOError:
-        logging.debug(f"Can't send email to {to}")
+        logging.debug("Can't send email to %s", to)
 
 
 def generate_confirmation_token(email):
