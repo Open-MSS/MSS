@@ -359,7 +359,6 @@ def read_config_file(path=constants.MSS_SETTINGS):
     path = path.replace("\\", "/")
     dir_name, file_name = fs.path.split(path)
     json_file_data = {}
-    error_message = ""
     with fs.open_fs(dir_name) as _fs:
         if _fs.exists(file_name):
             file_content = _fs.readtext(file_name)
@@ -375,7 +374,7 @@ def read_config_file(path=constants.MSS_SETTINGS):
                 raise FatalUserError(error_message)
         else:
             error_message = f"MSS config File '{path}' not found"
-            raise FatalUserError(error_message)
+            raise FileNotFoundError(error_message)
 
     global user_options
     if json_file_data:

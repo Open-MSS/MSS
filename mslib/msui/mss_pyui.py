@@ -894,8 +894,12 @@ def main():
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
 
-    read_config_file()
-    logging.info("Launching user interface...")
+    try:
+        read_config_file()
+    except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
+        message = f'\n\nFix the setup of your "MSS_SETTINGS" configuration.\n{ex}'
+        logging.error(message)
+        sys.exit()
 
     application = QtWidgets.QApplication(sys.argv)
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
