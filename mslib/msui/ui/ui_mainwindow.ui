@@ -202,7 +202,7 @@
        <item row="5" column="1">
         <widget class="QComboBox" name="filterCategoryCb">
          <property name="whatsThis">
-          <string>filter by project category</string>
+          <string>filter by operation category</string>
          </property>
          <property name="autoFillBackground">
           <bool>false</bool>

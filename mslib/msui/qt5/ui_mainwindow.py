@@ -236,7 +236,7 @@ class Ui_MSSMainWindow(object):
         self.categoryLabel.setText(_translate("MSSMainWindow", "Category:"))
         self.workLocallyCheckbox.setToolTip(_translate("MSSMainWindow", "Check to work asynchronously from the server"))
         self.workLocallyCheckbox.setText(_translate("MSSMainWindow", "Work Asynchronously"))
-        self.filterCategoryCb.setWhatsThis(_translate("MSSMainWindow", "filter by project category"))
+        self.filterCategoryCb.setWhatsThis(_translate("MSSMainWindow", "filter by operation category"))
         self.filterCategoryCb.setCurrentText(_translate("MSSMainWindow", "ANY"))
         self.filterCategoryCb.setItemText(0, _translate("MSSMainWindow", "ANY"))
         self.openFlightTracksLabel.setText(_translate("MSSMainWindow", "Flight Tracks:"))
