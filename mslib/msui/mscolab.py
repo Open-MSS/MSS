@@ -1169,23 +1169,21 @@ class MSSMscolab(QtCore.QObject):
         show_popup(self.ui, "Success", f'Project "{project_name}" was deleted!', icon=1)
 
     def show_categories_to_ui(self):
-        if self.mscolab_server_url is not None:
-            if self.verify_user_token():
-                data = {
-                    "token": self.token
-                }
-                r = requests.get(f'{self.mscolab_server_url}/projects', data=data)
-                if r.text != "False":
-                    _json = json.loads(r.text)
-                    projects = _json["projects"]
-                    self.ui.filterCategoryCb.clear()
-                    categories = set(["ANY"])
-                    for project in projects:
-                        categories.add(project["category"])
-                    categories.remove("ANY")
-                    categories = list(categories)
-                    categories.insert(0, "ANY")
-                    self.ui.filterCategoryCb.addItems(categories)
+        if self.verify_user_token():
+            data = {
+                "token": self.token
+            }
+            r = requests.get(f'{self.mscolab_server_url}/projects', data=data)
+            if r.text != "False":
+                _json = json.loads(r.text)
+                projects = _json["projects"]
+                self.ui.filterCategoryCb.clear()
+                categories = set(["ANY"])
+                for project in projects:
+                    categories.add(project["category"])
+                categories.remove("ANY")
+                categories = ["ANY"] + sorted(categories)
+                self.ui.filterCategoryCb.addItems(categories)
 
     def add_projects_to_ui(self):
         if self.verify_user_token():
