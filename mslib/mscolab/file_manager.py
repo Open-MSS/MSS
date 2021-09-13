@@ -39,7 +39,7 @@ class FileManager(object):
     def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_project(self, path, description, user, content=None):
+    def create_project(self, path, description, user, content=None, category="default"):
         """
         path: path to the project
         description: description of the project
@@ -49,9 +49,9 @@ class FileManager(object):
             logging.debug("malicious request: %s", user)
             return False
         proj_available = Project.query.filter_by(path=path).first()
-        if proj_available:
+        if proj_available is not None:
             return False
-        project = Project(path, description)
+        project = Project(path, description, category)
         db.session.add(project)
         db.session.flush()
         project_id = project.id
@@ -99,7 +99,8 @@ class FileManager(object):
                 "p_id": permission.p_id,
                 "access_level": permission.access_level,
                 "path": project.path,
-                "description": project.description
+                "description": project.description,
+                "category": project.category
             })
         return projects
 

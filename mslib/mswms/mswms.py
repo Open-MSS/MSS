@@ -56,6 +56,18 @@ def main():
                          help="Deletes all plots and corresponding code")
     gallery.add_argument("--refresh", action="store_true", default=False,
                          help="Deletes all plots and regenerates them, a mix of --clear and --create")
+    gallery.add_argument("--levels", default="", help="A comma-separated list of all levels visible on the gallery.\n"
+                                                      "E.g. --levels 200,300"
+                                                      "Use --levels all to include all levels.\n"
+                                                      "Default is the middle level.")
+    gallery.add_argument("--itimes", default="", help="A comma-separated list of all init times visible on the gallery"
+                                                      ", in ISO format.\nE.g. --itimes 2012-10-17T12:00:00\n"
+                                                      "Use --itimes all to use all available itimes.\n"
+                                                      "Default is the latest itime.")
+    gallery.add_argument("--vtimes", default="", help="A comma-separated list of all valid times visible on the gallery"
+                                                      ", in ISO format.\nE.g. --vtimes 2012-10-19T12:00:00\n"
+                                                      "Use --vtimes all to use all available vtimes.\n"
+                                                      "Default is the latest vtime")
     gallery.add_argument("--show-code", action="store_true", default=False,
                          help="Generates plots of all layers not already present, "
                               "and generates code snippets for each plot when clicking on the image")
@@ -89,7 +101,8 @@ def main():
     if args.action == "gallery":
         create = args.create or args.refresh
         clear = args.clear or args.refresh
-        server.generate_gallery(create, clear, args.show_code, url_prefix=args.url_prefix)
+        server.generate_gallery(create, clear, args.show_code, url_prefix=args.url_prefix, levels=args.levels,
+                                itimes=args.itimes, vtimes=args.vtimes)
         logging.info("Gallery generation done.")
         sys.exit()
 

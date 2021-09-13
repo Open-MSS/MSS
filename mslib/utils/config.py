@@ -129,6 +129,9 @@ class MissionSupportSystemDefaultConfig(object):
     # password to sign in
     MSCOLAB_password = ""
 
+    # category for MSC projects
+    MSCOLAB_category = "default"
+
     # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")}
     MSC_login = {}
 
@@ -230,6 +233,7 @@ class MissionSupportSystemDefaultConfig(object):
         'new_flighttrack_flightlevel',
         'MSCOLAB_mailid',
         'MSCOLAB_password',
+        'MSCOLAB_category',
         'mscolab_server_url',
         'wms_cache',
         'wms_cache_max_size_bytes',
@@ -355,7 +359,6 @@ def read_config_file(path=constants.MSS_SETTINGS):
     path = path.replace("\\", "/")
     dir_name, file_name = fs.path.split(path)
     json_file_data = {}
-    error_message = ""
     with fs.open_fs(dir_name) as _fs:
         if _fs.exists(file_name):
             file_content = _fs.readtext(file_name)
@@ -371,7 +374,7 @@ def read_config_file(path=constants.MSS_SETTINGS):
                 raise FatalUserError(error_message)
         else:
             error_message = f"MSS config File '{path}' not found"
-            raise FatalUserError(error_message)
+            raise FileNotFoundError(error_message)
 
     global user_options
     if json_file_data:

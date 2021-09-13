@@ -282,30 +282,36 @@ def seed_data():
         projects = [{
             'id': 1,
             'path': 'one',
-            'description': 'a, b'
+            'description': 'a, b',
+            'category': 'default'
         }, {
             'id': 2,
             'path': 'two',
-            'description': 'b, c'
+            'description': 'b, c',
+            'category': 'default'
         }, {
             'id': 3,
             'path': 'three',
-            'description': 'a, c'
+            'description': 'a, c',
+            'category': 'default'
         }, {
             'id': 4,
             'path': 'four',
-            'description': 'd'
+            'description': 'd',
+            'category': 'default'
         }, {
             'id': 5,
             'path': 'Admin_Test',
-            'description': 'Project for testing admin window'
+            'description': 'Project for testing admin window',
+            'category': 'default'
         }, {
             'id': 6,
             'path': 'test_mscolab',
-            'description': 'Project for testing mscolab main window'
+            'description': 'Project for testing mscolab main window',
+            'category': 'default'
         }]
         for project in projects:
-            db_project = Project(project['path'], project['description'])
+            db_project = Project(project['path'], project['description'], project['category'])
             db_project.id = project['id']
             db.session.add(db_project)
 
