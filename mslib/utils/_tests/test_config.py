@@ -80,7 +80,7 @@ class TestConfigLoader(object):
 
     def test_default_config_wrong_file(self):
         # return default if no access to config file given
-        with pytest.raises(utils.FatalUserError):
+        with pytest.raises(FileNotFoundError):
             read_config_file(path="foo.json")
 
     def test_sample_config_file(self):
@@ -102,7 +102,7 @@ class TestConfigLoader(object):
             config_loader(dataset="UNDEFINED")
         with pytest.raises(KeyError):
             assert config_loader(dataset="UNDEFINED")
-        with pytest.raises(utils.FatalUserError):
+        with pytest.raises(FileNotFoundError):
             config_file = os.path.join(
                 utils_path,
                 '../',

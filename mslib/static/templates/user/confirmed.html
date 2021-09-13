@@ -1,0 +1,15 @@
+{% extends "theme.html" %} {% block body %}
+  <div class="container">
+    <style>
+        @media (min-width: 1px) {
+          .container {
+            max-width: 90%;
+          }
+        }
+    </style>
+    <div class="col">
+      <br>
+        <p>Welcome {{ username }}! Thanks for activating your account:</p>
+        <p>Please login by the user interface.</p>
+    </div>
+  </div>{% endblock %}

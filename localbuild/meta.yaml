@@ -54,6 +54,7 @@ requirements:
     - matplotlib >=3.3.2
     - flask >=2.0.0
     - flask-httpauth
+    - flask-mail
     - werkzeug >2.0.0
     - flask-socketio >=5
     - flask-sqlalchemy

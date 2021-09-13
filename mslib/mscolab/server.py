@@ -28,11 +28,15 @@ import functools
 import json
 import logging
 import time
+import datetime
 import secrets
 import fs
 import socketio
+from itsdangerous import URLSafeTimedSerializer
 from flask import g, jsonify, request, render_template
-from flask import send_from_directory, abort
+from flask import send_from_directory, abort, url_for
+from flask_mail import Mail, Message
+
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
@@ -45,6 +49,7 @@ from mslib.utils import conditional_decorator
 from mslib.index import app_loader
 
 APP = app_loader(__name__)
+mail = Mail(APP)
 
 # set the operation root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder
@@ -55,6 +60,14 @@ APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
 APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
+APP.config['SECURITY_PASSWORD_SALT'] = mscolab_settings.SECURITY_PASSWORD_SALT
+APP.config['MAIL_DEFAULT_SENDER'] = mscolab_settings.MAIL_DEFAULT_SENDER
+APP.config['MAIL_SERVER'] = mscolab_settings.MAIL_SERVER
+APP.config['MAIL_PORT'] = mscolab_settings.MAIL_PORT
+APP.config['MAIL_USERNAME'] = mscolab_settings.MAIL_USERNAME
+APP.config['MAIL_PASSWORD'] = mscolab_settings.MAIL_PASSWORD
+APP.config['MAIL_USE_TLS'] = mscolab_settings.MAIL_USE_TLS
+APP.config['MAIL_USE_SSL'] = mscolab_settings.MAIL_USE_SSL
 
 auth = HTTPBasicAuth()
 
@@ -89,6 +102,37 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
         return authfunc(username, password)
 
 
+def send_email(to, subject, template):
+    msg = Message(
+        subject,
+        recipients=[to],
+        html=template,
+        sender=APP.config['MAIL_DEFAULT_SENDER']
+    )
+    try:
+        mail.send(msg)
+    except IOError:
+        logging.debug("Can't send email to %s", to)
+
+
+def generate_confirmation_token(email):
+    serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
+    return serializer.dumps(email, salt=APP.config['SECURITY_PASSWORD_SALT'])
+
+
+def confirm_token(token, expiration=3600):
+    serializer = URLSafeTimedSerializer(APP.config['SECRET_KEY'])
+    try:
+        email = serializer.loads(
+            token,
+            salt=APP.config['SECURITY_PASSWORD_SALT'],
+            max_age=expiration
+        )
+    except IOError:
+        return False
+    return email
+
+
 def initialize_managers(app):
     sockio, cm, fm = setup_managers(app)
     # initializing socketio and db
@@ -104,8 +148,13 @@ _app, sockio, cm, fm = initialize_managers(APP)
 def check_login(emailid, password):
     user = User.query.filter_by(emailid=str(emailid)).first()
     if user is not None:
-        if user.verify_password(password):
-            return user
+        if mscolab_settings.USER_VERIFICATION:
+            if user.confirmed:
+                if user.verify_password(password):
+                    return user
+        else:
+            if user.verify_password(password):
+                return user
     return False
 
 
@@ -141,8 +190,15 @@ def verify_user(func):
             return "False"
         else:
             # saving user details in flask.g
-            g.user = user
-            return func(*args, **kwargs)
+            if mscolab_settings.USER_VERIFICATION:
+                if user.confirmed:
+                    g.user = user
+                    return func(*args, **kwargs)
+                else:
+                    return "False"
+            else:
+                g.user = user
+                return func(*args, **kwargs)
     return wrapper
 
 
@@ -164,10 +220,19 @@ def get_auth_token():
     password = request.form['password']
     user = check_login(emailid, password)
     if user:
-        token = user.generate_auth_token()
-        return json.dumps({
-                          'token': token.decode('ascii'),
-                          'user': {'username': user.username, 'id': user.id}})
+        if mscolab_settings.USER_VERIFICATION:
+            if user.confirmed:
+                token = user.generate_auth_token()
+                return json.dumps({
+                                  'token': token.decode('ascii'),
+                                  'user': {'username': user.username, 'id': user.id}})
+            else:
+                return "False"
+        else:
+            token = user.generate_auth_token()
+            return json.dumps({
+                'token': token.decode('ascii'),
+                'user': {'username': user.username, 'id': user.id}})
     else:
         logging.debug("Unauthorized user: %s", emailid)
         return "False"
@@ -177,8 +242,14 @@ def get_auth_token():
 def authorized():
     token = request.form['token']
     user = User.verify_auth_token(token)
-    if user:
-        return "True"
+    if user is not None:
+        if mscolab_settings.USER_VERIFICATION:
+            if user.confirmed is False:
+                return "False"
+            else:
+                return "True"
+        else:
+            return "True"
     else:
         return "False"
 
@@ -193,9 +264,36 @@ def user_register_handler():
     try:
         if result["success"]:
             status_code = 201
+            if mscolab_settings.USER_VERIFICATION:
+                status_code = 204
+            token = generate_confirmation_token(email)
+            confirm_url = url_for('confirm_email', token=token, _external=True)
+            html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
+            subject = "Please confirm your email"
+            send_email(email, subject, html)
         return jsonify(result), status_code
     except TypeError:
         return jsonify({"success": False}), 401
+
+
+@APP.route('/confirm/<token>')
+def confirm_email(token):
+    if mscolab_settings.USER_VERIFICATION:
+        try:
+            email = confirm_token(token)
+        except TypeError:
+            return jsonify({"success": False}), 401
+        if email is False:
+            return jsonify({"success": False}), 401
+        user = User.query.filter_by(emailid=email).first_or_404()
+        if user.confirmed:
+            return render_template('user/confirmed.html', username=user.username)
+        else:
+            user.confirmed = True
+            user.confirmed_on = datetime.datetime.now()
+            db.session.add(user)
+            db.session.commit()
+            return render_template('user/confirmed.html', username=user.username)
 
 
 @APP.route('/user', methods=["GET"])
