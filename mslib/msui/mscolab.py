@@ -966,21 +966,21 @@ class MSSMscolab(QtCore.QObject):
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
-    def project_category_handler(self):
+    def operation_category_handler(self):
         # only after_login
         if self.mscolab_server_url is not None:
             self.selected_category = self.ui.filterCategoryCb.currentText()
             if self.selected_category != "ANY":
-                self.add_projects_to_ui()
-                items = [self.ui.listProjectsMSC.item(i) for i in range(self.ui.listProjectsMSC.count())]
+                self.add_operations_to_ui()
+                items = [self.ui.listOperationsMSC.item(i) for i in range(self.ui.listOperationsMSC.count())]
                 row = 0
                 for item in items:
-                    if item.project_category != self.selected_category:
-                        self.ui.listProjectsMSC.takeItem(row)
+                    if item.operation_category != self.selected_category:
+                        self.ui.listOperationsMSC.takeItem(row)
                     else:
                         row += 1
             else:
-                self.add_projects_to_ui()
+                self.add_operations_to_ui()
 
     def server_options_handler(self, index):
         selected_option = self.ui.serverOptionsCb.currentText()
