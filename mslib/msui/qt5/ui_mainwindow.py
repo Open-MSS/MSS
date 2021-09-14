@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -263,6 +263,7 @@ class Ui_MSSMainWindow(object):
         self.actionQuit.setText(_translate("MSSMainWindow", "&Quit"))
         self.actionQuit.setShortcut(_translate("MSSMainWindow", "Ctrl+Q"))
         self.actionShortcuts.setText(_translate("MSSMainWindow", "&Shortcuts"))
+        self.actionShortcuts.setToolTip(_translate("MSSMainWindow", "Open the shortcuts dialog"))
         self.actionShortcuts.setShortcut(_translate("MSSMainWindow", "Alt+S"))
         self.actionCloseSelectedFlightTrack.setText(_translate("MSSMainWindow", "&Close Selected Local Flight Track"))
         self.actionUpdater.setText(_translate("MSSMainWindow", "&Updater"))

@@ -392,6 +392,9 @@ Save a flight track to name it.</string>
    <property name="text">
     <string>&amp;Shortcuts</string>
    </property>
+   <property name="toolTip">
+    <string>Open the shortcuts dialog</string>
+   </property>
    <property name="shortcut">
     <string>Alt+S</string>
    </property>
