@@ -36,7 +36,7 @@ from itsdangerous import URLSafeTimedSerializer
 from flask import g, jsonify, request, render_template
 from flask import send_from_directory, abort, url_for
 from flask_mail import Mail, Message
-
+from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
@@ -50,6 +50,8 @@ from mslib.index import app_loader
 
 APP = app_loader(__name__)
 mail = Mail(APP)
+CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
+
 
 # set the project root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder
@@ -182,7 +184,7 @@ def verify_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            user = User.verify_auth_token(request.form.get('token', False))
+            user = User.verify_auth_token(request.values.get('token', False))
         except TypeError:
             logging.debug("no token in request form")
             abort(404)
@@ -315,8 +317,8 @@ def delete_user():
 @APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    timestamp = request.form.get("timestamp", "1970-01-01, 00:00:00")
-    p_id = request.form.get("p_id", None)
+    timestamp = request.values.get("timestamp", "1970-01-01, 00:00:00")
+    p_id = request.values.get("p_id", None)
     chat_messages = cm.get_messages(p_id, timestamp)
     return jsonify({"messages": chat_messages})
 
@@ -468,7 +470,7 @@ def update_project():
 @APP.route('/project_details', methods=["GET"])
 @verify_user
 def get_project_details():
-    p_id = request.form.get('p_id', None)
+    p_id = request.values.get('p_id', None)
     user = g.user
     return json.dumps(fm.get_project_details(int(p_id), user))
 
@@ -490,7 +492,7 @@ def undo_ftml():
 @APP.route("/users_without_permission", methods=["GET"])
 @verify_user
 def get_users_without_permission():
-    p_id = request.form.get('p_id', None)
+    p_id = request.values.get('p_id', None)
     u_id = g.user.id
     users = fm.fetch_users_without_permission(int(p_id), u_id)
     if users is False:
@@ -502,7 +504,7 @@ def get_users_without_permission():
 @APP.route("/users_with_permission", methods=["GET"])
 @verify_user
 def get_users_with_permission():
-    p_id = request.form.get('p_id', None)
+    p_id = request.values.get('p_id', None)
     u_id = g.user.id
     users = fm.fetch_users_with_permission(int(p_id), u_id)
     if users is False:

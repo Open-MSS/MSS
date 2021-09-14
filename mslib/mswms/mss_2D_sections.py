@@ -135,23 +135,17 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
 
     def uses_inittime_dimension(self):
         """
-        Returns whether this layer uses the WMS inittime dimension. If False,
+        Returns whether this layer uses the inittime dimension. If False,
         init_time does not have to be specified to plot_hsection().
-
-        Currently redirected to check for valid_time.
         """
-        return self.driver.uses_validtime_dimension() if self.driver is not None else False
+        return self.driver.uses_inittime_dimension() if self.driver is not None else False
 
     def uses_validtime_dimension(self):
         """
-        Returns whether this layer uses the WMS time dimension. If False,
-        valid_time does not have to be specified to
-        plot_hsection().
-
-        Currently implemented by testing whether the style requires data fields
-        from the ECMWF forecast.
+        Returns whether this layer uses the WMS (valid) time dimension. If False,
+        valid_time does not have to be specified to plot_hsection().
         """
-        return self.driver.uses_inittime_dimension() if self.driver is not None else False
+        return self.driver.uses_validtime_dimension() if self.driver is not None else False
 
     def get_elevations(self):
         """
