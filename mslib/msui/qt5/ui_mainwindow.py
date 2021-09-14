@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -169,7 +169,8 @@ class Ui_MSSMainWindow(object):
         self.actionNewFlightTrack = QtWidgets.QAction(MSSMainWindow)
         self.actionNewFlightTrack.setObjectName("actionNewFlightTrack")
         self.actionAddOperation = QtWidgets.QAction(MSSMainWindow)
-        self.actionAddOperation.setObjectName("actionAddOperation")
+        self.actionSearch = QtWidgets.QAction(MSSMainWindow)
+        self.actionSearch.setObjectName("actionSearch")
         self.menuNew.addAction(self.actionNewFlightTrack)
         self.menuNew.addAction(self.actionAddOperation)
         self.menuFile.addAction(self.menuNew.menuAction())
@@ -190,6 +191,7 @@ class Ui_MSSMainWindow(object):
         self.menuHelp.addAction(self.actionUpdater)
         self.menuHelp.addAction(self.actionOnlineHelp)
         self.menuHelp.addAction(self.actionAboutMSUI)
+        self.menuHelp.addAction(self.actionSearch)
         self.menuViews.addAction(self.actionTopView)
         self.menuViews.addAction(self.actionSideView)
         self.menuViews.addAction(self.actionTableView)
@@ -260,6 +262,7 @@ class Ui_MSSMainWindow(object):
         self.actionQuit.setText(_translate("MSSMainWindow", "&Quit"))
         self.actionQuit.setShortcut(_translate("MSSMainWindow", "Ctrl+Q"))
         self.actionShortcuts.setText(_translate("MSSMainWindow", "&Shortcuts"))
+        self.actionShortcuts.setToolTip(_translate("MSSMainWindow", "Open the shortcuts dialog"))
         self.actionShortcuts.setShortcut(_translate("MSSMainWindow", "Alt+S"))
         self.actionCloseSelectedFlightTrack.setText(_translate("MSSMainWindow", "&Close Selected Local Flight Track"))
         self.actionUpdater.setText(_translate("MSSMainWindow", "&Updater"))
@@ -281,3 +284,6 @@ class Ui_MSSMainWindow(object):
         self.actionBringMainWindowToFront.setShortcut(_translate("MSSMainWindow", "Ctrl+Up"))
         self.actionNewFlightTrack.setText(_translate("MSSMainWindow", "&Local Flight Track"))
         self.actionAddOperation.setText(_translate("MSSMainWindow", "&MSColab Operation"))
+        self.actionSearch.setText(_translate("MSSMainWindow", "Search"))
+        self.actionSearch.setToolTip(_translate("MSSMainWindow", "Search for interactive text in the UI"))
+        self.actionSearch.setShortcut(_translate("MSSMainWindow", "Ctrl+F"))

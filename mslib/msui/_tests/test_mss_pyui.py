@@ -72,7 +72,28 @@ class Test_MSS_ShortcutDialog():
         QtWidgets.QApplication.processEvents()
 
     def test_shortcuts_present(self):
+        # Assert list gets filled properly
+        self.shortcuts.fill_list()
         assert self.shortcuts.treeWidget.topLevelItemCount() == 1
+        self.shortcuts.filter_shortcuts("Nothing")
+        assert self.shortcuts.treeWidget.topLevelItem(0).isHidden()
+
+        # Assert changing display type works
+        self.shortcuts.cbAdvanced.click()
+        old_text = self.shortcuts.treeWidget.topLevelItem(0).child(1).text(0)
+        self.shortcuts.cbDisplayType.setCurrentIndex(2)
+        assert self.shortcuts.treeWidget.topLevelItem(0).child(1).text(0) != old_text
+
+        # Assert double clicking works
+        self.shortcuts.cbNoShortcut.setCheckState(True)
+        self.shortcuts.leShortcutFilter.setText("actionConfiguration")
+        for i in range(self.shortcuts.treeWidget.topLevelItem(0).childCount()):
+            child = self.shortcuts.treeWidget.topLevelItem(0).child(i)
+            if not child.isHidden():
+                self.shortcuts.double_clicked(child)
+                self.shortcuts.fill_list()
+                break
+        assert self.shortcuts.treeWidget.topLevelItemCount() == 2
 
 
 class Test_MSSSideViewWindow(object):

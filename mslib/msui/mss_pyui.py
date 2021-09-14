@@ -140,31 +140,104 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
-
     def __init__(self):
         super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
-        self.current_shortcuts = self.get_shortcuts()
-        self.fill_list()
+        self.current_shortcuts = None
+        self.treeWidget.itemDoubleClicked.connect(self.double_clicked)
+        self.treeWidget.itemClicked.connect(self.clicked)
+        self.leShortcutFilter.textChanged.connect(self.filter_shortcuts)
+        self.filterRemoveAction = self.leShortcutFilter.addAction(QtGui.QIcon(icons("64x64", "remove.png")),
+                                                                  QtWidgets.QLineEdit.TrailingPosition)
+        self.filterRemoveAction.setVisible(False)
+        self.filterRemoveAction.setToolTip("Click to remove the filter")
+        self.filterRemoveAction.triggered.connect(lambda: self.leShortcutFilter.setText(""))
+        self.cbNoShortcut.stateChanged.connect(self.fill_list)
+        self.cbAdvanced.stateChanged.connect(lambda i: (self.cbNoShortcut.setVisible(i),
+                                                        self.leShortcutFilter.setVisible(i),
+                                                        self.cbDisplayType.setVisible(i),
+                                                        self.label.setVisible(i),
+                                                        self.label_2.setVisible(i),
+                                                        self.line.setVisible(i)))
+        self.cbDisplayType.currentTextChanged.connect(self.fill_list)
+        self.cbAdvanced.stateChanged.emit(self.cbAdvanced.checkState())
+        self.oldReject = self.reject
+        self.reject = self.custom_reject
+
+    def custom_reject(self):
+        """
+        Reset highlighted objects when closing the shortcuts dialog
+        """
+        self.reset_highlight()
+        self.oldReject()
+
+    def reset_highlight(self):
+        """
+        Iterates through all shortcuts and resets the stylesheet
+        """
+        if self.current_shortcuts:
+            for shortcuts in self.current_shortcuts.values():
+                for shortcut in shortcuts.values():
+                    if shortcut[-1] and hasattr(shortcut[-1], "setStyleSheet"):
+                        shortcut[-1].setStyleSheet("")
+
+    def clicked(self, item):
+        """
+        Highlights the selected item in the GUI as yellow
+        """
+        self.reset_highlight()
+        if hasattr(item, "source_object") and item.source_object and hasattr(item.source_object, "setStyleSheet"):
+            item.source_object.setStyleSheet("background-color:yellow;")
+
+    def double_clicked(self, item):
+        """
+        Executes the shortcut for the doubleclicked item
+        """
+        if hasattr(item, "source_object") and item.source_object:
+            self.reset_highlight()
+            self.hide()
+            obj = item.source_object
+            if isinstance(obj, QtWidgets.QShortcut):
+                obj.activated.emit()
+            elif isinstance(obj, QtWidgets.QAction):
+                obj.trigger()
+            elif isinstance(obj, QtWidgets.QAbstractButton):
+                obj.click()
+            elif isinstance(obj, QtWidgets.QComboBox):
+                QtCore.QTimer.singleShot(200, obj.showPopup)
+            elif isinstance(obj, QtWidgets.QLineEdit) or isinstance(obj, QtWidgets.QAbstractSpinBox):
+                obj.setFocus()
 
     def fill_list(self):
         """
         Fills the treeWidget with all relevant windows as top level items and their shortcuts as children
         """
+        self.reset_highlight()
+        self.treeWidget.clear()
+        self.current_shortcuts = self.get_shortcuts()
         for widget in self.current_shortcuts:
-            name = widget.window().windowTitle()
-            if len(name) == 0 or widget.window().isHidden():
+            if hasattr(widget, "window"):
+                name = widget.window().windowTitle()
+            else:
+                name = widget.objectName()
+            if len(name) == 0 or (hasattr(widget, "window") and widget.window().isHidden()):
                 continue
             header = QtWidgets.QTreeWidgetItem(self.treeWidget)
             header.setText(0, name)
-            if widget.window() == self.parent():
+            if hasattr(widget, "window") and widget.window() == self.parent():
                 header.setExpanded(True)
                 header.setSelected(True)
                 self.treeWidget.setCurrentItem(header)
-            for description, shortcut in self.current_shortcuts[widget].items():
+            for objectName in self.current_shortcuts[widget].keys():
+                description, text, _, shortcut, obj = self.current_shortcuts[widget][objectName]
                 item = QtWidgets.QTreeWidgetItem(header)
-                item.setText(0, f"{description}: {shortcut}")
+                item.source_object = obj
+                itemText = description if self.cbDisplayType.currentText() == 'Tooltip' \
+                    else text if self.cbDisplayType.currentText() == 'Text' else objectName
+                item.setText(0, f"{itemText}: {shortcut}")
+                item.setToolTip(0, f"ToolTip: {description}\nText: {text}\nObjectName: {objectName}")
                 header.addChild(item)
+        self.filter_shortcuts(self.leShortcutFilter.text())
 
     def get_shortcuts(self):
         """
@@ -172,21 +245,70 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         shortcuts = {}
         for qobject in QtWidgets.QApplication.topLevelWidgets():
-            actions = [(qobject.window(), "Show Current Shortcuts", "Alt+S")]
+            actions = []
             actions.extend([
-                (action.parent().window(), action.toolTip(), ",".join(
-                    [shortcut.toString() for shortcut in action.shortcuts()]))
-                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0])
-            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), shortcut.key().toString())
+                (action.parent().window() if hasattr(action.parent(), "window") else action.parent(),
+                 action.toolTip(), action.text().replace("&&", "%%").replace("&", "").replace("%%", "&"),
+                 action.objectName(),
+                 ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
+                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
+                self.cbNoShortcut.checkState()])
+            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
+                             shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
-            actions.extend([(button.window(), button.toolTip(), button.shortcut().toString())
-                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut()])
+            actions.extend([(button.window(), button.toolTip(), button.text().replace("&&", "%%").replace("&", "")
+                             .replace("%%", "&"), button.objectName(),
+                             button.shortcut().toString() if button.shortcut() else "", button)
+                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut() or
+                            self.cbNoShortcut.checkState()])
+
+            # Additional objects which have no shortcuts, if requested
+            actions.extend([(obj.window(), obj.toolTip(), obj.currentText(), obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QComboBox) if self.cbNoShortcut.checkState()])
+            actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QAbstractSpinBox) +
+                            qobject.findChildren(QtWidgets.QLineEdit)
+                            if self.cbNoShortcut.checkState()])
+            actions.extend([(obj.window(), obj.toolTip(), obj.toPlainText(), obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QPlainTextEdit) +
+                            qobject.findChildren(QtWidgets.QTextEdit)
+                            if self.cbNoShortcut.checkState()])
+
+            if not any(action for action in actions if action[3] == "actionShortcuts"):
+                actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
+                               "Show Current Shortcuts", "Alt+S", None))
+            if not any(action for action in actions if action[3] == "actionSearch"):
+                actions.append((qobject.window(), "Search for interactive text in the UI",
+                                "Search for interactive text in the UI", "Search for interactive text in the UI",
+                                "Ctrl+F", None))
+
             for item in actions:
                 if item[0] not in shortcuts:
                     shortcuts[item[0]] = {}
-                shortcuts[item[0]][item[1].replace(f"({item[2]})", "").strip()] = item[2]
+                shortcuts[item[0]][item[3].strip()] = item[1:]
 
         return shortcuts
+
+    def filter_shortcuts(self, text):
+        """
+        Hides all shortcuts not containing the text
+        """
+        for window in self.treeWidget.findItems("", QtCore.Qt.MatchContains):
+            wms_hits = 0
+
+            for child_index in range(window.childCount()):
+                widget = window.child(child_index)
+                if text.lower() in widget.text(0).lower() or text.lower() in window.text(0).lower():
+                    widget.setHidden(False)
+                    wms_hits += 1
+                else:
+                    widget.setHidden(True)
+            if wms_hits == 0 and len(text) > 0:
+                window.setHidden(True)
+            else:
+                window.setHidden(False)
+
+        self.filterRemoveAction.setVisible(len(text) > 0)
 
 
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
@@ -261,6 +383,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
         self.actionShortcuts.triggered.connect(self.show_shortcuts)
         self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+        self.actionSearch.triggered.connect(lambda: self.show_shortcuts(True))
+        self.actionSearch.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
         # # Config
         self.actionConfiguration.triggered.connect(self.open_config_editor)
@@ -293,6 +417,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
+
+        self.shortcuts_dlg = None
 
         # Don't start the updater during a test run of mss_pyui
         if "pytest" not in sys.modules:
@@ -763,12 +889,29 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
-    def show_shortcuts(self):
+    def show_shortcuts(self, search_mode=False):
         """Show the shortcuts dialog to the user.
         """
-        dlg = MSS_ShortcutsDialog()
-        dlg.setModal(True)
-        dlg.exec_()
+        if QtWidgets.QApplication.activeWindow() == self.shortcuts_dlg:
+            return
+
+        self.shortcuts_dlg = MSS_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
+
+        # In case the dialog gets deleted by QT, recreate it
+        try:
+            self.shortcuts_dlg.setModal(True)
+        except RuntimeError:
+            self.shortcuts_dlg = MSS_ShortcutsDialog()
+
+        self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
+        self.shortcuts_dlg.fill_list()
+        self.shortcuts_dlg.show()
+        if search_mode:
+            self.shortcuts_dlg.cbDisplayType.setCurrentIndex(1)
+            self.shortcuts_dlg.leShortcutFilter.setText("")
+            self.shortcuts_dlg.cbAdvanced.setCheckState(2)
+            self.shortcuts_dlg.cbNoShortcut.setCheckState(2)
+            self.shortcuts_dlg.leShortcutFilter.setFocus()
 
     def status(self):
         if config_loader() != config_loader(default=True):
@@ -902,6 +1045,21 @@ def main():
         sys.exit()
 
     application = QtWidgets.QApplication(sys.argv)
+    mainwindow = None
+
+    # Trigger shortcuts/search dialog even on modal dialogs
+    application.oldNotify = application.notify
+
+    def notify(QObject, QEvent):
+        if QEvent.type() == QtCore.QEvent.KeyPress and mainwindow:
+            if QEvent.key() == QtCore.Qt.Key_S and QEvent.modifiers() == QtCore.Qt.AltModifier:
+                mainwindow.show_shortcuts()
+            elif QEvent.key() == QtCore.Qt.Key_F and QEvent.modifiers() == QtCore.Qt.ControlModifier:
+                mainwindow.show_shortcuts(True)
+        return application.oldNotify(QObject, QEvent)
+
+    application.notify = notify
+
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
     application.setApplicationDisplayName("MSS")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
