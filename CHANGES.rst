@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 5.0.2
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/66?closed=1
+
 Version 5.0.1
 ~~~~~~~~~~~~~
 

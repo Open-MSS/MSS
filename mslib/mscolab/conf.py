@@ -40,6 +40,9 @@ except ImportError as ex:
         # expire token in seconds
         # EXPIRATION = 86400
 
+        # Which origins are allowed to communicate with your server
+        CORS_ORIGINS = ["*"]
+
         # dir where mss output files are stored
         BASE_DIR = os.path.expanduser("~")
 
