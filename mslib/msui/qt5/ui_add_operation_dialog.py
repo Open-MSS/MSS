@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_add_operation.ui'
+# Form implementation generated from reading ui file 'ui_add_operation_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #

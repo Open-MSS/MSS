@@ -183,7 +183,7 @@ class Ui_MscolabAdminWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MscolabAdminWindow.setWindowTitle(_translate("MscolabAdminWindow", "Admin Window"))
         self.usernameLabel.setText(_translate("MscolabAdminWindow", "Logged In: "))
-        self.operationNameLabel.setText(_translate("MscolabAdminWindow", "Project: "))
+        self.operationNameLabel.setText(_translate("MscolabAdminWindow", "Operation: "))
         self.label.setText(_translate("MscolabAdminWindow", "All Users Without Permission:"))
         self.addUsersSearch.setPlaceholderText(_translate("MscolabAdminWindow", "Search User"))
         self.selectAllAddBtn.setText(_translate("MscolabAdminWindow", "Select All"))
@@ -195,7 +195,7 @@ class Ui_MscolabAdminWindow(object):
         self.addUsersPermission.setItemText(2, _translate("MscolabAdminWindow", "viewer"))
         self.addUsersBtn.setToolTip(_translate("MscolabAdminWindow", "Add the selected users to the operation"))
         self.addUsersBtn.setText(_translate("MscolabAdminWindow", "Add"))
-        self.label_3.setText(_translate("MscolabAdminWindow", "Clone Project Permissions:"))
+        self.label_3.setText(_translate("MscolabAdminWindow", "Clone Operation Permissions:"))
         self.importPermissionsBtn.setToolTip(_translate("MscolabAdminWindow", "Import permissions from another operation"))
         self.importPermissionsBtn.setText(_translate("MscolabAdminWindow", "Clone"))
         self.label_2.setText(_translate("MscolabAdminWindow", "All Users With Permission:"))

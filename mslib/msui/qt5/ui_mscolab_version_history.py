@@ -144,7 +144,7 @@ class Ui_MscolabVersionHistory(object):
         _translate = QtCore.QCoreApplication.translate
         MscolabVersionHistory.setWindowTitle(_translate("MscolabVersionHistory", "Version History"))
         self.usernameLabel.setText(_translate("MscolabVersionHistory", "Logged In: "))
-        self.operationNameLabel.setText(_translate("MscolabVersionHistory", "Project:"))
+        self.operationNameLabel.setText(_translate("MscolabVersionHistory", "Operation:"))
         self.refreshBtn.setText(_translate("MscolabVersionHistory", "Refresh Window"))
         self.label.setText(_translate("MscolabVersionHistory", "Viewing:"))
         self.versionFilterCB.setItemText(0, _translate("MscolabVersionHistory", "Named Versions"))

@@ -47,7 +47,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Project:</string>
+           <string>Operation:</string>
           </property>
          </widget>
         </item>

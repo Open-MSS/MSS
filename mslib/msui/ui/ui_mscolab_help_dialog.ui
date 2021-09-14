@@ -241,9 +241,9 @@ p, li { white-space: pre-wrap; }
          </item>
         </layout>
        </widget>
-       <widget class="QWidget" name="createProjectTab">
+       <widget class="QWidget" name="createOperationTab">
         <attribute name="title">
-         <string>Creating a Project</string>
+         <string>Creating a Operation</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_3">
          <property name="leftMargin">
@@ -276,7 +276,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;1. Each flight track in mscolab is called a &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Project&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;. You can create your operation by clicking on the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;MSColab Project&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; menu under the &amp;quot;New&amp;quot; section of File menu and filling in the required details.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;1. Each flight track in mscolab is called a &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Operation&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;. You can create your operation by clicking on the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;MSColab Operation&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; menu under the &amp;quot;New&amp;quot; section of File menu and filling in the required details.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'.SF NS Text';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;2. The operation list shows all the operations you have access to along with your access level to the operation. There are &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;4 access levels&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; you can have to a operation. These are: &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;	1. Creator&lt;/span&gt;&lt;/p&gt;
@@ -341,7 +341,7 @@ p, li { white-space: pre-wrap; }
        </widget>
        <widget class="QWidget" name="adminTab">
         <attribute name="title">
-         <string>Adding Users to Project</string>
+         <string>Adding Users to Operation</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_5">
          <property name="leftMargin">
@@ -386,7 +386,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;To collaborate with other users, you can add them to a operation if you are the creator of the operation or have administrator access. Click on the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Manage Users&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; sub-menu under the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;Project menu&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;, after selecting the operation.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;To collaborate with other users, you can add them to a operation if you are the creator of the operation or have administrator access. Click on the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Manage Users&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; sub-menu under the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;Operation menu&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;, after selecting the operation.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'.SF NS Text';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;A user can have 4 access levels:&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;1. &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;Creator&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; - The user that creates the operation. This user's permission can't be changed. This user has all the access an Admin has and can also delete the operation.&lt;/span&gt;&lt;/p&gt;
@@ -497,7 +497,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;You can chat with all the users added to a operation by opening the chat window using the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Chat&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; sub-menu under the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;Project menu&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;. You can send normal messages and upload images and documents as well. &lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;You can chat with all the users added to a operation by opening the chat window using the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Chat&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; sub-menu under the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;Operation menu&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;. You can send normal messages and upload images and documents as well. &lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'.SF NS Text';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;You can also use common markdown syntax to format your messages.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;1. *text* for italics&lt;/span&gt;&lt;/p&gt;
@@ -603,7 +603,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'.AppleSystemUIFont'; font-size:13pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;You can keep track of all the changes made to your operation by opening the version history window using the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Version History&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; sub-menu under the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;Project menu&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;You can keep track of all the changes made to your operation by opening the version history window using the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Version History&amp;quot;&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt; sub-menu under the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;Operation menu&lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'.SF NS Text';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
 &lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;Every change made by any user working the operation is saved in the version history window. At any time you can revert to a preview version by just selecting the version from the list and clicking on the &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text'; font-weight:600;&quot;&gt;&amp;quot;Checkout&amp;quot; &lt;/span&gt;&lt;span style=&quot; font-family:'.SF NS Text';&quot;&gt;button.&lt;/span&gt;&lt;/p&gt;
 &lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:'.SF NS Text';&quot;&gt;&lt;br /&gt;&lt;/p&gt;
@@ -660,7 +660,7 @@ p, li { white-space: pre-wrap; }
        </widget>
        <widget class="QWidget" name="operationWorkTab">
         <attribute name="title">
-         <string>Working on a Project</string>
+         <string>Working on a Operation</string>
         </attribute>
         <layout class="QGridLayout" name="gridLayout_8">
          <property name="leftMargin">

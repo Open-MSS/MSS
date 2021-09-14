@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_operation_window.ui'
+# Form implementation generated from reading ui file 'ui_mscolab_operation_window.ui'
 #
-# Created by: PyQt5 UI code generator 5.9.2
+# Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
+
 
 class Ui_MscolabOperation(object):
     def setupUi(self, MscolabOperation):
@@ -156,4 +158,3 @@ class Ui_MscolabOperation(object):
         self.cancelBtn.setText(_translate("MscolabOperation", "Cancel"))
         self.actionCloseWindow.setText(_translate("MscolabOperation", "CloseWindow"))
         self.actionCloseWindow.setShortcut(_translate("MscolabOperation", "Ctrl+W"))
-
