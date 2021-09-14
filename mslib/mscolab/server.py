@@ -50,7 +50,7 @@ from mslib.index import app_loader
 
 APP = app_loader(__name__)
 mail = Mail(APP)
-# CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
+CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
 
 
 # set the project root directory as the static folder
