@@ -321,8 +321,11 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.disconnect_handler()
             return
 
-        if r.status_code == 201:
-            self.set_status("Success", 'You are registered, you can now log in.')
+        if r.status_code == 204:
+            self.set_status("Success", 'You are registered, confirm your email to log in.')
+            self.stackedWidget.setCurrentWidget(self.loginPage)
+        elif r.status_code == 201:
+            self.set_status("Success", 'You are registered')
             self.stackedWidget.setCurrentWidget(self.loginPage)
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
@@ -471,7 +474,8 @@ class MSSMscolab(QtCore.QObject):
         self.connect_window.exec_()
 
     def after_login(self, emailid, url, r):
-        self.email = self.connect_window.loginEmailLe.text()
+        # emailid by direct call
+        self.email = emailid
         self.connect_window.close()
         self.connect_window = None
         QtWidgets.QApplication.processEvents()
@@ -526,6 +530,10 @@ class MSSMscolab(QtCore.QObject):
             logging.debug("Invalid schema of url")
             return False
         except requests.exceptions.ConnectionError as ex:
+            logging.error("unexpected error: %s %s", type(ex), ex)
+            return False
+        except requests.exceptions.MissingSchema as ex:
+            # self.mscolab_server_url can be None??
             logging.error("unexpected error: %s %s", type(ex), ex)
             return False
         return r.text == "True"
@@ -958,18 +966,20 @@ class MSSMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     def project_category_handler(self):
-        self.selected_category = self.ui.filterCategoryCb.currentText()
-        if self.selected_category != "ANY":
-            self.add_projects_to_ui()
-            items = [self.ui.listProjectsMSC.item(i) for i in range(self.ui.listProjectsMSC.count())]
-            row = 0
-            for item in items:
-                if item.project_category != self.selected_category:
-                    self.ui.listProjectsMSC.takeItem(row)
-                else:
-                    row += 1
-        else:
-            self.add_projects_to_ui()
+        # only after_login
+        if self.mscolab_server_url is not None:
+            self.selected_category = self.ui.filterCategoryCb.currentText()
+            if self.selected_category != "ANY":
+                self.add_projects_to_ui()
+                items = [self.ui.listProjectsMSC.item(i) for i in range(self.ui.listProjectsMSC.count())]
+                row = 0
+                for item in items:
+                    if item.project_category != self.selected_category:
+                        self.ui.listProjectsMSC.takeItem(row)
+                    else:
+                        row += 1
+            else:
+                self.add_projects_to_ui()
 
     def server_options_handler(self, index):
         selected_option = self.ui.serverOptionsCb.currentText()
@@ -1172,8 +1182,7 @@ class MSSMscolab(QtCore.QObject):
                 for project in projects:
                     categories.add(project["category"])
                 categories.remove("ANY")
-                categories = list(categories)
-                categories.insert(0, "ANY")
+                categories = ["ANY"] + sorted(categories)
                 self.ui.filterCategoryCb.addItems(categories)
 
     def add_projects_to_ui(self):
