@@ -108,6 +108,11 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         """
         self.waypoints_model = model
 
+        # Update title flighttrack name
+        title = self.windowTitle()
+        if len(title.split("Mission Support System - ")) > 1:
+            self.setWindowTitle(title.replace(title.split("Mission Support System - ")[-1], model.name))
+
     def controlToBeCreated(self, index):
         """
         Check if the dock widget at index <index> exists. If yes, show
@@ -173,14 +178,10 @@ class MSSMplViewWindow(MSSViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        self.waypoints_model = model
+        super().setFlightTrackModel(model)
+
         if self.mpl is not None:
             self.mpl.canvas.set_waypoints_model(model)
-
-            # Update title flighttrack name
-            title = self.windowTitle()
-            if len(title.split("Mission Support System - ")) > 1:
-                self.setWindowTitle(title.replace(title.split("Mission Support System - ")[-1], model.name))
 
             # Update Top View flighttrack name
             if hasattr(self.mpl.canvas, "map"):

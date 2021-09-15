@@ -967,7 +967,7 @@ class MplLinearViewCanvas(MplCanvas):
         If no model had been set before, create a new interactor object on the model
         """
         self.waypoints_model = model
-        pass
+
         if self.waypoints_interactor:
             self.waypoints_interactor.set_waypoints_model(model)
         else:
@@ -1029,6 +1029,12 @@ class MplLinearViewCanvas(MplCanvas):
                                      for d in zip(lats[::tick_index_step],
                                                   lons[::tick_index_step])],
                                     rotation=25, horizontalalignment="right")
+
+            # Remove all vertical lines
+            vertical_lines = [line for line in self.ax.lines if
+                              all(x == line.get_path().vertices[0, 0] for x in line.get_path().vertices[:, 0])]
+            for line in vertical_lines:
+                self.ax.lines.remove(line)
 
             ipoint = 0
             highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
