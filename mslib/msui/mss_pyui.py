@@ -421,6 +421,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         self.shortcuts_dlg = None
 
+        # deactivate vice versa selection of Operation or Flight Track
+        self.listFlightTracks.itemClicked.connect(lambda: self.listProjectsMSC.setCurrentItem(None))
+        self.listProjectsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
+
         # Don't start the updater during a test run of mss_pyui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
