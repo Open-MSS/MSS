@@ -1242,6 +1242,7 @@ class MSSMscolab(QtCore.QObject):
 
             # set active flightpath here
             self.load_wps_from_server()
+            self.waypoints_model.name = item.project_path
             # display working status
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
