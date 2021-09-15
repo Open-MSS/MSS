@@ -177,6 +177,20 @@ class MSSMplViewWindow(MSSViewWindow):
         if self.mpl is not None:
             self.mpl.canvas.set_waypoints_model(model)
 
+            # Update title flighttrack name
+            title = self.windowTitle()
+            if len(title.split("Mission Support System - ")) > 1:
+                self.setWindowTitle(title.replace(title.split("Mission Support System - ")[-1], model.name))
+
+            # Update Top View flighttrack name
+            if hasattr(self.mpl.canvas, "map"):
+                text = self.mpl.canvas.map.crs_text.get_text()
+                lines = text.split("\n")
+                if len(lines) > 1 and not any(x in lines[-2] for x in ["openAIP", "OurAirports"]):
+                    old_name = text.split("\n")[-2]
+                    self.mpl.canvas.map.crs_text.set_text(text.replace(old_name, model.name))
+                    self.mpl.canvas.map.ax.figure.canvas.draw()
+
     def getView(self):
         """
         Return the MplCanvas instance of the window.
