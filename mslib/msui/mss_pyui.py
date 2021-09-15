@@ -59,6 +59,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
+from mslib.mscolab.utils import disable_navbar_action_buttons, enable_navbar_action_buttons
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -697,6 +698,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
+            # local we have always all options enabled
+            enable_navbar_action_buttons(view_item.window.settings_tag, view_item.window)
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
@@ -785,7 +788,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if self.local_active:
             self.create_view(_type, self.active_flight_track)
         else:
-            self.mscolab.create_view_msc(_type)
+            self.mscolab.waypoints_model.name = self.mscolab.active_project_name
+            self.create_view(_type, self.mscolab.waypoints_model)
 
     def create_view(self, _type, model):
         """Method called when the user selects a new view to be opened. Creates
@@ -831,6 +835,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             view_window.viewCloses.connect(listitem.view_destroyed)
             self.listViews.setCurrentItem(listitem)
             # self.active_view_windows.append(view_window)
+            # disable navbar actions in the view for viewer
+            try:
+                if self.mscolab.access_level == "viewer":
+                    disable_navbar_action_buttons(_type, view_window)
+            except AttributeError:
+                enable_navbar_action_buttons(_type, view_window)
             self.viewsChanged.emit()
 
     def get_active_views(self):

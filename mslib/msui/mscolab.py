@@ -57,6 +57,7 @@ from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.mscolab.utils import disable_navbar_action_buttons, enable_navbar_action_buttons
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -1126,9 +1127,9 @@ class MSSMscolab(QtCore.QObject):
             for window in self.ui.get_active_views():
                 _type = window.view_type
                 if self.access_level == "viewer":
-                    self.disable_navbar_action_buttons(_type, window)
+                    disable_navbar_action_buttons(_type, window)
                 else:
-                    self.enable_navbar_action_buttons(_type, window)
+                    enable_navbar_action_buttons(_type, window)
 
         # update chat window if open
         if self.chat_window is not None:
@@ -1262,6 +1263,8 @@ class MSSMscolab(QtCore.QObject):
             # set new waypoints model to open views
             for window in self.ui.get_active_views():
                 window.setFlightTrackModel(self.waypoints_model)
+                if self.access_level == "viewer":
+                    disable_navbar_action_buttons(window.settings_tag, window)
 
             self.ui.switch_to_mscolab()
         else:
@@ -1276,6 +1279,7 @@ class MSSMscolab(QtCore.QObject):
                 font = QtGui.QFont()
                 for i in range(self.ui.listProjectsMSC.count()):
                     self.ui.listProjectsMSC.item(i).setFont(font)
+                # ToDo remove selection in MSC lst
 
                 # close all hanging project option windows
                 self.close_external_windows()
@@ -1442,67 +1446,6 @@ class MSSMscolab(QtCore.QObject):
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
-
-    def create_view_msc(self, _type):
-        if self.verify_user_token():
-            if self.active_pid is None:
-                return
-
-            self.waypoints_model.name = self.active_project_name
-            view_window = self.ui.create_view(_type, self.waypoints_model)
-
-            # disable navbar actions in the view for viewer
-            if self.access_level == "viewer":
-                self.disable_navbar_action_buttons(_type, view_window)
-        else:
-            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
-            self.logout()
-
-    def disable_navbar_action_buttons(self, _type, view_window):
-        """
-        _type: view type (topview, sideview, tableview)
-        view_window: PyQt view window
-
-        function disables some control, used if access_level is not appropriate
-        """
-        if _type == "topview" or _type == "sideview" or _type == "linearview":
-            actions = view_window.mpl.navbar.actions()
-            for action in actions:
-                action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                    action.setEnabled(False)
-        else:
-            # _type == tableview
-            view_window.btAddWayPointToFlightTrack.setEnabled(False)
-            view_window.btCloneWaypoint.setEnabled(False)
-            view_window.btDeleteWayPoint.setEnabled(False)
-            view_window.btInvertDirection.setEnabled(False)
-            view_window.btRoundtrip.setEnabled(False)
-            view_window.cbTools.setEnabled(False)
-            view_window.tableWayPoints.setEnabled(False)
-
-    def enable_navbar_action_buttons(self, _type, view_window):
-        """
-        _type: view type (topview, sideview, tableview)
-        view_window: PyQt view window
-
-        function enables some control, used if access_level is appropriate
-        """
-        if _type == "topview" or _type == "sideview" or _type == "linearview":
-            actions = view_window.mpl.navbar.actions()
-            for action in actions:
-                action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                    action.setEnabled(True)
-        else:
-            # _type == tableview
-            view_window.btAddWayPointToFlightTrack.setEnabled(True)
-            view_window.btCloneWaypoint.setEnabled(True)
-            view_window.btDeleteWayPoint.setEnabled(True)
-            view_window.btInvertDirection.setEnabled(True)
-            view_window.btRoundtrip.setEnabled(True)
-            view_window.cbTools.setEnabled(True)
-            view_window.tableWayPoints.setEnabled(True)
 
     def logout(self):
         self.ui.local_active = True
