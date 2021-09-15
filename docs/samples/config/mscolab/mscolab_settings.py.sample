@@ -27,43 +27,47 @@
 import os
 import logging
 
-# Set base directory where you want to save Mscolab data
-BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+class mscolab_settings:
+    # Set which origins are allowed to communicate with your server
+    CORS_ORIGINS = ["*"]
 
-# Directory in which all data related to Mscolab is stored
-DATA_DIR = os.path.join(BASE_DIR, "colabdata")
+    # Set base directory where you want to save Mscolab data
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-# Where mscolab project files are stored on the server
-MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+    # Directory in which all data related to Mscolab is stored
+    DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
-# Directory where uploaded images and documents in the chat are stored
-UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
+    # Where mscolab project files are stored on the server
+    MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 
-# Max image/document upload size in mscolab chat (default 2MB)
-MAX_UPLOAD_SIZE = 2 * 1024 * 1024
+    # Directory where uploaded images and documents in the chat are stored
+    UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
 
-# Set your secret key for token generation
-SECRET_KEY = 'MySecretKey'
+    # Max image/document upload size in mscolab chat (default 2MB)
+    MAX_UPLOAD_SIZE = 2 * 1024 * 1024
 
-# Set the database connection string:
-# Examples for different DBMS:
-# MySQL: "mysql+pymysql://<username>:<password>@<host>/<db_name>?charset=utf8mb4"
-# PostgreSQL: "postgresql://<username>:<password>@<host>/<db_name>"
-# SQLite: "sqlite:///<path_to_db>"
-SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+    # Set your secret key for token generation
+    SECRET_KEY = 'MySecretKey'
 
-enable_basic_http_authentication = False
+    # Set the database connection string:
+    # Examples for different DBMS:
+    # MySQL: "mysql+pymysql://<username>:<password>@<host>/<db_name>?charset=utf8mb4"
+    # PostgreSQL: "postgresql://<username>:<password>@<host>/<db_name>"
+    # SQLite: "sqlite:///<path_to_db>"
+    SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 
-# text to be written in new mscolab based ftml files.
-STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-<FlightTrack version="1.7.6">
-  <ListOfWaypoints>
-    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-      <Comments></Comments>
-    </Waypoint>
-    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-      <Comments></Comments>
-    </Waypoint>
-  </ListOfWaypoints>
-</FlightTrack>
-"""
+    enable_basic_http_authentication = False
+
+    # text to be written in new mscolab based ftml files.
+    STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
+    <FlightTrack version="1.7.6">
+      <ListOfWaypoints>
+        <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
+          <Comments></Comments>
+        </Waypoint>
+        <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
+          <Comments></Comments>
+        </Waypoint>
+      </ListOfWaypoints>
+    </FlightTrack>
+    """
