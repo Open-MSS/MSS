@@ -874,6 +874,16 @@ class MSSMscolab(QtCore.QObject):
         self.version_window.close()
         self.version_window = None
 
+    def update_views(self):
+        """
+        used on permission revoke to update waypoint model to defaults
+        """
+        locations = config_loader(dataset="new_flighttrack_template")
+        initial_waypoints = [ft.Waypoint(location=locations[0]), ft.Waypoint(location=locations[1])]
+        waypoints_model = ft.WaypointsTableModel(name="revoked", waypoints=initial_waypoints)
+        self.waypoints_model = waypoints_model
+        self.reload_view_windows()
+
     def close_external_windows(self):
         if self.prof_diag is not None:
             self.prof_diag.close()
@@ -1139,6 +1149,7 @@ class MSSMscolab(QtCore.QObject):
         logging.debug('delete project p_id: %s and active_id is: %s' % (p_id, self.active_pid))
         if self.active_pid == p_id:
             logging.debug('delete_project_from_list doing: %s' % p_id)
+            self.update_views()
             self.active_pid = None
             self.access_level = None
             self.active_project_name = None
@@ -1279,8 +1290,6 @@ class MSSMscolab(QtCore.QObject):
                 font = QtGui.QFont()
                 for i in range(self.ui.listProjectsMSC.count()):
                     self.ui.listProjectsMSC.item(i).setFont(font)
-                # ToDo remove selection in MSC lst
-
                 # close all hanging project option windows
                 self.close_external_windows()
                 self.hide_project_options()
