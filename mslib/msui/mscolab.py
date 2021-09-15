@@ -1096,6 +1096,8 @@ class MSSMscolab(QtCore.QObject):
                 project_desc = f'{project["path"]} - {project["access_level"]}'
                 widgetItem = QtWidgets.QListWidgetItem(project_desc, parent=self.ui.listProjectsMSC)
                 widgetItem.p_id = project["p_id"]
+                widgetItem.catgegory = project["category"]
+                widgetItem.project_path = project["path"]
                 widgetItem.access_level = project["access_level"]
                 self.ui.listProjectsMSC.addItem(widgetItem)
             if self.chat_window is not None:
