@@ -472,7 +472,7 @@ class Updater(QtCore.QObject):
         # Check if "search mss" yields a higher version than the currently running one
         search = self._execute_command(f"{self.command} search mss")
         self.new_version = search.split("\n")[-2].split()[1]
-        c_list = self._execute_command(f"{self.command} list mss")
+        c_list = self._execute_command(f"{self.command} list -f mss")
         self.old_version = c_list.split("\n")[-2].split()[1]
         if any(c.isdigit() for c in self.new_version):
             if self.new_version > self.old_version:
@@ -516,7 +516,7 @@ class Updater(QtCore.QObject):
         """
         Return if the newest mss exists in the environment or not
         """
-        verify = self._execute_command(f"{self.command} list mss")
+        verify = self._execute_command(f"{self.command} list -f mss")
         if self.new_version in verify:
             return True
 

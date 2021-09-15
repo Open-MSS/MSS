@@ -58,6 +58,7 @@ requirements:
     - werkzeug >2.0.0
     - flask-socketio >=5
     - flask-sqlalchemy
+    - flask-cors
     - passlib
     - gitpython
     - git

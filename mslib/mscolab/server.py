@@ -36,7 +36,7 @@ from itsdangerous import URLSafeTimedSerializer
 from flask import g, jsonify, request, render_template
 from flask import send_from_directory, abort, url_for
 from flask_mail import Mail, Message
-
+from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
@@ -50,6 +50,8 @@ from mslib.index import app_loader
 
 APP = app_loader(__name__)
 mail = Mail(APP)
+CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
+
 
 # set the operation root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder
