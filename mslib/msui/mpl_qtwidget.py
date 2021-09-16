@@ -729,7 +729,10 @@ class MplSideViewCanvas(MplCanvas):
 
             # Remove all vertical lines
             for line in self.vertical_lines[:]:
-                self.ax.lines.remove(line)
+                try:
+                    self.ax.lines.remove(line)
+                except ValueError as e:
+                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
                 self.vertical_lines.remove(line)
 
             # Add vertical lines
@@ -1034,7 +1037,10 @@ class MplLinearViewCanvas(MplCanvas):
 
             # Remove all vertical lines
             for line in self.vertical_lines[:]:
-                self.ax.lines.remove(line)
+                try:
+                    self.ax.lines.remove(line)
+                except ValueError as e:
+                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
                 self.vertical_lines.remove(line)
 
             ipoint = 0
