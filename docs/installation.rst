@@ -20,6 +20,27 @@ build processes.
 To install MSS you need the conda installer or its drop-in replacement the mamba installer. We explain below how you
 get by the conda installer the mamba installer. Mamba is a fast cross platform installerr.
 
+Automatic installation
+++++++++++++++++++++++
+
+* For **Windows**, go `here <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
+
+  #. Right click on the webpage and select "Save as..." to download the file
+
+  #. Double click the downloaded file and follow further instructions
+
+    * For fully automatic installation, open cmd and execute it with :code:`/Path/To/Windows.bat -a`
+
+* For **Linux/Mac**, go `here <https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1>`_
+
+  #. Right click on the webpage and select "Save as..." to download the file
+
+  #. Make it executable via :code:`chmod +x LinuxMac.sh`
+
+  #. Execute it and follow further instructions :code:`./LinuxMac.sh`
+
+    * For fully automatic installation, run it with the -a parameter :code:`./LinuxMac.sh -a`
+
 Preparations for installing MSS
 +++++++++++++++++++++++++++++++
 
