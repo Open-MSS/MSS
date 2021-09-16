@@ -107,7 +107,9 @@ class MissionSupportSystemDefaultConfig(object):
 
     # URLs of default WMS servers.
     default_WMS = [
-        "http://localhost:8081/"
+        "http://localhost:8081/",
+        "http://eumetview.eumetsat.int/geoserver/wms",
+        "https://apps.ecmwf.int/wms/?token=public"
     ]
 
     default_VSEC_WMS = [
