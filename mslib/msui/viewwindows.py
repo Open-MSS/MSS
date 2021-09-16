@@ -106,12 +106,11 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        self.waypoints_model = model
-
         # Update title flighttrack name
-        title = self.windowTitle()
-        if len(title.split("Mission Support System - ")) > 1:
-            self.setWindowTitle(title.replace(title.split("Mission Support System - ")[-1], model.name))
+        if self.waypoints_model:
+            self.setWindowTitle(self.windowTitle().replace(self.waypoints_model.name, model.name))
+
+        self.waypoints_model = model
 
     def controlToBeCreated(self, index):
         """
@@ -186,11 +185,10 @@ class MSSMplViewWindow(MSSViewWindow):
             # Update Top View flighttrack name
             if hasattr(self.mpl.canvas, "map"):
                 text = self.mpl.canvas.map.crs_text.get_text()
-                lines = text.split("\n")
-                if len(lines) > 1 and not any(x in lines[-2] for x in ["openAIP", "OurAirports"]):
-                    old_name = text.split("\n")[-2]
-                    self.mpl.canvas.map.crs_text.set_text(text.replace(old_name, model.name))
-                    self.mpl.canvas.map.ax.figure.canvas.draw()
+                old_name = self.mpl.canvas.map.project_name
+                self.mpl.canvas.map.project_name = model.name
+                self.mpl.canvas.map.crs_text.set_text(text.replace(old_name, model.name))
+                self.mpl.canvas.map.ax.figure.canvas.draw()
 
     def getView(self):
         """
