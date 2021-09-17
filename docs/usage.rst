@@ -248,11 +248,13 @@ With setting the option "filepicker_default": "default" you can only access loca
 Example WMS Server
 ++++++++++++++++++
 
-Some public accessible WMS Servers
+Some publicly accessible WMS Servers
 
  * http://osmwms.itc-halle.de/maps/osmfree
  * http://ows.terrestris.de/osm/service
- * https://firms.modaps.eosdis.nasa.gov/wms
+ * http://eumetview.eumetsat.int/geoserver/wms
+ * https://apps.ecmwf.int/wms/?token=public
+ * https://maps.dwd.de/geoserver/wms
 
 
 .. include:: kml_guide.rst
