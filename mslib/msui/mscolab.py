@@ -1242,7 +1242,6 @@ class MSSMscolab(QtCore.QObject):
 
             # set active flightpath here
             self.load_wps_from_server()
-            self.waypoints_model.name = item.project_path
             # display working status
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
@@ -1353,6 +1352,7 @@ class MSSMscolab(QtCore.QObject):
         xml_content = self.request_wps_from_server()
         if xml_content is not None:
             self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+            self.waypoints_model.name = self.active_project_name
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
     def reload_wps_from_server(self):
