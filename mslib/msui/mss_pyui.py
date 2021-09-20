@@ -59,7 +59,6 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.msui.mss_qt import get_open_filename, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
-from mslib.mscolab.utils import disable_navbar_action_buttons, enable_navbar_action_buttons
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -703,7 +702,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
             # local we have always all options enabled
-            enable_navbar_action_buttons(view_item.window.settings_tag, view_item.window)
+            view_item.window.enable_navbar_action_buttons()
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
@@ -827,7 +826,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         if view_window is not None:
             # Set view type to window
-            view_window.view_type = _type
+            view_window.view_type = view_window.name
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
             view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -842,9 +841,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # disable navbar actions in the view for viewer
             try:
                 if self.mscolab.access_level == "viewer":
-                    disable_navbar_action_buttons(_type, view_window)
+                    view_window.disable_navbar_action_buttons()
             except AttributeError:
-                enable_navbar_action_buttons(_type, view_window)
+                view_window.enable_navbar_action_buttons()
             self.viewsChanged.emit()
 
     def get_active_views(self):

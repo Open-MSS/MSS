@@ -30,54 +30,6 @@ import logging
 from mslib.mscolab.conf import mscolab_settings
 
 
-def enable_navbar_action_buttons(_type, view_window):
-    """
-    _type: view type (topview, sideview, tableview)
-    view_window: PyQt view window
-
-    function enables some control, used if access_level is appropriate
-    """
-    if _type == "topview" or _type == "sideview" or _type == "linearview":
-        actions = view_window.mpl.navbar.actions()
-        for action in actions:
-            action_text = action.text()
-            if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                action.setEnabled(True)
-    else:
-        # _type == tableview
-        view_window.btAddWayPointToFlightTrack.setEnabled(True)
-        view_window.btCloneWaypoint.setEnabled(True)
-        view_window.btDeleteWayPoint.setEnabled(True)
-        view_window.btInvertDirection.setEnabled(True)
-        view_window.btRoundtrip.setEnabled(True)
-        view_window.cbTools.setEnabled(True)
-        view_window.tableWayPoints.setEnabled(True)
-
-
-def disable_navbar_action_buttons(_type, view_window):
-    """
-    _type: view type (topview, sideview, tableview)
-    view_window: PyQt view window
-
-    function disables some control, used if access_level is not appropriate
-    """
-    if _type == "topview" or _type == "sideview" or _type == "linearview":
-        actions = view_window.mpl.navbar.actions()
-        for action in actions:
-            action_text = action.text()
-            if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                action.setEnabled(False)
-    else:
-        # _type == tableview
-        view_window.btAddWayPointToFlightTrack.setEnabled(False)
-        view_window.btCloneWaypoint.setEnabled(False)
-        view_window.btDeleteWayPoint.setEnabled(False)
-        view_window.btInvertDirection.setEnabled(False)
-        view_window.btRoundtrip.setEnabled(False)
-        view_window.cbTools.setEnabled(False)
-        view_window.tableWayPoints.setEnabled(False)
-
-
 def get_recent_pid(fm, user):
     projects = fm.list_projects(user)
     p_id = None

@@ -57,7 +57,6 @@ from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
-from mslib.mscolab.utils import disable_navbar_action_buttons, enable_navbar_action_buttons
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -1137,11 +1136,10 @@ class MSSMscolab(QtCore.QObject):
 
             # update view window nav elements if open
             for window in self.ui.get_active_views():
-                _type = window.view_type
                 if self.access_level == "viewer":
-                    disable_navbar_action_buttons(_type, window)
+                    window.disable_navbar_action_buttons()
                 else:
-                    enable_navbar_action_buttons(_type, window)
+                    window.enable_navbar_action_buttons()
 
         # update chat window if open
         if self.chat_window is not None:
@@ -1277,7 +1275,9 @@ class MSSMscolab(QtCore.QObject):
             for window in self.ui.get_active_views():
                 window.setFlightTrackModel(self.waypoints_model)
                 if self.access_level == "viewer":
-                    disable_navbar_action_buttons(window.settings_tag, window)
+                    window.disable_navbar_action_buttons()
+                else:
+                    window.enable_navbar_action_buttons()
 
             self.ui.switch_to_mscolab()
         else:
