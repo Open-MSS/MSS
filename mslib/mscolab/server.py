@@ -184,7 +184,7 @@ def verify_user(func):
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            user = User.verify_auth_token(request.form.get('token', False))
+            user = User.verify_auth_token(request.args.get('token', request.form.get('token', False)))
         except TypeError:
             logging.debug("no token in request form")
             abort(404)
@@ -242,7 +242,7 @@ def get_auth_token():
 
 @APP.route('/test_authorized')
 def authorized():
-    token = request.form['token']
+    token = request.args.get('token', request.form.get('token'))
     user = User.verify_auth_token(token)
     if user is not None:
         if mscolab_settings.USER_VERIFICATION:
@@ -317,8 +317,8 @@ def delete_user():
 @APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    timestamp = request.form.get("timestamp", "1970-01-01, 00:00:00")
-    op_id = request.form.get("op_id", None)
+    timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00"))
+    op_id = request.args.get("op_id", request.form.get("op_id", None))
     chat_messages = cm.get_messages(op_id, timestamp)
     return jsonify({"messages": chat_messages})
 
@@ -386,7 +386,7 @@ def create_operation():
 @APP.route('/get_operation_by_id', methods=['GET'])
 @verify_user
 def get_operation_by_id():
-    op_id = request.form.get('op_id', None)
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
     user = g.user
     result = fm.get_file(int(op_id), user)
     if result is False:
@@ -397,7 +397,7 @@ def get_operation_by_id():
 @APP.route('/get_all_changes', methods=['GET'])
 @verify_user
 def get_all_changes():
-    op_id = request.form.get('op_id', None)
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
     named_version = request.args.get('named_version')
     user = g.user
     result = fm.get_all_changes(int(op_id), user, named_version)
@@ -409,7 +409,7 @@ def get_all_changes():
 @APP.route('/get_change_content', methods=['GET'])
 @verify_user
 def get_change_content():
-    ch_id = int(request.form.get('ch_id', 0))
+    ch_id = int(request.args.get('ch_id', request.form.get('ch_id', 0)))
     result = fm.get_change_content(ch_id)
     if result is False:
         return "False"
@@ -433,7 +433,7 @@ def set_version_name():
 @APP.route('/authorized_users', methods=['GET'])
 @verify_user
 def authorized_users():
-    op_id = request.form.get('op_id', None)
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
     return json.dumps({"users": fm.get_authorized_users(int(op_id))})
 
 
@@ -470,7 +470,7 @@ def update_operation():
 @APP.route('/operation_details', methods=["GET"])
 @verify_user
 def get_operation_details():
-    op_id = request.form.get('op_id', None)
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
     user = g.user
     return json.dumps(fm.get_operation_details(int(op_id), user))
 
@@ -492,7 +492,7 @@ def undo_ftml():
 @APP.route("/users_without_permission", methods=["GET"])
 @verify_user
 def get_users_without_permission():
-    op_id = request.form.get('op_id', None)
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
     u_id = g.user.id
     users = fm.fetch_users_without_permission(int(op_id), u_id)
     if users is False:
@@ -504,7 +504,7 @@ def get_users_without_permission():
 @APP.route("/users_with_permission", methods=["GET"])
 @verify_user
 def get_users_with_permission():
-    op_id = request.form.get('op_id', None)
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
     u_id = g.user.id
     users = fm.fetch_users_with_permission(int(op_id), u_id)
     if users is False:
