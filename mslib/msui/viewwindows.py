@@ -162,6 +162,46 @@ class MSSViewWindow(QtWidgets.QMainWindow):
     def setIdentifier(self, identifier):
         self.identifier = identifier
 
+    def enable_navbar_action_buttons(self):
+        """
+        function enables some control, used if access_level is appropriate
+        """
+        if self.name in ("Top View", "Side View", "Linear View"):
+            actions = self.mpl.navbar.actions()
+            for action in actions:
+                action_text = action.text()
+                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
+                    action.setEnabled(True)
+        else:
+            # Table View
+            self.btAddWayPointToFlightTrack.setEnabled(True)
+            self.btCloneWaypoint.setEnabled(True)
+            self.btDeleteWayPoint.setEnabled(True)
+            self.btInvertDirection.setEnabled(True)
+            self.btRoundtrip.setEnabled(True)
+            self.cbTools.setEnabled(True)
+            self.tableWayPoints.setEnabled(True)
+
+    def disable_navbar_action_buttons(self):
+        """
+        function disables some control, used if access_level is not appropriate
+        """
+        if self.name in ("Top View", "Side View", "Linear View"):
+            actions = self.mpl.navbar.actions()
+            for action in actions:
+                action_text = action.text()
+                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
+                    action.setEnabled(False)
+        else:
+            # Table View
+            self.btAddWayPointToFlightTrack.setEnabled(False)
+            self.btCloneWaypoint.setEnabled(False)
+            self.btDeleteWayPoint.setEnabled(False)
+            self.btInvertDirection.setEnabled(False)
+            self.btRoundtrip.setEnabled(False)
+            self.cbTools.setEnabled(False)
+            self.tableWayPoints.setEnabled(False)
+
 
 class MSSMplViewWindow(MSSViewWindow):
     """
@@ -195,42 +235,3 @@ class MSSMplViewWindow(MSSViewWindow):
         Return the MplCanvas instance of the window.
         """
         return self.mpl.canvas
-
-    def enable_navbar_action_buttons(self):
-        """
-        function enables some control, used if access_level is appropriate
-        """
-        if self.name in ("Top View", "Side View", "Linear View"):
-            actions = self.mpl.navbar.actions()
-            for action in actions:
-                action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                    action.setEnabled(True)
-        else:
-            self.btAddWayPointToFlightTrack.setEnabled(True)
-            self.btCloneWaypoint.setEnabled(True)
-            self.btDeleteWayPoint.setEnabled(True)
-            self.btInvertDirection.setEnabled(True)
-            self.btRoundtrip.setEnabled(True)
-            self.cbTools.setEnabled(True)
-            self.tableWayPoints.setEnabled(True)
-
-    def disable_navbar_action_buttons(self):
-        """
-        function disables some control, used if access_level is not appropriate
-        """
-        if self.name in ("Top View", "Side View", "Linear View"):
-            actions = self.mpl.navbar.actions()
-            for action in actions:
-                action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                    action.setEnabled(False)
-        else:
-            # _type == tableview
-            self.btAddWayPointToFlightTrack.setEnabled(False)
-            self.btCloneWaypoint.setEnabled(False)
-            self.btDeleteWayPoint.setEnabled(False)
-            self.btInvertDirection.setEnabled(False)
-            self.btRoundtrip.setEnabled(False)
-            self.cbTools.setEnabled(False)
-            self.tableWayPoints.setEnabled(False)
