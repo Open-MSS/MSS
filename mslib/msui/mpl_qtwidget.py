@@ -524,6 +524,7 @@ class MplSideViewCanvas(MplCanvas):
         # Main axes instance of mplwidget has zorder 99.
         self.imgax = self.fig.add_axes(
             self.ax.get_position(), frameon=True, xticks=[], yticks=[], label="imgax", zorder=0)
+        self.vertical_lines = []
 
         # Sets the default value of sideview fontsize settings from MSSDefaultConfig.
         self.sideview_size_settings = config_loader(dataset="sideview")
@@ -727,10 +728,12 @@ class MplSideViewCanvas(MplCanvas):
                     self.settings_dict["colour_ceiling"])
 
             # Remove all vertical lines
-            vertical_lines = [line for line in self.ax.lines if
-                              all(x == line.get_path().vertices[0, 0] for x in line.get_path().vertices[:, 0])]
-            for line in vertical_lines:
-                self.ax.lines.remove(line)
+            for line in self.vertical_lines[:]:
+                try:
+                    self.ax.lines.remove(line)
+                except ValueError as e:
+                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                self.vertical_lines.remove(line)
 
             # Add vertical lines
             if self.settings_dict["draw_verticals"]:
@@ -740,7 +743,8 @@ class MplSideViewCanvas(MplCanvas):
                     if (ipoint < len(highlight) and
                             np.hypot(lat - highlight[ipoint][0],
                                      lon - highlight[ipoint][1]) < 2E-10):
-                        self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
+                        self.vertical_lines.append(
+                            self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
                         ipoint += 1
 
         self.draw()
@@ -953,6 +957,7 @@ class MplLinearViewCanvas(MplCanvas):
         # If a waypoints model has been passed, create an interactor on it.
         self.waypoints_interactor = None
         self.waypoints_model = None
+        self.vertical_lines = []
         self.basename = "linearview"
         self.draw()
         if model:
@@ -967,7 +972,7 @@ class MplLinearViewCanvas(MplCanvas):
         If no model had been set before, create a new interactor object on the model
         """
         self.waypoints_model = model
-        pass
+
         if self.waypoints_interactor:
             self.waypoints_interactor.set_waypoints_model(model)
         else:
@@ -1030,13 +1035,21 @@ class MplLinearViewCanvas(MplCanvas):
                                                   lons[::tick_index_step])],
                                     rotation=25, horizontalalignment="right")
 
+            # Remove all vertical lines
+            for line in self.vertical_lines[:]:
+                try:
+                    self.ax.lines.remove(line)
+                except ValueError as e:
+                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                self.vertical_lines.remove(line)
+
             ipoint = 0
             highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
             for i, (lat, lon) in enumerate(zip(lats, lons)):
                 if (ipoint < len(highlight) and
                         np.hypot(lat - highlight[ipoint][0],
                                  lon - highlight[ipoint][1]) < 2E-10):
-                    self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5)
+                    self.vertical_lines.append(self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
                     ipoint += 1
             self.draw()
 

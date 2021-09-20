@@ -106,6 +106,10 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
+        # Update title flighttrack name
+        if self.waypoints_model:
+            self.setWindowTitle(self.windowTitle().replace(self.waypoints_model.name, model.name))
+
         self.waypoints_model = model
 
     def controlToBeCreated(self, index):
@@ -173,9 +177,18 @@ class MSSMplViewWindow(MSSViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        self.waypoints_model = model
+        super().setFlightTrackModel(model)
+
         if self.mpl is not None:
             self.mpl.canvas.set_waypoints_model(model)
+
+            # Update Top View flighttrack name
+            if hasattr(self.mpl.canvas, "map"):
+                text = self.mpl.canvas.map.crs_text.get_text()
+                old_name = self.mpl.canvas.map.project_name
+                self.mpl.canvas.map.project_name = model.name
+                self.mpl.canvas.map.crs_text.set_text(text.replace(old_name, model.name))
+                self.mpl.canvas.map.ax.figure.canvas.draw()
 
     def getView(self):
         """
