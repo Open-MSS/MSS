@@ -879,7 +879,7 @@ class MSSMscolab(QtCore.QObject):
         """
         locations = config_loader(dataset="new_flighttrack_template")
         initial_waypoints = [ft.Waypoint(location=locations[0]), ft.Waypoint(location=locations[1])]
-        waypoints_model = ft.WaypointsTableModel(name="revoked", waypoints=initial_waypoints)
+        waypoints_model = ft.WaypointsTableModel(name="", waypoints=initial_waypoints)
         self.waypoints_model = waypoints_model
         self.reload_view_windows()
 
