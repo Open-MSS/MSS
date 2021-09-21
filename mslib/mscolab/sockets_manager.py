@@ -56,6 +56,17 @@ class SocketsManager(object):
     def handle_connect(self):
         logging.debug(request.sid)
 
+    def update_project_list(self, token):
+        """
+                json_config has:
+                    - token: authentication token
+                    - p_id: project id
+                """
+        user = User.verify_auth_token(token)
+        if not user:
+            return
+        socketio.emit('project-list-update')
+
     def join_creator_to_room(self, json_config):
         """
         json_config has:
@@ -138,9 +149,9 @@ class SocketsManager(object):
                 new_message = self.cm.add_message(user, _json['message_text'], str(p_id), reply_id=reply_id)
                 new_message_dict = get_message_dict(new_message)
                 if reply_id == -1:
-                    socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+                    socketio.emit('chat-message-client', json.dumps(new_message_dict))
                 else:
-                    socketio.emit('chat-message-reply-client', json.dumps(new_message_dict), room=str(p_id))
+                    socketio.emit('chat-message-reply-client', json.dumps(new_message_dict))
 
     def handle_message_edit(self, socket_message):
         message_id = socket_message["message_id"]
@@ -154,7 +165,7 @@ class SocketsManager(object):
                 socketio.emit('edit-message-client', json.dumps({
                     "message_id": message_id,
                     "new_message_text": new_message_text
-                }), room=str(p_id))
+                }))
 
     def handle_message_delete(self, socket_message):
         message_id = socket_message["message_id"]
@@ -164,7 +175,7 @@ class SocketsManager(object):
             perm = self.permission_check_emit(user.id, int(p_id))
             if perm:
                 self.cm.delete_message(message_id)
-                socketio.emit('delete-message-client', json.dumps({"message_id": message_id}), room=str(p_id))
+                socketio.emit('delete-message-client', json.dumps({"message_id": message_id}))
 
     def permission_check_emit(self, u_id, p_id):
         """
@@ -211,21 +222,21 @@ class SocketsManager(object):
                 message_ = f"[service message] **{user.username}** saved changes"
                 new_message = self.cm.add_message(user, message_, str(p_id), message_type=MessageType.SYSTEM_MESSAGE)
                 new_message_dict = get_message_dict(new_message)
-                socketio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+                socketio.emit('chat-message-client', json.dumps(new_message_dict))
                 # emit file-changed event to trigger reload of flight track
-                socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}), room=str(p_id))
+                socketio.emit('file-changed', json.dumps({"p_id": p_id, "u_id": user.id}))
         else:
             logging.debug(f'login expired for {user.username}, state unauthorized!')
 
     def emit_file_change(self, p_id):
-        socketio.emit('file-changed', json.dumps({"p_id": p_id}), room=str(p_id))
+        socketio.emit('file-changed', json.dumps({"p_id": p_id}))
 
     def emit_new_permission(self, u_id, p_id):
         """
         to refresh project list of u_id
         and to refresh collaborators' list
         """
-        socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
+        socketio.emit('new-permission', json.dumps({"p_id": p_id, "u_id": u_id}))
 
     def emit_update_permission(self, u_id, p_id, access_level=None):
         """
@@ -238,16 +249,16 @@ class SocketsManager(object):
 
         socketio.emit('update-permission', json.dumps({"p_id": p_id,
                                                        "u_id": u_id,
-                                                       "access_level": access_level}), room=str(p_id))
+                                                       "access_level": access_level}))
 
     def emit_revoke_permission(self, u_id, p_id):
-        socketio.emit("revoke-permission", json.dumps({"p_id": p_id, "u_id": u_id}), room=str(p_id))
+        socketio.emit("revoke-permission", json.dumps({"p_id": p_id, "u_id": u_id}))
 
     def emit_project_permissions_updated(self, u_id, p_id):
-        socketio.emit("project-permissions-updated", json.dumps({"u_id": u_id}), room=str(p_id))
+        socketio.emit("project-permissions-updated", json.dumps({"u_id": u_id}))
 
     def emit_project_delete(self, p_id):
-        socketio.emit("project-deleted", json.dumps({"p_id": p_id}), room=str(p_id))
+        socketio.emit("project-deleted", json.dumps({"p_id": p_id}))
 
 
 def setup_managers(app):
@@ -270,5 +281,7 @@ def setup_managers(app):
     socketio.on_event('delete-message', sm.handle_message_delete)
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('add-user-to-room', sm.join_creator_to_room)
+    socketio.on_event('update-project-list', sm.update_project_list)
+
     socketio.sm = sm
     return socketio, cm, fm

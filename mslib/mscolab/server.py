@@ -42,7 +42,7 @@ from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, User, db
+from mslib.mscolab.models import Change, MessageType, Project, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -349,7 +349,7 @@ def message_attachment():
             static_file_path = fs.path.join(static_dir, p_id, file_name)
         new_message = cm.add_message(user, static_file_path, p_id, message_type)
         new_message_dict = get_message_dict(new_message)
-        sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(p_id))
+        sockio.emit('chat-message-client', json.dumps(new_message_dict))
         return jsonify({"success": True, "path": static_file_path})
     return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
 
@@ -380,7 +380,13 @@ def create_project():
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
     user = g.user
-    return str(fm.create_project(path, description, user, content=content, category=category))
+    r = str(fm.create_project(path, description, user, content=content, category=category))
+    if r == "True":
+        project = Project.query.filter_by(path=path).first()
+        #sockio.sm.emit_new_permission(user.id, project.id)
+        token = request.args.get('token', request.form.get('token', False))
+        sockio.sm.update_project_list(token)
+    return r
 
 
 @APP.route('/get_project_by_id', methods=['GET'])

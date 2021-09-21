@@ -494,6 +494,7 @@ class MSSMscolab(QtCore.QObject):
             logging.debug(f"Couldn't create a socket connection: {ex}")
             show_popup(self.ui, "Error", "Couldn't create a socket connection. New Login required!")
             self.logout()
+        self.conn.signal_project_list_updated.connect(self.reload_project_list)
         self.conn.signal_reload.connect(self.reload_window)
         self.conn.signal_new_permission.connect(self.render_new_permission)
         self.conn.signal_update_permission.connect(self.handle_update_permission)
@@ -745,13 +746,6 @@ class MSSMscolab(QtCore.QObject):
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your project was created successfully')
-            self.add_projects_to_ui()
-            selected_category = self.ui.filterCategoryCb.currentText()
-            self.show_categories_to_ui()
-            self.project_category_handler()
-            index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
-            if index >= 0:
-                self.ui.filterCategoryCb.setCurrentIndex(index)
             p_id = self.get_recent_pid()
             self.conn.handle_new_room(p_id)
         else:
@@ -1056,6 +1050,10 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
+    @QtCore.Slot()
+    def reload_project_list(self):
+        self.reload_projects()
+
     @QtCore.Slot(int)
     def reload_window(self, value):
         if self.active_pid != value or self.ui.workLocallyCheckbox.isChecked():
@@ -1354,6 +1352,14 @@ class MSSMscolab(QtCore.QObject):
             self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
             self.waypoints_model.name = self.active_project_name
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+
+    def reload_projects(self):
+        self.add_projects_to_ui()
+        selected_category = self.ui.filterCategoryCb.currentText()
+        self.show_categories_to_ui()
+        index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.ui.filterCategoryCb.setCurrentIndex(index)
 
     def reload_wps_from_server(self):
         if self.active_pid is None:
