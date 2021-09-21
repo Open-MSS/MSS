@@ -185,8 +185,8 @@ class MSSMplViewWindow(MSSViewWindow):
             # Update Top View flighttrack name
             if hasattr(self.mpl.canvas, "map"):
                 text = self.mpl.canvas.map.crs_text.get_text()
-                old_name = self.mpl.canvas.map.project_name
-                self.mpl.canvas.map.project_name = model.name
+                old_name = self.mpl.canvas.map.operation_name
+                self.mpl.canvas.map.operation_name = model.name
                 self.mpl.canvas.map.crs_text.set_text(text.replace(old_name, model.name))
                 self.mpl.canvas.map.ax.figure.canvas.draw()
 

@@ -1357,7 +1357,7 @@ class MSSMscolab(QtCore.QObject):
         xml_content = self.request_wps_from_server()
         if xml_content is not None:
             self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
-            self.waypoints_model.name = self.active_project_name
+            self.waypoints_model.name = self.active_operation_name
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
     def reload_wps_from_server(self):
