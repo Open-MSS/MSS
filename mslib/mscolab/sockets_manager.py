@@ -56,12 +56,12 @@ class SocketsManager(object):
     def handle_connect(self):
         logging.debug(request.sid)
 
-    def update_project_list(self, token):
+    def update_project_list(self, json_config):
         """
-                json_config has:
-                    - token: authentication token
-                    - p_id: project id
-                """
+        json_config has:
+        - token: authentication token
+        """
+        token = json_config["token"]
         user = User.verify_auth_token(token)
         if not user:
             return

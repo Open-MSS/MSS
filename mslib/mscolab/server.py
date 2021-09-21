@@ -42,7 +42,7 @@ from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, Project, User, db
+from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -382,10 +382,9 @@ def create_project():
     user = g.user
     r = str(fm.create_project(path, description, user, content=content, category=category))
     if r == "True":
-        project = Project.query.filter_by(path=path).first()
-        #sockio.sm.emit_new_permission(user.id, project.id)
         token = request.args.get('token', request.form.get('token', False))
-        sockio.sm.update_project_list(token)
+        json_config = {"token": token}
+        sockio.sm.update_project_list(json_config)
     return r
 
 
