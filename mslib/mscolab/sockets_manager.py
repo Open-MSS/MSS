@@ -192,7 +192,7 @@ class SocketsManager(object):
     def handle_file_save(self, json_req):
         """
         json_req: {
-            "op_id": process id
+            "op_id": operation id
             "content": content of the file
             "comment": comment for file-save, defaults to None
         }

@@ -397,7 +397,7 @@ class MSSMscolab(QtCore.QObject):
         # if token is None, not authorized, else authorized
         self.token = None
         # int to store active pid
-        self.active_pid = None
+        self.active_op_id = None
         # storing access_level to save network call
         self.access_level = None
         # storing operation_name to save network call
@@ -752,13 +752,13 @@ class MSSMscolab(QtCore.QObject):
             index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
             if index >= 0:
                 self.ui.filterCategoryCb.setCurrentIndex(index)
-            op_id = self.get_recent_pid()
+            op_id = self.get_recent_op_id()
             self.conn.handle_new_room(op_id)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
 
-    def get_recent_pid(self):
+    def get_recent_op_id(self):
         if self.verify_user_token():
             """
             get most recent operation's op_id
@@ -792,7 +792,7 @@ class MSSMscolab(QtCore.QObject):
 
     def open_chat_window(self):
         if self.verify_user_token():
-            if self.active_pid is None:
+            if self.active_op_id is None:
                 return
 
             if self.chat_window is not None:
@@ -801,7 +801,7 @@ class MSSMscolab(QtCore.QObject):
 
             self.chat_window = mp.MSColabOperationWindow(
                 self.token,
-                self.active_pid,
+                self.active_op_id,
                 self.user,
                 self.active_operation_name,
                 self.access_level,
@@ -822,7 +822,7 @@ class MSSMscolab(QtCore.QObject):
 
     def open_admin_window(self):
         if self.verify_user_token():
-            if self.active_pid is None:
+            if self.active_op_id is None:
                 return
 
             if self.admin_window is not None:
@@ -831,7 +831,7 @@ class MSSMscolab(QtCore.QObject):
 
             self.admin_window = maw.MSColabAdminWindow(
                 self.token,
-                self.active_pid,
+                self.active_op_id,
                 self.user,
                 self.active_operation_name,
                 self.operations,
@@ -851,14 +851,14 @@ class MSSMscolab(QtCore.QObject):
 
     def open_version_history_window(self):
         if self.verify_user_token():
-            if self.active_pid is None:
+            if self.active_op_id is None:
                 return
 
             if self.version_window is not None:
                 self.version_window.activateWindow()
                 return
 
-            self.version_window = mvh.MSColabVersionHistory(self.token, self.active_pid, self.user,
+            self.version_window = mvh.MSColabVersionHistory(self.token, self.active_op_id, self.user,
                                                             self.active_operation_name, self.conn,
                                                             mscolab_server_url=self.mscolab_server_url)
             self.version_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -901,7 +901,7 @@ class MSSMscolab(QtCore.QObject):
                 if entered_operation_name == self.active_operation_name:
                     data = {
                         "token": self.token,
-                        "op_id": self.active_pid
+                        "op_id": self.active_op_id
                     }
                     url = url_join(self.mscolab_server_url, 'delete_operation')
                     try:
@@ -1023,7 +1023,7 @@ class MSSMscolab(QtCore.QObject):
             if self.merge_dialog.exec_():
                 xml_content = self.merge_dialog.get_values()
                 if xml_content is not None:
-                    self.conn.save_file(self.token, self.active_pid, xml_content, comment=comment)
+                    self.conn.save_file(self.token, self.active_op_id, xml_content, comment=comment)
                     self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
                     self.waypoints_model.save_to_ftml(self.local_ftml_file)
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
@@ -1059,13 +1059,13 @@ class MSSMscolab(QtCore.QObject):
 
     @QtCore.Slot(int)
     def reload_window(self, value):
-        if self.active_pid != value or self.ui.workLocallyCheckbox.isChecked():
+        if self.active_op_id != value or self.ui.workLocallyCheckbox.isChecked():
             return
         self.reload_wps_from_server()
 
     @QtCore.Slot()
     def reload_windows_slot(self):
-        self.reload_window(self.active_pid)
+        self.reload_window(self.active_op_id)
 
     @QtCore.Slot(int, int)
     def render_new_permission(self, op_id, u_id):
@@ -1116,7 +1116,7 @@ class MSSMscolab(QtCore.QObject):
             if operation_name is not None:
                 show_popup(self.ui, "Permission Updated",
                            f"Your access level to operation - {operation_name} was updated to {access_level}!", 1)
-            if op_id != self.active_pid:
+            if op_id != self.active_op_id:
                 return
 
             self.access_level = access_level
@@ -1136,10 +1136,10 @@ class MSSMscolab(QtCore.QObject):
             self.chat_window.load_users()
 
     def delete_operation_from_list(self, op_id):
-        logging.debug('delete operation op_id: %s and active_id is: %s' % (op_id, self.active_pid))
-        if self.active_pid == op_id:
+        logging.debug('delete operation op_id: %s and active_id is: %s' % (op_id, self.active_op_id))
+        if self.active_op_id == op_id:
             logging.debug('delete_operation_from_list doing: %s' % op_id)
-            self.active_pid = None
+            self.active_op_id = None
             self.access_level = None
             self.active_operation_name = None
             # self.ui.workingStatusLabel.setEnabled(False)
@@ -1210,13 +1210,13 @@ class MSSMscolab(QtCore.QObject):
                     widgetItem.access_level = operation["access_level"]
                     widgetItem.operation_path = operation["path"]
                     widgetItem.operation_category = operation["category"]
-                    if widgetItem.op_id == self.active_pid:
+                    if widgetItem.op_id == self.active_op_id:
                         selectedOperation = widgetItem
                     self.ui.listOperationsMSC.addItem(widgetItem)
                 if selectedOperation is not None:
                     self.ui.listOperationsMSC.setCurrentItem(selectedOperation)
                     self.ui.listOperationsMSC.itemActivated.emit(selectedOperation)
-                self.ui.listOperationsMSC.itemActivated.connect(self.set_active_pid)
+                self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
                 self.logout()
@@ -1224,10 +1224,10 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def set_active_pid(self, item):
+    def set_active_op_id(self, item):
         if self.verify_user_token():
             if not self.ui.local_active:
-                if item.op_id == self.active_pid:
+                if item.op_id == self.active_op_id:
                     return
 
             # close all hanging window
@@ -1239,8 +1239,8 @@ class MSSMscolab(QtCore.QObject):
             self.ui.workLocallyCheckbox.setChecked(False)
             self.ui.workLocallyCheckbox.blockSignals(False)
 
-            # set active_pid here
-            self.active_pid = item.op_id
+            # set active_op_id here
+            self.active_op_id = item.op_id
             self.access_level = item.access_level
             self.active_operation_name = item.operation_path
             self.waypoints_model = None
@@ -1275,7 +1275,7 @@ class MSSMscolab(QtCore.QObject):
 
     def switch_to_local(self):
         self.ui.local_active = True
-        if self.active_pid is not None:
+        if self.active_op_id is not None:
             if self.verify_user_token():
                 # change font style for selected
                 font = QtGui.QFont()
@@ -1339,7 +1339,7 @@ class MSSMscolab(QtCore.QObject):
         if self.verify_user_token():
             data = {
                 "token": self.token,
-                "op_id": self.active_pid
+                "op_id": self.active_op_id
             }
             r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data)
             if r.text != "False":
@@ -1361,7 +1361,7 @@ class MSSMscolab(QtCore.QObject):
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
     def reload_wps_from_server(self):
-        if self.active_pid is None:
+        if self.active_op_id is None:
             return
         self.load_wps_from_server()
         self.reload_view_windows()
@@ -1372,7 +1372,7 @@ class MSSMscolab(QtCore.QObject):
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
             else:
                 xml_content = self.waypoints_model.get_xml_content()
-                self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None)
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1388,7 +1388,7 @@ class MSSMscolab(QtCore.QObject):
 
     def handle_import_msc(self, file_path, extension, function, pickertype):
         if self.verify_user_token():
-            if self.active_pid is None:
+            if self.active_op_id is None:
                 return
             if file_path is None:
                 return
@@ -1415,7 +1415,7 @@ class MSSMscolab(QtCore.QObject):
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             else:
-                self.conn.save_file(self.token, self.active_pid, xml_content, comment=None)
+                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None)
                 self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             self.reload_view_windows()
             show_popup(self.ui, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
@@ -1425,7 +1425,7 @@ class MSSMscolab(QtCore.QObject):
 
     def handle_export_msc(self, extension, function, pickertype):
         if self.verify_user_token():
-            if self.active_pid is None:
+            if self.active_op_id is None:
                 return
 
             # Setting default filename path for filedialogue
@@ -1451,7 +1451,7 @@ class MSSMscolab(QtCore.QObject):
 
     def create_view_msc(self, _type):
         if self.verify_user_token():
-            if self.active_pid is None:
+            if self.active_op_id is None:
                 return
 
             self.waypoints_model.name = self.active_operation_name
@@ -1519,7 +1519,7 @@ class MSSMscolab(QtCore.QObject):
         # delete token and show login widget-items
         self.token = None
         # delete active-operation-id
-        self.active_pid = None
+        self.active_op_id = None
         # delete active access_level
         self.access_level = None
         # delete active operation_name
