@@ -421,8 +421,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.shortcuts_dlg = None
 
         # deactivate vice versa selection of Operation or Flight Track
-        self.listFlightTracks.itemClicked.connect(lambda: self.listProjectsMSC.setCurrentItem(None))
-        self.listProjectsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
+        self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
+        self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
         # Don't start the updater during a test run of mss_pyui
         if "pytest" not in sys.modules:
@@ -791,7 +791,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if self.local_active:
             self.create_view(_type, self.active_flight_track)
         else:
-            self.mscolab.waypoints_model.name = self.mscolab.active_project_name
+            self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
             self.create_view(_type, self.mscolab.waypoints_model)
 
     def create_view(self, _type, model):
