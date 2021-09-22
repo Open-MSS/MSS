@@ -6,7 +6,7 @@
         <file>mscolab-help/merge-window.png</file>
         <file>mscolab-help/admin-window.png</file>
         <file>mscolab-help/version-window.png</file>
-        <file>mscolab-help/add-project.png</file>
+        <file>mscolab-help/add-operation.png</file>
     </qresource>
     <qresource prefix="/gravatars">
         <file>default-gravatars/a.png</file>

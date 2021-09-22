@@ -31,11 +31,11 @@ from mslib.mscolab.conf import mscolab_settings
 
 
 def get_recent_pid(fm, user):
-    projects = fm.list_projects(user)
-    p_id = None
-    if projects:
-        p_id = projects[-1]["p_id"]
-    return p_id
+    operations = fm.list_operations(user)
+    op_id = None
+    if operations:
+        op_id = operations[-1]["op_id"]
+    return op_id
 
 
 def get_session_id(sockets, u_id):

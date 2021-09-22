@@ -30,7 +30,7 @@ import fs
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Project, db
+from mslib.mscolab.models import Operation, db
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -69,144 +69,144 @@ class Test_Files(TestCase):
     def tearDown(self):
         pass
 
-    def test_create_project(self):
+    def test_create_operation(self):
         with self.app.test_client():
             flight_path = "f3"
-            project = Project.query.filter_by(path=flight_path).first()
-            assert project is None
-            assert self.fm.create_project(flight_path, "f3 test example", self.user)
-            project = Project.query.filter_by(path=flight_path).first()
-            assert project.id is not None
-            assert project.path == "f3"
+            operation = Operation.query.filter_by(path=flight_path).first()
+            assert operation is None
+            assert self.fm.create_operation(flight_path, "f3 test example", self.user)
+            operation = Operation.query.filter_by(path=flight_path).first()
+            assert operation.id is not None
+            assert operation.path == "f3"
 
-    def test_list_projects(self):
+    def test_list_operations(self):
         with self.app.test_client():
-            projects = ["alpha", "beta", "gamma"]
-            for fp in projects:
-                assert self.fm.create_project(fp, f"{fp} test example", self.user)
-            assert len(self.fm.list_projects(self.user)) == 3
-            assert len(self.fm.list_projects(self.user_2)) == 0
-            fps = self.fm.list_projects(self.user)
-            all_projects = [fp['path'] for fp in fps]
-            assert projects == all_projects
+            operations = ["alpha", "beta", "gamma"]
+            for fp in operations:
+                assert self.fm.create_operation(fp, f"{fp} test example", self.user)
+            assert len(self.fm.list_operations(self.user)) == 3
+            assert len(self.fm.list_operations(self.user_2)) == 0
+            fps = self.fm.list_operations(self.user)
+            all_operations = [fp['path'] for fp in fps]
+            assert operations == all_operations
 
-    def test_get_project_details(self):
+    def test_get_operation_details(self):
         with self.app.test_client():
             description = "test example"
-            flight_path, project = self._create_project(flight_path="V1", description=description)
-            details = self.fm.get_project_details(project.id, self.user)
+            flight_path, operation = self._create_operation(flight_path="V1", description=description)
+            details = self.fm.get_operation_details(operation.id, self.user)
             assert details["description"] == description
             assert details["path"] == flight_path
-            assert details["id"] == project.id
+            assert details["id"] == operation.id
 
     def test_get_authorized_users(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V1")
-            users = self.fm.get_authorized_users(project.id)
+            flight_path, operation = self._create_operation(flight_path="V1")
+            users = self.fm.get_authorized_users(operation.id)
             assert users[0] == {'username': 'UV10', 'access_level': 'creator'}
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V2")
-            assert self.fm.fetch_users_without_permission(project.id, self.user_2.id) is False
-            without_permission = self.fm.fetch_users_without_permission(project.id, self.user.id)
+            flight_path, operation = self._create_operation(flight_path="V2")
+            assert self.fm.fetch_users_without_permission(operation.id, self.user_2.id) is False
+            without_permission = self.fm.fetch_users_without_permission(operation.id, self.user.id)
             # ToDo after seeding removed use absolut comparison
             assert without_permission[-1] == [self.user_2.username, self.user_2.id]
 
     def test_fetch_users_with_permission(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V3")
-            assert self.fm.fetch_users_with_permission(project.id, self.user_2.id) is False
+            flight_path, operation = self._create_operation(flight_path="V3")
+            assert self.fm.fetch_users_with_permission(operation.id, self.user_2.id) is False
             # we look in the query only on others than creator
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == []
 
     def test_add_bulk_permissions(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V4")
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            flight_path, operation = self._create_operation(flight_path="V4")
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == []
-            self.fm.add_bulk_permission(project.id, self.user, [self.user_2.id], "viewer")
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            self.fm.add_bulk_permission(operation.id, self.user, [self.user_2.id], "viewer")
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == [[self.user_2.username, 'viewer', self.user_2.id]]
 
     def test_modify_bulk_permissions(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V5")
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            flight_path, operation = self._create_operation(flight_path="V5")
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == []
-            self.fm.add_bulk_permission(project.id, self.user, [self.user_2.id], "viewer")
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            self.fm.add_bulk_permission(operation.id, self.user, [self.user_2.id], "viewer")
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == [[self.user_2.username, 'viewer', self.user_2.id]]
-            self.fm.modify_bulk_permission(project.id, self.user, [self.user_2.id], "collaborator")
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            self.fm.modify_bulk_permission(operation.id, self.user, [self.user_2.id], "collaborator")
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == [[self.user_2.username, 'collaborator', self.user_2.id]]
 
     def test_delete_bulk_permissions(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V6")
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            flight_path, operation = self._create_operation(flight_path="V6")
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == []
-            self.fm.add_bulk_permission(project.id, self.user, [self.user_2.id], "viewer")
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            self.fm.add_bulk_permission(operation.id, self.user, [self.user_2.id], "viewer")
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == [[self.user_2.username, 'viewer', self.user_2.id]]
-            assert self.fm.delete_bulk_permission(project.id, self.user, [self.user_2.id])
-            with_permission = self.fm.fetch_users_with_permission(project.id, self.user.id)
+            assert self.fm.delete_bulk_permission(operation.id, self.user, [self.user_2.id])
+            with_permission = self.fm.fetch_users_with_permission(operation.id, self.user.id)
             assert with_permission == []
 
     def test_import_permissions(self):
         with self.app.test_client():
-            flight_path, project_1 = self._create_project(flight_path="V7")
-            with_permission = self.fm.fetch_users_with_permission(project_1.id, self.user.id)
+            flight_path, operation_1 = self._create_operation(flight_path="V7")
+            with_permission = self.fm.fetch_users_with_permission(operation_1.id, self.user.id)
             assert with_permission == []
-            self.fm.add_bulk_permission(project_1.id, self.user, [self.user_2.id], "viewer")
+            self.fm.add_bulk_permission(operation_1.id, self.user, [self.user_2.id], "viewer")
 
-            flight_path, project_2 = self._create_project(flight_path="V8")
-            with_permission = self.fm.fetch_users_with_permission(project_2.id, self.user.id)
+            flight_path, operation_2 = self._create_operation(flight_path="V8")
+            with_permission = self.fm.fetch_users_with_permission(operation_2.id, self.user.id)
             assert with_permission == []
 
-            self.fm.import_permissions(project_1.id, project_2.id, self.user.id)
-            with_permission = self.fm.fetch_users_with_permission(project_2.id, self.user.id)
+            self.fm.import_permissions(operation_1.id, operation_2.id, self.user.id)
+            with_permission = self.fm.fetch_users_with_permission(operation_2.id, self.user.id)
             assert with_permission == [[self.user_2.username, 'viewer', self.user_2.id]]
 
-    def test_update_project(self):
+    def test_update_operation(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V9")
+            flight_path, operation = self._create_operation(flight_path="V9")
             new_flight_path = 'NEW_V9'
-            assert self.fm.update_project(project.id, 'path', new_flight_path, self.user)
-            project = Project.query.filter_by(path=new_flight_path).first()
-            assert project.path == new_flight_path
+            assert self.fm.update_operation(operation.id, 'path', new_flight_path, self.user)
+            operation = Operation.query.filter_by(path=new_flight_path).first()
+            assert operation.path == new_flight_path
             data = fs.open_fs(self.fm.data_dir)
             assert data.exists(new_flight_path)
             new_description = "my new description"
-            assert self.fm.update_project(project.id, 'description', new_description, self.user)
-            project = Project.query.filter_by(path=new_flight_path).first()
-            assert project.description == new_description
+            assert self.fm.update_operation(operation.id, 'description', new_description, self.user)
+            operation = Operation.query.filter_by(path=new_flight_path).first()
+            assert operation.description == new_description
 
     def test_delete_file(self):
-        # ToDo rename to project
+        # ToDo rename to operation
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V10")
-            assert project.path == flight_path
-            assert self.fm.delete_file(project.id, self.user)
-            project = Project.query.filter_by(path=flight_path).first()
-            assert project is None
+            flight_path, operation = self._create_operation(flight_path="V10")
+            assert operation.path == flight_path
+            assert self.fm.delete_file(operation.id, self.user)
+            operation = Operation.query.filter_by(path=flight_path).first()
+            assert operation is None
 
     def test_get_all_changes(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V11")
-            assert self.fm.save_file(project.id, "content1", self.user)
-            assert self.fm.save_file(project.id, "content2", self.user)
-            all_changes = self.fm.get_all_changes(project.id, self.user)
+            flight_path, operation = self._create_operation(flight_path="V11")
+            assert self.fm.save_file(operation.id, "content1", self.user)
+            assert self.fm.save_file(operation.id, "content2", self.user)
+            all_changes = self.fm.get_all_changes(operation.id, self.user)
             assert len(all_changes) == 2
 
     def test_get_change_content(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V12", content='initial')
-            assert self.fm.save_file(project.id, "content1", self.user)
-            assert self.fm.save_file(project.id, "content2", self.user)
-            assert self.fm.save_file(project.id, "content3", self.user)
-            all_changes = self.fm.get_all_changes(project.id, self.user)
+            flight_path, operation = self._create_operation(flight_path="V12", content='initial')
+            assert self.fm.save_file(operation.id, "content1", self.user)
+            assert self.fm.save_file(operation.id, "content2", self.user)
+            assert self.fm.save_file(operation.id, "content3", self.user)
+            all_changes = self.fm.get_all_changes(operation.id, self.user)
             previous_change = self.fm.get_change_content(all_changes[2]["id"])
             assert previous_change == "content1"
             previous_change = self.fm.get_change_content(all_changes[1]["id"])
@@ -214,18 +214,18 @@ class Test_Files(TestCase):
 
     def test_set_version_name(self):
         with self.app.test_client():
-            flight_path, project = self._create_project(flight_path="V13", content='initial')
-            assert self.fm.save_file(project.id, "content1", self.user)
-            all_changes = self.fm.get_all_changes(project.id, self.user)
+            flight_path, operation = self._create_operation(flight_path="V13", content='initial')
+            assert self.fm.save_file(operation.id, "content1", self.user)
+            all_changes = self.fm.get_all_changes(operation.id, self.user)
             ch_id = all_changes[-1]["id"]
-            self.fm.set_version_name(ch_id, project.id, self.user.id, "berlin")
-            all_changes = self.fm.get_all_changes(project.id, self.user)
+            self.fm.set_version_name(ch_id, operation.id, self.user.id, "berlin")
+            all_changes = self.fm.get_all_changes(operation.id, self.user)
             version_name = all_changes[-1]["version_name"]
             assert version_name == "berlin"
 
-    def _create_project(self, flight_path="firstflight", description="example", user=None, content=None):
+    def _create_operation(self, flight_path="firstflight", description="example", user=None, content=None):
         if user is None:
             user = self.user
-        self.fm.create_project(flight_path, description, user, content=content)
-        project = Project.query.filter_by(path=flight_path).first()
-        return flight_path, project
+        self.fm.create_operation(flight_path, description, user, content=content)
+        operation = Operation.query.filter_by(path=flight_path).first()
+        return flight_path, operation

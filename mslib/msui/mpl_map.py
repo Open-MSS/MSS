@@ -63,7 +63,7 @@ class MapCanvas(basemap.Basemap):
     automatically draw a graticule and to redraw specific map elements.
     """
 
-    def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None, PROJECT_NAME=None,
+    def __init__(self, identifier=None, CRS=None, BBOX_UNITS=None, OPERATION_NAME=None,
                  appearance=None, **kwargs):
         """
         New constructor automatically adds coastlines, continents, and
@@ -74,7 +74,7 @@ class MapCanvas(basemap.Basemap):
         Additional arguments:
         CRS -- string describing the coordinate reference system of the map.
         BBOX_UNITS -- string describing the units of the map coordinates.
-        PROJECT_NAME -- string with project name
+        OPERATION_NAME -- string with operation name
 
         """
         # Coordinate reference system identifier and coordinate system units.
@@ -84,8 +84,8 @@ class MapCanvas(basemap.Basemap):
         else:
             self.bbox_units = getattr(self, "bbox_units", None)
 
-        self.project_name = PROJECT_NAME if PROJECT_NAME is not None else self.project_name \
-            if hasattr(self, "project_name") else None
+        self.operation_name = OPERATION_NAME if OPERATION_NAME is not None else self.operation_name \
+            if hasattr(self, "operation_name") else None
 
         # Dictionary containing map appearance settings.
         if appearance is not None:
@@ -144,8 +144,8 @@ class MapCanvas(basemap.Basemap):
 
         # Print project name and CRS identifier into figure.
         crs_text = ""
-        if self.project_name is not None:
-            crs_text += self.project_name
+        if self.operation_name is not None:
+            crs_text += self.operation_name
         if self.crs is not None:
             if len(crs_text) > 0:
                 crs_text += "\n"

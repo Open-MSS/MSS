@@ -48,13 +48,13 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
-    def __init__(self, token, p_id, user, project_name, conn, parent=None,
+    def __init__(self, token, op_id, user, operation_name, conn, parent=None,
                  mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access_token
-        p_id: project id
+        op_id: operation id
         user: logged in user
-        project_name: name of project,
+        operation_name: name of operation,
         conn: socket connection
         parent: parent of widget
         mscolab_server_url: server url of mscolab
@@ -63,9 +63,9 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         self.setupUi(self)
         # Initialise Variables
         self.token = token
-        self.p_id = p_id
+        self.op_id = op_id
         self.user = user
-        self.project_name = project_name
+        self.operation_name = operation_name
         self.conn = conn
         self.mscolab_server_url = mscolab_server_url
 
@@ -86,7 +86,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
 
     def set_label_text(self):
         self.usernameLabel.setText(f"Logged in: {self.user['username']}")
-        self.projectNameLabel.setText(f"Project: {self.project_name}")
+        self.operationNameLabel.setText(f"Operation: {self.operation_name}")
 
     def set_change_list_style(self):
         palette = self.changes.palette()
@@ -107,9 +107,9 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
     def load_current_waypoints(self):
         data = {
             "token": self.token,
-            "p_id": self.p_id
+            "op_id": self.op_id
         }
-        url = url_join(self.mscolab_server_url, 'get_project_by_id')
+        url = url_join(self.mscolab_server_url, 'get_operation_by_id')
         res = requests.get(url, data=data)
         if res.text != "False":
             xml_content = json.loads(res.text)["content"]
@@ -124,7 +124,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         """
         data = {
             "token": self.token,
-            "p_id": self.p_id
+            "op_id": self.op_id
         }
         named_version_only = None
         if self.versionFilterCB.currentIndex() == 0:
@@ -187,7 +187,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             "token": self.token,
             "version_name": version_name,
             "ch_id": ch_id,
-            "p_id": self.p_id
+            "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, 'set_version_name')
         res = requests.post(url, data=data)

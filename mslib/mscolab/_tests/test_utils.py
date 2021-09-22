@@ -30,7 +30,7 @@ import json
 
 from fs.tempfs import TempFS
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, Project, MessageType
+from mslib.mscolab.models import db, Operation, MessageType
 from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_user, get_user
@@ -86,11 +86,11 @@ class Test_Utils(TestCase):
             db.init_app(self.app)
             user = get_user(self.userdata[0])
             anotheruser = get_user(self.anotheruserdata[0])
-            project, token = self._create_project(test_client, self.userdata)
-            p_id = get_recent_pid(self.fm, user)
-            assert p_id == project.id
-            p_id = get_recent_pid(self.fm, anotheruser)
-            assert p_id is None
+            operation, token = self._create_operation(test_client, self.userdata)
+            op_id = get_recent_pid(self.fm, user)
+            assert op_id == operation.id
+            op_id = get_recent_pid(self.fm, anotheruser)
+            assert op_id is None
 
     def test_get_session_id(self):
         sockets = [{"u_id": 5, "s_id": 100}]
@@ -112,16 +112,16 @@ class Test_Utils(TestCase):
         assert os.path.exists(mscolab_settings.MSCOLAB_DATA_DIR)
         assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
 
-    def _create_project(self, test_client, userdata=None, path="firstflight", description="simple test"):
+    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test"):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
         data = json.loads(response.data.decode('utf-8'))
         token = data["token"]
-        response = test_client.post('/create_project', data={"token": token,
-                                                             "path": path,
-                                                             "description": description})
+        response = test_client.post('/create_operation', data={"token": token,
+                                                               "path": path,
+                                                               "description": description})
         assert response.status_code == 200
         assert response.data.decode('utf-8') == "True"
-        project = Project.query.filter_by(path=path).first()
-        return project, token
+        operation = Operation.query.filter_by(path=path).first()
+        return operation, token

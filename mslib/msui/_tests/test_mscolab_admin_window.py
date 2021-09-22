@@ -4,7 +4,7 @@
     mslib.msui._tests.test_mscolab_admin_window
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module is used to test mscolab-project related gui.
+    This module is used to test mscolab-operation related gui.
 
     This file is part of mss.
 
@@ -34,7 +34,7 @@ from mslib._tests.utils import mscolab_start_server
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
+from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
 PORTS = list(range(24000, 24500))
@@ -49,13 +49,14 @@ class Test_MscolabAdminWindow(object):
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.room_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_project(self.room_name, "test europe")
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.room_name, "test europe")
+        assert add_user_to_operation(path=self.room_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         assert add_user("collaborator@example.de", "example", "example")
-        assert add_user_to_project(path=self.room_name, emailid="collaborator@example.de", access_level="collaborator")
+        assert add_user_to_operation(path=self.room_name,
+                                     emailid="collaborator@example.de", access_level="collaborator")
         assert add_user("viewer@example.de", "viewer", "viewer")
-        assert add_user_to_project(path=self.room_name, emailid="viewer@example.de", access_level="viewer")
+        assert add_user_to_operation(path=self.room_name, emailid="viewer@example.de", access_level="viewer")
         assert add_user("name1@example.de", "name1", "name1")
         assert add_user("name2@example.de", "name2", "name2")
 
@@ -66,8 +67,8 @@ class Test_MscolabAdminWindow(object):
         # connect and login to mscolab
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
-        # activate project and open chat window
-        self._activate_project_at_index(0)
+        # activate operation and open chat window
+        self._activate_operation_at_index(0)
         self.window.actionManageUsers.trigger()
         QtWidgets.QApplication.processEvents()
         self.admin_window = self.window.mscolab.admin_window
@@ -208,12 +209,12 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
-    def _activate_project_at_index(self, index):
-        item = self.window.listProjectsMSC.item(index)
-        point = self.window.listProjectsMSC.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+    def _activate_operation_at_index(self, index):
+        item = self.window.listOperationsMSC.item(index)
+        point = self.window.listOperationsMSC.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
     def _select_users(self, table, users):

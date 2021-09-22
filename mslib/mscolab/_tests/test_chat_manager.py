@@ -31,7 +31,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, MessageType
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import APP
-from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
+from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.mscolab.sockets_manager import setup_managers
 
 
@@ -56,8 +56,8 @@ class Test_Chat_Manager(TestCase):
         self.room_name = "europe"
         socketio, self.cm, self.fm = setup_managers(self.app)
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_project(self.room_name, "test europe")
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.room_name, "test europe")
+        assert add_user_to_operation(path=self.room_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
     def tearDown(self):

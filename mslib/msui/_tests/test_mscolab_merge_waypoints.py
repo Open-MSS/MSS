@@ -4,7 +4,7 @@
     mslib.msui._tests.test_mscolab_merge_waypoints
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module is used to test mscolab-project related gui.
+    This module is used to test mscolab-operation related gui.
 
     This file is part of mss.
 
@@ -33,8 +33,8 @@ import pytest
 from mslib.msui import flighttrack as ft
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib._tests.utils import (mscolab_start_server, mscolab_register_and_login, mscolab_create_project,
-                                mscolab_delete_all_projects, mscolab_delete_user)
+from mslib._tests.utils import (mscolab_start_server, mscolab_register_and_login, mscolab_create_operation,
+                                mscolab_delete_all_operations, mscolab_delete_user)
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.mscolab.mscolab import handle_db_reset
@@ -56,7 +56,7 @@ class Test_Mscolab_Merge_Waypoints(object):
 
     def teardown(self):
         with self.app.app_context():
-            mscolab_delete_all_projects(self.app, self.url, self.emailid, 'abcdef', 'alpha')
+            mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
             mscolab_delete_user(self.app, self.url, self.emailid, 'abcdef')
         with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as mss_dir:
             if mss_dir.exists('local_mscolab_data'):
@@ -76,11 +76,11 @@ class Test_Mscolab_Merge_Waypoints(object):
             response = mscolab_register_and_login(self.app, self.url, emailid, 'abcdef', 'alpha')
 
             assert response.status == '200 OK'
-            data, response = mscolab_create_project(self.app, self.url, response,
-                                                    path='f3', description='f3 test example')
+            data, response = mscolab_create_operation(self.app, self.url, response,
+                                                      path='f3', description='f3 test example')
             assert response.status == '200 OK'
             self._login(emailid, 'abcdef')
-            self._activate_project_at_index(0)
+            self._activate_operation_at_index(0)
 
     def _connect_to_mscolab(self):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
@@ -98,12 +98,12 @@ class Test_Mscolab_Merge_Waypoints(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
-    def _activate_project_at_index(self, index):
-        item = self.window.listProjectsMSC.item(index)
-        point = self.window.listProjectsMSC.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+    def _activate_operation_at_index(self, index):
+        item = self.window.listOperationsMSC.item(index)
+        point = self.window.listOperationsMSC.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
     def _select_waypoints(self, table):
