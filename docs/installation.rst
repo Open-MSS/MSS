@@ -76,12 +76,6 @@ leave out the 'source' here and below). ::
     $ conda create -n mssenv mamba
     $ conda activate mssenv
     (mssenv) $ mamba install mss=$mss_version python
-
-You need to reactivate after the installation once the environment to setup all needed
-enironment variables. ::
-
-    $ conda deactivate
-    $ conda activate mssenv
     (mssenv) $ mss
 
 Update
