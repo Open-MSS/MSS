@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>addProjectDialog</class>
- <widget class="QDialog" name="addProjectDialog">
+ <class>addOperationDialog</class>
+ <widget class="QDialog" name="addOperationDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Add project</string>
+   <string>Add operation</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -52,7 +52,7 @@
     </rect>
    </property>
    <property name="placeholderText">
-    <string>Project Name (No spaces or special characters)</string>
+    <string>Operation Name (No spaces or special characters)</string>
    </property>
   </widget>
   <widget class="QTextEdit" name="description">
@@ -65,7 +65,7 @@
     </rect>
    </property>
    <property name="placeholderText">
-    <string>Project Descriptions</string>
+    <string>Operation Descriptions</string>
    </property>
   </widget>
   <widget class="QPushButton" name="browse">
@@ -161,7 +161,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
-   <receiver>addProjectDialog</receiver>
+   <receiver>addOperationDialog</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -177,7 +177,7 @@
   <connection>
    <sender>buttonBox</sender>
    <signal>rejected()</signal>
-   <receiver>addProjectDialog</receiver>
+   <receiver>addOperationDialog</receiver>
    <slot>reject()</slot>
    <hints>
     <hint type="sourcelabel">

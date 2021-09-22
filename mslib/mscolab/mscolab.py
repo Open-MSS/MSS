@@ -34,8 +34,8 @@ import secrets
 
 from mslib import __version__
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_project,\
-    add_all_users_to_all_projects, delete_user
+from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation,\
+    add_all_users_to_all_operations, delete_user
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 from mslib.msui.mss_qt import Worker, Updater
@@ -112,9 +112,9 @@ def main():
                                  help="adds users into database, fileformat: suggested_username  name   <email>")
     database_parser.add_argument("--delete_users_by_file", type=argparse.FileType('r'),
                                  help="removes users from the database, fileformat: email")
-    database_parser.add_argument("--default_project", help="adds all users into a default TEMPLATE project",
+    database_parser.add_argument("--default_operation", help="adds all users into a default TEMPLATE operation",
                                  action="store_true")
-    database_parser.add_argument("--add_all_to_all_project", help="adds all users into all other projects",
+    database_parser.add_argument("--add_all_to_all_operation", help="adds all users into all other operations",
                                  action="store_true")
 
     args = parser.parse_args()
@@ -167,18 +167,18 @@ def main():
                     emailid = info[-1][1:-1]
                     password = secrets.token_hex(8)
                     add_user(emailid, username, password)
-        elif args.default_project:
+        elif args.default_operation:
             confirmation = confirm_action(
-                "Are you sure you want to add users to the default TEMPLATE project? (y/[n]):")
+                "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):")
             if confirmation is True:
-                # adds all users as collaborator on the project TEMPLATE if not added, command can be repeated
-                add_all_users_default_project(access_level='admin')
-        elif args.add_all_to_all_project:
+                # adds all users as collaborator on the operation TEMPLATE if not added, command can be repeated
+                add_all_users_default_operation(access_level='admin')
+        elif args.add_all_to_all_operation:
             confirmation = confirm_action(
-                "Are you sure you want to add users to the ALL projects? (y/[n]):")
+                "Are you sure you want to add users to the ALL operations? (y/[n]):")
             if confirmation is True:
-                # adds all users to all Projects
-                add_all_users_to_all_projects()
+                # adds all users to all Operations
+                add_all_users_to_all_operations()
         elif args.delete_users_by_file:
             confirmation = confirm_action(
                 "Are you sure you want to delete a user? (y/[n]):")

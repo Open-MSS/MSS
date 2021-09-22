@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.mscolab_project
+    mslib.msui.mscolab_operation
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Mscolab project window, to display chat, file change
+    Mscolab operation window, to display chat, file change
 
     This file is part of mss.
 
@@ -35,7 +35,7 @@ from werkzeug.urls import url_join
 from mslib.mscolab.models import MessageType
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.msui.mss_qt import get_open_filename, get_save_filename, show_popup
-from mslib.msui.qt5 import ui_mscolab_project_window as ui
+from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
 
 
@@ -59,37 +59,37 @@ class MessageTextEdit(QtWidgets.QTextEdit):
         super().keyPressEvent(event)
 
 
-class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
+class MSColabOperationWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     """Derives QMainWindow to provide some common functionality to all
        MSUI view windows.
     """
-    name = "MSColab Project Window"
+    name = "MSColab Operation Window"
     identifier = None
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     reloadWindows = QtCore.pyqtSignal(name="reloadWindows")
 
-    def __init__(self, token, p_id, user, project_name, access_level, conn, parent=None,
+    def __init__(self, token, op_id, user, operation_name, access_level, conn, parent=None,
                  mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access_token
-        p_id: project id
+        op_id: operation id
         user: logged in user
-        project_name: active project name,
+        operation_name: active operation name,
         access_level: access level of user logged in
         conn: to send messages, recv messages, if a direct slot-signal can't be setup
             to be connected at parents'
         parent: widget parent
         mscolab_server_url: server url for mscolab
         """
-        super(MSColabProjectWindow, self).__init__(parent)
+        super(MSColabOperationWindow, self).__init__(parent)
         self.setupUi(self)
 
         self.mscolab_server_url = mscolab_server_url
         self.token = token
         self.user = user
-        self.p_id = p_id
-        self.project_name = project_name
+        self.op_id = op_id
+        self.operation_name = operation_name
         self.conn = conn
         self.access_level = access_level
         self.text = ""
@@ -111,7 +111,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         self.editMessageBtn.clicked.connect(self.edit_message)
         self.cancelBtn.clicked.connect(self.send_message_state)
         # Socket Connection handlers
-        self.conn.signal_project_permissions_updated.connect(self.handle_permissions_updated)
+        self.conn.signal_operation_permissions_updated.connect(self.handle_permissions_updated)
         self.conn.signal_message_receive.connect(self.handle_incoming_message)
         self.conn.signal_message_reply_receive.connect(self.handle_incoming_message_reply)
         self.conn.signal_message_edited.connect(self.handle_message_edited)
@@ -147,7 +147,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
 
     def set_label_text(self):
         self.user_info.setText(f"Logged in: {self.user['username']}")
-        self.proj_info.setText(f"Project: {self.project_name}")
+        self.proj_info.setText(f"Operation: {self.operation_name}")
 
     def get_img_dimensions(self, image):
         # TODO: CHECK WHY SCROLL BAR COMES?
@@ -266,12 +266,12 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
             if message_text == "":
                 return
             message_text = message_text.strip()
-            self.conn.send_message(message_text, self.p_id, reply_id)
+            self.conn.send_message(message_text, self.op_id, reply_id)
         else:
             files = {"file": open(self.attachment, 'rb')}
             data = {
                 "token": self.token,
-                "p_id": self.p_id,
+                "op_id": self.op_id,
                 "message_type": int(self.attachment_type)
             }
             url = url_join(self.mscolab_server_url, 'message_attachment')
@@ -317,10 +317,10 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
     def edit_message(self):
         new_message_text = self.messageText.toPlainText()
         if new_message_text == "":
-            self.conn.delete_message(self.active_edit_id, self.p_id)
+            self.conn.delete_message(self.active_edit_id, self.op_id)
         else:
             new_message_text = new_message_text.strip()
-            self.conn.edit_message(self.active_edit_id, new_message_text, self.p_id)
+            self.conn.edit_message(self.active_edit_id, new_message_text, self.op_id)
         self.send_message_state()
 
     # API REQUESTS
@@ -329,7 +329,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         # make request to get users
         data = {
             "token": self.token,
-            "p_id": self.p_id
+            "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, 'authorized_users')
         r = requests.get(url, data=data)
@@ -347,7 +347,7 @@ class MSColabProjectWindow(QtWidgets.QMainWindow, ui.Ui_MscolabProject):
         # empty messages and reload from server
         data = {
             "token": self.token,
-            "p_id": self.p_id,
+            "op_id": self.op_id,
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
@@ -648,7 +648,7 @@ class MessageItem(QtWidgets.QWidget):
     def handle_delete_action(self):
         # disable edit message section if it's active before deleting
         self.chat_window.send_message_state()
-        self.chat_window.conn.delete_message(self.id, self.chat_window.p_id)
+        self.chat_window.conn.delete_message(self.id, self.chat_window.op_id)
 
     def update_text(self, message_text):
         self.message_text = message_text
