@@ -119,7 +119,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
         assert perms.u_id == self.user.id
         assert perms.access_level == "creator"
 
-    def test_join_collaborator_to_room(self):
+    def test_join_collaborator_to_operation(self):
         self._connect()
         operation = self._new_operation('new_operation', "example decription")
         sm = SocketsManager(self.cm, self.fm)
@@ -129,7 +129,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
         assert perms.u_id == self.anotheruser.id
         assert perms.access_level == "collaborator"
 
-    def test_remove_collaborator_from_room(self):
+    def test_remove_collaborator_from_operation(self):
         pytest.skip("get_session_id has None result")
         sio = self._connect()
         operation = self._new_operation('new_operation', "example decription")

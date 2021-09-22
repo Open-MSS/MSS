@@ -43,6 +43,7 @@ class ConnectionManager(QtCore.QObject):
     signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
     signal_revoke_permission = QtCore.Signal(int, int, name="revoke permission")
     signal_operation_permissions_updated = QtCore.Signal(int, name="operation permissions updated")
+    signal_operation_list_updated = QtCore.Signal(name="operation list updated")
     signal_operation_deleted = QtCore.Signal(int, name="operation deleted")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
@@ -73,6 +74,8 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('operation-permissions-updated', handler=self.handle_operation_permissions_updated)
         # On Operation Delete
         self.sio.on('operation-deleted', handler=self.handle_operation_deleted)
+        # On New Operation
+        self.sio.on('operation-list-update', handler=self.handle_operation_list_update)
 
         self.sio.emit('start', {'token': token})
 
@@ -131,6 +134,9 @@ class ConnectionManager(QtCore.QObject):
     def handle_operation_deleted(self, message):
         op_id = int(json.loads(message)["op_id"])
         self.signal_operation_deleted.emit(op_id)
+
+    def handle_operation_list_update(self):
+        self.signal_operation_list_updated.emit()
 
     def handle_new_operation(self, op_id):
         logging.debug("adding user to new operation")

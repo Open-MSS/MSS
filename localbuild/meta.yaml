@@ -17,7 +17,6 @@ build:
     - mswms = mslib.mswms.mswms:main
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
-    - mss_retriever = mslib.retriever:main
 
 requirements:
   build:

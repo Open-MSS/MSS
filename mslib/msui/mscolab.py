@@ -494,6 +494,7 @@ class MSSMscolab(QtCore.QObject):
             logging.debug(f"Couldn't create a socket connection: {ex}")
             show_popup(self.ui, "Error", "Couldn't create a socket connection. New Login required!")
             self.logout()
+        self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
         self.conn.signal_reload.connect(self.reload_window)
         self.conn.signal_new_permission.connect(self.render_new_permission)
         self.conn.signal_update_permission.connect(self.handle_update_permission)
@@ -745,14 +746,7 @@ class MSSMscolab(QtCore.QObject):
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your operation was created successfully')
-            self.add_operations_to_ui()
-            selected_category = self.ui.filterCategoryCb.currentText()
-            self.show_categories_to_ui()
-            self.operation_category_handler()
-            index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
-            if index >= 0:
-                self.ui.filterCategoryCb.setCurrentIndex(index)
-            op_id = self.get_recent_op_id()
+            op_id = self.get_recent_pid()
             self.conn.handle_new_operation(op_id)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
@@ -872,6 +866,16 @@ class MSSMscolab(QtCore.QObject):
     def close_version_history_window(self):
         self.version_window.close()
         self.version_window = None
+
+    def update_views(self):
+        """
+        used on permission revoke to update waypoint model to defaults
+        """
+        locations = config_loader(dataset="new_flighttrack_template")
+        initial_waypoints = [ft.Waypoint(location=locations[0]), ft.Waypoint(location=locations[1])]
+        waypoints_model = ft.WaypointsTableModel(name="", waypoints=initial_waypoints)
+        self.waypoints_model = waypoints_model
+        self.reload_view_windows()
 
     def close_external_windows(self):
         if self.prof_diag is not None:
@@ -1057,6 +1061,10 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
+    @QtCore.Slot()
+    def reload_operation_list(self):
+        self.reload_operations()
+
     @QtCore.Slot(int)
     def reload_window(self, value):
         if self.active_op_id != value or self.ui.workLocallyCheckbox.isChecked():
@@ -1086,6 +1094,8 @@ class MSSMscolab(QtCore.QObject):
                 operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                 widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
                 widgetItem.op_id = operation["op_id"]
+                widgetItem.catgegory = operation["category"]
+                widgetItem.operation_path = operation["path"]
                 widgetItem.access_level = operation["access_level"]
                 self.ui.listOperationsMSC.addItem(widgetItem)
             if self.chat_window is not None:
@@ -1125,11 +1135,10 @@ class MSSMscolab(QtCore.QObject):
 
             # update view window nav elements if open
             for window in self.ui.get_active_views():
-                _type = window.view_type
                 if self.access_level == "viewer":
-                    self.disable_navbar_action_buttons(_type, window)
+                    window.disable_navbar_action_buttons()
                 else:
-                    self.enable_navbar_action_buttons(_type, window)
+                    window.enable_navbar_action_buttons()
 
         # update chat window if open
         if self.chat_window is not None:
@@ -1139,6 +1148,7 @@ class MSSMscolab(QtCore.QObject):
         logging.debug('delete operation op_id: %s and active_id is: %s' % (op_id, self.active_op_id))
         if self.active_op_id == op_id:
             logging.debug('delete_operation_from_list doing: %s' % op_id)
+            self.update_views()
             self.active_op_id = None
             self.access_level = None
             self.active_operation_name = None
@@ -1267,6 +1277,10 @@ class MSSMscolab(QtCore.QObject):
             # set new waypoints model to open views
             for window in self.ui.get_active_views():
                 window.setFlightTrackModel(self.waypoints_model)
+                if self.access_level == "viewer":
+                    window.disable_navbar_action_buttons()
+                else:
+                    window.enable_navbar_action_buttons()
 
             self.ui.switch_to_mscolab()
         else:
@@ -1279,6 +1293,7 @@ class MSSMscolab(QtCore.QObject):
             if self.verify_user_token():
                 # change font style for selected
                 font = QtGui.QFont()
+
                 for i in range(self.ui.listOperationsMSC.count()):
                     self.ui.listOperationsMSC.item(i).setFont(font)
 
@@ -1359,6 +1374,14 @@ class MSSMscolab(QtCore.QObject):
             self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
             self.waypoints_model.name = self.active_operation_name
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+
+    def reload_operations(self):
+        self.add_operations_to_ui()
+        selected_category = self.ui.filterCategoryCb.currentText()
+        self.show_categories_to_ui()
+        index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
+        if index >= 0:
+            self.ui.filterCategoryCb.setCurrentIndex(index)
 
     def reload_wps_from_server(self):
         if self.active_op_id is None:
@@ -1448,67 +1471,6 @@ class MSSMscolab(QtCore.QObject):
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
-
-    def create_view_msc(self, _type):
-        if self.verify_user_token():
-            if self.active_op_id is None:
-                return
-
-            self.waypoints_model.name = self.active_operation_name
-            view_window = self.ui.create_view(_type, self.waypoints_model)
-
-            # disable navbar actions in the view for viewer
-            if self.access_level == "viewer":
-                self.disable_navbar_action_buttons(_type, view_window)
-        else:
-            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
-            self.logout()
-
-    def disable_navbar_action_buttons(self, _type, view_window):
-        """
-        _type: view type (topview, sideview, tableview)
-        view_window: PyQt view window
-
-        function disables some control, used if access_level is not appropriate
-        """
-        if _type == "topview" or _type == "sideview" or _type == "linearview":
-            actions = view_window.mpl.navbar.actions()
-            for action in actions:
-                action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                    action.setEnabled(False)
-        else:
-            # _type == tableview
-            view_window.btAddWayPointToFlightTrack.setEnabled(False)
-            view_window.btCloneWaypoint.setEnabled(False)
-            view_window.btDeleteWayPoint.setEnabled(False)
-            view_window.btInvertDirection.setEnabled(False)
-            view_window.btRoundtrip.setEnabled(False)
-            view_window.cbTools.setEnabled(False)
-            view_window.tableWayPoints.setEnabled(False)
-
-    def enable_navbar_action_buttons(self, _type, view_window):
-        """
-        _type: view type (topview, sideview, tableview)
-        view_window: PyQt view window
-
-        function enables some control, used if access_level is appropriate
-        """
-        if _type == "topview" or _type == "sideview" or _type == "linearview":
-            actions = view_window.mpl.navbar.actions()
-            for action in actions:
-                action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
-                    action.setEnabled(True)
-        else:
-            # _type == tableview
-            view_window.btAddWayPointToFlightTrack.setEnabled(True)
-            view_window.btCloneWaypoint.setEnabled(True)
-            view_window.btDeleteWayPoint.setEnabled(True)
-            view_window.btInvertDirection.setEnabled(True)
-            view_window.btRoundtrip.setEnabled(True)
-            view_window.cbTools.setEnabled(True)
-            view_window.tableWayPoints.setEnabled(True)
 
     def logout(self):
         self.ui.local_active = True
