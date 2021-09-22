@@ -172,7 +172,7 @@ and install ::
 
 Then run the following commands. ::
 
-  $ mamba install gunicorn eventlet
+  $ mamba install gunicorn eventlet==0.30.2
   $ gunicorn -b 0.0.0.0:8087 server:app
 
 

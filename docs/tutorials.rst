@@ -63,12 +63,7 @@ On the Anaconda terminal, type the following ::
  cd ..../MSS/$
  $ export PYTHONPATH=.../MSS        # Path of MSS
  $ conda activate mssdev
-
-
  (mssdev)$ mamba install --file requirements.d/tutorials.txt
- (mssdev)$ conda deactivate
- (base)$ conda activate mssdev
-
 
 This will install all the dependencies required for running of the tutorials.
 

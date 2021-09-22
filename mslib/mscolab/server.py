@@ -349,7 +349,7 @@ def message_attachment():
             static_file_path = fs.path.join(static_dir, op_id, file_name)
         new_message = cm.add_message(user, static_file_path, op_id, message_type)
         new_message_dict = get_message_dict(new_message)
-        sockio.emit('chat-message-client', json.dumps(new_message_dict), room=str(op_id))
+        sockio.emit('chat-message-client', json.dumps(new_message_dict))
         return jsonify({"success": True, "path": static_file_path})
     return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
 
@@ -380,7 +380,12 @@ def create_operation():
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
     user = g.user
-    return str(fm.create_operation(path, description, user, content=content, category=category))
+    r = str(fm.create_operation(path, description, user, content=content, category=category))
+    if r == "True":
+        token = request.args.get('token', request.form.get('token', False))
+        json_config = {"token": token}
+        sockio.sm.update_operation_list(json_config)
+    return r
 
 
 @APP.route('/get_operation_by_id', methods=['GET'])

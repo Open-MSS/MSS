@@ -420,6 +420,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         self.shortcuts_dlg = None
 
+        # deactivate vice versa selection of Operation or Flight Track
+        self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
+        self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
+
         # Don't start the updater during a test run of mss_pyui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
@@ -697,6 +701,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
+            # local we have always all options enabled
+            view_item.window.enable_navbar_action_buttons()
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
@@ -785,7 +791,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if self.local_active:
             self.create_view(_type, self.active_flight_track)
         else:
-            self.mscolab.create_view_msc(_type)
+            self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
+            self.create_view(_type, self.mscolab.waypoints_model)
 
     def create_view(self, _type, model):
         """Method called when the user selects a new view to be opened. Creates
@@ -819,7 +826,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
         if view_window is not None:
             # Set view type to window
-            view_window.view_type = _type
+            view_window.view_type = view_window.name
             # Make sure view window will be deleted after being closed, not
             # just hidden (cf. Chapter 5 in PyQt4).
             view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -831,6 +838,12 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             view_window.viewCloses.connect(listitem.view_destroyed)
             self.listViews.setCurrentItem(listitem)
             # self.active_view_windows.append(view_window)
+            # disable navbar actions in the view for viewer
+            try:
+                if self.mscolab.access_level == "viewer":
+                    view_window.disable_navbar_action_buttons()
+            except AttributeError:
+                view_window.enable_navbar_action_buttons()
             self.viewsChanged.emit()
 
     def get_active_views(self):
