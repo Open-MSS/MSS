@@ -494,7 +494,7 @@ class MSSMscolab(QtCore.QObject):
             logging.debug(f"Couldn't create a socket connection: {ex}")
             show_popup(self.ui, "Error", "Couldn't create a socket connection. New Login required!")
             self.logout()
-        self.conn.signal_project_list_updated.connect(self.reload_project_list)
+        self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
         self.conn.signal_reload.connect(self.reload_window)
         self.conn.signal_new_permission.connect(self.render_new_permission)
         self.conn.signal_update_permission.connect(self.handle_update_permission)
@@ -1052,8 +1052,8 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     @QtCore.Slot()
-    def reload_project_list(self):
-        self.reload_projects()
+    def reload_operation_list(self):
+        self.reload_operations()
 
     @QtCore.Slot(int)
     def reload_window(self, value):
@@ -1358,8 +1358,8 @@ class MSSMscolab(QtCore.QObject):
             self.waypoints_model.name = self.active_operation_name
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
-    def reload_projects(self):
-        self.add_projects_to_ui()
+    def reload_operations(self):
+        self.add_operations_to_ui()
         selected_category = self.ui.filterCategoryCb.currentText()
         self.show_categories_to_ui()
         index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)

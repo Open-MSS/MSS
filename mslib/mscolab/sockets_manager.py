@@ -167,7 +167,6 @@ class SocketsManager(object):
                     "new_message_text": new_message_text
                 }))
 
-
     def handle_message_delete(self, socket_message):
         message_id = socket_message["message_id"]
         op_id = socket_message["op_id"]
