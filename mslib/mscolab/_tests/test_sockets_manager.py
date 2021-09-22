@@ -68,15 +68,15 @@ class Test_Socket_Manager(LiveSocketTestCase):
         db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_operation(self.room_name, "test europe")
-        assert add_user_to_operation(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
         self.anotheruser = get_user(self.anotheruserdata[0])
         self.token = self.user.generate_auth_token()
-        self.operation = get_operation(self.room_name)
+        self.operation = get_operation(self.operation_name)
         self.url = self.get_server_url()
         self.sm = SocketsManager(self.cm, self.fm)
 
@@ -92,9 +92,9 @@ class Test_Socket_Manager(LiveSocketTestCase):
         sio.emit('connect')
         return sio
 
-    def _new_room(self, room_name, description):
-        assert add_operation(room_name, description)
-        operation = get_operation(room_name)
+    def _new_operation(self, operation_name, description):
+        assert add_operation(operation_name, description)
+        operation = get_operation(operation_name)
         return operation
 
     def test_handle_connect(self):
@@ -106,14 +106,14 @@ class Test_Socket_Manager(LiveSocketTestCase):
         sio.emit('connect')
         assert len(sio.sid) > 5
 
-    def test_join_creator_to_room(self):
+    def test_join_creator_to_operatiom(self):
         sio = self._connect()
-        operation = self._new_room('new_room', "example decription")
+        operation = self._new_operation('new_operation', "example decription")
         assert self.fm.get_file(int(operation.id), self.user) is False
         json_config = {"token": self.token,
                        "op_id": operation.id}
 
-        sio.emit('add-user-to-room', json_config)
+        sio.emit('add-user-to-operation', json_config)
         perms = Permission(self.user.id, operation.id, "creator")
         assert perms.op_id == operation.id
         assert perms.u_id == self.user.id
@@ -121,9 +121,9 @@ class Test_Socket_Manager(LiveSocketTestCase):
 
     def test_join_collaborator_to_room(self):
         self._connect()
-        operation = self._new_room('new_room', "example decription")
+        operation = self._new_operation('new_operation', "example decription")
         sm = SocketsManager(self.cm, self.fm)
-        sm.join_collaborator_to_room(self.anotheruser.id, operation.id)
+        sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
         assert perms.op_id == operation.id
         assert perms.u_id == self.anotheruser.id
@@ -132,12 +132,12 @@ class Test_Socket_Manager(LiveSocketTestCase):
     def test_remove_collaborator_from_room(self):
         pytest.skip("get_session_id has None result")
         sio = self._connect()
-        operation = self._new_room('new_room', "example decription")
+        operation = self._new_operation('new_operation', "example decription")
         sm = SocketsManager(self.cm, self.fm)
-        sm.join_collaborator_to_room(self.anotheruser.id, operation.id)
+        sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
         assert perms is not None
-        sm.remove_collaborator_from_room(self.anotheruser.id, operation.id)
+        sm.remove_collaborator_from_operation(self.anotheruser.id, operation.id)
         sio.sleep(1)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
         assert perms is None

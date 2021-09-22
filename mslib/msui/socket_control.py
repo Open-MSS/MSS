@@ -132,9 +132,9 @@ class ConnectionManager(QtCore.QObject):
         op_id = int(json.loads(message)["op_id"])
         self.signal_operation_deleted.emit(op_id)
 
-    def handle_new_room(self, op_id):
-        logging.debug("adding user to new room")
-        self.sio.emit('add-user-to-room', {
+    def handle_new_operation(self, op_id):
+        logging.debug("adding user to new operation")
+        self.sio.emit('add-user-to-operation', {
                       "op_id": op_id,
                       "token": self.token})
 

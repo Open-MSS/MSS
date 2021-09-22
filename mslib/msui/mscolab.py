@@ -753,7 +753,7 @@ class MSSMscolab(QtCore.QObject):
             if index >= 0:
                 self.ui.filterCategoryCb.setCurrentIndex(index)
             op_id = self.get_recent_op_id()
-            self.conn.handle_new_room(op_id)
+            self.conn.handle_new_operation(op_id)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
