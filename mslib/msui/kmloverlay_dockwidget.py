@@ -52,12 +52,9 @@ class KMLPatch(object):
         self.draw()
 
     def compute_xy(self, geometry):
-        lons = []
-        lats = []
-        for coordinates in geometry.coords:
-            lons.append(coordinates[0])
-            lats.append(coordinates[1])
-        return self.map(lons, lats)
+        unzipped = list(zip(*geometry.coords))
+        x, y = self.map.gcpoints_path(unzipped[0], unzipped[1])
+        return x, y
 
     def add_point(self, point, style, name):
         """
@@ -309,7 +306,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "linewidth": 5, "colour": (0, 0, 0, 1),
+            self.settings_tag, {"filename": "", "linewidth": 2, "colour": (0, 0, 0, 1),
                                 "saved_files": {}})  # initial settings
 
         self.directory_location = settings["filename"]
@@ -358,59 +355,59 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if self.listWidget.count() != 0:
             for index in range(self.listWidget.count()):
                 if self.listWidget.item(index).text() in self.dict_files:
-                    file = self.listWidget.item(index).text()
-                    clr = self.dict_files[file]["color"]
-                    self.listWidget.item(index).setIcon(self.show_color_icon(file, clr))
+                    filename = self.listWidget.item(index).text()
+                    clr = self.dict_files[filename]["color"]
+                    self.listWidget.item(index).setIcon(self.show_color_icon(filename, clr))
 
     def select_color(self):
         """
         Sets the color of the selected KML file when Change Colour button is clicked.
         """
         if self.listWidget.currentItem() is not None:
-            file = self.listWidget.currentItem().text()
-            clr = self.set_color(file)
+            filename = self.listWidget.currentItem().text()
+            clr = self.set_color(filename)
             colour = QtGui.QColor(clr[0] * 255, clr[1] * 255, clr[2] * 255)
             self.colour = QtWidgets.QColorDialog.getColor(colour)
-            if self.colour.isValid() and file in self.dict_files:
-                self.dict_files[file]["color"] = self.colour.getRgbF()
+            if self.colour.isValid() and filename in self.dict_files:
+                self.dict_files[filename]["color"] = self.colour.getRgbF()
                 self.flag2 = 1  # sets flag of 0 to 1 when the color changes
-                self.listWidget.currentItem().setIcon(self.show_color_icon(file, self.set_color(file)))
-                self.dict_files[file]["patch"].update(self.dict_files[file]["color"],
-                                                      self.dict_files[file]["linewidth"])
+                self.listWidget.currentItem().setIcon(self.show_color_icon(filename, self.set_color(filename)))
+                self.dict_files[filename]["patch"].update(
+                    self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
                 if self.listWidget.currentItem().checkState() == QtCore.Qt.Unchecked:
                     self.flag2 = 1  # again sets to 1 because itemChanged signal due to set icon had changed it to 0
-                    self.checklistitem(file)
+                    self.checklistitem(filename)
 
-    def set_color(self, file):
+    def set_color(self, filename):
         """
         Returns the respective colour of a given file
         """
-        return self.dict_files[file]["color"]
+        return self.dict_files[filename]["color"]
 
     def select_linewidth(self):
         """
         When new value is entered in dsbx_linewidth, it assigns new linewidth to KML file
         """
         if self.listWidget.currentItem() is not None:
-            file = self.listWidget.currentItem().text()
-            if self.dict_files[file]["linewidth"] != self.dsbx_linewidth.value() and file in self.dict_files:
-                self.dict_files[file]["linewidth"] = self.dsbx_linewidth.value()
+            filename = self.listWidget.currentItem().text()
+            if self.dict_files[filename]["linewidth"] != self.dsbx_linewidth.value() and filename in self.dict_files:
+                self.dict_files[filename]["linewidth"] = self.dsbx_linewidth.value()
 
                 self.flag = 1  # sets flag of 0 to 1 when the linewidth changes
-                self.listWidget.currentItem().setIcon(self.show_color_icon(file, self.set_color(file)))
+                self.listWidget.currentItem().setIcon(self.show_color_icon(filename, self.set_color(filename)))
                 # removes and updates patches in the map according to new linewidth
-                self.dict_files[file]["patch"].remove()
-                self.dict_files[file]["patch"].update(self.dict_files[file]["color"],
-                                                      self.dict_files[file]["linewidth"])
+                self.dict_files[filename]["patch"].remove()
+                self.dict_files[filename]["patch"].update(
+                    self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
                 if self.listWidget.currentItem().checkState() == QtCore.Qt.Unchecked:
                     self.flag = 1   # again sets to 1 because itemChanged signal due to set icon had changed it to 0
-                    self.checklistitem(file)
+                    self.checklistitem(filename)
 
-    def set_linewidth(self, file):
+    def set_linewidth(self, filename):
         """
         Returns the respective linewidth of a given file
         """
-        return self.dict_files[file]["linewidth"]
+        return self.dict_files[filename]["linewidth"]
 
     def flagop(self):
         """
@@ -425,12 +422,12 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         else:
             self.load_file()    # important for updating patches on map when checkState changes
 
-    def show_color_icon(self, file, clr):
+    def show_color_icon(self, filename, clr):
         """
         Creating object of QPixmap for displaying icon inside the listWidget
         """
-        if self.set_linewidth(file) >= 1:
-            pixmap = QtGui.QPixmap(20, (2 * int(self.set_linewidth(file))))
+        if self.set_linewidth(filename) >= 1:
+            pixmap = QtGui.QPixmap(20, (2 * int(self.set_linewidth(filename))))
         else:
             pixmap = QtGui.QPixmap(20, 1)
         pixmap.fill(QtGui.QColor(clr[0] * 255, clr[1] * 255, clr[2] * 255))
@@ -443,16 +440,15 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if self.listWidget.currentItem() is not None:
             # shows the linewidth and color options once any item is clicked.
             self.frame.show()
-            file = self.listWidget.currentItem().text()
-            if file in self.dict_files:
-                self.dsbx_linewidth.setValue(self.set_linewidth(file))
+            filename = self.listWidget.currentItem().text()
+            if filename in self.dict_files:
+                self.dsbx_linewidth.setValue(self.set_linewidth(filename))
 
-    def checklistitem(self, file):
+    def checklistitem(self, filename):
         """
         Checks the file item in ListWidget
         """
-        item_list = self.listWidget.findItems(file, QtCore.Qt.MatchExactly)
-        for item in item_list:
+        for item in self.listWidget.findItems(filename, QtCore.Qt.MatchExactly):
             index = self.listWidget.row(item)
             self.listWidget.item(index).setCheckState(QtCore.Qt.Checked)
 
@@ -486,7 +482,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.dict_files[text] = {}
                 self.dict_files[text]["patch"] = None
                 self.dict_files[text]["color"] = (0, 0, 0, 1)
-                self.dict_files[text]["linewidth"] = 5.0  # Sets linewidth to 5.0 if we add new/previously added files.
+                self.dict_files[text]["linewidth"] = 2.0  # Sets linewidth to 2.0 if we add new/previously added files.
 
                 self.directory_location = text  # Saves location of directory to open
                 self.create_list_item(text)

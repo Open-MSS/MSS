@@ -225,7 +225,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         for i, (lon, lat) in enumerate(zip(solar_x, solar_y)):
             points.append([[lon, lat]])  # append double-list for later concatenation
             if old_wp is not None:
-                wp_dist = get_distance((old_wp[0], old_wp[1]), (lat, lon)) * 1000.
+                wp_dist = get_distance(old_wp[0], old_wp[1], lat, lon) * 1000.
                 total_distance += wp_dist
             old_wp = (lat, lon)
         vals = []

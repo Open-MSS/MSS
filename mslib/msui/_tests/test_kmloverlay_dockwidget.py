@@ -44,6 +44,7 @@ class Test_KmlOverlayDockWidget(object):
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])
+        self.view.map.gcpoints_path = mock.Mock(side_effect=lambda x, y: (x, y))
 
         self.window = kd.KMLOverlayControlWidget(view=self.view)
         self.window.show()

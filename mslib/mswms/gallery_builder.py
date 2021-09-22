@@ -678,9 +678,9 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \
         "Side" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
 
-    filename = f"{l_type}_{dataset}{plot_object.name}-" + (f"{level}it{itime}vt{vtime}".replace(" ", "_")
-                                                           .replace(":", "_").replace("-", "_") if not simple_naming
-                                                           else "")
+    filename = f"{l_type}_{dataset}{plot_object.name}-" + (
+        f"{level}it{itime}vt{vtime}".replace(" ", "_").replace(":", "_").replace("-", "_")
+        if not simple_naming else "")
 
     if plot:
         location = DOCS_LOCATION if sphinx else STATIC_LOCATION
@@ -713,9 +713,10 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
 
     id = img_path.split(f"-{level}")[0]
     if not any([id in html for html in plots[l_type]]):
-        plots[l_type].append(image_md(img_path, plot_object.name, code_path if generate_code else None,
-                                      f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
-                                                                if plot_object.abstract else "")))
+        plots[l_type].append(image_md(
+            img_path, plot_object.name, code_path if generate_code else None,
+            f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
+                                      if plot_object.abstract else "")))
 
 
 def add_levels(levels, l_type=None, text=None):
@@ -727,10 +728,13 @@ def add_levels(levels, l_type=None, text=None):
     level_select = text.split("name=\"levels\"")[-1].split("</select>")[0]
     if l_type:
         if f"optgroup label=\"{l_type}\"" not in level_select:
-            text = text.replace(level_select, level_select + f"<optgroup label=\"{l_type}\" id=\"{l_type}\"></optgroup>")
+            text = text.replace(
+                level_select, level_select +
+                f"<optgroup label=\"{l_type}\" id=\"{l_type}\"></optgroup>")
         level_select = text.split(f"label=\"{l_type}\"")[-1].split("</optgroup>")[0]
-    text = text.replace(level_select, level_select + "".join([f"<option value='{level}'>{level}</option>" for level
-                                                              in levels if f"value='{level}'" not in level_select]))
+    text = text.replace(level_select, level_select + "".join([
+        f"<option value='{level}'>{level}</option>"
+        for level in levels if f"value='{level}'" not in level_select]))
     if replace_begin:
         begin = text
     return text
@@ -746,8 +750,9 @@ def add_times(itime, vtimes, text=None):
     if f"optgroup label=\"{itime}\"" not in time_select:
         text = text.replace(time_select, time_select + f"<optgroup label=\"{itime}\" id=\"{itime}\"></optgroup>")
     opt_group = text.split(f"label=\"{itime}\"")[-1].split("</optgroup>")[0]
-    text = text.replace(opt_group, opt_group + "".join([f"<option value='{time}'>{time}</option>" for time
-                                                        in vtimes if f"value='{time}'" not in opt_group]))
+    text = text.replace(opt_group, opt_group + "".join([
+        f"<option value='{time}'>{time}</option>"
+        for time in vtimes if f"value='{time}'" not in opt_group]))
 
     if replace_begin:
         begin = text
