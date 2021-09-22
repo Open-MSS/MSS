@@ -132,41 +132,41 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
     data["path"] = path_name
     data['description'] = path_name
     data['content'] = content
-    url = url_join(msc_url, 'create_project')
+    url = url_join(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return response
 
 
-def mscolab_delete_all_projects(app, msc_url, email, password, username):
+def mscolab_delete_all_operations(app, msc_url, email, password, username):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'projects')
+    url = url_join(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
-    for p in response['projects']:
-        data['p_id'] = p['p_id']
-        url = url_join(msc_url, 'delete_project')
+    for p in response['operations']:
+        data['op_id'] = p['op_id']
+        url = url_join(msc_url, 'delete_operation')
         response = app.test_client().post(url, data=data)
 
 
-def mscolab_create_project(app, msc_url, response, path='f', description='description'):
+def mscolab_create_operation(app, msc_url, response, path='f', description='description'):
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
-    url = url_join(msc_url, 'create_project')
+    url = url_join(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return data, response
 
 
-def mscolab_get_project_id(app, msc_url, email, password, username, path):
+def mscolab_get_operation_id(app, msc_url, email, password, username, path):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'projects')
+    url = url_join(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
-    for p in response['projects']:
+    for p in response['operations']:
         if p['path'] == path:
-            return p['p_id']
+            return p['op_id']
 
 
 def mscolab_check_free_port(all_ports, port):

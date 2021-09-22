@@ -316,7 +316,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # the projection parameters.
         kwargs = current_map["map"]
         kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
-                       "PROJECT_NAME": self.waypoints_model.name})
+                       "OPERATION_NAME": self.waypoints_model.name})
         kwargs.update(proj_params["basemap"])
 
         if only_kwargs:

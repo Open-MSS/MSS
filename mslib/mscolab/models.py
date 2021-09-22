@@ -100,27 +100,27 @@ class Permission(db.Model):
 
     __tablename__ = 'permissions'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     access_level = db.Column(db.Enum("admin", "collaborator", "viewer", "creator", name="access_level"))
 
-    def __init__(self, u_id, p_id, access_level):
+    def __init__(self, u_id, op_id, access_level):
         """
         u_id: user-id
-        p_id: process-id
-        access_level: the type of authorization to the project
+        op_id: process-id
+        access_level: the type of authorization to the operation
         """
         self.u_id = u_id
-        self.p_id = p_id
+        self.op_id = op_id
         self.access_level = access_level
 
     def __repr__(self):
-        return f'<Permission u_id: {self.u_id}, p_id:{self.p_id}, access_level: {str(self.access_level)}>'
+        return f'<Permission u_id: {self.u_id}, op_id:{self.op_id}, access_level: {str(self.access_level)}>'
 
 
-class Project(db.Model):
+class Operation(db.Model):
 
-    __tablename__ = "projects"
+    __tablename__ = "operations"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     path = db.Column(db.String(255), unique=True)
     category = db.Column(db.String(255))
@@ -128,8 +128,8 @@ class Project(db.Model):
 
     def __init__(self, path, description, category="default"):
         """
-        path: path to the project
-        description: small description of project
+        path: path to the operation
+        description: small description of operation
         category: name of category
         """
         self.path = path
@@ -137,7 +137,7 @@ class Project(db.Model):
         self.category = category
 
     def __repr__(self):
-        return f'<Project path: {self.path}, desc: {self.description}, cat: {self.category}>'
+        return f'<Operation path: {self.path}, desc: {self.description}, cat: {self.category}>'
 
 
 class MessageType(enum.IntEnum):
@@ -151,7 +151,7 @@ class Message(db.Model):
 
     __tablename__ = "messages"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
     message_type = db.Column(db.Enum(MessageType), default=MessageType.TEXT)
@@ -160,22 +160,22 @@ class Message(db.Model):
     user = db.relationship('User')
     replies = db.relationship('Message', cascade='all,delete,delete-orphan', single_parent=True)
 
-    def __init__(self, p_id, u_id, text, message_type=MessageType.TEXT, reply_id=None):
-        self.p_id = p_id
+    def __init__(self, op_id, u_id, text, message_type=MessageType.TEXT, reply_id=None):
+        self.op_id = op_id
         self.u_id = u_id
         self.text = text
         self.message_type = message_type
         self.reply_id = reply_id
 
     def __repr__(self):
-        return f'<Message text: {self.text}, u_id: {self.u_id}, p_id: {self.p_id}>, message_type: {self.message_type}'
+        return f'<Message text: {self.text}, u_id: {self.u_id}, op_id: {self.op_id}>, message_type: {self.message_type}'
 
 
 class Change(db.Model):
 
     __tablename__ = "changes"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    p_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     commit_hash = db.Column(db.String(255), default=None)
     version_name = db.Column(db.String(255), default=None)
@@ -183,8 +183,8 @@ class Change(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     user = db.relationship('User')
 
-    def __init__(self, p_id, u_id, commit_hash, version_name=None, comment=None):
-        self.p_id = p_id
+    def __init__(self, op_id, u_id, commit_hash, version_name=None, comment=None):
+        self.op_id = op_id
         self.u_id = u_id
         self.commit_hash = commit_hash
         self.version_name = version_name

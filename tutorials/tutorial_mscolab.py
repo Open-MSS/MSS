@@ -99,13 +99,13 @@ def automate_mscolab():
     username = 'John Doe'
     email = 'johndoe@gmail.com'
     password = 'johndoe'
-    p_name = 'project_of_john_doe'
-    p_description = """This is John Doe's project. He wants his collegues and friends to collaborate on this project
+    p_name = 'operation_of_john_doe'
+    p_description = """This is John Doe's operation. He wants his collegues and friends to collaborate on this operation
     with him in the network. Mscolab, here, will be very helpful for Joe with various features to use!"""
-    chat_message1 = 'Hi buddy! What\'s the next plan? I have marked the points in topview for the dummy project.' \
+    chat_message1 = 'Hi buddy! What\'s the next plan? I have marked the points in topview for the dummy operation.' \
                     'Just have a look, please!'
     chat_message2 = 'Hey there user! This is the chat feature of MSCOLAB. You can have a conversation with your ' \
-                    'fellow mates about the project and discuss ideas and plans.'
+                    'fellow mates about the operation and discuss ideas and plans.'
     search_message = 'chat feature of MSCOLAB'
     localhost_url = 'http://localhost:8083'
 
@@ -114,7 +114,7 @@ def automate_mscolab():
     example_image_path = os.path.join(path, 'docs/mss-logo.png')
 
     file_x, file_y = None, None
-    open_projects_x, open_projects_y = None, None
+    open_operations_x, open_operations_y = None, None
     selectall_left_x, selectall_left_y = None, None
     selectall_right_x, selectall_right_y = None, None
     modify_x, modify_y = None, None
@@ -194,7 +194,7 @@ def automate_mscolab():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Connect to Mscolab\' button not found on the screen.")
 
-    # Opening a new Mscolab Project
+    # Opening a new Mscolab Operation
     try:
         file_x, file_y = pag.locateCenterOnScreen(f'{mscolab_path}file.png')
         pag.moveTo(file_x, file_y, duration=2)
@@ -219,20 +219,20 @@ def automate_mscolab():
             pag.press(enter)
             pag.sleep(2)
         except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Ok\' button when adding a new project not found on the screen.")
+            print("\nException :\'Ok\' button when adding a new operation not found on the screen.")
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'File\' menu button not found on the screen.")
 
     try:
-        open_projects_x, open_projects_y = pag.locateCenterOnScreen(f'{mscolab_path}openprojects.png')
-        pag.moveTo(open_projects_x, open_projects_y + 20, duration=2)
+        open_operations_x, open_operations_y = pag.locateCenterOnScreen(f'{mscolab_path}openoperations.png')
+        pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(1)
-        pag.doubleClick(open_projects_x, open_projects_y + 20, duration=2)
+        pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Open Projects\' label not found on the screen.")
+        print("\nException :\'Open Operations\' label not found on the screen.")
 
-    # Managing Users for the project that you are working on
+    # Managing Users for the operation that you are working on
     if file_x is not None and file_y is not None:
         pag.moveTo(file_x, file_y, duration=2)
         pag.click(file_x, file_y, duration=2)
@@ -272,7 +272,7 @@ def automate_mscolab():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Select All\' leftside button not found on the screen.")
 
-    # Selecting and adding users for collaborating in the project.
+    # Selecting and adding users for collaborating in the operation.
     if selectall_left_x is not None and selectall_left_y is not None:
         row_gap = 30
         pag.moveTo(selectall_left_x, selectall_left_y + 57, duration=1)
@@ -597,13 +597,13 @@ def automate_mscolab():
         print("\nException : Work Asynchronously (in mscolab) checkbox not found on the screen.")
 
     # Activating a local flight track
-    if open_projects_x is not None and open_projects_y is not None:
-        pag.moveTo(open_projects_x - 900, open_projects_y + 20, duration=2)
+    if open_operations_x is not None and open_operations_y is not None:
+        pag.moveTo(open_operations_x - 900, open_operations_y + 20, duration=2)
         pag.sleep(1)
-        pag.doubleClick(open_projects_x - 900, open_projects_y + 20, duration=2)
+        pag.doubleClick(open_operations_x - 900, open_operations_y + 20, duration=2)
         pag.sleep(2)
     else:
-        print("Image Not Found : Open Projects label (for activating local flighttrack) not found, previously!")
+        print("Image Not Found : Open Operations label (for activating local flighttrack) not found, previously!")
 
     # Opening Topview again and making some changes in it
     if file_x is not None and file_y is not None:
@@ -638,11 +638,11 @@ def automate_mscolab():
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : Add waypoint (in topview again) button not found on the screen.")
 
-    # Activating the opened mscolab project
-    if open_projects_x is not None and open_projects_y is not None:
-        pag.moveTo(open_projects_x, open_projects_y + 20, duration=2)
+    # Activating the opened mscolab operation
+    if open_operations_x is not None and open_operations_y is not None:
+        pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(1)
-        pag.doubleClick(open_projects_x, open_projects_y + 20, duration=2)
+        pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(3)
 
         # Opening the topview again by double clicking on open views
@@ -661,9 +661,9 @@ def automate_mscolab():
         pag.press(enter)
         pag.sleep(2)
     else:
-        print("Image Not Found : Open Projects label (for activating mscolab project) not found, previously!")
+        print("Image Not Found : Open Operations label (for activating mscolab operation) not found, previously!")
 
-    # Deleting the project
+    # Deleting the operation
     if file_x is not None and file_y is not None:
         pag.moveTo(file_x, file_y, duration=2)
         pag.click(file_x, file_y, duration=1)

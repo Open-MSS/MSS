@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MscolabProject</class>
- <widget class="QMainWindow" name="MscolabProject">
+ <class>MscolabOperation</class>
+ <widget class="QMainWindow" name="MscolabOperation">
   <property name="windowModality">
    <enum>Qt::NonModal</enum>
   </property>
@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>Mscolab Project Chat</string>
+   <string>Mscolab Operation Chat</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout">
@@ -59,7 +59,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Project:</string>
+           <string>Operation:</string>
           </property>
          </widget>
         </item>
@@ -280,7 +280,7 @@
   <connection>
    <sender>actionCloseWindow</sender>
    <signal>triggered()</signal>
-   <receiver>MscolabProject</receiver>
+   <receiver>MscolabOperation</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
