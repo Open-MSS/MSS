@@ -258,3 +258,14 @@ Some publicly accessible WMS Servers
 
 
 .. include:: kml_guide.rst
+
+
+Automation using the WMS API
+============================
+
+Besides using the MSS UI we can use the API of the WMS sercer by a script to create
+for instance a number of the same plots or several flights or several forecast steps.
+
+The retriever is an example which needs tweaked before using it
+
+.. literalinclude:: samples/automation/retriever.py
