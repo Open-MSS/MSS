@@ -3,7 +3,7 @@
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to use the top view, side view, table view and
-    linear view section of Mission Support System in creating a project and planning the flightrack.
+    linear view section of Mission Support System in creating a operation and planning the flightrack.
 
     This file is part of mss.
 
@@ -49,7 +49,7 @@ def initial_ops():
         print("\n INFO : Automation is running on Windows OS..\n")
     else:
         pag.alert(text="Sorry, no support on this platform!", title="Platform Exception", button='OK')
-    print("\n INFO : We will be learning how to create a project in MSS with all the views.\n")
+    print("\n INFO : We will be learning how to create a operation in MSS with all the views.\n")
 
 
 def call_recorder():
@@ -69,7 +69,7 @@ def call_mss():
 def automate_views():
     """
     This is the main automating script of the MSS views tutorial which will cover all the views(topview, sideview,
-    tableview, linear view) in demonstrating how to create a project. This will be recorded and savedto a file having
+    tableview, linear view) in demonstrating how to create a operation. This will be recorded and savedto a file having
     dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.

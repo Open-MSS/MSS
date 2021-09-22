@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_help_dialog.ui'
+# Form implementation generated from reading ui file 'ui_mscolab_help_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -91,14 +91,14 @@ class Ui_mscolabHelpDialog(object):
         self.verticalLayout_3.setStretch(3, 1)
         self.gridLayout_4.addLayout(self.verticalLayout_3, 0, 0, 1, 1)
         self.tabWidget.addTab(self.connectingTab, "")
-        self.createProjectTab = QtWidgets.QWidget()
-        self.createProjectTab.setObjectName("createProjectTab")
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.createProjectTab)
+        self.createOperationTab = QtWidgets.QWidget()
+        self.createOperationTab.setObjectName("createOperationTab")
+        self.gridLayout_3 = QtWidgets.QGridLayout(self.createOperationTab)
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3.setObjectName("gridLayout_3")
         self.verticalLayout_4 = QtWidgets.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
-        self.textEdit_20 = QtWidgets.QTextEdit(self.createProjectTab)
+        self.textEdit_20 = QtWidgets.QTextEdit(self.createOperationTab)
         self.textEdit_20.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.textEdit_20.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.textEdit_20.setReadOnly(True)
@@ -108,9 +108,9 @@ class Ui_mscolabHelpDialog(object):
         self.horizontalLayout_11.setObjectName("horizontalLayout_11")
         spacerItem6 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_11.addItem(spacerItem6)
-        self.label_13 = QtWidgets.QLabel(self.createProjectTab)
+        self.label_13 = QtWidgets.QLabel(self.createOperationTab)
         self.label_13.setText("")
-        self.label_13.setPixmap(QtGui.QPixmap(":/images/mscolab-help/add-project.png"))
+        self.label_13.setPixmap(QtGui.QPixmap(":/images/mscolab-help/add-operation.png"))
         self.label_13.setScaledContents(True)
         self.label_13.setObjectName("label_13")
         self.horizontalLayout_11.addWidget(self.label_13)
@@ -118,7 +118,7 @@ class Ui_mscolabHelpDialog(object):
         self.horizontalLayout_11.addItem(spacerItem7)
         self.verticalLayout_4.addLayout(self.horizontalLayout_11)
         self.gridLayout_3.addLayout(self.verticalLayout_4, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.createProjectTab, "")
+        self.tabWidget.addTab(self.createOperationTab, "")
         self.adminTab = QtWidgets.QWidget()
         self.adminTab.setObjectName("adminTab")
         self.gridLayout_5 = QtWidgets.QGridLayout(self.adminTab)
@@ -209,14 +209,14 @@ class Ui_mscolabHelpDialog(object):
         self.verticalLayout_7.addLayout(self.horizontalLayout_14)
         self.gridLayout_9.addLayout(self.verticalLayout_7, 0, 0, 1, 1)
         self.tabWidget.addTab(self.versionTab, "")
-        self.projectWorkTab = QtWidgets.QWidget()
-        self.projectWorkTab.setObjectName("projectWorkTab")
-        self.gridLayout_8 = QtWidgets.QGridLayout(self.projectWorkTab)
+        self.operationWorkTab = QtWidgets.QWidget()
+        self.operationWorkTab.setObjectName("operationWorkTab")
+        self.gridLayout_8 = QtWidgets.QGridLayout(self.operationWorkTab)
         self.gridLayout_8.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_8.setObjectName("gridLayout_8")
         self.verticalLayout_8 = QtWidgets.QVBoxLayout()
         self.verticalLayout_8.setObjectName("verticalLayout_8")
-        self.textEdit_25 = QtWidgets.QTextEdit(self.projectWorkTab)
+        self.textEdit_25 = QtWidgets.QTextEdit(self.operationWorkTab)
         self.textEdit_25.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         self.textEdit_25.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.textEdit_25.setReadOnly(True)
@@ -226,7 +226,7 @@ class Ui_mscolabHelpDialog(object):
         self.horizontalLayout_15.setObjectName("horizontalLayout_15")
         spacerItem14 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_15.addItem(spacerItem14)
-        self.label_17 = QtWidgets.QLabel(self.projectWorkTab)
+        self.label_17 = QtWidgets.QLabel(self.operationWorkTab)
         self.label_17.setText("")
         self.label_17.setPixmap(QtGui.QPixmap(":/images/mscolab-help/merge-window.png"))
         self.label_17.setScaledContents(True)
@@ -236,7 +236,7 @@ class Ui_mscolabHelpDialog(object):
         self.horizontalLayout_15.addItem(spacerItem15)
         self.verticalLayout_8.addLayout(self.horizontalLayout_15)
         self.gridLayout_8.addLayout(self.verticalLayout_8, 0, 0, 1, 1)
-        self.tabWidget.addTab(self.projectWorkTab, "")
+        self.tabWidget.addTab(self.operationWorkTab, "")
         self.verticalLayout.addWidget(self.tabWidget)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
@@ -275,44 +275,44 @@ class Ui_mscolabHelpDialog(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. Each flight track in mscolab is called a </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Project&quot;</span><span style=\" font-family:\'.SF NS Text\';\">. You can create your project by clicking on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;MSColab Project&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> menu under the &quot;New&quot; section of File menu and filling in the required details.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. Each flight track in mscolab is called a </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Operation&quot;</span><span style=\" font-family:\'.SF NS Text\';\">. You can create your operation by clicking on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;MSColab Operation&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> menu under the &quot;New&quot; section of File menu and filling in the required details.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. The project list shows all the projects you have access to along with your access level to the project. There are </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">4 access levels</span><span style=\" font-family:\'.SF NS Text\';\"> you can have to a project. These are: </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. The operation list shows all the operations you have access to along with your access level to the operation. There are </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">4 access levels</span><span style=\" font-family:\'.SF NS Text\';\"> you can have to a operation. These are: </span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">    1. Creator</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">    2. Admin</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">    3. Collaborator</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">    4. Viewer</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">3. You can select a project by </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">double-clicking</span><span style=\" font-family:\'.SF NS Text\';\"> on it in the project list and then start working on it.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">3. You can select a operation by </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">double-clicking</span><span style=\" font-family:\'.SF NS Text\';\"> on it in the operation list and then start working on it.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">4. Select a project and you can start editing the flight track in 4 different views - Top, Side and Table, Linear. (Note: Already open views will automatically change the waypoints model to the newly selected project\'s waypoints model)</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">4. Select a operation and you can start editing the flight track in 4 different views - Top, Side and Table, Linear. (Note: Already open views will automatically change the waypoints model to the newly selected operation\'s waypoints model)</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">5. You can use the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Import/Export</span><span style=\" font-family:\'.SF NS Text\';\"> menu from the &quot;File&quot; menu to import or export Flighttrack files in FTML/CSV or any other supported plugin format.</span></p></body></html>"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.createProjectTab), _translate("mscolabHelpDialog", "Creating a Project"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.createOperationTab), _translate("mscolabHelpDialog", "Creating a Operation"))
         self.textEdit_22.setHtml(_translate("mscolabHelpDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">To collaborate with other users, you can add them to a project if you are the creator of the project or have administrator access. Click on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Manage Users&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> sub-menu under the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Project menu</span><span style=\" font-family:\'.SF NS Text\';\">, after selecting the project.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">To collaborate with other users, you can add them to a operation if you are the creator of the operation or have administrator access. Click on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Manage Users&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> sub-menu under the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Operation menu</span><span style=\" font-family:\'.SF NS Text\';\">, after selecting the operation.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">A user can have 4 access levels:</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Creator</span><span style=\" font-family:\'.SF NS Text\';\"> - The user that creates the project. This user\'s permission can\'t be changed. This user has all the access an Admin has and can also delete the project.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Admin</span><span style=\" font-family:\'.SF NS Text\';\"> - The admin has permission to add and update access levels of other users working on the project. They can also view the version history of the project and checkout to a previous version.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Creator</span><span style=\" font-family:\'.SF NS Text\';\"> - The user that creates the operation. This user\'s permission can\'t be changed. This user has all the access an Admin has and can also delete the operation.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Admin</span><span style=\" font-family:\'.SF NS Text\';\"> - The admin has permission to add and update access levels of other users working on the operation. They can also view the version history of the operation and checkout to a previous version.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">3. </span><span style=\" font-weight:600;\">Collaborator</span> - The collaborator can edit the flight track path and use the version history but has no ability to manage users.</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">4. </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Viewer</span><span style=\" font-family:\'.SF NS Text\';\"> - The viewer has the least access. They can only view the flight tracks and can\'t edit anything.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">What can you do with the Mscolab Admin Window?</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. Select users on your Mscolab server and add them to your project or update the access level of existing users.</span></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. Clone the permissions from a different project using the clone button at the top, allowing your team to quickly get started on a new project.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. Select users on your Mscolab server and add them to your operation or update the access level of existing users.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">2. Clone the permissions from a different operation using the clone button at the top, allowing your team to quickly get started on a new operation.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">3. Easily search users using the search bar. You can use the username or email id to search for a user.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">4. Apply filter based on access level to find exactly who you need.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p></body></html>"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.adminTab), _translate("mscolabHelpDialog", "Adding Users to Project"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.adminTab), _translate("mscolabHelpDialog", "Adding Users to Operation"))
         self.textEdit_23.setHtml(_translate("mscolabHelpDialog", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You can chat with all the users added to a project by opening the chat window using the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Chat&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> sub-menu under the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Project menu</span><span style=\" font-family:\'.SF NS Text\';\">. You can send normal messages and upload images and documents as well. </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You can chat with all the users added to a operation by opening the chat window using the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Chat&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> sub-menu under the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Operation menu</span><span style=\" font-family:\'.SF NS Text\';\">. You can send normal messages and upload images and documents as well. </span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You can also use common markdown syntax to format your messages.</span></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. *text* for italics</span></p>\n"
@@ -329,9 +329,9 @@ class Ui_mscolabHelpDialog(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You can keep track of all the changes made to your project by opening the version history window using the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Version History&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> sub-menu under the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Project menu</span><span style=\" font-family:\'.SF NS Text\';\">.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You can keep track of all the changes made to your operation by opening the version history window using the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Version History&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> sub-menu under the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">Operation menu</span><span style=\" font-family:\'.SF NS Text\';\">.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">Every change made by any user working the project is saved in the version history window. At any time you can revert to a preview version by just selecting the version from the list and clicking on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Checkout&quot; </span><span style=\" font-family:\'.SF NS Text\';\">button.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">Every change made by any user working the operation is saved in the version history window. At any time you can revert to a preview version by just selecting the version from the list and clicking on the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Checkout&quot; </span><span style=\" font-family:\'.SF NS Text\';\">button.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You can also give names to the important versions so you can view only the important named versions by changing the filter above the version list</span></p></body></html>"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.versionTab), _translate("mscolabHelpDialog", "Manage Versions"))
@@ -339,7 +339,7 @@ class Ui_mscolabHelpDialog(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'.AppleSystemUIFont\'; font-size:13pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">While working on a project you can be working in 2 modes:</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">While working on a operation you can be working in 2 modes:</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">1. The </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">default mode</span><span style=\" font-family:\'.SF NS Text\';\"> is when the  </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Work Asynchronously&quot; </span><span style=\" font-family:\'.SF NS Text\';\">checkbox is </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">unchecked</span><span style=\" font-family:\'.SF NS Text\';\">. In this mode all your changes will be shared with all other users in real-time. Each change made will also be recorded in the version history window in this mode.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
@@ -347,7 +347,7 @@ class Ui_mscolabHelpDialog(object):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'.SF NS Text\';\">You can toggle between these modes at any moment you like. All your local changes are saved on your machine and are </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">not</span><span style=\" font-family:\'.SF NS Text\';\"> discarded. You can uncheck the </span><span style=\" font-family:\'.SF NS Text\'; font-weight:600;\">&quot;Work Asynchronously&quot;</span><span style=\" font-family:\'.SF NS Text\';\"> checkbox at any time, work on the shared file and then turn it back on and continue from where you left off.</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'.SF NS Text\';\"><br /></p></body></html>"))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.projectWorkTab), _translate("mscolabHelpDialog", "Working on a Project"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.operationWorkTab), _translate("mscolabHelpDialog", "Working on a Operation"))
         self.okayBtn.setText(_translate("mscolabHelpDialog", "Okay"))
 
 from . import resources_rc

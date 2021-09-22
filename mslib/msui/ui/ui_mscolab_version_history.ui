@@ -39,7 +39,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="projectNameLabel">
+         <widget class="QLabel" name="operationNameLabel">
           <property name="sizePolicy">
            <sizepolicy hsizetype="MinimumExpanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -47,7 +47,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Project:</string>
+           <string>Operation:</string>
           </property>
          </widget>
         </item>

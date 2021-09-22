@@ -42,7 +42,7 @@ class ChatManager(object):
     def add_message(self, user, text, roomname, message_type=MessageType.TEXT, reply_id=None):
         """
         text: message to be emitted to room and saved to db
-        roomname: room-name(p_id) to which message is emitted,
+        roomname: room-name(op_id) to which message is emitted,
         user: User object, one which emits the message
         message_type: Enum of type MessageType. values: TEXT, SYSTEM_MESSAGE, IMAGE, DOCUMENT
         """
@@ -53,9 +53,9 @@ class ChatManager(object):
         db.session.commit()
         return message
 
-    def get_messages(self, p_id, timestamp=None):
+    def get_messages(self, op_id, timestamp=None):
         """
-        p_id: project id
+        op_id: operation id
         timestamp:  if provided, messages only after this time stamp is provided
         """
         if timestamp is None:
@@ -63,7 +63,7 @@ class ChatManager(object):
         else:
             timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S")
         messages = Message.query \
-            .filter(Message.p_id == p_id) \
+            .filter(Message.op_id == op_id) \
             .filter(Message.reply_id.is_(None)) \
             .filter(Message.created_at > timestamp) \
             .all()
@@ -90,6 +90,6 @@ class ChatManager(object):
         if message.message_type == MessageType.IMAGE or message.message_type == MessageType.DOCUMENT:
             file_name = fs.path.basename(message.text)
             with fs.open_fs(mscolab_settings.UPLOAD_FOLDER) as upload_dir:
-                upload_dir.remove(fs.path.join(str(message.p_id), file_name))
+                upload_dir.remove(fs.path.join(str(message.op_id), file_name))
         db.session.delete(message)
         db.session.commit()

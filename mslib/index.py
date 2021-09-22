@@ -41,7 +41,7 @@ from xstatic.main import XStatic
 from mslib.msui.icons import icons
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 
-# set the project root directory as the static folder
+# set the operation root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
 # This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
 SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
