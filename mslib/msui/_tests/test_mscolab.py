@@ -51,10 +51,10 @@ class Test_Mscolab_connect_window():
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_operation(self.room_name, "test europe")
-        assert add_user_to_operation(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
         QtTest.QTest.qWait(500)
@@ -196,10 +196,10 @@ class Test_Mscolab(object):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_operation(self.room_name, "test europe")
-        assert add_user_to_operation(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
         QtTest.QTest.qWait(500)
@@ -226,8 +226,8 @@ class Test_Mscolab(object):
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         # activate a operation
         self._activate_operation_at_index(0)
-        assert self.window.mscolab.active_pid is not None
-        assert self.window.mscolab.active_operation_name == self.room_name
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_name == self.operation_name
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_view_open(self, mockbox):
@@ -248,7 +248,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 4
 
-        operation = self.window.mscolab.active_pid
+        operation = self.window.mscolab.active_op_id
         uid = self.window.mscolab.user["id"]
         active_windows = self.window.get_active_views()
         topview = active_windows[1]
@@ -389,17 +389,17 @@ class Test_Mscolab(object):
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self._create_operation("flight7", "Description flight7")
-        assert self.window.mscolab.active_pid is None
+        assert self.window.mscolab.active_op_id is None
         self._activate_operation_at_index(0)
-        op_id = self.window.mscolab.get_recent_pid()
+        op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self.window.actionDeleteOperation.trigger()
         QtWidgets.QApplication.processEvents()
-        op_id = self.window.mscolab.get_recent_pid()
+        op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
 
-    def test_get_recent_pid(self):
+    def test_get_recent_op_id(self):
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
         self._login("anton@something.org", "something")
@@ -407,11 +407,11 @@ class Test_Mscolab(object):
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self._create_operation("flight2", "Description flight2")
-        current_pid = self.window.mscolab.get_recent_pid()
+        current_op_id = self.window.mscolab.get_recent_op_id()
         self._create_operation("flight3", "Description flight3")
         self._create_operation("flight4", "Description flight4")
         # ToDo fix number after cleanup initial data
-        assert self.window.mscolab.get_recent_pid() == current_pid + 2
+        assert self.window.mscolab.get_recent_op_id() == current_op_id + 2
 
     def test_get_recent_operation(self):
         self._connect_to_mscolab()
@@ -435,9 +435,9 @@ class Test_Mscolab(object):
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self._create_operation("flight3", "Description flight3")
         self._activate_operation_at_index(0)
-        op_id = self.window.mscolab.get_recent_pid()
+        op_id = self.window.mscolab.get_recent_op_id()
         self.window.mscolab.delete_operation_from_list(op_id)
-        assert self.window.mscolab.active_pid is None
+        assert self.window.mscolab.active_op_id is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):

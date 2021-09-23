@@ -47,16 +47,16 @@ class Test_MscolabAdminWindow(object):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_operation(self.room_name, "test europe")
-        assert add_user_to_operation(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         assert add_user("collaborator@example.de", "example", "example")
-        assert add_user_to_operation(path=self.room_name,
+        assert add_user_to_operation(path=self.operation_name,
                                      emailid="collaborator@example.de", access_level="collaborator")
         assert add_user("viewer@example.de", "viewer", "viewer")
-        assert add_user_to_operation(path=self.room_name, emailid="viewer@example.de", access_level="viewer")
+        assert add_user_to_operation(path=self.operation_name, emailid="viewer@example.de", access_level="viewer")
         assert add_user("name1@example.de", "name1", "name1")
         assert add_user("name2@example.de", "name2", "name2")
 

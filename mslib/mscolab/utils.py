@@ -30,7 +30,7 @@ import logging
 from mslib.mscolab.conf import mscolab_settings
 
 
-def get_recent_pid(fm, user):
+def get_recent_op_id(fm, user):
     operations = fm.list_operations(user)
     op_id = None
     if operations:

@@ -53,15 +53,15 @@ class Test_Seed(TestCase):
         handle_db_reset()
         db.init_app(self.app)
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
-        self.room_name = "XYZ"
+        self.operation_name = "XYZ"
         self.description = "Template"
         self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0'
         self.userdata_1 = "UV1@uv1", "UV1", "UV1"
         self.userdata_2 = "UV2@v2", "V2", "v2"
 
         assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
-        assert add_operation(self.room_name, self.description)
-        assert add_user_to_operation(path=self.room_name, emailid=self.userdata_0[0])
+        assert add_operation(self.operation_name, self.description)
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata_0[0])
         self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
 
     def tearDown(self):

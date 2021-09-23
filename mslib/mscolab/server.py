@@ -528,7 +528,7 @@ def add_bulk_permissions():
     success = fm.add_bulk_permission(op_id, user, new_u_ids, access_level)
     if success:
         for u_id in new_u_ids:
-            sockio.sm.join_collaborator_to_room(u_id, op_id)
+            sockio.sm.join_collaborator_to_operation(u_id, op_id)
             sockio.sm.emit_new_permission(u_id, op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify({"success": True, "message": "Users successfully added!"})
@@ -563,7 +563,7 @@ def delete_bulk_permissions():
     if success:
         for u_id in u_ids:
             sockio.sm.emit_revoke_permission(u_id, op_id)
-            sockio.sm.remove_collaborator_from_room(u_id, op_id)
+            sockio.sm.remove_collaborator_from_operation(u_id, op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify({"success": True, "message": "User permissions successfully deleted!"})
 
@@ -579,13 +579,13 @@ def import_permissions():
     success, users = fm.import_permissions(import_op_id, current_op_id, user.id)
     if success:
         for u_id in users["add_users"]:
-            sockio.sm.join_collaborator_to_room(u_id, current_op_id)
+            sockio.sm.join_collaborator_to_operation(u_id, current_op_id)
             sockio.sm.emit_new_permission(u_id, current_op_id)
         for u_id in users["modify_users"]:
             sockio.sm.emit_update_permission(u_id, current_op_id)
         for u_id in users["delete_users"]:
             sockio.sm.emit_revoke_permission(u_id, current_op_id)
-            sockio.sm.remove_collaborator_from_room(u_id, current_op_id)
+            sockio.sm.remove_collaborator_from_operation(u_id, current_op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, current_op_id)
         return jsonify({"success": True})
 

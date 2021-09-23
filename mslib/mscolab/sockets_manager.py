@@ -67,7 +67,7 @@ class SocketsManager(object):
             return
         socketio.emit('operation-list-update')
 
-    def join_creator_to_room(self, json_config):
+    def join_creator_to_operation(self, json_config):
         """
         json_config has:
             - token: authentication token
@@ -80,7 +80,7 @@ class SocketsManager(object):
         op_id = json_config['op_id']
         join_room(str(op_id))
 
-    def join_collaborator_to_room(self, u_id, op_id):
+    def join_collaborator_to_operation(self, u_id, op_id):
         """
         json has:
             - u_id: user id(collaborator's id)
@@ -90,7 +90,7 @@ class SocketsManager(object):
         if s_id is not None:
             join_room(str(op_id), sid=s_id)
 
-    def remove_collaborator_from_room(self, u_id, op_id):
+    def remove_collaborator_from_operation(self, u_id, op_id):
         s_id = get_session_id(self.sockets, u_id)
         if s_id is not None:
             leave_room(str(op_id), sid=s_id)
@@ -203,7 +203,7 @@ class SocketsManager(object):
     def handle_file_save(self, json_req):
         """
         json_req: {
-            "op_id": process id
+            "op_id": operation id
             "content": content of the file
             "comment": comment for file-save, defaults to None
         }
@@ -280,7 +280,7 @@ def setup_managers(app):
     socketio.on_event('edit-message', sm.handle_message_edit)
     socketio.on_event('delete-message', sm.handle_message_delete)
     socketio.on_event('file-save', sm.handle_file_save)
-    socketio.on_event('add-user-to-room', sm.join_creator_to_room)
+    socketio.on_event('add-user-to-operation', sm.join_creator_to_operation)
     socketio.on_event('update-operation-list', sm.update_operation_list)
 
     socketio.sm = sm

@@ -39,16 +39,16 @@ class ChatManager(object):
     def __init__(self):
         pass
 
-    def add_message(self, user, text, roomname, message_type=MessageType.TEXT, reply_id=None):
+    def add_message(self, user, text, operation_name, message_type=MessageType.TEXT, reply_id=None):
         """
-        text: message to be emitted to room and saved to db
-        roomname: room-name(op_id) to which message is emitted,
+        text: message to be emitted to operation and saved to db
+        operation_name: operation-name(op_id) to which message is emitted,
         user: User object, one which emits the message
         message_type: Enum of type MessageType. values: TEXT, SYSTEM_MESSAGE, IMAGE, DOCUMENT
         """
         if reply_id == -1:
             reply_id = None
-        message = Message(roomname, user.id, text, message_type, reply_id)
+        message = Message(operation_name, user.id, text, message_type, reply_id)
         db.session.add(message)
         db.session.commit()
         return message

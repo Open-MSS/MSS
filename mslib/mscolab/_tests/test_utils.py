@@ -34,7 +34,7 @@ from mslib.mscolab.models import db, Operation, MessageType
 from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.utils import get_recent_pid, get_session_id, get_message_dict, create_files, os_fs_create_dir
+from mslib.mscolab.utils import get_recent_op_id, get_session_id, get_message_dict, create_files, os_fs_create_dir
 from mslib.mscolab.sockets_manager import setup_managers
 
 
@@ -79,7 +79,9 @@ class Test_Utils(TestCase):
     def tearDown(self):
         handle_db_reset()
 
-    def test_get_recent_pid(self):
+    @pytest.mark.skipif(os.name == "nt",
+                        reason="multiprocessing needs currently start_method fork")
+    def test_get_recent_oid(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
         with self.app.test_client() as test_client:
@@ -87,9 +89,9 @@ class Test_Utils(TestCase):
             user = get_user(self.userdata[0])
             anotheruser = get_user(self.anotheruserdata[0])
             operation, token = self._create_operation(test_client, self.userdata)
-            op_id = get_recent_pid(self.fm, user)
+            op_id = get_recent_op_id(self.fm, user)
             assert op_id == operation.id
-            op_id = get_recent_pid(self.fm, anotheruser)
+            op_id = get_recent_op_id(self.fm, anotheruser)
             assert op_id is None
 
     def test_get_session_id(self):
