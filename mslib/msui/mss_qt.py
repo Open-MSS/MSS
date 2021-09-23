@@ -28,6 +28,7 @@
 import importlib
 import logging
 import os
+import re
 import platform
 import sys
 import subprocess
@@ -54,8 +55,15 @@ def get_open_filenames_qt(*args):
 
 
 def get_save_filename_qt(*args):
-    filename = QtWidgets.QFileDialog.getSaveFileName(*args)
-    return filename[0] if isinstance(filename, tuple) else str(filename)
+    _filename = QtWidgets.QFileDialog.getSaveFileName(*args)
+    if isinstance(_filename, tuple):
+        # ToDo when can this be only a str
+        extension = re.sub(r'\w.*\(\*', '', _filename[1][:-1])
+        filename = _filename[0]
+        if not filename.endswith(extension):
+            filename = f'{filename}{extension}'
+        return filename
+    return _filename
 
 
 def get_existing_directory_qt(*args):
