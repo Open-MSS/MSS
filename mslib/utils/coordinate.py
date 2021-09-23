@@ -40,18 +40,22 @@ except ImportError:
 from mslib.utils.config import config_loader
 
 
-def get_distance(coord0, coord1):
+__PR = pyproj.Geod(ellps='WGS84')
+
+
+def get_distance(lat0, lon0, lat1, lon1):
     """
     Computes the distance between two points on the Earth surface
     Args:
-        coord0: coordinate(lat/lon) of first point
-        coord1: coordinate(lat/lon) of second point
+        lat0: lat of first point
+        lon0: lon of first point
+        lat1: lat of second point
+        lon1: lon of second point
 
     Returns:
         length of distance in km
     """
-    pr = pyproj.Geod(ellps='WGS84')
-    return (pr.inv(coord0[1], coord0[0], coord1[1], coord1[0])[-1] / 1000.)
+    return __PR.inv(lon0, lat0, lon1, lat1)[-1] / 1000.
 
 
 def find_location(lat, lon, tolerance=5):
@@ -63,7 +67,7 @@ def find_location(lat, lon, tolerance=5):
     :return: None or lat/lon, name
     """
     locations = config_loader(dataset='locations')
-    distances = sorted([(get_distance((lat, lon), (loc_lat, loc_lon)), loc)
+    distances = sorted([(get_distance(lat, lon, loc_lat, loc_lon), loc)
                         for loc, (loc_lat, loc_lon) in locations.items()])
     if len(distances) > 0 and distances[0][0] <= tolerance:
         return locations[distances[0][1]], distances[0][1]
@@ -247,7 +251,7 @@ def interpolate_vertsec(data3D, data3D_lats, data3D_lons, lats, lons):
     return np.ma.masked_invalid(curtain)
 
 
-def latlon_points(p1, p2, numpoints=100, connection='linear', contains_altitude=False):
+def latlon_points(lat0, lon0, lat1, lon1, numpoints=100, connection='linear'):
     """
     Compute intermediate points between two given points.
 
@@ -259,43 +263,28 @@ def latlon_points(p1, p2, numpoints=100, connection='linear', contains_altitude=
 
     Returns two arrays lats, lons with intermediate latitude and longitudes.
     """
-    LAT = 0
-    LON = 1
-    ALT = 2
-    TIME = 2 if not contains_altitude else 3
-    lats, lons, alts, times = None, None, None, None
-
     if connection == 'linear':
-        lats = np.linspace(p1[LAT], p2[LAT], numpoints)
-        lons = np.linspace(p1[LON], p2[LON], numpoints)
+        lats = np.linspace(lat0, lat1, numpoints)
+        lons = np.linspace(lon0, lon1, numpoints)
     elif connection == 'greatcircle':
         if numpoints > 2:
-            gc = pyproj.Geod(ellps="WGS84")
-            pts = gc.npts(p1[LON], p1[LAT], p2[LON], p2[LAT], numpoints - 2)
-            lats = np.asarray([p1[LAT]] + [_x[1] for _x in pts] + [p2[LAT]])
-            lons = np.asarray([p1[LON]] + [_x[0] for _x in pts] + [p2[LON]])
+            pts = __PR.npts(lon0, lat0, lon1, lat1, numpoints - 2)
+            lats = [lat0] + [_x[1] for _x in pts] + [lat1]
+            lons = [lon0] + [_x[0] for _x in pts] + [lon1]
         else:
-            lats = np.asarray([p1[LAT], p2[LAT]])
-            lons = np.asarray([p1[LON], p2[LON]])
+            lats = [lat0, lat1]
+            lons = [lon0, lon1]
 
-    if contains_altitude:
-        alts = np.linspace(p1[ALT], p2[ALT], numpoints)
-
-    p1_time, p2_time = nc.date2num([p1[TIME], p2[TIME]], "seconds since 2000-01-01")
-    times = np.linspace(p1_time, p2_time, numpoints)
-
-    if not contains_altitude:
-        return lats, lons, nc.num2date(times, "seconds since 2000-01-01")
-    else:
-        return lats, lons, alts, nc.num2date(times, "seconds since 2000-01-01")
+    return lats, lons
 
 
-def path_points(points, numpoints=100, connection='linear', contains_altitude=False):
+def path_points(lats, lons, numpoints=100, times=None, alts=None, connection='linear'):
     """
     Compute intermediate points of a path given by a list of points.
 
     Arguments:
-    points -- list of lat/lon pairs, i.e. [[lat1,lon1], [lat2,lon2], ...]
+    lats -- list of lats
+    lons -- list of lons
     numpoints -- number of intermediate points to be computed along the path
     connection -- method to compute the intermediate points. Can be
                   'linear' or 'greatcircle'
@@ -303,77 +292,74 @@ def path_points(points, numpoints=100, connection='linear', contains_altitude=Fa
     Returns two arrays lats, lons with intermediate latitude and longitudes.
     """
     if connection not in ['linear', 'greatcircle']:
+        raise RuntimeError(f"Wrong connection type '{connection}'")
+    if lats is None or lons is None:
+        raise RuntimeError("Blub")
+    assert len(lats) == len(lons)
+    if len(lats) == 0:
+        if times is not None and alts is not None:
+            return None, None, None, None
+        if times is not None or alts is not None:
+            return None, None, None
         return None, None
-    if points is None or len(points) == 0:
-        return None, None, None
-
-    LAT = 0
-    LON = 1
-    ALT = 2
-    TIME = 3 if contains_altitude else 2
+    if times is not None:
+        assert len(lats) == len(times)
+        times = nc.date2num(times, "seconds since 2000-01-01")
+    if alts is not None:
+        assert len(lats) == len(alts)
 
     # First compute the lengths of the individual path segments, i.e.
     # the distances between the points.
-    distances = []
-    for i in range(len(points) - 1):
-        if connection == 'linear':
-            # Use Euclidean distance in lat/lon space.
-            d = np.hypot(points[i][LAT] - points[i + 1][LAT],
-                         points[i][LON] - points[i + 1][LON])
-        elif connection == 'greatcircle':
-            # Use Vincenty distance provided by the geopy module.
-            d = get_distance(points[i], points[i + 1])
-        distances.append(d)
-    distances = np.asarray(distances)
+    if connection == 'linear':
+        lats, lons = np.asarray(lats), np.asarray(lons)
+        distances = np.hypot(lats[:-1] - lats[1:], lons[:-1] - lons[1:])
+    else:
+        distances = [
+            get_distance(lats[i], lons[i], lats[i + 1], lons[i + 1])
+            for i in range(len(lats) - 1)]
 
     # Compute the total length of the path and the length of the point
     # segments to be computed.
-    total_length = distances.sum()
-    length_point_segment = total_length / (numpoints + len(points) - 2)
+    total_length = sum(distances)
+    length_point_segment = total_length / (numpoints + len(lats) - 2)
 
     # If the total length of the path is zero, all given waypoints have the
     # same coordinates. Return arrays with numpoints points all having these
     # coordinate.
     if total_length == 0.:
-        lons = np.repeat(points[0][LON], numpoints)
-        lats = np.repeat(points[0][LAT], numpoints)
-        times = np.repeat(points[0][TIME], numpoints)
-        if contains_altitude:
-            alts = np.repeat(points[0][ALT], numpoints)
-            return lats, lons, alts, times
-        else:
-            return lats, lons, times
+        result = [np.repeat(lats[0], numpoints), np.repeat(lons[0], numpoints)]
+        if times is not None:
+            result.append(nc.num2date(np.repeat(times[0], numpoints), "seconds since 2000-01-01"))
+        if alts is not None:
+            result.append(np.repeat(alts[0], numpoints))
+        return result
 
     # For each segment, determine the number of points to be computed
     # from the distance between the two bounding points and the
     # length of the point segments. Then compute the intermediate
     # points. Cut the first point from each segment other than the
     # first segment to avoid double points.
-    lons = []
-    lats = []
-    alts = []
-    times = []
-    for i in range(len(points) - 1):
+    r_lats, r_lons, r_times, r_alts = [], [], [], []
+    startidx = 0
+    for i in range(len(lats) - 1):
         segment_points = int(round(distances[i] / length_point_segment))
         # Enforce that a segment consists of at least two points
         # (otherwise latlon_points will throw an exception).
         segment_points = max(segment_points, 2)
-        # print segment_points
-        if not contains_altitude:
-            lats_, lons_, times_ = latlon_points(
-                points[i], points[i + 1],
-                numpoints=segment_points, connection=connection)
-        else:
-            lats_, lons_, alts_, times_ = latlon_points(
-                points[i], points[i + 1],
-                numpoints=segment_points, connection=connection, contains_altitude=True)
-        startidx = 0 if i == 0 else 1
-        lons.extend(lons_[startidx:])
-        lats.extend(lats_[startidx:])
-        times.extend(times_[startidx:])
-        if contains_altitude:
-            alts.extend(alts_[startidx:])
+        lats_, lons_ = latlon_points(
+            lats[i], lons[i], lats[i + 1], lons[i + 1],
+            numpoints=segment_points, connection=connection)
+        r_lons.extend(lons_[startidx:])
+        r_lats.extend(lats_[startidx:])
+        if times is not None:
+            r_times.extend(np.linspace(times[i], times[i + 1], segment_points)[startidx:])
+        if alts is not None:
+            r_alts.extend(np.linspace(alts[i], alts[i + 1], segment_points)[startidx:])
+        startidx = 1
 
-    if not contains_altitude:
-        return [np.asarray(_x) for _x in (lats, lons, times)]
-    return [np.asarray(_x) for _x in (lats, lons, alts, times)]
+    result = [r_lats, r_lons]
+    if times is not None:
+        result.append(nc.num2date(r_times, "seconds since 2000-01-01"))
+    if alts is not None:
+        result.append(r_alts)
+    return result
