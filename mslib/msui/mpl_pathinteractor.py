@@ -975,11 +975,9 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
-        if self.map.projection in ['stere', 'lcc']:
-            map_delta = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx) / 1000.
-        else:
-            map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
+        map_delta = get_distance((self.map.llcrnrlat, self.map.llcrnrlon), (self.map.urcrnrlat, self.map.urcrnrlon))
         km_per_px = map_delta / diagonal
+
         return km_per_px * px
 
     def get_lat_lon(self, event):
