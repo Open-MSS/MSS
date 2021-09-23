@@ -261,7 +261,8 @@ class Test_Mscolab(object):
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
+                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
+                              "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
