@@ -24,8 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import fs
-import logging
 import collections
 
 from matplotlib.collections import LineCollection
@@ -34,7 +32,6 @@ import numpy as np
 from skyfield.api import Loader, Topos, utc
 import skyfield_data
 
-from mslib.msui.constants import MSS_CONFIG_PATH
 from PyQt5 import QtGui, QtWidgets
 from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
 from mslib.utils.time import jsec_to_datetime, datetime_to_jsec
@@ -58,22 +55,10 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         self.setupUi(self)
 
         self.view = view
-        if '://' in MSS_CONFIG_PATH:
-            try:
-                _fs = fs.open_fs(MSS_CONFIG_PATH)
-                download_path = _fs.getsyspath("")
-            except fs.errors.CreateFailed:
-                logging.error(f'Make sure that the FS url "{MSS_CONFIG_PATH}" exists')
-            except fs.opener.errors.UnsupportedProtocol:
-                logging.error(f'FS url "{MSS_CONFIG_PATH}" not supported')
-        else:
-            download_path = MSS_CONFIG_PATH
-
-        self.load = Loader(download_path, verbose=False)
         self.load_bsp = Loader(skyfield_data.get_skyfield_data_path(), verbose=False)
 
-        self.timescale = self.load.timescale(builtin=True)
         self.planets = self.load_bsp('de421.bsp')
+        self.timescale = self.load_bsp.timescale(builtin=True)
 
         button = self.btTangentsColour
         palette = QtGui.QPalette(button.palette())
