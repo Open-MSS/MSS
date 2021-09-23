@@ -255,9 +255,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         Returns lats, lons.
         """
-        path = [[wp.lat, wp.lon, wp.utc_time] for wp in self.waypoints]
         return path_points(
-            path, numpoints=numpoints, connection=connection)
+            [wp.lat for wp in self.waypoints],
+            [wp.lon for wp in self.waypoints],
+            times=[wp.utc_time for wp in self.waypoints],
+            numpoints=numpoints, connection=connection)
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
         """
@@ -488,8 +490,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.ascent_rate = 0
             else:
                 wp0 = waypoints[pos - 1]
-                wp1.distance_to_prev = get_distance((wp0.lat, wp0.lon),
-                                                    (wp1.lat, wp1.lon))
+                wp1.distance_to_prev = get_distance(
+                    wp0.lat, wp0.lon, wp1.lat, wp1.lon)
 
                 last = (pos - 1 == rows)
                 time, fuel = get_duration_fuel(
@@ -509,8 +511,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # Update the distance of the following waypoint as well.
         if pos < len(waypoints) - 1:
             wp2 = waypoints[pos + 1]
-            wp2.distance_to_prev = get_distance((wp1.lat, wp1.lon),
-                                                (wp2.lat, wp2.lon))
+            wp2.distance_to_prev = get_distance(
+                wp1.lat, wp1.lon, wp2.lat, wp2.lon)
             if wp2.leg_time != 0:
                 wp2.ascent_rate = int((wp2.flightlevel - wp1.flightlevel) * 100 / (wp2.leg_time / 60))
             else:

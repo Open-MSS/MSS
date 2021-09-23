@@ -114,7 +114,10 @@ class MapCanvas(basemap.Basemap):
         # delete the attribute (mr, 08Feb2013).
         if hasattr(self, "epsg"):
             del self.epsg
-        super(MapCanvas, self).__init__(**kwargs)
+        super().__init__(**kwargs)
+
+        self.gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
+
         self.kwargs = kwargs
 
         # Set up the map appearance.
@@ -284,8 +287,8 @@ class MapCanvas(basemap.Basemap):
         spacingValues = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 30, 40]
         deltaLon = mapLonStop - mapLonStart
         deltaLat = mapLatStop - mapLatStart
-        spacingLon = [i for i in spacingValues if i > (deltaLon / 11.)][0]
-        spacingLat = [i for i in spacingValues if i > (deltaLat / 11.)][0]
+        spacingLon = ([i for i in spacingValues if i > (deltaLon / 11.)] + [60])[0]
+        spacingLat = ([i for i in spacingValues if i > (deltaLat / 11.)] + [60])[0]
 
         #   c) parallels and meridians start at the first value in the
         #      spacingLon/Lat grid that's smaller than the lon/lat of the
@@ -679,23 +682,22 @@ class MapCanvas(basemap.Basemap):
         self.ax.figure.canvas.draw()
         return self.image
 
-    def gcpoints2(self, lon1, lat1, lon2, lat2, del_s=100., map_coords=True):
+    def gcpoints2(self, lon0, lat0, lon1, lat1, del_s=100., map_coords=True):
         """
         The same as basemap.gcpoints(), but takes a distance interval del_s
         to space the points instead of a number of points.
         """
         # use great circle formula for a perfect sphere.
-        gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
-        az12, az21, dist = gc.inv(lon1, lat1, lon2, lat2)
+        _, _, dist = self.gc.inv(lon0, lat0, lon1, lat1)
         npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
-        lonlats = gc.npts(lon1, lat1, lon2, lat2, npoints)
-        lons = [lon1]
-        lats = [lat1]
+        lonlats = self.gc.npts(lon0, lat0, lon1, lat1, npoints)
+        lons = [lon0]
+        lats = [lat0]
         for lon, lat in lonlats:
             lons.append(lon)
             lats.append(lat)
-        lons.append(lon2)
-        lats.append(lat2)
+        lons.append(lon1)
+        lats.append(lat1)
         if map_coords:
             x, y = self(lons, lats)
         else:
@@ -708,50 +710,28 @@ class MapCanvas(basemap.Basemap):
         line segments. lons and lats are lists of waypoint coordinates.
         """
         # use great circle formula for a perfect sphere.
-        gc = pyproj.Geod(a=self.rmajor, b=self.rminor)
         assert len(lons) == len(lats)
         assert len(lons) > 1
         gclons = [lons[0]]
         gclats = [lats[0]]
         for i in range(len(lons) - 1):
-            az12, az21, dist = gc.inv(lons[i], lats[i], lons[i + 1], lats[i + 1])
+            _, _, dist = self.gc.inv(lons[i], lats[i], lons[i + 1], lats[i + 1])
             npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
-            # BUG -- weird path in cyl projection on waypoint move
-            # On some system configurations, the path is wrongly plotted when one
-            # of the waypoints is moved by the user and the current projection is cylindric.
-            # The weird thing is that when comparing cyl projection and stereo projection
-            # (which works), the exact same arguments are passed to gc.npts(). Also, the
-            # gc is initialised with the exact same a and b. Nevertheless, for the cyl
-            # projection, gc.npts() returns lons that connect lon1 and lat2, not lon1 and
-            # lon2 ... I cannot figure out why, maybe this is an issue in certain versions
-            # of pyproj?? (mr, 16Oct2012)
             lonlats = []
             if npoints > 0:
-                lonlats = gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
-            # The cylindrical projection of matplotlib is not periodic, that means that
-            # -170 longitude and 190 longitude are not identical. The gc projection however
-            # assumes identity and maps all longitudes to -180 to 180. This is no issue for
-            # most other projections.
-            # The clean solution would be to have a periodic display, where the locations
-            # and path are plotted periodically every 360 degree. As long as this is not
-            # supported by matplotlib.basemap, we "hack" this to map the path to the
-            # longitude range defined by the locations. This breaks potentially down in case
-            # that the locations are too far apart (>180 degree), but this is not the typical
-            # use case and will thus hopefully not pose a problem.
-            if self.projection == "cyl" and npoints > 0:
-                lonlats = np.asarray(lonlats)
-                milon = min(lons[i], lons[i + 1])
-                malon = max(lons[i], lons[i + 1])
-                sel = lonlats[:, 0] < milon
-                lonlats[sel, 0] += 360
-                sel = lonlats[:, 0] > malon
-                lonlats[sel, 0] -= 360
-
+                lonlats = self.gc.npts(lons[i], lats[i], lons[i + 1], lats[i + 1], npoints)
             for lon, lat in lonlats:
                 gclons.append(lon)
                 gclats.append(lat)
             gclons.append(lons[i + 1])
             gclats.append(lats[i + 1])
+        if self.projection == "cyl":  # hack for wraparound
+            lon_min, lon_max = self.llcrnrlon, self.urcrnrlon
+            gclons = np.array(gclons)
+            gclons[gclons < lon_min] += 360
+            gclons[gclons > lon_max] -= 360
+            idcs = np.where(abs(np.diff(gclons)) > 300)[0]
+            gclons[idcs] = np.nan
         if map_coords:
             x, y = self(gclons, gclats)
         else:

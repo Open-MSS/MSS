@@ -420,10 +420,11 @@ class VerticalSectionDriver(MSSPlotDriver):
         """
         logging.debug("computing %i interpolation points, connection: %s",
                       vsec_numpoints, vsec_path_connection)
-        now = datetime.now()
-        self.lats, self.lons, _ = coordinate.path_points(
-            [(_x, _y, now) for _x, _y in vsec_path],
+        self.lats, self.lons = coordinate.path_points(
+            [_x[0] for _x in vsec_path],
+            [_x[1] for _x in vsec_path],
             numpoints=vsec_numpoints, connection=vsec_path_connection)
+        self.lats, self.lons = np.asarray(self.lats), np.asarray(self.lons)
         self.vsec_path = vsec_path
         self.vsec_numpoints = vsec_numpoints
         self.vsec_path_connection = vsec_path_connection
@@ -723,10 +724,13 @@ class LinearSectionDriver(VerticalSectionDriver):
         """
         logging.debug("computing %i interpolation points, connection: %s",
                       lsec_numpoints, lsec_path_connection)
-        now = datetime.now()
-        self.lats, self.lons, self.alts, _ = coordinate.path_points(
-            [(_x, _y, _z, now) for _x, _y, _z in lsec_path],
-            numpoints=lsec_numpoints, connection=lsec_path_connection, contains_altitude=True)
+        self.lats, self.lons, self.alts = coordinate.path_points(
+            [_x[0] for _x in lsec_path],
+            [_x[1] for _x in lsec_path],
+            alts=[_x[2] for _x in lsec_path],
+            numpoints=lsec_numpoints, connection=lsec_path_connection)
+        self.lats, self.lons, self.alts = [
+            np.asarray(_x) for _x in (self.lats, self.lons, self.alts)]
         self.lsec_path = lsec_path
         self.lsec_numpoints = lsec_numpoints
         self.lsec_path_connection = lsec_path_connection
