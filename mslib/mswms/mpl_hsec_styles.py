@@ -64,6 +64,7 @@
 """
 
 import logging
+import warnings
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -542,8 +543,10 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         self.add_colorbar(tc, "Temperature (degC)")
 
         # Colors in python2.6/site-packages/matplotlib/colors.py
-        cs = bm.contour(self.lonmesh, self.latmesh, tempC,
-                        [0], colors="red", linewidths=4)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cs = bm.contour(self.lonmesh, self.latmesh, tempC,
+                            [0], colors="red", linewidths=4)
         cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thick_contours, colors="saddlebrown",
                         linewidths=2, linestyles="solid")
@@ -716,8 +719,10 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
                         thin_contours, colors="grey",
                         linewidths=0.5, linestyles="solid")
         ax.clabel(cs, colors="grey", fontsize=10, fmt='%i')
-        cs = bm.contour(self.lonmesh, self.latmesh, rh,
-                        np.arange(100, 170, 15), colors="yellow", linewidths=1)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cs = bm.contour(self.lonmesh, self.latmesh, rh,
+                            np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
         # Plot geopotential height contours.
         gpm = self.data["geopotential_height"]
