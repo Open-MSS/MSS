@@ -50,7 +50,7 @@ def rel_hum(p, t, q):
     Returns: Relative humidity in [%].
     """
     return mpcalc.relative_humidity_from_specific_humidity(
-        units.Pa * p, units.K * t, q) * 100
+        units.Pa * p, units.K * t, q).to("dimensionless").m * 100
 
 
 def pot_temp(p, t):

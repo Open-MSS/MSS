@@ -50,6 +50,8 @@ class Ui_ConfigurationEditorWindow(object):
         self.jsonWidget.setObjectName("jsonWidget")
         self.verticalLayout.addWidget(self.jsonWidget)
         self.verticalLayout.setStretch(1, 1)
+        self.actionCloseWindow = QtWidgets.QAction(ConfigurationEditorWindow)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
         ConfigurationEditorWindow.setCentralWidget(self.centralwidget)
         self.statusbar = QtWidgets.QStatusBar(ConfigurationEditorWindow)
         self.statusbar.setObjectName("statusbar")
@@ -57,8 +59,10 @@ class Ui_ConfigurationEditorWindow(object):
         self.toolBar = QtWidgets.QToolBar(ConfigurationEditorWindow)
         self.toolBar.setObjectName("toolBar")
         ConfigurationEditorWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.toolBar)
+        self.centralwidget.addAction(self.actionCloseWindow)
 
         self.retranslateUi(ConfigurationEditorWindow)
+        self.actionCloseWindow.triggered.connect(ConfigurationEditorWindow.close)
         QtCore.QMetaObject.connectSlotsByName(ConfigurationEditorWindow)
 
     def retranslateUi(self, ConfigurationEditorWindow):
@@ -74,4 +78,6 @@ class Ui_ConfigurationEditorWindow(object):
         self.restoreDefaultsBtn.setText(_translate("ConfigurationEditorWindow", "Restore Defaults"))
         self.moveUpTb.setText(_translate("ConfigurationEditorWindow", "..."))
         self.moveDownTb.setText(_translate("ConfigurationEditorWindow", "..."))
+        self.actionCloseWindow.setText(_translate("ConfigurationEditorWindow", "CloseWindow"))
+        self.actionCloseWindow.setShortcut(_translate("ConfigurationEditorWindow", "Ctrl+W"))
         self.toolBar.setWindowTitle(_translate("ConfigurationEditorWindow", "toolBar"))
