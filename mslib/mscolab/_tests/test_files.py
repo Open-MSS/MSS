@@ -35,7 +35,7 @@ from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.utils import get_recent_pid
+from mslib.mscolab.utils import get_recent_op_id
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -103,7 +103,7 @@ class Test_Files(TestCase):
     def test_is_admin(self):
         with self.app.test_client():
             assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
-            op_id = get_recent_pid(self.fm, self.user)
+            op_id = get_recent_op_id(self.fm, self.user)
             u_id = self.user.id
             assert self.fm.is_admin(u_id, op_id) is True
             undefined_op_id = 123
@@ -137,7 +137,7 @@ class Test_Files(TestCase):
     def test_get_operation(self):
         with self.app.test_client():
             self._create_operation(flight_path="operation9")
-            op_id = get_recent_pid(self.fm, self.user)
+            op_id = get_recent_op_id(self.fm, self.user)
             assert self.fm.get_file(op_id, self.user) is not False
             user2 = User.query.filter_by(emailid=self.userdata2[0]).first()
             assert self.fm.get_file(op_id, user2) is False
@@ -145,13 +145,13 @@ class Test_Files(TestCase):
     def test_authorized_users(self):
         with self.app.test_client():
             self._create_operation(flight_path="operation10", content=self.content1)
-            op_id = get_recent_pid(self.fm, self.user)
+            op_id = get_recent_op_id(self.fm, self.user)
             assert len(self.fm.get_authorized_users(op_id)) == 1
 
     def test_modify_operation(self):
         with self.app.test_client():
             self._create_operation(flight_path="path")
-            op_id = get_recent_pid(self.fm, self.user)
+            op_id = get_recent_op_id(self.fm, self.user)
             # testing for wrong characters in path like ' ', '/'
             assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
@@ -162,7 +162,7 @@ class Test_Files(TestCase):
     def test_delete_operation(self):
         with self.app.test_client():
             self._create_operation(flight_path="f3")
-            op_id = get_recent_pid(self.fm, self.user)
+            op_id = get_recent_op_id(self.fm, self.user)
             assert self.fm.delete_file(op_id, self.user2) is False
             assert self.fm.delete_file(op_id, self.user) is True
             assert self.fm.delete_file(op_id, self.user) is False
