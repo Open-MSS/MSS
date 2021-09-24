@@ -4,7 +4,7 @@
     mslib.msui._tests.test_mscolab_version_history
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module is used to test mscolab-project related gui.
+    This module is used to test mscolab-operation related gui.
 
     This file is part of mss.
 
@@ -35,7 +35,7 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
+from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
 PORTS = list(range(20000, 20500))
@@ -48,10 +48,10 @@ class Test_MscolabVersionHistory(object):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_project(self.room_name, "test europe")
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
@@ -60,8 +60,8 @@ class Test_MscolabVersionHistory(object):
         # connect and login to mscolab
         self._connect_to_mscolab()
         self._login(self.userdata[0], self.userdata[2])
-        # activate project and open chat window
-        self._activate_project_at_index(0)
+        # activate operation and open chat window
+        self._activate_operation_at_index(0)
         self.window.actionVersionHistory.trigger()
         QtWidgets.QApplication.processEvents()
         self.version_window = self.window.mscolab.version_window
@@ -162,13 +162,13 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
-    def _activate_project_at_index(self, index):
-        assert index < self.window.listProjectsMSC.count()
-        item = self.window.listProjectsMSC.item(index)
-        point = self.window.listProjectsMSC.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+    def _activate_operation_at_index(self, index):
+        assert index < self.window.listOperationsMSC.count()
+        item = self.window.listOperationsMSC.item(index)
+        point = self.window.listOperationsMSC.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
     def _activate_change_at_index(self, index):

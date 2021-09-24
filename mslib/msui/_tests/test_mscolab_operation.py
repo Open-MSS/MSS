@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_mscolab_project
+    mslib.msui._tests.test_mscolab_operation
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module is used to test mscolab-project related gui.
+    This module is used to test mscolab-operation related gui.
 
     This file is part of mss.
 
@@ -35,7 +35,7 @@ from mslib._tests.utils import mscolab_start_server
 from mslib.msui import mscolab
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
+from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 PORTS = list(range(22000, 22500))
 
@@ -50,15 +50,15 @@ class Actions(object):
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_MscolabProject(object):
+class Test_MscolabOperation(object):
     def setup(self):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_project(self.room_name, "test europe")
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
@@ -67,8 +67,8 @@ class Test_MscolabProject(object):
         # connect and login to mscolab
         self._connect_to_mscolab()
         self._login(self.userdata[0], self.userdata[2])
-        # activate project and open chat window
-        self._activate_project_at_index(0)
+        # activate operation and open chat window
+        self._activate_operation_at_index(0)
         self.window.actionChat.trigger()
         QtWidgets.QApplication.processEvents()
         self.chat_window = self.window.mscolab.chat_window
@@ -162,12 +162,12 @@ class Test_MscolabProject(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
-    def _activate_project_at_index(self, index):
-        item = self.window.listProjectsMSC.item(index)
-        point = self.window.listProjectsMSC.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+    def _activate_operation_at_index(self, index):
+        item = self.window.listOperationsMSC.item(index)
+        point = self.window.listOperationsMSC.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
 
     def _activate_context_menu_action(self, action_index):

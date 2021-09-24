@@ -4,7 +4,7 @@
     mslib.msui.mscolab_admin_window
     ~~~~~~~~~~~~~~~~~~~~~
 
-    Mscolab project window, to display chat, file change
+    Mscolab operation window, to display chat, file change
 
     This file is part of mss.
 
@@ -39,11 +39,11 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
 
-    def __init__(self, token, p_id, user, project_name, projects, conn, parent=None,
+    def __init__(self, token, op_id, user, operation_name, operations, conn, parent=None,
                  mscolab_server_url=config_loader(dataset="default_MSCOLAB")):
         """
         token: access token
-        p_id: project id
+        op_id: operation id
         conn: connection to send/receive socket messages
         """
         super(MSColabAdminWindow, self).__init__(parent)
@@ -51,10 +51,10 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
         self.mscolab_server_url = mscolab_server_url
         self.token = token
-        self.p_id = p_id
+        self.op_id = op_id
         self.user = user
-        self.project_name = project_name
-        self.projects = projects
+        self.operation_name = operation_name
+        self.operations = operations
         self.conn = conn
 
         self.addUsers = []
@@ -79,7 +79,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.modifyUsersPermissionFilter.currentTextChanged.connect(self.apply_permission_filter)
 
         # Setting handlers for connection manager
-        self.conn.signal_project_permissions_updated.connect(self.handle_permissions_updated)
+        self.conn.signal_operation_permissions_updated.connect(self.handle_permissions_updated)
 
         self.set_label_text()
         self.load_users_without_permission()
@@ -97,9 +97,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
     def populate_import_permission_cb(self):
         self.importPermissionsCB.clear()
-        for project in self.projects:
-            if project['p_id'] != self.p_id:
-                self.importPermissionsCB.addItem(project['path'], project['p_id'])
+        for operation in self.operations:
+            if operation['op_id'] != self.op_id:
+                self.importPermissionsCB.addItem(operation['path'], operation['op_id'])
 
     def get_selected_userids(self, table, users):
         u_ids = []
@@ -147,14 +147,14 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
 
     def set_label_text(self):
-        self.projectNameLabel.setText(f"Project: {self.project_name}")
+        self.operationNameLabel.setText(f"Operation: {self.operation_name}")
         self.usernameLabel.setText(f"Logged In: {self.user['username']}")
 
     def load_users_without_permission(self):
         self.addUsers = []
         data = {
             "token": self.token,
-            "p_id": self.p_id
+            "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, "users_without_permission")
         res = requests.get(url, data=data)
@@ -174,7 +174,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.modifyUsers = []
         data = {
             "token": self.token,
-            "p_id": self.p_id
+            "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, "users_with_permission")
         res = requests.get(url, data=data)
@@ -199,7 +199,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         selected_access_level = str(self.addUsersPermission.currentText())
         data = {
             "token": self.token,
-            "p_id": self.p_id,
+            "op_id": self.op_id,
             "selected_userids": json.dumps(selected_userids),
             "selected_access_level": selected_access_level
         }
@@ -224,7 +224,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         selected_access_level = str(self.modifyUsersPermission.currentText())
         data = {
             "token": self.token,
-            "p_id": self.p_id,
+            "op_id": self.op_id,
             "selected_userids": json.dumps(selected_userids),
             "selected_access_level": selected_access_level
         }
@@ -247,7 +247,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
         data = {
             "token": self.token,
-            "p_id": self.p_id,
+            "op_id": self.op_id,
             "selected_userids": json.dumps(selected_userids)
         }
         url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
@@ -263,11 +263,11 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             show_popup(self, "Error", "Session expired, new login required")
 
     def import_permissions(self):
-        import_p_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
+        import_op_id = self.importPermissionsCB.currentData(QtCore.Qt.UserRole)
         data = {
             "token": self.token,
-            "current_p_id": self.p_id,
-            "import_p_id": import_p_id
+            "current_op_id": self.op_id,
+            "import_op_id": import_op_id
         }
         url = url_join(self.mscolab_server_url, 'import_permissions')
         res = requests.post(url, data=data)
@@ -286,7 +286,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         if self.user["id"] == u_id:
             return
 
-        show_popup(self, 'Alert', 'The permissions for this project were updated! The window is going to refresh.', 1)
+        show_popup(self, 'Alert', 'The permissions for this operation were updated! The window is going to refresh.', 1)
         self.load_users_without_permission()
         self.load_users_with_permission()
 

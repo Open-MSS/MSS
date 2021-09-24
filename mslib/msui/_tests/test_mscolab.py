@@ -41,7 +41,7 @@ from mslib._tests.utils import mscolab_start_server, ExceptionMock
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.seed import add_user, get_user, add_project, add_user_to_project
+from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 PORTS = list(range(25000, 25500))
 
@@ -51,10 +51,10 @@ class Test_Mscolab_connect_window():
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_project(self.room_name, "test europe")
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
         QtTest.QTest.qWait(500)
@@ -101,12 +101,12 @@ class Test_Mscolab_connect_window():
         assert self.main_window.connectBtn.isVisible() is False
         assert self.main_window.mscolab.connect_window is None
         assert self.main_window.local_active is True
-        # test project listing visibility
-        assert self.main_window.listProjectsMSC.model().rowCount() == 1
+        # test operation listing visibility
+        assert self.main_window.listOperationsMSC.model().rowCount() == 1
         # test logout
         self.main_window.mscolab.logout_action.trigger()
         QtWidgets.QApplication.processEvents()
-        assert self.main_window.listProjectsMSC.model().rowCount() == 0
+        assert self.main_window.listOperationsMSC.model().rowCount() == 0
         assert self.main_window.mscolab.conn is None
         assert self.main_window.local_active is True
 
@@ -196,10 +196,10 @@ class Test_Mscolab(object):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.room_name = "europe"
+        self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_project(self.room_name, "test europe")
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata[0])
+        assert add_operation(self.operation_name, "test europe")
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
         QtTest.QTest.qWait(500)
@@ -215,26 +215,26 @@ class Test_Mscolab(object):
         # force close all open views
         while self.window.listViews.count() > 0:
             self.window.listViews.item(0).window.handle_force_close()
-        # close all hanging project option windows
+        # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
-    def test_activate_project(self):
+    def test_activate_operation(self):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
-        # activate a project
-        self._activate_project_at_index(0)
-        assert self.window.mscolab.active_pid is not None
-        assert self.window.mscolab.active_project_name == self.room_name
+        # activate a operation
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_name == self.operation_name
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_view_open(self, mockbox):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
-        # test after activating project
-        self._activate_project_at_index(0)
+        # test after activating operation
+        self._activate_operation_at_index(0)
         self.window.actionTableView.trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 1
@@ -248,15 +248,15 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 4
 
-        project = self.window.mscolab.active_pid
+        operation = self.window.mscolab.active_op_id
         uid = self.window.mscolab.user["id"]
         active_windows = self.window.get_active_views()
         topview = active_windows[1]
         tableview = active_windows[0]
-        self.window.mscolab.handle_update_permission(project, uid, "viewer")
+        self.window.mscolab.handle_update_permission(operation, uid, "viewer")
         assert not tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and not action.isEnabled() for action in topview.mpl.navbar.actions())
-        self.window.mscolab.handle_update_permission(project, uid, "creator")
+        self.window.mscolab.handle_update_permission(operation, uid, "creator")
         assert tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
@@ -265,7 +265,7 @@ class Test_Mscolab(object):
     def test_handle_export(self, mockbox):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
-        self._activate_project_at_index(0)
+        self._activate_operation_at_index(0)
         self.window.actionExportFlightTrackftml.trigger()
         QtWidgets.QApplication.processEvents()
         exported_waypoints = WaypointsTableModel(filename=fs.path.join(self.window.mscolab.data_dir,
@@ -288,7 +288,7 @@ class Test_Mscolab(object):
             with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(file_path, None)):
                 self._connect_to_mscolab()
                 self._login(emailid=self.userdata[0], password=self.userdata[2])
-                self._activate_project_at_index(0)
+                self._activate_operation_at_index(0)
                 exported_wp = WaypointsTableModel(waypoints=self.window.mscolab.waypoints_model.waypoints)
                 full_name = f"actionExportFlightTrack{ext[1:]}"
                 for action in self.window.menuExportActiveFlightTrack.actions():
@@ -318,7 +318,7 @@ class Test_Mscolab(object):
     def test_work_locally_toggle(self):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
-        self._activate_project_at_index(0)
+        self._activate_operation_at_index(0)
         self.window.workLocallyCheckbox.setChecked(True)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
@@ -334,12 +334,12 @@ class Test_Mscolab(object):
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
-    def test_browse_add_project(self, mockopen, mockmessage):
+    def test_browse_add_operation(self, mockopen, mockmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
-        assert self.window.listProjectsMSC.model().rowCount() == 0
-        self.window.actionAddProject.trigger()
+        assert self.window.listOperationsMSC.model().rowCount() == 0
+        self.window.actionAddOperation.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str("example"))
         QtWidgets.QApplication.processEvents()
@@ -353,91 +353,91 @@ class Test_Mscolab(object):
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert self.window.listProjectsMSC.model().rowCount() == 1
+        assert self.window.listOperationsMSC.model().rowCount() == 1
 
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")
-    def test_add_project(self, mockbox):
+    def test_add_operation(self, mockbox):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._login("something@something.org", "something")
         assert self.window.usernameLabel.text() == 'something'
         assert self.window.connectBtn.isVisible() is False
-        self._create_project("Alpha", "Description Alpha")
+        self._create_operation("Alpha", "Description Alpha")
         assert mockbox.return_value.showMessage.call_count == 1
         with mock.patch("PyQt5.QtWidgets.QLineEdit.text", return_value=None):
-            self._create_project("Alpha2", "Description Alpha")
+            self._create_operation("Alpha2", "Description Alpha")
         with mock.patch("PyQt5.QtWidgets.QTextEdit.toPlainText", return_value=None):
-            self._create_project("Alpha3", "Description Alpha")
-        self._create_project("/", "Description Alpha")
+            self._create_operation("Alpha3", "Description Alpha")
+        self._create_operation("/", "Description Alpha")
         assert mockbox.return_value.showMessage.call_count == 4
-        assert self.window.listProjectsMSC.model().rowCount() == 1
-        self._create_project("reproduce-test", "Description Test")
-        assert self.window.listProjectsMSC.model().rowCount() == 2
-        self._activate_project_at_index(0)
-        assert self.window.mscolab.active_project_name == "Alpha"
-        self._activate_project_at_index(1)
-        assert self.window.mscolab.active_project_name == "reproduce-test"
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._create_operation("reproduce-test", "Description Test")
+        assert self.window.listOperationsMSC.model().rowCount() == 2
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_operation_name == "Alpha"
+        self._activate_operation_at_index(1)
+        assert self.window.mscolab.active_operation_name == "reproduce-test"
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
-    def test_handle_delete_project(self, mocktext, mockbox):
-        # pytest.skip('needs a review for the delete button pressed. Seems to delete a None project')
+    def test_handle_delete_operation(self, mocktext, mockbox):
+        # pytest.skip('needs a review for the delete button pressed. Seems to delete a None operation')
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
         self._login("berta@something.org", "something")
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
-        assert self.window.listProjectsMSC.model().rowCount() == 0
-        self._create_project("flight7", "Description flight7")
-        assert self.window.mscolab.active_pid is None
-        self._activate_project_at_index(0)
-        p_id = self.window.mscolab.get_recent_pid()
-        assert p_id is not None
-        assert self.window.listProjectsMSC.model().rowCount() == 1
-        self.window.actionDeleteProject.trigger()
+        assert self.window.listOperationsMSC.model().rowCount() == 0
+        self._create_operation("flight7", "Description flight7")
+        assert self.window.mscolab.active_op_id is None
+        self._activate_operation_at_index(0)
+        op_id = self.window.mscolab.get_recent_op_id()
+        assert op_id is not None
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self.window.actionDeleteOperation.trigger()
         QtWidgets.QApplication.processEvents()
-        p_id = self.window.mscolab.get_recent_pid()
-        assert p_id is None
+        op_id = self.window.mscolab.get_recent_op_id()
+        assert op_id is None
 
-    def test_get_recent_pid(self):
+    def test_get_recent_op_id(self):
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
         self._login("anton@something.org", "something")
         assert self.window.usernameLabel.text() == 'anton'
         assert self.window.connectBtn.isVisible() is False
-        assert self.window.listProjectsMSC.model().rowCount() == 0
-        self._create_project("flight2", "Description flight2")
-        current_pid = self.window.mscolab.get_recent_pid()
-        self._create_project("flight3", "Description flight3")
-        self._create_project("flight4", "Description flight4")
+        assert self.window.listOperationsMSC.model().rowCount() == 0
+        self._create_operation("flight2", "Description flight2")
+        current_op_id = self.window.mscolab.get_recent_op_id()
+        self._create_operation("flight3", "Description flight3")
+        self._create_operation("flight4", "Description flight4")
         # ToDo fix number after cleanup initial data
-        assert self.window.mscolab.get_recent_pid() == current_pid + 2
+        assert self.window.mscolab.get_recent_op_id() == current_op_id + 2
 
-    def test_get_recent_project(self):
+    def test_get_recent_operation(self):
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
         self._login("berta@something.org", "something")
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
-        assert self.window.listProjectsMSC.model().rowCount() == 0
-        self._create_project("flight1234", "Description flight1234")
-        self._activate_project_at_index(0)
-        project = self.window.mscolab.get_recent_project()
-        assert project["path"] == "flight1234"
-        assert project["access_level"] == "creator"
+        assert self.window.listOperationsMSC.model().rowCount() == 0
+        self._create_operation("flight1234", "Description flight1234")
+        self._activate_operation_at_index(0)
+        operation = self.window.mscolab.get_recent_operation()
+        assert operation["path"] == "flight1234"
+        assert operation["access_level"] == "creator"
 
-    def test_delete_project_from_list(self):
+    def test_delete_operation_from_list(self):
         self._connect_to_mscolab()
         self._create_user("other", "other@something.org", "something")
         self._login("other@something.org", "something")
         assert self.window.usernameLabel.text() == 'other'
         assert self.window.connectBtn.isVisible() is False
-        assert self.window.listProjectsMSC.model().rowCount() == 0
-        self._create_project("flight3", "Description flight3")
-        self._activate_project_at_index(0)
-        p_id = self.window.mscolab.get_recent_pid()
-        self.window.mscolab.delete_project_from_list(p_id)
-        assert self.window.mscolab.active_pid is None
+        assert self.window.listOperationsMSC.model().rowCount() == 0
+        self._create_operation("flight3", "Description flight3")
+        self._activate_operation_at_index(0)
+        op_id = self.window.mscolab.get_recent_op_id()
+        self.window.mscolab.delete_operation_from_list(op_id)
+        assert self.window.mscolab.active_op_id is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
@@ -448,7 +448,7 @@ class Test_Mscolab(object):
         self.window.mscolab.open_profile_window()
         QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert self.window.listProjectsMSC.model().rowCount() == 0
+        assert self.window.listOperationsMSC.model().rowCount() == 0
         assert self.window.usernameLabel.isVisible() is False
         assert self.window.connectBtn.isVisible() is True
         with self.app.app_context():
@@ -531,8 +531,8 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
-    def _create_project(self, path, description, mockbox):
-        self.window.actionAddProject.trigger()
+    def _create_operation(self, path, description, mockbox):
+        self.window.actionAddOperation.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str(path))
         QtWidgets.QApplication.processEvents()
@@ -545,10 +545,10 @@ class Test_Mscolab(object):
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def _activate_project_at_index(self, index):
-        item = self.window.listProjectsMSC.item(index)
-        point = self.window.listProjectsMSC.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+    def _activate_operation_at_index(self, index):
+        item = self.window.listOperationsMSC.item(index)
+        point = self.window.listOperationsMSC.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseDClick(self.window.listProjectsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()

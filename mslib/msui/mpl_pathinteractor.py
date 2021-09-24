@@ -47,12 +47,11 @@
 import logging
 import math
 import numpy as np
-import datetime
 import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from PyQt5 import QtCore, QtWidgets
 
-from mslib.utils.coordinate import get_distance, find_location, path_points, latlon_points
+from mslib.utils.coordinate import get_distance, find_location, latlon_points
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
@@ -192,7 +191,7 @@ class PathV(WaypointsPath):
                         points.
         """
         self.numintpoints = kwargs.pop("numintpoints")
-        super(PathV, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def update_from_WaypointsTableModel(self, wps_model):
         """Extended version of the corresponding WaypointsPath method.
@@ -233,7 +232,7 @@ class PathV(WaypointsPath):
             self.itimes = times
 
             # Call super method.
-            WaypointsPath.update_from_WaypointsTableModel(self, wps_model)
+            super().update_from_WaypointsTableModel(wps_model)
 
     def transform_waypoint(self, wps_list, index):
         """Returns the x-index of the waypoint and its pressure.
@@ -256,7 +255,7 @@ class PathH(WaypointsPath):
            vertex cooredinates between lat/lon and projection coordinates.
         """
         self.map = kwargs.pop("map")
-        super(PathH, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def transform_waypoint(self, wps_list, index):
         """Transform lon/lat to projection coordinates.
@@ -275,7 +274,7 @@ class PathH_GC(PathH):
     """
 
     def __init__(self, *args, **kwargs):
-        super(PathH_GC, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.wp_codes = np.array([], dtype=np.uint8)
         self.wp_vertices = np.array([])
 
@@ -315,7 +314,7 @@ class PathH_GC(PathH):
         """
         # Determine the index of the great circle vertex that is closest to the
         # given point.
-        gcvertex_index = super(PathH_GC, self).index_of_closest_segment(x, y, eps)
+        gcvertex_index = super().index_of_closest_segment(x, y, eps)
 
         # Determine the waypoint index that corresponds to the great circle
         # index. If the best index is to append the waypoint to the end of
@@ -351,7 +350,7 @@ class PathInteractor(QtCore.QObject):
     """
 
     showverts = True  # show the vertices of the path patch
-    epsilon = 12  # max pixel distance to count as a vertex hit when
+    epsilon = 12
 
     # picking points
 
@@ -483,7 +482,7 @@ class PathInteractor(QtCore.QObject):
         xy = np.asarray(self.pathpatch.get_path().vertices)
         xyt = self.pathpatch.get_transform().transform(xy)
         xt, yt = xyt[:, 0], xyt[:, 1]
-        d = np.sqrt((xt - event.x) ** 2 + (yt - event.y) ** 2)
+        d = np.hypot(xt - event.x, yt - event.y)
         ind = d.argmin()
         if d[ind] >= self.epsilon:
             ind = None
@@ -642,7 +641,7 @@ class VPathInteractor(PathInteractor):
         self.numintpoints = numintpoints
         self.redraw_xaxis = redraw_xaxis
         self.clear_figure = clear_figure
-        super(VPathInteractor, self).__init__(
+        super().__init__(
             ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
 
     def get_num_interpolation_points(self):
@@ -715,12 +714,9 @@ class VPathInteractor(PathInteractor):
         x = event.xdata
         wpm = self.waypoints_model
         vertices = self.pathpatch.get_path().vertices
-        vertices = np.ndarray.tolist(vertices)
-        for index, vertex in enumerate(vertices):
-            vertices[index].append(datetime.datetime(2012, 7, 1, 10, 30))
         best_index = 1
         # if x axis has increasing coordinates
-        if vertices[-1][0] > vertices[0][0]:
+        if vertices[-1, 0] > vertices[0, 0]:
             for index, vertex in enumerate(vertices):
                 if x >= vertex[0]:
                     best_index = index + 1
@@ -730,31 +726,21 @@ class VPathInteractor(PathInteractor):
                 if x <= vertex[0]:
                     best_index = index + 1
         # number of subcoordinates is determined by difference in x coordinates
-        number_of_intermediate_points = math.floor(vertices[best_index][0] - vertices[best_index - 1][0])
-        intermediate_vertices_list = path_points([vertices[best_index - 1], vertices[best_index]],
-                                                 number_of_intermediate_points)
-        wp1Array = [wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
-                    datetime.datetime(2012, 7, 1, 10, 30)]
-        wp2Array = [wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
-                    datetime.datetime(2012, 7, 1, 10, 30)]
-        intermediate_waypoints_list = latlon_points(wp1Array, wp2Array,
-                                                    number_of_intermediate_points, connection="greatcircle")
+        number_of_intermediate_points = math.floor(vertices[best_index, 0] - vertices[best_index - 1, 0])
+        vert_xs, vert_ys = latlon_points(
+            vertices[best_index - 1, 0], vertices[best_index - 1, 1],
+            vertices[best_index, 0], vertices[best_index, 1],
+            number_of_intermediate_points, connection="linear")
+        lats, lons = latlon_points(
+            wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
+            wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
+            number_of_intermediate_points, connection="greatcircle")
 
         # best_index1 is the best index among the intermediate coordinates to fit the hovered point
         # if x axis has increasing coordinates
-        best_index1 = 1
-        if vertices[-1][0] > vertices[0][0]:
-            for index, vertex in enumerate(intermediate_vertices_list[0]):
-                if x >= vertex:
-                    best_index1 = index + 1
-        # if x axis has decreasing coordinates
-        else:
-            for index, vertex in enumerate(intermediate_vertices_list[0]):
-                if x <= vertex:
-                    best_index1 = index + 1
+        best_index1 = np.argmin(abs(vert_xs - x))
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
-        return [intermediate_waypoints_list[0][best_index1 - 1],
-                intermediate_waypoints_list[1][best_index1 - 1]], best_index
+        return (lats[best_index1], lons[best_index1]), best_index
 
     def button_release_move_callback(self, event):
         """Called whenever a mouse button is released.
@@ -766,7 +752,7 @@ class VPathInteractor(PathInteractor):
             # Submit the new pressure (the only value that can be edited
             # in the side view) to the data model.
             vertices = self.pathpatch.get_path().vertices
-            pressure = vertices[self._ind][1]
+            pressure = vertices[self._ind, 1]
             # http://doc.trolltech.com/4.3/qabstractitemmodel.html#createIndex
             qt_index = self.waypoints_model.createIndex(self._ind, ft.PRESSURE)
             # NOTE: QVariant cannot handle numpy.float64 types, hence convert
@@ -788,7 +774,7 @@ class VPathInteractor(PathInteractor):
         vertices = self.pathpatch.get_path().vertices
         # Set the new y position of the vertex to event.ydata. Keep the
         # x coordinate.
-        vertices[self._ind] = vertices[self._ind][0], event.ydata
+        vertices[self._ind] = vertices[self._ind, 0], event.ydata
         self.redraw_path(vertices)
 
     def qt_data_changed_listener(self, index1, index2):
@@ -830,7 +816,7 @@ class LPathInteractor(PathInteractor):
         self.numintpoints = numintpoints
         self.clear_figure = clear_figure
         self.redraw_xaxis = redraw_xaxis
-        super(LPathInteractor, self).__init__(
+        super().__init__(
             ax=ax, waypoints=waypoints, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
 
     def get_num_interpolation_points(self):
@@ -859,12 +845,9 @@ class LPathInteractor(PathInteractor):
         x = event.xdata
         wpm = self.waypoints_model
         vertices = self.pathpatch.get_path().vertices
-        vertices = np.ndarray.tolist(vertices)
-        for index, vertex in enumerate(vertices):
-            vertices[index].append(datetime.datetime(2012, 7, 1, 10, 30))
         best_index = 1
         # if x axis has increasing coordinates
-        if vertices[-1][0] > vertices[0][0]:
+        if vertices[-1, 0] > vertices[0, 0]:
             for index, vertex in enumerate(vertices):
                 if x >= vertex[0]:
                     best_index = index + 1
@@ -874,32 +857,19 @@ class LPathInteractor(PathInteractor):
                 if x <= vertex[0]:
                     best_index = index + 1
         # number of subcoordinates is determined by difference in x coordinates
-        number_of_intermediate_points = math.floor(vertices[best_index][0] - vertices[best_index - 1][0])
-        intermediate_vertices_list = path_points([vertices[best_index - 1], vertices[best_index]],
-                                                 number_of_intermediate_points)
-        wp1Array = [wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
-                    datetime.datetime(2012, 7, 1, 10, 30)]
-        wp2Array = [wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
-                    datetime.datetime(2012, 7, 1, 10, 30)]
-        intermediate_waypoints_list = latlon_points(wp1Array, wp2Array, number_of_intermediate_points,
-                                                    connection="greatcircle")
+        number_of_intermediate_points = int(abs(vertices[best_index, 0] - vertices[best_index - 1, 0]))
+        vert_xs, vert_ys = latlon_points(
+            vertices[best_index - 1, 0], vertices[best_index - 1, 1],
+            vertices[best_index, 0], vertices[best_index, 1],
+            number_of_intermediate_points, connection="linear")
+        lats, lons = latlon_points(
+            wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
+            wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
+            number_of_intermediate_points, connection="greatcircle")
 
-        # best_index1 is the best index among the intermediate coordinates to fit the hovered point
-        # if x axis has increasing coordinates
-        best_index1 = 1
-        if vertices[-1][0] > vertices[0][0]:
-            for index, vertex in enumerate(intermediate_vertices_list[0]):
-                if x >= vertex:
-                    best_index1 = index + 1
-        # if x axis has decreasing coordinates
-        else:
-            for index, vertex in enumerate(intermediate_vertices_list[0]):
-                if x <= vertex:
-                    best_index1 = index + 1
+        best_index1 = np.argmin(abs(vert_xs - x))
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
-        return [intermediate_waypoints_list[0][best_index1 - 1],
-                intermediate_waypoints_list[1][best_index1 - 1],
-                intermediate_vertices_list[1][best_index1 - 1]], best_index
+        return (lats[best_index1], lons[best_index1]), best_index
 
     def qt_data_changed_listener(self, index1, index2):
         """Listens to dataChanged() signals emitted by the flight track
@@ -938,7 +908,7 @@ class HPathInteractor(PathInteractor):
         self.show_marker = show_marker
         self.show_solar_angle = None
         self.remote_sensing = None
-        super(HPathInteractor, self).__init__(
+        super().__init__(
             ax=mplmap.ax, waypoints=waypoints,
             mplpath=PathH_GC([[0, 0]], map=mplmap),
             facecolor='none', edgecolor='none', linecolor=linecolor,
@@ -975,11 +945,9 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
-        if self.map.projection in ['stere', 'lcc']:
-            map_delta = np.hypot(self.map.llcrnry - self.map.urcrnry, self.map.llcrnrx - self.map.urcrnrx) / 1000.
-        else:
-            map_delta = get_distance((self.map.llcrnry, self.map.llcrnrx), (self.map.urcrnry, self.map.urcrnrx))
+        map_delta = get_distance(self.map.llcrnrlat, self.map.llcrnrlon, self.map.urcrnrlat, self.map.urcrnrlon)
         km_per_px = map_delta / diagonal
+
         return km_per_px * px
 
     def get_lat_lon(self, event):
@@ -1148,10 +1116,14 @@ class HPathInteractor(PathInteractor):
         if self.wp_scatter is not None:
             self.wp_scatter.remove()
         x, y = list(zip(*wp_vertices))
+
+        if self.map.projection == "cyl":  # hack for wraparound
+            x = np.array(x)
+            x[x < self.map.llcrnrlon] += 360
+            x[x > self.map.urcrnrlon] -= 360
         # (animated is important to remove the old scatter points from the map)
-        self.wp_scatter = self.ax.scatter(x, y, color=self.markerfacecolor,
-                                          s=20, zorder=3, animated=True,
-                                          visible=self.show_marker)
+        self.wp_scatter = self.ax.scatter(
+            x, y, color=self.markerfacecolor, s=20, zorder=3, animated=True, visible=self.show_marker)
 
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
@@ -1163,18 +1135,11 @@ class HPathInteractor(PathInteractor):
             textlabel = str(i)
             if wpd[i].location != "":
                 textlabel = f"{wpd[i].location:}"
-            t = self.ax.text(x[i] + label_offset,
-                             y[i] + label_offset,
-                             textlabel,
-                             bbox=dict(boxstyle="round",
-                                       facecolor="white",
-                                       alpha=0.6,
-                                       edgecolor="none"),
-                             fontweight="bold",
-                             zorder=4,
-                             animated=True,
-                             clip_on=True,
-                             visible=self.showverts and self.label_waypoints)
+            t = self.ax.text(
+                x[i] + label_offset, y[i] + label_offset, textlabel,
+                bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.6, "edgecolor": "none"},
+                fontweight="bold", zorder=4, animated=True, clip_on=True,
+                visible=self.showverts and self.label_waypoints)
             self.wp_labels.append(t)
 
         # Redraw the artists.
@@ -1183,7 +1148,7 @@ class HPathInteractor(PathInteractor):
         try:
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
-            logging.debug("ValueError Exception %s", error)
+            logging.debug("ValueError Exception '%s'", error)
         self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
 
@@ -1217,9 +1182,13 @@ class HPathInteractor(PathInteractor):
         If no waypoint vertex is found, None is returned.
         """
         xy = np.asarray(self.pathpatch.get_path().wp_vertices)
+        if self.map.projection == "cyl":  # hack for wraparound
+            lon_min, lon_max = self.map.llcrnrlon, self.map.urcrnrlon
+            xy[xy[:, 0] < lon_min, 0] += 360
+            xy[xy[:, 0] > lon_max, 0] -= 360
         xyt = self.pathpatch.get_transform().transform(xy)
         xt, yt = xyt[:, 0], xyt[:, 1]
-        d = np.sqrt((xt - event.x) ** 2 + (yt - event.y) ** 2)
+        d = np.hypot(xt - event.x, yt - event.y)
         ind = d.argmin()
         if d[ind] >= self.epsilon:
             ind = None

@@ -95,27 +95,22 @@ Setting up a git remote
 
 2. Type ``git remote -v`` in terminal to list remote connections to your repo.
 
-3. It will show something like this:
+3. It will show something like this::
 
-  ``origin  git@github.com:<your-user-name>/MSS.git`` (fetch)
-
-  ``origin  git@github.com:<your-user-name>/MSS.git`` (push)
+   origin  git@github.com:<your-user-name>/MSS.git (fetch)
+   origin  git@github.com:<your-user-name>/MSS.git (push)
 
 4. Now type the command git remote add upstream ``git@github.com:Open-MSS/MSS.git`` this will set upstream as main directory
 
 
 5. Again type in command git remote -v to check if remote has been set up correctly
 
-6. It should show something like this :
+6. It should show something like this::
 
-    ``origin	git@github.com:<your-user-name>/MSS.git (fetch)``
-
-    ``origin	git@github.com:<your-user-name>/MSS.git (push)``
-
-    ``upstream	git@github.com:Open-MSS/MSS.git (fetch)``
-
-    ``upstream	git@github.com:Open-MSS/MSS.git (push)``
-
+   origin	git@github.com:<your-user-name>/MSS.git (fetch)
+   origin	git@github.com:<your-user-name>/MSS.git (push)
+   upstream	git@github.com:Open-MSS/MSS.git (fetch)
+   upstream	git@github.com:Open-MSS/MSS.git (push)
 
 Update local stable branch
 --------------------------
@@ -412,3 +407,32 @@ Publish on Conda Forge
 * rerender the feedstock by conda smithy
 * send a pull request
 * maintainer will merge if there is no error
+
+
+Google Summer of Code(TM)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+MSS takes part in Google Summer of Code
+as a sub-organization of Python Software Foundation(PSF).
+
+GSoC'21 Projects
+----------------
+
+- `Hrithik Kumar Verma: Generating a tool chain tutorial for the MSUI user interface by automation operations : GSoC 2021 <https://github.com/Open-MSS/MSS/wiki/Generating-a-tool-chain-tutorial-for-the-MSUI-user-interface-by-automation-operations-:-GSoC---2021>`_
+
+- `Aravind Murali: MSUI: UI Redesign GSOC 2021 <https://github.com/Open-MSS/MSS/wiki/MSUI:-UI-Redesign---GSOC-2021>`_
+
+
+GSoC'20 Projects
+----------------
+
+- `Aryan Gupta: Mission Support System : Enhance KML Support <https://github.com/Open-MSS/MSS/wiki/KML:-Enhance-KML-Support---GSoC-2020>`_
+
+- `Tanish Grover: Mission Support System: Mission Support Collaboration Improvements <https://github.com/Open-MSS/MSS/wiki/Mscolab:-Mission-Support-Collaboration-Improvements---GSoC-2020>`_
+
+GSoC'19 Projects
+----------------
+
+- `Anveshan Lal: Updating Geographical Plotting Routines <https://github.com/Open-MSS/MSS/wiki/Cartopy:-Updating-Geographical-Plotting-Routines----GSoC-2019>`_
+
+- `Shivashis Padhi: Collaborative editing of flight path in real-time <https://github.com/Open-MSS/MSS/wiki/Mscolab:-Collaborative-editing-of-flight-path-in-real-time---GSoC19>`_
+

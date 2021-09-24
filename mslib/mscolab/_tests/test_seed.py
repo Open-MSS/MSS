@@ -27,12 +27,12 @@
 from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, User, Project
+from mslib.mscolab.models import db, User, Operation
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
-from mslib.mscolab.seed import (add_user, get_user, add_project, add_user_to_project,
-                                delete_user, delete_project, add_all_users_default_project)
+from mslib.mscolab.seed import (add_user, get_user, add_operation, add_user_to_operation,
+                                delete_user, delete_operation, add_all_users_default_operation)
 
 
 class Test_Seed(TestCase):
@@ -53,91 +53,92 @@ class Test_Seed(TestCase):
         handle_db_reset()
         db.init_app(self.app)
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
-        self.room_name = "XYZ"
+        self.operation_name = "XYZ"
         self.description = "Template"
         self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0'
         self.userdata_1 = "UV1@uv1", "UV1", "UV1"
         self.userdata_2 = "UV2@v2", "V2", "v2"
 
         assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
-        assert add_project(self.room_name, self.description)
-        assert add_user_to_project(path=self.room_name, emailid=self.userdata_0[0])
+        assert add_operation(self.operation_name, self.description)
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata_0[0])
         self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
 
     def tearDown(self):
         pass
 
-    def test_add_project(self):
+    def test_add_operation(self):
         with self.app.test_client():
-            assert add_project("a1", "description")
-            project = Project.query.filter_by(path="a1").first()
-            assert project.id > 0
+            assert add_operation("a1", "description")
+            operation = Operation.query.filter_by(path="a1").first()
+            assert operation.id > 0
 
-    def test_delete_project(self):
+    def test_delete_operation(self):
         with self.app.test_client():
-            assert add_project("todelete", "description")
-            project = Project.query.filter_by(path="todelete").first()
-            assert project.id > 0
-            assert delete_project("todelete")
-            project = Project.query.filter_by(path="todelete").first()
-            assert project is None
+            assert add_operation("todelete", "description")
+            operation = Operation.query.filter_by(path="todelete").first()
+            assert operation.id > 0
+            assert delete_operation("todelete")
+            operation = Operation.query.filter_by(path="todelete").first()
+            assert operation is None
 
-    def test_add_all_users_default_project_viewer(self):
+    def test_add_all_users_default_operation_viewer(self):
         with self.app.test_client():
             assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # viewer
-            add_all_users_default_project(path='XYZ', description="Project to keep all users", access_level='viewer')
+            add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
+                                            access_level='viewer')
             expected_result = [{'access_level': 'viewer', 'category': 'default',
-                                'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
+                                'description': 'Template', 'op_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
-            result = self.fm.list_projects(user)
-            # we don't care here for p_id
-            expected_result[0]['p_id'] = result[0]['p_id']
+            result = self.fm.list_operations(user)
+            # we don't care here for op_id
+            expected_result[0]['op_id'] = result[0]['op_id']
             assert result == expected_result
 
-    def test_add_all_users_default_project_collaborator(self):
+    def test_add_all_users_default_operation_collaborator(self):
         with self.app.test_client():
             # collaborator
             assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
-            add_all_users_default_project(path='XYZ', description="Project to keep all users",
-                                          access_level='collaborator')
+            add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
+                                            access_level='collaborator')
             expected_result = [{'access_level': 'collaborator', 'category': 'default',
-                                'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
+                                'description': 'Template', 'op_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
-            result = self.fm.list_projects(user)
-            # we don't care here for p_id
-            expected_result[0]['p_id'] = result[0]['p_id']
+            result = self.fm.list_operations(user)
+            # we don't care here for op_id
+            expected_result[0]['op_id'] = result[0]['op_id']
             assert result == expected_result
 
-    def test_add_all_users_default_project_creator(self):
+    def test_add_all_users_default_operation_creator(self):
         with self.app.test_client():
             assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             # creator
-            add_all_users_default_project(path='XYZ', description="Project to keep all users",
-                                          access_level='creator')
+            add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
+                                            access_level='creator')
             expected_result = [{'access_level': 'creator', 'category': 'default',
-                                'description': 'Template', 'p_id': 7, 'path': 'XYZ'}]
+                                'description': 'Template', 'op_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
-            result = self.fm.list_projects(user)
-            # we don't care here for p_id
-            expected_result[0]['p_id'] = result[0]['p_id']
+            result = self.fm.list_operations(user)
+            # we don't care here for op_id
+            expected_result[0]['op_id'] = result[0]['op_id']
             assert result == expected_result
 
-    def test_add_all_users_default_project_creator_unknown_project(self):
+    def test_add_all_users_default_operation_creator_unknown_operation(self):
         with self.app.test_client():
             assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
-            # creator added to new project
-            add_all_users_default_project(path='UVXYZ', description="Project to keep all users",
-                                          access_level='creator')
+            # creator added to new operation
+            add_all_users_default_operation(path='UVXYZ', description="Operation to keep all users",
+                                            access_level='creator')
             expected_result = [{'access_level': 'creator', 'category': 'default',
-                                'description': 'Project to keep all users',
-                                'p_id': 7, 'path': 'UVXYZ'}]
+                                'description': 'Operation to keep all users',
+                                'op_id': 7, 'path': 'UVXYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
-            result = self.fm.list_projects(user)
-            # we don't care here for p_id
-            expected_result[0]['p_id'] = result[0]['p_id']
+            result = self.fm.list_operations(user)
+            # we don't care here for op_id
+            expected_result[0]['op_id'] = result[0]['op_id']
             assert result == expected_result
 
     def test_add_user(self):
@@ -152,11 +153,11 @@ class Test_Seed(TestCase):
             assert user.id is not None
             assert user.emailid == self.userdata_2[0]
 
-    def test_add_user_to_project(self):
+    def test_add_user_to_operation(self):
         with self.app.test_client():
             assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
-            assert add_project("project2", "description")
-            assert add_user_to_project(path="project2", access_level='admin', emailid=self.userdata_2[0])
+            assert add_operation("operation2", "description")
+            assert add_user_to_operation(path="operation2", access_level='admin', emailid=self.userdata_2[0])
 
     def test_delete_user(self,):
         with self.app.test_client():

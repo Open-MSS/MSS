@@ -25,8 +25,11 @@
     limitations under the License.
 """
 import logging
-import pytest
 import datetime
+
+import numpy as np
+import pytest
+
 import mslib.utils.coordinate as coordinate
 
 LOGGER = logging.getLogger(__name__)
@@ -39,10 +42,10 @@ class TestGetDistance(object):
     # we don't test the utils method here, may be that method should me refactored off
 
     def test_get_distance(self):
-        coordinates_distance = [((50.355136, 7.566077), (50.353968, 4.577915), 212),
-                                ((-5.135943, -42.792442), (4.606085, 120.028077), 18130)]
-        for coord1, coord2, distance in coordinates_distance:
-            assert int(coordinate.get_distance(coord1, coord2)) == distance
+        coordinates_distance = [(50.355136, 7.566077, 50.353968, 4.577915, 212),
+                                (-5.135943, -42.792442, 4.606085, 120.028077, 18130)]
+        for lat0, lon0, lat1, lon1, distance in coordinates_distance:
+            assert int(coordinate.get_distance(lat0, lon0, lat1, lon1)) == distance
 
     def test_find_location(self):
         assert coordinate.find_location(50.92, 6.36) == ([50.92, 6.36], 'Juelich')
@@ -83,116 +86,107 @@ class TestAngles(object):
 
 class TestLatLonPoints(object):
     def test_linear(self):
-        ref_times = [datetime.datetime(2012, 7, 12, 10, 30), datetime.datetime(2012, 7, 12, 10, 35)]
         ref_lats = [0, 10]
         ref_lons = [0, 0]
 
-        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                     numpoints=2, connection="linear")
+        lats, lons = coordinate.latlon_points(ref_lats[0], ref_lons[0], ref_lats[1], ref_lons[1],
+                                              numpoints=2, connection="linear")
         assert len(lats) == len(ref_lats)
         assert all(lats == ref_lats)
         assert len(lons) == len(ref_lons)
         assert all(lons == ref_lons)
-        assert len(times) == len(ref_times)
-        assert all(times == ref_times)
 
-        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                     numpoints=3, connection="linear")
+        lats, lons = coordinate.latlon_points(ref_lats[0], ref_lons[0], ref_lats[1], ref_lons[1],
+                                              numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
-        assert len(times) == 3
         assert all(lats == [0, 5, 10])
 
         ref_lats = [0, 0]
         ref_lons = [0, 10]
-        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                     numpoints=3, connection="linear")
+        lats, lons = coordinate.latlon_points(ref_lats[0], ref_lons[0], ref_lats[1], ref_lons[1],
+                                              numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
-        assert len(times) == 3
         assert all(lons == [0, 5, 10])
-        assert times[1] - times[0] == times[2] - times[1]
 
-        ref_times = [datetime.datetime(2012, 7, 12, 10, 30), datetime.datetime(2012, 7, 12, 10, 30)]
-        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                     numpoints=3, connection="linear")
+        lats, lons = coordinate.latlon_points(ref_lats[0], ref_lons[0], ref_lats[1], ref_lons[1],
+                                              numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
-        assert len(times) == 3
         assert all(lons == [0, 5, 10])
-        assert times[0] == times[1]
-        assert times[1] == times[2]
 
     def test_greatcircle(self):
-        ref_times = [datetime.datetime(2012, 7, 12, 10, 30), datetime.datetime(2012, 7, 12, 10, 35)]
         ref_lats = [0, 10]
         ref_lons = [0, 0]
 
-        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                     numpoints=2, connection="greatcircle")
+        lats, lons = coordinate.latlon_points(ref_lats[0], ref_lons[0], ref_lats[1], ref_lons[1],
+                                              numpoints=2, connection="greatcircle")
         assert len(lats) == len(ref_lats)
-        assert all(lats == ref_lats)
+        assert lats == ref_lats
         assert len(lons) == len(ref_lons)
-        assert all(lons == ref_lons)
-        assert len(times) == len(ref_times)
-        assert all(times == ref_times)
+        assert lons == ref_lons
 
-        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                     numpoints=3, connection="linear")
+        lats, lons = coordinate.latlon_points(ref_lats[0], ref_lons[0], ref_lats[1], ref_lons[1],
+                                              numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
-        assert len(times) == 3
-        assert all(lats == [0, 5, 10])
+        assert all(np.asarray(lats) == [0, 5, 10])
 
         ref_lats = [0, 0]
         ref_lons = [0, 10]
-        lats, lons, times = coordinate.latlon_points([ref_lats[0], ref_lons[0], ref_times[0]],
-                                                     [ref_lats[1], ref_lons[1], ref_times[1]],
-                                                     numpoints=3, connection="linear")
+        lats, lons = coordinate.latlon_points(ref_lats[0], ref_lons[0], ref_lats[1], ref_lons[1],
+                                              numpoints=3, connection="linear")
         assert len(lats) == 3
         assert len(lons) == 3
-        assert len(times) == 3
-        assert all(lons == [0, 5, 10])
-        assert(times[1] - times[0] == times[2] - times[1])
+        assert all(np.asarray(lons) == [0, 5, 10])
 
 
 def test_pathpoints():
-    p1 = [0, 0, datetime.datetime(2012, 7, 1, 10, 30)]
-    p2 = [10, 10, datetime.datetime(2012, 7, 1, 10, 40)]
-    p3 = [-20, 20, datetime.datetime(2012, 7, 1, 10, 40)]
-
-    result = coordinate.path_points([p1, p1], 100, "linear")
+    lats = [0, 10]
+    lons = [0, 10]
+    times = [datetime.datetime(2012, 7, 1, 10, 30),
+             datetime.datetime(2012, 7, 1, 10, 40)]
+    ref = [lats, lons, times]
+    result = coordinate.path_points(lats, lons, 100, times=times, connection="linear")
     assert all(len(_x) == 100 for _x in result)
-    assert all(result[i][0] == p1[i] for i in range(3))
-    assert all(result[i][-1] == p1[i] for i in range(3))
+    for i in range(3):
+        assert pytest.approx(result[i][0]) == ref[i][0]
+        assert pytest.approx(result[i][-1]) == ref[i][-1]
 
-    result = coordinate.path_points([p1, p1], 100, "greatcircle")
+    result = coordinate.path_points(lats, lons, 100, times=times, connection="greatcircle")
     assert all(len(_x) == 100 for _x in result)
-    assert all(result[i][0] == p1[i] for i in range(3))
-    assert all(result[i][-1] == p1[i] for i in range(3))
+    for i in range(3):
+        assert pytest.approx(result[i][0]) == ref[i][0]
+        assert pytest.approx(result[i][-1]) == ref[i][-1]
 
-    result = coordinate.path_points([p1, p2], 200, "linear")
+    result = coordinate.path_points(lats, lons, 200, times=times, connection="linear")
     assert all(len(_x) == 200 for _x in result)
-    assert all(result[i][0] == p1[i] for i in range(3))
-    assert all(result[i][-1] == p2[i] for i in range(3))
+    for i in range(3):
+        assert pytest.approx(result[i][0]) == ref[i][0]
+        assert pytest.approx(result[i][-1]) == ref[i][-1]
 
-    result = coordinate.path_points([p1, p2], 200, "greatcircle")
+    result = coordinate.path_points(lats, lons, 200, times=times, connection="greatcircle")
     assert all(len(_x) == 200 for _x in result)
-    assert all(result[i][0] == p1[i] for i in range(3))
-    assert all(result[i][-1] == p2[i] for i in range(3))
+    for i in range(3):
+        assert pytest.approx(result[i][0]) == ref[i][0]
+        assert pytest.approx(result[i][-1]) == ref[i][-1]
 
-    result = coordinate.path_points([p1, p2, p3], 100, "linear")
-    assert all(len(_x) == 100 for _x in result)
-    assert all(result[i][0] == p1[i] for i in range(3))
-    assert all(result[i][-1] == p3[i] for i in range(3))
+    lats = [0, 10, -20]
+    lons = [0, 10, 20]
+    times = [datetime.datetime(2012, 7, 1, 10, 30),
+             datetime.datetime(2012, 7, 1, 10, 40),
+             datetime.datetime(2012, 7, 1, 10, 50)]
+    ref = [lats, lons, times]
 
-    result = coordinate.path_points([p1, p2, p3], 100, "greatcircle")
+    result = coordinate.path_points(lats, lons, 100, times=times, connection="linear")
+    assert all([len(_x) == 100 for _x in result])
+    for i in range(3):
+        assert pytest.approx(result[i][0]) == ref[i][0]
+        assert pytest.approx(result[i][-1]) == ref[i][-1]
+
+    result = coordinate.path_points(lats, lons, 100, times=times, connection="greatcircle")
     assert all(len(_x) == 100 for _x in result)
-    assert all(result[i][0] == p1[i] for i in range(3))
-    assert all(result[i][-1] == p3[i] for i in range(3))
+    for i in range(3):
+        assert pytest.approx(result[i][0]) == ref[i][0]
+        assert pytest.approx(result[i][-1]) == ref[i][-1]
