@@ -323,26 +323,21 @@ class MissionSupportSystemDefaultConfig(object):
     }
 
 
-def get_default_config():
-    default_options = dict(MissionSupportSystemDefaultConfig.__dict__)
-    for key in [
-        "__module__",
-        "__doc__",
-        "__dict__",
-        "__weakref__",
-        "fixed_dict_options",
-        "dict_option_structure",
-        "list_option_structure",
-        "key_value_options",
-        "config_descriptions",
-    ]:
-        del default_options[key]
-
-    return default_options
-
-
 # default options as dictionary
-default_options = get_default_config()
+default_options = dict(MissionSupportSystemDefaultConfig.__dict__)
+for key in [
+    "__module__",
+    "__doc__",
+    "__dict__",
+    "__weakref__",
+    "fixed_dict_options",
+    "dict_option_structure",
+    "list_option_structure",
+    "key_value_options",
+    "config_descriptions",
+]:
+    del default_options[key]
+
 
 # user options as dictionary
 user_options = copy.deepcopy(default_options)
@@ -389,11 +384,11 @@ def read_config_file(path=constants.MSS_SETTINGS):
 
 def config_loader(dataset=None, default=False):
     """
-    Function for loading json config data
+    Function for returning config value
 
     Args:
-        config_file: json file, parameters for initializing mss,
         dataset: section to pull from json file
+        default: option to return default config for the dataset
 
     Returns: a the dataset value or the config as dictionary
 
@@ -549,29 +544,29 @@ def compare_data(default, user_data):
             return default, False
 
     data = copy.deepcopy(default)
-    trues = []
+    matches = []
     # If data is list type, compare all values in list
-    if isinstance(default, list):
-        if isinstance(user_data, list):
-            if len(default) == len(user_data):
-                for i in range(len(default)):
-                    data[i], match = compare_data(default[i], user_data[i])
-                    trues.append(match)
-            else:
-                return default, False
+    if isinstance(default, list) and isinstance(user_data, list):
+        if len(default) == len(user_data):
+            for i in range(len(default)):
+                data[i], match = compare_data(default[i], user_data[i])
+                matches.append(match)
         else:
             return default, False
 
     # If data is dict type, goes through the dict and update
-    elif isinstance(default, dict):
-        for key in default:
-            if key in user_data:
-                data[key], match = compare_data(default[key], user_data[key])
-                trues.append(match)
-            else:
-                trues.append(False)
+    elif isinstance(default, dict) and isinstance(user_data, dict):
+        if default.keys() == user_data.keys():
+            for key in default:
+                if key in user_data:
+                    data[key], match = compare_data(default[key], user_data[key])
+                    matches.append(match)
+                else:
+                    matches.append(False)
+        else:
+            return default, False
 
-    return data, all(trues)
+    return data, all(matches)
 
 
 def dict_raise_on_duplicates_empty(ordered_pairs):

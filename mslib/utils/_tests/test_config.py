@@ -31,7 +31,7 @@ import fs
 import pytest
 
 from mslib import utils
-from mslib.utils.config import config_loader, get_default_config, read_config_file
+from mslib.utils.config import config_loader, read_config_file
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
 
@@ -69,12 +69,12 @@ class TestConfigLoader(object):
     def test_default_config(self):
         data = config_loader(default=True)
         assert isinstance(data, dict)
-        assert data == get_default_config()
+        assert data == config_loader(default=True)
         assert data["num_labels"] == 10
         assert data["num_interpolation_points"] == 201
 
     def test_default_config_dataset(self):
-        default_data = get_default_config()
+        default_data = config_loader(default=True)
         num_labels = config_loader(dataset="num_labels", default=True)
         assert num_labels == default_data["num_labels"]
 
@@ -125,7 +125,7 @@ class TestConfigLoader(object):
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("mss_settings.json")
         assert ":" not in file_content
-        default_data = get_default_config()
+        default_data = config_loader(default=True)
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
@@ -147,7 +147,7 @@ class TestConfigLoader(object):
         with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("mss_settings.json")
         assert "num_labels" not in file_content
-        default_data = get_default_config()
+        default_data = config_loader(default=True)
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
         read_config_file(path=config_file)
         data = config_loader()

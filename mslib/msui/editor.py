@@ -75,9 +75,9 @@ class JsonDelegate(delegate.JsonDelegate):
             root_index, parents = get_root_index(index, parents=True)
             parents.append(index)
             key = root_index.data()
-            if key in mss_default.list_option_structure or key \
-                in mss_default.dict_option_structure or key \
-                in mss_default.key_value_options:
+            if key in mss_default.list_option_structure or \
+                key in mss_default.dict_option_structure or \
+                key in mss_default.key_value_options:
                 if root_index == index and data[key] != default_options[key]:
                     option.font.setWeight(QtGui.QFont.Bold)
             elif key in mss_default.fixed_dict_options:
@@ -133,8 +133,6 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         super(ConfigurationEditorWindow, self).__init__(parent)
         self.setupUi(self)
 
-        self.restart_on_save = True
-
         options = config_loader()
         self.path = MSS_SETTINGS
         self.last_saved = copy.deepcopy(options)
@@ -143,7 +141,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         for option in sorted(options.keys(), key=str.lower):
             self.optCb.addItem(option)
 
-        # Create view and place in widget
+        # Create view and place in parent widget
         self.view = JsonView()
         self.view.setItemDelegate(JsonDelegate())
         self.view.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
@@ -180,7 +178,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.toolBar.addAction(self.export_file_action)
 
         # Button signals
-        self.optCb.currentIndexChanged.connect(self.selection_change)
+        self.optCb.currentIndexChanged.connect(self.set_option_filter)
         self.addOptBtn.clicked.connect(self.add_option_handler)
         self.removeOptBtn.clicked.connect(self.remove_option_handler)
         self.restoreDefaultsBtn.clicked.connect(self.restore_defaults)
@@ -222,6 +220,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         # Add invalidity roles and update status of keys
         self.update_view()
 
+        self.restart_on_save = True
+
     def set_noneditable_items(self, parent):
         for r in range(self.json_model.rowCount(parent)):
             index = self.json_model.index(r, 0, parent)
@@ -233,6 +233,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 item.setData(mss_default.config_descriptions[item.text()], QtCore.Qt.ToolTipRole)
 
     def tree_selection_changed(self, selected, deselected):
+        """Enable/Disable appropriate buttons based on selection in treeview
+        """
         selection = self.view.selectionModel().selectedRows()
         # if no selection
         add, remove, restore_defaults, move = [False] * 4
@@ -275,6 +277,12 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.moveDownTb.setEnabled(move)
 
     def update_view(self):
+        """
+        Set InvalidRole and DummyRole for all root items in the treeview and highlight appropriately.
+
+        InvalidRole -> Boolean list indicating if item has Empty, Duplicate, Invalid values
+        DummyRole -> Boolean value indicating if item has dummy value
+        """
         source_model = self.json_model
         data = source_model.serialize()
         parent = QtCore.QModelIndex()
@@ -338,13 +346,10 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             item = source_model.itemFromIndex(source_index)
             item.setBackground(color)
 
-    def show_all(self):
+    def set_option_filter(self, index):
         # By default FilterKeyColumn of the proxy model is set to 0
-        self.proxy_model.setFilterRegExp("")
-
-    def selection_change(self, index):
         if self.optCb.currentText() == "All":
-            self.show_all()
+            self.proxy_model.setFilterRegExp("")
             return
         self.proxy_model.setFilterRegExp(QtCore.QRegExp(f"^{self.optCb.currentText()}$"))
         self.view.expandAll()
@@ -364,14 +369,17 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             item = self.json_model.itemFromIndex(index)
             if index.data() == option:
                 if option in mss_default.fixed_dict_options + mss_default.key_value_options:
+                    # Cannot add options to fixed structure options
                     self.statusbar.showMessage(
                         "Option already exists. Please change value to your preference or restore to default.")
                     return
                 elif option in mss_default.dict_option_structure:
+                    # Append dummy value dict to options having a dictionary structure
                     json_data = mss_default.dict_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
                 elif option in mss_default.list_option_structure:
+                    # Append dummy value to options having a list structure
                     json_data = mss_default.list_option_structure[option]
                     type_ = match_type(json_data)
                     type_.next(model=self.json_model, data=json_data, parent=item)
@@ -383,7 +391,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 # expand root item
                 proxy_index = self.proxy_model.mapFromSource(index)
                 self.view.expand(proxy_index)
-                # scroll to, expand and select new item
+                # expand, scroll to and select new item
                 rows = self.json_model.rowCount(index) - 1
                 new_index = self.json_model.index(rows, 0, index)
                 proxy_index = self.proxy_model.mapFromSource(new_index)
@@ -402,6 +410,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             self.statusbar.showMessage("Please select one/more options to remove")
             return
 
+        # Collect all removable indexes from selected items
         non_removable = []
         removable_indexes = {}
         for index in selection:
@@ -454,8 +463,8 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.update_view()
 
     def restore_defaults(self):
-        # function to update dict at a depth
         def update(data, option, value):
+            """Function to update dict at a depth"""
             for k, v in data.items():
                 if k == option:
                     data[k] = value
@@ -625,7 +634,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     self, self.tr("Mission Support System"),
                     self.tr("Do you want to restart the application?\n"
                             "(This is necessary to apply changes)\n\n"
-                            "Please note that clicking No will not save the current configuration"),
+                            "Please note that clicking 'No' will not save the current configuration"),
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                     QtWidgets.QMessageBox.No)
                 if ret == QtWidgets.QMessageBox.Yes:
