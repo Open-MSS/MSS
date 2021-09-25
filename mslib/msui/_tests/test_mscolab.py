@@ -261,7 +261,8 @@ class Test_Mscolab(object):
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'), None))
+                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
+                              "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
@@ -378,8 +379,8 @@ class Test_Mscolab(object):
         self._activate_operation_at_index(1)
         assert self.window.mscolab.active_operation_name == "reproduce-test"
 
-    @mock.patch("mslib.msui.mscolab.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mscolab.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_operation(self, mocktext, mockbox):
         # pytest.skip('needs a review for the delete button pressed. Seems to delete a None operation')
         self._connect_to_mscolab()
@@ -398,6 +399,9 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
+        assert mockbox.call_count == 1
 
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()
@@ -459,14 +463,16 @@ class Test_Mscolab(object):
         self.window.actionMSColabHelp.trigger()
         QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.help_dialog is not None
-        self.window.close()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
-    def test_close_help_dialog(self, mockwarn):
+    def test_close_help_dialog(self):
         self.window.actionMSColabHelp.trigger()
         QtWidgets.QApplication.processEvents()
-        self.window.close()
+        assert self.window.mscolab.help_dialog is not None
+        QtTest.QTest.mouseClick(
+            self.window.mscolab.help_dialog.okayBtn, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(50)
+        QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.help_dialog is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")

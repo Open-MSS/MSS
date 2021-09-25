@@ -746,7 +746,7 @@ class MSSMscolab(QtCore.QObject):
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your operation was created successfully')
-            op_id = self.get_recent_pid()
+            op_id = self.get_recent_op_id()
             self.conn.handle_new_operation(op_id)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()

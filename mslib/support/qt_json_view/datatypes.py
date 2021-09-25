@@ -66,7 +66,7 @@ class DataType(object):
     def value_item(self, value, model, key=None):
         """Create an item for the value column for this data type."""
         display_value = value
-        item = QtGui.QStandardItem(display_value)
+        item = QtGui.QStandardItem()
         item.setData(display_value, QtCore.Qt.DisplayRole)
         item.setData(value, QtCore.Qt.UserRole)
         item.setData(self, TypeRole)
