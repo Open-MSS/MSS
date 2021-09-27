@@ -948,7 +948,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         d = self.dteInitTime.dateTime()
         # Add value from cbInitTime_step and set new date.
         secs = self.secs_from_timestep(self.cbInitTime_step.currentText())
-        self.dteInitTime.setDateTime(d.addSecs(-1. * secs))
+        self.dteInitTime.setDateTime(d.addSecs(-secs))
         self.auto_update()
 
     def init_time_fwd_click(self):
@@ -966,7 +966,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         d = self.dteValidTime.dateTime()
         # Add value from cbInitTime_step and set new date.
         secs = self.secs_from_timestep(self.cbValidTime_step.currentText())
-        self.dteValidTime.setDateTime(d.addSecs(-1. * secs))
+        self.dteValidTime.setDateTime(d.addSecs(-secs))
         self.auto_update()
 
     def valid_time_fwd_click(self):
