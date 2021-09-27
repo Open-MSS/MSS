@@ -746,7 +746,7 @@ class MSSMscolab(QtCore.QObject):
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your operation was created successfully')
-            op_id = self.get_recent_pid()
+            op_id = self.get_recent_op_id()
             self.conn.handle_new_operation(op_id)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
@@ -1172,8 +1172,12 @@ class MSSMscolab(QtCore.QObject):
     def handle_revoke_permission(self, op_id, u_id):
         if u_id == self.user["id"]:
             operation_name = self.delete_operation_from_list(op_id)
-            show_popup(self.ui, "Permission Revoked",
-                       f'Your access to operation - "{operation_name}" was revoked!', icon=1)
+            if operation_name is not None:
+                show_popup(self.ui, "Permission Revoked",
+                           f'Your access to operation - "{operation_name}" was revoked!', icon=1)
+                # on import permissions revoked name can not taken from the operation list,
+                # because we update the list first by reloading it.
+                show_popup(self.ui, "Permission Revoked", "Access to an operation was revoked")
 
     @QtCore.Slot(int)
     def handle_operation_deleted(self, op_id):

@@ -274,6 +274,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         if res.text != "False":
             res = res.json()
             if res["success"]:
+                # updates the admin view
                 self.load_users_without_permission()
                 self.load_users_with_permission()
             else:

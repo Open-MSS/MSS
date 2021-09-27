@@ -425,22 +425,38 @@ class FileManager(object):
             .filter((Permission.u_id != u_id) & (Permission.u_id != current_operation_creator.u_id))\
             .all()
 
-        # We Delete all the existing permissions
-        existing_users = []
+        is_perm = []
         for perm in existing_perms:
-            existing_users.append(perm.u_id)
-            db.session.delete(perm)
+            is_perm.append((perm.u_id, perm.access_level))
+        new_perm = []
+        for perm in import_perms:
+            access_level = perm.access_level
+            # we keep creator to the one created the operation
+            if perm.access_level in ("creator", "admin"):
+                access_level = "collaborator"
+            new_perm.append((perm.u_id, access_level))
+
+        if sorted(new_perm) == sorted(is_perm):
+            return False, None, "Permissions are already given"
+
+        # We Delete all permissions of different users which change
+        existing_users = []
+        delete_users = []
+        for perm in existing_perms:
+            if (perm.u_id, perm.access_level) not in new_perm:
+                db.session.delete(perm)
+                delete_users.append(perm.u_id)
+            else:
+                existing_users.append(perm.u_id)
 
         db.session.flush()
 
         # Then add the permissions of the imported operation
         new_users = []
-        for perm in import_perms:
-            access_level = perm.access_level
-            if perm.access_level == "creator":
-                access_level = "admin"
-            new_users.append(perm.u_id)
-            db.session.add(Permission(perm.u_id, current_op_id, access_level))
+        for u_id, access_level in new_perm:
+            if not (u_id, access_level) in is_perm:
+                new_users.append(u_id)
+                db.session.add(Permission(u_id, current_op_id, access_level))
 
         # Set Difference of lists new_users - existing users
         add_users = [u_id for u_id in new_users if u_id not in existing_users]
@@ -451,8 +467,8 @@ class FileManager(object):
 
         try:
             db.session.commit()
-            return True, {"add_users": add_users, "modify_users": modify_users, "delete_users": delete_users}
+            return True, {"add_users": add_users, "modify_users": modify_users, "delete_users": delete_users}, "success"
 
         except IntegrityError:
             db.session.rollback()
-            return False, None
+            return False, None, "Some error occurred! Could not import permissions. Please try again."
