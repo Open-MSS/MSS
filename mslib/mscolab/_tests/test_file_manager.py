@@ -204,10 +204,8 @@ class Test_FileManager(TestCase):
         with self.app.test_client():
             flight_path8, operation8 = self._create_operation(flight_path="operation8")
             flight_path9, operation9 = self._create_operation(flight_path="operation9")
-            assert self.fm.import_permissions(operation8.id, operation9.id, self.user.id) == (True,
-                                                                                              {'add_users': [],
-                                                                                               'delete_users': [],
-                                                                                               'modify_users': []})
+            result = (False, None, 'Permissions are already given')
+            assert self.fm.import_permissions(operation8.id, operation9.id, self.user.id) == result
 
     def _example_data(self):
         self.content1 = """\

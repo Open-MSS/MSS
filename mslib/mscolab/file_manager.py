@@ -418,12 +418,14 @@ class FileManager(object):
             .filter(Permission.op_id == current_op_id) \
             .filter((Permission.u_id != u_id) & (Permission.access_level != 'creator')) \
             .all()
+        existing_users = set([perm.u_id for perm in existing_perms])
 
         current_operation_creator = Permission.query.filter_by(op_id=current_op_id, access_level="creator").first()
         import_perms = Permission.query\
             .filter(Permission.op_id == import_op_id)\
             .filter((Permission.u_id != u_id) & (Permission.u_id != current_operation_creator.u_id))\
             .all()
+        import_users = set([perm.u_id for perm in import_perms])
 
         is_perm = []
         for perm in existing_perms:
@@ -431,7 +433,7 @@ class FileManager(object):
         new_perm = []
         for perm in import_perms:
             access_level = perm.access_level
-            # we keep creator to the one created the operation
+            # we keep creator/admin to the one created the operation
             if perm.access_level in ("creator", "admin"):
                 access_level = "collaborator"
             new_perm.append((perm.u_id, access_level))
@@ -439,31 +441,32 @@ class FileManager(object):
         if sorted(new_perm) == sorted(is_perm):
             return False, None, "Permissions are already given"
 
-        # We Delete all permissions of different users which change
-        existing_users = []
+        # We Delete all permissions of existing users which not in new permission
         delete_users = []
         for perm in existing_perms:
             if (perm.u_id, perm.access_level) not in new_perm:
                 db.session.delete(perm)
                 delete_users.append(perm.u_id)
-            else:
-                existing_users.append(perm.u_id)
 
         db.session.flush()
 
-        # Then add the permissions of the imported operation
+        # Then add the permissions of the imported operation based on new_perm
         new_users = []
         for u_id, access_level in new_perm:
             if not (u_id, access_level) in is_perm:
                 new_users.append(u_id)
                 db.session.add(Permission(u_id, current_op_id, access_level))
 
-        # Set Difference of lists new_users - existing users
-        add_users = [u_id for u_id in new_users if u_id not in existing_users]
-        # Intersection of lists existing_users and new_users
-        modify_users = [u_id for u_id in existing_users if u_id in new_users]
-        # Set Difference of lists existing users - new_users
-        delete_users = [u_id for u_id in new_users if u_id in existing_users]
+        # prepare events based on action done
+        delete_users = existing_users.difference(import_users)
+        add_users = import_users.difference(existing_users)
+        modify_users = []
+        _intersect_users = import_users.intersection(existing_users)
+        _new_perm = dict(new_perm)
+        _is_perm = dict(is_perm)
+        for m_uid in _intersect_users:
+            if _new_perm[m_uid] != _is_perm[m_uid]:
+                modify_users.append(m_uid)
 
         try:
             db.session.commit()
