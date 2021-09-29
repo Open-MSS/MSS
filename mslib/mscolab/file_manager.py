@@ -408,11 +408,11 @@ class FileManager(object):
 
     def import_permissions(self, import_op_id, current_op_id, u_id):
         if not self.is_admin(u_id, current_op_id):
-            return False, None
+            return False, None, "Not an admin of this operation"
 
         perm = Permission.query.filter_by(u_id=u_id, op_id=import_op_id).first()
         if not perm:
-            return False, None
+            return False, None, "Not a member of this operation"
 
         existing_perms = Permission.query \
             .filter(Permission.op_id == current_op_id) \
@@ -458,8 +458,8 @@ class FileManager(object):
                 db.session.add(Permission(u_id, current_op_id, access_level))
 
         # prepare events based on action done
-        delete_users = existing_users.difference(import_users)
-        add_users = import_users.difference(existing_users)
+        delete_users = list(existing_users.difference(import_users))
+        add_users = list(import_users.difference(existing_users))
         modify_users = []
         _intersect_users = import_users.intersection(existing_users)
         _new_perm = dict(new_perm)
