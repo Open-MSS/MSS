@@ -1284,8 +1284,9 @@ class MSSMscolab(QtCore.QObject):
 
             self.ui.switch_to_mscolab()
         else:
-            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
-            self.logout()
+            if self.mscolab_server_url is not None:
+                show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                self.logout()
 
     def switch_to_local(self):
         self.ui.local_active = True
@@ -1473,6 +1474,8 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def logout(self):
+        if self.mscolab_server_url is None:
+            return
         self.ui.local_active = True
         self.ui.menu_handler()
         # close all hanging window
