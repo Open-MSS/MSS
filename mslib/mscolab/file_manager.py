@@ -368,7 +368,8 @@ class FileManager(object):
 
         new_permissions = []
         for u_id in new_u_ids:
-            new_permissions.append(Permission(u_id, op_id, access_level))
+            if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
+                new_permissions.append(Permission(u_id, op_id, access_level))
         db.session.add_all(new_permissions)
         try:
             db.session.commit()
@@ -455,7 +456,8 @@ class FileManager(object):
         for u_id, access_level in new_perm:
             if not (u_id, access_level) in is_perm:
                 new_users.append(u_id)
-                db.session.add(Permission(u_id, current_op_id, access_level))
+                if Permission.query.filter_by(u_id=u_id, op_id=current_op_id).first() is None:
+                    db.session.add(Permission(u_id, current_op_id, access_level))
 
         # prepare events based on action done
         delete_users = list(existing_users.difference(import_users))
