@@ -434,9 +434,9 @@ class FileManager(object):
         new_perm = []
         for perm in import_perms:
             access_level = perm.access_level
-            # we keep creator/admin to the one created the operation
-            if perm.access_level in ("creator", "admin"):
-                access_level = "collaborator"
+            # we keep creator to the one created the operation, and substitute the imported to admin
+            if perm.access_level == "creator":
+                access_level = "admin"
             new_perm.append((perm.u_id, access_level))
 
         if sorted(new_perm) == sorted(is_perm):
