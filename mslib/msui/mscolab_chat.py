@@ -59,7 +59,7 @@ class MessageTextEdit(QtWidgets.QTextEdit):
         super().keyPressEvent(event)
 
 
-class MSColabOperationWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
+class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     """Derives QMainWindow to provide some common functionality to all
        MSUI view windows.
     """
@@ -82,7 +82,7 @@ class MSColabOperationWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         parent: widget parent
         mscolab_server_url: server url for mscolab
         """
-        super(MSColabOperationWindow, self).__init__(parent)
+        super(MSColabChatWindow, self).__init__(parent)
         self.setupUi(self)
 
         self.mscolab_server_url = mscolab_server_url

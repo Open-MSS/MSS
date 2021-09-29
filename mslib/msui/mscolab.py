@@ -43,7 +43,7 @@ from PIL import Image
 from werkzeug.urls import url_join
 
 from mslib.msui import flighttrack as ft
-from mslib.msui import mscolab_operation as mp
+from mslib.msui import mscolab_chat as mp
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
@@ -793,7 +793,7 @@ class MSSMscolab(QtCore.QObject):
                 self.chat_window.activateWindow()
                 return
 
-            self.chat_window = mp.MSColabOperationWindow(
+            self.chat_window = mp.MSColabChatWindow(
                 self.token,
                 self.active_op_id,
                 self.user,
