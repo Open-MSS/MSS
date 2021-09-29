@@ -82,9 +82,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.conn.signal_operation_permissions_updated.connect(self.handle_permissions_updated)
 
         self.set_label_text()
+        self.load_import_operations()
         self.load_users_without_permission()
         self.load_users_with_permission()
-        self.populate_import_permission_cb()
 
     def populate_table(self, table, users):
         users.sort()
@@ -150,6 +150,18 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.operationNameLabel.setText(f"Operation: {self.operation_name}")
         self.usernameLabel.setText(f"Logged In: {self.user['username']}")
 
+    def load_import_operations(self):
+        data = {
+            "token": self.token,
+            "op_id": self.op_id
+        }
+        url = url_join(self.mscolab_server_url, "operations")
+        r = requests.get(url, data=data)
+        if r.text != "False":
+            _json = json.loads(r.text)
+            self.operations = _json["operations"]
+            self.populate_import_permission_cb()
+
     def load_users_without_permission(self):
         self.addUsers = []
         data = {
@@ -209,6 +221,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             res = res.json()
             if res["success"]:
                 # TODO: Do we need a success popup?
+                self.load_import_operations()
                 self.load_users_without_permission()
                 self.load_users_with_permission()
             else:
@@ -233,6 +246,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         if res.text != "False":
             res = res.json()
             if res["success"]:
+                self.load_import_operations()
                 self.load_users_without_permission()
                 self.load_users_with_permission()
             else:
@@ -255,6 +269,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         if res.text != "False":
             res = res.json()
             if res["success"]:
+                self.load_import_operations()
                 self.load_users_without_permission()
                 self.load_users_with_permission()
             else:
@@ -275,6 +290,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             res = res.json()
             if res["success"]:
                 # updates the admin view
+                self.load_import_operations()
                 self.load_users_without_permission()
                 self.load_users_with_permission()
             else:
@@ -288,6 +304,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             return
 
         show_popup(self, 'Alert', 'The permissions for this operation were updated! The window is going to refresh.', 1)
+        self.load_import_operations()
         self.load_users_without_permission()
         self.load_users_with_permission()
 
