@@ -578,7 +578,6 @@ def import_permissions():
     user = g.user
     success, users, message = fm.import_permissions(import_op_id, current_op_id, user.id)
     if success:
-        # ToDo review notification on new permission
         for u_id in users["add_users"]:
             sockio.sm.emit_new_permission(u_id, current_op_id)
         for u_id in users["modify_users"]:
