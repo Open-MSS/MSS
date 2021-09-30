@@ -154,7 +154,8 @@ class ConnectionManager(QtCore.QObject):
                           "message_text": message_text,
                           "reply_id": reply_id})
         else:
-            self.expired_message()
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
     def edit_message(self, message_id, new_message_text, op_id):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -165,7 +166,8 @@ class ConnectionManager(QtCore.QObject):
                 "token": self.token
             })
         else:
-            self.expired_message()
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
     def delete_message(self, message_id, op_id):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -175,7 +177,8 @@ class ConnectionManager(QtCore.QObject):
                 'token': self.token
             })
         else:
-            self.expired_message()
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
     def save_file(self, token, op_id, content, comment=None):
         # ToDo refactor API
@@ -187,13 +190,8 @@ class ConnectionManager(QtCore.QObject):
                           "content": content,
                           "comment": comment})
         else:
-            self.expired_message()
-
-    def expired_message(self):
-        qd = QtWidgets.QDialog()
-        show_popup(qd, "Error", "Your Connection is expired. New Login required!")
-        qd.close()
-        self.disconnect()
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
     def disconnect(self):
         self.sio.disconnect()
