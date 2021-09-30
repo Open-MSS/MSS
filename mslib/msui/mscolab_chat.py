@@ -63,7 +63,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     """Derives QMainWindow to provide some common functionality to all
        MSUI view windows.
     """
-    name = "MSColab Operation Window"
+    name = "MSColab Chat Window"
     identifier = None
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
