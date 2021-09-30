@@ -28,9 +28,10 @@ import socketio
 import json
 import logging
 
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
-
+from mslib.msui.mss_qt import show_popup
+from mslib.mscolab.utils import verify_user_token
 
 class ConnectionManager(QtCore.QObject):
 
@@ -145,36 +146,54 @@ class ConnectionManager(QtCore.QObject):
                       "token": self.token})
 
     def send_message(self, message_text, op_id, reply_id):
-        logging.debug("sending message")
-        self.sio.emit('chat-message', {
-                      "op_id": op_id,
-                      "token": self.token,
-                      "message_text": message_text,
-                      "reply_id": reply_id})
+        if verify_user_token(self.mscolab_server_url, self.token):
+            logging.debug("sending message")
+            self.sio.emit('chat-message', {
+                          "op_id": op_id,
+                          "token": self.token,
+                          "message_text": message_text,
+                          "reply_id": reply_id})
+        else:
+            self.expired_message()
 
     def edit_message(self, message_id, new_message_text, op_id):
-        self.sio.emit('edit-message', {
-            "message_id": message_id,
-            "new_message_text": new_message_text,
-            "op_id": op_id,
-            "token": self.token
-        })
+        if verify_user_token(self.mscolab_server_url, self.token):
+            self.sio.emit('edit-message', {
+                "message_id": message_id,
+                "new_message_text": new_message_text,
+                "op_id": op_id,
+                "token": self.token
+            })
+        else:
+            self.expired_message()
 
     def delete_message(self, message_id, op_id):
-        self.sio.emit('delete-message', {
-            'message_id': message_id,
-            'op_id': op_id,
-            'token': self.token
-        })
+        if verify_user_token(self.mscolab_server_url, self.token):
+            self.sio.emit('delete-message', {
+                'message_id': message_id,
+                'op_id': op_id,
+                'token': self.token
+            })
+        else:
+            self.expired_message()
 
     def save_file(self, token, op_id, content, comment=None):
         # ToDo refactor API
-        logging.debug("saving file")
-        self.sio.emit('file-save', {
-                      "op_id": op_id,
-                      "token": self.token,
-                      "content": content,
-                      "comment": comment})
+        if verify_user_token(self.mscolab_server_url, self.token):
+            logging.debug("saving file")
+            self.sio.emit('file-save', {
+                          "op_id": op_id,
+                          "token": self.token,
+                          "content": content,
+                          "comment": comment})
+        else:
+            self.expired_message()
+
+    def expired_message(self):
+        qd = QtWidgets.QDialog()
+        show_popup(qd, "Error", "Your Connection is expired. New Login required!")
+        qd.close()
+        self.disconnect()
 
     def disconnect(self):
         self.sio.disconnect()

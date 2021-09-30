@@ -49,6 +49,7 @@ from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+from mslib.mscolab.utils import verify_user_token
 from mslib.msui.mss_qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.mss_qt import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.mss_qt import ui_add_operation_dialog as add_operation_ui
@@ -518,27 +519,6 @@ class MSSMscolab(QtCore.QObject):
         # Show category list
         self.show_categories_to_ui()
 
-    def verify_user_token(self):
-        data = {
-            "token": self.token
-        }
-        try:
-            r = requests.get(f'{self.mscolab_server_url}/test_authorized', data=data)
-        except requests.exceptions.SSLError:
-            logging.debug("Certificate Verification Failed")
-            return False
-        except requests.exceptions.InvalidSchema:
-            logging.debug("Invalid schema of url")
-            return False
-        except requests.exceptions.ConnectionError as ex:
-            logging.error("unexpected error: %s %s", type(ex), ex)
-            return False
-        except requests.exceptions.MissingSchema as ex:
-            # self.mscolab_server_url can be None??
-            logging.error("unexpected error: %s %s", type(ex), ex)
-            return False
-        return r.text == "True"
-
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_settings = self.email in config_loader(dataset="gravatar_ids")
@@ -648,7 +628,7 @@ class MSSMscolab(QtCore.QObject):
         self.fetch_gravatar()
 
     def delete_account(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             w = QtWidgets.QWidget()
             qm = QtWidgets.QMessageBox
             reply = qm.question(w, self.tr('Continue?'),
@@ -662,10 +642,10 @@ class MSSMscolab(QtCore.QObject):
             requests.post(self.mscolab_server_url + '/delete_user', data=data)
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
-        self.logout()
+            self.logout()
 
     def add_operation_handler(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             def check_and_enable_operation_accept():
                 if (self.add_proj_dialog.path.text() != "" and
                         self.add_proj_dialog.description.toPlainText() != "" and
@@ -753,7 +733,7 @@ class MSSMscolab(QtCore.QObject):
             self.error_dialog.showMessage('The path already exists')
 
     def get_recent_op_id(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             """
             get most recent operation's op_id
             """
@@ -785,7 +765,7 @@ class MSSMscolab(QtCore.QObject):
             self.handle_delete_operation()
 
     def open_chat_window(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if self.active_op_id is None:
                 return
 
@@ -815,7 +795,7 @@ class MSSMscolab(QtCore.QObject):
         self.chat_window = None
 
     def open_admin_window(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if self.active_op_id is None:
                 return
 
@@ -844,7 +824,7 @@ class MSSMscolab(QtCore.QObject):
         self.admin_window = None
 
     def open_version_history_window(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if self.active_op_id is None:
                 return
 
@@ -892,7 +872,7 @@ class MSSMscolab(QtCore.QObject):
             self.version_window = None
 
     def handle_delete_operation(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             entered_operation_name, ok = QtWidgets.QInputDialog.getText(
                 self.ui,
                 self.ui.tr("Delete Operation"),
@@ -921,7 +901,7 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def handle_work_locally_toggle(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if self.ui.workLocallyCheckbox.isChecked():
                 if self.version_window is not None:
                     self.version_window.close()
@@ -998,7 +978,7 @@ class MSSMscolab(QtCore.QObject):
             self.save_wp_mscolab()
 
     def fetch_wp_mscolab(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             server_xml = self.request_wps_from_server()
             server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
             self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model, server_waypoints_model, True, self.ui)
@@ -1018,7 +998,7 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def save_wp_mscolab(self, comment=None):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             server_xml = self.request_wps_from_server()
             server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
             self.merge_dialog = MscolabMergeWaypointsDialog(self.waypoints_model,
@@ -1043,7 +1023,7 @@ class MSSMscolab(QtCore.QObject):
         """
         get most recent operation
         """
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             data = {
                 "token": self.token
             }
@@ -1184,7 +1164,7 @@ class MSSMscolab(QtCore.QObject):
         """
         adds the list of operation categories to the UI
         """
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             data = {
                 "token": self.token
             }
@@ -1201,7 +1181,7 @@ class MSSMscolab(QtCore.QObject):
                 self.ui.filterCategoryCb.addItems(categories)
 
     def add_operations_to_ui(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             data = {
                 "token": self.token
             }
@@ -1235,7 +1215,7 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def set_active_op_id(self, item):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if not self.ui.local_active:
                 if item.op_id == self.active_op_id:
                     return
@@ -1291,7 +1271,7 @@ class MSSMscolab(QtCore.QObject):
     def switch_to_local(self):
         self.ui.local_active = True
         if self.active_op_id is not None:
-            if self.verify_user_token():
+            if verify_user_token(self.mscolab_server_url, self.token):
                 # change font style for selected
                 font = QtGui.QFont()
 
@@ -1352,7 +1332,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Operation Selected"))
 
     def request_wps_from_server(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             data = {
                 "token": self.token,
                 "op_id": self.active_op_id
@@ -1391,7 +1371,7 @@ class MSSMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     def handle_waypoints_changed(self):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if self.ui.workLocallyCheckbox.isChecked():
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
             else:
@@ -1411,7 +1391,7 @@ class MSSMscolab(QtCore.QObject):
                     logging.error("%s" % err)
 
     def handle_import_msc(self, file_path, extension, function, pickertype):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if self.active_op_id is None:
                 return
             if file_path is None:
@@ -1448,7 +1428,7 @@ class MSSMscolab(QtCore.QObject):
             self.logout()
 
     def handle_export_msc(self, extension, function, pickertype):
-        if self.verify_user_token():
+        if verify_user_token(self.mscolab_server_url, self.token):
             if self.active_op_id is None:
                 return
 
