@@ -26,8 +26,31 @@
 import fs
 import os
 import logging
+import requests
 
 from mslib.mscolab.conf import mscolab_settings
+
+
+def verify_user_token(mscolab_server_url, token):
+    data = {
+        "token": token
+    }
+    try:
+        r = requests.get(f'{mscolab_server_url}/test_authorized', data=data)
+    except requests.exceptions.SSLError:
+        logging.debug("Certificate Verification Failed")
+        return False
+    except requests.exceptions.InvalidSchema:
+        logging.debug("Invalid schema of url")
+        return False
+    except requests.exceptions.ConnectionError as ex:
+        logging.error("unexpected error: %s %s", type(ex), ex)
+        return False
+    except requests.exceptions.MissingSchema as ex:
+        # self.mscolab_server_url can be None??
+        logging.error("unexpected error: %s %s", type(ex), ex)
+        return False
+    return r.text == "True"
 
 
 def get_recent_op_id(fm, user):
