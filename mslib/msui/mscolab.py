@@ -639,7 +639,10 @@ class MSSMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            requests.post(self.mscolab_server_url + '/delete_user', data=data)
+
+            res = requests.post(self.mscolab_server_url + '/delete_user', data=data)
+            if res.status_code == 200 and json.loads(res.text)["success"] is True:
+                self.logout()
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
             self.logout()
