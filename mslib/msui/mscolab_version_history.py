@@ -118,9 +118,11 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)
                 self.currentWaypointsTable.setModel(waypoint_model)
             else:
-                show_popup(self, "Error", "Some error occurred while fetching data!")
+                # this triggers disconnect
+                self.conn.signal_reload.emit(self.op_id)
         else:
-            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def load_all_changes(self):
         """
@@ -154,9 +156,11 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                     item.version_name = change["version_name"]
                     self.changes.addItem(item)
             else:
-                show_popup(self, "Error", "Session expired, new login required")
+                # this triggers disconnect
+                self.conn.signal_reload.emit(self.op_id)
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def preview_change(self, current_item, previous_item):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -188,9 +192,11 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                     self.deleteVersionNameBtn.setVisible(False)
                 self.toggle_version_buttons(True)
             else:
-                show_popup(self, "Error", "Session expired, new login required")
+                # this triggers disconnect
+                self.conn.signal_reload.emit(self.op_id)
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def request_set_version_name(self, version_name, ch_id):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -204,7 +210,8 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             res = requests.post(url, data=data)
             return res
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def handle_named_version(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -226,9 +233,11 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                     else:
                         show_popup(self, "Error", res["message"])
                 else:
-                    show_popup(self, "Error", "Session expired, new login required")
+                    # this triggers disconnect
+                    self.conn.signal_reload.emit(self.op_id)
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def handle_delete_version_name(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -249,9 +258,11 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 else:
                     show_popup(self, "Error", res["message"])
             else:
-                show_popup(self, "Error", "Session expired, new login required")
+                # this triggers disconnect
+                self.conn.signal_reload.emit(self.op_id)
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def handle_undo(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -270,13 +281,19 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                     self.load_current_waypoints()
                     self.load_all_changes()
                 else:
-                    show_popup(self, "Error", "Session expired, new login required")
+                    # this triggers disconnect
+                    self.conn.signal_reload.emit(self.op_id)
         else:
-            show_popup(self, "Error", "Session expired, new login required")
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def handle_refresh(self):
-        self.load_current_waypoints()
-        self.load_all_changes()
+        if verify_user_token(self.mscolab_server_url, self.token):
+            self.load_current_waypoints()
+            self.load_all_changes()
+        else:
+            # this triggers disconnect
+            self.conn.signal_reload.emit(self.op_id)
 
     def closeEvent(self, event):
         self.viewCloses.emit()
