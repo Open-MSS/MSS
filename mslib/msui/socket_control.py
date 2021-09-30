@@ -28,10 +28,10 @@ import socketio
 import json
 import logging
 
-from PyQt5 import QtCore, QtWidgets
+from PyQt5 import QtCore
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import show_popup
 from mslib.mscolab.utils import verify_user_token
+
 
 class ConnectionManager(QtCore.QObject):
 
