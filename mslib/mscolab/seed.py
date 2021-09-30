@@ -85,7 +85,8 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
         new_u_ids = [user.id for user in user_list]
         new_permissions = []
         for u_id in new_u_ids:
-            new_permissions.append(Permission(u_id, operation.id, access_level))
+            if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
+                new_permissions.append(Permission(u_id, operation.id, access_level))
         db.session.add_all(new_permissions)
         try:
             db.session.commit()
