@@ -576,21 +576,26 @@ def import_permissions():
     import_op_id = int(request.form.get('import_op_id'))
     current_op_id = int(request.form.get('current_op_id'))
     user = g.user
-    success, users = fm.import_permissions(import_op_id, current_op_id, user.id)
+    success, users, message = fm.import_permissions(import_op_id, current_op_id, user.id)
     if success:
         for u_id in users["add_users"]:
-            sockio.sm.join_collaborator_to_operation(u_id, current_op_id)
             sockio.sm.emit_new_permission(u_id, current_op_id)
         for u_id in users["modify_users"]:
+            # changes navigation for viewer/collaborator
             sockio.sm.emit_update_permission(u_id, current_op_id)
         for u_id in users["delete_users"]:
+            # invalidate waypoint table, title of windows
             sockio.sm.emit_revoke_permission(u_id, current_op_id)
-            sockio.sm.remove_collaborator_from_operation(u_id, current_op_id)
+
+        token = request.args.get('token', request.form.get('token', False))
+        json_config = {"token": token}
+        sockio.sm.update_operation_list(json_config)
+
         sockio.sm.emit_operation_permissions_updated(user.id, current_op_id)
         return jsonify({"success": True})
 
     return jsonify({"success": False,
-                    "message": "Some error occurred! Could not import permissions. Please try again."})
+                    "message": message})
 
 
 def start_server(app, sockio, cm, fm, port=8083):
