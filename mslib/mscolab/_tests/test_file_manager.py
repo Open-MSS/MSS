@@ -65,6 +65,11 @@ class Test_FileManager(TestCase):
         assert self.user is not None
         assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
         self.anotheruser = get_user(self.anotheruserdata[0])
+        assert add_user('UV30@uv30', 'UV30', 'uv30')
+        self.vieweruser = get_user('UV30@uv30')
+        assert add_user('UV40@uv40', 'UV40', 'uv40')
+        self.collaboratoruser = get_user('UV40@uv40')
+
         self._example_data()
 
     def tearDown(self):
@@ -193,7 +198,7 @@ class Test_FileManager(TestCase):
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation9")
-            assert len(self.fm.fetch_users_without_permission(operation.id, self.user.id)) == 1
+            assert len(self.fm.fetch_users_without_permission(operation.id, self.user.id)) == 3
 
     def test_fetch_users_with_permission(self):
         with self.app.test_client():
@@ -202,12 +207,36 @@ class Test_FileManager(TestCase):
 
     def test_import_permission(self):
         with self.app.test_client():
-            flight_path8, operation8 = self._create_operation(flight_path="operation8")
-            flight_path9, operation9 = self._create_operation(flight_path="operation9")
-            assert self.fm.import_permissions(operation8.id, operation9.id, self.user.id) == (True,
-                                                                                              {'add_users': [],
-                                                                                               'delete_users': [],
-                                                                                               'modify_users': []})
+            flight_path10, operation10 = self._create_operation(flight_path="operation10")
+            flight_path11, operation11 = self._create_operation(flight_path="operation11")
+            flight_path12, operation12 = self._create_operation(flight_path="operation12", user=self.anotheruser)
+            flight_path13, operation13 = self._create_operation_with_users(flight_path="operation13")
+            flight_path14, operation14 = self._create_operation_with_users(flight_path="operation14")
+            flight_path15, operation15 = self._create_operation_with_opposite_permissions(flight_path="operation15")
+            # equal permissions, nothing to do
+            result = (False, None, 'Permissions are already given')
+            assert self.fm.import_permissions(operation10.id, operation11.id, self.user.id) == result
+            # no admin rights
+            result = (False, None, 'Not an admin of this operation')
+            assert self.fm.import_permissions(operation10.id, operation12.id, self.user.id) == result
+            # not a member
+            result = (False, None, 'Not a member of this operation')
+            assert self.fm.import_permissions(operation12.id, operation10.id, self.user.id) == result
+            # we add to op8 all users of op11
+            result = (True, {'add_users': [self.vieweruser.id, self.collaboratoruser.id],
+                             'delete_users': [],
+                             'modify_users': []}, 'success')
+            assert self.fm.import_permissions(operation13.id, operation10.id, self.user.id) == result
+            # we remove all users from op8 which are not in op9
+            result = (True, {'add_users': [],
+                             'delete_users': [self.vieweruser.id, self.collaboratoruser.id],
+                             'modify_users': []}, 'success')
+            assert self.fm.import_permissions(operation11.id, operation10.id, self.user.id) == result
+            # we modify access level
+            result = (True, {'add_users': [],
+                             'delete_users': [],
+                             'modify_users': [self.vieweruser.id, self.collaboratoruser.id]}, 'success')
+            assert self.fm.import_permissions(operation15.id, operation14.id, self.user.id) == result
 
     def _example_data(self):
         self.content1 = """\
@@ -251,4 +280,22 @@ class Test_FileManager(TestCase):
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
         operation = Operation.query.filter_by(path=flight_path).first()
+        return flight_path, operation
+
+    def _create_operation_with_users(self, flight_path="firstflight", user=None, content=None):
+        if user is None:
+            user = self.user
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
+        operation = Operation.query.filter_by(path=flight_path).first()
+        self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+        self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
+        return flight_path, operation
+
+    def _create_operation_with_opposite_permissions(self, flight_path="firstflight", user=None, content=None):
+        if user is None:
+            user = self.user
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
+        operation = Operation.query.filter_by(path=flight_path).first()
+        self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "collaborator")
+        self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "viewer")
         return flight_path, operation

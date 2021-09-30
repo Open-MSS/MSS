@@ -368,7 +368,8 @@ class FileManager(object):
 
         new_permissions = []
         for u_id in new_u_ids:
-            new_permissions.append(Permission(u_id, op_id, access_level))
+            if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
+                new_permissions.append(Permission(u_id, op_id, access_level))
         db.session.add_all(new_permissions)
         try:
             db.session.commit()
@@ -408,51 +409,71 @@ class FileManager(object):
 
     def import_permissions(self, import_op_id, current_op_id, u_id):
         if not self.is_admin(u_id, current_op_id):
-            return False, None
+            return False, None, "Not an admin of this operation"
 
         perm = Permission.query.filter_by(u_id=u_id, op_id=import_op_id).first()
         if not perm:
-            return False, None
+            return False, None, "Not a member of this operation"
 
         existing_perms = Permission.query \
             .filter(Permission.op_id == current_op_id) \
             .filter((Permission.u_id != u_id) & (Permission.access_level != 'creator')) \
             .all()
+        existing_users = set([perm.u_id for perm in existing_perms])
 
         current_operation_creator = Permission.query.filter_by(op_id=current_op_id, access_level="creator").first()
         import_perms = Permission.query\
             .filter(Permission.op_id == import_op_id)\
             .filter((Permission.u_id != u_id) & (Permission.u_id != current_operation_creator.u_id))\
             .all()
+        import_users = set([perm.u_id for perm in import_perms])
 
-        # We Delete all the existing permissions
-        existing_users = []
+        is_perm = []
         for perm in existing_perms:
-            existing_users.append(perm.u_id)
-            db.session.delete(perm)
+            is_perm.append((perm.u_id, perm.access_level))
+        new_perm = []
+        for perm in import_perms:
+            access_level = perm.access_level
+            # we keep creator to the one created the operation, and substitute the imported to admin
+            if perm.access_level == "creator":
+                access_level = "admin"
+            new_perm.append((perm.u_id, access_level))
+
+        if sorted(new_perm) == sorted(is_perm):
+            return False, None, "Permissions are already given"
+
+        # We Delete all permissions of existing users which not in new permission
+        delete_users = []
+        for perm in existing_perms:
+            if (perm.u_id, perm.access_level) not in new_perm:
+                db.session.delete(perm)
+                delete_users.append(perm.u_id)
 
         db.session.flush()
 
-        # Then add the permissions of the imported operation
+        # Then add the permissions of the imported operation based on new_perm
         new_users = []
-        for perm in import_perms:
-            access_level = perm.access_level
-            if perm.access_level == "creator":
-                access_level = "admin"
-            new_users.append(perm.u_id)
-            db.session.add(Permission(perm.u_id, current_op_id, access_level))
+        for u_id, access_level in new_perm:
+            if not (u_id, access_level) in is_perm:
+                new_users.append(u_id)
+                if Permission.query.filter_by(u_id=u_id, op_id=current_op_id).first() is None:
+                    db.session.add(Permission(u_id, current_op_id, access_level))
 
-        # Set Difference of lists new_users - existing users
-        add_users = [u_id for u_id in new_users if u_id not in existing_users]
-        # Intersection of lists existing_users and new_users
-        modify_users = [u_id for u_id in existing_users if u_id in new_users]
-        # Set Difference of lists existing users - new_users
-        delete_users = [u_id for u_id in new_users if u_id in existing_users]
+        # prepare events based on action done
+        delete_users = list(existing_users.difference(import_users))
+        add_users = list(import_users.difference(existing_users))
+        modify_users = []
+        _intersect_users = import_users.intersection(existing_users)
+        _new_perm = dict(new_perm)
+        _is_perm = dict(is_perm)
+        for m_uid in _intersect_users:
+            if _new_perm[m_uid] != _is_perm[m_uid]:
+                modify_users.append(m_uid)
 
         try:
             db.session.commit()
-            return True, {"add_users": add_users, "modify_users": modify_users, "delete_users": delete_users}
+            return True, {"add_users": add_users, "modify_users": modify_users, "delete_users": delete_users}, "success"
 
         except IntegrityError:
             db.session.rollback()
-            return False, None
+            return False, None, "Some error occurred! Could not import permissions. Please try again."

@@ -255,7 +255,7 @@ class SocketsManager(object):
         socketio.emit("revoke-permission", json.dumps({"op_id": op_id, "u_id": u_id}))
 
     def emit_operation_permissions_updated(self, u_id, op_id):
-        socketio.emit("operation-permissions-updated", json.dumps({"u_id": u_id}))
+        socketio.emit("operation-permissions-updated", json.dumps({"op_id": op_id, "u_id": u_id}))
 
     def emit_operation_delete(self, op_id):
         socketio.emit("operation-deleted", json.dumps({"op_id": op_id}))

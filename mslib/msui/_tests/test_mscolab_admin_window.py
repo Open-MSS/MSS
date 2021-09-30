@@ -59,6 +59,11 @@ class Test_MscolabAdminWindow(object):
         assert add_user_to_operation(path=self.operation_name, emailid="viewer@example.de", access_level="viewer")
         assert add_user("name1@example.de", "name1", "name1")
         assert add_user("name2@example.de", "name2", "name2")
+        assert add_operation("paris", "test paris")
+        assert add_user_to_operation(path="paris", emailid=self.userdata[0])
+        assert add_user_to_operation(path="paris", emailid="name1@example.de")
+        assert add_operation("tokyo", "test tokyo")
+        assert add_user_to_operation(path="tokyo", emailid=self.userdata[0])
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
@@ -186,7 +191,7 @@ class Test_MscolabAdminWindow(object):
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
     def test_import_permissions(self):
-        index = self.admin_window.importPermissionsCB.findText("name1", QtCore.Qt.MatchFixedString)
+        index = self.admin_window.importPermissionsCB.findText("paris", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
