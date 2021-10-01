@@ -59,6 +59,9 @@ class MissionSupportSystemDefaultConfig(object):
     Do not change any value for good reasons.
     Your values can be set in your personal mss_settings.json file
     """
+    # this skips the verification of the user token on each mscolab request
+    mscolab_skip_verify_user_token = True
+
     # Default for general filepicker. Pick "default", "qt", or "fs"
     filepicker_default = "default"
 
