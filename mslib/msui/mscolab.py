@@ -1392,6 +1392,9 @@ class MSSMscolab(QtCore.QObject):
         for window in self.ui.get_active_views():
             window.setFlightTrackModel(self.waypoints_model)
             if hasattr(window, 'mpl'):
+                if window.name in ("Top View", "Table View"):
+                    # Make Roundtrip Button
+                    window.btRoundtrip.setEnabled(window.is_roundtrip_possible())
                 try:
                     window.mpl.canvas.waypoints_interactor.redraw_figure()
                 except AttributeError as err:

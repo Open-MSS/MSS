@@ -166,11 +166,14 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         """
         function enables some control, used if access_level is appropriate
         """
+        if self.name in ("Top View", "Table View"):
+            # Make Roundtrip Button
+            self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
         if self.name in ("Top View", "Side View", "Linear View"):
             actions = self.mpl.navbar.actions()
             for action in actions:
                 action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
+                if action_text in ("Ins WP", "Del WP", "Mv WP"):
                     action.setEnabled(True)
         else:
             # Table View
@@ -178,7 +181,6 @@ class MSSViewWindow(QtWidgets.QMainWindow):
             self.btCloneWaypoint.setEnabled(True)
             self.btDeleteWayPoint.setEnabled(True)
             self.btInvertDirection.setEnabled(True)
-            self.btRoundtrip.setEnabled(True)
             self.cbTools.setEnabled(True)
             self.tableWayPoints.setEnabled(True)
 
@@ -186,11 +188,14 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         """
         function disables some control, used if access_level is not appropriate
         """
+        if self.name in ("Top View", "Table View"):
+            # Make Roundtrip Button
+            self.btRoundtrip.setEnabled(False)
         if self.name in ("Top View", "Side View", "Linear View"):
             actions = self.mpl.navbar.actions()
             for action in actions:
                 action_text = action.text()
-                if action_text == "Ins WP" or action_text == "Del WP" or action_text == "Mv WP":
+                if action_text in ("Ins WP", "Del WP", "Mv WP"):
                     action.setEnabled(False)
         else:
             # Table View
@@ -198,7 +203,6 @@ class MSSViewWindow(QtWidgets.QMainWindow):
             self.btCloneWaypoint.setEnabled(False)
             self.btDeleteWayPoint.setEnabled(False)
             self.btInvertDirection.setEnabled(False)
-            self.btRoundtrip.setEnabled(False)
             self.cbTools.setEnabled(False)
             self.tableWayPoints.setEnabled(False)
 
