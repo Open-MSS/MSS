@@ -27,11 +27,16 @@ import fs
 import os
 import logging
 import requests
+from mslib.utils.config import config_loader
 
 from mslib.mscolab.conf import mscolab_settings
 
 
 def verify_user_token(mscolab_server_url, token):
+
+    if config_loader(dataset="mscolab_skip_verify_user_token"):
+        return True
+
     data = {
         "token": token
     }
