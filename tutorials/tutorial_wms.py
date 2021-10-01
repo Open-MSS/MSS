@@ -92,22 +92,6 @@ def automate_waypoints():
     pag.hotkey('ctrl', 'h')
     pag.sleep(1)
 
-    # Opening web map service
-    try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}selecttoopencontrol.png')
-        pag.click(x, y, interval=2)
-        pag.press('down', interval=1)
-        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-            pag.press('enter', interval=1)
-        elif platform == 'darwin':
-            pag.press('return', interval=1)
-        pag.move(None, -777, duration=1)
-        if platform == 'win32':
-            pag.dragRel(400, None, duration=2)
-        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.dragRel(800, None, duration=2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control\' button/option not found on the screen.")
 
     # Locating Server Layer
     try:
@@ -118,7 +102,7 @@ def automate_waypoints():
             pag.dragRel(-800, -60, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             pag.move(35, -522, duration=1)
-            pag.dragRel(-800, -30, duration=2)
+            pag.dragRel(800, -30, duration=2)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Server\\Layers\' button/option not found on the screen.")
