@@ -49,7 +49,7 @@ from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from mslib.mscolab.utils import verify_user_token
+from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.mss_qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.mss_qt import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.mss_qt import ui_add_operation_dialog as add_operation_ui
