@@ -30,7 +30,7 @@ import logging
 
 from PyQt5 import QtCore
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
-from mslib.mscolab.utils import verify_user_token
+from mslib.utils.verify_user_token import verify_user_token
 
 
 class ConnectionManager(QtCore.QObject):

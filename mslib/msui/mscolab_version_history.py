@@ -31,7 +31,7 @@ import json
 import requests
 from werkzeug.urls import url_encode, url_join
 
-from mslib.mscolab.utils import verify_user_token
+from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.qt5 import ui_mscolab_version_history as ui
