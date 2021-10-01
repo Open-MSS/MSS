@@ -430,6 +430,7 @@ class MSSMscolab(QtCore.QObject):
         # User email
         self.email = None
         self.selected_category = "ANY"
+        self.gravatar = None
 
         # set data dir, uri
         if data_dir is None:
@@ -495,29 +496,30 @@ class MSSMscolab(QtCore.QObject):
             logging.debug(f"Couldn't create a socket connection: {ex}")
             show_popup(self.ui, "Error", "Couldn't create a socket connection. New Login required!")
             self.logout()
-        self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
-        self.conn.signal_reload.connect(self.reload_window)
-        self.conn.signal_new_permission.connect(self.render_new_permission)
-        self.conn.signal_update_permission.connect(self.handle_update_permission)
-        self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
-        self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
+        else:
+            self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
+            self.conn.signal_reload.connect(self.reload_window)
+            self.conn.signal_new_permission.connect(self.render_new_permission)
+            self.conn.signal_update_permission.connect(self.handle_update_permission)
+            self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
+            self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
 
-        self.ui.connectBtn.hide()
-        # display connection status
-        self.ui.mscStatusLabel.setText(self.ui.tr(f"Connected to MSColab Server at {self.mscolab_server_url}"))
-        # display username beside useroptions toolbutton
-        self.ui.usernameLabel.setText(f"{self.user['username']}")
-        self.ui.usernameLabel.show()
-        self.ui.userOptionsTb.show()
-        self.fetch_gravatar()
-        # enable add operation menu action
-        self.ui.actionAddOperation.setEnabled(True)
+            self.ui.connectBtn.hide()
+            # display connection status
+            self.ui.mscStatusLabel.setText(self.ui.tr(f"Connected to MSColab Server at {self.mscolab_server_url}"))
+            # display username beside useroptions toolbutton
+            self.ui.usernameLabel.setText(f"{self.user['username']}")
+            self.ui.usernameLabel.show()
+            self.ui.userOptionsTb.show()
+            self.fetch_gravatar()
+            # enable add operation menu action
+            self.ui.actionAddOperation.setEnabled(True)
 
-        # Populate open operations list
-        self.add_operations_to_ui()
+            # Populate open operations list
+            self.add_operations_to_ui()
 
-        # Show category list
-        self.show_categories_to_ui()
+            # Show category list
+            self.show_categories_to_ui()
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
