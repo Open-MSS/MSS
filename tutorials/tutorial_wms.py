@@ -464,10 +464,10 @@ def main():
     """
     p1 = multiprocessing.Process(target=call_mss)
     p2 = multiprocessing.Process(target=automate_waypoints)
-    #p3 = multiprocessing.Process(target=call_recorder)
+    p3 = multiprocessing.Process(target=call_recorder)
 
     print("\nINFO : Starting Automation.....\n")
-    #p3.start()
+    p3.start()
     pag.sleep(5)
     initial_ops()
     p1.start()
@@ -475,7 +475,7 @@ def main():
 
     p2.join()
     p1.join()
-    #p3.join()
+    p3.join()
     print("\n\nINFO : Automation Completes Successfully!")
     # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
     sys.exit()
