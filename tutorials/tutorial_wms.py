@@ -102,7 +102,7 @@ def automate_waypoints():
             pag.dragRel(-800, -60, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             pag.move(35, -522, duration=1)
-            pag.dragRel(800, -30, duration=2)
+            pag.dragRel(950, -30, duration=2)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Server\\Layers\' button/option not found on the screen.")
@@ -184,11 +184,11 @@ def automate_waypoints():
         print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}checkbox_unselected_divergence.png')
         if platform == 'win32':
             pag.moveTo(x - 268, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.moveTo(x - 248, y, duration=2)
+            pag.moveTo(x - 228, y, duration=2)
         pag.click(interval=1)
         pag.sleep(2)
         pag.move(None, gap * 4, duration=1)
@@ -202,6 +202,7 @@ def automate_waypoints():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer multilayering checkbox\' option not found on the screen.")
+
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
         pag.moveTo(x, y, duration=2)
@@ -213,7 +214,7 @@ def automate_waypoints():
 
     # Starring the layers
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}unselected_divergence_layer.png')
         if platform == 'win32':
             pag.moveTo(x - 255, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
@@ -368,7 +369,7 @@ def automate_waypoints():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Clear cache\' button/option not found on the screen.")
 
-    # Transparent layer
+    # qrent layer
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2, interval=2)
         pag.sleep(1)
@@ -463,10 +464,10 @@ def main():
     """
     p1 = multiprocessing.Process(target=call_mss)
     p2 = multiprocessing.Process(target=automate_waypoints)
-    p3 = multiprocessing.Process(target=call_recorder)
+    #p3 = multiprocessing.Process(target=call_recorder)
 
     print("\nINFO : Starting Automation.....\n")
-    p3.start()
+    #p3.start()
     pag.sleep(5)
     initial_ops()
     p1.start()
@@ -474,7 +475,7 @@ def main():
 
     p2.join()
     p1.join()
-    p3.join()
+    #p3.join()
     print("\n\nINFO : Automation Completes Successfully!")
     # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
     sys.exit()
