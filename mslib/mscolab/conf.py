@@ -78,18 +78,18 @@ except ImportError as ex:
         """
         enable_basic_http_authentication = False
 
-        # mail settings
-        MAIL_SERVER = 'localhost'
-        MAIL_PORT = 25
-        MAIL_USE_TLS = False
-        MAIL_USE_SSL = True
-
-        # mail authentication
-        MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
-        MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
-
-        # mail accounts
-        MAIL_DEFAULT_SENDER = 'MSS@localhost'
-
         # enable verification by Mail
         USER_VERIFICATION = False
+
+        # mail settings
+        # MAIL_SERVER = 'localhost'
+        # MAIL_PORT = 25
+        # MAIL_USE_TLS = False
+        # MAIL_USE_SSL = True
+
+        # mail authentication
+        # MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
+        # MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
+
+        # mail accounts
+        # MAIL_DEFAULT_SENDER = 'MSS@localhost'
