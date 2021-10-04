@@ -32,6 +32,7 @@ import datetime
 import secrets
 import fs
 import socketio
+import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer
 from flask import g, jsonify, request, render_template
 from flask import send_from_directory, abort, url_for
@@ -148,7 +149,11 @@ _app, sockio, cm, fm = initialize_managers(APP)
 
 
 def check_login(emailid, password):
-    user = User.query.filter_by(emailid=str(emailid)).first()
+    try:
+        user = User.query.filter_by(emailid=str(emailid)).first()
+    except sqlalchemy.exc.OperationalError as ex:
+        logging.debug("Problem in the database (%ex), likly version client different", ex)
+        return False
     if user is not None:
         if mscolab_settings.USER_VERIFICATION:
             if user.confirmed:
