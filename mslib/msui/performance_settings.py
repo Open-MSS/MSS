@@ -25,12 +25,13 @@
     limitations under the License.
 """
 
-from mslib.msui.mss_qt import get_open_filename
+import json
+
 from PyQt5 import QtCore, QtWidgets
+
 from mslib.utils import FatalUserError
-from mslib.utils.config import config_loader
-from mslib.msui import aircrafts
-from mslib.msui import constants
+from mslib.msui import aircrafts, constants
+from mslib.msui.mss_qt import get_open_filename
 from mslib.msui.mss_qt import ui_performance_dockwidget as ui_dw
 
 
@@ -106,7 +107,8 @@ class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockW
             "Performance File (*.json)", pickertag="filepicker_default")
         if filename is not None:
             try:
-                performance = config_loader(config_file=filename)
+                with open(filename) as tf:
+                    performance = json.load(tf)
                 self.aircraft = aircrafts.SimpleAircraft(performance)
                 self.lbAircraftName.setText(self.aircraft.name)
                 self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
