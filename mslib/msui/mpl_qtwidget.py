@@ -740,7 +740,7 @@ class MplSideViewCanvas(MplCanvas):
                 try:
                     self.ax.lines.remove(line)
                 except ValueError as e:
-                    logging.debug("Vertical line was somehow already removed:\n%s"%e)
+                    logging.debug("Vertical line was somehow already removed:\n%s" % e)
                 self.vertical_lines.remove(line)
 
             # Add vertical lines
