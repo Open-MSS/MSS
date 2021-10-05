@@ -212,7 +212,7 @@ def automate_mscolab():
             pag.sleep(2)
 
         try:
-            x1, y1 = pag.locateCenterOnScreen(f'{mscolab_path}addproj_ok.png')
+            x1, y1 = pag.locateCenterOnScreen(f'{mscolab_path}addop_ok.png')
             pag.moveTo(x1, y1, duration=2)
             pag.click(x1, y1, duration=2)
             pag.sleep(2)
@@ -224,13 +224,13 @@ def automate_mscolab():
         print("\nException :\'File\' menu button not found on the screen.")
 
     try:
-        open_operations_x, open_operations_y = pag.locateCenterOnScreen(f'{mscolab_path}openoperations.png')
+        open_operations_x, open_operations_y = pag.locateCenterOnScreen(f'{mscolab_path}openop.png')
         pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(1)
         pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Open Operations\' label not found on the screen.")
+        print("\nException :\'Operations\' label not found on the screen.")
 
     # Managing Users for the operation that you are working on
     if file_x is not None and file_y is not None:
@@ -413,7 +413,7 @@ def automate_mscolab():
         print("\nException :\'Previous (while in chat window searching operation)\' button not found on the screen.")
 
     # Closing the Chat Window
-    pag.hotkey('command', 'w') if platform == 'dawrin' else pag.hotkey(alt, 'f4')
+    pag.hotkey('command', 'w') if platform == 'darwin' else pag.hotkey(alt, 'f4')
     pag.sleep(2)
 
     # Opening Topview
