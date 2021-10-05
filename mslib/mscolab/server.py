@@ -62,14 +62,14 @@ APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
 APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-APP.config['SECURITY_PASSWORD_SALT'] = mscolab_settings.__dict__.get("SECURITY_PASSWORD_SALT", None)
-APP.config['MAIL_DEFAULT_SENDER'] = mscolab_settings.__dict__.get("MAIL_DEFAULT_SENDER", None)
-APP.config['MAIL_SERVER'] = mscolab_settings.__dict__.get("MAIL_SERVER", None)
-APP.config['MAIL_PORT'] = mscolab_settings.__dict__.get("MAIL_PORT", None)
-APP.config['MAIL_USERNAME'] = mscolab_settings.__dict__.get("MAIL_USERNAME", None)
-APP.config['MAIL_PASSWORD'] = mscolab_settings.__dict__.get("MAIL_PASSWORD", None)
-APP.config['MAIL_USE_TLS'] = mscolab_settings.__dict__.get("MAIL_USE_TLS", None)
-APP.config['MAIL_USE_SSL'] = mscolab_settings.__dict__.get("MAIL_USE_SSL", None)
+APP.config['SECURITY_PASSWORD_SALT'] = getattr(mscolab_settings, "SECURITY_PASSWORD_SALT", None)
+APP.config['MAIL_DEFAULT_SENDER'] = getattr(mscolab_settings, "MAIL_DEFAULT_SENDER", None)
+APP.config['MAIL_SERVER'] = getattr(mscolab_settings, "MAIL_SERVER", None)
+APP.config['MAIL_PORT'] = getattr(mscolab_settings, "MAIL_PORT", None)
+APP.config['MAIL_USERNAME'] = getattr(mscolab_settings, "MAIL_USERNAME", None)
+APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
+APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
+APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
 
 auth = HTTPBasicAuth()
 
@@ -115,7 +115,7 @@ def send_email(to, subject, template):
         try:
             mail.send(msg)
         except IOError:
-            logging.debug("Can't send email to %s", to)
+            logging.error("Can't send email to %s", to)
     else:
         logging.debug("setup user verification by email")
 
