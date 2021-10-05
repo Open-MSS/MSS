@@ -230,6 +230,7 @@ class MissionSupportSystemDefaultConfig(object):
 
     # Fixed key/value pair options
     key_value_options = [
+        'mscolab_skip_verify_user_token',
         'filepicker_default',
         'mss_dir',
         'data_dir',
