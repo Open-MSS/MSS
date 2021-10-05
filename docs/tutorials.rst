@@ -173,7 +173,7 @@ The generated video size is too large, so if you want to reduce the size, you ca
 For trimming the videos from a start (00:14:00) and end time (05:19:00), you can ::
 
     $ cd MSS/tutorials/Screen Recordings/
-    (mssdev)$ ffmpeg -i input.mp4 -ss 00:14:00 -to 05:19:00 -c:v libx264 -crf 30 output.mp4
+    (mssdev)$ ffmpeg -i input.mp4 -ss 00:00:14 -to 05:19:00 -c:v libx264 -crf 30 output.mp4
 
 For cropping the video
 (you can also use Screen Recorder for selected screen area recording feature as described above) ::
