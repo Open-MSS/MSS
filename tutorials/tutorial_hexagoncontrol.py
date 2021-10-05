@@ -143,14 +143,19 @@ def automate_hexagoncontrol():
         x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
         pag.moveTo(x + 250, y - 462, duration=1)
         if platform == 'linux' or platform == 'linux2':
-            pag.dragRel(649, 700, duration=3)
+            # the window need to be moved a bit below the topview window
+            pag.dragRel(400, 387, duration=2)
         elif platform == 'win32' or platform == 'darwin':
             pag.dragRel(200, 487, duration=2)
         pag.sleep(2)
         if platform == 'linux' or platform == 'linux2':
+            # this is to select over the window manager the topview and brings it on top
+            # ToDo the help search function should be used for this (ctrl f)
             pag.keyDown('altleft')
             pag.press('tab')
-            pag.press('right')
+            pag.keyUp('tab')
+            pag.press('tab')
+            pag.keyUp('tab')
             pag.keyUp('altleft')
         elif platform == 'win32':
             pag.keyDown('alt')
@@ -167,7 +172,6 @@ def automate_hexagoncontrol():
             pag.dragRel(None, -700, duration=2)
             tv_x, tv_y = pag.position()
         elif platform == 'linux' or platform == 'linux2':
-            pag.dragRel(None, -630, duration=2)
             tv_x, tv_y = pag.position()
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : TableView's Select to open Control option not found on the screen.")
