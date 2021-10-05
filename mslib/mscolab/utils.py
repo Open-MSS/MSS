@@ -64,7 +64,7 @@ def os_fs_create_dir(dir):
         try:
             _ = fs.open_fs(dir)
         except fs.errors.CreateFailed:
-            logging.error(f'Make sure that the FS url "{dir}" exists')
+            logging.error('Make sure that the FS url "%s" exists' % dir)
         except fs.opener.errors.UnsupportedProtocol:
             logging.error(f'FS url "{dir}" not supported')
     else:
