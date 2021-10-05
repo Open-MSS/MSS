@@ -52,7 +52,6 @@ APP = app_loader(__name__)
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
 
-
 # set the operation root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder
 
@@ -76,7 +75,8 @@ auth = HTTPBasicAuth()
 try:
     from mss_mscolab_auth import mss_mscolab_auth
 except ImportError as ex:
-    logging.warning("Couldn't import mss_mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
+    logging.warning("Couldn't import mss_mscolab_auth (ImportError:'{%s), creating dummy config." % ex)
+
 
     class mss_mscolab_auth(object):
         allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
@@ -89,11 +89,13 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
                   "password required to access the service.")
     import hashlib
 
+
     def authfunc(username, password):
         for u, p in mss_mscolab_auth.allowed_users:
             if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
                 return True
         return False
+
 
     @auth.verify_password
     def verify_pw(username, password):
@@ -114,7 +116,7 @@ def send_email(to, subject, template):
     try:
         mail.send(msg)
     except IOError:
-        logging.debug("Can't send email to %s", to)
+        logging.debug("Can't send email to %s" % to)
 
 
 def generate_confirmation_token(email):
@@ -201,6 +203,7 @@ def verify_user(func):
             else:
                 g.user = user
                 return func(*args, **kwargs)
+
     return wrapper
 
 
@@ -226,8 +229,8 @@ def get_auth_token():
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
-                                  'token': token.decode('ascii'),
-                                  'user': {'username': user.username, 'id': user.id}})
+                    'token': token.decode('ascii'),
+                    'user': {'username': user.username, 'id': user.id}})
             else:
                 return "False"
         else:

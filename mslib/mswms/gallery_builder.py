@@ -36,15 +36,15 @@ from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 STATIC_LOCATION = ""
 try:
     import mss_wms_settings
+
     if hasattr(mss_wms_settings, "_gallerypath"):
         STATIC_LOCATION = mss_wms_settings._gallerypath
     else:
         STATIC_LOCATION = os.path.join(os.path.dirname(os.path.abspath(mss_wms_settings.__file__)), "gallery")
 except ImportError as e:
-    logging.warning(f"{e}. Can't generate gallery.")
+    logging.warning("{0}. Can't generate gallery.".format(e))
 
 DOCS_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "docs", "gallery")
-
 
 code_header = """\"\"\"
     This file is part of mss.
@@ -447,7 +447,8 @@ def write_html(sphinx=False):
 
     with open(os.path.join(location, "plots.html"), "w+") as file:
         file.write(html + end)
-        logging.info(f"plots.html created at {os.path.join(location, 'plots.html')}")
+        logging.info("plots.html created at %s"
+                     % (os.path.join(location, 'plots.html')))
 
 
 def import_instructions(plot_object, l_type, layer, native_import=None, dataset=""):
@@ -485,7 +486,7 @@ def import_instructions(plot_object, l_type, layer, native_import=None, dataset=
                        f"ent = \"{plot_object.dataname if hasattr(plot_object, 'dataname') else None}\"\n" \
                        f"vtype = \"{plot_object.required_datafields[0][0]}\"\n" \
                        f"add_data = " \
-                       f"{plot_object.required_datafields[1:] if len(plot_object.required_datafields) > 1 else None}\n"\
+                       f"{plot_object.required_datafields[1:] if len(plot_object.required_datafields) > 1 else None}\n" \
                        f"fix_style = {plot_object.styles}\n" \
                        f"contours = {plot_object.contours}\n"
         instruction += f"mpl_{style}_styles.make_generic_class(name, ent, vtype, add_data, contours, fix_style)\n"
@@ -510,8 +511,8 @@ def source_and_import(plot_object, l_type, layer, dataset=""):
     native_import = "mslib" + \
                     os.path.abspath(inspect.getfile(type(plot_object))).split("mslib")[-1].replace(os.sep, ".")[:-3] \
         if os.path.join("mslib", "mswms") in os.path.abspath(inspect.getfile(type(plot_object))) \
-        and not ((isinstance(plot_object, HS_GenericStyle) or isinstance(plot_object, VS_GenericStyle)) and
-                        "pass" not in inspect.getsource(plot_object._prepare_datafields)) else None
+           and not ((isinstance(plot_object, HS_GenericStyle) or isinstance(plot_object, VS_GenericStyle)) and
+                    "pass" not in inspect.getsource(plot_object._prepare_datafields)) else None
 
     import_text = import_instructions(plot_object, l_type, layer, dataset=dataset)
     import_text_native = import_instructions(plot_object, l_type, layer, native_import, dataset) \
@@ -541,9 +542,9 @@ def source_and_import(plot_object, l_type, layer, dataset=""):
         source += f"from mslib.mswms.mpl_{style}_styles import {parent}\n\n"
         prepare = inspect.getsource(plot_object._prepare_datafields)
         prepare = prepare.replace(prepare.split("def ")[-1].split(":")[0], "_prepare_datafields(self)")
-        source += f"class {plot_object.__class__.__name__}({parent}):" + "\n"\
+        source += f"class {plot_object.__class__.__name__}({parent}):" + "\n" \
                   + (("    " + "    ".join(prepare.splitlines(True))) if not prepare.startswith("    ") else prepare) \
-                  + "\n    "\
+                  + "\n    " \
                   + "\n    ".join([f"{val[0]} = \"{val[1]}\"" if isinstance(val[1], str) else f"{val[0]} = {val[1]}"
                                    for val in inspect.getmembers(type(plot_object))
                                    if not (str(val[1]).startswith("<") and str(val[1]).endswith(">")) and
@@ -606,7 +607,7 @@ def get_plot_details_sphinx(plot_object, l_type, layer, dataset="", image_detail
     text += f".. image:: ../plots/{l_type}_{dataset}{plot_object.name}-{image_details}.png\n\n"
     text += f"""**How to use this plot**
 
-Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field in plot_object.required_datafields)})
+Make sure you have the required datafields ({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})
 
 """
     if instructions_native:
@@ -693,7 +694,7 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
                 image.save(os.path.join(location, "plots", filename + ".png"),
                            format="PNG")
 
-    end = end.replace("files = [", f"files = [\"{filename}.png\",")\
+    end = end.replace("files = [", f"files = [\"{filename}.png\",") \
         .replace(",];", "];")
     img_path = f"../_static/{filename}.png" if sphinx \
         else f"{url_prefix}/static/plots/{filename}.png"
@@ -730,7 +731,7 @@ def add_levels(levels, l_type=None, text=None):
         if f"optgroup label=\"{l_type}\"" not in level_select:
             text = text.replace(
                 level_select, level_select +
-                f"<optgroup label=\"{l_type}\" id=\"{l_type}\"></optgroup>")
+                              f"<optgroup label=\"{l_type}\" id=\"{l_type}\"></optgroup>")
         level_select = text.split(f"label=\"{l_type}\"")[-1].split("</optgroup>")[0]
     text = text.replace(level_select, level_select + "".join([
         f"<option value='{level}'>{level}</option>"

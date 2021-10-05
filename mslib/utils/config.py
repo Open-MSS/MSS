@@ -365,11 +365,11 @@ def read_config_file(path=constants.MSS_SETTINGS):
             try:
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
             except json.JSONDecodeError as e:
-                logging.error(f"Error while loading json file {e}")
+                logging.error("Error while loading json file {}".format(e))
                 error_message = f"Unexpected error while loading config\n{e}"
                 raise FatalUserError(error_message)
             except ValueError as e:
-                logging.error(f"Error while loading json file {e}")
+                logging.error("Error while loading json file {}".format(e))
                 error_message = f"Invalid keys detected in config\n{e}"
                 raise FatalUserError(error_message)
         else:

@@ -307,9 +307,9 @@ class DefaultDataAccess(NWPDataAccess):
         }
 
     def _add_to_filetree(self, filename, content):
-        logging.info("File '%s' identified as '%s' type", filename, content["vert_type"])
-        logging.info("Found init time '%s', %s valid_times and %s standard_names",
-                     content["init_time"], len(content["valid_times"]), len(content["standard_names"]))
+        logging.info("File '%s' identified as '%s' type" % (filename, content["vert_type"]))
+        logging.info("Found init time '%s', %s valid_times and %s standard_names" %
+                     (content["init_time"], len(content["valid_times"]), len(content["standard_names"])))
         if len(content["valid_times"]) == 0 or len(content["standard_names"]) == 0:
             logging.error(
                 "Something is wrong with this file... valid_times='%s' standard_names='%s'",
@@ -334,8 +334,8 @@ class DefaultDataAccess(NWPDataAccess):
         # Get a list of the available data files.
         self._available_files = [
             _filename for _filename in sorted(os.listdir(self._root_path)) if self._domain_id in _filename]
-        logging.info("Files identified for domain '%s': %s",
-                     self._domain_id, self._available_files)
+        logging.info("Files identified for domain '%s': %s" % (
+            self._domain_id, self._available_files))
 
         for filename in list(self._file_cache):
             if filename not in self._available_files:
@@ -348,22 +348,22 @@ class DefaultDataAccess(NWPDataAccess):
         for filename in self._available_files:
             mtime = os.path.getmtime(os.path.join(self._root_path, filename))
             if (filename in self._file_cache) and (mtime == self._file_cache[filename][0]):
-                logging.info("Using cached candidate '%s'", filename)
+                logging.info("Using cached candidate '%s'" % filename)
                 content = self._file_cache[filename][1]
                 if content["vert_type"] != "sfc":
                     if content["vert_type"] not in self._elevations:
                         self._elevations[content["vert_type"]] = content["elevations"]
                     if ((len(self._elevations[content["vert_type"]]["levels"]) !=
                          len(content["elevations"]["levels"])) or
-                        (not np.allclose(
-                         self._elevations[content["vert_type"]]["levels"],
-                         content["elevations"]["levels"]))):
+                            (not np.allclose(
+                                self._elevations[content["vert_type"]]["levels"],
+                                content["elevations"]["levels"]))):
                         logging.error("Skipping file '%s' due to elevation mismatch", filename)
                         continue
             else:
                 if filename in self._file_cache:
                     del self._file_cache[filename]
-                logging.info("Opening candidate '%s'", filename)
+                logging.info("Opening candidate '%s'" % filename)
                 try:
                     content = self._parse_file(filename)
                 except IOError as ex:

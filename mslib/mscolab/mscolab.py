@@ -34,7 +34,7 @@ import secrets
 
 from mslib import __version__
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation,\
+from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
@@ -44,9 +44,9 @@ from mslib.msui.mss_qt import Worker, Updater
 def handle_start(args):
     from mslib.mscolab.server import APP, initialize_managers, start_server
     setup_logging(args)
-    logging.info("MSS Version: %s", __version__)
-    logging.info("Python Version: %s", sys.version)
-    logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
+    logging.info("MSS Version: %s" % __version__)
+    logging.info("Python Version: %s" % sys.version)
+    logging.info("Platform: %s (%s)" % (platform.platform(), platform.architecture()))
     logging.info("Launching user interface...")
 
     app, sockio, cm, fm = initialize_managers(APP)
@@ -137,8 +137,9 @@ def main():
             list(Worker.workers)[0].wait()
         sys.exit()
 
-    updater.on_update_available.connect(lambda old, new: logging.info(f"MSS can be updated from {old} to {new}.\nRun"
-                                                                      " the --update argument to update the server."))
+    updater.on_update_available.connect(lambda old, new: logging.info("MSS can be updated from %s to %s.\nRun"
+                                                                      " the --update argument to update the server."
+                                                                      % (old, new)))
     updater.run()
 
     if args.action == "start":

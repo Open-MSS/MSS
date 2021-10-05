@@ -80,6 +80,7 @@ try:
 except ImportError as ex:
     logging.warning("Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
 
+
     class mss_wms_settings(object):
         base_dir = os.path.abspath(os.path.dirname(__file__))
         xml_template_location = os.path.join(base_dir, "xml_templates")
@@ -108,6 +109,7 @@ try:
 except ImportError as ex:
     logging.warning("Couldn't import mss_wms_auth (ImportError:'{%s), creating dummy config.", ex)
 
+
     class mss_wms_auth(object):
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
@@ -118,11 +120,13 @@ if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
                   "password required to access the service.")
     import hashlib
 
+
     def authfunc(username, password):
         for u, p in mss_wms_auth.allowed_users:
             if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
                 return True
         return False
+
 
     @auth.verify_password
     def verify_pw(username, password):
@@ -281,9 +285,10 @@ class WMSServer(object):
 
                             for itime in sorted(init_times):
                                 if itime and plot_driver.get_init_times() and itime not in plot_driver.get_init_times():
-                                    logging.warning(f"Requested itime {itime} not present for "
-                                                    f"{dataset} {plot_object.name}! itimes present: "
-                                                    f"{plot_driver.get_init_times()}")
+                                    logging.warning("Requested itime {0} not present for "
+                                                    "{1} {2}! itimes present: "
+                                                    "{3}".format(itime, dataset, plot_object.name,
+                                                                 plot_driver.get_init_times()))
                                     continue
                                 elif not plot_driver.get_init_times():
                                     itime = None
@@ -300,8 +305,12 @@ class WMSServer(object):
 
                                 for vtime in sorted(valid_times):
                                     if vtime and i_vtimes and vtime not in i_vtimes:
-                                        logging.warning(f"Requested vtime {vtime} at {itime} not present for "
-                                                        f"{dataset} {plot_object.name}! vtimes present: {i_vtimes}")
+                                        logging.warning("Requested vtime {0} at {1} not present for "
+                                                        "{2} {3}! vtimes present: {4}".format(vtime,
+                                                                                              itime, dataset,
+                                                                                              plot_object.name, i_vtimes
+                                                                                              )
+                                                        )
                                         continue
                                     elif not i_vtimes:
                                         vtime = None
@@ -311,8 +320,8 @@ class WMSServer(object):
                                               "init_time": itime,
                                               "valid_time": vtime}
                                     filename = f"{l_type}_{dataset if multiple_datasets else ''}{plot_object.name}-" \
-                                               + f"Noneit{itime}vt{vtime}".replace(" ", "_").replace(":", "_")\
-                                                                          .replace("-", "_")
+                                               + f"Noneit{itime}vt{vtime}".replace(" ", "_").replace(":", "_") \
+                                                   .replace("-", "_")
 
                                     exists = os.path.exists(os.path.join(location, "plots", filename + ".png"))
 
@@ -356,9 +365,10 @@ class WMSServer(object):
                                         for level in sorted(rendered_levels):
                                             if level and elevations and level \
                                                     not in [float(elev) for elev in elevations]:
-                                                logging.warning(f"Requested level {level} not present for "
-                                                                f"{dataset} {plot_object.name}! Levels present: "
-                                                                f"{elevations}")
+                                                logging.warning("Requested level {0} not present for "
+                                                                "{1} {2}! Levels present: "
+                                                                "{3}".format(level, dataset, plot_object.name,
+                                                                             elevations))
                                                 continue
                                             elif not elevations:
                                                 level = None
@@ -368,15 +378,15 @@ class WMSServer(object):
                                             # filename is different for top layers, so needs a redefine
                                             filename = f"{l_type}_{dataset if multiple_datasets else ''}" \
                                                        f"{plot_object.name}-" + \
-                                                       f"{level}{vert_units}it{itime}vt{vtime}".replace(" ", "_")\
-                                                                                               .replace(":", "_")\
-                                                                                               .replace("-", "_")
+                                                       f"{level}{vert_units}it{itime}vt{vtime}".replace(" ", "_") \
+                                                           .replace(":", "_") \
+                                                           .replace("-", "_")
                                             exists = os.path.exists(os.path.join(location, "plots", filename + ".png"))
 
                                             add_image(None if exists else plot_driver.plot(), plot_object,
                                                       generate_code, sphinx, url_prefix=url_prefix,
                                                       dataset=dataset if multiple_datasets else "", level=f"{level}" +
-                                                                                                f"{vert_units}",
+                                                                                                          f"{vert_units}",
                                                       itime=str(itime), vtime=str(vtime), simple_naming=simple_naming)
                                             if level:
                                                 add_levels([f"{level} {vert_units}"], vert_units)

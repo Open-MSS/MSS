@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-
 import csv
 import defusedxml.ElementTree as etree
 import os
@@ -36,7 +35,6 @@ import logging
 import time
 
 from mslib.msui.constants import MSS_CONFIG_PATH
-
 
 _airspaces = []
 _airports = []
@@ -59,13 +57,13 @@ _airspace_cache = \
      ('za_asp.aip', '197K')]
 
 
-def download_progress(file_path, url, progress_callback=lambda f: logging.info(f"{int(f * 100)}% Downloaded")):
+def download_progress(file_path, url, progress_callback=lambda f: logging.info("%s% Downloaded" % (int(f * 100)))):
     """
     Downloads the file at the given url to file_path and keeps track of the progress
     """
     try:
         with open(file_path, "wb+") as file:
-            logging.info(f"Downloading to {file_path}. This might take a while.")
+            logging.info("Downloading to %s. This might take a while." % file_path)
             response = requests.get(url, stream=True, timeout=5)
             length = response.headers.get("content-length")
             if length is None:  # no content length header
@@ -93,13 +91,15 @@ def get_airports(force_download=False):
         return _airports
 
     is_outdated = file_exists \
-        and (time.time() - os.path.getmtime(os.path.join(MSS_CONFIG_PATH, "airports.csv"))) > 60 * 60 * 24 * 30
+                  and (time.time() - os.path.getmtime(
+        os.path.join(MSS_CONFIG_PATH, "airports.csv"))) > 60 * 60 * 24 * 30
 
     if (force_download or is_outdated or not file_exists) \
             and QtWidgets.QMessageBox.question(None, "Allow download", f"You selected airports to be "
-                                               f"{'drawn' if not force_download else 'downloaded (~10MB)'}." +
-                                               ("\nThe airports file first needs to be downloaded or updated (~10MB)."
-                                                if not force_download else "") + "\nIs now a good time?",
+                                                                       f"{'drawn' if not force_download else 'downloaded (~10MB)'}." +
+                                                                       (
+                                                                               "\nThe airports file first needs to be downloaded or updated (~10MB)."
+                                                                               if not force_download else "") + "\nIs now a good time?",
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
             == QtWidgets.QMessageBox.Yes:
         download_progress(os.path.join(MSS_CONFIG_PATH, "airports.csv"), "https://ourairports.com/data/airports.csv")
@@ -144,10 +144,10 @@ def update_airspace(force_download=False, countries=["de"]):
 
         if (force_download or is_outdated or not file_exists) \
                 and QtWidgets.QMessageBox.question(
-                    None, "Allow download",
-                    f"The selected {country} airspace needs to be downloaded ({data[-1]})"
-                    f"\nIs now a good time?",
-                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
+            None, "Allow download",
+            f"The selected {country} airspace needs to be downloaded ({data[-1]})"
+            f"\nIs now a good time?",
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
                 == QtWidgets.QMessageBox.Yes:
             download_progress(location, url)
 

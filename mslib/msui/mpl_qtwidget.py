@@ -418,7 +418,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 try:
                     lat, lon = self.canvas.waypoints_interactor.get_lat_lon(event)
                 except (ValueError, OverflowError) as ex:
-                    logging.error("%s", ex)
+                    logging.error("%s"%ex)
                 else:
                     s = f"lat={lat:6.2f}, lon={lon:7.2f}"
                     artists = [a for a in event.inaxes._mouseover_set
@@ -740,7 +740,7 @@ class MplSideViewCanvas(MplCanvas):
                 try:
                     self.ax.lines.remove(line)
                 except ValueError as e:
-                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                    logging.debug("Vertical line was somehow already removed:\n%s"%e)
                 self.vertical_lines.remove(line)
 
             # Add vertical lines
@@ -1048,7 +1048,7 @@ class MplLinearViewCanvas(MplCanvas):
                 try:
                     self.ax.lines.remove(line)
                 except ValueError as e:
-                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                    logging.debug("Vertical line was somehow already removed:\n%s"%e)
                 self.vertical_lines.remove(line)
 
             ipoint = 0

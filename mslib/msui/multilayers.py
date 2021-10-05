@@ -259,9 +259,9 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             crs_values[0] = list(set(crs_values[0]).intersection(values))
 
         return sorted(elevation_values[0], key=lambda x: float(x.split()[0])) if len(elevation_values) > 0 else [], \
-            sorted(init_time_values[0]) if len(init_time_values) > 0 else [], \
-            sorted(valid_time_values[0]) if len(valid_time_values) > 0 else [], \
-            sorted(crs_values[0]) if len(crs_values) > 0 else []
+               sorted(init_time_values[0]) if len(init_time_values) > 0 else [], \
+               sorted(valid_time_values[0]) if len(valid_time_values) > 0 else [], \
+               sorted(crs_values[0]) if len(crs_values) > 0 else []
 
     def get_multilayer_priority(self, layer_widget):
         """
@@ -604,7 +604,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_init_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.itimes = [_time.isoformat() + "Z" for _time in self.allowed_init_times]
             if len(self.allowed_init_times) == 0:
-                logging.error(f"Cannot determine init time format of {self.header.text(0)} for {self.text(0)}")
+                logging.error("Cannot determine init time format of {0} for {1}"
+                              .format(self.header.text(0), self.text(0)))
                 self.is_invalid = True
             else:
                 self.itime = self.itimes[-1]
@@ -623,7 +624,8 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_valid_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
-                logging.error(f"Cannot determine valid time format of {self.header.text(0)} for {self.text(0)}")
+                logging.error("Cannot determine valid time format of {0} for {1}"
+                              .format(self.header.text(0), self.text(0)))
                 self.is_invalid = True
             else:
                 if self.itime:
@@ -642,7 +644,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if len(self.styles) > 0:
             self.style = self.styles[0]
             if str(self) in self.parent.settings["saved_styles"] and \
-               self.parent.settings["saved_styles"][str(self)] in self.styles:
+                    self.parent.settings["saved_styles"][str(self)] in self.styles:
                 self.style = self.parent.settings["saved_styles"][str(self)]
 
     def get_level(self):

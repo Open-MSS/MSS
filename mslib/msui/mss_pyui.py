@@ -140,6 +140,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
+
     def __init__(self):
         super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
@@ -252,7 +253,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                  action.objectName(),
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
                 for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
-                self.cbNoShortcut.checkState()])
+                                                                         self.cbNoShortcut.checkState()])
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
                              shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
@@ -276,7 +277,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
             if not any(action for action in actions if action[3] == "actionShortcuts"):
                 actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
-                               "Show Current Shortcuts", "Alt+S", None))
+                                "Show Current Shortcuts", "Alt+S", None))
             if not any(action for action in actions if action[3] == "actionSearch"):
                 actions.append((qobject.window(), "Search for interactive text in the UI",
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
@@ -458,7 +459,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 wms = wms_control.MSSWebMapService(request.url, version=None,
                                                    username=username, password=password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
-                logging.info("Stored WMS info for '%s'", wms.url)
+                logging.info("Stored WMS info for '%s'" % wms.url)
             except Exception as ex:
                 logging.error("Error in preloading '%s': '%s'", type(ex), ex)
             if pdlg.wasCanceled():
@@ -1046,9 +1047,9 @@ def main():
         logging.info("menu entry removed")
         sys.exit()
 
-    logging.info("MSS Version: %s", __version__)
-    logging.info("Python Version: %s", sys.version)
-    logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
+    logging.info("MSS Version: %s" % __version__)
+    logging.info("Python Version: %s" % sys.version)
+    logging.info("Platform: %s (%s)" % (platform.platform(), platform.architecture()))
 
     try:
         read_config_file()

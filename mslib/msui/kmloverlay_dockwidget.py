@@ -188,14 +188,14 @@ class KMLPatch(object):
             "color": str(getattr(style, "color", "")),
             "linewidth": float(getattr(style, "width", linewidth))
         }
-        logging.debug("color before %s", result["color"])
+        logging.debug("color before %s" % result["color"])
         if len(result["color"]) == 7 and result["color"][0] == "#":
             result["color"] = [(int(result["color"][i:i + 2], 16) / 255.) for i in range(1, 8, 2)]
         elif len(result["color"]) == 8:
             result["color"] = [(int(result["color"][i:i + 2], 16) / 255.) for i in range(0, 8, 2)][::-1]
         else:
             result["color"] = color
-        logging.debug("color after %s", result["color"])
+        logging.debug("color after %s" % result["color"])
         return result
 
     def parse_styles(self, kml_doc):
@@ -294,7 +294,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         # Hiding the color and linewidth options.
         self.frame.hide()
         # setting flags to control self.load_file() while changing color and linewidth.
-        self.flag = 0   # Flag for control of load_file() for linewidth
+        self.flag = 0  # Flag for control of load_file() for linewidth
         self.flag2 = 0  # Flag for control of load_file() for linewidth
 
         # Connect slots and signals (For showing color and linewidth of clicked file).
@@ -322,7 +322,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     self.create_list_item(fn)
                 else:
                     delete_files.append(fn)  # add non-existent files to list
-                    logging.info("'%s' does not exist in the directory anymore.", fn)
+                    logging.info("'%s' does not exist in the directory anymore." % fn)
             for fn in delete_files:
                 del self.dict_files[fn]  # remove non-existent files from dictionary
             self.load_file()
@@ -400,7 +400,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.dict_files[filename]["patch"].update(
                     self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
                 if self.listWidget.currentItem().checkState() == QtCore.Qt.Unchecked:
-                    self.flag = 1   # again sets to 1 because itemChanged signal due to set icon had changed it to 0
+                    self.flag = 1  # again sets to 1 because itemChanged signal due to set icon had changed it to 0
                     self.checklistitem(filename)
 
     def set_linewidth(self, filename):
@@ -420,7 +420,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         elif self.flag2 == 1:
             self.flag2 = 0  # reverses the flag to carry flag operation again for color.
         else:
-            self.load_file()    # important for updating patches on map when checkState changes
+            self.load_file()  # important for updating patches on map when checkState changes
 
     def show_color_icon(self, filename, clr):
         """
@@ -487,7 +487,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.directory_location = text  # Saves location of directory to open
                 self.create_list_item(text)
             else:
-                logging.info("%s file already added", text)
+                logging.info("%s file already added" % text)
         self.labelStatusBar.setText("Status: KML Files added")
         self.load_file()
 
@@ -528,7 +528,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.labelStatusBar.setText("Status: KML Files removed")
         if self.listWidget.count() == 0:  # implies no files in ListWidget
             self.dsbx_linewidth.setValue(0.1)  # Shows 0.1 for Linewidth in absence of any file
-            self.frame.hide()   # again hide the color and linewidth options when all files are removed.
+            self.frame.hide()  # again hide the color and linewidth options when all files are removed.
         # self.load_file() # not sure to keep this or not, works either ways
 
     def load_file(self):
