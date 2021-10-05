@@ -31,6 +31,7 @@ import fs
 import pytest
 
 from mslib import utils
+from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
@@ -65,6 +66,15 @@ class TestConfigLoader(object):
     def teardown(self):
         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
+
+    def test_option_types(self):
+        # check if all config options are added to the appropriate type of options
+        config_keys = set(config_loader(default=True).keys())
+        option_types = set(mss_default.fixed_dict_options +
+                           mss_default.key_value_options +
+                           list(mss_default.dict_option_structure.keys()) +
+                           list(mss_default.list_option_structure.keys()))
+        assert config_keys == option_types
 
     def test_default_config(self):
         data = config_loader(default=True)

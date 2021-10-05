@@ -92,22 +92,6 @@ def automate_waypoints():
     pag.hotkey('ctrl', 'h')
     pag.sleep(1)
 
-    # Opening web map service
-    try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}selecttoopencontrol.png')
-        pag.click(x, y, interval=2)
-        pag.press('down', interval=1)
-        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-            pag.press('enter', interval=1)
-        elif platform == 'darwin':
-            pag.press('return', interval=1)
-        pag.move(None, -777, duration=1)
-        if platform == 'win32':
-            pag.dragRel(400, None, duration=2)
-        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.dragRel(800, None, duration=2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control\' button/option not found on the screen.")
 
     # Locating Server Layer
     try:
@@ -118,7 +102,7 @@ def automate_waypoints():
             pag.dragRel(-800, -60, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             pag.move(35, -522, duration=1)
-            pag.dragRel(-800, -30, duration=2)
+            pag.dragRel(950, -30, duration=2)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Server\\Layers\' button/option not found on the screen.")
@@ -200,11 +184,11 @@ def automate_waypoints():
         print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}checkbox_unselected_divergence.png')
         if platform == 'win32':
             pag.moveTo(x - 268, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.moveTo(x - 248, y, duration=2)
+            pag.moveTo(x - 228, y, duration=2)
         pag.click(interval=1)
         pag.sleep(2)
         pag.move(None, gap * 4, duration=1)
@@ -218,6 +202,7 @@ def automate_waypoints():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer multilayering checkbox\' option not found on the screen.")
+
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
         pag.moveTo(x, y, duration=2)
@@ -229,7 +214,7 @@ def automate_waypoints():
 
     # Starring the layers
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}unselected_divergence_layer.png')
         if platform == 'win32':
             pag.moveTo(x - 255, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
@@ -384,7 +369,7 @@ def automate_waypoints():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Clear cache\' button/option not found on the screen.")
 
-    # Transparent layer
+    # qrent layer
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2, interval=2)
         pag.sleep(1)
