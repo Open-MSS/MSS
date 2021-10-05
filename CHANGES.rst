@@ -9,7 +9,7 @@ This now connects in a user-friendly way the editing of flight paths locally
 or remotely with other users. Many of Jörn Ungermann's ideas were implemented.
 In addition, Aravind Murali has improved a configuration editor for our json mss_settings file
 and made this user-friendly. The initial idea of the new editor stems from Reimar Bauer.
-GSoC mentors were Joern Ungermann, May Bär, Reimar Bauer
+GSoC mentors were Jörn Ungermann, May Bär, Reimar Bauer
 
 Hrithik Kumar Verma developed a toolchain for the automatic creation of tutorials
 in the Google Summer of Code 2021. This simplifies the creation of video tutorials in
