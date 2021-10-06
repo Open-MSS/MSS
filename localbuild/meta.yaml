@@ -54,6 +54,7 @@ requirements:
     - flask >=2.0.0
     - flask-httpauth
     - flask-mail
+    - flask-migrate
     - werkzeug >2.0.0
     - flask-socketio >=5
     - flask-sqlalchemy
