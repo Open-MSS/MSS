@@ -32,6 +32,7 @@ import datetime
 import secrets
 import fs
 import socketio
+import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer
 from flask import g, jsonify, request, render_template
 from flask import send_from_directory, abort, url_for
@@ -62,14 +63,14 @@ APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
 APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-APP.config['SECURITY_PASSWORD_SALT'] = mscolab_settings.SECURITY_PASSWORD_SALT
-APP.config['MAIL_DEFAULT_SENDER'] = mscolab_settings.MAIL_DEFAULT_SENDER
-APP.config['MAIL_SERVER'] = mscolab_settings.MAIL_SERVER
-APP.config['MAIL_PORT'] = mscolab_settings.MAIL_PORT
-APP.config['MAIL_USERNAME'] = mscolab_settings.MAIL_USERNAME
-APP.config['MAIL_PASSWORD'] = mscolab_settings.MAIL_PASSWORD
-APP.config['MAIL_USE_TLS'] = mscolab_settings.MAIL_USE_TLS
-APP.config['MAIL_USE_SSL'] = mscolab_settings.MAIL_USE_SSL
+APP.config['SECURITY_PASSWORD_SALT'] = getattr(mscolab_settings, "SECURITY_PASSWORD_SALT", None)
+APP.config['MAIL_DEFAULT_SENDER'] = getattr(mscolab_settings, "MAIL_DEFAULT_SENDER", None)
+APP.config['MAIL_SERVER'] = getattr(mscolab_settings, "MAIL_SERVER", None)
+APP.config['MAIL_PORT'] = getattr(mscolab_settings, "MAIL_PORT", None)
+APP.config['MAIL_USERNAME'] = getattr(mscolab_settings, "MAIL_USERNAME", None)
+APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
+APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
+APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
 
 auth = HTTPBasicAuth()
 
@@ -105,16 +106,19 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
 
 
 def send_email(to, subject, template):
-    msg = Message(
-        subject,
-        recipients=[to],
-        html=template,
-        sender=APP.config['MAIL_DEFAULT_SENDER']
-    )
-    try:
-        mail.send(msg)
-    except IOError:
-        logging.debug("Can't send email to %s", to)
+    if APP.config['MAIL_DEFAULT_SENDER'] is not None:
+        msg = Message(
+            subject,
+            recipients=[to],
+            html=template,
+            sender=APP.config['MAIL_DEFAULT_SENDER']
+        )
+        try:
+            mail.send(msg)
+        except IOError:
+            logging.error("Can't send email to %s", to)
+    else:
+        logging.debug("setup user verification by email")
 
 
 def generate_confirmation_token(email):
@@ -148,7 +152,11 @@ _app, sockio, cm, fm = initialize_managers(APP)
 
 
 def check_login(emailid, password):
-    user = User.query.filter_by(emailid=str(emailid)).first()
+    try:
+        user = User.query.filter_by(emailid=str(emailid)).first()
+    except sqlalchemy.exc.OperationalError as ex:
+        logging.debug("Problem in the database (%ex), likly version client different", ex)
+        return False
     if user is not None:
         if mscolab_settings.USER_VERIFICATION:
             if user.confirmed:

@@ -157,6 +157,30 @@ After executed you get informations to exchange with users.
 
 Further options can be listed by `mscolab db -h`
 
+user verification by email
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With setting of `USER_VERIFICATION = True` you have to set further options in the mscolab_settings.py. These are
+parameters of `flask-mail` ::
+
+        # enable verification by Mail
+        USER_VERIFICATION = True
+
+        # mail settings
+        MAIL_SERVER = 'localhost'
+        MAIL_PORT = 25
+        MAIL_USE_TLS = False
+        MAIL_USE_SSL = True
+
+        mail authentication
+        MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
+        MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
+
+        # mail accounts
+        MAIL_DEFAULT_SENDER = 'MSS@localhost'
+
+A new user gets an email with an url including a token to become verified on the mscolab server. After the verification
+she can login.
 
 Instructions to use mscolab wsgi
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
