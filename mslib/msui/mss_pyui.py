@@ -41,7 +41,6 @@ import re
 import requests
 import shutil
 import sys
-import types
 import fs
 
 from mslib import __version__
@@ -49,20 +48,18 @@ from mslib.msui.mss_qt import ui_mainwindow as ui
 from mslib.msui.mss_qt import ui_about_dialog as ui_ab
 from mslib.msui.mss_qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
-from mslib.msui import tableview
-from mslib.msui import topview
-from mslib.msui import sideview
-from mslib.msui import linearview
+from mslib.msui import tableview, topview, sideview, linearview
 from mslib.msui import editor
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mscolab
 from mslib.msui.updater import UpdaterUI
-from mslib.utils import config_loader, setup_logging, Worker, Updater
+from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.msui.mss_qt import get_open_filename, get_save_filename
-from PyQt5 import QtGui, QtCore, QtWidgets
+from mslib.msui.mss_qt import get_open_filename, get_save_filename, Worker, Updater
+from mslib.utils.config import read_config_file, config_loader
+from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSS_CONFIG_PATH)
@@ -80,14 +77,15 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
 
     # Class variable to assign a unique ID to each view.
     opened_views = 0
+    open_views = []
 
-    def __init__(self, view_window, parent=None, viewsChanged=None,
-                 type=QtWidgets.QListWidgetItem.UserType):
+    def __init__(self, view_window, parent=None, viewsChanged=None, mscolab=False,
+                 _type=QtWidgets.QListWidgetItem.UserType):
         """Add ID number to the title of the corresponding view window.
         """
         QActiveViewsListWidgetItem.opened_views += 1
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
-        super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, type)
+        super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, _type)
 
         view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
                                    f"{view_window.waypoints_model.name}")
@@ -95,6 +93,7 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         self.window = view_window
         self.parent = parent
         self.viewsChanged = viewsChanged
+        QActiveViewsListWidgetItem.open_views.append(view_window)
 
     def view_destroyed(self):
         """Slot that removes this QListWidgetItem from the parent (the
@@ -102,6 +101,10 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         if self.parent is not None:
             self.parent.takeItem(self.parent.row(self))
+            for index, window in enumerate(QActiveViewsListWidgetItem.open_views):
+                if window.identifier == self.window.identifier:
+                    del QActiveViewsListWidgetItem.open_views[index]
+                    break
         if self.viewsChanged is not None:
             self.viewsChanged.emit()
 
@@ -137,31 +140,104 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
-
     def __init__(self):
         super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
-        self.current_shortcuts = self.get_shortcuts()
-        self.fill_list()
+        self.current_shortcuts = None
+        self.treeWidget.itemDoubleClicked.connect(self.double_clicked)
+        self.treeWidget.itemClicked.connect(self.clicked)
+        self.leShortcutFilter.textChanged.connect(self.filter_shortcuts)
+        self.filterRemoveAction = self.leShortcutFilter.addAction(QtGui.QIcon(icons("64x64", "remove.png")),
+                                                                  QtWidgets.QLineEdit.TrailingPosition)
+        self.filterRemoveAction.setVisible(False)
+        self.filterRemoveAction.setToolTip("Click to remove the filter")
+        self.filterRemoveAction.triggered.connect(lambda: self.leShortcutFilter.setText(""))
+        self.cbNoShortcut.stateChanged.connect(self.fill_list)
+        self.cbAdvanced.stateChanged.connect(lambda i: (self.cbNoShortcut.setVisible(i),
+                                                        self.leShortcutFilter.setVisible(i),
+                                                        self.cbDisplayType.setVisible(i),
+                                                        self.label.setVisible(i),
+                                                        self.label_2.setVisible(i),
+                                                        self.line.setVisible(i)))
+        self.cbDisplayType.currentTextChanged.connect(self.fill_list)
+        self.cbAdvanced.stateChanged.emit(self.cbAdvanced.checkState())
+        self.oldReject = self.reject
+        self.reject = self.custom_reject
+
+    def custom_reject(self):
+        """
+        Reset highlighted objects when closing the shortcuts dialog
+        """
+        self.reset_highlight()
+        self.oldReject()
+
+    def reset_highlight(self):
+        """
+        Iterates through all shortcuts and resets the stylesheet
+        """
+        if self.current_shortcuts:
+            for shortcuts in self.current_shortcuts.values():
+                for shortcut in shortcuts.values():
+                    if shortcut[-1] and hasattr(shortcut[-1], "setStyleSheet"):
+                        shortcut[-1].setStyleSheet("")
+
+    def clicked(self, item):
+        """
+        Highlights the selected item in the GUI as yellow
+        """
+        self.reset_highlight()
+        if hasattr(item, "source_object") and item.source_object and hasattr(item.source_object, "setStyleSheet"):
+            item.source_object.setStyleSheet("background-color:yellow;")
+
+    def double_clicked(self, item):
+        """
+        Executes the shortcut for the doubleclicked item
+        """
+        if hasattr(item, "source_object") and item.source_object:
+            self.reset_highlight()
+            self.hide()
+            obj = item.source_object
+            if isinstance(obj, QtWidgets.QShortcut):
+                obj.activated.emit()
+            elif isinstance(obj, QtWidgets.QAction):
+                obj.trigger()
+            elif isinstance(obj, QtWidgets.QAbstractButton):
+                obj.click()
+            elif isinstance(obj, QtWidgets.QComboBox):
+                QtCore.QTimer.singleShot(200, obj.showPopup)
+            elif isinstance(obj, QtWidgets.QLineEdit) or isinstance(obj, QtWidgets.QAbstractSpinBox):
+                obj.setFocus()
 
     def fill_list(self):
         """
         Fills the treeWidget with all relevant windows as top level items and their shortcuts as children
         """
+        self.reset_highlight()
+        self.treeWidget.clear()
+        self.current_shortcuts = self.get_shortcuts()
         for widget in self.current_shortcuts:
-            name = widget.window().windowTitle()
-            if len(name) == 0 or widget.window().isHidden():
+            if hasattr(widget, "window"):
+                name = widget.window().windowTitle()
+            else:
+                name = widget.objectName()
+            if len(name) == 0 or (hasattr(widget, "window") and widget.window().isHidden()):
                 continue
             header = QtWidgets.QTreeWidgetItem(self.treeWidget)
             header.setText(0, name)
-            if widget.window() == self.parent():
+            if hasattr(widget, "window") and widget.window() == self.parent():
                 header.setExpanded(True)
                 header.setSelected(True)
                 self.treeWidget.setCurrentItem(header)
-            for description, shortcut in self.current_shortcuts[widget].items():
+            for objectName in self.current_shortcuts[widget].keys():
+                description, text, _, shortcut, obj = self.current_shortcuts[widget][objectName]
                 item = QtWidgets.QTreeWidgetItem(header)
-                item.setText(0, f"{description}: {shortcut}")
+                item.source_object = obj
+                itemText = description if self.cbDisplayType.currentText() == 'Tooltip' \
+                    else text if self.cbDisplayType.currentText() == 'Text' else objectName
+                item.setText(0, f"{itemText}: {shortcut}")
+                item.setToolTip(0, f"ToolTip: {description}\nText: {text}\nObjectName: {objectName}")
                 header.addChild(item)
+        self.filter_shortcuts(self.leShortcutFilter.text())
 
     def get_shortcuts(self):
         """
@@ -169,21 +245,70 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         shortcuts = {}
         for qobject in QtWidgets.QApplication.topLevelWidgets():
-            actions = [(qobject.window(), "Show Current Shortcuts", "Alt+S")]
+            actions = []
             actions.extend([
-                (action.parent().window(), action.toolTip(), ",".join(
-                    [shortcut.toString() for shortcut in action.shortcuts()]))
-                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0])
-            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), shortcut.key().toString())
+                (action.parent().window() if hasattr(action.parent(), "window") else action.parent(),
+                 action.toolTip(), action.text().replace("&&", "%%").replace("&", "").replace("%%", "&"),
+                 action.objectName(),
+                 ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
+                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
+                self.cbNoShortcut.checkState()])
+            actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
+                             shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
-            actions.extend([(button.window(), button.toolTip(), button.shortcut().toString())
-                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut()])
+            actions.extend([(button.window(), button.toolTip(), button.text().replace("&&", "%%").replace("&", "")
+                             .replace("%%", "&"), button.objectName(),
+                             button.shortcut().toString() if button.shortcut() else "", button)
+                            for button in qobject.findChildren(QtWidgets.QAbstractButton) if button.shortcut() or
+                            self.cbNoShortcut.checkState()])
+
+            # Additional objects which have no shortcuts, if requested
+            actions.extend([(obj.window(), obj.toolTip(), obj.currentText(), obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QComboBox) if self.cbNoShortcut.checkState()])
+            actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QAbstractSpinBox) +
+                            qobject.findChildren(QtWidgets.QLineEdit)
+                            if self.cbNoShortcut.checkState()])
+            actions.extend([(obj.window(), obj.toolTip(), obj.toPlainText(), obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QPlainTextEdit) +
+                            qobject.findChildren(QtWidgets.QTextEdit)
+                            if self.cbNoShortcut.checkState()])
+
+            if not any(action for action in actions if action[3] == "actionShortcuts"):
+                actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
+                               "Show Current Shortcuts", "Alt+S", None))
+            if not any(action for action in actions if action[3] == "actionSearch"):
+                actions.append((qobject.window(), "Search for interactive text in the UI",
+                                "Search for interactive text in the UI", "Search for interactive text in the UI",
+                                "Ctrl+F", None))
+
             for item in actions:
                 if item[0] not in shortcuts:
                     shortcuts[item[0]] = {}
-                shortcuts[item[0]][item[1].replace(f"({item[2]})", "").strip()] = item[2]
+                shortcuts[item[0]][item[3].strip()] = item[1:]
 
         return shortcuts
+
+    def filter_shortcuts(self, text):
+        """
+        Hides all shortcuts not containing the text
+        """
+        for window in self.treeWidget.findItems("", QtCore.Qt.MatchContains):
+            wms_hits = 0
+
+            for child_index in range(window.childCount()):
+                widget = window.child(child_index)
+                if text.lower() in widget.text(0).lower() or text.lower() in window.text(0).lower():
+                    widget.setHidden(False)
+                    wms_hits += 1
+                else:
+                    widget.setHidden(True)
+            if wms_hits == 0 and len(text) > 0:
+                window.setHidden(True)
+            else:
+                window.setHidden(False)
+
+        self.filterRemoveAction.setVisible(len(text) > 0)
 
 
 class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
@@ -206,13 +331,13 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
 
 
 class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
-    """MSUI main window class. Provides user interface elements for managing
-       flight tracks and views.
+    """MSUI new main window class. Provides user interface elements for managing
+       flight tracks, views and MSColab functionalities.
     """
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
 
-    def __init__(self, *args):
+    def __init__(self, mscolab_data_dir=None, *args):
         super(MSSMainWindow, self).__init__(*args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
@@ -224,42 +349,50 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
-        # Reference to the flight track that is currently displayed in the
-        # views.
+
+        self.config_editor = None
+        self.local_active = True
+        self.new_flight_track_counter = 0
+
+        # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir")
-        self.mscolab_window = None
-        self.config_editor = None
 
-        # Connect Qt SIGNALs:
-        # ===================
+        # bind meta (ctrl in macOS) to override automatic translation of ctrl to command by qt
+        if sys.platform == 'darwin':
+            self.actionTopView.setShortcut(QtGui.QKeySequence("Meta+h"))
+            self.actionSideView.setShortcut(QtGui.QKeySequence("Meta+v"))
+            self.actionTableView.setShortcut(QtGui.QKeySequence("Meta+t"))
+            self.actionLinearView.setShortcut(QtGui.QKeySequence("Meta+l"))
+            self.actionConfiguration.setShortcut(QtGui.QKeySequence("Ctrl+,"))
 
         # File menu.
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
-        self.actionOpenFlightTrack.triggered.connect(self.open_flight_track)
-        self.actionActivateSelectedFlightTrack.triggered.connect(self.activate_selected_flight_track)
+        self.actionSaveActiveFlightTrack.triggered.connect(self.save_handler)
+        self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_as_handler)
         self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
-        self.actionSaveActiveFlightTrack.triggered.connect(self.save_flight_track)
-        self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_flight_track_as)
 
         # Views menu.
-        self.actionTopView.triggered.connect(self.create_new_view)
-        self.actionSideView.triggered.connect(self.create_new_view)
-        self.actionTableView.triggered.connect(self.create_new_view)
-        self.actionLinearView.triggered.connect(self.create_new_view)
-
-        # mscolab menu
-        self.actionMscolabProjects.triggered.connect(self.activate_mscolab_window)
+        self.actionTopView.triggered.connect(functools.partial(self.create_view_handler, "topview"))
+        self.actionSideView.triggered.connect(functools.partial(self.create_view_handler, "sideview"))
+        self.actionTableView.triggered.connect(functools.partial(self.create_view_handler, "tableview"))
+        self.actionLinearView.triggered.connect(functools.partial(self.create_view_handler, "linearview"))
 
         # Help menu.
         self.actionOnlineHelp.triggered.connect(self.show_online_help)
         self.actionAboutMSUI.triggered.connect(self.show_about_dialog)
         self.actionShortcuts.triggered.connect(self.show_shortcuts)
         self.actionShortcuts.setShortcutContext(QtCore.Qt.ApplicationShortcut)
+        self.actionSearch.triggered.connect(lambda: self.show_shortcuts(True))
+        self.actionSearch.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
-        # Config
-        self.actionLoadConfigurationFile.triggered.connect(self.load_config_file)
-        self.actionConfigurationEditor.triggered.connect(self.open_config_editor)
+        # # Config
+        self.actionConfiguration.triggered.connect(self.open_config_editor)
+
+        # Raise Main Window to front with Ctrl/Cmnd + up keyboard shortcut
+        self.addAction(self.actionBringMainWindowToFront)
+        self.actionBringMainWindowToFront.triggered.connect(self.bring_main_window_to_front)
+        self.actionBringMainWindowToFront.setShortcutContext(QtCore.Qt.ApplicationShortcut)
 
         # Flight Tracks.
         self.listFlightTracks.itemActivated.connect(self.activate_flight_track)
@@ -267,17 +400,29 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # Views.
         self.listViews.itemActivated.connect(self.activate_sub_window)
 
-        self.add_import_filter("CSV", "csv", load_from_csv, pickertag="filepicker_default")
-        self.add_export_filter("CSV", "csv", save_to_csv, pickertag="filepicker_default")
-
-        self._imported_plugins, self._exported_plugins = {}, {}
+        # Add default and plugins from settings
+        picker_default = config_loader(dataset="filepicker_default")
+        self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Import")
+        self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Export")
         self.add_plugins()
 
         preload_urls = config_loader(dataset="WMS_preload")
         self.preload_wms(preload_urls)
 
         # Status Bar
-        self.labelStatusbar.setText(self.status())
+        self.statusBar.showMessage(self.status())
+
+        # Create MSColab instance to handle all MSColab functionalities
+        self.mscolab = mscolab.MSSMscolab(parent=self, data_dir=mscolab_data_dir)
+
+        # Setting up MSColab Tab
+        self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
+
+        self.shortcuts_dlg = None
+
+        # deactivate vice versa selection of Operation or Flight Track
+        self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
+        self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
         # Don't start the updater during a test run of mss_pyui
         if "pytest" not in sys.modules:
@@ -321,244 +466,165 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         logging.debug("Contents of WMS_SERVICE_CACHE: %s", wms_control.WMS_SERVICE_CACHE.keys())
         pdlg.close()
 
+    def bring_main_window_to_front(self):
+        self.show()
+        self.raise_()
+        self.activateWindow()
+
+    def menu_handler(self):
+        self.menuImportFlightTrack.setEnabled(True)
+        if not self.local_active and self.mscolab.access_level == "viewer":
+            # viewer has no import access to server
+            self.menuImportFlightTrack.setEnabled(False)
+
+        # enable/disable flight track menus
+        self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
+        self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
+
     def add_plugins(self):
-        picker_default = config_loader(
-            dataset="filepicker_default")
+        picker_default = config_loader(dataset="filepicker_default")
+        self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
+        self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
+        self.import_plugins = {"csv": load_from_csv}
+        self.export_plugins = {"csv": save_to_csv}
+        self.add_import_plugins(picker_default)
+        self.add_export_plugins(picker_default)
 
-        self._imported_plugins = config_loader(dataset="import_plugins")
-        for name in self._imported_plugins:
-            extension, module, function = self._imported_plugins[name][:3]
+    def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
+        if plugin_type == "Import":
+            menu = self.menuImportFlightTrack
+            action_name = "actionImportFlightTrack" + clean_string(extension)
+            handler = self.handle_import_local
+        elif plugin_type == "Export":
+            menu = self.menuExportActiveFlightTrack
+            action_name = "actionExportFlightTrack" + clean_string(extension)
+            handler = self.handle_export_local
+
+        if hasattr(self, action_name):
+            raise ValueError(f"'{action_name}' has already been set!")
+        action = QtWidgets.QAction(self)
+        action.setObjectName(action_name)
+        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
+        action.triggered.connect(functools.partial(handler, extension, function, pickertype))
+        menu.addAction(action)
+        setattr(self, action_name, action)
+
+    def add_import_plugins(self, picker_default):
+        plugins = config_loader(dataset="import_plugins")
+        for name in plugins:
+            extension, module, function = plugins[name][:3]
             picker_type = picker_default
-            if len(self._imported_plugins[name]) == 4:
-                picker_type = self._imported_plugins[name][3]
+            if len(plugins[name]) == 4:
+                picker_type = plugins[name][3]
             try:
                 imported_module = importlib.import_module(module)
+                imported_function = getattr(imported_module, function)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self._imported_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self.tr(f"ERROR: Configuration\n\n{plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
             try:
-                self.add_import_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
+                self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Import")
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self._imported_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
-
+                    self.tr(f"ERROR: Configuration\n\n{self.import_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
+            self.import_plugins[extension] = imported_function
 
-        self._exported_plugins = config_loader(dataset="export_plugins")
-        for name in self._exported_plugins:
-            extension, module, function = self._exported_plugins[name][:3]
+    def add_export_plugins(self, picker_default):
+        plugins = config_loader(dataset="export_plugins")
+        for name in plugins:
+            extension, module, function = plugins[name][:3]
             picker_type = picker_default
-            if len(self._exported_plugins[name]) == 4:
-                picker_type = self._exported_plugins[name][3]
+            if len(plugins[name]) == 4:
+                picker_type = plugins[name][3]
             try:
                 imported_module = importlib.import_module(module)
+                imported_function = getattr(imported_module, function)
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("file io plugin error import plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{self._exported_plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self, self.tr("file io plugin error export plugins"),
+                    self.tr(f"ERROR: Configuration\n\n{plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
             try:
-                self.add_export_filter(name, extension, getattr(imported_module, function), pickertype=picker_type)
+                self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Export")
             # wildcard exception to be resilient against error introduced by user code
             except Exception as ex:
                 logging.error("Error on installing plugin: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
-                    self, self.tr("file io plugin error"),
-                    self.tr(f"ERROR: Configuration for export {self._exported_plugins} plugins\n\n{type(ex)}\n"
-                            f"\nthrows error:\n{ex}"))
+                    self, self.tr("file io plugin error import plugins"),
+                    self.tr(f"ERROR: Configuration\n\n{self.export_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
+            self.export_plugins[extension] = imported_function
 
     def remove_plugins(self):
-        for name in self._imported_plugins:
+        for name in self.import_plugins:
             full_name = "actionImportFlightTrack" + clean_string(name)
-            actions = [_x for _x in self.menuImport_Flight_Track.actions()
+            actions = [_x for _x in self.menuImportFlightTrack.actions()
                        if _x.objectName() == full_name]
             assert len(actions) == 1
-            self.menuImport_Flight_Track.removeAction(actions[0])
+            self.menuImportFlightTrack.removeAction(actions[0])
             delattr(self, full_name)
+        self.import_plugins = {}
 
-        for name in self._exported_plugins:
+        for name in self.export_plugins:
             full_name = "actionExportFlightTrack" + clean_string(name)
-            actions = [_x for _x in self.menuExport_Active_Flight_Track.actions()
+            actions = [_x for _x in self.menuExportActiveFlightTrack.actions()
                        if _x.objectName() == full_name]
             assert len(actions) == 1
-            self.menuExport_Active_Flight_Track.removeAction(actions[0])
+            self.menuExportActiveFlightTrack.removeAction(actions[0])
             delattr(self, full_name)
+        self.export_plugins = {}
 
-    def add_import_filter(self, name, extension, function, pickertag=None, pickertype=None):
-        full_name = "actionImportFlightTrack" + clean_string(name)
-        if hasattr(self, full_name):
-            raise ValueError(f"'{full_name}' has already been set!")
-
-        action = QtWidgets.QAction(self)
-        action.setObjectName(full_name)
-        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
-        self.menuImport_Flight_Track.addAction(action)
-
-        def load_function_wrapper(self):
-            filename = get_open_filename(
-                self, "Import Flight Track", self.last_save_directory,
-                "All Files (*." + extension + ")", pickertype=pickertype)
+    def handle_import_local(self, extension, function, pickertype):
+        filename = get_open_filename(
+            self, "Import Flight Track",
+            self.last_save_directory,
+            f"Flight Track (*.{extension});;All files (*.*)",
+            pickertype=pickertype)
+        if self.local_active:
             if filename is not None:
                 self.last_save_directory = fs.path.dirname(filename)
-                try:
-                    ft_name, new_waypoints = function(filename)
-                # wildcard exception to be resilient against error introduced by user code
-                except Exception as ex:
-                    logging.error("file io plugin error: %s %s", type(ex), ex)
-                    QtWidgets.QMessageBox.critical(
-                        self, self.tr("file io plugin error"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
-                else:
-                    if not ft_name:
-                        ft_name = filename
-                    waypoints_model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
+                self.create_new_flight_track(filename=filename, function=function)
+        else:
+            self.mscolab.handle_import_msc(filename, extension, function, pickertype)
 
-                    listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
-                    listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-
-                    self.listFlightTracks.setCurrentItem(listitem)
-                    self.activate_flight_track(listitem)
-
-        setattr(self, full_name, types.MethodType(load_function_wrapper, self))
-        action.triggered.connect(getattr(self, full_name))
-
-    def add_export_filter(self, name, extension, function, pickertag=None, pickertype=None):
-        full_name = "actionExportFlightTrack" + clean_string(name)
-        if hasattr(self, full_name):
-            raise ValueError(f"'{full_name}' has already been set!")
-
-        action = QtWidgets.QAction(self)
-        action.setObjectName(full_name)
-        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
-        self.menuExport_Active_Flight_Track.addAction(action)
-
-        def save_function_wrapper(self):
-            default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name) + "." + extension
+    def handle_export_local(self, extension, function, pickertype):
+        if self.local_active:
+            default_filename = f'{os.path.join(self.last_save_directory, self.active_flight_track.name)}.{extension}'
             filename = get_save_filename(
-                self, "Export Flight Track", default_filename,
-                name + " (*." + extension + ")", pickertype=pickertype)
+                self, "Export Flight Track",
+                default_filename, f"Flight Track (*.{extension})",
+                pickertype=pickertype)
             if filename is not None:
                 self.last_save_directory = fs.path.dirname(filename)
                 try:
-                    function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
+                    if function is None:
+                        doc = self.active_flight_track.get_xml_doc()
+                        dirname, name = fs.path.split(filename)
+                        file_dir = fs.open_fs(dirname)
+                        with file_dir.open(name, 'w') as file_object:
+                            doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+                        file_dir.close()
+                    else:
+                        function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
                 # wildcard exception to be resilient against error introduced by user code
                 except Exception as ex:
                     logging.error("file io plugin error: %s %s", type(ex), ex)
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("file io plugin error"),
                         self.tr(f"ERROR: {type(ex)} {ex}"))
-
-        setattr(self, full_name, types.MethodType(save_function_wrapper, self))
-        action.triggered.connect(getattr(self, full_name))
-
-    def closeEvent(self, event):
-        """Ask user if he/she wants to close the application. If yes, also
-           close all views that are open.
-
-        Overloads QtGui.QMainWindow.closeEvent(). This method is called if
-        Qt receives a window close request for our application window.
-        """
-        ret = QtWidgets.QMessageBox.warning(
-            self, self.tr("Mission Support System"),
-            self.tr("Do you want to close the Mission Support System application?"),
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-
-        if ret == QtWidgets.QMessageBox.Yes:
-            # Table View stick around after MainWindow closes - maybe some dangling reference?
-            # This removes them for sure!
-            while self.listViews.count() > 0:
-                self.listViews.item(0).window.handle_force_close()
-            self.listViews.clear()
-            self.listFlightTracks.clear()
-            # cleanup mscolab window
-            if self.mscolab_window is not None:
-                self.mscolab_window.close()
-            if self.config_editor is not None:
-                self.config_editor.close()
-            event.accept()
         else:
-            event.ignore()
+            self.mscolab.handle_export_msc(extension, function, pickertype)
 
-    def create_new_view(self):
-        """Method called when the user selects a new view to be opened. Creates
-           a new instance of the view and adds a QActiveViewsListWidgetItem to
-           the list of open views (self.listViews).
-        """
-        layout = config_loader(dataset="layout")
-        view_window = None
-        if self.sender() == self.actionTopView:
-            # Top view.
-            view_window = topview.MSSTopViewWindow(model=self.active_flight_track)
-            view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
-            if layout["immutable"]:
-                view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
-        elif self.sender() == self.actionSideView:
-            # Side view.
-            view_window = sideview.MSSSideViewWindow(model=self.active_flight_track)
-            view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
-            if layout["immutable"]:
-                view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
-        elif self.sender() == self.actionTableView:
-            # Table view.
-            view_window = tableview.MSSTableViewWindow(model=self.active_flight_track)
-            view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
-        elif self.sender() == self.actionLinearView:
-            # Linear view.
-            view_window = linearview.MSSLinearViewWindow(model=self.active_flight_track)
-            view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
-            if layout["immutable"]:
-                view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
-        if view_window is not None:
-            # Make sure view window will be deleted after being closed, not
-            # just hidden (cf. Chapter 5 in PyQt4).
-            view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            # Open as a non-modal window.
-            view_window.show()
-            # Add an entry referencing the new view to the list of views.
-            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
-            view_window.viewCloses.connect(listitem.view_destroyed)
-            self.listViews.setCurrentItem(listitem)
-            self.viewsChanged.emit()
-
-    def activate_sub_window(self, item):
-        """When the user clicks on one of the open view or tool windows, this
-           window is brought to the front. This function implements the slot to
-           activate a window if the user selects it in the list of views or
-           tools.
-        """
-        # Restore the activated view and bring it to the front.
-        item.window.showNormal()
-        item.window.raise_()
-        item.window.activateWindow()
-
-    def close_mscolab_window(self):
-        self.mscolab_window = None
-
-    def activate_mscolab_window(self):
-        # initiate mscolab window
-        if self.mscolab_window is None:
-            self.mscolab_window = mscolab.MSSMscolabWindow(parent=self)
-            self.mscolab_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-            self.mscolab_window.viewCloses.connect(self.close_mscolab_window)
-            self.mscolab_window.show()
-        else:
-            self.mscolab_window.setWindowState(QtCore.Qt.WindowNoState)
-            self.mscolab_window.raise_()
-            self.mscolab_window.activateWindow()
-
-    new_flight_track_counter = 0
-
-    def create_new_flight_track(self, template=None, filename=None):
+    def create_new_flight_track(self, template=None, filename=None, function=None):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
            flight track' menu entries.
@@ -580,8 +646,32 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self.tr("ERROR:Flighttrack template in configuration is too short. "
                             "Please add at least two valid locations."))
 
+        waypoints_model = None
         if filename is not None:
-            waypoints_model = ft.WaypointsTableModel(filename=filename)
+            # function is none if ftml file is selected
+            if function is None:
+                try:
+                    waypoints_model = ft.WaypointsTableModel(filename=filename)
+                except (SyntaxError, OSError, IOError) as ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("Problem while opening flight track FTML:"),
+                        self.tr(f"ERROR: {type(ex)} {ex}"))
+            else:
+                try:
+                    ft_name, new_waypoints = function(filename)
+                    waypoints_model = ft.WaypointsTableModel(name=ft_name, waypoints=new_waypoints)
+                # wildcard exception to be resilient against error introduced by user code
+                except Exception as ex:
+                    logging.error("file io plugin error: %s %s", type(ex), ex)
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("file io plugin error"),
+                        self.tr(f"ERROR: {type(ex)} {ex}"))
+            if waypoints_model is not None:
+                for i in range(self.listFlightTracks.count()):
+                    fltr = self.listFlightTracks.item(i)
+                    if fltr.flighttrack_model.name == waypoints_model.name:
+                        waypoints_model.name += " - imported from file"
+                        break
         else:
             # Create a new flight track from the waypoints template.
             self.new_flight_track_counter += 1
@@ -591,74 +681,88 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
             waypoints_model.insertRows(0, rows=len(template_copy), waypoints=template_copy)
-        # Create a new list entry for the flight track. Make the item name
-        # editable.
-        listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
-        listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
-        self.activate_flight_track(listitem)
+        if waypoints_model is not None:
+            # Create a new list entry for the flight track. Make the item name editable.
+            listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
+            listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
-    def restart_application(self):
-        while self.listViews.count() > 0:
-            self.listViews.item(0).window.handle_force_close()
-        self.listViews.clear()
-        self.remove_plugins()
-        self.add_plugins()
+            # Activate new item
+            self.activate_flight_track(listitem)
 
-    def load_config_file(self):
+    def activate_flight_track(self, item):
+        """Set the currently selected flight track to be the active one, i.e.
+           the one that is displayed in the views (only one flight track can be
+           displayed at a time).
         """
-        Loads a config file and potentially restarts the application
-        """
-        ret = QtWidgets.QMessageBox.warning(
-            self, self.tr("Mission Support System"),
-            self.tr("Opening a config file will reset application. Continue?"),
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-        if ret == QtWidgets.QMessageBox.Yes:
-            filename = get_open_filename(
-                self, "Open Config file", constants.MSS_CONFIG_PATH, "Config Files (*.json)")
-            if filename is not None:
-                constants.CACHED_CONFIG_FILE = filename
-                self.restart_application()
-
-    def open_config_editor(self):
-        """
-        Opens up a JSON config editor
-        """
-        if self.config_editor is None:
-            self.config_editor = editor.EditorMainWindow(parent=self)
-            self.config_editor.viewCloses.connect(self.close_config_editor)
-            self.config_editor.restartApplication.connect(self.restart_application)
-        else:
-            self.config_editor.showNormal()
-            self.config_editor.activateWindow()
-
-    def close_config_editor(self):
-        self.config_editor = None
-
-    def open_flight_track(self):
-        """Slot for the 'Open Flight Track' menu entry. Opens a QFileDialog and
-           passes the result to createNewFlightTrack().
-        """
-        filename = get_open_filename(
-            self, "Open Flight Track", self.last_save_directory, "Flight Track Files (*.ftml)",
-            pickertag="filepicker_default")
-        if filename is not None:
-            self.last_save_directory = fs.path.dirname(filename)
-            try:
-                if filename.endswith('.ftml'):
-                    self.create_new_flight_track(filename=filename)
-                else:
-                    QtWidgets.QMessageBox.warning(self, "Open flight track",
-                                                  f"No supported file extension recognized!\n{filename:}")
-
-            except (SyntaxError, OSError, IOError) as ex:
-                QtWidgets.QMessageBox.critical(
-                    self, self.tr("Problem while opening flight track FTML:"),
-                    self.tr(f"ERROR: {type(ex)} {ex}"))
+        self.mscolab.switch_to_local()
+        # self.setWindowModality(QtCore.Qt.NonModal)
+        self.active_flight_track = item.flighttrack_model
+        for i in range(self.listViews.count()):
+            view_item = self.listViews.item(i)
+            view_item.window.setFlightTrackModel(self.active_flight_track)
+            # local we have always all options enabled
+            view_item.window.enable_navbar_action_buttons()
+        font = QtGui.QFont()
+        for i in range(self.listFlightTracks.count()):
+            self.listFlightTracks.item(i).setFont(font)
+        font.setBold(True)
+        item.setFont(font)
+        self.menu_handler()
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
         self.activate_flight_track(item)
+
+    def switch_to_mscolab(self):
+        self.local_active = False
+        font = QtGui.QFont()
+        for i in range(self.listFlightTracks.count()):
+            self.listFlightTracks.item(i).setFont(font)
+        # disable appropriate menu options
+        self.menu_handler()
+
+    def save_handler(self):
+        """Slot for the 'Save Active Flight Track' menu entry.
+        """
+        filename = self.active_flight_track.get_filename()
+        if filename:
+            self.save_flight_track(filename)
+        else:
+            self.save_as_handler()
+
+    def save_as_handler(self):
+        """Slot for the 'Save Active Flight Track As' menu entry.
+        """
+        default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
+        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
+        filename = get_save_filename(
+            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertag="filepicker_default"
+        )
+        logging.debug("filename : '%s'", filename)
+        if filename:
+            self.save_flight_track(filename)
+
+    def save_flight_track(self, file_name):
+        if file_name:
+            if file_name.endswith('.ftml'):
+                try:
+                    self.active_flight_track.save_to_ftml(file_name)
+                except (OSError, IOError) as ex:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("Problem while saving flight track to FTML:"),
+                        self.tr(f"ERROR: {type(ex)} {ex}"))
+            else:
+                ext = fs.path.splitext(file_name)[-1]
+                file_path = fs.path.basename(file_name)
+                _function = self.export_plugins[ext[1:]]
+                _function(file_name, file_path, self.active_flight_track.waypoints)
+                self.active_flight_track.filename = file_name
+                self.active_flight_track.name = fs.path.basename(file_name.replace(f"{ext}", "").strip())
+
+            for idx in range(self.listFlightTracks.count()):
+                if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
+                    self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
 
     def close_selected_flight_track(self):
         """Slot to close the currently selected flight track. Flight tracks can
@@ -670,7 +774,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                                               self.tr("At least one flight track has to be open."))
             return
         item = self.listFlightTracks.currentItem()
-        if item.flighttrack_model == self.active_flight_track:
+        if item.flighttrack_model == self.active_flight_track and self.local_active:
             QtWidgets.QMessageBox.information(self, self.tr("Flight Track Management"),
                                               self.tr("Cannot close currently active flight track."))
             return
@@ -683,61 +787,108 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             if ret == QtWidgets.QMessageBox.Yes:
                 self.listFlightTracks.takeItem(self.listFlightTracks.currentRow())
 
-    def save_flight_track(self):
-        """Slot for the 'Save Active Flight Track As' menu entry.
-        """
-        filename = self.active_flight_track.get_filename()
-        if filename and filename.endswith('.ftml'):
-            sel = QtWidgets.QMessageBox.question(self, "Save flight track",
-                                                 f"Saving flight track to '{filename:s}'. Continue?",
-                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
-            if sel == QtWidgets.QMessageBox.Yes:
-                try:
-                    self.active_flight_track.save_to_ftml(filename)
-                except (OSError, IOError) as ex:
-                    QtWidgets.QMessageBox.critical(
-                        self, self.tr("Problem while saving flight track to FTML:"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
+    def create_view_handler(self, _type):
+        if self.local_active:
+            self.create_view(_type, self.active_flight_track)
         else:
-            self.save_flight_track_as()
+            self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
+            self.create_view(_type, self.mscolab.waypoints_model)
 
-    def save_flight_track_as(self):
-        """Slot for the 'Save Active Flight Track As' menu entry.
+    def create_view(self, _type, model):
+        """Method called when the user selects a new view to be opened. Creates
+           a new instance of the view and adds a QActiveViewsListWidgetItem to
+           the list of open views (self.listViews).
         """
-        default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
-        filename = get_save_filename(
-            self, "Save Flight Track", default_filename, "Flight Track (*.ftml)", pickertag="filepicker_default")
-        logging.debug("filename : '%s'", filename)
-        if filename:
-            self.last_save_directory = fs.path.dirname(filename)
-            if filename.endswith('.ftml'):
-                try:
-                    self.active_flight_track.save_to_ftml(filename)
-                except (OSError, IOError) as ex:
-                    QtWidgets.QMessageBox.critical(
-                        self, self.tr("Problem while saving flight track to FTML:"),
-                        self.tr(f"ERROR: {type(ex)} {ex}"))
-                for idx in range(self.listFlightTracks.count()):
-                    if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
-                        self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
-            else:
-                QtWidgets.QMessageBox.warning(self, "Save flight track",
-                                              f"File extension is not '.ftml'!\n{filename:}")
+        layout = config_loader(dataset="layout")
+        view_window = None
+        if _type == "topview":
+            # Top view.
+            view_window = topview.MSSTopViewWindow(model=model)
+            view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
+        elif _type == "sideview":
+            # Side view.
+            view_window = sideview.MSSSideViewWindow(model=model)
+            view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
+        elif _type == "tableview":
+            # Table view.
+            view_window = tableview.MSSTableViewWindow(model=model)
+            view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
+        elif _type == "linearview":
+            # Linear view.
+            view_window = linearview.MSSLinearViewWindow(model=model)
+            view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
+            if layout["immutable"]:
+                view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
 
-    def activate_flight_track(self, item):
-        """Set the currently selected flight track to be the active one, i.e.
-           the one that is displayed in the views (only one flight track can be
-           displayed at a time).
-        """
-        self.active_flight_track = item.flighttrack_model
+        if view_window is not None:
+            # Set view type to window
+            view_window.view_type = view_window.name
+            # Make sure view window will be deleted after being closed, not
+            # just hidden (cf. Chapter 5 in PyQt4).
+            view_window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            # Open as a non-modal window.
+            view_window.show()
+            # Add an entry referencing the new view to the list of views.
+            # listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged, mscolab)
+            listitem = QActiveViewsListWidgetItem(view_window, self.listViews, self.viewsChanged)
+            view_window.viewCloses.connect(listitem.view_destroyed)
+            self.listViews.setCurrentItem(listitem)
+            # self.active_view_windows.append(view_window)
+            # disable navbar actions in the view for viewer
+            try:
+                if self.mscolab.access_level == "viewer":
+                    view_window.disable_navbar_action_buttons()
+            except AttributeError:
+                view_window.enable_navbar_action_buttons()
+            self.viewsChanged.emit()
+
+    def get_active_views(self):
+        active_view_windows = []
         for i in range(self.listViews.count()):
-            view_item = self.listViews.item(i)
-            view_item.window.setFlightTrackModel(self.active_flight_track)
-        font = QtGui.QFont()
-        for i in range(self.listFlightTracks.count()):
-            self.listFlightTracks.item(i).setFont(font)
-        font.setBold(True)
-        item.setFont(font)
+            active_view_windows.append(self.listViews.item(i).window)
+        return active_view_windows
+
+    def activate_sub_window(self, item):
+        """When the user clicks on one of the open view or tool windows, this
+           window is brought to the front. This function implements the slot to
+           activate a window if the user selects it in the list of views or
+           tools.
+        """
+        # Restore the activated view and bring it to the front.
+        item.window.showNormal()
+        item.window.raise_()
+        item.window.activateWindow()
+
+    def restart_application(self):
+        while self.listViews.count() > 0:
+            self.listViews.item(0).window.handle_force_close()
+        self.listViews.clear()
+        self.remove_plugins()
+        self.add_plugins()
+        if self.mscolab.token is not None:
+            self.mscolab.logout()
+        read_config_file()
+
+    def open_config_editor(self):
+        """
+        Opens up a JSON config editor
+        """
+        if self.config_editor is None:
+            self.config_editor = editor.ConfigurationEditorWindow(parent=self)
+            self.config_editor.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+            self.config_editor.destroyed.connect(self.close_config_editor)
+            self.config_editor.restartApplication.connect(self.restart_application)
+            self.config_editor.show()
+        else:
+            self.config_editor.showNormal()
+            self.config_editor.activateWindow()
+
+    def close_config_editor(self):
+        self.config_editor = None
 
     def show_online_help(self):
         """Open Documentation in a browser"""
@@ -751,20 +902,72 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         dlg.setModal(True)
         dlg.exec_()
 
-    def show_shortcuts(self):
+    def show_shortcuts(self, search_mode=False):
         """Show the shortcuts dialog to the user.
         """
-        dlg = MSS_ShortcutsDialog()
-        dlg.setModal(True)
-        dlg.exec_()
+        if QtWidgets.QApplication.activeWindow() == self.shortcuts_dlg:
+            return
+
+        self.shortcuts_dlg = MSS_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
+
+        # In case the dialog gets deleted by QT, recreate it
+        try:
+            self.shortcuts_dlg.setModal(True)
+        except RuntimeError:
+            self.shortcuts_dlg = MSS_ShortcutsDialog()
+
+        self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
+        self.shortcuts_dlg.fill_list()
+        self.shortcuts_dlg.show()
+        if search_mode:
+            self.shortcuts_dlg.cbDisplayType.setCurrentIndex(1)
+            self.shortcuts_dlg.leShortcutFilter.setText("")
+            self.shortcuts_dlg.cbAdvanced.setCheckState(2)
+            self.shortcuts_dlg.cbNoShortcut.setCheckState(2)
+            self.shortcuts_dlg.leShortcutFilter.setFocus()
 
     def status(self):
-        if constants.CACHED_CONFIG_FILE is None:
+        if config_loader() != config_loader(default=True):
             return ("Status : System Configuration")
         else:
-            filename = constants.CACHED_CONFIG_FILE
-            head_filename, tail_filename = os.path.split(filename)
-            return("Status : User Configuration '" + tail_filename + "' loaded")
+            return (f"Status : User Configuration '{constants.MSS_SETTINGS}' loaded")
+
+    def closeEvent(self, event):
+        """Ask user if he/she wants to close the application. If yes, also
+           close all views that are open.
+
+        Overloads QtGui.QMainWindow.closeEvent(). This method is called if
+        Qt receives a window close request for our application window.
+        """
+        ret = QtWidgets.QMessageBox.warning(
+            self, self.tr("Mission Support System"),
+            self.tr("Do you want to close the Mission Support System application?"),
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+
+        if ret == QtWidgets.QMessageBox.Yes:
+            if self.mscolab.help_dialog is not None:
+                self.mscolab.help_dialog.close()
+            # cleanup mscolab widgets
+            if self.mscolab.token is not None:
+                self.mscolab.logout()
+            # Table View stick around after MainWindow closes - maybe some dangling reference?
+            # This removes them for sure!
+            while self.listViews.count() > 0:
+                self.listViews.item(0).window.handle_force_close()
+            self.listViews.clear()
+            self.listFlightTracks.clear()
+            # close configuration editor
+            if self.config_editor is not None:
+                self.config_editor.restart_on_save = False
+                self.config_editor.close()
+                QtTest.QTest.qWait(5)
+                if self.config_editor is not None:
+                    self.statusBar.showMessage("Save your config changes and try closing again")
+                    event.ignore()
+                    return
+            event.accept()
+        else:
+            event.ignore()
 
 
 def main():
@@ -846,13 +1049,35 @@ def main():
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
-    logging.info("Launching user interface...")
+
+    try:
+        read_config_file()
+    except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
+        message = f'\n\nFix the setup of your "MSS_SETTINGS" configuration.\n{ex}'
+        logging.error(message)
+        sys.exit()
 
     application = QtWidgets.QApplication(sys.argv)
+    mainwindow = None
+
+    # Trigger shortcuts/search dialog even on modal dialogs
+    application.oldNotify = application.notify
+
+    def notify(QObject, QEvent):
+        if QEvent.type() == QtCore.QEvent.KeyPress and mainwindow:
+            if QEvent.key() == QtCore.Qt.Key_S and QEvent.modifiers() == QtCore.Qt.AltModifier:
+                mainwindow.show_shortcuts()
+            elif QEvent.key() == QtCore.Qt.Key_F and QEvent.modifiers() == QtCore.Qt.ControlModifier:
+                mainwindow.show_shortcuts(True)
+        return application.oldNotify(QObject, QEvent)
+
+    application.notify = notify
+
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
     application.setApplicationDisplayName("MSS")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSSMainWindow()
+    mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()
     sys.exit(application.exec_())

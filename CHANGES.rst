@@ -1,6 +1,29 @@
 Changelog
 =========
 
+Version 6.0.0
+~~~~~~~~~~~~~
+
+Aravind Murali redesigned in google summer of code 2021 the MSUI interface.
+This now connects in a user-friendly way the editing of flight paths locally
+or remotely with other users. Many of Jörn Ungermann's ideas were implemented.
+In addition, Aravind Murali has improved a configuration editor for our json mss_settings file
+and made this user-friendly. The initial idea of the new editor stems from Reimar Bauer.
+GSoC mentors were Jörn Ungermann, May Bär, Reimar Bauer
+
+Hrithik Kumar Verma developed a toolchain for the automatic creation of tutorials
+in the Google Summer of Code 2021. This simplifies the creation of video tutorials in
+a similar way to updating tests. Using these tutorial scripts to create videos
+also increases test coverage. The initial idea stems from Reimar Bauer.
+GSoC mentors were Reimar Bauer, May Bär
+
+Jörn Ungermann improved kml visualizing the same way as of a flightpath.
+
+Reimar Bauer improved permissions, projects and signalling for mscolab.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/50?closed=1
+
 Version 5.0.2
 ~~~~~~~~~~~~~
 
@@ -21,7 +44,8 @@ Version 5.0.0
 ~~~~~~~~~~~~~
 
 This release brings many improvements to the WMS Server along with new features for the UI.
-On demand a WMS server can show what kind of view graphics are provided.
+May Bär implemented a gallery feature. On demand a WMS server can show what kind of view graphics
+are provided.
 Optional the source for creating the graphics can be published over the web service too.
 By this any existing server shows examples how to create graphics. Have a look on
 our documentation on https://mss.readthedocs.io/en/stable/gallery/index.html for this feature.

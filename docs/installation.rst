@@ -20,6 +20,27 @@ build processes.
 To install MSS you need the conda installer or its drop-in replacement the mamba installer. We explain below how you
 get by the conda installer the mamba installer. Mamba is a fast cross platform installerr.
 
+Automatic installation
+++++++++++++++++++++++
+
+* For **Windows**, go `here <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
+
+  #. Right click on the webpage and select "Save as..." to download the file
+
+  #. Double click the downloaded file and follow further instructions
+
+    * For fully automatic installation, open cmd and execute it with :code:`/Path/To/Windows.bat -a`
+
+* For **Linux/Mac**, go `here <https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1>`_
+
+  #. Right click on the webpage and select "Save as..." to download the file
+
+  #. Make it executable via :code:`chmod +x LinuxMac.sh`
+
+  #. Execute it and follow further instructions :code:`./LinuxMac.sh`
+
+    * For fully automatic installation, run it with the -a parameter :code:`./LinuxMac.sh -a`
+
 Preparations for installing MSS
 +++++++++++++++++++++++++++++++
 
@@ -55,12 +76,6 @@ leave out the 'source' here and below). ::
     $ conda create -n mssenv mamba
     $ conda activate mssenv
     (mssenv) $ mamba install mss=$mss_version python
-
-You need to reactivate after the installation once the environment to setup all needed
-enironment variables. ::
-
-    $ conda deactivate
-    $ conda activate mssenv
     (mssenv) $ mss
 
 Update
@@ -147,6 +162,32 @@ Point a browser for the verification of both servers installed on
   - `http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1 <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
 
 Further details in the components section on `<http://mss.rtfd.io>`_
+
+
+Based on Docker
++++++++++++++++
+
+You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_
+
+Build settings are based on the stable branch. Our openmss/mss:latest has any update in the stable branch.
+
+
+You can start server and client by loading the image ::
+
+ $ xhost +local:docker
+ $ docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix openmss/mss:latest  /bin/bash
+ $ /opt/conda/envs/mssenv/bin/mss &
+ $ /opt/conda/envs/mssenv/bin/mswms --port 80 &
+ $ /opt/conda/envs/mssenv/bin/mscolab &
+ $ curl http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1
+ $ curl http://localhost:8083/status
+
+The WMS server initialized by demodata, and the mscolab server and the userinterface can be started by ::
+
+ $  xhost +local:docker
+ $  docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix openmss/mss:latest MSS
+
+
 
 
 

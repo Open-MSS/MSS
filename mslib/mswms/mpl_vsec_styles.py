@@ -29,6 +29,8 @@
     limitations under the License.
 """
 
+import warnings
+
 import matplotlib
 import matplotlib.pyplot as plt
 import mpl_toolkits.axes_grid1.inset_locator
@@ -37,8 +39,8 @@ import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
 from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
-from mslib.utils import convert_to
-from mslib import thermolib
+from mslib.utils import thermolib
+from mslib.utils.units import convert_to
 
 
 class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
@@ -512,9 +514,11 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
                             curtain_p, curtain_rh, thin_contours,
                             colors="grey", linestyles="solid", linewidths=0.5)  # gist_earth
         ax.clabel(cs_rh1, fontsize=8, fmt='%i')
-        ax.contour(self.horizontal_coordinate,
-                   curtain_p, curtain_rh, np.arange(100, 170, 15),
-                   colors="yellow", linestyles="solid", linewidths=1)  # gist_earth
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            ax.contour(self.horizontal_coordinate,
+                       curtain_p, curtain_rh, np.arange(100, 170, 15),
+                       colors="yellow", linestyles="solid", linewidths=1)  # gist_earth
         # Contour line plot of temperature.
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),

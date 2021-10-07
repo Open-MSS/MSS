@@ -32,7 +32,7 @@ import matplotlib as mpl
 from pint import Quantity
 
 from mslib.mswms import mss_2D_sections
-from mslib.utils import convert_to
+from mslib.utils.units import convert_to
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'

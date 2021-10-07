@@ -6,7 +6,8 @@ Components
 
    usage
    deployment
+   mswms
    mscolab
-   demodata
+   tutorials
 
 

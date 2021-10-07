@@ -29,7 +29,7 @@ import logging
 import mslib.msui.wms_control
 from mslib.msui.icons import icons
 from mslib.msui.mss_qt import ui_wms_multilayers as ui
-from mslib.utils import save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 
 
 class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
@@ -62,9 +62,10 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         self.settings = load_settings_qsettings("multilayers",
                                                 {"favourites": [], "saved_styles": {}, "saved_colors": {}})
         self.synced_reference = Layer(None, None, None, is_empty=True)
+        self.skip_clicked_event = False
         self.listLayers.itemChanged.connect(self.multilayer_changed)
-        self.listLayers.itemClicked.connect(self.multilayer_clicked)
         self.listLayers.itemClicked.connect(self.check_icon_clicked)
+        self.listLayers.itemClicked.connect(self.multilayer_clicked)
         self.listLayers.itemDoubleClicked.connect(self.multilayer_doubleclicked)
         self.listLayers.setVisible(True)
 
@@ -142,6 +143,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 icon_start += checkbox_width + 6
             position = self.listLayers.viewport().mapFromGlobal(QtGui.QCursor().pos())
             if icon_start <= position.x() <= icon_start + icon_width:
+                self.skip_clicked_event = True
                 self.threads += 1
                 item.favourite_triggered()
                 if self.filter_favourite:
@@ -315,7 +317,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             icon = QtGui.QIcon(icons("64x64", "bin.png"))
             header.setIcon(0, icon)
 
-    def add_multilayer(self, name, wms):
+    def add_multilayer(self, name, wms, auto_select=False):
         """
         Adds a layer to the multilayer list, with the wms url as a parent
         """
@@ -369,14 +371,20 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             if widget.is_invalid:
                 widget.setDisabled(True)
                 return
-            self.current_layer = widget
-            self.listLayers.setCurrentItem(widget)
+
+            if not self.current_layer or auto_select:
+                self.current_layer = widget
+                self.listLayers.setCurrentItem(widget)
 
     def multilayer_clicked(self, item):
         """
         Gets called whenever the user clicks on a layer in the multilayer list
         Makes sure the dock widget updates its data depending on the users selection
         """
+        if self.skip_clicked_event:
+            self.skip_clicked_event = False
+            return
+
         if not isinstance(item, Layer):
             index = self.cbWMS_URL.findText(item.text(0))
             if index != -1 and index != self.cbWMS_URL.currentIndex():

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_version_history.ui'
+# Form implementation generated from reading ui file 'ui_mscolab_version_history.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -32,14 +32,14 @@ class Ui_MscolabVersionHistory(object):
         self.usernameLabel.setSizePolicy(sizePolicy)
         self.usernameLabel.setObjectName("usernameLabel")
         self.horizontalLayout_3.addWidget(self.usernameLabel)
-        self.projectNameLabel = QtWidgets.QLabel(self.centralwidget)
+        self.operationNameLabel = QtWidgets.QLabel(self.centralwidget)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.MinimumExpanding, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.projectNameLabel.sizePolicy().hasHeightForWidth())
-        self.projectNameLabel.setSizePolicy(sizePolicy)
-        self.projectNameLabel.setObjectName("projectNameLabel")
-        self.horizontalLayout_3.addWidget(self.projectNameLabel)
+        sizePolicy.setHeightForWidth(self.operationNameLabel.sizePolicy().hasHeightForWidth())
+        self.operationNameLabel.setSizePolicy(sizePolicy)
+        self.operationNameLabel.setObjectName("operationNameLabel")
+        self.horizontalLayout_3.addWidget(self.operationNameLabel)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem)
         self.horizontalLayout_3.setStretch(0, 1)
@@ -144,7 +144,7 @@ class Ui_MscolabVersionHistory(object):
         _translate = QtCore.QCoreApplication.translate
         MscolabVersionHistory.setWindowTitle(_translate("MscolabVersionHistory", "Version History"))
         self.usernameLabel.setText(_translate("MscolabVersionHistory", "Logged In: "))
-        self.projectNameLabel.setText(_translate("MscolabVersionHistory", "Project:"))
+        self.operationNameLabel.setText(_translate("MscolabVersionHistory", "Operation:"))
         self.refreshBtn.setText(_translate("MscolabVersionHistory", "Refresh Window"))
         self.label.setText(_translate("MscolabVersionHistory", "Viewing:"))
         self.versionFilterCB.setItemText(0, _translate("MscolabVersionHistory", "Named Versions"))

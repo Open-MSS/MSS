@@ -18,3 +18,6 @@ gitpython
 gevent
 pynco
 conda-verify
+Flask-Testing
+pytest-reverse
+eventlet==0.30.2

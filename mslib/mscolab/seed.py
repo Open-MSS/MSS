@@ -31,39 +31,39 @@ import git
 from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import User, db, Permission, Project
+from mslib.mscolab.models import User, db, Permission, Operation
 
 
 app = Flask(__name__, static_url_path='')
 
 
-def add_all_users_to_all_projects(access_level='collaborator'):
-    """ on db level we add all users as collaborator to all projects """
+def add_all_users_to_all_operations(access_level='collaborator'):
+    """ on db level we add all users as collaborator to all operations """
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     db.init_app(app)
     with app.app_context():
-        all_projects = Project.query.all()
-        all_path = [project.path for project in all_projects]
+        all_operations = Operation.query.all()
+        all_path = [operation.path for operation in all_operations]
         db.session.close()
     for path in all_path:
         access_level = 'collaborator'
         if path == "TEMPLATE":
             access_level = 'admin'
-        add_all_users_default_project(path=path, access_level=access_level)
+        add_all_users_default_operation(path=path, access_level=access_level)
 
 
-def add_all_users_default_project(path='TEMPLATE', description="Project to keep all users", access_level='admin'):
-    """ on db level we add all users to the project TEMPLATE for user handling"""
+def add_all_users_default_operation(path='TEMPLATE', description="Operation to keep all users", access_level='admin'):
+    """ on db level we add all users to the operation TEMPLATE for user handling"""
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
     with app.app_context():
-        project_available = Project.query.filter_by(path=path).first()
-        if not project_available:
-            project = Project(path, description)
-            db.session.add(project)
+        operation_available = Operation.query.filter_by(path=path).first()
+        if not operation_available:
+            operation = Operation(path, description)
+            db.session.add(operation)
             db.session.commit()
             with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
                 if not file_dir.exists(path):
@@ -75,17 +75,18 @@ def add_all_users_default_project(path='TEMPLATE', description="Project to keep 
                     r.index.add(['main.ftml'])
                     r.index.commit("initial commit")
 
-        project = Project.query.filter_by(path=path).first()
-        p_id = project.id
+        operation = Operation.query.filter_by(path=path).first()
+        op_id = operation.id
         user_list = User.query \
-            .join(Permission, (User.id == Permission.u_id) & (Permission.p_id == p_id), isouter=True) \
+            .join(Permission, (User.id == Permission.u_id) & (Permission.op_id == op_id), isouter=True) \
             .add_columns(User.id, User.username) \
             .filter(Permission.u_id.is_(None))
 
         new_u_ids = [user.id for user in user_list]
         new_permissions = []
         for u_id in new_u_ids:
-            new_permissions.append(Permission(u_id, project.id, access_level))
+            if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
+                new_permissions.append(Permission(u_id, operation.id, access_level))
         db.session.add_all(new_permissions)
         try:
             db.session.commit()
@@ -103,10 +104,13 @@ def delete_user(email):
     with app.app_context():
         user = User.query.filter_by(emailid=str(email)).first()
         if user:
-            print(f"User: {email} deleted from db")
+            logging.info(f"User: {email} deleted from db")
             db.session.delete(user)
             db.session.commit()
+            db.session.close()
+            return True
         db.session.close()
+        return False
 
 
 def add_user(email, username, password):
@@ -129,10 +133,87 @@ def add_user(email, username, password):
             db.session.add(db_user)
             db.session.commit()
             db.session.close()
-            print(f"Userdata: {email} {username} {password}")
-            print(template)
+            logging.info(f"Userdata: {email} {username} {password}")
+            logging.info(template)
+            return True
         else:
-            print(f"{user_name_exists} already in db")
+            logging.info(f"{user_name_exists} already in db")
+    return False
+
+
+def get_user(email):
+    with app.app_context():
+        return User.query.filter_by(emailid=str(email)).first()
+
+
+def get_operation(operation_name):
+    with app.app_context():
+        return Operation.query.filter_by(path=operation_name).first()
+
+
+def add_operation(operation_name, description):
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    with app.app_context():
+        operation_available = Operation.query.filter_by(path=operation_name).first()
+        if not operation_available:
+            operation = Operation(operation_name, description)
+            db.session.add(operation)
+            db.session.commit()
+            with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+                if not file_dir.exists(operation_name):
+                    file_dir.makedir(operation_name)
+                    file_dir.writetext(f'{operation_name}/main.ftml', mscolab_settings.STUB_CODE)
+                    # initiate git
+                    r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', operation_name))
+                    r.git.clear_cache()
+                    r.index.add(['main.ftml'])
+                    r.index.commit("initial commit")
+            return True
+        else:
+            return False
+
+
+def delete_operation(operation_name):
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    db.init_app(app)
+    with app.app_context():
+        operation = Operation.query.filter_by(path=operation_name).first()
+        if operation:
+            db.session.delete(operation)
+            db.session.commit()
+            db.session.close()
+            return True
+        db.session.close()
+        return False
+
+
+def add_user_to_operation(path=None, access_level='admin', emailid=None):
+    """ on db level we add all users to the operation TEMPLATE for user handling"""
+    if None in (path, emailid):
+        return False
+    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    db.init_app(app)
+    with app.app_context():
+        operation = Operation.query.filter_by(path=path).first()
+        if operation:
+
+            user = User.query.filter_by(emailid=emailid).first()
+            if user:
+                new_permissions = [Permission(user.id, operation.id, access_level)]
+                db.session.add_all(new_permissions)
+                try:
+                    db.session.commit()
+                    return True
+                except IntegrityError as err:
+                    db.session.rollback()
+                    logging.debug(f"Error writing to db: {err}")
+                db.session.close()
+    return False
 
 
 def seed_data():
@@ -198,109 +279,115 @@ def seed_data():
             db_user.id = user['id']
             db.session.add(db_user)
 
-        # create projects
-        projects = [{
+        # create operations
+        operations = [{
             'id': 1,
             'path': 'one',
-            'description': 'a, b'
+            'description': 'a, b',
+            'category': 'default'
         }, {
             'id': 2,
             'path': 'two',
-            'description': 'b, c'
+            'description': 'b, c',
+            'category': 'default'
         }, {
             'id': 3,
             'path': 'three',
-            'description': 'a, c'
+            'description': 'a, c',
+            'category': 'default'
         }, {
             'id': 4,
             'path': 'four',
-            'description': 'd'
+            'description': 'd',
+            'category': 'default'
         }, {
             'id': 5,
             'path': 'Admin_Test',
-            'description': 'Project for testing admin window'
+            'description': 'Operation for testing admin window',
+            'category': 'default'
         }, {
             'id': 6,
             'path': 'test_mscolab',
-            'description': 'Project for testing mscolab main window'
+            'description': 'Operation for testing mscolab main window',
+            'category': 'default'
         }]
-        for project in projects:
-            db_project = Project(project['path'], project['description'])
-            db_project.id = project['id']
-            db.session.add(db_project)
+        for operation in operations:
+            db_operation = Operation(operation['path'], operation['description'], operation['category'])
+            db_operation.id = operation['id']
+            db.session.add(db_operation)
 
         # create permissions
         permissions = [{
             'u_id': 8,
-            'p_id': 1,
+            'op_id': 1,
             'access_level': "creator"
         }, {
             'u_id': 9,
-            'p_id': 1,
+            'op_id': 1,
             'access_level': "collaborator"
         }, {
             'u_id': 9,
-            'p_id': 2,
+            'op_id': 2,
             'access_level': "creator"
         }, {
             'u_id': 10,
-            'p_id': 2,
+            'op_id': 2,
             'access_level': "collaborator"
         }, {
             'u_id': 10,
-            'p_id': 3,
+            'op_id': 3,
             'access_level': "creator"
         }, {
             'u_id': 8,
-            'p_id': 3,
+            'op_id': 3,
             'access_level': "collaborator"
         }, {
             'u_id': 10,
-            'p_id': 1,
+            'op_id': 1,
             'access_level': "viewer"
         }, {
             'u_id': 11,
-            'p_id': 4,
+            'op_id': 4,
             'access_level': 'creator'
         }, {
             'u_id': 8,
-            'p_id': 4,
+            'op_id': 4,
             'access_level': 'admin'
         }, {
             'u_id': 13,
-            'p_id': 3,
+            'op_id': 3,
             'access_level': 'viewer'
         }, {
             'u_id': 12,
-            'p_id': 5,
+            'op_id': 5,
             'access_level': 'creator'
         }, {
             'u_id': 12,
-            'p_id': 3,
+            'op_id': 3,
             'access_level': 'collaborator'
         }, {
             'u_id': 15,
-            'p_id': 5,
+            'op_id': 5,
             'access_level': 'viewer'
         }, {
             'u_id': 14,
-            'p_id': 3,
+            'op_id': 3,
             'access_level': 'collaborator'
         }, {
             'u_id': 15,
-            'p_id': 3,
+            'op_id': 3,
             'access_level': 'collaborator'
         }, {
             'u_id': 16,
-            'p_id': 6,
+            'op_id': 6,
             'access_level': 'creator'
         }, {
             'u_id': 17,
-            'p_id': 6,
+            'op_id': 6,
             'access_level': 'admin'
         }]
         for perm in permissions:
-            db_perm = Permission(perm['u_id'], perm['p_id'], perm['access_level'])
+            db_perm = Permission(perm['u_id'], perm['op_id'], perm['access_level'])
             db.session.add(db_perm)
         db.session.commit()
         db.session.close()

@@ -26,6 +26,8 @@
 """
 
 import mock
+import fs
+import os
 import pytest
 import sys
 
@@ -69,6 +71,9 @@ class Test_TableView(object):
         """
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
+        assert len(self.window.docks) == 2
+        assert self.window.docks[0] is not None
+        assert self.window.docks[1] is None
 
     def test_open_perf_settings(self):
         """
@@ -76,6 +81,9 @@ class Test_TableView(object):
         """
         self.window.cbTools.currentIndexChanged.emit(2)
         QtWidgets.QApplication.processEvents()
+        assert len(self.window.docks) == 2
+        assert self.window.docks[0] is None
+        assert self.window.docks[1] is not None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
@@ -95,10 +103,18 @@ class Test_TableView(object):
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 5
 
-    def test_performance(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
+    @mock.patch("mslib.msui.performance_settings.get_open_filename",
+                return_value=fs.path.join(
+                    os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "config",
+                    "mss", "performance_simple.json"))
+    def test_performance(self, mockopen, mockcrit):
         """
         Check effect of performance settings on TableView
         """
+        self.window.cbTools.currentIndexChanged.emit(2)
+        QtWidgets.QApplication.processEvents()
+
         self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
         self.window.waypoints_model.update_distances(0)
         self.window.waypoints_model.dataChanged.emit(
@@ -114,6 +130,10 @@ class Test_TableView(object):
         self.window.resizeColumns()
         assert self.window.waypoints_model.columnCount() == 15
         # todo this does not check that actually something happens
+        QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
+        QtWidgets.QApplication.processEvents()
+        assert mockopen.call_count == 1
+        assert mockcrit.call_count == 0
 
     def test_insert_point(self):
         """

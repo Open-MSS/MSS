@@ -29,7 +29,8 @@ import json
 import logging
 
 from PyQt5 import QtCore
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.verify_user_token import verify_user_token
 
 
 class ConnectionManager(QtCore.QObject):
@@ -42,8 +43,9 @@ class ConnectionManager(QtCore.QObject):
     signal_new_permission = QtCore.Signal(int, int, name="new permission")
     signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
     signal_revoke_permission = QtCore.Signal(int, int, name="revoke permission")
-    signal_project_permissions_updated = QtCore.Signal(int, name="project permissions updated")
-    signal_project_deleted = QtCore.Signal(int, name="project deleted")
+    signal_operation_permissions_updated = QtCore.Signal(int, name="operation permissions updated")
+    signal_operation_list_updated = QtCore.Signal(name="operation list updated")
+    signal_operation_deleted = QtCore.Signal(int, name="operation deleted")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -67,12 +69,14 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('new-permission', handler=self.handle_new_permission)
         # on update of permission
         self.sio.on('update-permission', handler=self.handle_update_permission)
-        # on revoking project permission
+        # on revoking operation permission
         self.sio.on('revoke-permission', handler=self.handle_revoke_permission)
-        # on updating project permissions in admin window
-        self.sio.on('project-permissions-updated', handler=self.handle_project_permissions_updated)
-        # On Project Delete
-        self.sio.on('project-deleted', handler=self.handle_project_deleted)
+        # on updating operation permissions in admin window
+        self.sio.on('operation-permissions-updated', handler=self.handle_operation_permissions_updated)
+        # On Operation Delete
+        self.sio.on('operation-deleted', handler=self.handle_operation_deleted)
+        # On New Operation
+        self.sio.on('operation-list-update', handler=self.handle_operation_list_update)
 
         self.sio.emit('start', {'token': token})
 
@@ -81,33 +85,33 @@ class ConnectionManager(QtCore.QObject):
         signal update of permission affected
         """
         message = json.loads(message)
-        p_id = int(message["p_id"])
+        op_id = int(message["op_id"])
         u_id = int(message["u_id"])
         access_level = message["access_level"]
-        self.signal_update_permission.emit(p_id, u_id, access_level)
+        self.signal_update_permission.emit(op_id, u_id, access_level)
 
     def handle_new_permission(self, message):
         """
         signal updating of newly added permission
         """
         message = json.loads(message)
-        p_id = int(message["p_id"])
+        op_id = int(message["op_id"])
         u_id = int(message["u_id"])
-        self.signal_new_permission.emit(p_id, u_id)
+        self.signal_new_permission.emit(op_id, u_id)
 
     def handle_revoke_permission(self, message):
         """
         Signal update of revoked permission
         """
         message = json.loads(message)
-        p_id = int(message["p_id"])
+        op_id = int(message["op_id"])
         u_id = int(message["u_id"])
-        self.signal_revoke_permission.emit(p_id, u_id)
+        self.signal_revoke_permission.emit(op_id, u_id)
 
-    def handle_project_permissions_updated(self, message):
+    def handle_operation_permissions_updated(self, message):
         message = json.loads(message)
         u_id = int(message["u_id"])
-        self.signal_project_permissions_updated.emit(u_id)
+        self.signal_operation_permissions_updated.emit(u_id)
 
     def handle_incoming_message(self, message):
         # raise signal to render to view
@@ -126,49 +130,68 @@ class ConnectionManager(QtCore.QObject):
 
     def handle_file_change(self, message):
         message = json.loads(message)
-        self.signal_reload.emit(message["p_id"])
+        self.signal_reload.emit(message["op_id"])
 
-    def handle_project_deleted(self, message):
-        p_id = int(json.loads(message)["p_id"])
-        self.signal_project_deleted.emit(p_id)
+    def handle_operation_deleted(self, message):
+        op_id = int(json.loads(message)["op_id"])
+        self.signal_operation_deleted.emit(op_id)
 
-    def handle_new_room(self, p_id):
-        logging.debug("adding user to new room")
-        self.sio.emit('add-user-to-room', {
-                      "p_id": p_id,
+    def handle_operation_list_update(self):
+        self.signal_operation_list_updated.emit()
+
+    def handle_new_operation(self, op_id):
+        logging.debug("adding user to new operation")
+        self.sio.emit('add-user-to-operation', {
+                      "op_id": op_id,
                       "token": self.token})
 
-    def send_message(self, message_text, p_id, reply_id):
-        logging.debug("sending message")
-        self.sio.emit('chat-message', {
-                      "p_id": p_id,
-                      "token": self.token,
-                      "message_text": message_text,
-                      "reply_id": reply_id})
+    def send_message(self, message_text, op_id, reply_id):
+        if verify_user_token(self.mscolab_server_url, self.token):
+            logging.debug("sending message")
+            self.sio.emit('chat-message', {
+                          "op_id": op_id,
+                          "token": self.token,
+                          "message_text": message_text,
+                          "reply_id": reply_id})
+        else:
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
-    def edit_message(self, message_id, new_message_text, p_id):
-        self.sio.emit('edit-message', {
-            "message_id": message_id,
-            "new_message_text": new_message_text,
-            "p_id": p_id,
-            "token": self.token
-        })
+    def edit_message(self, message_id, new_message_text, op_id):
+        if verify_user_token(self.mscolab_server_url, self.token):
+            self.sio.emit('edit-message', {
+                "message_id": message_id,
+                "new_message_text": new_message_text,
+                "op_id": op_id,
+                "token": self.token
+            })
+        else:
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
-    def delete_message(self, message_id, p_id):
-        self.sio.emit('delete-message', {
-            'message_id': message_id,
-            'p_id': p_id,
-            'token': self.token
-        })
+    def delete_message(self, message_id, op_id):
+        if verify_user_token(self.mscolab_server_url, self.token):
+            self.sio.emit('delete-message', {
+                'message_id': message_id,
+                'op_id': op_id,
+                'token': self.token
+            })
+        else:
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
-    def save_file(self, token, p_id, content, comment=None):
+    def save_file(self, token, op_id, content, comment=None):
         # ToDo refactor API
-        logging.debug("saving file")
-        self.sio.emit('file-save', {
-                      "p_id": p_id,
-                      "token": self.token,
-                      "content": content,
-                      "comment": comment})
+        if verify_user_token(self.mscolab_server_url, self.token):
+            logging.debug("saving file")
+            self.sio.emit('file-save', {
+                          "op_id": op_id,
+                          "token": self.token,
+                          "content": content,
+                          "comment": comment})
+        else:
+            # this triggers disconnect
+            self.signal_reload.emit(op_id)
 
     def disconnect(self):
         self.sio.disconnect()

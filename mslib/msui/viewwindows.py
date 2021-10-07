@@ -43,7 +43,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     # views for mscolab
-    viewClosesId = QtCore.Signal(int, name="viewClosesId")
+    # viewClosesId = QtCore.Signal(int, name="viewClosesId")
 
     def __init__(self, parent=None, model=None, _id=None):
         super(MSSViewWindow, self).__init__(parent)
@@ -55,9 +55,9 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         # in proper size in derived classes!
         self.docks = []
 
-        # emit _id if not none
-        logging.debug(_id)
-        self._id = _id
+        # # emit _id if not none
+        # logging.debug(_id)
+        # self._id = _id
         # Used to force close window without the dialog popping up
         self.force_close = False
         # Flag variable to check whether tableview window exists or not.
@@ -84,9 +84,9 @@ class MSSViewWindow(QtWidgets.QMainWindow):
                                                 QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
-            if self._id is not None:
-                self.viewClosesId.emit(self._id)
-                logging.debug(self._id)
+            # if self._id is not None:
+            #     self.viewClosesId.emit(self._id)
+            #     logging.debug(self._id)
             # sets flag as False which shows tableview window had been closed.
             self.tv_window_exists = False
             self.viewCloses.emit()
@@ -106,6 +106,10 @@ class MSSViewWindow(QtWidgets.QMainWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
+        # Update title flighttrack name
+        if self.waypoints_model:
+            self.setWindowTitle(self.windowTitle().replace(self.waypoints_model.name, model.name))
+
         self.waypoints_model = model
 
     def controlToBeCreated(self, index):
@@ -158,6 +162,50 @@ class MSSViewWindow(QtWidgets.QMainWindow):
     def setIdentifier(self, identifier):
         self.identifier = identifier
 
+    def enable_navbar_action_buttons(self):
+        """
+        function enables some control, used if access_level is appropriate
+        """
+        if self.name in ("Top View", "Table View"):
+            # Make Roundtrip Button
+            self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+        if self.name in ("Top View", "Side View", "Linear View"):
+            actions = self.mpl.navbar.actions()
+            for action in actions:
+                action_text = action.text()
+                if action_text in ("Ins WP", "Del WP", "Mv WP"):
+                    action.setEnabled(True)
+        else:
+            # Table View
+            self.btAddWayPointToFlightTrack.setEnabled(True)
+            self.btCloneWaypoint.setEnabled(True)
+            self.btDeleteWayPoint.setEnabled(True)
+            self.btInvertDirection.setEnabled(True)
+            self.cbTools.setEnabled(True)
+            self.tableWayPoints.setEnabled(True)
+
+    def disable_navbar_action_buttons(self):
+        """
+        function disables some control, used if access_level is not appropriate
+        """
+        if self.name in ("Top View", "Table View"):
+            # Make Roundtrip Button
+            self.btRoundtrip.setEnabled(False)
+        if self.name in ("Top View", "Side View", "Linear View"):
+            actions = self.mpl.navbar.actions()
+            for action in actions:
+                action_text = action.text()
+                if action_text in ("Ins WP", "Del WP", "Mv WP"):
+                    action.setEnabled(False)
+        else:
+            # Table View
+            self.btAddWayPointToFlightTrack.setEnabled(False)
+            self.btCloneWaypoint.setEnabled(False)
+            self.btDeleteWayPoint.setEnabled(False)
+            self.btInvertDirection.setEnabled(False)
+            self.cbTools.setEnabled(False)
+            self.tableWayPoints.setEnabled(False)
+
 
 class MSSMplViewWindow(MSSViewWindow):
     """
@@ -173,9 +221,18 @@ class MSSMplViewWindow(MSSViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        self.waypoints_model = model
+        super().setFlightTrackModel(model)
+
         if self.mpl is not None:
             self.mpl.canvas.set_waypoints_model(model)
+
+            # Update Top View flighttrack name
+            if hasattr(self.mpl.canvas, "map"):
+                text = self.mpl.canvas.map.crs_text.get_text()
+                old_name = self.mpl.canvas.map.operation_name
+                self.mpl.canvas.map.operation_name = model.name
+                self.mpl.canvas.map.crs_text.set_text(text.replace(old_name, model.name))
+                self.mpl.canvas.map.ax.figure.canvas.draw()
 
     def getView(self):
         """

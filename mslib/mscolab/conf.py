@@ -37,6 +37,9 @@ except ImportError as ex:
         import os
         import logging
 
+        # expire token in seconds
+        # EXPIRATION = 86400
+
         # Which origins are allowed to communicate with your server
         CORS_ORIGINS = ["*"]
 
@@ -58,6 +61,9 @@ except ImportError as ex:
         # used to generate and parse tokens
         SECRET_KEY = secrets.token_urlsafe(16)
 
+        # used to generate the password token
+        SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
+
         STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
         <FlightTrack version="1.7.6">
           <ListOfWaypoints>
@@ -71,3 +77,19 @@ except ImportError as ex:
         </FlightTrack>
         """
         enable_basic_http_authentication = False
+
+        # enable verification by Mail
+        USER_VERIFICATION = False
+
+        # mail settings
+        # MAIL_SERVER = 'localhost'
+        # MAIL_PORT = 25
+        # MAIL_USE_TLS = False
+        # MAIL_USE_SSL = True
+
+        # mail authentication
+        # MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
+        # MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
+
+        # mail accounts
+        # MAIL_DEFAULT_SENDER = 'MSS@localhost'

@@ -38,21 +38,20 @@ import requests
 import traceback
 import urllib.parse
 import defusedxml.ElementTree as etree
-from mslib.utils import config_loader
+from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import mslib.ogcwms
 import owslib.util
 from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
 
+from mslib.msui import constants, wms_capabilities
 from mslib.msui.mss_qt import ui_wms_dockwidget as ui
 from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
-from mslib.msui import wms_capabilities
-from mslib.msui import constants
-from mslib.utils import parse_iso_datetime, parse_iso_duration, load_settings_qsettings, save_settings_qsettings, Worker
-from mslib.ogcwms import openURL, removeXMLNamespace
+from mslib.msui.mss_qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
+import mslib.utils.ogcwms as ogcwms
+from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 
 
 WMS_SERVICE_CACHE = {}
@@ -65,7 +64,7 @@ def add_wms_urls(combo_box, url_list):
         combo_box.addItem(url)
 
 
-class MSSWebMapService(mslib.ogcwms.WebMapService):
+class MSSWebMapService(ogcwms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 
         added parameters are
@@ -201,8 +200,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
         # not considered. For some reason, the check below doesn't work, though..
         proxies = config_loader(dataset="proxies")
 
-        u = openURL(base_url, data, method,
-                    username=self.auth.username, password=self.auth.password, proxies=proxies)
+        u = ogcwms.openURL(base_url, data, method,
+                           username=self.auth.username, password=self.auth.password, proxies=proxies)
 
         # check for service exceptions, and return
         # NOTE: There is little bug in owslib.util.openURL -- if the file
@@ -215,7 +214,8 @@ class MSSWebMapService(mslib.ogcwms.WebMapService):
             se_xml = u.read()
             se_tree = etree.fromstring(se_xml)
             # Remove namespaces in the response, otherwise this code might fail
-            removeXMLNamespace(se_tree)
+            # (mslib) add ogcwms
+            ogcwms.removeXMLNamespace(se_tree)
             err_message = str(se_tree.find('ServiceException').text).strip()
             raise owslib.util.ServiceException(err_message, se_xml)
         return u
@@ -745,13 +745,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         logging.debug("discovered %i layers that can be used in this view",
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
+        selected = self.multilayers.current_layer.text(0) if self.multilayers.current_layer else None
         if not cache and wms.url in self.multilayers.layers and \
                 wms.capabilities_document.decode("utf-8") != \
                 self.multilayers.layers[wms.url]["wms"].capabilities_document.decode("utf-8"):
             self.multilayers.delete_server(self.multilayers.layers[wms.url]["header"])
         self.multilayers.add_wms(wms)
         for layer in filtered_layers:
-            self.multilayers.add_multilayer(layer, wms)
+            self.multilayers.add_multilayer(layer, wms, layer == selected)
         self.multilayers.filter_multilayers()
         self.multilayers.update_checkboxes()
         self.multilayers.pbViewCapabilities.setEnabled(True)
@@ -947,7 +948,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         d = self.dteInitTime.dateTime()
         # Add value from cbInitTime_step and set new date.
         secs = self.secs_from_timestep(self.cbInitTime_step.currentText())
-        self.dteInitTime.setDateTime(d.addSecs(-1. * secs))
+        self.dteInitTime.setDateTime(d.addSecs(-secs))
         self.auto_update()
 
     def init_time_fwd_click(self):
@@ -965,7 +966,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         d = self.dteValidTime.dateTime()
         # Add value from cbInitTime_step and set new date.
         secs = self.secs_from_timestep(self.cbValidTime_step.currentText())
-        self.dteValidTime.setDateTime(d.addSecs(-1. * secs))
+        self.dteValidTime.setDateTime(d.addSecs(-secs))
         self.auto_update()
 
     def valid_time_fwd_click(self):

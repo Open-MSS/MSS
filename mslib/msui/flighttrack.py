@@ -41,15 +41,17 @@ import os
 import fs
 import xml.dom.minidom
 import xml.parsers.expat
-from metpy.units import units
 
-from mslib.msui.mss_qt import variant_to_string, variant_to_float
 from PyQt5 import QtGui, QtCore, QtWidgets
-from mslib import utils, __version__
-from mslib import thermolib
-from mslib.utils import config_loader, find_location, save_settings_qsettings, load_settings_qsettings
+
+from mslib import __version__
+from mslib.utils.units import units
+from mslib.utils.coordinate import find_location, path_points, get_distance
+from mslib.utils import thermolib
+from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
+from mslib.msui.mss_qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
-from mslib.msui import MissionSupportSystemDefaultConfig as mss_default
 
 from mslib.utils import writexml
 xml.dom.minidom.Element.writexml = writexml
@@ -164,10 +166,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         # If a filename is passed to the constructor, load data from this file.
         if filename is not None:
-            if filename.endswith(".ftml"):
-                self.load_from_ftml(filename)
-            else:
-                logging.debug("No known file extension! '%s'", filename)
+            self.load_from_ftml(filename)
 
         # If xml string is passed to constructor, load data from that
         elif xml_content is not None:
@@ -202,13 +201,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             table = TABLE_FULL
         if table[column][2]:
             return QtCore.Qt.ItemFlags(
-                QtCore.QAbstractTableModel.flags(self, index) |
-                QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDragEnabled |
-                QtCore.Qt.ItemIsDropEnabled)
+                int(QtCore.QAbstractTableModel.flags(self, index) |
+                    QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsDragEnabled |
+                    QtCore.Qt.ItemIsDropEnabled))
         else:
             return QtCore.Qt.ItemFlags(
-                QtCore.QAbstractTableModel.flags(self, index) |
-                QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled)
+                int(QtCore.QAbstractTableModel.flags(self, index) |
+                    QtCore.Qt.ItemIsDragEnabled | QtCore.Qt.ItemIsDropEnabled))
 
     def data(self, index, role=QtCore.Qt.DisplayRole):
         """
@@ -256,9 +255,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         Returns lats, lons.
         """
-        path = [[wp.lat, wp.lon, wp.utc_time] for wp in self.waypoints]
-        return utils.path_points(
-            path, numpoints=numpoints, connection=connection)
+        return path_points(
+            [wp.lat for wp in self.waypoints],
+            [wp.lon for wp in self.waypoints],
+            times=[wp.utc_time for wp in self.waypoints],
+            numpoints=numpoints, connection=connection)
 
     def headerData(self, section, orientation, role=QtCore.Qt.DisplayRole):
         """
@@ -489,8 +490,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 wp1.ascent_rate = 0
             else:
                 wp0 = waypoints[pos - 1]
-                wp1.distance_to_prev = utils.get_distance((wp0.lat, wp0.lon),
-                                                          (wp1.lat, wp1.lon))
+                wp1.distance_to_prev = get_distance(
+                    wp0.lat, wp0.lon, wp1.lat, wp1.lon)
 
                 last = (pos - 1 == rows)
                 time, fuel = get_duration_fuel(
@@ -510,8 +511,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         # Update the distance of the following waypoint as well.
         if pos < len(waypoints) - 1:
             wp2 = waypoints[pos + 1]
-            wp2.distance_to_prev = utils.get_distance((wp1.lat, wp1.lon),
-                                                      (wp2.lat, wp2.lon))
+            wp2.distance_to_prev = get_distance(
+                wp1.lat, wp1.lon, wp2.lat, wp2.lon)
             if wp2.leg_time != 0:
                 wp2.ascent_rate = int((wp2.flightlevel - wp1.flightlevel) * 100 / (wp2.leg_time / 60))
             else:

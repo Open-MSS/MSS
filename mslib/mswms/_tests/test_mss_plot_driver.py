@@ -28,9 +28,11 @@
 """
 
 from datetime import datetime
-import pytest
 import os
+import warnings
 import sys
+
+import pytest
 from PIL import Image
 from xml.etree import ElementTree
 import io
@@ -193,6 +195,8 @@ class Test_VSec(object):
         assert noframe != img
 
     def test_VS_gallery_template(self):
+        pytest.skip('Test can be biased. In pytest-reverse when there is not a plot_examples it can''t import')
+        # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)
         from VS_template import VS_Template
@@ -294,7 +298,9 @@ class Test_HSec(object):
     @pytest.mark.parametrize("crs", ["EPSG:3031", "EPSG:3857", "EPSG:3413", "EPSG:3995"])
     def test_meter_crs_codes(self, crs):
         bbox_meter = [-1e7, -1e7, 1e7, 1e7]
-        img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs, bbox=bbox_meter)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")  # disable warnings as there is no data for the cutout
+            img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), crs=crs, bbox=bbox_meter)
         assert img is not None
 
     @pytest.mark.parametrize("crs", ["EPSG:12345678", "FNORD", "MSS:lagranto"])
@@ -481,6 +487,8 @@ class Test_HSec(object):
         assert noframe != img
 
     def test_HS_gallery_template(self):
+        pytest.skip('Test can be biased. In pytest-reverse when there is not a plot_examples it can''t import')
+        # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)
         from HS_template import HS_Template

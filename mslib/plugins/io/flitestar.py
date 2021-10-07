@@ -29,11 +29,11 @@ from __future__ import division
 
 import numpy as np
 import os
-from metpy.units import units
+from fs import open_fs
 
 import mslib.msui.flighttrack as ft
-from mslib import thermolib
-from fs import open_fs
+from mslib.utils import thermolib
+from mslib.utils.units import units
 
 
 def load_from_flitestar(filename):

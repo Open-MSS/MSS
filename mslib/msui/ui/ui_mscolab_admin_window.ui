@@ -62,9 +62,9 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="projectNameLabel">
+           <widget class="QLabel" name="operationNameLabel">
             <property name="text">
-             <string>Project: </string>
+             <string>Operation: </string>
             </property>
            </widget>
           </item>
@@ -156,7 +156,7 @@
           <item>
            <widget class="QPushButton" name="addUsersBtn">
             <property name="toolTip">
-             <string>Add the selected users to the project</string>
+             <string>Add the selected users to the operation</string>
             </property>
             <property name="text">
              <string>Add</string>
@@ -187,7 +187,7 @@
           <item>
            <widget class="QLabel" name="label_3">
             <property name="text">
-             <string>Clone Project Permissions:</string>
+             <string>Clone Operation Permissions:</string>
             </property>
            </widget>
           </item>
@@ -197,7 +197,7 @@
           <item>
            <widget class="QPushButton" name="importPermissionsBtn">
             <property name="toolTip">
-             <string>Import permissions from another project</string>
+             <string>Import permissions from another operation</string>
             </property>
             <property name="text">
              <string>Clone</string>

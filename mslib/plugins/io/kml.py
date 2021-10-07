@@ -39,7 +39,7 @@ def save_to_kml(filename, name, waypoints):
 <open>1</open>
 <description>MSS flight track export</description>
 <Style id="flighttrack">
-<LineStyle><color>ff000000</color><width>4</width></LineStyle><PolyStyle><color>FFF87217</color></PolyStyle></Style>
+<LineStyle><color>ff000000</color><width>2</width></LineStyle></Style>
 <Placemark><name>{name}</name>
 <styleUrl>#flighttrack</styleUrl>
 <LineString>

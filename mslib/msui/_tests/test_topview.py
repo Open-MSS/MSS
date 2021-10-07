@@ -40,7 +40,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 from mslib._tests.utils import wait_until_signal
 
-PORTS = list(range(8084, 8094))
+PORTS = list(range(28000, 28500))
 
 
 class Test_MSS_TV_MapAppearanceDialog(object):

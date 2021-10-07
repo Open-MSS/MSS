@@ -1,0 +1,48 @@
+The MSS software will be maximised automatically and TOP VIEW will be opened. 
+
+After clicking on SELECT TO OPEN CONTROL, click on KML OVERLAY. The UI will look as shown.
+
+The GREEN coloured boundary is the KML file that denotes the geographical boundary which helps in planning the WAY POINTS.
+
+We can put the WAY POINTS along this green line. We will now see how to add, move, select KML files.
+
+We can see two KML files here, one is COLOR.KML ; and the another one is FOLDER.KML.
+
+
+COLOR.KML is in Red colour, FOLDER.KML is denoted by Green colour.
+
+The box is checked that shows that these KML files are shown in the map, if unchecked, it will not show.
+
+
+First of all, we click on SELECT ALL FILES, and then click on REMOVE FILES. Both the KML files will be removed.
+
+Now, we will add KML files by clicking on ADD KML FILES. The dialogue will be opened and it will add the path where the KML file is present. You can also select it through the file dialogue.
+
+When we add a KML file, the default colour is Black and the default linewidth is 5 units.
+
+Now, let's change colour and line width of the KML files. Before that, we add another KML file. Both the KML files will be opened when we will open the GLOBAL map. 
+
+Both the files are in black colour.
+
+Now, we will change colour of FOLDER.KML file by selecting it and clicking on CHANGE COLOUR. We change it from Black to blue followed by blue to green.
+
+Changing it for some time...
+
+Now, we change line width by changing its numerical value whose range is 0 to 10.
+
+We change it to different values to obtain different linewidths.
+
+
+After entering in GLOBAL MAP, we can see COLOR dot KML file which is in black colour.
+
+We change its colour by clicking on CHANGE COLOR option button. 
+
+We change it to Red. 
+
+It's default line width is 5. 
+
+We again change its colour to Maroon. 
+
+We type the line width to 6.53 and then 3.45.
+
+The top view is closed and the tutorial ends.

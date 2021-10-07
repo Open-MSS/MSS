@@ -41,7 +41,7 @@ from xstatic.main import XStatic
 from mslib.msui.icons import icons
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 
-# set the project root directory as the static folder
+# set the operation root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
 # This can be used to set a location by SCRIPT_NAME for testing. e.g. export SCRIPT_NAME=/demo/
 SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
@@ -185,7 +185,7 @@ def app_loader(name):
             return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
                                     .splitlines(keepends=True)][1:-2]),
                             mimetype="text/plain",
-                            headers={"Content-disposition": f"attachment; filename={filename.replace('.md', '.py')}"})
+                            headers={"Content-disposition": f"attachment; filename={filename.split('-')[0]}.py"})
 
     @APP.route("/mss/help")
     def help():

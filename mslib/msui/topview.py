@@ -30,7 +30,8 @@
 
 import functools
 import logging
-from mslib.utils import config_loader, get_projection_params, save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.mss_qt import ui_topview_window as ui
 from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
@@ -315,7 +316,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         # the projection parameters.
         kwargs = current_map["map"]
         kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
-                       "PROJECT_NAME": self.waypoints_model.name})
+                       "OPERATION_NAME": self.waypoints_model.name})
         kwargs.update(proj_params["basemap"])
 
         if only_kwargs:

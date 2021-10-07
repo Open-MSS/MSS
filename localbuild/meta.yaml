@@ -17,7 +17,6 @@ build:
     - mswms = mslib.mswms.mswms:main
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
-    - mss_retriever = mslib.retriever:main
 
 requirements:
   build:
@@ -52,14 +51,12 @@ requirements:
     - fs_filepicker
     - cftime >=1.0.1
     - matplotlib >=3.3.2
-    - flask <2.0.0
-    - jinja2 <3.0.0
-    - click <8.0.o
-    - itsdangerous <2.0.0
-    - markupsafe <2.0.0
+    - flask >=2.0.0
     - flask-httpauth
-    - werkzeug <2.0.0
-    - flask-socketio >=4.3.1, <5
+    - flask-mail
+    - flask-migrate
+    - werkzeug >2.0.0
+    - flask-socketio >=5
     - flask-sqlalchemy
     - flask-cors
     - passlib
@@ -70,8 +67,8 @@ requirements:
     - validate_email
     - multidict
     - pint
-    - python-socketio >=4.4.0, <5
-    - python-engineio >=3.13.2, <4
+    - python-socketio >=5
+    - python-engineio >=4
     - markdown
     - xstatic
     - xstatic-jquery

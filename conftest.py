@@ -118,6 +118,25 @@ class mscolab_settings(object):
     # used to generate and parse tokens
     SECRET_KEY = secrets.token_urlsafe(16)
 
+    # used to generate the password token
+    SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
+
+    # mail settings
+    MAIL_SERVER = 'localhost'
+    MAIL_PORT = 25
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = True
+
+    # mail authentication
+    MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
+
+    # mail accounts
+    MAIL_DEFAULT_SENDER = 'MSS@localhost'
+
+    # enable verification by Mail
+    USER_VERIFICATION = False
+
     SQLALCHEMY_DB_URI = 'sqlite:///' + url_join(DATA_DIR, 'mscolab.db')
 
     # mscolab file upload settings

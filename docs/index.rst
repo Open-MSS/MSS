@@ -20,7 +20,6 @@ Topics
    gallery/index
    dependencies
    installation
-   docker_based_installation
    development
    authors
    help

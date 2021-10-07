@@ -31,7 +31,7 @@ import fs
 import os
 import logging
 
-
+# ToDo refactor to generic functions, keep only constants
 HOME = os.path.expanduser(f"~{os.path.sep}")
 MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, ".config", "mss"))
 if '://' in MSS_CONFIG_PATH:
@@ -48,13 +48,27 @@ else:
 
 MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
 
+# We try to create an empty MSS_SETTINGS file if not existing
+# but there can be a permission problem
+if '://' in MSS_SETTINGS:
+    dir_path, file_name = fs.path.split(MSS_SETTINGS)
+    try:
+        _fs = fs.open_fs(dir_path)
+        if not _fs.exists(file_name):
+            with _fs.open(file_name, 'w') as fid:
+                fid.write("{}")
+    except fs.errors.CreateFailed:
+        logging.error(f'"{MSS_SETTINGS}" can''t be created')
+else:
+    if not os.path.exists(MSS_SETTINGS):
+        try:
+            with open(MSS_SETTINGS, 'w') as fid:
+                fid.write("{}")
+        except IOError:
+            logging.error(f'"{MSS_SETTINGS}" can''t be created')
+
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}
-
-CACHED_CONFIG_FILE = None
-
-if os.path.exists(MSS_SETTINGS):
-    CACHED_CONFIG_FILE = MSS_SETTINGS
 
 POSIX = {"application_destination": os.path.join(HOME, ".local/share/applications/mss{}.desktop"),
          "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/mss-logo{}.png"),

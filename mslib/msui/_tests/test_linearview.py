@@ -38,7 +38,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib._tests.utils import wait_until_signal
 
-PORTS = list(range(8106, 8107))
+PORTS = list(range(26000, 26500))
 
 
 class Test_MSS_LV_Options_Dialog(object):
