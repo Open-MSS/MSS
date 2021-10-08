@@ -410,7 +410,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 self.set_message(self.mode)
             else:
                 (lat, lon, alt), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
-                self.set_message(f"lat={lat: <6.2f} lon={lon: <7.2f} altitude={alt/100: <.2f}hPa")
+                self.set_message(f"lat={lat: <6.2f} lon={lon: <7.2f} altitude={alt: <3.0f}hft")
         elif not self.sideview:
             self._update_cursor(event)
 
@@ -443,7 +443,11 @@ class NavigationToolbar(NavigationToolbar2QT):
                 (lat, lon), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
                 y_value = convert_pressure_to_vertical_axis_measure(
                     self.canvas.settings_dict["vertical_axis"], event.ydata)
-                self.set_message(f"{self.mode} lat={lat:6.2f} lon={lon:7.2f} altitude={y_value:.2f}")
+                units = {
+                    "pressure altitude": "km",
+                    "flight level": "hft",
+                    "pressure": "hPa"}[self.canvas.settings_dict["vertical_axis"]]
+                self.set_message(f"{self.mode} lat={lat:6.2f} lon={lon:7.2f} altitude={y_value:.2f}{units}")
 
     def _update_buttons_checked(self):
         super(NavigationToolbar, self)._update_buttons_checked()
