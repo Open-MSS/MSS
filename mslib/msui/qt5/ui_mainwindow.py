@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -32,7 +32,20 @@ class Ui_MSSMainWindow(object):
         self.listViews = QtWidgets.QListWidget(self.openViewsGb)
         self.listViews.setObjectName("listViews")
         self.openViewsVL.addWidget(self.listViews)
-        self.gridLayout.addWidget(self.openViewsGb, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.openViewsGb, 3, 0, 1, 1)
+        self.openFlightTracksGb = QtWidgets.QGroupBox(self.centralwidget)
+        self.openFlightTracksGb.setTitle("")
+        self.openFlightTracksGb.setObjectName("openFlightTracksGb")
+        self.verticalLayout = QtWidgets.QVBoxLayout(self.openFlightTracksGb)
+        self.verticalLayout.setContentsMargins(8, 8, 8, 8)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.openFlightTracksLabel = QtWidgets.QLabel(self.openFlightTracksGb)
+        self.openFlightTracksLabel.setObjectName("openFlightTracksLabel")
+        self.verticalLayout.addWidget(self.openFlightTracksLabel)
+        self.listFlightTracks = QtWidgets.QListWidget(self.openFlightTracksGb)
+        self.listFlightTracks.setObjectName("listFlightTracks")
+        self.verticalLayout.addWidget(self.listFlightTracks)
+        self.gridLayout.addWidget(self.openFlightTracksGb, 2, 0, 1, 1)
         self.userOptionsHL = QtWidgets.QHBoxLayout()
         self.userOptionsHL.setContentsMargins(0, -1, 0, -1)
         self.userOptionsHL.setObjectName("userOptionsHL")
@@ -87,25 +100,15 @@ class Ui_MSSMainWindow(object):
         self.filterCategoryCb.setObjectName("filterCategoryCb")
         self.filterCategoryCb.addItem("")
         self.gridLayout_3.addWidget(self.filterCategoryCb, 5, 1, 1, 1)
-        self.gridLayout.addWidget(self.openOperationsGb, 1, 1, 2, 1)
-        self.openFlightTracksGb = QtWidgets.QGroupBox(self.centralwidget)
-        self.openFlightTracksGb.setTitle("")
-        self.openFlightTracksGb.setObjectName("openFlightTracksGb")
-        self.verticalLayout = QtWidgets.QVBoxLayout(self.openFlightTracksGb)
-        self.verticalLayout.setContentsMargins(8, 8, 8, 8)
-        self.verticalLayout.setObjectName("verticalLayout")
-        self.openFlightTracksLabel = QtWidgets.QLabel(self.openFlightTracksGb)
-        self.openFlightTracksLabel.setObjectName("openFlightTracksLabel")
-        self.verticalLayout.addWidget(self.openFlightTracksLabel)
-        self.listFlightTracks = QtWidgets.QListWidget(self.openFlightTracksGb)
-        self.listFlightTracks.setObjectName("listFlightTracks")
-        self.verticalLayout.addWidget(self.listFlightTracks)
-        self.gridLayout.addWidget(self.openFlightTracksGb, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.openOperationsGb, 2, 1, 2, 1)
+        self.activeOperationDesc = QtWidgets.QLabel(self.centralwidget)
+        self.activeOperationDesc.setObjectName("activeOperationDesc")
+        self.gridLayout.addWidget(self.activeOperationDesc, 1, 0, 1, 2)
         self.gridLayout.setColumnStretch(0, 1)
         self.gridLayout.setColumnStretch(1, 1)
         MSSMainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MSSMainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 738, 20))
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 738, 26))
         self.menubar.setNativeMenuBar(False)
         self.menubar.setObjectName("menubar")
         self.menuFile = QtWidgets.QMenu(self.menubar)
@@ -169,6 +172,7 @@ class Ui_MSSMainWindow(object):
         self.actionNewFlightTrack = QtWidgets.QAction(MSSMainWindow)
         self.actionNewFlightTrack.setObjectName("actionNewFlightTrack")
         self.actionAddOperation = QtWidgets.QAction(MSSMainWindow)
+        self.actionAddOperation.setObjectName("actionAddOperation")
         self.actionSearch = QtWidgets.QAction(MSSMainWindow)
         self.actionSearch.setObjectName("actionSearch")
         self.menuNew.addAction(self.actionNewFlightTrack)
@@ -223,6 +227,10 @@ class Ui_MSSMainWindow(object):
         MSSMainWindow.setWindowTitle(_translate("MSSMainWindow", "Mission Support System"))
         self.openViewsLabel.setText(_translate("MSSMainWindow", "Open Views:"))
         self.listViews.setToolTip(_translate("MSSMainWindow", "Double-click a view to bring it to the front."))
+        self.openFlightTracksLabel.setText(_translate("MSSMainWindow", "Flight Tracks:"))
+        self.listFlightTracks.setToolTip(_translate("MSSMainWindow", "List of open flight tracks.\n"
+"Double-click a flight track to activate it.\n"
+"Save a flight track to name it."))
         self.mscStatusLabel.setText(_translate("MSSMainWindow", "Status: Disconnected"))
         self.usernameLabel.setText(_translate("MSSMainWindow", "User"))
         self.userOptionsTb.setToolTip(_translate("MSSMainWindow", "Profile options"))
@@ -241,10 +249,7 @@ class Ui_MSSMainWindow(object):
         self.filterCategoryCb.setWhatsThis(_translate("MSSMainWindow", "filter by operation category"))
         self.filterCategoryCb.setCurrentText(_translate("MSSMainWindow", "ANY"))
         self.filterCategoryCb.setItemText(0, _translate("MSSMainWindow", "ANY"))
-        self.openFlightTracksLabel.setText(_translate("MSSMainWindow", "Flight Tracks:"))
-        self.listFlightTracks.setToolTip(_translate("MSSMainWindow", "List of open flight tracks.\n"
-"Double-click a flight track to activate it.\n"
-"Save a flight track to name it."))
+        self.activeOperationDesc.setText(_translate("MSSMainWindow", "Select Operation to View Description."))
         self.menuFile.setTitle(_translate("MSSMainWindow", "&File"))
         self.menuImportFlightTrack.setTitle(_translate("MSSMainWindow", "Import Flight Track"))
         self.menuExportActiveFlightTrack.setTitle(_translate("MSSMainWindow", "Export Flight Track"))
@@ -287,3 +292,13 @@ class Ui_MSSMainWindow(object):
         self.actionSearch.setText(_translate("MSSMainWindow", "Search"))
         self.actionSearch.setToolTip(_translate("MSSMainWindow", "Search for interactive text in the UI"))
         self.actionSearch.setShortcut(_translate("MSSMainWindow", "Ctrl+F"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MSSMainWindow = QtWidgets.QMainWindow()
+    ui = Ui_MSSMainWindow()
+    ui.setupUi(MSSMainWindow)
+    MSSMainWindow.show()
+    sys.exit(app.exec_())

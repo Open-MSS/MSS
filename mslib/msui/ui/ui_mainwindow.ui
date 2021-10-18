@@ -20,7 +20,7 @@
    <string>Mission Support System</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0" columnstretch="1,1">
+   <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0,0" columnstretch="1,1">
     <property name="leftMargin">
      <number>8</number>
     </property>
@@ -36,7 +36,7 @@
     <property name="spacing">
      <number>2</number>
     </property>
-    <item row="2" column="0">
+    <item row="3" column="0">
      <widget class="QGroupBox" name="openViewsGb">
       <layout class="QVBoxLayout" name="openViewsVL">
        <property name="leftMargin">
@@ -62,6 +62,43 @@
         <widget class="QListWidget" name="listViews">
          <property name="toolTip">
           <string>Double-click a view to bring it to the front.</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item row="2" column="0">
+     <widget class="QGroupBox" name="openFlightTracksGb">
+      <property name="title">
+       <string/>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="leftMargin">
+        <number>8</number>
+       </property>
+       <property name="topMargin">
+        <number>8</number>
+       </property>
+       <property name="rightMargin">
+        <number>8</number>
+       </property>
+       <property name="bottomMargin">
+        <number>8</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="openFlightTracksLabel">
+         <property name="text">
+          <string>Flight Tracks:</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QListWidget" name="listFlightTracks">
+         <property name="toolTip">
+          <string>List of open flight tracks.
+Double-click a flight track to activate it.
+Save a flight track to name it.</string>
          </property>
         </widget>
        </item>
@@ -118,7 +155,7 @@
       </item>
      </layout>
     </item>
-    <item row="1" column="1" rowspan="2">
+    <item row="2" column="1" rowspan="2">
      <widget class="QGroupBox" name="openOperationsGb">
       <property name="title">
        <string/>
@@ -226,41 +263,11 @@
       </layout>
      </widget>
     </item>
-    <item row="1" column="0">
-     <widget class="QGroupBox" name="openFlightTracksGb">
-      <property name="title">
-       <string/>
+    <item row="1" column="0" colspan="2">
+     <widget class="QLabel" name="activeOperationDesc">
+      <property name="text">
+       <string>Select Operation to View Description.</string>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <property name="leftMargin">
-        <number>8</number>
-       </property>
-       <property name="topMargin">
-        <number>8</number>
-       </property>
-       <property name="rightMargin">
-        <number>8</number>
-       </property>
-       <property name="bottomMargin">
-        <number>8</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="openFlightTracksLabel">
-         <property name="text">
-          <string>Flight Tracks:</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QListWidget" name="listFlightTracks">
-         <property name="toolTip">
-          <string>List of open flight tracks.
-Double-click a flight track to activate it.
-Save a flight track to name it.</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
      </widget>
     </item>
    </layout>
@@ -271,7 +278,7 @@ Save a flight track to name it.</string>
      <x>0</x>
      <y>0</y>
      <width>738</width>
-     <height>20</height>
+     <height>26</height>
     </rect>
    </property>
    <property name="nativeMenuBar">

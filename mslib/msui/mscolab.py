@@ -372,6 +372,11 @@ class MSSMscolab(QtCore.QObject):
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
         self.hide_operation_options()
+        self.ui.activeOperationDesc.setHidden(True)
+
+        # hide operation description for flight tracks and open views
+        self.ui.listFlightTracks.itemDoubleClicked.connect(lambda: self.ui.activeOperationDesc.setHidden(True))
+        self.ui.listViews.itemDoubleClicked.connect(lambda: self.ui.activeOperationDesc.setHidden(True))
 
         # connect operation options menu actions
         self.ui.actionAddOperation.triggered.connect(self.add_operation_handler)
@@ -409,6 +414,8 @@ class MSSMscolab(QtCore.QObject):
         self.waypoints_model = None
         # Store active operation's file path
         self.local_ftml_file = None
+        # Store active_operation_description
+        self.active_operation_desc = None
         # connection object to interact with sockets
         self.conn = None
         # assign ids to view-window
@@ -1141,6 +1148,8 @@ class MSSMscolab(QtCore.QObject):
             # self.ui.workingStatusLabel.setEnabled(False)
             self.close_external_windows()
             self.hide_operation_options()
+            self.ui.activeOperationDesc.clear()
+            self.ui.activeOperationDesc.setHidden(True)
 
         # Update operation list
         remove_item = None
@@ -1206,6 +1215,7 @@ class MSSMscolab(QtCore.QObject):
                 for operation in operations:
                     operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                     widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
+                    widgetItem.active_operation_desc = operation["description"]
                     widgetItem.op_id = operation["op_id"]
                     widgetItem.access_level = operation["access_level"]
                     widgetItem.operation_path = operation["path"]
@@ -1243,7 +1253,14 @@ class MSSMscolab(QtCore.QObject):
             self.active_op_id = item.op_id
             self.access_level = item.access_level
             self.active_operation_name = item.operation_path
+            self.active_operation_desc = item.active_operation_desc
             self.waypoints_model = None
+
+            # show active_operation_description
+            self.ui.listOperationsMSC.itemDoubleClicked.connect(lambda: self.ui.activeOperationDesc.setHidden(False))
+
+            # set active operation description
+            self.ui.activeOperationDesc.setText(self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
 
             # set active flightpath here
             self.load_wps_from_server()
@@ -1261,6 +1278,7 @@ class MSSMscolab(QtCore.QObject):
             font = QtGui.QFont()
             for i in range(self.ui.listOperationsMSC.count()):
                 self.ui.listOperationsMSC.item(i).setFont(font)
+                self.ui.activeOperationDesc.setHidden(False)
             font.setBold(True)
             item.setFont(font)
 
@@ -1494,6 +1512,8 @@ class MSSMscolab(QtCore.QObject):
         self.ui.userOptionsTb.hide()
         self.ui.connectBtn.show()
         self.ui.actionAddOperation.setEnabled(False)
+        # hide operation description
+        self.ui.activeOperationDesc.setHidden(True)
         # disconnect socket
         if self.conn is not None:
             self.conn.disconnect()
