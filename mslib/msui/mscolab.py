@@ -1278,7 +1278,6 @@ class MSSMscolab(QtCore.QObject):
             font = QtGui.QFont()
             for i in range(self.ui.listOperationsMSC.count()):
                 self.ui.listOperationsMSC.item(i).setFont(font)
-                self.ui.activeOperationDesc.setHidden(False)
             font.setBold(True)
             item.setFont(font)
 
