@@ -293,12 +293,3 @@ class Ui_MSSMainWindow(object):
         self.actionSearch.setToolTip(_translate("MSSMainWindow", "Search for interactive text in the UI"))
         self.actionSearch.setShortcut(_translate("MSSMainWindow", "Ctrl+F"))
 
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MSSMainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MSSMainWindow()
-    ui.setupUi(MSSMainWindow)
-    MSSMainWindow.show()
-    sys.exit(app.exec_())
