@@ -186,7 +186,8 @@ Save a flight track to name it.</string>
        <item row="1" column="0" colspan="2">
         <widget class="QListWidget" name="listOperationsMSC">
          <property name="toolTip">
-          <string>List of mscolab operations.</string>
+          <string>List of mscolab operations.
+Double-Click a operation to view its description.</string>
          </property>
         </widget>
        </item>
@@ -348,6 +349,7 @@ Save a flight track to name it.</string>
       <string>Properties</string>
      </property>
      <addaction name="actionDeleteOperation"/>
+     <addaction name="actionDescription"/>
     </widget>
     <addaction name="actionChat"/>
     <addaction name="actionVersionHistory"/>
@@ -505,6 +507,11 @@ Save a flight track to name it.</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionDescription">
+   <property name="text">
+    <string>Description</string>
    </property>
   </action>
  </widget>

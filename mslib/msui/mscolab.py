@@ -374,9 +374,11 @@ class MSSMscolab(QtCore.QObject):
         self.hide_operation_options()
         self.ui.activeOperationDesc.setHidden(True)
 
-        # hide operation description for flight tracks and open views
-        self.ui.listFlightTracks.itemDoubleClicked.connect(lambda: self.ui.activeOperationDesc.setHidden(True))
-        self.ui.listViews.itemDoubleClicked.connect(lambda: self.ui.activeOperationDesc.setHidden(True))
+        # reset operation description label for flight tracks and open views
+        self.ui.listFlightTracks.itemDoubleClicked.connect(
+            lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
+        self.ui.listViews.itemDoubleClicked.connect(
+            lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
 
         # connect operation options menu actions
         self.ui.actionAddOperation.triggered.connect(self.add_operation_handler)
@@ -528,6 +530,9 @@ class MSSMscolab(QtCore.QObject):
 
             # Show category list
             self.show_categories_to_ui()
+
+            # show operation_description
+            self.ui.activeOperationDesc.setHidden(False)
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
@@ -1148,8 +1153,8 @@ class MSSMscolab(QtCore.QObject):
             # self.ui.workingStatusLabel.setEnabled(False)
             self.close_external_windows()
             self.hide_operation_options()
-            self.ui.activeOperationDesc.clear()
-            self.ui.activeOperationDesc.setHidden(True)
+            # reset operation_description label text
+            self.ui.activeOperationDesc.setText("Select Operation to View Description.")
 
         # Update operation list
         remove_item = None
@@ -1256,12 +1261,19 @@ class MSSMscolab(QtCore.QObject):
             self.active_operation_desc = item.active_operation_desc
             self.waypoints_model = None
 
-            # show active_operation_description
-            self.ui.listOperationsMSC.itemDoubleClicked.connect(lambda: self.ui.activeOperationDesc.setHidden(False))
+            # Show operation description
+            self.error_dialog = QtWidgets.QErrorMessage()
+            self.ui.actionDescription.triggered.connect \
+                (lambda: self.error_dialog.showMessage(f"{self.active_operation_desc}"))
 
-            # set active operation description
-            self.ui.activeOperationDesc.setText(self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
-
+            # Set active operation description
+            desc_count = len(str(self.active_operation_desc))
+            if desc_count < 95:
+                self.ui.activeOperationDesc.setText(
+                    self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
+            else:
+                self.ui.activeOperationDesc.setText("Description is too long to show here, for long descriptions go "
+                                                    "to operations menu.")
             # set active flightpath here
             self.load_wps_from_server()
             # display working status
@@ -1513,6 +1525,8 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionAddOperation.setEnabled(False)
         # hide operation description
         self.ui.activeOperationDesc.setHidden(True)
+        # reset description label text
+        self.ui.activeOperationDesc.setText(self.ui.tr("Select Operation to View Description."))
         # disconnect socket
         if self.conn is not None:
             self.conn.disconnect()

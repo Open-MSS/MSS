@@ -175,6 +175,8 @@ class Ui_MSSMainWindow(object):
         self.actionAddOperation.setObjectName("actionAddOperation")
         self.actionSearch = QtWidgets.QAction(MSSMainWindow)
         self.actionSearch.setObjectName("actionSearch")
+        self.actionDescription = QtWidgets.QAction(MSSMainWindow)
+        self.actionDescription.setObjectName("actionDescription")
         self.menuNew.addAction(self.actionNewFlightTrack)
         self.menuNew.addAction(self.actionAddOperation)
         self.menuFile.addAction(self.menuNew.menuAction())
@@ -201,6 +203,7 @@ class Ui_MSSMainWindow(object):
         self.menuViews.addAction(self.actionTableView)
         self.menuViews.addAction(self.actionLinearView)
         self.menuProperties.addAction(self.actionDeleteOperation)
+        self.menuProperties.addAction(self.actionDescription)
         self.menuOperation.addAction(self.actionChat)
         self.menuOperation.addAction(self.actionVersionHistory)
         self.menuOperation.addAction(self.actionManageUsers)
@@ -237,7 +240,8 @@ class Ui_MSSMainWindow(object):
         self.connectBtn.setToolTip(_translate("MSSMainWindow", "Connect to an MSColab Server"))
         self.connectBtn.setText(_translate("MSSMainWindow", "Connect to MSColab"))
         self.workingStatusLabel.setText(_translate("MSSMainWindow", "No operations selected"))
-        self.listOperationsMSC.setToolTip(_translate("MSSMainWindow", "List of mscolab operations."))
+        self.listOperationsMSC.setToolTip(_translate("MSSMainWindow", "List of mscolab operations.\n"
+"Double-Click a operation to view its description."))
         self.serverOptionsCb.setToolTip(_translate("MSSMainWindow", "Fetch/Save Server options"))
         self.serverOptionsCb.setItemText(0, _translate("MSSMainWindow", "Server Options"))
         self.serverOptionsCb.setItemText(1, _translate("MSSMainWindow", "Fetch From Server"))
@@ -292,4 +296,5 @@ class Ui_MSSMainWindow(object):
         self.actionSearch.setText(_translate("MSSMainWindow", "Search"))
         self.actionSearch.setToolTip(_translate("MSSMainWindow", "Search for interactive text in the UI"))
         self.actionSearch.setShortcut(_translate("MSSMainWindow", "Ctrl+F"))
+        self.actionDescription.setText(_translate("MSSMainWindow", "Description"))
 
