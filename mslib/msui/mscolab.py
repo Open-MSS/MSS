@@ -1263,8 +1263,7 @@ class MSSMscolab(QtCore.QObject):
 
             # Show operation description
             self.error_dialog = QtWidgets.QErrorMessage()
-            self.ui.actionDescription.triggered.connect \
-                (lambda: self.error_dialog.showMessage(f"{self.active_operation_desc}"))
+            self.ui.actionDescription.triggered.connect(lambda: self.error_dialog.showMessage(f"{self.active_operation_desc}"))
 
             # Set active operation description
             desc_count = len(str(self.active_operation_desc))
