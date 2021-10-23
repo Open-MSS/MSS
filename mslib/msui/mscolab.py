@@ -338,7 +338,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             try:
                 error_msg = json.loads(r.text)["message"]
             except Exception as e:
-                logging.debug("Unexpected error occured {0}".format(e))
+                logging.debug("Unexpected error occured %s" % e)
                 error_msg = "Unexpected error occured. Please try again."
             self.set_status("Error", error_msg)
 
@@ -445,11 +445,11 @@ class MSSMscolab(QtCore.QObject):
             try:
                 _ = fs.open_fs(self.data_dir)
             except fs.errors.CreateFailed:
-                logging.error('Make sure that the FS url "{0}" exists'.format(self.data_dir))
+                logging.error('Make sure that the FS url "%s" exists' % self.data_dir)
                 show_popup(self.ui, "Error", f'FS Url: "{self.data_dir}" does not exist!')
                 sys.exit()
             except fs.opener.errors.UnsupportedProtocol:
-                logging.error('FS url "{}" not supported'.format(self.data_dir))
+                logging.error('FS url "%s" not supported' % self.data_dir)
                 show_popup(self.ui, "Error", f'FS Url: "{self.data_dir}" not supported!')
                 sys.exit()
         else:
@@ -493,7 +493,7 @@ class MSSMscolab(QtCore.QObject):
         try:
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
         except Exception as ex:
-            logging.debug("Couldn't create a socket connection: {0}".format(ex))
+            logging.debug("Couldn't create a socket connection: %s" % ex)
             show_popup(self.ui, "Error", "Couldn't create a socket connection. New Login required!")
             self.logout()
         else:
@@ -1149,7 +1149,7 @@ class MSSMscolab(QtCore.QObject):
                 remove_item = item
                 break
         if remove_item is not None:
-            logging.debug("remove_item: {0}".format(remove_item))
+            logging.debug("remove_item: %s" % remove_item)
             self.ui.listOperationsMSC.takeItem(self.ui.listOperationsMSC.row(remove_item))
             return remove_item.operation_path
 
@@ -1508,7 +1508,7 @@ class MSSMscolab(QtCore.QObject):
                 try:
                     os.remove(self.gravatar)
                 except Exception as e:
-                    logging.debug("Error while removing gravatar cache... {0}".format(e))
+                    logging.debug("Error while removing gravatar cache... %s" % e )
         # clear gravatar image path
         self.gravatar = None
         # clear user email

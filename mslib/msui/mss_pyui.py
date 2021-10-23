@@ -253,7 +253,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                  action.objectName(),
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
                 for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
-                                                                         self.cbNoShortcut.checkState()])
+                self.cbNoShortcut.checkState()])
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
                              shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])

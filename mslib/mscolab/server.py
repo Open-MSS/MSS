@@ -89,13 +89,11 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
                   "password required to access the service.")
     import hashlib
 
-
     def authfunc(username, password):
         for u, p in mss_mscolab_auth.allowed_users:
             if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
                 return True
         return False
-
 
     @auth.verify_password
     def verify_pw(username, password):
@@ -203,7 +201,6 @@ def verify_user(func):
             else:
                 g.user = user
                 return func(*args, **kwargs)
-
     return wrapper
 
 
@@ -229,8 +226,8 @@ def get_auth_token():
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
-                    'token': token.decode('ascii'),
-                    'user': {'username': user.username, 'id': user.id}})
+                                  'token': token.decode('ascii'),
+                                  'user': {'username': user.username, 'id': user.id}})
             else:
                 return "False"
         else:

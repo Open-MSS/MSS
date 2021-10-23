@@ -418,7 +418,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 try:
                     lat, lon = self.canvas.waypoints_interactor.get_lat_lon(event)
                 except (ValueError, OverflowError) as ex:
-                    logging.error("%s"%ex)
+                    logging.error("%s" % ex)
                 else:
                     s = f"lat={lat:6.2f}, lon={lon:7.2f}"
                     artists = [a for a in event.inaxes._mouseover_set
