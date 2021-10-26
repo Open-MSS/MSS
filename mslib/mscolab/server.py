@@ -105,16 +105,19 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
 
 
 def send_email(to, subject, template):
-    msg = Message(
-        subject,
-        recipients=[to],
-        html=template,
-        sender=APP.config['MAIL_DEFAULT_SENDER']
-    )
-    try:
-        mail.send(msg)
-    except IOError:
-        logging.debug("Can't send email to %s" % to)
+    if APP.config['MAIL_DEFAULT_SENDER'] is not None:
+        msg = Message(
+            subject,
+            recipients=[to],
+            html=template,
+            sender=APP.config['MAIL_DEFAULT_SENDER']
+        )
+        try:
+            mail.send(msg)
+        except IOError:
+            logging.error("Can't send email to %s" % to)
+    else:
+        logging.debug("setup user verification by email")
 
 
 def generate_confirmation_token(email):
