@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.version
-    ~~~~~~~~~~~~~~~~
+    mslib.mscolab.app
+    ~~~~~~~~~~~~~~~~~
 
-    This module provides the version number
+    app module of mscolab
 
     This file is part of mss.
 
-    :copyright: Copyright 2016-2017 Reimar Bauer
     :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
@@ -24,4 +23,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-__version__ = u'6.0.0.'
+
+
+from flask_migrate import Migrate
+from mslib.mscolab.models import db
+from mslib.mscolab.server import _app as app
+
+# in memory database for testing
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
+
+migrate = Migrate(app, db, render_as_batch=True)

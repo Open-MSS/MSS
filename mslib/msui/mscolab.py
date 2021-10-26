@@ -493,9 +493,11 @@ class MSSMscolab(QtCore.QObject):
         try:
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
         except Exception as ex:
+
             logging.debug("Couldn't create a socket connection: %s" % ex)
             show_popup(self.ui, "Error", "Couldn't create a socket connection. Maybe the mscolab server is too old."
                                 "New Login required!")
+
             self.logout()
         else:
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
