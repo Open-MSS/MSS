@@ -1263,9 +1263,10 @@ class MSSMscolab(QtCore.QObject):
 
             # Show operation description
             # ToDo review closing of widget
-            self.ui.actionDescription.triggered.connect(lambda: QtWidgets.QMessageBox.information(None,
-                                                                                                  "Operation Description",
-                                                                                                  f"{self.active_operation_desc}"))
+            self.ui.actionDescription.triggered.connect(
+                lambda: QtWidgets.QMessageBox.information(None,
+                                                          "Operation Description",
+                                                          f"{self.active_operation_desc}"))
 
             # Set active operation description
             desc_count = len(str(self.active_operation_desc))
