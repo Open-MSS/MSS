@@ -241,7 +241,7 @@ class Ui_MSSMainWindow(object):
         self.connectBtn.setText(_translate("MSSMainWindow", "Connect to MSColab"))
         self.workingStatusLabel.setText(_translate("MSSMainWindow", "No operations selected"))
         self.listOperationsMSC.setToolTip(_translate("MSSMainWindow", "List of mscolab operations.\n"
-"Double-Click a operation to view its description."))
+"Double click a operation to activate and view its description."))
         self.serverOptionsCb.setToolTip(_translate("MSSMainWindow", "Fetch/Save Server options"))
         self.serverOptionsCb.setItemText(0, _translate("MSSMainWindow", "Server Options"))
         self.serverOptionsCb.setItemText(1, _translate("MSSMainWindow", "Fetch From Server"))
