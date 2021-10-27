@@ -1261,7 +1261,7 @@ class MSSMscolab(QtCore.QObject):
             self.active_operation_desc = item.active_operation_desc
             self.waypoints_model = None
 
-            # Show operation description
+            # show operation_description widget
             # ToDo review closing of widget
             self.ui.actionDescription.triggered.connect(
                 lambda: QtWidgets.QMessageBox.information(None,
