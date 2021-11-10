@@ -420,8 +420,6 @@ class MSSMscolab(QtCore.QObject):
         self.active_operation_desc = None
         # connection object to interact with sockets
         self.conn = None
-        # assign ids to view-window
-        # self.view_id = 0
         # operation window
         self.chat_window = None
         # Admin Window
@@ -438,7 +436,9 @@ class MSSMscolab(QtCore.QObject):
         self.mscolab_server_url = None
         # User email
         self.email = None
+        # Display all categories by default
         self.selected_category = "ANY"
+        # Gravatar image path
         self.gravatar = None
 
         # set data dir, uri
@@ -536,11 +536,13 @@ class MSSMscolab(QtCore.QObject):
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
-        email_in_settings = self.email in config_loader(dataset="gravatar_ids")
+        email_in_config = self.email in config_loader(dataset="gravatar_ids")
         gravatar_path = os.path.join(constants.MSS_CONFIG_PATH, 'gravatars')
         gravatar = os.path.join(gravatar_path, f"{email_hash}.png")
 
-        if refresh or email_in_settings:
+        # refresh is used to fetch new gravatar associated with the email
+        if refresh or email_in_config:
+            # create directory to store cached gravatar images
             if not os.path.exists(gravatar_path):
                 try:
                     os.makedirs(gravatar_path)
@@ -549,17 +551,17 @@ class MSSMscolab(QtCore.QObject):
                     show_popup(self.prof_diag, "Error", "Could not create gravatar folder in config folder")
                     return
 
-            if not refresh and email_in_settings and os.path.exists(gravatar):
+            # use cached image if refresh not requested
+            if not refresh and email_in_config and os.path.exists(gravatar):
                 self.set_gravatar(gravatar)
+                return
 
-            gravatar = os.path.join(gravatar_path, f"{email_hash}.jpg")
-            gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}?s=80&d=404"
+            # fetch gravatar image
+            gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}.png?s=80&d=404"
             try:
                 urllib.request.urlretrieve(gravatar_url, gravatar)
                 img = Image.open(gravatar)
-                img.save(gravatar.replace(".jpg", ".png"))
-                os.remove(gravatar)
-                gravatar = gravatar.replace(".jpg", ".png")
+                img.save(gravatar)
             except urllib.error.HTTPError:
                 if refresh:
                     show_popup(self.prof_diag, "Error", "Gravatar not found")
@@ -569,7 +571,7 @@ class MSSMscolab(QtCore.QObject):
                     show_popup(self.prof_diag, "Error", "Could not fetch Gravatar")
                 return
 
-        if refresh and not email_in_settings:
+        if refresh and not email_in_config:
             show_popup(
                 self.prof_diag,
                 "Information",
