@@ -354,6 +354,9 @@ def read_config_file(path=constants.MSS_SETTINGS):
     Args:
         path: path of config file
 
+    Returns:
+        List of keys which had invalid values, if any
+
     Note:
         sole purpose of the path argument is to be able to test with example config files
     """
@@ -377,13 +380,16 @@ def read_config_file(path=constants.MSS_SETTINGS):
             error_message = f"MSS config File '{path}' not found"
             raise FileNotFoundError(error_message)
 
+    invalid_keys = []
     global user_options
     if json_file_data:
-        user_options = merge_data(copy.deepcopy(default_options), json_file_data)
+        user_options, invalid_keys = merge_data(copy.deepcopy(default_options), json_file_data)
         logging.debug("Merged default and user settings")
     else:
         user_options = copy.deepcopy(default_options)
         logging.debug("No user settings found, using default settings")
+
+    return invalid_keys
 
 
 def config_loader(dataset=None, default=False):
@@ -473,10 +479,15 @@ def merge_data(options, json_file_data):
     options -- Dict to merge options into
     json_file_data -- Dict with new values
     """
+    # Collect keys in which invalid values were detected
+    invalid_keys = []
+
     # Check if dictionary options with fixed key/value pairs match data types from default
     for key in MissionSupportSystemDefaultConfig.fixed_dict_options:
         if key in json_file_data:
-            options[key] = compare_data(options[key], json_file_data[key])[0]
+            options[key], match = compare_data(options[key], json_file_data[key])
+            if not match:
+                invalid_keys.append(key)
 
     # Check if dictionary options with predefined structure match data types from default
     dos = copy.deepcopy(MissionSupportSystemDefaultConfig.dict_option_structure)
@@ -485,6 +496,7 @@ def merge_data(options, json_file_data):
     dos["import_plugins"]["plugin-name-a"] = dos["import_plugins"]["plugin-name"][:3]
     dos["export_plugins"]["plugin-name-a"] = dos["export_plugins"]["plugin-name"][:3]
     for key in dos:
+        matches = []
         if key in json_file_data:
             temp_data = {}
             for option_key in json_file_data[key]:
@@ -493,12 +505,16 @@ def merge_data(options, json_file_data):
                     if match:
                         temp_data[option_key] = json_file_data[key][option_key]
                         break
+                matches.append(match)
             if temp_data != {}:
                 options[key] = temp_data
+        if not all(matches):
+            invalid_keys.append(key)
 
     # Check if list options with predefined structure match data types from default
     los = copy.deepcopy(MissionSupportSystemDefaultConfig.list_option_structure)
     for key in los:
+        matches = []
         if key in json_file_data:
             temp_data = []
             for i in range(len(json_file_data[key])):
@@ -507,8 +523,11 @@ def merge_data(options, json_file_data):
                     if match:
                         temp_data.append(data)
                         break
+                matches.append(match)
             if temp_data != []:
                 options[key] = temp_data
+        if not all(matches):
+            invalid_keys.append(key)
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MissionSupportSystemDefaultConfig.key_value_options:
@@ -516,6 +535,8 @@ def merge_data(options, json_file_data):
             data, match = compare_data(options[key], json_file_data[key])
             if match:
                 options[key] = data
+            if not match:
+                invalid_keys.append(key)
 
     # add filepicker default to import and export plugins if missing
     for plugin_type in ["import_plugins", "export_plugins"]:
@@ -524,7 +545,7 @@ def merge_data(options, json_file_data):
                 if len(options[plugin_type][plugin]) == 3:
                     options[plugin_type][plugin].append(options.get("filepicker_default", "default"))
 
-    return options
+    return options, invalid_keys
 
 
 def compare_data(default, user_data):

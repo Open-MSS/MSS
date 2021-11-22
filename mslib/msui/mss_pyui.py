@@ -1051,7 +1051,7 @@ def main():
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
 
     try:
-        read_config_file()
+        invalid_keys = read_config_file()
     except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
         message = f'\n\nFix the setup of your "MSS_SETTINGS" configuration.\n{ex}'
         logging.error(message)
@@ -1080,6 +1080,13 @@ def main():
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()
+
+    if invalid_keys:
+        print(invalid_keys)
+        keys = "Invalid values were detected for the following configuration options in your mss_settings.json file.\n\n"
+        keys += "\n".join(invalid_keys)
+        QtWidgets.QMessageBox.critical(mainwindow, "Invalid keys detected in config file", f"{keys}")
+
     sys.exit(application.exec_())
 
 
