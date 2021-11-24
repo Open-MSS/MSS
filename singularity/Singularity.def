@@ -1,0 +1,51 @@
+Bootstrap: docker
+From: condaforge/mambaforge
+Stage: build
+
+%files
+script.sh /scripts
+%labels
+MAINTAINER Reimar Bauer <rb.proj@gmail.com>
+%post
+##################################################################################
+# Definition File for singualarity
+#
+# Based on mambaforge Image
+# singularity build -f mss.sif Singularity.def
+# singularity shell mss.sif 
+#
+# Singularity > mss # starts the ui
+# Singularity > mswms_demodata --seed  # creates in your $HOME a mss/ folter with testdata
+# Singularity > export PYTHONPATH=$HOME/mss; mswms # starts the development server 
+# Singularity > mscolab db --init; mscolab start # starts the mscolab server
+#
+##################################################################################
+
+
+
+# get keyboard working for mss gui
+apt-get --yes update && DEBIAN_FRONTEND=noninteractive \
+apt-get --yes install xserver-xorg-video-dummy \
+&& apt-get --yes upgrade \
+&& apt-get clean \
+&& rm -rf /var/lib/apt/lists/*
+
+# Set up conda-forge channel
+conda config --add channels conda-forge && conda config --add channels defaults &&\
+conda update -n base -c defaults conda
+
+
+# create some desktop user directories
+# if there is no data attached e.g. demodata /srv/mss is the preferred dir
+mkdir -p /root/.local/share/applications/ \
+&& mkdir -p /root/.local/share/icons/hicolor/48x48/apps/ \
+&& mkdir /srv/mss
+
+# Install Mission Support System Software
+mamba create -n mssenv mss xorg-libxcb libxcb xorg-libxrender -y
+PATH=/opt/conda/envs/mssenv/bin:$PATH
+
+
+%environment
+export PATH=/opt/conda/envs/mssenv/bin:$PATH
+export PROJ_LIB="/opt/conda/envs/mssenv/share/proj"
