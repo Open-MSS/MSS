@@ -20,12 +20,12 @@ build:
 
 requirements:
   build:
-    - python  >3.6
+    - python
     - pip
     - future
     - menuinst  # [win]
   run:
-    - python  >3.6
+    - python
     - defusedxml
     - menuinst  # [win]
     - basemap  >1.2.1
