@@ -35,8 +35,9 @@ Once the `conda-forge` channel has been enabled, `mss` can be installed with:
 
     $ conda create -n mssenv mamba
     $ conda activate mssenv
-    $ mamba install mss
-
+    (mssenv) $ mamba install mss=6.0.0 python
+    (mssenv) $ mss
+    
 It is possible to list all versions of `mss` available on your platform with:
 
 
