@@ -386,6 +386,10 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
+        self.ui.actionDescription.triggered.connect(
+            lambda: QtWidgets.QMessageBox.information(None,
+                                                      "Operation Description",
+                                                      f"{self.active_operation_desc}"))
 
         self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
         # connect slot for handling operation options combobox
@@ -1268,13 +1272,6 @@ class MSSMscolab(QtCore.QObject):
             self.active_operation_name = item.operation_path
             self.active_operation_desc = item.active_operation_desc
             self.waypoints_model = None
-
-            # show operation_description widget
-            # ToDo review closing of widget
-            self.ui.actionDescription.triggered.connect(
-                lambda: QtWidgets.QMessageBox.information(None,
-                                                          "Operation Description",
-                                                          f"{self.active_operation_desc}"))
 
             # Set active operation description
             desc_count = len(str(self.active_operation_desc))
