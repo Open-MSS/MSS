@@ -42,24 +42,21 @@ _airspaces = []
 _airports = []
 _airports_mtime = 0
 _airspaces_mtime = {}
-_airspace_url = "https://www.openaip.net/customer_export_akfshb9237tgwiuvb4tgiwbf"
-# Updated Jul 27 2021
+_airspace_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
+_airspace_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
+                         "{}_asp.xml?alt=media"
+# Updated Dec 07 2021
 _airspace_cache = \
-    [('al_asp.aip', '13K'), ('ar_asp.aip', '1.0M'), ('at_asp.aip', '169K'), ('au_asp.aip', '4.7M'),
-     ('ba_asp.aip', '80K'), ('be_asp.aip', '308K'), ('bg_asp.aip', '28K'), ('bh_asp.aip', '76K'),
-     ('br_asp.aip', '853K'), ('ca_asp.aip', '2.9M'), ('ch_asp.aip', '163K'), ('co_asp.aip', '121K'),
-     ('cz_asp.aip', '574K'), ('de_asp.aip', '843K'), ('dk_asp.aip', '120K'), ('ee_asp.aip', '66K'),
-     ('es_asp.aip', '923K'), ('fi_asp.aip', '213K'), ('fr_asp.aip', '1.4M'), ('gb_asp.aip', '1.2M'),
-     ('gr_asp.aip', '164K'), ('hr_asp.aip', '598K'), ('hu_asp.aip', '252K'), ('ie_asp.aip', '205K'),
-     ('is_asp.aip', '33K'), ('it_asp.aip', '1.9M'), ('jp_asp.aip', '1.8M'), ('la_asp.aip', '3.5M'),
-     ('lt_asp.aip', '450K'), ('lu_asp.aip', '45K'), ('lv_asp.aip', '65K'), ('na_asp.aip', '117K'),
-     ('nl_asp.aip', '352K'), ('no_asp.aip', '296K'), ('np_asp.aip', '521K'), ('nz_asp.aip', '656K'),
-     ('pl_asp.aip', '845K'), ('pt_asp.aip', '165K'), ('ro_asp.aip', '240K'), ('rs_asp.aip', '1.4M'),
-     ('se_asp.aip', '263K'), ('si_asp.aip', '80K'), ('sk_asp.aip', '296K'), ('us_asp.aip', '7.0M'),
-     ('za_asp.aip', '197K')]
+    [('al_asp.xml', '2817'), ('ar_asp.xml', '262968'), ('at_asp.xml', '20933'), ('au_asp.xml', '1686931'),
+     ('ba_asp.xml', '20865'), ('be_asp.xml', '70624'), ('bg_asp.xml', '4696'), ('bh_asp.xml', '23073'),
+     ('br_asp.xml', '250204'), ('ca_asp.xml', '1011153'), ('ch_asp.xml', '28961'), ('co_asp.xml', '38061'),
+     ('cz_asp.xml', '143524'), ('de_asp.xml', '217490'), ('dk_asp.xml', '19854'), ('ee_asp.xml', '17761'),
+     ('es_asp.xml', '255423'), ('fi_asp.xml', '25058'), ('fr_asp.xml', '319716'), ('gb_asp.xml', '1410038'),
+     ('gr_asp.xml', '55492'), ('hr_asp.xml', '135531'), ('hu_asp.xml', '52526'), ('ie_asp.xml', '61167'),
+     ('is_asp.xml', '10499'), ('it_asp.xml', '1063320'), ('jp_asp.xml', '540727')]
 
 
-def download_progress(file_path, url, progress_callback=lambda f: logging.info(f"{int(f * 100)}% Downloaded")):
+def download_progress(file_path, url, progress_callback=lambda f: logging.info(f"{int(f)}KB Downloaded")):
     """
     Downloads the file at the given url to file_path and keeps track of the progress
     """
@@ -72,11 +69,10 @@ def download_progress(file_path, url, progress_callback=lambda f: logging.info(f
                 file.write(response.content)
             else:
                 dl = 0
-                length = int(length)
                 for data in response.iter_content(chunk_size=1024 * 1024):
                     dl += len(data)
                     file.write(data)
-                    progress_callback(dl / length)
+                    progress_callback(dl / 1024)
     except requests.exceptions.RequestException:
         os.remove(file_path)
         QtWidgets.QMessageBox.information(None, "Download failed", f"{url} was unreachable, please try again later.")
@@ -121,8 +117,8 @@ def get_available_airspaces():
         directory = requests.get(_airspace_url, timeout=5)
         if directory.status_code == 404:
             return _airspace_cache
-        airspaces = regex.findall(r">(.._asp\.aip)<", directory.text)
-        sizes = regex.findall(r".._asp.aip.*?>[ ]*([0-9\.]+[KM]*)[ ]*<\/td", directory.text)
+        airspaces = regex.findall(r">(.._asp\.xml)<", directory.text)
+        sizes = regex.findall(r".._asp.xml.*?<Size>([0-9]+)<\/Size", directory.text)
         airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
         return airspaces
     except requests.exceptions.RequestException:
@@ -135,8 +131,8 @@ def update_airspace(force_download=False, countries=["de"]):
     """
     global _airspaces, _airspaces_mtime
     for country in countries:
-        location = os.path.join(MSS_CONFIG_PATH, f"{country}_asp.aip")
-        url = f"{_airspace_url}/{country}_asp.aip"
+        location = os.path.join(MSS_CONFIG_PATH, f"{country}_asp.xml")
+        url = _airspace_download_url.format(country)
         data = [airspace for airspace in get_available_airspaces() if airspace[0].startswith(country)][0]
         file_exists = os.path.exists(location)
 
@@ -145,7 +141,7 @@ def update_airspace(force_download=False, countries=["de"]):
         if (force_download or is_outdated or not file_exists) \
                 and QtWidgets.QMessageBox.question(
                     None, "Allow download",
-                    f"The selected {country} airspace needs to be downloaded ({data[-1]})"
+                    f"The selected {country} airspace needs to be downloaded ({round(int(data[-1]) / (1024**2), 3)}MB)"
                     f"\nIs now a good time?",
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
                 == QtWidgets.QMessageBox.Yes:
@@ -154,11 +150,11 @@ def update_airspace(force_download=False, countries=["de"]):
 
 def get_airspaces(countries=[]):
     """
-    Gets the .aip files in ~/.config/mss and returns all airspaces within
+    Gets the .xml files in ~/.config/mss and returns all airspaces within
     """
     global _airspaces, _airspaces_mtime
     reload = False
-    files = [f"{country}_asp.aip" for country in countries]
+    files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
     files = [file for file in files if os.path.exists(os.path.join(MSS_CONFIG_PATH, file))]
 
@@ -195,7 +191,7 @@ def get_airspaces(countries=[]):
             airspace_data.pop("bottom_unit")
 
             airspace_data["polygon"] = [(float(data.split(" ")[0]), float(data.split(" ")[-1]))
-                                        for data in airspace_data["polygon"].split(", ")]
+                                        for data in airspace_data["polygon"].split(",")]
             _airspaces.append(airspace_data)
             _airspaces_mtime[file] = os.path.getmtime(os.path.join(MSS_CONFIG_PATH, file))
     return _airspaces

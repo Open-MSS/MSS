@@ -28,7 +28,7 @@ import pycountry
 from mslib.msui.mss_qt import ui_airdata_dockwidget as ui
 from PyQt5 import QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
-from mslib.utils.airdata import _airspace_cache, update_airspace, get_airports
+from mslib.utils.airdata import get_available_airspaces, update_airspace, get_airports
 
 
 class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
@@ -41,7 +41,7 @@ class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
         code_to_name = {country.alpha_2.lower(): country.name for country in pycountry.countries}
         self.cbAirspaces.addItems([f"{code_to_name.get(airspace[0].split('_')[0], 'Unknown')} "
                                    f"{airspace[0].split('_')[0]}"
-                                   for airspace in _airspace_cache])
+                                   for airspace in get_available_airspaces()])
         self.cbAirportType.addItems(["small_airport", "medium_airport", "large_airport", "heliport", "balloonport",
                                      "seaplane_base", "closed"])
 

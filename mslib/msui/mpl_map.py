@@ -382,7 +382,7 @@ class MapCanvas(basemap.Basemap):
         if not self.airspaces:
             airspaces = copy.deepcopy(get_airspaces(countries))
             if not airspaces:
-                logging.error("Tried to draw airspaces without .aip files.")
+                logging.error("Tried to draw airspaces without asp files.")
                 return
 
             for i, airspace in enumerate(airspaces):
