@@ -44,6 +44,8 @@ class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
                                    for airspace in get_available_airspaces()])
         self.cbAirportType.addItems(["small_airport", "medium_airport", "large_airport", "heliport", "balloonport",
                                      "seaplane_base", "closed"])
+        self.cbAirportType.empty_text = "Click here to select airports..."
+        self.cbAirspaces.empty_text = "Click here to select airspaces..."
 
         self.settings_tag = "airdatadock"
         settings = load_settings_qsettings(self.settings_tag, {"draw_airports": False, "draw_airspaces": False,
@@ -56,8 +58,12 @@ class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
                                                                           self.cbAirspaces.currentData()]))
         self.btApply.clicked.connect(self.redraw_map)
 
+        self.cbAirspaces.currentTextChanged.connect(self.adjust_ui)
+        self.cbAirportType.currentTextChanged.connect(self.adjust_ui)
+
         self.cbDrawAirports.setChecked(settings["draw_airports"])
         self.cbDrawAirspaces.setChecked(settings["draw_airspaces"])
+
         for airspace in settings["airspaces"]:
             i = self.cbAirspaces.findText(airspace)
             if i != -1:
@@ -70,6 +76,20 @@ class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
         self.cbFilterAirspaces.setChecked(settings["filter_airspaces"])
         self.sbFrom.setValue(settings["filter_from"])
         self.sbTo.setValue(settings["filter_to"])
+
+    def adjust_ui(self):
+        """
+        Disables and unchecks, or vice versa, UI elements depending on the current user selection
+        """
+        airports_enabled = len(self.cbAirportType.currentData()) > 0
+        self.cbDrawAirports.setChecked(airports_enabled)
+        self.cbDrawAirports.setEnabled(airports_enabled)
+        self.btDownload.setEnabled(airports_enabled)
+
+        airspaces_enabled = len(self.cbAirspaces.currentData()) > 0
+        self.cbDrawAirspaces.setChecked(airspaces_enabled)
+        self.cbDrawAirspaces.setEnabled(airspaces_enabled)
+        self.btDownloadAsp.setEnabled(airspaces_enabled)
 
     def redraw_map(self):
         if self.view.map is not None:
