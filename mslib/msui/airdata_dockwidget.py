@@ -58,8 +58,8 @@ class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
                                                                           self.cbAirspaces.currentData()]))
         self.btApply.clicked.connect(self.redraw_map)
 
-        self.cbAirspaces.currentTextChanged.connect(self.adjust_ui)
-        self.cbAirportType.currentTextChanged.connect(self.adjust_ui)
+        self.cbAirspaces.currentTextChanged.connect(self.adjust_ui_airspaces)
+        self.cbAirportType.currentTextChanged.connect(self.adjust_ui_airports)
 
         self.cbDrawAirports.setChecked(settings["draw_airports"])
         self.cbDrawAirspaces.setChecked(settings["draw_airspaces"])
@@ -77,19 +77,23 @@ class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
         self.sbFrom.setValue(settings["filter_from"])
         self.sbTo.setValue(settings["filter_to"])
 
-    def adjust_ui(self):
+    def adjust_ui_airspaces(self):
         """
-        Disables and unchecks, or vice versa, UI elements depending on the current user selection
+        Disables and unchecks, or vice versa, airspace UI elements depending on the current user selection
+        """
+        airspaces_enabled = len(self.cbAirspaces.currentData()) > 0
+        self.cbDrawAirspaces.setChecked(airspaces_enabled)
+        self.cbDrawAirspaces.setEnabled(airspaces_enabled)
+        self.btDownloadAsp.setEnabled(airspaces_enabled)
+
+    def adjust_ui_airports(self):
+        """
+        Disables and unchecks, or vice versa, airport UI elements depending on the current user selection
         """
         airports_enabled = len(self.cbAirportType.currentData()) > 0
         self.cbDrawAirports.setChecked(airports_enabled)
         self.cbDrawAirports.setEnabled(airports_enabled)
         self.btDownload.setEnabled(airports_enabled)
-
-        airspaces_enabled = len(self.cbAirspaces.currentData()) > 0
-        self.cbDrawAirspaces.setChecked(airspaces_enabled)
-        self.cbDrawAirspaces.setEnabled(airspaces_enabled)
-        self.btDownloadAsp.setEnabled(airspaces_enabled)
 
     def redraw_map(self):
         if self.view.map is not None:

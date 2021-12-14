@@ -28,6 +28,7 @@
 
 import csv
 import defusedxml.ElementTree as etree
+import humanfriendly
 import os
 import requests
 import re as regex
@@ -93,8 +94,8 @@ def get_airports(force_download=False):
 
     if (force_download or is_outdated or not file_exists) \
             and QtWidgets.QMessageBox.question(None, "Allow download", f"You selected airports to be "
-                                               f"{'drawn' if not force_download else 'downloaded (~10MB)'}." +
-                                               ("\nThe airports file first needs to be downloaded or updated (~10MB)."
+                                               f"{'drawn' if not force_download else 'downloaded (~10 MB)'}." +
+                                               ("\nThe airports file first needs to be downloaded or updated (~10 MB)."
                                                 if not force_download else "") + "\nIs now a good time?",
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
             == QtWidgets.QMessageBox.Yes:
@@ -141,8 +142,8 @@ def update_airspace(force_download=False, countries=["de"]):
         if (force_download or is_outdated or not file_exists) \
                 and QtWidgets.QMessageBox.question(
                     None, "Allow download",
-                    f"The selected {country} airspace needs to be downloaded ({round(int(data[-1]) / (1024**2), 3)}MB)"
-                    f"\nIs now a good time?",
+                    f"The selected {country} airspace needs to be downloaded "
+                    f"({humanfriendly.format_size(int(data[-1]))})\nIs now a good time?",
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
                 == QtWidgets.QMessageBox.Yes:
             download_progress(location, url)
