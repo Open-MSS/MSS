@@ -493,11 +493,11 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
         if plugin_type == "Import":
             menu = self.menuImportFlightTrack
-            action_name = "actionImportFlightTrack" + clean_string(name) + clean_string(extension)
+            action_name = "actionImportFlightTrack" + clean_string(name)
             handler = self.handle_import_local
         elif plugin_type == "Export":
             menu = self.menuExportActiveFlightTrack
-            action_name = "actionExportFlightTrack" + clean_string(name) + clean_string(extension)
+            action_name = "actionExportFlightTrack" + clean_string(name)
             handler = self.handle_export_local
 
         if hasattr(self, action_name):
@@ -534,7 +534,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(f"ERROR: Configuration\n\n{self.import_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
-            self.import_plugins[name + extension] = imported_function
+            self.import_plugins[name] = imported_function
 
     def add_export_plugins(self, picker_default):
         plugins = config_loader(dataset="export_plugins")
@@ -562,7 +562,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(f"ERROR: Configuration\n\n{self.export_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
-            self.export_plugins[name + extension] = imported_function
+            self.export_plugins[name] = imported_function
 
     def remove_plugins(self):
         for name in self.import_plugins:

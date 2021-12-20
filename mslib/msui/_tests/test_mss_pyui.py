@@ -107,7 +107,7 @@ class Test_MSSSideViewWindow(object):
     save_csv = os.path.join(ROOT_DIR, "example.csv")
     save_ftml = os.path.join(ROOT_DIR, "example.ftml")
     save_ftml = save_ftml.replace('\\', '/')
-    save_txt = os.path.join(ROOT_DIR, "example.txt")
+    save_txt = os.path.join(ROOT_DIR, "example.Text")
     # import/export plugins
     import_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
@@ -117,6 +117,15 @@ class Test_MSSSideViewWindow(object):
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
         # "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
         # "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
+    }
+    actions = {
+        "actionImportFlightTrackFTML": "ftml",
+        "actionImportFlightTrackCSV": "csv",
+        "actionImportFlightTrackText": "txt",
+        "actionImportFlightTrackFliteStar": "fls",
+        "actionExportFlightTrackFTML": "ftml",
+        "actionExportFlightTrackCSV": "csv",
+        "actionExportFlightTrackText": "Text",
     }
 
     def setup(self):
@@ -232,7 +241,7 @@ class Test_MSSSideViewWindow(object):
             ext = open_file[1]
             for action in self.window.menuImportFlightTrack.actions():
                 objname = action.objectName()
-                if objname.endswith(ext) and objname.startswith("actionImportFlightTrack"):
+                if self.actions[objname] == ext:
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
@@ -251,7 +260,7 @@ class Test_MSSSideViewWindow(object):
             ext = fs.path.splitext(save_file[0])[-1][1:]
             for action in self.window.menuExportActiveFlightTrack.actions():
                 objname = action.objectName()
-                if objname.endswith(ext) and objname.startswith("actionExportFlightTrack"):
+                if self.actions[objname] == ext:
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
@@ -318,7 +327,7 @@ class Test_MSSSideViewWindow(object):
         self.window.active_flight_track = tmp_ft
         self.window.actionCloseSelectedFlightTrack.trigger()
         assert self.window.listFlightTracks.count() == 1
-        self.window.actionImportFlightTrackftml.trigger()
+        self.window.actionImportFlightTrackFTML.trigger()
         assert self.window.listFlightTracks.count() == 2
         assert os.path.exists(self.save_ftml)
         os.remove(self.save_ftml)
