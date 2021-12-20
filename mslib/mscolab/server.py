@@ -347,9 +347,13 @@ def message_attachment():
     if file is not None:
         with fs.open_fs('/') as home_fs:
             file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], op_id)
-            file_dir = file_dir.replace('\\', '/')
-            if not os.path.exists(file_dir):
-                os.makedirs(file_dir)
+            if '\\' not in file_dir:
+                if not home_fs.exists(file_dir):
+                    home_fs.makedirs(file_dir)
+            else:
+                file_dir = file_dir.replace('\\', '/')
+                if not os.path.exists(file_dir):
+                    os.makedirs(file_dir)
             file_name, file_ext = file.filename.rsplit('.', 1)
             file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
             file_name = secure_filename(file_name)
