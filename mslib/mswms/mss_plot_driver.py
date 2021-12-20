@@ -466,6 +466,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
+        lons = ((self.lons - left_longitude) % 360) + left_longitude
 
         for name, var in self.data_vars.items():
             if len(var.shape) == 4:
@@ -479,7 +480,7 @@ class VerticalSectionDriver(MSSPlotDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
-            data[name] = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
+            data[name] = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, lons)
             # Free memory.
             del var_data
 
@@ -772,6 +773,7 @@ class LinearSectionDriver(VerticalSectionDriver):
         lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
+        lons = ((self.lons - left_longitude) % 360) + left_longitude
         factors = []
 
         # Make sure air_pressure is the first to be evaluated if needed
@@ -795,7 +797,7 @@ class LinearSectionDriver(VerticalSectionDriver):
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
 
-            cross_section = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, self.lons)
+            cross_section = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, lons)
             # Create vertical interpolation factors and indices for subsequent variables
             # TODO: Improve performance for this interpolation in general
             if len(factors) == 0:
