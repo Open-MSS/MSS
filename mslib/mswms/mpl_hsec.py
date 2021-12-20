@@ -448,6 +448,16 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         left_longitude = min(self.bm.llcrnrlon, ulcrnrlon)
         logging.debug("shifting data grid to leftmost longitude in map %2.f..", left_longitude)
 
+        # Add a column of nans for non-global data to keep it from being
+        # interpolated over long gaps in cylindrical
+        dlon = self.lons[1] - self.lons[0]
+        # not global!
+        if abs(((180 + self.lons[-1] + dlon - self.lons[0]) % 360) - 180) > 1e-4:
+            self.lons = np.concatenate([self.lons, [self.lons[-1] + dlon]])
+            for key in self.data:
+                self.data[key] = np.hstack(
+                    [self.data[key], np.full((len(self.lats), 1), np.nan)])
+
         # Shift the longitude field such that the data is in the range
         # left_longitude .. left_longitude+360.
         self.lons = ((self.lons - left_longitude) % 360) + left_longitude
