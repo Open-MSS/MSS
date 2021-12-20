@@ -222,6 +222,7 @@ class Test_MSSSideViewWindow(object):
     @pytest.mark.parametrize(
         "open_file", [(open_ftml, "ftml"), (open_csv, "csv"), (open_txt, "txt"), (open_fls, "fls")])
     def test_plugin_import(self, open_file):
+        # ToDo add a test with same extension for namespace
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
         with mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=open_file[0]) as mockopen:
@@ -229,9 +230,9 @@ class Test_MSSSideViewWindow(object):
             assert mockopen.call_count == 0
             self.window.last_save_directory = ROOT_DIR
             ext = open_file[1]
-            full_name = f"actionImportFlightTrack{ext}"
             for action in self.window.menuImportFlightTrack.actions():
-                if action.objectName() == full_name:
+                objname = action.objectName()
+                if objname.endswith(ext) and objname.startswith("actionImportFlightTrack"):
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
@@ -240,6 +241,7 @@ class Test_MSSSideViewWindow(object):
 
     @pytest.mark.parametrize("save_file", [[save_ftml], [save_csv], [save_txt]])
     def test_plugin_export(self, save_file):
+        # ToDo add a test with same extension for namespace
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
         with mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_file[0]) as mocksave:
@@ -247,9 +249,9 @@ class Test_MSSSideViewWindow(object):
             assert mocksave.call_count == 0
             self.window.last_save_directory = ROOT_DIR
             ext = fs.path.splitext(save_file[0])[-1][1:]
-            full_name = f"actionExportFlightTrack{ext}"
             for action in self.window.menuExportActiveFlightTrack.actions():
-                if action.objectName() == full_name:
+                objname = action.objectName()
+                if objname.endswith(ext) and objname.startswith("actionExportFlightTrack"):
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
