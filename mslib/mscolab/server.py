@@ -485,7 +485,6 @@ def update_operation():
     return r
 
 
-
 @APP.route('/operation_details', methods=["GET"])
 @verify_user
 def get_operation_details():
