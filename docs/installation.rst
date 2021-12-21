@@ -178,7 +178,7 @@ You can start server and client by loading the image ::
  $ docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix openmss/mss:latest  /bin/bash
  $ /opt/conda/envs/mssenv/bin/mss &
  $ /opt/conda/envs/mssenv/bin/mswms --port 80 &
- $ /opt/conda/envs/mssenv/bin/mscolab &
+ $ /opt/conda/envs/mssenv/bin/mscolab start &
  $ curl http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1
  $ curl http://localhost:8083/status
 
@@ -189,5 +189,22 @@ The WMS server initialized by demodata, and the mscolab server and the userinter
 
 
 
+Based on Singularity
+++++++++++++++++++++
 
+You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_ by converting them to singularity
+or build from our `singularity definition <https://github.com/Open-MSS/singularity>`_
+
+Build settings are based on the stable branch. Our openmss/mss:latest has any update in the stable branch.
+
+
+You can start server and client by loading the image ::
+
+  $ host +
+  $ singularity build -f mss.sif Singularity.def
+  $ singularity shell mss.sif
+  $ Singularity > mss # starts the ui
+  $ Singularity > mswms_demodata --seed  # creates in your $HOME a mss/ folder with testdata
+  $ Singularity > export PYTHONPATH=$HOME/mss; mswms # starts the development server
+  $ Singularity > mscolab db --init; mscolab start # starts the mscolab development server
 
