@@ -386,6 +386,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
+        self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
         self.ui.actionDescription.triggered.connect(
             lambda: QtWidgets.QMessageBox.information(None,
                                                       "Operation Description",
@@ -758,6 +759,9 @@ class MSSMscolab(QtCore.QObject):
             self.error_dialog.showMessage('Your operation was created successfully')
             op_id = self.get_recent_op_id()
             self.conn.handle_new_operation(op_id)
+
+            # reset operation_description label text
+            self.ui.activeOperationDesc.setText("Select Operation to View Description.")
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
@@ -926,6 +930,36 @@ class MSSMscolab(QtCore.QObject):
                         show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
                 else:
                     show_popup(self.ui, "Error", "Entered operation name did not match!")
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def rename_operation_handler(self):
+        # only after login
+        if verify_user_token(self.mscolab_server_url, self.token):
+            entered_operation_name, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr("Rename Operation"),
+                self.ui.tr(
+                    f"You're about to rename the operation - '{self.active_operation_name}' "
+                    f"Enter new operation name: "
+                ),
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "attribute": 'path',
+                    "value": entered_operation_name
+                }
+                url = url_join(self.mscolab_server_url, 'update_operation')
+                r = requests.post(url, data=data)
+                if r.text == "True":
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Operation is renamed successfully.")
+
+                    # reset operation_description label text
+                    self.ui.activeOperationDesc.setText("Select Operation to View Description.")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
