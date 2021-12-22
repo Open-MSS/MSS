@@ -28,7 +28,6 @@
 
 import sys
 import mock
-import fs
 import os
 import pytest
 from urllib.request import urlopen
@@ -107,25 +106,16 @@ class Test_MSSSideViewWindow(object):
     save_csv = os.path.join(ROOT_DIR, "example.csv")
     save_ftml = os.path.join(ROOT_DIR, "example.ftml")
     save_ftml = save_ftml.replace('\\', '/')
-    save_txt = os.path.join(ROOT_DIR, "example.Text")
+    save_txt = os.path.join(ROOT_DIR, "example.txt")
     # import/export plugins
     import_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
-        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
+        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"],
     }
     export_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
         # "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
         # "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
-    }
-    actions = {
-        "actionImportFlightTrackFTML": "ftml",
-        "actionImportFlightTrackCSV": "csv",
-        "actionImportFlightTrackText": "txt",
-        "actionImportFlightTrackFliteStar": "fls",
-        "actionExportFlightTrackFTML": "ftml",
-        "actionExportFlightTrackCSV": "csv",
-        "actionExportFlightTrackText": "Text",
     }
 
     def setup(self):
@@ -214,7 +204,7 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
-    @pytest.mark.parametrize("save_file", [[save_ftml], [save_csv], [save_txt]])
+    @pytest.mark.parametrize("save_file", [[save_ftml]])
     def test_plugin_saveas(self, save_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
@@ -229,7 +219,8 @@ class Test_MSSSideViewWindow(object):
             os.remove(save_file[0])
 
     @pytest.mark.parametrize(
-        "open_file", [(open_ftml, "ftml"), (open_csv, "csv"), (open_txt, "txt"), (open_fls, "fls")])
+        "open_file", [(open_ftml, "actionImportFlightTrackFTML"), (open_csv, "actionImportFlightTrackCSV"),
+                      (open_txt, "actionImportFlightTrackText"), (open_fls, "actionImportFlightTrackFliteStar")])
     def test_plugin_import(self, open_file):
         # ToDo add a test with same extension for namespace
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
@@ -238,17 +229,18 @@ class Test_MSSSideViewWindow(object):
             assert self.window.listFlightTracks.count() == 1
             assert mockopen.call_count == 0
             self.window.last_save_directory = ROOT_DIR
-            ext = open_file[1]
+            obj_name = open_file[1]
             for action in self.window.menuImportFlightTrack.actions():
-                objname = action.objectName()
-                if self.actions[objname] == ext:
+                if obj_name == action.objectName():
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
             assert mockopen.call_count == 1
             assert self.window.listFlightTracks.count() == 2
 
-    @pytest.mark.parametrize("save_file", [[save_ftml], [save_csv], [save_txt]])
+    @pytest.mark.parametrize("save_file", [[save_ftml, "actionExportFlightTrackFTML"],
+                                           [save_csv, "actionExportFlightTrackCSV"],
+                                           [save_txt, "actionExportFlightTrackText"]])
     def test_plugin_export(self, save_file):
         # ToDo add a test with same extension for namespace
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
@@ -257,10 +249,9 @@ class Test_MSSSideViewWindow(object):
             assert self.window.listFlightTracks.count() == 1
             assert mocksave.call_count == 0
             self.window.last_save_directory = ROOT_DIR
-            ext = fs.path.splitext(save_file[0])[-1][1:]
+            obj_name = save_file[1]
             for action in self.window.menuExportActiveFlightTrack.actions():
-                objname = action.objectName()
-                if self.actions[objname] == ext:
+                if obj_name == action.objectName():
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
