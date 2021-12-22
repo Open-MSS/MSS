@@ -485,8 +485,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         picker_default = config_loader(dataset="filepicker_default")
         self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
         self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
-        self.import_plugins = {"csv": load_from_csv}
-        self.export_plugins = {"csv": save_to_csv}
+        self.import_plugins = {"CSV": (load_from_csv, "csv")}
+        self.export_plugins = {"CSV": (save_to_csv, "csv")}
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
 
@@ -534,7 +534,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(f"ERROR: Configuration\n\n{self.import_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
-            self.import_plugins[name] = imported_function
+            self.import_plugins[name] = (imported_function, extension)
 
     def add_export_plugins(self, picker_default):
         plugins = config_loader(dataset="export_plugins")
@@ -562,10 +562,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     self, self.tr("file io plugin error import plugins"),
                     self.tr(f"ERROR: Configuration\n\n{self.export_plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
-            self.export_plugins[name] = imported_function
+            self.export_plugins[name] = (imported_function, extension)
 
     def remove_plugins(self):
-        for name in self.import_plugins:
+        for name, _ in self.import_plugins:
             full_name = "actionImportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuImportFlightTrack.actions()
                        if _x.objectName() == full_name]
@@ -574,7 +574,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             delattr(self, full_name)
         self.import_plugins = {}
 
-        for name in self.export_plugins:
+        for name, _ in self.export_plugins:
             full_name = "actionExportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuExportActiveFlightTrack.actions()
                        if _x.objectName() == full_name]
@@ -735,13 +735,16 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         """Slot for the 'Save Active Flight Track As' menu entry.
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
-        file_type = ["Flight track (*.ftml)"] + [f"Flight track (*.{ext})" for ext in self.export_plugins.keys()]
+        file_type = ["Flight track (*.ftml)"]
         filename = get_save_filename(
             self, "Save Flight Track", default_filename, ";;".join(file_type), pickertag="filepicker_default"
         )
         logging.debug("filename : '%s'", filename)
         if filename:
+            ext = "ftml"
             self.save_flight_track(filename)
+            self.active_flight_track.filename = filename
+            self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
 
     def save_flight_track(self, file_name):
         if file_name:
@@ -752,13 +755,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while saving flight track to FTML:"),
                         self.tr(f"ERROR: {type(ex)} {ex}"))
-            else:
-                ext = fs.path.splitext(file_name)[-1]
-                file_path = fs.path.basename(file_name)
-                _function = self.export_plugins[ext[1:]]
-                _function(file_name, file_path, self.active_flight_track.waypoints)
-                self.active_flight_track.filename = file_name
-                self.active_flight_track.name = fs.path.basename(file_name.replace(f"{ext}", "").strip())
 
             for idx in range(self.listFlightTracks.count()):
                 if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
