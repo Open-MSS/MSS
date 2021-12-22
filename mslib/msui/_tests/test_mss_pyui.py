@@ -222,7 +222,6 @@ class Test_MSSSideViewWindow(object):
         "open_file", [(open_ftml, "actionImportFlightTrackFTML"), (open_csv, "actionImportFlightTrackCSV"),
                       (open_txt, "actionImportFlightTrackText"), (open_fls, "actionImportFlightTrackFliteStar")])
     def test_plugin_import(self, open_file):
-        # ToDo add a test with same extension for namespace
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
         with mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=open_file[0]) as mockopen:
@@ -242,7 +241,6 @@ class Test_MSSSideViewWindow(object):
                                            [save_csv, "actionExportFlightTrackCSV"],
                                            [save_txt, "actionExportFlightTrackText"]])
     def test_plugin_export(self, save_file):
-        # ToDo add a test with same extension for namespace
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
         with mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_file[0]) as mocksave:
