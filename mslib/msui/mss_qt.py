@@ -276,6 +276,8 @@ class CheckableComboBox(QtWidgets.QComboBox):
         # Prevent popup from closing when clicking on an item
         self.view().viewport().installEventFilter(self)
 
+        self.empty_text = ""
+
     def resizeEvent(self, event):
         # Recompute text to elide as needed
         self.updateText()
@@ -326,6 +328,9 @@ class CheckableComboBox(QtWidgets.QComboBox):
             if self.model().item(i).checkState() == QtCore.Qt.Checked:
                 texts.append(self.model().item(i).text())
         text = ", ".join(texts)
+        if len(text) == 0:
+            text = self.empty_text
+
         self.lineEdit().setText(text)
 
     def addItem(self, text, data=None):
