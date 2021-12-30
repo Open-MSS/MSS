@@ -386,6 +386,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
+        self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
         self.ui.actionDescription.triggered.connect(
             lambda: QtWidgets.QMessageBox.information(None,
                                                       "Operation Description",
@@ -930,6 +931,49 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
+    def set_operation_desc_label(self, op_desc):
+        self.active_operation_desc = op_desc
+        desc_count = len(str(self.active_operation_desc))
+        if desc_count < 95:
+            self.ui.activeOperationDesc.setText(
+                self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
+        else:
+            self.ui.activeOperationDesc.setText(
+                "Description is too long to show here, for long descriptions go "
+                "to operations menu.")
+
+    def update_description_handler(self):
+        # only after login
+        if verify_user_token(self.mscolab_server_url, self.token):
+            entered_operation_desc, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr(f"{self.active_operation_name} - Update Description"),
+                self.ui.tr(
+                    f"You're about to update the operation description "
+                    f"Enter new operation description: "
+                ),
+                text=self.active_operation_desc
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "attribute": 'description',
+                    "value": entered_operation_desc
+                }
+                url = url_join(self.mscolab_server_url, 'update_operation')
+                r = requests.post(url, data=data)
+                if r.text == "True":
+                    # Update active operation description label
+                    self.set_operation_desc_label(entered_operation_desc)
+
+                    self.reload_operation_list()
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Description is updated successfully.")
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
     def handle_work_locally_toggle(self):
         if verify_user_token(self.mscolab_server_url, self.token):
             if self.ui.workLocallyCheckbox.isChecked():
@@ -1274,13 +1318,7 @@ class MSSMscolab(QtCore.QObject):
             self.waypoints_model = None
 
             # Set active operation description
-            desc_count = len(str(self.active_operation_desc))
-            if desc_count < 95:
-                self.ui.activeOperationDesc.setText(
-                    self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
-            else:
-                self.ui.activeOperationDesc.setText("Description is too long to show here, for long descriptions go "
-                                                    "to operations menu.")
+            self.set_operation_desc_label(self.active_operation_desc)
             # set active flightpath here
             self.load_wps_from_server()
             # display working status
