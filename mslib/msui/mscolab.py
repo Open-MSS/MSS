@@ -538,6 +538,12 @@ class MSSMscolab(QtCore.QObject):
 
             # show operation_description
             self.ui.activeOperationDesc.setHidden(False)
+            # disable update operation description button
+            self.ui.actionUpdateOperationDesc.setEnabled(False)
+            # disable delete operation button
+            self.ui.actionDeleteOperation.setEnabled(False)
+            # disable category change selector
+            self.ui.filterCategoryCb.setEnabled(False)
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
@@ -949,8 +955,8 @@ class MSSMscolab(QtCore.QObject):
                 self.ui,
                 self.ui.tr(f"{self.active_operation_name} - Update Description"),
                 self.ui.tr(
-                    f"You're about to update the operation description "
-                    f"Enter new operation description: "
+                    "You're about to update the operation description"
+                    "\nEnter new operation description: "
                 ),
                 text=self.active_operation_desc
             )
@@ -1374,7 +1380,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProperties.setEnabled(False)
+        self.ui.menuProperties.setEnabled(True)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
@@ -1396,12 +1402,14 @@ class MSSMscolab(QtCore.QObject):
 
         if self.access_level in ["creator", "admin"]:
             self.ui.actionManageUsers.setEnabled(True)
+            self.ui.actionUpdateOperationDesc.setEnabled(True)
+            self.ui.filterCategoryCb.setEnabled(True)
         else:
             if self.admin_window is not None:
                 self.admin_window.close()
 
         if self.access_level in ["creator"]:
-            self.ui.menuProperties.setEnabled(True)
+            self.ui.actionDeleteOperation.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 
