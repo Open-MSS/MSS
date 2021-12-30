@@ -955,11 +955,23 @@ class MSSMscolab(QtCore.QObject):
                 url = url_join(self.mscolab_server_url, 'update_operation')
                 r = requests.post(url, data=data)
                 if r.text == "True":
+                    # Update active operation name
+                    self.active_operation_name = entered_operation_name
+
+                    # Update active operation description
+                    self.active_operation_desc.replace(str(self.active_operation_desc), entered_operation_name)
+                    desc_count = len(str(self.active_operation_desc))
+                    if desc_count < 95:
+                        self.ui.activeOperationDesc.setText(
+                            self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
+                    else:
+                        self.ui.activeOperationDesc.setText(
+                            "Description is too long to show here, for long descriptions go "
+                            "to operations menu.")
+                    self.reload_operation_list()
+                    self.reload_windows_slot()
                     self.error_dialog = QtWidgets.QErrorMessage()
                     self.error_dialog.showMessage("Operation is renamed successfully.")
-
-                    # reset operation_description label text
-                    self.ui.activeOperationDesc.setText("Select Operation to View Description.")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()

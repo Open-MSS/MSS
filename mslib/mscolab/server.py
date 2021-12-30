@@ -477,12 +477,7 @@ def update_operation():
     attribute = request.form['attribute']
     value = request.form['value']
     user = g.user
-    r = str(fm.update_operation(int(op_id), attribute, value, user))
-    if r == "True":
-        token = request.args.get('token', request.form.get('token', False))
-        json_config = {"token": token}
-        sockio.sm.update_operation_list(json_config)
-    return r
+    return str(fm.update_operation(int(op_id), attribute, value, user))
 
 
 @APP.route('/operation_details', methods=["GET"])
