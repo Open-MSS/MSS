@@ -79,6 +79,8 @@ class Test_Utils(TestCase):
     def tearDown(self):
         handle_db_reset()
 
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+                        reason="skipped because of problem with xdist using subprocess")
     @pytest.mark.skipif(os.name == "nt",
                         reason="multiprocessing needs currently start_method fork")
     def test_get_recent_oid(self):
