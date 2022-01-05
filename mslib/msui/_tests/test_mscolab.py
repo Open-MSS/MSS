@@ -334,7 +334,7 @@ class Test_Mscolab(object):
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
@@ -359,7 +359,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         assert self.window.listOperationsMSC.model().rowCount() == 1
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")
     def test_add_operation(self, mockbox):
@@ -384,7 +384,7 @@ class Test_Mscolab(object):
         self._activate_operation_at_index(1)
         assert self.window.mscolab.active_operation_name == "reproduce-test"
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
@@ -497,7 +497,7 @@ class Test_Mscolab(object):
             assert mockbox.critical.call_count == 2
             assert mockexit.call_count == 2
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_profile_dialog(self, mockbox):

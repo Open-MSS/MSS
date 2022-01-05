@@ -162,7 +162,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://.....127.0.0.1:{self.port}")
         assert mockbox.critical.call_count == 1
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_forward_backward_clicks(self, mockbox):
@@ -201,7 +201,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 0
         self.view.reset_mock()
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
@@ -220,7 +220,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 1
         self.view.reset_mock()
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap_cached(self, mockbox):
@@ -289,7 +289,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_multilayer_handling(self, mockbox):
@@ -382,7 +382,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
                                                                 QtCore.Qt.MatchFixedString)) == 0
         assert mockbox.critical.call_count == 0
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_singlelayer_handling(self, mockbox):
@@ -421,7 +421,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_multilayer_syncing(self, mockbox):
@@ -455,7 +455,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert layer_a.get_itime() == layer_a.get_itimes()[-1]
         assert mockbox.critical.call_count == 0
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.wms_control.WMSMapFetcher.moveToThread")
@@ -483,7 +483,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER").startswith('gw'),
+    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
                         reason="skipped because of problem with xdist using subprocess")
     def test_preload(self):
         assert len(wc.WMS_SERVICE_CACHE) == 0
