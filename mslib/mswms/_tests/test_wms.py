@@ -384,8 +384,8 @@ class Test_WMS(object):
         assert mslib.mswms.wms.mss_wms_settings.__file__ is not None
         assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
 
-    @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
-                        reason="skipped because of problem with xdist")
+    # @pytest.mark.skipif(os.getenv("PYTEST_XDIST_WORKER", "MAIN").startswith('gw'),
+    #                     reason="skipped because of problem with xdist")
     def test_files_changed(self):
         def do_test():
             environ = {
