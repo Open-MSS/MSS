@@ -251,6 +251,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.openTool(WMS + 1)
 
     def update_predefined_maps(self, extra=None):
+        current_map_key = self.cbChangeMapSection.currentText()
         self.cbChangeMapSection.clear()
         predefined_map_sections = config_loader(
             dataset="predefined_map_sections")
@@ -258,6 +259,9 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         if extra is not None and len(extra) > 0:
             self.cbChangeMapSection.insertSeparator(self.cbChangeMapSection.count())
             self.cbChangeMapSection.addItems(sorted(extra))
+        # set initial map key again
+        if current_map_key in predefined_map_sections.keys():
+            self.cbChangeMapSection.setCurrentText(current_map_key)
 
     def openTool(self, index):
         """
