@@ -903,6 +903,7 @@ class MSSMscolab(QtCore.QObject):
                     try:
                         res = requests.post(url, data=data)
                         res.raise_for_status()
+                        self.reload_operations()
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
                         show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")

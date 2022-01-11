@@ -698,17 +698,23 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.mscolab.switch_to_local()
         # self.setWindowModality(QtCore.Qt.NonModal)
         self.active_flight_track = item.flighttrack_model
-        for i in range(self.listViews.count()):
-            view_item = self.listViews.item(i)
-            view_item.window.setFlightTrackModel(self.active_flight_track)
-            # local we have always all options enabled
-            view_item.window.enable_navbar_action_buttons()
+        self.update_active_flight_track()
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
         self.menu_handler()
+
+    def update_active_flight_track(self, old_flight_track_name=None):
+        for i in range(self.listViews.count()):
+            view_item = self.listViews.item(i)
+            view_item.window.setFlightTrackModel(self.active_flight_track)
+            # local we have always all options enabled
+            view_item.window.enable_navbar_action_buttons()
+            if old_flight_track_name is not None:
+                view_item.window.setWindowTitle(view_item.window.windowTitle().replace(old_flight_track_name,
+                                                self.active_flight_track.name))
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -747,8 +753,9 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
 
     def save_flight_track(self, file_name):
+        ext = ".ftml"
         if file_name:
-            if file_name.endswith('.ftml'):
+            if file_name.endswith(ext):
                 try:
                     self.active_flight_track.save_to_ftml(file_name)
                 except (OSError, IOError) as ex:
@@ -758,7 +765,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
             for idx in range(self.listFlightTracks.count()):
                 if self.listFlightTracks.item(idx).flighttrack_model == self.active_flight_track:
+                    old_filght_track_name = self.listFlightTracks.item(idx).text()
                     self.listFlightTracks.item(idx).setText(self.active_flight_track.name)
+
+            self.update_active_flight_track(old_filght_track_name)
 
     def close_selected_flight_track(self):
         """Slot to close the currently selected flight track. Flight tracks can
