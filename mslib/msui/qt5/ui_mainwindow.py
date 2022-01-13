@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -177,8 +177,8 @@ class Ui_MSSMainWindow(object):
         self.actionSearch.setObjectName("actionSearch")
         self.actionDescription = QtWidgets.QAction(MSSMainWindow)
         self.actionDescription.setObjectName("actionDescription")
-        self.actionRenameOperation = QtWidgets.QAction(MSSMainWindow)
-        self.actionRenameOperation.setObjectName("actionRenameOperation")
+        self.actionUpdateOperationDesc = QtWidgets.QAction(MSSMainWindow)
+        self.actionUpdateOperationDesc.setObjectName("actionUpdateOperationDesc")
         self.menuNew.addAction(self.actionNewFlightTrack)
         self.menuNew.addAction(self.actionAddOperation)
         self.menuFile.addAction(self.menuNew.menuAction())
@@ -206,7 +206,7 @@ class Ui_MSSMainWindow(object):
         self.menuViews.addAction(self.actionLinearView)
         self.menuProperties.addAction(self.actionDeleteOperation)
         self.menuProperties.addAction(self.actionDescription)
-        self.menuProperties.addAction(self.actionRenameOperation)
+        self.menuProperties.addAction(self.actionUpdateOperationDesc)
         self.menuOperation.addAction(self.actionChat)
         self.menuOperation.addAction(self.actionVersionHistory)
         self.menuOperation.addAction(self.actionManageUsers)
@@ -299,7 +299,5 @@ class Ui_MSSMainWindow(object):
         self.actionSearch.setText(_translate("MSSMainWindow", "Search"))
         self.actionSearch.setToolTip(_translate("MSSMainWindow", "Search for interactive text in the UI"))
         self.actionSearch.setShortcut(_translate("MSSMainWindow", "Ctrl+F"))
-        self.actionDescription.setText(_translate("MSSMainWindow", "Description"))
-        self.actionRenameOperation.setText(_translate("MSSMainWindow", "Rename Operation"))
-
-
+        self.actionDescription.setText(_translate("MSSMainWindow", "View Description"))
+        self.actionUpdateOperationDesc.setText(_translate("MSSMainWindow", "Update Description"))
