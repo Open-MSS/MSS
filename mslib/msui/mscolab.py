@@ -387,6 +387,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
         self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
+        self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
         self.ui.actionDescription.triggered.connect(
             lambda: QtWidgets.QMessageBox.information(None,
                                                       "Operation Description",
@@ -566,7 +567,7 @@ class MSSMscolab(QtCore.QObject):
 
             # use cached image if refresh not requested
             if not refresh and email_in_config and \
-                config_fs.exists(fs.path.join("gravatars", f"{email_hash}.png")):
+                    config_fs.exists(fs.path.join("gravatars", f"{email_hash}.png")):
                 self.set_gravatar(gravatar_img_path)
                 return
 
@@ -591,7 +592,7 @@ class MSSMscolab(QtCore.QObject):
                 "Information",
                 "Please add your email to the gravatar_ids section in your "
                 "mss_settings.json to automatically fetch your gravatar",
-                icon=1,)
+                icon=1, )
 
         self.set_gravatar(gravatar_img_path)
 
@@ -634,7 +635,7 @@ class MSSMscolab(QtCore.QObject):
                         "Information",
                         "Please remove your email from gravatar_ids section in your "
                         "mss_settings.json to not fetch gravatar automatically",
-                        icon=1,)
+                        icon=1, )
 
         self.set_gravatar()
 
@@ -976,6 +977,43 @@ class MSSMscolab(QtCore.QObject):
                     self.reload_operation_list()
                     self.error_dialog = QtWidgets.QErrorMessage()
                     self.error_dialog.showMessage("Description is updated successfully.")
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def rename_operation_handler(self):
+        # only after login
+        if verify_user_token(self.mscolab_server_url, self.token):
+            entered_operation_name, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr("Rename Operation"),
+                self.ui.tr(
+                    f"You're about to rename the operation - '{self.active_operation_name}' "
+                    f"Enter new operation name: "
+                ),
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "attribute": 'path',
+                    "value": entered_operation_name
+                }
+                url = url_join(self.mscolab_server_url, 'update_operation')
+                r = requests.post(url, data=data)
+                if r.text == "True":
+                    # Update active operation name
+                    self.active_operation_name = entered_operation_name
+
+                    # Update active operation description
+                    self.set_operation_desc_label(self.active_operation_desc)
+                    self.reload_operation_list()
+                    self.reload_windows_slot()
+                    # Update other user's operation list
+                    self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
+
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Operation is renamed successfully.")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1593,7 +1631,7 @@ class MSSMscolab(QtCore.QObject):
         config_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
         if config_fs.exists("gravatars") and self.gravatar is not None:
             if self.email not in config_loader(dataset="gravatar_ids") and \
-                fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
+                    fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
                 fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
         # clear gravatar image path
         self.gravatar = None
