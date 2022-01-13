@@ -179,8 +179,6 @@ class Ui_MSSMainWindow(object):
         self.actionDescription.setObjectName("actionDescription")
         self.actionRenameOperation = QtWidgets.QAction(MSSMainWindow)
         self.actionRenameOperation.setObjectName("actionRenameOperation")
-        self.actionUpdateDescription = QtWidgets.QAction(MSSMainWindow)
-        self.actionUpdateDescription.setObjectName("actionUpdateDescription")
         self.menuNew.addAction(self.actionNewFlightTrack)
         self.menuNew.addAction(self.actionAddOperation)
         self.menuFile.addAction(self.menuNew.menuAction())
@@ -208,7 +206,6 @@ class Ui_MSSMainWindow(object):
         self.menuViews.addAction(self.actionLinearView)
         self.menuProperties.addAction(self.actionDeleteOperation)
         self.menuProperties.addAction(self.actionDescription)
-        self.menuProperties.addAction(self.actionUpdateDescription)
         self.menuProperties.addAction(self.actionRenameOperation)
         self.menuOperation.addAction(self.actionChat)
         self.menuOperation.addAction(self.actionVersionHistory)
@@ -302,6 +299,7 @@ class Ui_MSSMainWindow(object):
         self.actionSearch.setText(_translate("MSSMainWindow", "Search"))
         self.actionSearch.setToolTip(_translate("MSSMainWindow", "Search for interactive text in the UI"))
         self.actionSearch.setShortcut(_translate("MSSMainWindow", "Ctrl+F"))
-        self.actionDescription.setText(_translate("MSSMainWindow", "View Description"))
+        self.actionDescription.setText(_translate("MSSMainWindow", "Description"))
         self.actionRenameOperation.setText(_translate("MSSMainWindow", "Rename Operation"))
-        self.actionUpdateDescription.setText(_translate("MSSMainWindow", "Update Description"))
+
+
