@@ -189,8 +189,8 @@ def get_airspaces(countries=[]):
                     "country": elem.find("COUNTRY").text
                 }
             except TypeError as ex:
-                logging.debug("Problem %s in airspaces file %s" % (ex, fpath))
-                logging.info("A few data of %s is ignored because of an incompatible format." % fpath)
+                logging.debug("Problem %s in airspaces file %s", (ex, fpath))
+                logging.info("A few data of %s is ignored because of an incompatible format.",  fpath)
                 continue
 
             # Convert to kilometers
