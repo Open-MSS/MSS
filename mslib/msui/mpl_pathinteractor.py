@@ -866,10 +866,12 @@ class LPathInteractor(PathInteractor):
             wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
             wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
             number_of_intermediate_points, connection="greatcircle")
+        alts = np.linspace(wpm.waypoint_data(best_index - 1).flightlevel,
+                           wpm.waypoint_data(best_index).flightlevel, number_of_intermediate_points)
 
         best_index1 = np.argmin(abs(vert_xs - x))
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
-        return (lats[best_index1], lons[best_index1]), best_index
+        return (lats[best_index1], lons[best_index1], alts[best_index1]), best_index
 
     def qt_data_changed_listener(self, index1, index2):
         """Listens to dataChanged() signals emitted by the flight track

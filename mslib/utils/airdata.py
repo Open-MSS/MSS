@@ -171,18 +171,25 @@ def get_airspaces(countries=[]):
     _airspaces_mtime = {}
     _airspaces = []
     for file in files:
-        airspace = etree.parse(os.path.join(MSS_CONFIG_PATH, file))
+        fpath = os.path.join(MSS_CONFIG_PATH, file)
+        airspace = etree.parse(fpath)
         airspace = airspace.find("AIRSPACES")
         for elem in airspace:
-            airspace_data = {
-                "name": elem.find("NAME").text,
-                "polygon": elem.find("GEOMETRY").find("POLYGON").text,
-                "top": float(elem.find("ALTLIMIT_TOP").find("ALT").text),
-                "top_unit": elem.find("ALTLIMIT_TOP").find("ALT").get("UNIT"),
-                "bottom": float(elem.find("ALTLIMIT_BOTTOM").find("ALT").text),
-                "bottom_unit": elem.find("ALTLIMIT_BOTTOM").find("ALT").get("UNIT"),
-                "country": elem.find("COUNTRY").text
-            }
+            try:
+                airspace_data = {
+                    "name": elem.find("NAME").text,
+                    "polygon": elem.find("GEOMETRY").find("POLYGON").text,
+                    "top": float(elem.find("ALTLIMIT_TOP").find("ALT").text),
+                    "top_unit": elem.find("ALTLIMIT_TOP").find("ALT").get("UNIT"),
+                    "bottom": float(elem.find("ALTLIMIT_BOTTOM").find("ALT").text),
+                    "bottom_unit": elem.find("ALTLIMIT_BOTTOM").find("ALT").get("UNIT"),
+                    "country": elem.find("COUNTRY").text
+                }
+            except TypeError as ex:
+                logging.debug("Problem %s in airspaces file %s", (ex, fpath))
+                logging.info("A few data of %s is ignored because of an incompatible format.", fpath)
+                continue
+
             # Convert to kilometers
             airspace_data["top"] /= 3281 if airspace_data["top_unit"] == "F" else 32.81
             airspace_data["bottom"] /= 3281 if airspace_data["bottom_unit"] == "F" else 32.81

@@ -589,6 +589,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             if json_data[key] == default_options[key] or json_data[key] == {} or json_data[key] == []:
                 del save_data[key]
 
+        filename = filename.replace('\\', '/')
         dir_name, file_name = fs.path.split(filename)
         with fs.open_fs(dir_name) as _fs:
             _fs.writetext(file_name, json.dumps(save_data, indent=4))
