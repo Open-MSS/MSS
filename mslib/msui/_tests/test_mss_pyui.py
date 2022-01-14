@@ -28,7 +28,6 @@
 
 import sys
 import mock
-import fs
 import os
 import pytest
 from urllib.request import urlopen
@@ -111,7 +110,7 @@ class Test_MSSSideViewWindow(object):
     # import/export plugins
     import_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
-        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
+        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"],
     }
     export_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
@@ -205,7 +204,7 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 0
 
-    @pytest.mark.parametrize("save_file", [[save_ftml], [save_csv], [save_txt]])
+    @pytest.mark.parametrize("save_file", [[save_ftml]])
     def test_plugin_saveas(self, save_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
@@ -220,7 +219,8 @@ class Test_MSSSideViewWindow(object):
             os.remove(save_file[0])
 
     @pytest.mark.parametrize(
-        "open_file", [(open_ftml, "ftml"), (open_csv, "csv"), (open_txt, "txt"), (open_fls, "fls")])
+        "open_file", [(open_ftml, "actionImportFlightTrackFTML"), (open_csv, "actionImportFlightTrackCSV"),
+                      (open_txt, "actionImportFlightTrackText"), (open_fls, "actionImportFlightTrackFliteStar")])
     def test_plugin_import(self, open_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
@@ -228,17 +228,18 @@ class Test_MSSSideViewWindow(object):
             assert self.window.listFlightTracks.count() == 1
             assert mockopen.call_count == 0
             self.window.last_save_directory = ROOT_DIR
-            ext = open_file[1]
-            full_name = f"actionImportFlightTrack{ext}"
+            obj_name = open_file[1]
             for action in self.window.menuImportFlightTrack.actions():
-                if action.objectName() == full_name:
+                if obj_name == action.objectName():
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
             assert mockopen.call_count == 1
             assert self.window.listFlightTracks.count() == 2
 
-    @pytest.mark.parametrize("save_file", [[save_ftml], [save_csv], [save_txt]])
+    @pytest.mark.parametrize("save_file", [[save_ftml, "actionExportFlightTrackFTML"],
+                                           [save_csv, "actionExportFlightTrackCSV"],
+                                           [save_txt, "actionExportFlightTrackText"]])
     def test_plugin_export(self, save_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
@@ -246,10 +247,9 @@ class Test_MSSSideViewWindow(object):
             assert self.window.listFlightTracks.count() == 1
             assert mocksave.call_count == 0
             self.window.last_save_directory = ROOT_DIR
-            ext = fs.path.splitext(save_file[0])[-1][1:]
-            full_name = f"actionExportFlightTrack{ext}"
+            obj_name = save_file[1]
             for action in self.window.menuExportActiveFlightTrack.actions():
-                if action.objectName() == full_name:
+                if obj_name == action.objectName():
                     action.trigger()
                     break
             QtWidgets.QApplication.processEvents()
@@ -316,7 +316,7 @@ class Test_MSSSideViewWindow(object):
         self.window.active_flight_track = tmp_ft
         self.window.actionCloseSelectedFlightTrack.trigger()
         assert self.window.listFlightTracks.count() == 1
-        self.window.actionImportFlightTrackftml.trigger()
+        self.window.actionImportFlightTrackFTML.trigger()
         assert self.window.listFlightTracks.count() == 2
         assert os.path.exists(self.save_ftml)
         os.remove(self.save_ftml)
