@@ -31,6 +31,7 @@ import time
 import datetime
 import secrets
 import fs
+import os
 import socketio
 import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer
@@ -346,15 +347,21 @@ def message_attachment():
     if file is not None:
         with fs.open_fs('/') as home_fs:
             file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], op_id)
-            if not home_fs.exists(file_dir):
-                home_fs.makedirs(file_dir)
+            if '\\' not in file_dir:
+                if not home_fs.exists(file_dir):
+                    home_fs.makedirs(file_dir)
+            else:
+                file_dir = file_dir.replace('\\', '/')
+                if not os.path.exists(file_dir):
+                    os.makedirs(file_dir)
             file_name, file_ext = file.filename.rsplit('.', 1)
             file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
             file_name = secure_filename(file_name)
             file_path = fs.path.join(file_dir, file_name)
             file.save(file_path)
             static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
-            static_file_path = fs.path.join(static_dir, op_id, file_name)
+            static_dir = static_dir.replace('\\', '/')
+            static_file_path = os.path.join(static_dir, op_id, file_name)
         new_message = cm.add_message(user, static_file_path, op_id, message_type)
         new_message_dict = get_message_dict(new_message)
         sockio.emit('chat-message-client', json.dumps(new_message_dict))
