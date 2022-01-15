@@ -267,7 +267,7 @@ class Test_Mscolab(object):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
-        self.window.actionExportFlightTrackftml.trigger()
+        self.window.actionExportFlightTrackFTML.trigger()
         QtWidgets.QApplication.processEvents()
         exported_waypoints = WaypointsTableModel(filename=fs.path.join(self.window.mscolab.data_dir,
                                                                        'test_export.ftml'))

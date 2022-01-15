@@ -29,8 +29,8 @@ jobs:
         && source /opt/conda/bin/activate mssenv \
         && conda config --add channels conda-forge \
         && conda install --revision 0 \
-        && conda install mamba \
-        && mamba install pyvirtualdisplay \
+        && conda install mamba python \
+        && mamba install pyvirtualdisplay python \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 

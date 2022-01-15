@@ -386,6 +386,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
+        self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
         self.ui.actionDescription.triggered.connect(
             lambda: QtWidgets.QMessageBox.information(None,
                                                       "Operation Description",
@@ -537,6 +538,12 @@ class MSSMscolab(QtCore.QObject):
 
             # show operation_description
             self.ui.activeOperationDesc.setHidden(False)
+            # disable update operation description button
+            self.ui.actionUpdateOperationDesc.setEnabled(False)
+            # disable delete operation button
+            self.ui.actionDeleteOperation.setEnabled(False)
+            # disable category change selector
+            self.ui.filterCategoryCb.setEnabled(False)
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
@@ -685,9 +692,11 @@ class MSSMscolab(QtCore.QObject):
                     self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
             def browse():
-                file_type = ["Flight track (*.ftml)"] + [
-                    f"Flight track (*.{ext})" for ext in self.ui.import_plugins.keys()
-                ]
+                type = self.add_proj_dialog.cb_ImportType.currentText()
+                file_type = ["Flight track (*.ftml)"]
+                if type != 'FTML':
+                    file_type = [f"Flight track (*.{self.ui.import_plugins[type][1]})"]
+
                 file_path = get_open_filename(
                     self.ui, "Open Flighttrack file", "", ';;'.join(file_type))
                 if file_path is not None:
@@ -696,8 +705,7 @@ class MSSMscolab(QtCore.QObject):
                         with open_fs(fs.path.dirname(file_path)) as file_dir:
                             file_content = file_dir.readtext(file_name)
                     else:
-                        ext = fs.path.splitext(file_path)[-1][1:]
-                        function = self.ui.import_plugins[ext]
+                        function = self.ui.import_plugins[type][0]
                         ft_name, waypoints = function(file_path)
                         model = ft.WaypointsTableModel(waypoints=waypoints)
                         xml_doc = model.get_xml_doc()
@@ -716,6 +724,11 @@ class MSSMscolab(QtCore.QObject):
             self.add_proj_dialog.category.textChanged.connect(check_and_enable_operation_accept)
             self.add_proj_dialog.browse.clicked.connect(browse)
             self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
+
+            # sets types from defined import menu
+            import_menu = self.ui.menuImportFlightTrack
+            for im_action in import_menu.actions():
+                self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
             self.proj_diag.show()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -921,11 +934,55 @@ class MSSMscolab(QtCore.QObject):
                     try:
                         res = requests.post(url, data=data)
                         res.raise_for_status()
+                        self.reload_operations()
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
                         show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
                 else:
                     show_popup(self.ui, "Error", "Entered operation name did not match!")
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def set_operation_desc_label(self, op_desc):
+        self.active_operation_desc = op_desc
+        desc_count = len(str(self.active_operation_desc))
+        if desc_count < 95:
+            self.ui.activeOperationDesc.setText(
+                self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
+        else:
+            self.ui.activeOperationDesc.setText(
+                "Description is too long to show here, for long descriptions go "
+                "to operations menu.")
+
+    def update_description_handler(self):
+        # only after login
+        if verify_user_token(self.mscolab_server_url, self.token):
+            entered_operation_desc, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr(f"{self.active_operation_name} - Update Description"),
+                self.ui.tr(
+                    "You're about to update the operation description"
+                    "\nEnter new operation description: "
+                ),
+                text=self.active_operation_desc
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "attribute": 'description',
+                    "value": entered_operation_desc
+                }
+                url = url_join(self.mscolab_server_url, 'update_operation')
+                r = requests.post(url, data=data)
+                if r.text == "True":
+                    # Update active operation description label
+                    self.set_operation_desc_label(entered_operation_desc)
+
+                    self.reload_operation_list()
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Description is updated successfully.")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1274,13 +1331,7 @@ class MSSMscolab(QtCore.QObject):
             self.waypoints_model = None
 
             # Set active operation description
-            desc_count = len(str(self.active_operation_desc))
-            if desc_count < 95:
-                self.ui.activeOperationDesc.setText(
-                    self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
-            else:
-                self.ui.activeOperationDesc.setText("Description is too long to show here, for long descriptions go "
-                                                    "to operations menu.")
+            self.set_operation_desc_label(self.active_operation_desc)
             # set active flightpath here
             self.load_wps_from_server()
             # display working status
@@ -1336,7 +1387,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProperties.setEnabled(False)
+        self.ui.menuProperties.setEnabled(True)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
@@ -1358,12 +1409,14 @@ class MSSMscolab(QtCore.QObject):
 
         if self.access_level in ["creator", "admin"]:
             self.ui.actionManageUsers.setEnabled(True)
+            self.ui.actionUpdateOperationDesc.setEnabled(True)
+            self.ui.filterCategoryCb.setEnabled(True)
         else:
             if self.admin_window is not None:
                 self.admin_window.close()
 
         if self.access_level in ["creator"]:
-            self.ui.menuProperties.setEnabled(True)
+            self.ui.actionDeleteOperation.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 
