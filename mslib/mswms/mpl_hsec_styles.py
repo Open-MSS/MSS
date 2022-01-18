@@ -1144,13 +1144,13 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
 
         if self.style == "PRES":
             titlestring = "Dynamical Tropopause Pressure (hPa) at " \
-                          f"{int(self.level):.1f} PVU"
+                          f"{float(self.level):.1f} PVU"
         elif self.style == "PT":
             titlestring = "Dynamical Tropopause Potential Temperature (K) at " \
-                          f"{int(self.level):.1f} PVU"
+                          f"{float(self.level):.1f} PVU"
         elif self.style == "GEOP":
             titlestring = "Dynamical Tropopause Geopotential Height (m) at " \
-                          f"{int(self.level):.1f} PVU"
+                          f"{float(self.level):.1f} PVU"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
         if self.uses_inittime_dimension():
             time_step = self.valid_time - self.init_time
