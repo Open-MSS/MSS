@@ -276,6 +276,27 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
+    def new_user_login_handler(self, emailid, password, auth):
+        data = {
+            "email": emailid,
+            "password": password
+        }
+        s = requests.Session()
+        s.auth = (auth[0], auth[1])
+        s.headers.update({'x-test': 'true'})
+        url = f'{self.mscolab_server_url}/token'
+        try:
+            r = s.post(url, data=data)
+        except requests.exceptions.ConnectionError as ex:
+            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
+            self.set_status(
+                "Error",
+                "Failed to establish a new connection" f' to "{self.mscolab_server_url}". Try in a moment again.',
+            )
+            self.disconnect_handler()
+            return
+        self.mscolab.after_login(emailid, self.mscolab_server_url, r)
+
     def login_server_auth(self):
         data, r, url, auth = self.login_data
         emailid = data['email']
@@ -327,7 +348,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.stackedWidget.setCurrentWidget(self.loginPage)
         elif r.status_code == 201:
             self.set_status("Success", 'You are registered')
-            self.stackedWidget.setCurrentWidget(self.loginPage)
+            self.new_user_login_handler(emailid, password, auth)
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
