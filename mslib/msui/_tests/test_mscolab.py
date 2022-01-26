@@ -114,7 +114,6 @@ class Test_Mscolab_connect_window():
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         # assert self.window.stackedWidget.currentWidget() == self.window.newuserPage
-        self._login("something@something.org", "something")
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
 
@@ -339,7 +338,6 @@ class Test_Mscolab(object):
     def test_browse_add_operation(self, mockopen, mockmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
-        self._login("something@something.org", "something")
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self.window.actionAddOperation.trigger()
         QtWidgets.QApplication.processEvents()
@@ -361,7 +359,6 @@ class Test_Mscolab(object):
     def test_add_operation(self, mockbox):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
-        self._login("something@something.org", "something")
         assert self.window.usernameLabel.text() == 'something'
         assert self.window.connectBtn.isVisible() is False
         self._create_operation("Alpha", "Description Alpha")
@@ -386,7 +383,6 @@ class Test_Mscolab(object):
         # pytest.skip('needs a review for the delete button pressed. Seems to delete a None operation')
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
-        self._login("berta@something.org", "something")
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -407,7 +403,6 @@ class Test_Mscolab(object):
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
-        self._login("anton@something.org", "something")
         assert self.window.usernameLabel.text() == 'anton'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -421,7 +416,6 @@ class Test_Mscolab(object):
     def test_get_recent_operation(self):
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
-        self._login("berta@something.org", "something")
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -434,7 +428,6 @@ class Test_Mscolab(object):
     def test_delete_operation_from_list(self):
         self._connect_to_mscolab()
         self._create_user("other", "other@something.org", "something")
-        self._login("other@something.org", "something")
         assert self.window.usernameLabel.text() == 'other'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -448,7 +441,6 @@ class Test_Mscolab(object):
     def test_user_delete(self, mockmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
-        self._login("something@something.org", "something")
         u_id = self.window.mscolab.user['id']
         self.window.mscolab.open_profile_window()
         QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
@@ -495,7 +487,6 @@ class Test_Mscolab(object):
     def test_profile_dialog(self, mockbox):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
-        self._login("something@something.org", "something")
         self.window.mscolab.profile_action.trigger()
         QtWidgets.QApplication.processEvents()
         # case: default gravatar is set and no messagebox is called
