@@ -78,6 +78,7 @@ requirements:
     - gpxpy >=1.4.2
     - metpy
     - pycountry
+    - websocket-client
 
 test:
   imports:

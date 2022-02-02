@@ -468,7 +468,11 @@ class MessageItem(QtWidgets.QWidget):
     def setup_image_message_box(self):
         MAX_WIDTH = MAX_HEIGHT = 300
         self.messageBox = QtWidgets.QLabel()
-        img_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
+        if '\\' in self.attachment_path:
+            img_url = url_join(self.chat_window.mscolab_server_url,
+                               self.attachment_path.replace('\\', '/').split('colabdata')[1])
+        else:
+            img_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
         data = requests.get(img_url).content
         image = QtGui.QImage()
         image.loadFromData(data)
