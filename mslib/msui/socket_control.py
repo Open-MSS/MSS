@@ -55,7 +55,9 @@ class ConnectionManager(QtCore.QObject):
         if token is not None:
             logging.getLogger("engineio.client").addFilter(filter=lambda record: token not in record.getMessage())
         self.sio = socketio.Client(reconnection_attempts=5)
-        self.sio.connect(self.mscolab_server_url)
+        # Forcing polling transport disables trying to use websocket
+        self.sio.connect(self.mscolab_server_url, transports='polling')
+        logging.debug("Transport Layer: %s" % self.sio.transport())
 
         self.sio.on('file-changed', handler=self.handle_file_change)
         # on chat message recive
