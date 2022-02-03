@@ -407,7 +407,7 @@ def modify_config_file(data, path=constants.MSS_SETTINGS):
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
                 modified_data = merge_data(data, json_file_data)
                 logging.debug("Merged default and user settings")
-                _fs.writetext(file_name, json.dumps(modified_data, indent=4)) 
+                _fs.writetext(file_name, json.dumps(modified_data, indent=4))
             except json.JSONDecodeError as e:
                 logging.error(f"Error while loading json file {e}")
                 error_message = f"Unexpected error while loading config\n{e}"
