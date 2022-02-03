@@ -26,7 +26,7 @@
     limitations under the License.
 """
 
-import numpy
+import numpy as np
 
 from mslib.utils.units import units, check_units
 
@@ -49,8 +49,27 @@ def rel_hum(p, t, q):
 
     Returns: Relative humidity in [%].
     """
-    return mpcalc.relative_humidity_from_specific_humidity(
-        units.Pa * p, units.K * t, q).to("dimensionless").m * 100
+    # calculate relative humidity and dew point
+    # (https://www.ecmwf.int/sites/default/files/elibrary/2016/17117-part-iv-physical-processes.pdf#subsection.7.4.2)
+
+    p, t, q = [np.asarray(_x) for _x in (p, t, q)]
+    e = q * p / (0.621981) / (1. + q * (0.621981 - 1))
+
+    # saturation pressure magnus formular
+    # over water
+    es_w = 611.21 * np.exp(17.502 * (t - 273.16) / (t - 32.19))
+    es_i = 611.21 * np.exp(22.587 * (t - 273.16) / (t + 0.7))
+
+    t_sel = (t > 250.16) & (t < 273.16)
+    alpha = np.zeros_like(t)
+    # alpha[t <= 250.16] = 0.
+    alpha[t >= 273.16] = 1.
+    alpha[t_sel] = ((t[t_sel] - 250.16) / (273.16 - 250.16)) ** 2
+
+    es = alpha * es_w + (1. - alpha) * es_i
+    rh = e / es * 100.
+
+    return rh
 
 
 def pot_temp(p, t):
@@ -61,7 +80,7 @@ def pot_temp(p, t):
     p -- pressure in [Pa]
     t -- temperature in [K]
 
-    p and t can be scalars of NumPy arrays. They just have to either both
+    p and t can be scalars of np arrays. They just have to either both
     scalars, or both arrays.
 
     Returns: potential temperature in [K].
@@ -80,7 +99,7 @@ def eqpt_approx(p, t, q):
     t -- temperature in [K]
     q -- specific humidity in [kg/kg]
 
-    p, t and q can be scalars or NumPy arrays.
+    p, t and q can be scalars or np arrays.
 
     Returns: equivalent potential temperature in [K].
     """
@@ -99,7 +118,7 @@ def omega_to_w(omega, p, t):
     p -- pressure in [Pa]
     t -- temperature in [K]
 
-    All inputs can be scalars or NumPy arrays.
+    All inputs can be scalars or np arrays.
 
     Returns the vertical velocity in geometric coordinates, [m/s].
     """
@@ -154,7 +173,7 @@ def flightlevel2pressure(height):
         height = [height.magnitude] * height.units
 
     # Initialize the return array.
-    p = numpy.full_like(height, numpy.nan) * units.Pa
+    p = np.full_like(height, np.nan) * units.Pa
 
     for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
                                                                    _STANDARD_ATMOSPHERE[1:])):
@@ -164,9 +183,9 @@ def flightlevel2pressure(height):
         if gamma != 0:
             p[indices] = p0 * ((t0 - gamma * (height[indices] - z0)) / t0) ** (g / (gamma * Rd))
         else:
-            p[indices] = p0 * numpy.exp(-g * (height[indices] - z0) / (Rd * t0))
+            p[indices] = p0 * np.exp(-g * (height[indices] - z0) / (Rd * t0))
 
-    if numpy.isnan(p).any():
+    if np.isnan(p).any():
         raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 71km")
 
@@ -206,7 +225,7 @@ def pressure2flightlevel(pressure):
         pressure = [pressure.magnitude] * pressure.units
 
     # Initialize the return array.
-    z = numpy.full_like(pressure, numpy.nan) * units.hft
+    z = np.full_like(pressure, np.nan) * units.hft
 
     for i, ((z0, t0, p0, gamma), (z1, t1, p1, _)) in enumerate(zip(_STANDARD_ATMOSPHERE[:-1],
                                                                    _STANDARD_ATMOSPHERE[1:])):
@@ -215,11 +234,11 @@ def pressure2flightlevel(pressure):
         if i == 0:
             indices |= (pressure >= p0)
         if gamma != 0:
-            z[indices] = z0 + 1. / gamma * (t0 - t0 * numpy.exp(gamma * Rd / g * numpy.log(pressure[indices] / p0)))
+            z[indices] = z0 + 1. / gamma * (t0 - t0 * np.exp(gamma * Rd / g * np.log(pressure[indices] / p0)))
         else:
-            z[indices] = z0 - (Rd * t0) / g * numpy.log(pressure[indices] / p0)
+            z[indices] = z0 - (Rd * t0) / g * np.log(pressure[indices] / p0)
 
-    if numpy.isnan(z).any():
+    if np.isnan(z).any():
         raise ValueError("flight level to pressure conversion not "
                          "implemented for z > 71km")
 

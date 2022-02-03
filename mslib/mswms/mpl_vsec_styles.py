@@ -85,12 +85,12 @@ class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 330, 4),
                           colors='orange', linestyles='solid', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, 10), colors='grey',
                            linestyles='dashed', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -154,7 +154,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
                 plt.setp(cs_pv.collections,
                          path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
-                cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%i')
+                cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%.0f')
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # Pressure decreases with index, i.e. orography is stored at the
@@ -349,19 +349,19 @@ class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t,
                           np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
                            np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -433,13 +433,13 @@ class VS_CloudsWindStyle_01(AbstractVerticalSectionStyle):
         cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_v,
                           wind_contours, colors='red', linestyles='solid',
                           linewidths=2)  # gist_earth
-        ax.clabel(cs_t, fontsize=12, fmt='%i')
+        ax.clabel(cs_t, fontsize=12, fmt='%.0f')
 
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
                            np.arange(200, 700, delta_pt), colors='0.40',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=12, fmt='%i')
+        ax.clabel(cs_pt, fontsize=12, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -513,7 +513,7 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         cs_rh1 = ax.contour(self.horizontal_coordinate,
                             curtain_p, curtain_rh, thin_contours,
                             colors="grey", linestyles="solid", linewidths=0.5)  # gist_earth
-        ax.clabel(cs_rh1, fontsize=8, fmt='%i')
+        ax.clabel(cs_rh1, fontsize=8, fmt='%.0f')
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             ax.contour(self.horizontal_coordinate,
@@ -523,19 +523,19 @@ class VS_RelativeHumdityStyle_01(AbstractVerticalSectionStyle):
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='orange',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -628,14 +628,14 @@ class VS_SpecificHumdityStyle_01(AbstractVerticalSectionStyle):
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
 
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
@@ -710,20 +710,20 @@ class VS_VerticalVelocityStyle_01(AbstractVerticalSectionStyle):
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='green', linestyles='solid', linewidths=1)
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, [234],
                           colors='green', linestyles='solid', linewidths=2)
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='green', linestyles='dashed', linewidths=1)
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
                            np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -789,28 +789,28 @@ class VS_HorizontalVelocityStyle_01(AbstractVerticalSectionStyle):
         cs_v1 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_v, np.arange(5, 90, 5),
                            colors="orange", linestyles="solid", linewidths=1)
-        ax.clabel(cs_v1, fontsize=8, fmt='%i')
+        ax.clabel(cs_v1, fontsize=8, fmt='%.0f')
         cs_v2 = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_v, np.arange(95, 150, 5),
                            colors="black", linestyles="solid", linewidths=0.5)
-        ax.clabel(cs_v2, fontsize=8, fmt='%i')
+        ax.clabel(cs_v2, fontsize=8, fmt='%.0f')
         # Contour line plot of temperature.
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='green', linestyles='solid', linewidths=1)
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='green', linestyles='solid', linewidths=2)
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='green', linestyles='dashed', linewidths=1)
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
                            np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -1014,11 +1014,11 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # cs_v1 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(5, 90, 5),
         #                     colors="green", linestyles="solid", linewidths=2)
-        # ax.clabel(cs_v1, fontsize=8, fmt='%i')
+        # ax.clabel(cs_v1, fontsize=8, fmt='%.0f')
         # cs_v2 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(95, 150, 5),
         #                     colors="black", linestyles="solid", linewidths=0.5)
-        # ax.clabel(cs_v2, fontsize=8, fmt='%i')
+        # ax.clabel(cs_v2, fontsize=8, fmt='%.0f')
 
         # [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0]
 
@@ -1036,21 +1036,21 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
         # cs_t = ax.contour(self.horizontal_coordinate,
         #                   curtain_p, curtain_t, np.arange(236, 330, delta_t),
         #                   colors='green', linestyles='solid', linewidths=1)
-        # ax.clabel(cs_t, fontsize=8, fmt='%i')
+        # ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # cs_t = ax.contour(self.horizontal_coordinate,
         #                   curtain_p, curtain_t, [234],
         #                   colors='green', linestyles='solid', linewidths=2)
-        # ax.clabel(cs_t, fontsize=8, fmt='%i')
+        # ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # cs_t = ax.contour(self.horizontal_coordinate,
         #                   curtain_p, curtain_t, np.arange(160, 232, delta_t),
         #                   colors='green', linestyles='dashed', linewidths=1)
-        # ax.clabel(cs_t, fontsize=8, fmt='%i')
+        # ax.clabel(cs_t, fontsize=8, fmt='%.0f')
 
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='black',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -1118,11 +1118,11 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         # cs_v1 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(5, 90, 5),
         #                     colors="green", linestyles="solid", linewidths=2)
-        # ax.clabel(cs_v1, fontsize=8, fmt='%i')
+        # ax.clabel(cs_v1, fontsize=8, fmt='%.0f')
         # cs_v2 = ax.contour(self.horizontal_coordinate,
         #                     curtain_p, curtain_v, np.arange(95, 150, 5),
         #                     colors="black", linestyles="solid", linewidths=0.5)
-        # ax.clabel(cs_v2, fontsize=8, fmt='%i')
+        # ax.clabel(cs_v2, fontsize=8, fmt='%.0f')
 
         # [0.01, 0.03, 0.05, 0.07, 0.1, 0.3, 0.5, 0.7, 1.0]
 
@@ -1140,7 +1140,7 @@ class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
         cs_pt = ax.contour(self.horizontal_coordinate,
                            curtain_p, curtain_pt, np.arange(200, 700, delta_pt), colors='black',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -1249,24 +1249,24 @@ class VS_EMACEyja_Style_01(AbstractVerticalSectionStyle):
                          norm=matplotlib.colors.LogNorm(vmin=1., vmax=100.))
         # csl = ax.contour(self.horizontal_coordinate,
         #                 curtain_p, curtain_cc, np.arange(1, 101, 1), colors="k", linewidths=1)
-        # ax.clabel(csl, fontsize=8, fmt='%i')
+        # ax.clabel(csl, fontsize=8, fmt='%.0f')
         # Contour line plot of temperature.
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(236, 330, delta_t),
                           colors='red', linestyles='solid', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate, curtain_p, curtain_t, [234],
                           colors='red', linestyles='solid', linewidths=2)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         cs_t = ax.contour(self.horizontal_coordinate,
                           curtain_p, curtain_t, np.arange(160, 232, delta_t),
                           colors='red', linestyles='dashed', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%i')
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
         # Contour line plot of potential temperature.
         cs_pt = ax.contour(self.horizontal_coordinate, curtain_p, curtain_pt,
                            np.arange(200, 700, delta_pt), colors='grey',
                            linestyles='solid', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%i')
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
