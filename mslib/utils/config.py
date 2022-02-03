@@ -386,6 +386,41 @@ def read_config_file(path=constants.MSS_SETTINGS):
         logging.debug("No user settings found, using default settings")
 
 
+def modify_config_file(data, path=constants.MSS_SETTINGS):
+    """
+    modifies a config file
+
+    Args:
+        data: data to be modified/written
+        path: path of config file
+
+    Note:
+        sole purpose of the path argument is to be able to test with example config files
+    """
+    path = path.replace("\\", "/")
+    dir_name, file_name = fs.path.split(path)
+    json_file_data = {}
+    with fs.open_fs(dir_name) as _fs:
+        if _fs.exists(file_name):
+            file_content = _fs.readtext(file_name)
+            try:
+                json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
+                modified_data = merge_data(data, json_file_data)
+                logging.debug("Merged default and user settings")
+                _fs.writetext(file_name, json.dumps(modified_data, indent=4)) 
+            except json.JSONDecodeError as e:
+                logging.error(f"Error while loading json file {e}")
+                error_message = f"Unexpected error while loading config\n{e}"
+                raise FatalUserError(error_message)
+            except ValueError as e:
+                logging.error(f"Error while loading json file {e}")
+                error_message = f"Invalid keys detected in config\n{e}"
+                raise FatalUserError(error_message)
+        else:
+            error_message = f"MSS config File '{path}' not found"
+            raise FileNotFoundError(error_message)
+
+
 def config_loader(dataset=None, default=False):
     """
     Function for returning config value

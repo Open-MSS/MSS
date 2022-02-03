@@ -57,7 +57,7 @@ from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
-from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -239,7 +239,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             if key not in constants.MSC_LOGIN_CACHE:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
-
         # get mscolab /token http auth credentials from cache
         emailid = self.loginEmailLe.text()
         password = self.loginPasswordLe.text()
@@ -276,7 +275,12 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
-    def new_user_login_handler(self, emailid, password, auth):
+    def new_user_login_handler(self, emailid, password):
+        for key, value in config_loader(dataset="MSC_login").items():
+            if key not in constants.MSC_LOGIN_CACHE:
+                constants.MSC_LOGIN_CACHE[key] = value
+        auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
+
         data = {
             "email": emailid,
             "password": password
@@ -348,7 +352,12 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.stackedWidget.setCurrentWidget(self.loginPage)
         elif r.status_code == 201:
             self.set_status("Success", 'You are registered')
-            self.new_user_login_handler(emailid, password, auth)
+            data_to_save_in_config_file = {
+                "MSCOLAB_mailid": emailid,
+                "MSCOLAB_password": password
+            }
+            modify_config_file(data_to_save_in_config_file)
+            self.new_user_login_handler(emailid, password)
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
