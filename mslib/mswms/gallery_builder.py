@@ -398,12 +398,12 @@ def image_md(image_location, caption="", link=None, tooltip=""):
                 </div>"""
 
 
-def write_doc_index():
+def write_doc_index(path):
     """
     Write index containing all code examples for the sphinx docs
     """
-    with open(os.path.join(DOCS_LOCATION, "code", "index.rst"), "w+") as rst:
-        files = "\n".join(sorted(["   " + f[:-4] for f in os.listdir(os.path.join(DOCS_LOCATION, "code"))
+    with open(os.path.join(path, "code", "index.rst"), "w+") as rst:
+        files = "\n".join(sorted(["   " + f[:-4] for f in os.listdir(os.path.join(path, "code"))
                                   if "index" not in f and ".rst" in f]))
         rst.write(f"""
 Code Examples
@@ -415,7 +415,7 @@ Code Examples
 """)
 
 
-def write_code_pages(sphinx=False, url_prefix=None):
+def write_code_pages(path, sphinx=False, url_prefix=None):
     """
     Writes the .html, .rst or .md files containing the code examples for the plots
     """
@@ -424,18 +424,17 @@ def write_code_pages(sphinx=False, url_prefix=None):
         code_path = f"code/{layer}.html" if sphinx \
             else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{layer}.md"
         if not sphinx:
-            with open(os.path.join(STATIC_LOCATION, "code", code_path.split('/')[-1]), "w+") as f:
+            with open(os.path.join(path, "code", code_path.split('/')[-1]), "w+") as f:
                 f.write(plot_htmls[layer])
         else:
-            with open(os.path.join(DOCS_LOCATION, "code", code_path.split('/')[-1].replace("html", "rst")), "w+") as f:
+            with open(os.path.join(path, "code", code_path.split('/')[-1].replace("html", "rst")), "w+") as f:
                 f.write(f""".. raw:: html\n\n{plot_htmls[layer]}""")
 
 
-def write_html(sphinx=False):
+def write_html(path, sphinx=False):
     """
     Writes the plots.html file containing the gallery
     """
-    location = DOCS_LOCATION if sphinx else STATIC_LOCATION
     html = begin
     if sphinx:
         html = html.replace("<h3>Plot Gallery</h3>", "")
@@ -448,9 +447,9 @@ def write_html(sphinx=False):
         html += "\n".join(plots[l_type])
         html += "</div>"
 
-    with open(os.path.join(location, "plots.html"), "w+") as file:
+    with open(os.path.join(path, "plots.html"), "w+") as file:
         file.write(html + end)
-        logging.info(f"plots.html created at {os.path.join(location, 'plots.html')}")
+        logging.info(f"plots.html created at {os.path.join(path, 'plots.html')}")
 
 
 def import_instructions(plot_object, l_type, layer, native_import=None, dataset=""):
@@ -560,18 +559,18 @@ def source_and_import(plot_object, l_type, layer, dataset=""):
     return source, import_text, import_text_native
 
 
-def get_plot_details(plot_object, l_type="top", sphinx=False, image_path="", code_path="", dataset=""):
+def get_plot_details(path, plot_object, l_type="top", sphinx=False, image_path="", code_path="", dataset=""):
     """
     Returns the .rst or .md file contents containing the plot examples
     """
     layer = "horizontal" if l_type == "Top" else "vertical" if l_type == "Side" else "linear"
-    location = DOCS_LOCATION if sphinx else STATIC_LOCATION
 
-    if not os.path.exists(os.path.join(location, "code")):
-        os.mkdir(os.path.join(location, "code"))
+    if not os.path.exists(os.path.join(path, "code")):
+        os.mkdir(os.path.join(path, "code"))
 
     if sphinx:
-        return get_plot_details_sphinx(plot_object, l_type, layer, dataset, image_path.split("-")[-1].split(".png")[0])
+        return get_plot_details_sphinx(
+            path, plot_object, l_type, layer, dataset, image_path.split("-")[-1].split(".png")[0])
 
     text = ""
     text += f"![]({image_path})\n\n"
@@ -596,12 +595,12 @@ def get_plot_details(plot_object, l_type="top", sphinx=False, image_path="", cod
     return text
 
 
-def get_plot_details_sphinx(plot_object, l_type, layer, dataset="", image_details=None):
+def get_plot_details_sphinx(path, plot_object, l_type, layer, dataset="", image_details=None):
     """
     Write .py example files and returns the .rst file content for the sphinx docs
     """
-    if not os.path.exists(os.path.join(DOCS_LOCATION, "code", "downloads")):
-        os.mkdir(os.path.join(DOCS_LOCATION, "code", "downloads"))
+    if not os.path.exists(os.path.join(path, "code", "downloads")):
+        os.mkdir(os.path.join(path, "code", "downloads"))
 
     text = ""
     source, instructions, instructions_native = source_and_import(plot_object, l_type, layer, dataset)
@@ -644,7 +643,7 @@ Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field 
 
    </details>
 """
-        with open(os.path.join(DOCS_LOCATION, "code", "downloads",
+        with open(os.path.join(path, "code", "downloads",
                                f"{l_type}_{dataset}{plot_object.name}.py"), "w+") as py:
             py.write(source)
     return text
@@ -666,8 +665,8 @@ def create_linear_plot(xml, file_location):
     plt.close(fig)
 
 
-def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="", dataset=None, level=None, itime=None,
-              vtime=None, simple_naming=False):
+def add_image(path, plot, plot_object, generate_code=False, sphinx=False, url_prefix="",
+              dataset=None, level=None, itime=None, vtime=None, simple_naming=False):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
@@ -675,8 +674,8 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
     # Import here due to some circular import issue if imported too soon
     from mslib.index import SCRIPT_NAME
 
-    if not os.path.exists(STATIC_LOCATION) and not sphinx:
-        os.mkdir(STATIC_LOCATION)
+    if not os.path.exists(path) and not sphinx:
+        os.mkdir(path)
 
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \
         "Side" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
@@ -686,14 +685,13 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
         if not simple_naming else "")
 
     if plot:
-        location = DOCS_LOCATION if sphinx else STATIC_LOCATION
-        if not os.path.exists(os.path.join(location, "plots")):
-            os.mkdir(os.path.join(location, "plots"))
+        if not os.path.exists(os.path.join(path, "plots")):
+            os.mkdir(os.path.join(path, "plots"))
         if l_type == "Linear":
-            create_linear_plot(etree.fromstring(plot), os.path.join(location, "plots", filename + ".png"))
+            create_linear_plot(etree.fromstring(plot), os.path.join(path, "plots", filename + ".png"))
         else:
             with Image.open(io.BytesIO(plot)) as image:
-                image.save(os.path.join(location, "plots", filename + ".png"),
+                image.save(os.path.join(path, "plots", filename + ".png"),
                            format="PNG")
 
     end = end.replace("files = [", f"files = [\"{filename}.png\",")\
@@ -706,7 +704,7 @@ def add_image(plot, plot_object, generate_code=False, sphinx=False, url_prefix="
     if generate_code:
         if f"{l_type}_{dataset}{plot_object.name}" not in plot_htmls:
             plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = \
-                plot_html_begin + get_plot_details(plot_object, l_type, sphinx, img_path, code_path, dataset)
+                plot_html_begin + get_plot_details(path, plot_object, l_type, sphinx, img_path, code_path, dataset)
         markdown = plot_htmls[f"{l_type}_{dataset}{plot_object.name}"]
         if level:
             markdown = add_levels([level], None, markdown)
