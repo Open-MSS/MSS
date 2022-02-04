@@ -270,7 +270,10 @@ function changeImages(from_filter=false){
         return;
     }
 
-    var value = document.getElementById("level-select").value;
+    var value = document.getElementById("level-select").value
+                .replace(" ", "")
+                .replaceAll(" ", "_")
+                .replaceAll("-", "_");
     value = value != "" ? value : "None";
     var vtime = document.getElementById("time-select").value
                 .replaceAll(" ", "_").replaceAll(":", "_").replaceAll("-", "_");
@@ -285,7 +288,7 @@ function changeImages(from_filter=false){
     images = document.getElementsByName("gallery-image");
     for(var i = 0; i < images.length; i++){
         var image = images[i];
-        var tmpLevel = value.replaceAll(" ", "");
+        var tmpLevel = value;
         var new_location = image.src.replace(image.src.split("-").pop(), `${tmpLevel}it${itime}vt${vtime}.png`);
         var parentNode = hrefs.length == images.length ? image.parentNode.parentNode : image.parentNode;
 
