@@ -47,18 +47,20 @@ standard_library.install_aliases()
 
 import os
 import io
+import inspect
 import logging
+import shutil
 import traceback
 import urllib.parse
-import inspect
+
 from xml.etree import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
-import shutil
-
+import numpy as np
 from flask import request, make_response, render_template
 from flask_httpauth import HTTPBasicAuth
+
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils.time import parse_iso_datetime
@@ -321,8 +323,9 @@ class WMSServer(object):
                                                                         lsec_path=[[0, 0, 20000], [1, 1, 20000]],
                                                                         lsec_numpoints=201,
                                                                         lsec_path_connection="linear")
-                                        path = [[min(plot_driver.lat_data), min(plot_driver.lon_data), 20000],
-                                                [max(plot_driver.lat_data), max(plot_driver.lon_data), 20000]]
+                                        lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
+                                        path = [[min(plot_driver.lat_data), min(lon_data), 20000],
+                                                [max(plot_driver.lat_data), max(lon_data), 20000]]
                                         plot_driver.update_plot_parameters(lsec_path=path)
 
                                     elif driver == self.vsec_drivers and not exists:
@@ -330,8 +333,9 @@ class WMSServer(object):
                                                                         vsec_numpoints=201, figsize=[800, 600],
                                                                         vsec_path_connection="linear", style=style,
                                                                         noframe=False, bbox=[101, 1050, 10, 180])
-                                        path = [[min(plot_driver.lat_data), min(plot_driver.lon_data)],
-                                                [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
+                                        lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
+                                        path = [[min(plot_driver.lat_data), min(lon_data)],
+                                                [max(plot_driver.lat_data), max(lon_data)]]
                                         plot_driver.update_plot_parameters(vsec_path=path)
 
                                     elif driver == self.hsec_drivers:
@@ -342,8 +346,9 @@ class WMSServer(object):
                                                                         crs="EPSG:4326", style=style,
                                                                         bbox=[-15, 35, 30, 65],
                                                                         level=elevation)
-                                        bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
-                                                max(plot_driver.lon_data), max(plot_driver.lat_data)]
+                                        lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
+                                        bbox = [min(lon_data), min(plot_driver.lat_data),
+                                                max(lon_data), max(plot_driver.lat_data)]
                                         vert_units = plot_driver.vert_units
                                         plot_driver.update_plot_parameters(bbox=bbox)
 
