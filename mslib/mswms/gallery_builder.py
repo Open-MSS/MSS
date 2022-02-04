@@ -712,7 +712,7 @@ def add_image(path, plot, plot_object, generate_code=False, sphinx=False, url_pr
             markdown = add_times(itime, [vtime], markdown)
         plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = markdown
 
-    id = img_path.split(f"-{level}")[0]
+    id = img_path.split("-" + f"{level}".replace(" ", "_").replace(":", "_").replace("-", "_"))[0]
     if not any([id in html for html in plots[l_type]]):
         plots[l_type].append(image_md(
             img_path, plot_object.name, code_path if generate_code else None,
