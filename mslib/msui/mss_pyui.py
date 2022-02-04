@@ -565,7 +565,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.export_plugins[name] = (imported_function, extension)
 
     def remove_plugins(self):
-        for name, _ in self.import_plugins:
+        for name, _ in self.import_plugins.items():
             full_name = "actionImportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuImportFlightTrack.actions()
                        if _x.objectName() == full_name]
@@ -574,7 +574,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             delattr(self, full_name)
         self.import_plugins = {}
 
-        for name, _ in self.export_plugins:
+        for name, _ in self.export_plugins.items():
             full_name = "actionExportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuExportActiveFlightTrack.actions()
                        if _x.objectName() == full_name]
@@ -874,10 +874,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.listViews.item(0).window.handle_force_close()
         self.listViews.clear()
         self.remove_plugins()
-        self.add_plugins()
         if self.mscolab.token is not None:
             self.mscolab.logout()
         read_config_file()
+        self.add_plugins()
 
     def open_config_editor(self):
         """
