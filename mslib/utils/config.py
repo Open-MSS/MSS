@@ -405,7 +405,10 @@ def modify_config_file(data, path=constants.MSS_SETTINGS):
             file_content = _fs.readtext(file_name)
             try:
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
-                modified_data = merge_data(data, json_file_data)
+                json_file_data_copy = copy.deepcopy(json_file_data)
+                for key in json_file_data:
+                    del json_file_data_copy[key]
+                modified_data = merge_data(data, json_file_data_copy)
                 logging.debug("Merged default and user settings")
                 _fs.writetext(file_name, json.dumps(modified_data, indent=4))
             except json.JSONDecodeError as e:
