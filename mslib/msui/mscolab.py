@@ -352,11 +352,17 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.stackedWidget.setCurrentWidget(self.loginPage)
         elif r.status_code == 201:
             self.set_status("Success", 'You are registered')
-            data_to_save_in_config_file = {
-                "MSCOLAB_mailid": emailid,
-                "MSCOLAB_password": password
-            }
-            modify_config_file(data_to_save_in_config_file)
+            if config_loader(dataset="MSCOLAB_mailid") != "" and config_loader(dataset="MSCOLAB_password") != "":
+                ret = QtWidgets.QMessageBox.question(
+                    self, self.tr("Update Credentials"),
+                    self.tr("You are using new credentials. Should your settings file be updated with the new credentials?"),
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+                if ret == QtWidgets.QMessageBox.Yes:
+                    data_to_save_in_config_file = {
+                        "MSCOLAB_mailid": emailid,
+                        "MSCOLAB_password": password
+                    }
+                    modify_config_file(data_to_save_in_config_file)
             self.new_user_login_handler(emailid, password)
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
