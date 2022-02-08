@@ -406,8 +406,9 @@ def modify_config_file(data, path=constants.MSS_SETTINGS):
             try:
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
                 json_file_data_copy = copy.deepcopy(json_file_data)
-                for key in json_file_data:
-                    del json_file_data_copy[key]
+                for key in data:
+                    if key in json_file_data:
+                        del json_file_data_copy[key]
                 modified_data = merge_data(data, json_file_data_copy)
                 logging.debug("Merged default and user settings")
                 _fs.writetext(file_name, json.dumps(modified_data, indent=4))
