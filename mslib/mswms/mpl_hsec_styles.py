@@ -131,7 +131,7 @@ class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, data['air_pressure_at_sea_level'],
                         np.arange(950, 1050, 4), colors="burlywood", linewidths=2)
-        ax.clabel(cs, fontsize=8, fmt='%i')
+        ax.clabel(cs, fontsize=8, fmt='%.0f')
 
         titlestring = "Total cloud cover (high, medium, low) (0-1)"
         if self.style == "LOW":
@@ -266,11 +266,11 @@ class HS_SEAStyle_01(MPLBasemapHorizontalSectionStyle):
                    linewidths=3, linestyles="solid")
         cs2 = bm.contour(self.lonmesh, self.latmesh, sea,
                          thin_contours, colors="white", linewidths=1)
-        cs2.clabel(cs2.levels, fontsize=14, fmt='%i')
+        cs2.clabel(cs2.levels, fontsize=14, fmt='%.0f')
         cs3 = bm.contour(self.lonmesh, self.latmesh, sea,
                          neg_thin_contours, colors="saddlebrown",
                          linewidths=1, linestyles="solid")
-        cs3.clabel(fontsize=14, fmt='%i')
+        cs3.clabel(fontsize=14, fmt='%.0f')
 
         # Plot title.
         titlestring = "Solar Elevation Angle "
@@ -375,7 +375,7 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
                         [0], colors="red", linewidths=4)
         cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thick_contours, colors="saddlebrown", linewidths=2)
-        ax.clabel(cs, fontsize=14, fmt='%i')
+        ax.clabel(cs, fontsize=14, fmt='%.0f')
         cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thin_contours, colors="saddlebrown", linewidths=1)
 
@@ -417,7 +417,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
             cs_pv = ax.contour(self.lonmesh, self.latmesh, self.data[cont_data], cont_levels,
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
-            cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
+            cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%.0f')
             if pe:
                 plt.setp(cs_pv.collections, path_effects=[
                     patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
@@ -550,7 +550,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thick_contours, colors="saddlebrown",
                         linewidths=2, linestyles="solid")
-        ax.clabel(cs, colors="black", fontsize=14, fmt='%i')
+        ax.clabel(cs, colors="black", fontsize=14, fmt='%.0f')
         cs = bm.contour(self.lonmesh, self.latmesh, tempC,
                         thin_contours, colors="white",
                         linewidths=1, linestyles="solid")
@@ -564,11 +564,11 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, fontsize=10, fmt='%i')
+        ax.clabel(cs, lablevels, fontsize=10, fmt='%.0f')
 
         titlestring = "Temperature (degC) and Geopotential Height (m) at " \
             f"{self.level:.0f} hPa"
-        titlestring += '\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
+        titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
         if self.uses_inittime_dimension():
             time_step = self.valid_time - self.init_time
             time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
@@ -656,7 +656,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, fontsize=14, fmt='%i')
+        ax.clabel(cs, lablevels, fontsize=14, fmt='%.0f')
 
         # Plot title.
         titlestring = "Geopotential Height (m) and Horizontal Wind (m/s) " \
@@ -718,7 +718,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         cs = bm.contour(self.lonmesh, self.latmesh, rh,
                         thin_contours, colors="grey",
                         linewidths=0.5, linestyles="solid")
-        ax.clabel(cs, colors="grey", fontsize=10, fmt='%i')
+        ax.clabel(cs, colors="grey", fontsize=10, fmt='%.0f')
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             cs = bm.contour(self.lonmesh, self.latmesh, rh,
@@ -734,7 +734,7 @@ class HS_RelativeHumidityStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, fontsize=10, fmt='%i')
+        ax.clabel(cs, lablevels, fontsize=10, fmt='%.0f')
 
         titlestring = "Relative Humditiy (%%) and Geopotential Height (m) at " \
             f"{self.level:.0f} hPa"
@@ -800,7 +800,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, colors="grey", fontsize=10, fmt='%i')
+        ax.clabel(cs, lablevels, colors="grey", fontsize=10, fmt='%.0f')
         # cs = bm.contour(self.lonmesh, self.latmesh, eqpt,
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
@@ -814,7 +814,7 @@ class HS_EQPTStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, fontsize=10, fmt='%i')
+        ax.clabel(cs, lablevels, fontsize=10, fmt='%.0f')
 
         titlestring = "Equivalent Potential Temperature (degC) and Geopotential Height (m) at " \
                       f"{self.level:.0f} hPa"
@@ -878,7 +878,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         cs = bm.contour(self.lonmesh, self.latmesh, w,
                         [-2], colors="blue",
                         linewidths=0.5, linestyles="solid")
-        # ax.clabel(cs, thin_contours[::2], colors="grey", fontsize=10, fmt='%i')
+        # ax.clabel(cs, thin_contours[::2], colors="grey", fontsize=10, fmt='%.0f')
         # cs = bm.contour(self.lonmesh, self.latmesh, w,
         #                np.arange(100, 170, 15), colors="yellow", linewidths=1)
 
@@ -892,7 +892,7 @@ class HS_WStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, fontsize=10, fmt='%i')
+        ax.clabel(cs, lablevels, fontsize=10, fmt='%.0f')
 
         titlestring = "Vertical Velocity (cm/s) and Geopotential Height (m) at " \
                       f"{self.level:.0f} hPa"
@@ -954,7 +954,7 @@ class HS_DivStyle_PL_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, fontsize=10, fmt='%i')
+        ax.clabel(cs, lablevels, fontsize=10, fmt='%.0f')
 
         titlestring = "Divergence (positive: red, negative: blue) and Geopotential Height (m) at " \
             f"{self.level:.0f} hPa"
@@ -1002,7 +1002,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         ac = bm.contour(self.lonmesh, self.latmesh, tracer,
                         np.arange(1, 101, 1)[::2],
                         colors="b", linewidths=1)
-        ax.clabel(ac, fontsize=10, fmt='%i')
+        ax.clabel(ac, fontsize=10, fmt='%.0f')
 
         self.add_colorbar(tc, "Tracer (relative)")
 
@@ -1140,17 +1140,17 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, colors="red", fontsize=11, fmt='%i')
+        ax.clabel(cs, lablevels, colors="red", fontsize=11, fmt='%.0f')
 
         if self.style == "PRES":
             titlestring = "Dynamical Tropopause Pressure (hPa) at " \
-                          f"{int(self.level):.1f} PVU"
+                          f"{float(self.level):.1f} PVU"
         elif self.style == "PT":
             titlestring = "Dynamical Tropopause Potential Temperature (K) at " \
-                          f"{int(self.level):.1f} PVU"
+                          f"{float(self.level):.1f} PVU"
         elif self.style == "GEOP":
             titlestring = "Dynamical Tropopause Geopotential Height (m) at " \
-                          f"{int(self.level):.1f} PVU"
+                          f"{float(self.level):.1f} PVU"
         titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
         if self.uses_inittime_dimension():
             time_step = self.valid_time - self.init_time
@@ -1234,7 +1234,7 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
             lablevels = cs.levels[::2]
         else:
             lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, colors="red", fontsize=11, fmt='%i')
+        ax.clabel(cs, lablevels, colors="red", fontsize=11, fmt='%.0f')
 
 
 class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
@@ -1270,7 +1270,7 @@ class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
         # Contour plot of mean sea level pressure.
         cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thick_contours, colors="darkblue", linewidths=2)
-        ax.clabel(cs, fontsize=12, fmt='%i')
+        ax.clabel(cs, fontsize=12, fmt='%.0f')
         cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thin_contours, colors="darkblue", linewidths=1)
 
@@ -1325,7 +1325,7 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         # Contour plot of num(INSITU).
         # cs = bm.contour(self.lonmesh, self.latmesh, ninsitu,
         #                thick_contours, colors="darkred", linewidths=2)
-        # ax.clabel(cs, fontsize=12, fmt='%i')
+        # ax.clabel(cs, fontsize=12, fmt='%.0f')
         cs = bm.contour(self.lonmesh, self.latmesh, ninsitu,
                         thin_contours, colors="red", linewidths=1)
         ax.clabel(cs, fontsize=12, fmt='%.1f')
@@ -1333,7 +1333,7 @@ class HS_LagrantoTrajStyle_PL_01(MPLBasemapHorizontalSectionStyle):
         # Contour plot of num(MIX).
         # cs = bm.contour(self.lonmesh, self.latmesh, nmix,
         #                thick_contours, colors="darkblue", linewidths=2)
-        # ax.clabel(cs, fontsize=12, fmt='%i')
+        # ax.clabel(cs, fontsize=12, fmt='%.0f')
         cs = bm.contour(self.lonmesh, self.latmesh, nmix,
                         thin_contours, colors="darkblue", linewidths=1)
         ax.clabel(cs, fontsize=12, fmt='%.1f')
@@ -1385,7 +1385,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         # Colors in python2.6/site-packages/matplotlib/colors.py
         cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thick_contours, colors="darkred", linewidths=2)
-        ax.clabel(cs, fontsize=12, fmt='%i')
+        ax.clabel(cs, fontsize=12, fmt='%.0f')
         cs = bm.contour(self.lonmesh, self.latmesh, mslp,
                         thin_contours, colors="darkred", linewidths=1)
 
@@ -1398,7 +1398,7 @@ class HS_BLH_MSLP_Style_01(MPLBasemapHorizontalSectionStyle):
         # Labelled thin grey contours of BLH, interval 500m.
         cs = bm.contour(self.lonmesh, self.latmesh, blh,
                         np.arange(0, 3000, 500), colors="grey", linewidths=0.5)
-        ax.clabel(cs, fontsize=12, fmt='%i')
+        ax.clabel(cs, fontsize=12, fmt='%.0f')
 
         # Title
         titlestring = "Boundary layer height (m) and mean sea level pressure (hPa)"
@@ -1454,7 +1454,7 @@ class HS_Meteosat_BT108_01(MPLBasemapHorizontalSectionStyle):
         #                 [0], colors="red", linewidths=4)
         # cs = bm.contour(self.lonmesh, self.latmesh, tempC,
         #                 thick_contours, colors="saddlebrown", linewidths=2)
-        # ax.clabel(cs, fontsize=14, fmt='%i')
+        # ax.clabel(cs, fontsize=14, fmt='%.0f')
         # cs = bm.contour(self.lonmesh, self.latmesh, tempC,
         #                 thin_contours, colors="saddlebrown", linewidths=1)
 

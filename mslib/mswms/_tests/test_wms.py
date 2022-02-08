@@ -452,8 +452,9 @@ class Test_WMS(object):
         assert not os.path.exists(file)
         mslib.mswms.wms.server.generate_gallery(generate_code=False, plot_list=linear_plots)
         assert not os.path.exists(os.path.join(tempdir, "code"))
-        assert os.path.exists(file)
-        assert modified_at == os.path.getmtime(file2)
+        assert os.path.exists(file), file
+        assert modified_at == os.path.getmtime(file2), \
+            (modified_at, os.path.getmtime(file2))
 
         mslib.mswms.wms.server.generate_gallery(clear=True, create=True, plot_list=linear_plots)
         assert modified_at != os.path.getmtime(file2)
