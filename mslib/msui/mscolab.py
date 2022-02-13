@@ -236,7 +236,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def login_handler(self):
         for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE:
+            if key not in constants.MSC_LOGIN_CACHE or constants.MSC_LOGIN_CACHE[key] != value:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
         # get mscolab /token http auth credentials from cache
@@ -266,7 +266,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", 'Oh no, your credentials were incorrect.')
         elif r.text == "Unauthorized Access":
             # Server auth required for logging in
-            self.login_data = [data, r, url, auth]
+            self.login_data = [data, r, url]
             self.connectBtn.setEnabled(False)
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
             # ToDo disconnect functions already connected to httpBb buttonBox
@@ -277,7 +277,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def new_user_login_handler(self, emailid, password):
         for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE:
+            if key not in constants.MSC_LOGIN_CACHE or constants.MSC_LOGIN_CACHE[key] != value:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
 
@@ -299,15 +299,36 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             )
             self.disconnect_handler()
             return
+        data_to_save_in_config_file = {
+            "MSCOLAB_mailid": emailid,
+            "MSCOLAB_password": password
+        }
+        if config_loader(dataset="MSCOLAB_mailid") == "" and config_loader(dataset="MSCOLAB_password") == "":
+            modify_config_file(data_to_save_in_config_file)
+        else:
+            ret = QtWidgets.QMessageBox.question(
+                self, self.tr("Update Credentials"),
+                self.tr("You are using new credentials. Should your settings file be updated with the new credentials?"),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Yes:
+                modify_config_file(data_to_save_in_config_file)
         self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
     def login_server_auth(self):
-        data, r, url, auth = self.login_data
+        data, r, url = self.login_data
         emailid = data['email']
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
             if r.status_code == 200 and r.text not in ["False", "Unauthorized Access"]:
-                constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
+                msc_login_data = config_loader(dataset="MSC_login")
+                msc_login_data[self.mscolab_server_url] = (
+                    self.settings["auth"][self.mscolab_server_url][0],
+                    self.settings["auth"][self.mscolab_server_url][1]
+                )
+                data_to_save_in_config_file = {
+                    "MSC_login": msc_login_data
+                }
+                modify_config_file(data_to_save_in_config_file)
                 self.mscolab.after_login(emailid, self.mscolab_server_url, r)
             else:
                 self.set_status("Error", 'Oh no, server authentication were incorrect.')
@@ -351,18 +372,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Success", 'You are registered, confirm your email to log in.')
             self.stackedWidget.setCurrentWidget(self.loginPage)
         elif r.status_code == 201:
-            self.set_status("Success", 'You are registered')
-            if config_loader(dataset="MSCOLAB_mailid") != "" and config_loader(dataset="MSCOLAB_password") != "":
-                ret = QtWidgets.QMessageBox.question(
-                    self, self.tr("Update Credentials"),
-                    self.tr("You are using new credentials. Should your settings file be updated with the new credentials?"),
-                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
-                if ret == QtWidgets.QMessageBox.Yes:
-                    data_to_save_in_config_file = {
-                        "MSCOLAB_mailid": emailid,
-                        "MSCOLAB_password": password
-                    }
-                    modify_config_file(data_to_save_in_config_file)
+            self.set_status("Success", 'You are registered.')
             self.new_user_login_handler(emailid, password)
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
@@ -382,9 +392,17 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         data, r, url = self.newuser_data
         r = self.authenticate(data, r, url)
         if r.status_code == 201:
-            constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (data['username'], data['password'])
-            self.set_status("Success", "You are registered, you can now log in.")
-            self.stackedWidget.setCurrentWidget(self.loginPage)
+            msc_login_data = config_loader(dataset="MSC_login")
+            msc_login_data[self.mscolab_server_url] = (
+                self.settings["auth"][self.mscolab_server_url][0],
+                self.settings["auth"][self.mscolab_server_url][1]
+            )
+            data_to_save_in_config_file = {
+                "MSC_login": msc_login_data
+            }
+            modify_config_file(data_to_save_in_config_file)
+            self.set_status("Success", "You are registered.")
+            self.new_user_login_handler(data['email'], data['password'])
         else:
             self.set_status("Error", "Oh no, server authentication were incorrect.")
             self.stackedWidget.setCurrentWidget(self.newuserPage)
