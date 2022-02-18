@@ -643,7 +643,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         elif self.level <= 500:
             gpm_interval = 40
 
-        geop_contours = np.arange(400, 28000, gpm_interval)
+        geop_contours = np.arange(400, 55000, gpm_interval)
         cs = bm.contour(self.lonmesh, self.latmesh, gpm,
                         geop_contours, colors="green", linewidths=2)
         if cs.levels[0] in geop_contours[::2]:
@@ -1005,7 +1005,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
         tc = bm.pcolormesh(self.lonmesh, self.latmesh, tracer,
-                           cmap=plt.cm.hot_r,
+                           cmap=plt.cm.inferno_r,
                            norm=matplotlib.colors.LogNorm(vmin=1., vmax=100.),
                            shading='nearest', edgecolors='none')
 
@@ -1053,7 +1053,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         tracer = data["emac_column_density"]
 
         tc = bm.pcolormesh(self.lonmesh, self.latmesh, tracer,
-                           cmap=plt.cm.hot_r,
+                           cmap=plt.cm.inferno_r,
                            norm=matplotlib.colors.LogNorm(vmin=0.05, vmax=0.5),
                            shading="nearest", edgecolors='none')
 
