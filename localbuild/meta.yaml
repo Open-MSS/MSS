@@ -31,7 +31,7 @@ requirements:
     - basemap  >1.2.1
     - chameleon
     - execnet
-    - fastkml
+    - fastkml  =0.11
     - isodate
     - lxml
     - netcdf4
