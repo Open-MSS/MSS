@@ -45,20 +45,24 @@ from future import standard_library
 
 standard_library.install_aliases()
 
+import glob
 import os
 import io
+import inspect
 import logging
+import shutil
+import tempfile
 import traceback
 import urllib.parse
-import inspect
+
 from xml.etree import ElementTree
 from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
-import shutil
-
+import numpy as np
 from flask import request, make_response, render_template
 from flask_httpauth import HTTPBasicAuth
+
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils.time import parse_iso_datetime
@@ -239,16 +243,11 @@ class WMSServer(object):
                 ]
                 self.__init__()
 
-            location = DOCS_LOCATION if sphinx else STATIC_LOCATION
-            if clear and os.path.exists(os.path.join(location, "plots")):
-                shutil.rmtree(os.path.join(location, "plots"))
-            if os.path.exists(os.path.join(location, "code")):
-                shutil.rmtree(os.path.join(location, "code"))
-            if os.path.exists(os.path.join(location, "plots.html")):
-                os.remove(os.path.join(location, "plots.html"))
-
             if not (create or generate_code or all_plots or plot_list):
                 return
+
+            tmp_path = tempfile.mkdtemp()
+            path = DOCS_LOCATION if sphinx else STATIC_LOCATION
 
             if not plot_list:
                 plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
@@ -314,25 +313,28 @@ class WMSServer(object):
                                                + f"Noneit{itime}vt{vtime}".replace(" ", "_").replace(":", "_")\
                                                                           .replace("-", "_")
 
-                                    exists = os.path.exists(os.path.join(location, "plots", filename + ".png"))
+                                    exists = (not clear) and os.path.exists(
+                                        os.path.join(path, "plots", filename + ".png"))
 
                                     if driver == self.lsec_drivers and not exists:
                                         plot_driver.set_plot_parameters(**kwargs,
                                                                         lsec_path=[[0, 0, 20000], [1, 1, 20000]],
                                                                         lsec_numpoints=201,
                                                                         lsec_path_connection="linear")
-                                        path = [[min(plot_driver.lat_data), min(plot_driver.lon_data), 20000],
-                                                [max(plot_driver.lat_data), max(plot_driver.lon_data), 20000]]
-                                        plot_driver.update_plot_parameters(lsec_path=path)
+                                        lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
+                                        lpath = [[min(plot_driver.lat_data), min(lon_data), 20000],
+                                                 [max(plot_driver.lat_data), max(lon_data), 20000]]
+                                        plot_driver.update_plot_parameters(lsec_path=lpath)
 
                                     elif driver == self.vsec_drivers and not exists:
                                         plot_driver.set_plot_parameters(**kwargs, vsec_path=[[0, 0], [1, 1]],
                                                                         vsec_numpoints=201, figsize=[800, 600],
                                                                         vsec_path_connection="linear", style=style,
                                                                         noframe=False, bbox=[101, 1050, 10, 180])
-                                        path = [[min(plot_driver.lat_data), min(plot_driver.lon_data)],
-                                                [max(plot_driver.lat_data), max(plot_driver.lon_data)]]
-                                        plot_driver.update_plot_parameters(vsec_path=path)
+                                        lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
+                                        lpath = [[min(plot_driver.lat_data), min(lon_data)],
+                                                 [max(plot_driver.lat_data), max(lon_data)]]
+                                        plot_driver.update_plot_parameters(vsec_path=lpath)
 
                                     elif driver == self.hsec_drivers:
                                         elevations = plot_object.get_elevations()
@@ -342,8 +344,9 @@ class WMSServer(object):
                                                                         crs="EPSG:4326", style=style,
                                                                         bbox=[-15, 35, 30, 65],
                                                                         level=elevation)
-                                        bbox = [min(plot_driver.lon_data), min(plot_driver.lat_data),
-                                                max(plot_driver.lon_data), max(plot_driver.lat_data)]
+                                        lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
+                                        bbox = [min(lon_data), min(plot_driver.lat_data),
+                                                max(lon_data), max(plot_driver.lat_data)]
                                         vert_units = plot_driver.vert_units
                                         plot_driver.update_plot_parameters(bbox=bbox)
 
@@ -371,33 +374,57 @@ class WMSServer(object):
                                                        f"{level}{vert_units}it{itime}vt{vtime}".replace(" ", "_")\
                                                                                                .replace(":", "_")\
                                                                                                .replace("-", "_")
-                                            exists = os.path.exists(os.path.join(location, "plots", filename + ".png"))
+                                            exists = (not clear) and os.path.exists(
+                                                os.path.join(path, "plots", filename + ".png"))
 
-                                            add_image(None if exists else plot_driver.plot(), plot_object,
+                                            add_image(tmp_path, None if exists else plot_driver.plot(), plot_object,
                                                       generate_code, sphinx, url_prefix=url_prefix,
                                                       dataset=dataset if multiple_datasets else "", level=f"{level}" +
                                                                                                 f"{vert_units}",
                                                       itime=str(itime), vtime=str(vtime), simple_naming=simple_naming)
                                             if level:
                                                 add_levels([f"{level} {vert_units}"], vert_units)
+                                            else:
+                                                add_levels(["None None"], "None")
+
                                             add_times(itime, [vtime])
                                         continue
 
-                                    add_image(None if exists else plot_driver.plot(), plot_object, generate_code,
-                                              sphinx, url_prefix=url_prefix,
-                                              dataset=dataset if multiple_datasets else "", itime=str(itime),
-                                              vtime=str(vtime), simple_naming=simple_naming)
+                                    add_image(
+                                        tmp_path,
+                                        None if exists else plot_driver.plot(), plot_object, generate_code,
+                                        sphinx, url_prefix=url_prefix,
+                                        dataset=dataset if multiple_datasets else "", itime=str(itime),
+                                        vtime=str(vtime), simple_naming=simple_naming)
                                     add_times(itime, [vtime])
 
                         except Exception as e:
                             traceback.print_exc()
                             logging.error("%s %s %s", plot_object.name, type(e), e)
 
-            write_html(sphinx)
+            write_html(tmp_path, sphinx)
             if generate_code:
-                write_code_pages(sphinx, url_prefix)
+                write_code_pages(tmp_path, sphinx, url_prefix)
                 if sphinx:
-                    write_doc_index()
+                    write_doc_index(tmp_path)
+
+            if clear and os.path.exists(os.path.join(path, "plots")):
+                shutil.rmtree(os.path.join(path, "plots"))
+            if os.path.exists(os.path.join(path, "plots")):
+                for fn in glob.glob(os.path.join(tmp_path, "plots", "*")):
+                    if not os.path.exists(os.path.join(path, "plots", os.path.basename(fn))):
+                        shutil.move(fn, os.path.join(path, "plots"))
+            else:
+                shutil.move(os.path.join(tmp_path, "plots"), path)
+            if os.path.exists(os.path.join(path, "code")):
+                shutil.rmtree(os.path.join(path, "code"))
+            if os.path.exists(os.path.join(tmp_path, "code")):
+                shutil.move(os.path.join(tmp_path, "code"), path)
+            if os.path.exists(os.path.join(path, "plots.html")):
+                os.remove(os.path.join(path, "plots.html"))
+            if os.path.exists(os.path.join(tmp_path, "plots.html")):
+                shutil.move(os.path.join(tmp_path, "plots.html"), path)
+            shutil.rmtree(tmp_path)
 
     def register_hsec_layer(self, datasets, layer_class):
         """
