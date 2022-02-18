@@ -568,7 +568,7 @@ class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):
 
         titlestring = "Temperature (degC) and Geopotential Height (m) at " \
             f"{self.level:.0f} hPa"
-        titlestring += '\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
+        titlestring += f'\nValid: {self.valid_time.strftime("%a %Y-%m-%d %H:%M UTC")}'
         if self.uses_inittime_dimension():
             time_step = self.valid_time - self.init_time
             time_step_hrs = (time_step.days * 86400 + time_step.seconds) // 3600
