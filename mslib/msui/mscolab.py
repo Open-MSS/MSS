@@ -303,17 +303,18 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             "MSCOLAB_mailid": emailid,
             "MSCOLAB_password": password
         }
-        if config_loader(dataset="MSCOLAB_mailid") == "" and config_loader(dataset="MSCOLAB_password") == "":
-            modify_config_file(data_to_save_in_config_file)
-        else:
+
+        if config_loader(dataset="MSCOLAB_mailid") != "" and config_loader(dataset="MSCOLAB_password") != "":
             ret = QtWidgets.QMessageBox.question(
                 self, self.tr("Update Credentials"),
                 self.tr("You are using new credentials. Should your settings file be updated with the new credentials?"),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:
                 modify_config_file(data_to_save_in_config_file)
+        else:
+            modify_config_file(data_to_save_in_config_file)
         self.mscolab.after_login(emailid, self.mscolab_server_url, r)
-
+            
     def login_server_auth(self):
         data, r, url = self.login_data
         emailid = data['email']

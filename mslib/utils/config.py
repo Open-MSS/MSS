@@ -402,10 +402,13 @@ def modify_config_file(data, path=constants.MSS_SETTINGS):
     json_file_data = {}
     with fs.open_fs(dir_name) as _fs:
         if _fs.exists(file_name):
-            file_content = _fs.readtext(file_name)
             try:
+                file_content = _fs.readtext(file_name)
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
                 json_file_data_copy = copy.deepcopy(json_file_data)
+                for key in data:
+                    if key not in json_file_data:
+                        json_file_data_copy[key] = config_loader(dataset=key, default=True)
                 modified_data = merge_data(json_file_data_copy, data)
                 logging.debug("Merged default and user settings")
                 _fs.writetext(file_name, json.dumps(modified_data, indent=4))
