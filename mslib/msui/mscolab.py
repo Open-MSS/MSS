@@ -314,7 +314,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             modify_config_file(data_to_save_in_config_file)
         self.mscolab.after_login(emailid, self.mscolab_server_url, r)
-         
+
     def login_server_auth(self):
         data, r, url = self.login_data
         emailid = data['email']
