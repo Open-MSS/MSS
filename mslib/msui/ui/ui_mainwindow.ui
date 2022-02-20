@@ -351,6 +351,7 @@ Double click a operation to activate and view its description.</string>
      <addaction name="actionDeleteOperation"/>
      <addaction name="actionDescription"/>
      <addaction name="actionUpdateOperationDesc"/>
+     <addaction name="actionRenameOperation"/>
     </widget>
     <addaction name="actionChat"/>
     <addaction name="actionVersionHistory"/>
@@ -518,6 +519,11 @@ Double click a operation to activate and view its description.</string>
   <action name="actionUpdateOperationDesc">
    <property name="text">
     <string>Update Description</string>
+   </property>
+  </action>
+  <action name="actionRenameOperation">
+   <property name="text">
+    <string>Rename Operation</string>
    </property>
   </action>
  </widget>
