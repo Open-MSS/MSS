@@ -1426,6 +1426,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
         self.ui.menuProperties.setEnabled(True)
+        self.ui.actionRenameOperation.setEnabled(False)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
@@ -1455,6 +1456,7 @@ class MSSMscolab(QtCore.QObject):
 
         if self.access_level in ["creator"]:
             self.ui.actionDeleteOperation.setEnabled(True)
+            self.ui.actionRenameOperation.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 
