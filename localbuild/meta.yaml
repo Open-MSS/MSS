@@ -28,7 +28,7 @@ requirements:
     - python
     - defusedxml
     - menuinst  # [win]
-    - basemap  >1.2.1
+    - basemap >1.2.1
     - chameleon
     - execnet
     - fastkml
