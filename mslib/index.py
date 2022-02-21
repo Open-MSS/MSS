@@ -171,6 +171,13 @@ def app_loader(name):
                       "An example of the gallery can be seen " \
                       "<a href=\"https://mss.readthedocs.io/en/latest/gallery/index.html\">here</a>"
         return render_template("/content.html", act="plots", content=content)
+    
+    @APP.route('/mss/static/plots/',defaults=dict(filename=''))
+    @APP.route('/mss/static/plots/<path:filename>')
+    def plots_img(filename):
+        if STATIC_LOCATION != "" and os.path.exists(os.path.join(STATIC_LOCATION, 'plots')):
+            base_path = os.path.join(STATIC_LOCATION, 'plots')
+        return send_from_directory(base_path, filename)
 
     @APP.route("/mss/code/<path:filename>")
     def code(filename):
