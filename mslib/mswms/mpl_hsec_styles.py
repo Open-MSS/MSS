@@ -590,6 +590,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
     title = "Geopotential Height (m) and Horizontal Wind (m/s)"
     styles = [
         ("default", "Wind Speed 10-85 m/s"),
+        ("wind_10_105", "Wind Speed 10-105 m/s"),
         ("wind_10_65", "Wind Speed 10-65 m/s"),
         ("wind_20_55", "Wind Speed 20-55 m/s"),
         ("wind_15_55", "Wind Speed 15-55 m/s")]
@@ -625,10 +626,31 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
             wind_contours = np.arange(20, 60, 5)
         elif self.style.lower() == "wind_15_55":
             wind_contours = np.arange(15, 60, 5)
+        elif self.style.lower() == "wind_10_105":
+            wind_contours = np.arange(10, 110, 5)
         cs = bm.contourf(self.lonmesh, self.latmesh, wind,
-                         # wind_contours, cmap=plt.cm.hot_r, alpha=0.8)
-                         wind_contours, cmap=plt.cm.hot_r)
+                         wind_contours, cmap=plt.cm.inferno_r)
         self.add_colorbar(cs, "Wind Speed (m/s)")
+
+        # Plot geopotential height contours.
+        gpm = self.data["geopotential_height"]
+
+        gpm_interval = 20
+        if self.level <= 20:
+            gpm_interval = 120
+        elif self.level <= 100:
+            gpm_interval = 80
+        elif self.level <= 500:
+            gpm_interval = 40
+
+        geop_contours = np.arange(400, 55000, gpm_interval)
+        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
+                        geop_contours, colors="green", linewidths=2)
+        if cs.levels[0] in geop_contours[::2]:
+            lablevels = cs.levels[::2]
+        else:
+            lablevels = cs.levels[1::2]
+        ax.clabel(cs, lablevels, fontsize=14, fmt='%.0f')
 
         # Convert wind data from m/s to knots for the wind barbs.
         uk = convert_to(u, "m/s", "knots")
@@ -644,19 +666,7 @@ class HS_GeopotentialWindStyle_PL(MPLBasemapHorizontalSectionStyle):
         # Plot wind barbs.
         bm.barbs(xv, yv, udat, vdat,
                  barbcolor='firebrick', flagcolor='firebrick', pivot='middle',
-                 linewidths=0.5, length=6)
-
-        # Plot geopotential height contours.
-        gpm = self.data["geopotential_height"]
-        gpm_interval = 40 if self.level <= 500 else 20
-        geop_contours = np.arange(400, 28000, gpm_interval)
-        cs = bm.contour(self.lonmesh, self.latmesh, gpm,
-                        geop_contours, colors="green", linewidths=2)
-        if cs.levels[0] in geop_contours[::2]:
-            lablevels = cs.levels[::2]
-        else:
-            lablevels = cs.levels[1::2]
-        ax.clabel(cs, lablevels, fontsize=14, fmt='%.0f')
+                 linewidths=0.5, length=6, zorder=1)
 
         # Plot title.
         titlestring = "Geopotential Height (m) and Horizontal Wind (m/s) " \
@@ -995,7 +1005,7 @@ class HS_EMAC_TracerStyle_ML_01(MPLBasemapHorizontalSectionStyle):
 
         # Shift lat/lon grid for PCOLOR (see comments in HS_EMAC_TracerStyle_SFC_01).
         tc = bm.pcolormesh(self.lonmesh, self.latmesh, tracer,
-                           cmap=plt.cm.hot_r,
+                           cmap=plt.cm.inferno_r,
                            norm=matplotlib.colors.LogNorm(vmin=1., vmax=100.),
                            shading='nearest', edgecolors='none')
 
@@ -1043,7 +1053,7 @@ class HS_EMAC_TracerStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         tracer = data["emac_column_density"]
 
         tc = bm.pcolormesh(self.lonmesh, self.latmesh, tracer,
-                           cmap=plt.cm.hot_r,
+                           cmap=plt.cm.inferno_r,
                            norm=matplotlib.colors.LogNorm(vmin=0.05, vmax=0.5),
                            shading="nearest", edgecolors='none')
 
