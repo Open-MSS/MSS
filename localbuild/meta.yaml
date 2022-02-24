@@ -51,7 +51,7 @@ requirements:
     - fs_filepicker
     - cftime >=1.0.1
     - matplotlib >=3.3.2
-    - itsdangerous   <2.1.0
+    - itsdangerous <2.1.0
     - flask >=2.0.0
     - flask-httpauth
     - flask-mail
