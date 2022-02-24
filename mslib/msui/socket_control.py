@@ -24,7 +24,6 @@
     limitations under the License.
 """
 
-import socketio
 import json
 import logging
 
