@@ -58,7 +58,6 @@ class ConnectionManager(QtCore.QObject):
         # Forcing polling transport disables trying to use websocket
         self.sio.connect(self.mscolab_server_url, transports='polling')
         logging.debug("Transport Layer: %s", self.sio.transport())
-        self.sio.connect(self.mscolab_server_url)
 
         self.sio.on('file-changed', handler=self.handle_file_change)
         # on chat message recive
