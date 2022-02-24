@@ -56,7 +56,7 @@ requirements:
     - flask-mail
     - flask-migrate
     - werkzeug >2.0.0
-    - flask-socketio >=5
+    - flask-socketio >=5, <5.1.1
     - flask-sqlalchemy
     - flask-cors
     - passlib
