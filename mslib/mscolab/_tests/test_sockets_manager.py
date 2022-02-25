@@ -88,7 +88,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
         sio = socketio.Client(reconnection_attempts=5)
         self.sockets.append(sio)
         assert self._can_ping_server()
-        sio.connect(self.url)
+        sio.connect(self.url, transports='polling')
         sio.emit('connect')
         return sio
 
@@ -102,7 +102,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
         assert sio.sid is None
         self.sockets.append(sio)
         assert self._can_ping_server()
-        sio.connect(self.url)
+        sio.connect(self.url, transports='polling')
         sio.emit('connect')
         assert len(sio.sid) > 5
 
