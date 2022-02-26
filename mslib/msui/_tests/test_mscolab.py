@@ -37,10 +37,12 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib._tests.utils import mscolab_start_server, ExceptionMock
+from mslib.utils.config import read_config_file, config_loader
+from mslib._tests.utils import mscolab_start_server, create_mss_settings_file, ExceptionMock
 import mslib.msui.mss_pyui as mss_pyui
 from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
+from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 PORTS = list(range(25000, 25500))
@@ -49,6 +51,7 @@ PORTS = list(range(25000, 25500))
 class Test_Mscolab_connect_window():
     def setup(self):
         handle_db_reset()
+        self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
@@ -113,6 +116,8 @@ class Test_Mscolab_connect_window():
     def test_add_user(self):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
+        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
+        assert config_loader(dataset="MSCOLAB_password") == "something"
         # assert self.window.stackedWidget.currentWidget() == self.window.newuserPage
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
@@ -177,6 +182,10 @@ class Test_Mscolab_connect_window():
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
+    def _reset_config_file(self):
+        create_mss_settings_file('{ }')
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        read_config_file(path=config_file)
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
@@ -193,6 +202,7 @@ class Test_Mscolab(object):
 
     def setup(self):
         handle_db_reset()
+        self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
@@ -527,6 +537,11 @@ class Test_Mscolab(object):
         okWidget = self.connect_window.newUserBb.button(self.connect_window.newUserBb.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+
+    def _reset_config_file(self):
+        create_mss_settings_file('{ }')
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        read_config_file(path=config_file)
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     def _create_operation(self, path, description, mockbox):
