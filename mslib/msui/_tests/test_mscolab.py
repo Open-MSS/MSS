@@ -187,6 +187,7 @@ class Test_Mscolab_connect_window():
         config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
         read_config_file(path=config_file)
 
+
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab(object):

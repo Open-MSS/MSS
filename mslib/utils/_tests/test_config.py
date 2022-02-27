@@ -32,7 +32,7 @@ import pytest
 
 from mslib import utils
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
-from mslib.utils.config import config_loader, read_config_file
+from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
 
@@ -213,3 +213,49 @@ class TestConfigLoader(object):
         assert "num_labels" in file_content
         with pytest.raises(utils.FatalUserError):
             read_config_file(path=config_file)
+
+    def test_modify_config_file_with_empty_parameters(self):
+        """
+        Test to check if modify_config_file properly stores a key-value pair in an empty config file
+        """
+        create_mss_settings_file('{ }')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        data_to_save_in_config_file = {
+            "MSCOLAB_mailid": "something@something.org"
+        }
+        modify_config_file(data_to_save_in_config_file)
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        read_config_file(path=config_file)
+        data = config_loader()
+        assert data["MSCOLAB_mailid"] == "something@something.org"
+
+    def test_modify_config_file_with_existing_parameters(self):
+        """
+        Test to check if modify_config_file properly modifies a key-value pair in the config file
+        """
+        create_mss_settings_file('{"MSCOLAB_mailid": "anand@something.org"}')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        data_to_save_in_config_file = {
+            "MSCOLAB_mailid": "sree@something.org"
+        }
+        modify_config_file(data_to_save_in_config_file)
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        read_config_file(path=config_file)
+        data = config_loader()
+        assert data["MSCOLAB_mailid"] == "sree@something.org"
+
+    def test_modify_config_file_with_invalid_parameters(self):
+        """
+        Test to check if modify_config_file raises a KeyError when a key is empty
+        """
+        create_mss_settings_file('{ }')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        data_to_save_in_config_file = {
+            "": "sree",
+            "MSCOLAB_mailid": "sree@something.org"
+        }
+        with pytest.raises(KeyError):
+            modify_config_file(data_to_save_in_config_file)
