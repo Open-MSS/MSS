@@ -504,19 +504,21 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     return default_settings
 
 
-def merge_data(options, json_file_data):
+def merge_data(dict_to_merge_new_dict_into, new_dict):
     """
     Merge two dictionaries by comparing all the options from
     the MissionSupportSystemDefaultConfig class
 
     Arguments:
-    options -- Dict to merge options into
-    json_file_data -- Dict with new values
+    dict_to_merge_new_dict_into -- Dict to merge new dict into
+    new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
     for key in MissionSupportSystemDefaultConfig.fixed_dict_options:
-        if key in json_file_data:
-            options[key] = compare_data(options[key], json_file_data[key])[0]
+        if key in new_dict:
+            dict_to_merge_new_dict_into[key] = compare_data(
+                dict_to_merge_new_dict_into[key], new_dict[key]
+            )[0]
 
     # Check if dictionary options with predefined structure match data types from default
     dos = copy.deepcopy(MissionSupportSystemDefaultConfig.dict_option_structure)
@@ -525,46 +527,48 @@ def merge_data(options, json_file_data):
     dos["import_plugins"]["plugin-name-a"] = dos["import_plugins"]["plugin-name"][:3]
     dos["export_plugins"]["plugin-name-a"] = dos["export_plugins"]["plugin-name"][:3]
     for key in dos:
-        if key in json_file_data:
+        if key in new_dict:
             temp_data = {}
-            for option_key in json_file_data[key]:
+            for option_key in new_dict[key]:
                 for dos_key_key in dos[key]:
-                    data, match = compare_data(dos[key][dos_key_key], json_file_data[key][option_key])
+                    data, match = compare_data(dos[key][dos_key_key], new_dict[key][option_key])
                     if match:
-                        temp_data[option_key] = json_file_data[key][option_key]
+                        temp_data[option_key] = new_dict[key][option_key]
                         break
             if temp_data != {}:
-                options[key] = temp_data
+                dict_to_merge_new_dict_into[key] = temp_data
 
     # Check if list options with predefined structure match data types from default
     los = copy.deepcopy(MissionSupportSystemDefaultConfig.list_option_structure)
     for key in los:
-        if key in json_file_data:
+        if key in new_dict:
             temp_data = []
-            for i in range(len(json_file_data[key])):
+            for i in range(len(new_dict[key])):
                 for los_key_item in los[key]:
-                    data, match = compare_data(los_key_item, json_file_data[key][i])
+                    data, match = compare_data(los_key_item, new_dict[key][i])
                     if match:
                         temp_data.append(data)
                         break
             if temp_data != []:
-                options[key] = temp_data
+                dict_to_merge_new_dict_into[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MissionSupportSystemDefaultConfig.key_value_options:
-        if key in json_file_data:
-            data, match = compare_data(options[key], json_file_data[key])
+        if key in new_dict:
+            data, match = compare_data(dict_to_merge_new_dict_into[key], new_dict[key])
             if match:
-                options[key] = data
+                dict_to_merge_new_dict_into[key] = data
 
     # add filepicker default to import and export plugins if missing
     for plugin_type in ["import_plugins", "export_plugins"]:
-        if plugin_type in options:
-            for plugin in options[plugin_type]:
-                if len(options[plugin_type][plugin]) == 3:
-                    options[plugin_type][plugin].append(options.get("filepicker_default", "default"))
+        if plugin_type in dict_to_merge_new_dict_into:
+            for plugin in dict_to_merge_new_dict_into[plugin_type]:
+                if len(dict_to_merge_new_dict_into[plugin_type][plugin]) == 3:
+                    dict_to_merge_new_dict_into[plugin_type][plugin].append(
+                        dict_to_merge_new_dict_into.get("filepicker_default", "default")
+                    )
 
-    return options
+    return dict_to_merge_new_dict_into
 
 
 def compare_data(default, user_data):
