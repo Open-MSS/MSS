@@ -299,6 +299,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             )
             self.disconnect_handler()
             return
+        self.save_credentials_to_config_file(emailid, password)
+        self.mscolab.after_login(emailid, self.mscolab_server_url, r)
+
+    def save_credentials_to_config_file(self, emailid, password):
         data_to_save_in_config_file = {
             "MSCOLAB_mailid": emailid,
             "MSCOLAB_password": password
@@ -313,7 +317,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 modify_config_file(data_to_save_in_config_file)
         else:
             modify_config_file(data_to_save_in_config_file)
-        self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
     def login_server_auth(self):
         data, r, url = self.login_data
@@ -404,6 +407,16 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             modify_config_file(data_to_save_in_config_file)
             self.set_status("Success", "You are registered.")
             self.new_user_login_handler(data['email'], data['password'])
+        elif r.status_code == 200:
+            try:
+                error_msg = json.loads(r.text)["message"]
+            except Exception as e:
+                logging.debug(f"Unexpected error occured {e}")
+                error_msg = "Unexpected error occured. Please try again."
+            self.set_status("Error", error_msg)
+        elif r.status_code == 204:
+            self.set_status("Success", 'You are registered, confirm your email to log in.')
+            self.stackedWidget.setCurrentWidget(self.loginPage)
         else:
             self.set_status("Error", "Oh no, server authentication were incorrect.")
             self.stackedWidget.setCurrentWidget(self.newuserPage)

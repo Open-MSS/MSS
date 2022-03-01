@@ -379,7 +379,7 @@ def read_config_file(path=constants.MSS_SETTINGS):
 
     global user_options
     if json_file_data:
-        user_options = merge_data(copy.deepcopy(default_options), json_file_data)
+        user_options = merge_dict(copy.deepcopy(default_options), json_file_data)
         logging.debug("Merged default and user settings")
     else:
         user_options = copy.deepcopy(default_options)
@@ -409,7 +409,7 @@ def modify_config_file(data, path=constants.MSS_SETTINGS):
                 for key in data:
                     if key not in json_file_data:
                         json_file_data_copy[key] = config_loader(dataset=key, default=True)
-                modified_data = merge_data(json_file_data_copy, data)
+                modified_data = merge_dict(json_file_data_copy, data)
                 logging.debug("Merged default and user settings")
                 _fs.writetext(file_name, json.dumps(modified_data, indent=4))
                 read_config_file()
@@ -504,20 +504,20 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     return default_settings
 
 
-def merge_data(dict_to_merge_new_dict_into, new_dict):
+def merge_dict(existing_dict, new_dict):
     """
     Merge two dictionaries by comparing all the options from
     the MissionSupportSystemDefaultConfig class
 
     Arguments:
-    dict_to_merge_new_dict_into -- Dict to merge new dict into
+    existing_dict -- Dict to merge new_dict into
     new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
     for key in MissionSupportSystemDefaultConfig.fixed_dict_options:
         if key in new_dict:
-            dict_to_merge_new_dict_into[key] = compare_data(
-                dict_to_merge_new_dict_into[key], new_dict[key]
+            existing_dict[key] = compare_data(
+                existing_dict[key], new_dict[key]
             )[0]
 
     # Check if dictionary options with predefined structure match data types from default
@@ -536,7 +536,7 @@ def merge_data(dict_to_merge_new_dict_into, new_dict):
                         temp_data[option_key] = new_dict[key][option_key]
                         break
             if temp_data != {}:
-                dict_to_merge_new_dict_into[key] = temp_data
+                existing_dict[key] = temp_data
 
     # Check if list options with predefined structure match data types from default
     los = copy.deepcopy(MissionSupportSystemDefaultConfig.list_option_structure)
@@ -550,25 +550,25 @@ def merge_data(dict_to_merge_new_dict_into, new_dict):
                         temp_data.append(data)
                         break
             if temp_data != []:
-                dict_to_merge_new_dict_into[key] = temp_data
+                existing_dict[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MissionSupportSystemDefaultConfig.key_value_options:
         if key in new_dict:
-            data, match = compare_data(dict_to_merge_new_dict_into[key], new_dict[key])
+            data, match = compare_data(existing_dict[key], new_dict[key])
             if match:
-                dict_to_merge_new_dict_into[key] = data
+                existing_dict[key] = data
 
     # add filepicker default to import and export plugins if missing
     for plugin_type in ["import_plugins", "export_plugins"]:
-        if plugin_type in dict_to_merge_new_dict_into:
-            for plugin in dict_to_merge_new_dict_into[plugin_type]:
-                if len(dict_to_merge_new_dict_into[plugin_type][plugin]) == 3:
-                    dict_to_merge_new_dict_into[plugin_type][plugin].append(
-                        dict_to_merge_new_dict_into.get("filepicker_default", "default")
+        if plugin_type in existing_dict:
+            for plugin in existing_dict[plugin_type]:
+                if len(existing_dict[plugin_type][plugin]) == 3:
+                    existing_dict[plugin_type][plugin].append(
+                        existing_dict.get("filepicker_default", "default")
                     )
 
-    return dict_to_merge_new_dict_into
+    return existing_dict
 
 
 def compare_data(default, user_data):
