@@ -219,7 +219,7 @@ class Test_MSSSideViewWindow(object):
             os.remove(save_file[0])
 
     @pytest.mark.parametrize(
-        "open_file", [(open_ftml, "actionImportFlightTrackFTML"), (open_csv, "actionImportFlightTrackCSV"),
+        "open_file", [(open_ftml, "actionImportFlightTrackFTML"),
                       (open_txt, "actionImportFlightTrackText"), (open_fls, "actionImportFlightTrackFliteStar")])
     def test_plugin_import(self, open_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
