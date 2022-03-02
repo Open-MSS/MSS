@@ -238,7 +238,6 @@ class Test_MSSSideViewWindow(object):
             assert self.window.listFlightTracks.count() == 2
 
     @pytest.mark.parametrize("save_file", [[save_ftml, "actionExportFlightTrackFTML"],
-                                           [save_csv, "actionExportFlightTrackCSV"],
                                            [save_txt, "actionExportFlightTrackText"]])
     def test_plugin_export(self, save_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
