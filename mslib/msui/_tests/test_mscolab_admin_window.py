@@ -81,6 +81,7 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        self.window.mscolab.logout()
         if self.window.mscolab.admin_window:
             self.window.mscolab.admin_window.close()
         if self.window.mscolab.conn:

@@ -1587,6 +1587,8 @@ class MSSMscolab(QtCore.QObject):
         self.ui.activeOperationDesc.setHidden(True)
         # reset description label text
         self.ui.activeOperationDesc.setText(self.ui.tr("Select Operation to View Description."))
+        # set usernameLabel back to default
+        self.ui.usernameLabel.setText("User")
         # disconnect socket
         if self.conn is not None:
             self.conn.disconnect()
