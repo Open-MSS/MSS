@@ -23,9 +23,9 @@ Protecting Login
 ~~~~~~~~~~~~~~~~
 The login to the MSColab server can be protected by an additional auth method.
 
-**mss_mscolab_auth.py**
-
  .. literalinclude:: samples/config/mscolab/mss_mscolab_auth.py.sample
+
+Copy the above file to the mslib/mscolab directory, rename it to mss_mscolab_auth.py and make the necessary changes in the file. 
 
 Steps to Run MSColab Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
