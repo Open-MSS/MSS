@@ -36,6 +36,7 @@ from mslib import __version__
 from mslib._tests.constants import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib._tests.utils import ExceptionMock
+from mslib.utils.config import read_config_file
 
 
 class Test_MSS_AboutDialog():
@@ -119,6 +120,14 @@ class Test_MSSSideViewWindow(object):
     }
 
     def setup(self):
+        self.sample_path = os.path.join(
+            os.path.dirname(os.path.abspath(mss_pyui.__file__)),
+            '../',
+            '../',
+            'docs',
+            'samples',
+            'config',
+            'mss')
         self.application = QtWidgets.QApplication(sys.argv)
 
         self.window = mss_pyui.MSSMainWindow()
@@ -129,6 +138,11 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        config_file = os.path.join(
+            self.sample_path,
+            'empty_mss_settings.json.sample',
+        )
+        read_config_file(path=config_file)
         for i in range(self.window.listViews.count()):
             self.window.listViews.item(i).window.hide()
         self.window.hide()

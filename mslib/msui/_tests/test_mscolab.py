@@ -208,6 +208,7 @@ class Test_Mscolab_connect_window():
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab(object):
+    sample_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "flight-tracks")
     # import/export plugins
     import_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
@@ -362,8 +363,7 @@ class Test_Mscolab(object):
         assert wpdata_local.lat != wpdata_server.lat
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
-    @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(mscolab_settings.BASE_DIR,
-                                                                                  "example.ftml"))
+    @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
     def test_browse_add_operation(self, mockopen, mockmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")

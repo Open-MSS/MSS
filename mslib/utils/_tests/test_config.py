@@ -63,9 +63,24 @@ class TestConfigLoader(object):
     tests config file for client
     """
 
+    def setup(self):
+        self.sample_path = os.path.join(
+            os.path.dirname(os.path.abspath(utils.__file__)),
+            '../',
+            '../',
+            'docs',
+            'samples',
+            'config',
+            'mss')
+
     def teardown(self):
         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
+        config_file = os.path.join(
+            self.sample_path,
+            'empty_mss_settings.json.sample'
+        )
+        read_config_file(config_file)
 
     def test_option_types(self):
         # check if all config options are added to the appropriate type of options
@@ -94,15 +109,8 @@ class TestConfigLoader(object):
             read_config_file(path="foo.json")
 
     def test_sample_config_file(self):
-        utils_path = os.path.dirname(os.path.abspath(utils.__file__))
         config_file = os.path.join(
-            utils_path,
-            '../',
-            '../',
-            'docs',
-            'samples',
-            'config',
-            'mss',
+            self.sample_path,
             'mss_settings.json.sample',
         )
         read_config_file(path=config_file)
@@ -112,18 +120,6 @@ class TestConfigLoader(object):
             config_loader(dataset="UNDEFINED")
         with pytest.raises(KeyError):
             assert config_loader(dataset="UNDEFINED")
-        with pytest.raises(FileNotFoundError):
-            config_file = os.path.join(
-                utils_path,
-                '../',
-                '../',
-                'docs',
-                'samples',
-                'config',
-                'mss',
-                'non_existent_mss_settings.json.sample',
-            )
-            read_config_file(config_file)
 
     def test_existing_empty_config_file(self):
         """
