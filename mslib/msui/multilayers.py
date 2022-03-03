@@ -177,30 +177,36 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         """
         Updates the self.synced_reference layer to contain the common options of all synced layers
         """
-        levels, itimes, vtimes, crs = self.get_multilayer_common_options()
-        self.synced_reference.levels = levels
-        self.synced_reference.itimes = itimes
-        self.synced_reference.vtimes = vtimes
-        self.synced_reference.allowed_crs = crs
+        sr = self.synced_reference
+        sr.levels, sr.itimes, sr.vtimes, sr.allowed_crs = self.get_multilayer_common_options()
 
         if self.current_layer:
-            if not self.synced_reference.level:
-                self.synced_reference.level = self.current_layer.level
-            if not self.synced_reference.itime:
-                self.synced_reference.itime = self.current_layer.itime
-            if not self.synced_reference.vtime:
-                self.synced_reference.vtime = self.current_layer.vtime
+            if not sr.level:
+                sr.level = self.current_layer.level
+            if not sr.itime:
+                sr.itime = self.current_layer.itime
+            if not sr.vtime:
+                sr.vtime = self.current_layer.vtime
 
-        if self.synced_reference.level not in self.synced_reference.levels:
-            self.synced_reference.level = levels[0] if levels else None
+        if sr.level not in sr.levels:
+            sr.level = None
+            if sr.levels:
+                sr.level = sr.levels[0]
 
-        if self.synced_reference.itime not in self.synced_reference.itimes:
-            self.synced_reference.itime = itimes[-1] if itimes else None
+        if sr.itime not in sr.itimes:
+            sr.itime = None
+            if sr.itimes:
+                sr.itime = sr.itimes[-1]
 
-        if self.synced_reference.vtime not in self.synced_reference.vtimes or \
-                self.synced_reference.vtime < self.synced_reference.itime:
-            self.synced_reference.vtime = next((vtime for vtime in vtimes if
-                                                vtime >= self.synced_reference.itime), None) if vtimes else None
+        if sr.itime is not None:
+            if sr.vtime not in sr.vtimes or sr.vtime < sr.itime:
+                sr.vtime = None
+                if sr.vtimes:
+                    sr.vtime = next((vtime for vtime in sr.vtimes if vtime >= sr.itime), None)
+        elif sr.vtime not in sr.vtimes:
+            sr.vtime = None
+            if sr.vtimes:
+                sr.vtime = sr.vtimes[0]
 
     def filter_multilayers(self, filter_string=None):
         """
