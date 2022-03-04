@@ -70,6 +70,7 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
