@@ -148,32 +148,36 @@ class Test_Mscolab_connect_window():
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
-        self._connect_to_mscolab()
-        self._create_user("something", "something@something.org", "something")
-        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
-        assert config_loader(dataset="MSCOLAB_password") == "something"
-        assert self.main_window.usernameLabel.text() == "something"
-        self.main_window.mscolab.logout_action.trigger()
-        QtWidgets.QApplication.processEvents()
-        self._create_user("anand", "anand@something.org", "anand")
-        assert config_loader(dataset="MSCOLAB_mailid") == "anand@something.org"
-        assert config_loader(dataset="MSCOLAB_password") == "anand"
-        assert self.main_window.usernameLabel.text() == "anand"
-
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_add_users_without_updating_credentials_in_config_file(self, mockmessage):
+        create_mss_settings_file('{"MSCOLAB_mailid": "something@something.org", "MSCOLAB_password": "something"}')
+        read_config_file()
+        # check current settings
+        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
+        assert config_loader(dataset="MSCOLAB_password") == "something"
         self._connect_to_mscolab()
-        self._create_user("something", "something@something.org", "something")
-        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
-        assert config_loader(dataset="MSCOLAB_password") == "something"
-        assert self.main_window.usernameLabel.text() == "something"
-        self.main_window.mscolab.logout_action.trigger()
-        QtWidgets.QApplication.processEvents()
+        assert self.window.mscolab_server_url is not None
         self._create_user("anand", "anand@something.org", "anand")
+        # check changed settings
         assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
         assert config_loader(dataset="MSCOLAB_password") == "something"
+        # check user is logged in
+        assert self.main_window.usernameLabel.text() == "anand"
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
+        create_mss_settings_file('{"MSCOLAB_mailid": "something@something.org", "MSCOLAB_password": "something"}')
+        read_config_file()
+        # check current settings
+        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
+        assert config_loader(dataset="MSCOLAB_password") == "something"
+        self._connect_to_mscolab()
+        assert self.window.mscolab_server_url is not None
+        self._create_user("anand", "anand@something.org", "anand")
+        # check changed settings
+        assert config_loader(dataset="MSCOLAB_mailid") == "anand@something.org"
+        assert config_loader(dataset="MSCOLAB_password") == "anand"
+        # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
 
     def test_failed_authorize(self):

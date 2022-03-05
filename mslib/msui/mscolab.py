@@ -343,13 +343,13 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Success", 'You are registered, confirm your email to log in.')
             self.save_user_credentials_to_config_file(emailid, password)
             self.stackedWidget.setCurrentWidget(self.loginPage)
-            self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
-            self.loginPasswordLe.setText(config_loader(dataset="MSCOLAB_password"))
+            self.loginEmailLe.setText(emailid)
+            self.loginPasswordLe.setText(password)
         elif r.status_code == 201:
             self.set_status("Success", 'You are registered.')
             self.save_user_credentials_to_config_file(emailid, password)
-            self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
-            self.loginPasswordLe.setText(config_loader(dataset="MSCOLAB_password"))
+            self.loginEmailLe.setText(emailid)
+            self.loginPasswordLe.setText(password)
             self.login_handler()
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
@@ -383,8 +383,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.save_auth_credentials_to_config_file()
             self.set_status("Success", "You are registered.")
             self.save_user_credentials_to_config_file(data['email'], data['password'])
-            self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
-            self.loginPasswordLe.setText(config_loader(dataset="MSCOLAB_password"))
+            self.loginEmailLe.setText(data['email'])
+            self.loginPasswordLe.setText(data['password'])
             self.login_handler()
         elif r.status_code == 200:
             try:
@@ -398,8 +398,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Success", 'You are registered, confirm your email to log in.')
             self.save_user_credentials_to_config_file(data['email'], data['password'])
             self.stackedWidget.setCurrentWidget(self.loginPage)
-            self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
-            self.loginPasswordLe.setText(config_loader(dataset="MSCOLAB_password"))
+            self.loginEmailLe.setText(data['email'])
+            self.loginPasswordLe.setText(data['password'])
         else:
             self.set_status("Error", "Oh no, server authentication were incorrect.")
             self.stackedWidget.setCurrentWidget(self.newuserPage)
