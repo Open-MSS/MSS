@@ -142,7 +142,7 @@ Create an environment and install the whole mss package dependencies then remove
 
   $ conda create -n mssdev mamba
   $ conda activate mssdev
-  $ mamba install mss python --only-deps
+  $ mamba install mss=$mss_version python --only-deps
 
 You can also use conda to install mss, but mamba is a way faster.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.

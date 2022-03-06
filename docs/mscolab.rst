@@ -25,7 +25,7 @@ The login to the MSColab server can be protected by an additional auth method.
 
  .. literalinclude:: samples/config/mscolab/mss_mscolab_auth.py.sample
 
-Copy the above file to the mslib/mscolab directory, rename it to mss_mscolab_auth.py and make the necessary changes in the file. 
+Make a copy of the above file, rename it to mss_mscolab_auth.py, make the necessary changes in the file and add it to your $PYTHONPATH.
 
 Steps to Run MSColab Server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
