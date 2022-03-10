@@ -56,7 +56,9 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.user = user
         self.operation_name = operation_name
         self.operations = operations
+        self.initial_operations = self.operations
         self.conn = conn
+        self.mscolab_category = config_loader(dataset="MSCOLAB_category")
 
         self.addUsers = []
         self.modifyUsers = []
@@ -81,11 +83,32 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
 
         # Setting handlers for connection manager
         self.conn.signal_operation_permissions_updated.connect(self.handle_permissions_updated)
-
+        self.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
         self.set_label_text()
         self.load_import_operations()
         self.load_users_without_permission()
         self.load_users_with_permission()
+        categories = set(["ANY"])
+        for operation in self.operations:
+            categories.add(operation["category"])
+        categories.remove("ANY")
+        categories = list(categories)
+        self.filterCategoryCb.addItems(categories)
+        if self.mscolab_category in categories:
+            self.filterCategoryCb.setCurrentIndex(categories.index(self.mscolab_category) + 1)
+
+    def operation_category_handler(self):
+        # only after_login
+        self.operations = self.initial_operations
+        if self.mscolab_server_url is not None:
+            self.selected_category = self.filterCategoryCb.currentText()
+            _operations = []
+            if self.selected_category != "ANY":
+                for operation in self.operations:
+                    if operation["category"] == self.selected_category:
+                        _operations.append(operation)
+                self.operations = _operations
+            self.populate_import_permission_cb()
 
     def populate_table(self, table, users):
         users.sort()

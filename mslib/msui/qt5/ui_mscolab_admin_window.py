@@ -93,6 +93,10 @@ class Ui_MscolabAdminWindow(object):
         self.label_3 = QtWidgets.QLabel(self.centralwidget)
         self.label_3.setObjectName("label_3")
         self.horizontalLayout_8.addWidget(self.label_3)
+        self.filterCategoryCb = QtWidgets.QComboBox(self.centralwidget)
+        self.filterCategoryCb.setObjectName("filterCategoryCb")
+        self.filterCategoryCb.addItem("")
+        self.horizontalLayout_8.addWidget(self.filterCategoryCb)
         self.importPermissionsCB = QtWidgets.QComboBox(self.centralwidget)
         self.importPermissionsCB.setObjectName("importPermissionsCB")
         self.horizontalLayout_8.addWidget(self.importPermissionsCB)
@@ -181,7 +185,7 @@ class Ui_MscolabAdminWindow(object):
 
     def retranslateUi(self, MscolabAdminWindow):
         _translate = QtCore.QCoreApplication.translate
-        MscolabAdminWindow.setWindowTitle(_translate("MscolabAdminWindow", "Admin Window"))
+        MscolabAdminWindow.setWindowTitle(_translate("MscolabAdminWindow", "Manage Users"))
         self.usernameLabel.setText(_translate("MscolabAdminWindow", "Logged In: "))
         self.operationNameLabel.setText(_translate("MscolabAdminWindow", "Operation: "))
         self.label.setText(_translate("MscolabAdminWindow", "All Users Without Permission:"))
@@ -196,6 +200,7 @@ class Ui_MscolabAdminWindow(object):
         self.addUsersBtn.setToolTip(_translate("MscolabAdminWindow", "Add the selected users to the operation"))
         self.addUsersBtn.setText(_translate("MscolabAdminWindow", "Add"))
         self.label_3.setText(_translate("MscolabAdminWindow", "Clone Operation Permissions:"))
+        self.filterCategoryCb.setItemText(0, _translate("MscolabAdminWindow", "ANY"))
         self.importPermissionsBtn.setToolTip(_translate("MscolabAdminWindow", "Import permissions from another operation"))
         self.importPermissionsBtn.setText(_translate("MscolabAdminWindow", "Clone"))
         self.label_2.setText(_translate("MscolabAdminWindow", "All Users With Permission:"))
