@@ -92,7 +92,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         for operation in self.operations:
             categories.add(operation["category"])
         categories.remove("ANY")
-        categories = list(categories)
+        categories = sorted(list(categories))
         self.filterCategoryCb.addItems(categories)
         if self.mscolab_category in categories:
             self.filterCategoryCb.setCurrentIndex(categories.index(self.mscolab_category) + 1)
