@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,7 +81,7 @@ if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
