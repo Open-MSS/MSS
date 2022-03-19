@@ -4,13 +4,11 @@
     "filepicker_default": "default",
 
     "import_plugins": {
-        "CSV": ["csv", "mslib.plugins.io.csv", "load_from_csv"],
         "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
         "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"]
     },
 
     "export_plugins": {
-        "CSV": ["csv", "mslib.plugins.io.csv", "save_to_csv"],
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
         "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
         "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]

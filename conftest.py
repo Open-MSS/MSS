@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-import importlib
 import importlib.machinery
 import os
 import sys
@@ -37,9 +36,13 @@ sys.dont_write_bytecode = True
 
 import pytest
 import fs
+import shutil
 from mslib.mswms.demodata import DataFiles
 import mslib._tests.constants as constants
 
+# make a copy for mscolab test, so that we read different pathes during parallel tests.
+sample_path = os.path.join(os.path.dirname(__file__), "docs", "samples", "flight-tracks")
+shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
 def pytest_addoption(parser):
     parser.addoption("--mss_settings", action="store")
@@ -81,7 +84,7 @@ if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2020 Vaibhav Mehra <veb7vmehra@gmail.com>
-    :copyright: Copyright 2020-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from mslib.msui.constants import MSS_SETTINGS
 from mslib.msui.icons import icons
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
-from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_data
+from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_dict
 
 
 from mslib.support.qt_json_view import delegate
@@ -565,7 +565,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
 
         if json_file_data:
             json_model_data = self.json_model.serialize()
-            options = merge_data(copy.deepcopy(json_model_data), json_file_data)
+            options = merge_dict(copy.deepcopy(json_model_data), json_file_data)
             if options == json_model_data:
                 self.statusbar.showMessage("No option with new values found")
                 return

@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,6 +55,7 @@ class Test_Mscolab_Merge_Waypoints(object):
         self.emailid = 'merge@alpha.org'
 
     def teardown(self):
+        self.window.mscolab.logout()
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
             mscolab_delete_user(self.app, self.url, self.emailid, 'abcdef')

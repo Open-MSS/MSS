@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2020 Tanish Grover
-    :copyright: Copyright 2020-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,6 +70,7 @@ class Test_MscolabVersionHistory(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:

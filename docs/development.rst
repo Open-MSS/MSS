@@ -142,7 +142,7 @@ Create an environment and install the whole mss package dependencies then remove
 
   $ conda create -n mssdev mamba
   $ conda activate mssdev
-  $ mamba install mss=$mss_version --only-deps
+  $ mamba install mss=$mss_version python --only-deps
 
 You can also use conda to install mss, but mamba is a way faster.
 Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
@@ -171,7 +171,7 @@ You can view the default configuration of mscolab in the file `mslib/mscolab/con
 If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server"
 section in :ref:`mscolab`
 
-When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab db --init`
+When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab.py db --init`
 to initialise it. The default database is a sqlite3 database.
 You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
 The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.

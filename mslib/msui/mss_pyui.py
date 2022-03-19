@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -485,8 +485,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         picker_default = config_loader(dataset="filepicker_default")
         self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
         self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
-        self.import_plugins = {"CSV": (load_from_csv, "csv")}
-        self.export_plugins = {"CSV": (save_to_csv, "csv")}
+        self.import_plugins = {}
+        self.export_plugins = {}
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
 
