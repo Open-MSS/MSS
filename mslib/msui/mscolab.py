@@ -14,6 +14,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2019- Shivashis Padhi
+    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -285,7 +286,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         if config_loader(dataset="MSCOLAB_mailid") != "" and config_loader(dataset="MSCOLAB_password") != "":
             ret = QtWidgets.QMessageBox.question(
                 self, self.tr("Update Credentials"),
-                self.tr("You are using new credentials. Should your settings file be updated with the new credentials?"),
+                self.tr("You are using new credentials. "
+                        "Should your settings file be updated with the new credentials?"),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:
                 modify_config_file(data_to_save_in_config_file)
