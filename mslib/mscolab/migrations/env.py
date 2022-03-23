@@ -23,8 +23,6 @@ SOFTWARE.
 """
 # source https://github.com/sunscrapers/flask-boilerplate/blob/master/migrations/env.py
 
-from __future__ import with_statement
-
 import logging
 from logging.config import fileConfig
 
