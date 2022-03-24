@@ -1,22 +1,16 @@
 .. _plugins:
 
 
-Plugins for exporting and importing flight path data
-====================================================
+NAVAID Plugin for exporting and importing flight path data
+==========================================================
 
 The communication of the flight path data (e.g. with the aircraft
 authorities) is always individual. For this reason, import and of
 these data can be done using different pre-defined templates.
 Alternative plugins could be placed into the settings directory.
 
-text
-~~~~
-
-csv
-~~~
-
-navaid
-~~~~~~
+Details
+~~~~~~~
 It may be requiered to compute the waypoints in the format WPT012034,
 where WPT is the NAVAID ID, 012 is the heading and 034 is the distance
 in nautical miles. This standard is used by several flight authorities.
