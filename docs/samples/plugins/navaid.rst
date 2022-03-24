@@ -1,4 +1,4 @@
-.. _plugins:
+.. _navaid:
 
 
 NAVAID Plugin for exporting and importing flight path data
