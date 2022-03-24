@@ -1,0 +1,33 @@
+.. _plugins:
+
+
+Plugins for exporting and importing flight path data
+====================================================
+
+The communication of the flight path data (e.g. with the aircraft
+authorities) is always individual. For this reason, import and of
+these data can be done using different pre-defined templates.
+Alternative plugins could be placed into the settings directory.
+
+text
+~~~~
+
+csv
+~~~
+
+navaid
+~~~~~~
+It may be requiered to compute the waypoints in the format WPT012034,
+where WPT is the NAVAID ID, 012 is the heading and 034 is the distance
+in nautical miles. This standard is used by several flight authorities.
+Data for the location of the NAVAID waypoints can be obtained as csv from
+https://adds-faa.opendata.arcgis.com/search?collection=Dataset
+The dataset should be named NAVAID_System.csv and placed into the subdir
+plugins of the condif dir. 
+For a given set of waypoints, the navaid export plugin exports an ASCII
+table containing a column of the so-determined waypoint names. For locations
+ouside the given set of NAVAID points , e.g. over the oceans, the naming
+convention switches to coordinate based name like xxyyNwwwzzW for
+latitude xx°yy'N and longitude www°zz'W. This is done if the closest NAVAID
+waypoint is more than 500 nm. 
+
