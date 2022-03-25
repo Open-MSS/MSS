@@ -32,9 +32,10 @@ from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
 from mslib.msui.constants import MSS_CONFIG_PATH
 
+
 def radial_dme(lat, lon, elev=12., test_date=datetime.date.today()):
-    ## Read the list of NAVAIDs
-    ## PATH needs to be replaced by generic
+    # Read the list of NAVAIDs
+    # PATH needs to be replaced by generic
     navaid_file = os.path.join(MSS_CONFIG_PATH, 'plugins', 'NAVAID_System.csv')
     navaid = open(navaid_file)
     csvreader = csv.reader(navaid)
@@ -46,7 +47,7 @@ def radial_dme(lat, lon, elev=12., test_date=datetime.date.today()):
     locations = []
     navidents = []
     for row in csvreader:
-        ## Find the ones that are useful to the pilots (types 6, 7, or 8)
+        # Find the ones that are useful to the pilots (types 6, 7, or 8)
         type_code = int(row[itype])
         if type_code == 6 or type_code == 7 or type_code == 8:
             navlon = float(row[ix])
@@ -54,7 +55,7 @@ def radial_dme(lat, lon, elev=12., test_date=datetime.date.today()):
             locations.append((navlat, navlon))
             navidents.append(row[iident])
 
-    ## Determine nearest NAVAID to the lat/lon point in nautical miles.
+    # Determine nearest NAVAID to the lat/lon point in nautical miles.
     position = (lat, lon)
     dist = [geodesic(position, i).nm for i in locations]
     minpos = dist.index(min(dist))
@@ -62,25 +63,26 @@ def radial_dme(lat, lon, elev=12., test_date=datetime.date.today()):
     navlat = locations[minpos][0]
     navlon = locations[minpos][1]
 
-    ## Calculate the true heading to the nearest NAVAID
-    ## Uses WGS84 ellipsoid for the earth
+    # Calculate the true heading to the nearest NAVAID
+    # Uses WGS84 ellipsoid for the earth
     true_bear = Geodesic.WGS84.Inverse(navlat, navlon, lat, lon)['azi1']
 
-    ## Convert to magnetic heading (note: elevation converted to feet)
+    # Convert to magnetic heading (note: elevation converted to feet)
     mag_bear = geomag.mag_heading(true_bear, dlat=lat, dlon=lon,
-                                  h=elev*3280.8399, time=test_date)
+                                  h=elev * 3280.8399, time=test_date)
 
-    ## Round to whole numbers
+    # Round to whole numbers
     az = round(mag_bear)
     rng = round(dist[minpos])
 
-    ## Print and return values
-    #print(lat, lon, az, rng)
-    lonx = np.mod((lon +180), 360) - 180
+    # Print and return values
+    lonx = np.mod((lon + 180), 360) - 180
     hemx = 'E'
-    if lonx < 0: hemx = 'W'
+    if lonx < 0:
+        hemx = 'W'
     hemy = 'N'
-    if lat < 0: hemy = 'S'
+    if lat < 0:
+        hemy = 'S'
 
     lonx = np.abs(lonx)
     latx = np.abs(lat)
@@ -111,7 +113,8 @@ def save_to_navaid(filename, name, waypoints):
     with codecs.open(filename, "w", encoding="utf-8") as out_file:
         out_file.write(u"# Do not modify if you plan to import this file again!\n")
         out_file.write(f"Track name: {name:}\n")
-        line = u"{0:5d}  {1:{2}} {3:11} {4:4.0f} {5:2.0f}'  {6:4.0f} {7:2.0f}' {8:11.3f} {9:14.3f}  {10:14.1f}  {11:15.1f}  {12:{13}}\n"
+        line = u"{0:5d}  {1:{2}} {3:11} {4:4.0f} {5:2.0f}'  {6:4.0f} {7:2.0f}' {8:11.3f} {9:14.3f}  {10:14.1f}" \
+               u"  {11:15.1f}  {12:{13}}\n"
         header = f"Index  {'Location':{max_loc_len}} NAVAID        Lat     Lon      Flightlevel Pressure (hPa)  " \
                  f"Leg dist. (km)  Cum. dist. (km)  {'Comments':{max_com_len}}\n"
         out_file.write(header)
@@ -122,12 +125,14 @@ def save_to_navaid(filename, name, waypoints):
             lon = wp.lon
             # transform to degrees and minutes
             latdeg = np.floor(lat)
-            if lat < 0: latdeg = - np.floor(-lat)
-            latmin = abs(round((lat - latdeg)*60.))
+            if lat < 0:
+                latdeg = - np.floor(-lat)
+            latmin = abs(round((lat - latdeg) * 60.))
 
             londeg = np.floor(lon)
-            if lon < 0: londeg = - np.floor(-lon)
-            lonmin = abs(round((lon - londeg)*60.))
+            if lon < 0:
+                londeg = - np.floor(-lon)
+            lonmin = abs(round((lon - londeg) * 60.))
 
             nav = radial_dme(lat, lon)
             lvl = wp.flightlevel
