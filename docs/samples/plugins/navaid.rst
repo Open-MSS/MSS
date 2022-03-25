@@ -32,7 +32,7 @@ Installation
 1. Save the NAVAID waypoint from https://adds-faa.opendata.arcgis.com/search?collection=Dataset select "Pending NAVAID System" and Download as CSV to your local directory `.config/mss/plugins/NAVAID_System.csv`
 
 
-1. Add additional modules to you mssenv by ::
+1. Add additional modules to your mssenv by ::
 
    (mssenv): mamba install geomag geopy geographiclib
    
