@@ -16,7 +16,7 @@ in nautical miles. This standard is used by several flight authorities.
 Data for the location of the NAVAID waypoints can be obtained as csv from
 https://adds-faa.opendata.arcgis.com/search?collection=Dataset
 The dataset should be named NAVAID_System.csv and placed into the subdir
-plugins of the condif dir. 
+plugins of the config dir.
 For a given set of waypoints, the navaid export plugin exports an ASCII
 table containing a column of the so-determined waypoint names. For locations
 ouside the given set of NAVAID points , e.g. over the oceans, the naming
