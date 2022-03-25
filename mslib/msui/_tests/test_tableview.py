@@ -107,7 +107,7 @@ class Test_TableView(object):
     @mock.patch("mslib.msui.performance_settings.get_open_filename",
                 return_value=fs.path.join(
                     os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "config",
-                    "mss", "performance_simple.json"))
+                    "mss", "performance_simple.json.sample"))
     def test_performance(self, mockopen, mockcrit):
         """
         Check effect of performance settings on TableView
