@@ -20,6 +20,8 @@ For more information on WMS, see http://www.opengeospatial.org/standards/wms
 WMS Server Deployment
 =====================
 
+.. _deployment:
+
 Once installation and configuration are complete, you can start the
 Web Map Service application (provided you have forecast data to visualise).
 The file "mswms" is an executable Python script starting up a Flask HTTP server

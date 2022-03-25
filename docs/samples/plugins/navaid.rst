@@ -1,8 +1,7 @@
-.. _navaid:
-
-
 NAVAID Plugin for exporting and importing flight path data
 ==========================================================
+
+.. _navaid:
 
 The communication of the flight path data (e.g. with the aircraft
 authorities) is always individual. For this reason, import and of
@@ -25,3 +24,15 @@ convention switches to coordinate based name like xxyyNwwwzzW for
 latitude xx°yy'N and longitude www°zz'W. This is done if the closest NAVAID
 waypoint is more than 500 nm. 
 
+Installation
+~~~~~~~~~~~~
+
+1. Copy :download:`navaid.py <samples/plugins/navaid.py>` to a PYTHONPATH directory e.g. .config/mss
+
+1. Save the NAVAID waypoint from https://adds-faa.opendata.arcgis.com/search?collection=Dataset select "Pending NAVAID System" and Download as CSV to your local directory `.config/mss/plugins/NAVAID_System.csv`
+
+
+1. Add additional modules to you mssenv by ::
+
+   (mssenv): mamba install geomag geopy geographiclib
+   

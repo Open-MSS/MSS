@@ -5,7 +5,7 @@ Components
    :maxdepth: 3
 
    usage
-   deployment
+   plugins
    mswms
    mscolab
    tutorials
