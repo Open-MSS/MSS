@@ -8,7 +8,7 @@
 
     This file is part of mss.
 
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,11 +33,11 @@ from geographiclib.geodesic import Geodesic
 from mslib.msui.constants import MSS_CONFIG_PATH
 
 
-def radial_dme(lat, lon, elev=12., test_date=datetime.date.today()):
+def radial_dme(lat, lon, elev=12., test_date=datetime.date.today(), maxdist = 250.):
     # Read the list of NAVAIDs
     # PATH needs to be replaced by generic
     navaid_file = os.path.join(MSS_CONFIG_PATH, 'plugins', 'NAVAID_System.csv')
-    navaid = open(navaid_file)
+    navaid = open(navaid_file, encoding='utf-8-sig' )
     csvreader = csv.reader(navaid)
     header = next(csvreader)
     ix = header.index('X')
@@ -91,7 +91,7 @@ def radial_dme(lat, lon, elev=12., test_date=datetime.date.today()):
     latmin = int(round((latx - np.floor(latx)) * 60.))
     lonmin = int(round((lonx - np.floor(lonx)) * 60.))
 
-    if rng > 500:
+    if rng > maxdist:
         wpt_str = '{:02d}{:02d}{}{:03d}{:02d}{}'.format(latdeg, latmin, hemy,
                                                         londeg, lonmin, hemx)
     else:
@@ -102,6 +102,7 @@ def radial_dme(lat, lon, elev=12., test_date=datetime.date.today()):
 
 
 def save_to_navaid(filename, name, waypoints):
+    maxdist = 250.
     if not filename:
         raise ValueError("filename to save flight track cannot be None")
     max_loc_len, max_com_len = len("Location"), len("Comments")
@@ -112,11 +113,12 @@ def save_to_navaid(filename, name, waypoints):
             max_com_len = len(str(wp.comments))
     with codecs.open(filename, "w", encoding="utf-8") as out_file:
         out_file.write(u"# Do not modify if you plan to import this file again!\n")
+        out_file.write(u"# This file contains NAVAID-DME names for points less than {0:.0f} nm distance from closest NAVAID point\n".format(maxdist))
         out_file.write(f"Track name: {name:}\n")
-        line = u"{0:5d}  {1:{2}} {3:11} {4:4.0f} {5:2.0f}'  {6:4.0f} {7:2.0f}' {8:11.3f} {9:14.3f}  {10:14.1f}" \
-               u"  {11:15.1f}  {12:{13}}\n"
-        header = f"Index  {'Location':{max_loc_len}} NAVAID        Lat     Lon      Flightlevel Pressure (hPa)  " \
-                 f"Leg dist. (km)  Cum. dist. (km)  {'Comments':{max_com_len}}\n"
+        line = u"{0:5d}  {1:{2}} {3:11} {4:4.0f}° {5:02.0f}'  {6:4.0f}° {7:02.0f}' {8:7.1f} {9:7.1f}  {10:8.1f}" \
+               u"  {11:8.1f}  {12:{13}}\n"
+        header = f"Index  {'Location':{max_loc_len}} NAVAID-DME    Lat      Lon      FL (hft) P (hPa)  " \
+                 f"Leg (km) Cum. (km)  {'Comments':{max_com_len}}\n"
         out_file.write(header)
         for i, wp in enumerate(waypoints):
             # ToDo check str(str( .. ) and may be use csv write
@@ -134,7 +136,7 @@ def save_to_navaid(filename, name, waypoints):
                 londeg = - np.floor(-lon)
             lonmin = abs(round((lon - londeg) * 60.))
 
-            nav = radial_dme(lat, lon)
+            nav = radial_dme(lat, lon, maxdist=maxdist)
             lvl = wp.flightlevel
             pre = wp.pressure / 100.
             leg = wp.distance_to_prev
