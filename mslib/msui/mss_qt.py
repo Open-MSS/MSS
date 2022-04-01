@@ -389,6 +389,8 @@ class Worker(QtCore.QThread):
     def run(self):
         try:
             result = self.function()
+            # ToDo the capbilities worker member needs the possibility to terminate itselfs.
+            # ToDo refactoring needed
             if "MSSWebMapService" in repr(result) and not result.contents:
                 raise NoLayersError
             else:
