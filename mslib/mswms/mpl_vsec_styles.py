@@ -190,7 +190,7 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
     class fnord(VS_GenericStyle):
         name = f"VS_{entity}_{vert}"
         dataname = entity
-        units, _ = Targets.get_unit(dataname)
+        units = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
             title += f" ({units})"

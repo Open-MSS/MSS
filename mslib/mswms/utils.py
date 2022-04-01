@@ -27,9 +27,9 @@
 
 import numpy as np
 import matplotlib
-import pint
 
-UR = pint.UnitRegistry()
+from mslib.utils.units import convert_to
+
 N_LEVELS = 16
 
 
@@ -101,43 +101,43 @@ class Targets(object):
     ]
 
     UNITS = {
-        "air_temperature": ("K", 1),
-        "eastward_wind": ("1/ms", 1),
-        "equivalent_latitude": ("degree N", 1),
-        "ertel_potential_vorticity": ("PVU", 1),
-        "gravity_wave_temperature_perturbation": ("K", 1),
-        "mean_age_of_air": ("month", 1),
-        "median_of_age_of_air_spectrum": ("month", 1),
-        "northward_wind": ("1/ms", 1),
-        "square_of_brunt_vaisala_frequency_in_air": ("1/s²", 1),
-        "tropopause_altitude": ("km", 1),
-        "cloud_ice_mixing_ratio": ("ppmv", 1),
-        "number_concentration_of_ice_crystals_in_air": ("1/cm³", 1),
-        "mean_mass_radius_of_cloud_ice_crystals": ("µm", 1),
-        "maximum_pressure_on_backtrajectory": ("hPa", 1),
-        "maximum_relative_humidity_wrt_ice_on_backtrajectory": ("percent", 1),
+        "air_temperature": "K",
+        "eastward_wind": "1/ms",
+        "equivalent_latitude": "degree N",
+        "ertel_potential_vorticity": "PVU",
+        "gravity_wave_temperature_perturbation": "K",
+        "mean_age_of_air": "month",
+        "median_of_age_of_air_spectrum": "month",
+        "northward_wind": "1/ms",
+        "square_of_brunt_vaisala_frequency_in_air": "1/s²",
+        "tropopause_altitude": "km",
+        "cloud_ice_mixing_ratio": "ppmv",
+        "number_concentration_of_ice_crystals_in_air": "1/cm³",
+        "mean_mass_radius_of_cloud_ice_crystals": "µm",
+        "maximum_pressure_on_backtrajectory": "hPa",
+        "maximum_relative_humidity_wrt_ice_on_backtrajectory": "percent",
     }
 
     # The THRESHOLDS are used to determine a single colourmap suitable for all plotting purposes (that is vertical
     # and horizontal on all levels. The given thresholds have been manually designed.
     THRESHOLDS = {
         "ertel_potential_vorticity":
-            (-1, 0, 1, 2, 4, 6, 9, 12, 15, 25, 40),
+            ("PVU", (-1, 0, 1, 2, 4, 6, 9, 12, 15, 25, 40)),
         "mole_fraction_of_carbon_monoxide_in_air":
-            (10e-9, 20e-9, 30e-9, 40e-9, 50e-9, 60e-9, 70e-9, 80e-9, 90e-9, 100e-9, 300e-9),
+            ("nmol/mol", (10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 300)),
         "mole_fraction_of_nitric_acid_in_air":
-            (0e-9, 0.3e-9, 0.5e-9, 0.7e-9, 0.9e-9, 1.1e-9, 1.3e-9, 1.5e-9, 2e-9, 4e-9),
+            ("nmol/mol", (0, 0.3, 0.5, 0.7, 0.9, 1.1, 1.3, 1.5, 2, 4)),
         "mole_fraction_of_ozone_in_air":
-            (0e-6, 0.02e-6, 0.03e-6, 0.04e-6, 0.06e-6, 0.1e-6, 0.16e-6, 0.25e-6, 0.45e-6, 1e-6, 4e-6),
+            ("µmol/mol", (0, 0.02, 0.03, 0.04, 0.06, 0.1, 0.16, 0.25, 0.45, 1, 4)),
         "mole_fraction_of_peroxyacetyl_nitrate_in_air":
-            (0, 50e-12, 70e-12, 100e-12, 150e-12, 200e-12, 250e-12, 300e-12, 350e-12, 400e-12, 450e-12, 500e-12),
+            ("pmol/mol", (0, 50, 70, 100, 150, 200, 250, 300, 350, 400, 450, 500)),
         "mole_fraction_of_water_vapor_in_air":
-            (0, 3e-6, 4e-6, 6e-6, 10e-6, 16e-6, 60e-6, 150e-6, 500e-6, 1000e-6),
+            ("µmol/mol", (0, 3, 4, 6, 10, 16, 60, 150, 500, 1000)),
     }
 
     for standard_name in _TARGETS:
         if standard_name.startswith("surface_origin_tracer_from_"):
-            UNITS[standard_name] = ("percent", 1)
+            UNITS[standard_name] = "percent"
 
     for standard_name in [
             "mole_fraction_of_carbon_dioxide_in_air",
@@ -145,7 +145,7 @@ class Targets(object):
             "mole_fraction_of_ozone_in_air",
             "mole_fraction_of_water_vapor_in_air",
     ]:
-        UNITS[standard_name] = ("µmol/mol", 1)
+        UNITS[standard_name] = "µmol/mol"
 
     for standard_name in [
             "mole_fraction_of_active_chlorine_in_air",
@@ -155,7 +155,7 @@ class Targets(object):
             "mole_fraction_of_nitric_acid_in_air",
             "mole_fraction_of_nitrous_oxide_in_air",
     ]:
-        UNITS[standard_name] = ("nmol/mol", 1)
+        UNITS[standard_name] = "nmol/mol"
 
     for standard_name in [
             "mole_fraction_of_bromine_nitrate_in_air",
@@ -176,13 +176,13 @@ class Targets(object):
             "mole_fraction_of_peroxyacetyl_nitrate_in_air",
             "mole_fraction_of_sulfur_dioxide_in_air",
     ]:
-        UNITS[standard_name] = ("pmol/mol", 1)
+        UNITS[standard_name] = "pmol/mol"
 
     for standard_name in [
             "fraction_below_6months_of_age_of_air_spectrum",
             "fraction_above_24months_of_age_of_air_spectrum",
     ]:
-        UNITS[standard_name] = ("percent", 1)
+        UNITS[standard_name] = "percent"
 
     TITLES = {
         "ertel_potential_vorticity": "PV",
@@ -216,7 +216,7 @@ class Targets(object):
             Tuple of string describing the unit and scaling factor to apply on data.
 
         """
-        return Targets.UNITS.get(standard_name, (None, 1))
+        return Targets.UNITS.get(standard_name, "dimensionless")
 
     @staticmethod
     def get_range(standard_name, level="total", typ=None):
@@ -231,21 +231,21 @@ class Targets(object):
             Tuple of lowest and highest valid value
         """
         if standard_name in Targets.RANGES:
+            if level == "total" and "total" in Targets.RANGES[standard_name]:
+                unit, values = Targets.RANGES[standard_name]["total"]
+                return convert_to(values, unit, Targets.get_unit(standard_name))
             if typ in Targets.RANGES[standard_name]:
                 if level in Targets.RANGES[standard_name][typ]:
-                    return [_x * Targets.get_unit(standard_name)[1]
-                            for _x in Targets.RANGES[standard_name][typ][level]]
+                    unit, values = Targets.RANGES[standard_name][typ][level]
+                    return convert_to(values, unit, Targets.get_unit(standard_name))
                 elif level is None:
                     return 0, 0
-            if level == "total" and "total" in Targets.RANGES[standard_name]:
-                return [_x * Targets.get_unit(standard_name)[1]
-                        for _x in Targets.RANGES[standard_name]["total"]]
         if standard_name.startswith("surface_origin_tracer_from_"):
             return 0, 100
         return None, None
 
     @staticmethod
-    def get_thresholds(standard_name, level=None, type=None):
+    def get_thresholds(standard_name):
         """
         Returns a list of meaningful values for a BoundaryNorm for plotting.
         Args:
@@ -257,7 +257,8 @@ class Targets(object):
             Tuple of threshold values to be supplied to a BoundaryNorm.
         """
         try:
-            return [_x * Targets.get_unit(standard_name)[1] for _x in Targets.THRESHOLDS[standard_name]]
+            threshold_unit, thresholds = Targets.THRESHOLDS[standard_name]
+            return convert_to(thresholds, threshold_unit, Targets.get_unit(standard_name))
         except KeyError:
             return None
 

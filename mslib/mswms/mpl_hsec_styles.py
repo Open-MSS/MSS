@@ -460,7 +460,7 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
         dataname = entity
         title = Targets.TITLES.get(entity, entity)
         long_name = entity
-        units, _ = Targets.get_unit(entity)
+        units = Targets.get_unit(entity)
         if units:
             title += f" ({units})"
 
