@@ -11,7 +11,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -350,7 +350,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         if self._plot_countries:
             # Set up the map appearance.
-            bm.drawcoastlines(color='0.25')
+            try:
+                bm.drawcoastlines(color='0.25')
+            except ValueError as ex:
+                logging.error("Error in basemap/matplotlib call of drawcoastlines: %s", ex)
             bm.drawcountries(color='0.5')
             bm.drawmapboundary(fill_color='white')
 

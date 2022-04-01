@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 6.0.5
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/74?closed=1
+
 Version 6.0.4
 ~~~~~~~~~~~~~
 
