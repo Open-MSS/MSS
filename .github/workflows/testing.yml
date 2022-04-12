@@ -30,11 +30,10 @@ jobs:
         && conda config --add channels conda-forge \
         && conda config --set channel_priority strict \
         && conda install --revision 0 \
-        && conda install mamba python=3.9 \
-        && mamba install pyvirtualdisplay python=3.9 \
+        && conda install mamba \
+        && mamba install pyvirtualdisplay \
         && mamba install --file reqs.txt \
-        && mamba install --file requirements.d/development.txt \
-        && mamba install -c conda-forge gsl=2.7.0)
+        && mamba install --file requirements.d/development.txt)
 
     - name: Run tests
       timeout-minutes: 25
