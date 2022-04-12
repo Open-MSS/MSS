@@ -452,6 +452,9 @@ class WMSServer(object):
                     self.hsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError("dataset '%s' not available", dataset)
+            if layer.name in self.hsec_layer_registry[dataset]:
+                raise ValueError(f"new layer is already registered? dataset={dataset} layer.name={layer.name} "
+                                 f"new={layer} old={self.hsec_layer_registry[dataset][layer.name]}")
             self.hsec_layer_registry[dataset][layer.name] = layer
 
     def register_vsec_layer(self, datasets, layer_class):
@@ -477,6 +480,9 @@ class WMSServer(object):
                     self.vsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError("dataset '%s' not available", dataset)
+            if layer.name in self.vsec_layer_registry[dataset]:
+                raise ValueError(f"new layer is already registered? dataset={dataset} layer.name={layer.name} "
+                                 f"new={layer} old={self.vsec_layer_registry[dataset][layer.name]}")
             self.vsec_layer_registry[dataset][layer.name] = layer
 
     def register_lsec_layer(self, datasets, variable=None, filetype="ml", layer_class=None):
@@ -505,6 +511,9 @@ class WMSServer(object):
                     self.lsec_layer_registry[dataset] = {}
                 else:
                     raise ValueError("dataset '%s' not available", dataset)
+            if layer.name in self.lsec_layer_registry[dataset]:
+                raise ValueError(f"new layer is already registered? dataset={dataset} layer.name={layer.name} "
+                                 f"new={layer} old={self.lsec_layer_registry[dataset][layer.name]}")
             self.lsec_layer_registry[dataset][layer.name] = layer
 
     def create_service_exception(self, code=None, text="", version="1.3.0"):
