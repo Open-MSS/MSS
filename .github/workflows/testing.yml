@@ -30,7 +30,7 @@ jobs:
         && conda config --add channels conda-forge \
         && conda install --revision 0 \
         && conda install mamba python=3.9 \
-        && mamba install pyvirtualdisplay python \
+        && mamba install pyvirtualdisplay python=3.9 \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 
