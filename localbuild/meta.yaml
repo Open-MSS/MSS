@@ -20,7 +20,7 @@ build:
 
 requirements:
   build:
-    - python =3.9
+    - python
     - pip
     - future
     - menuinst  # [win]
