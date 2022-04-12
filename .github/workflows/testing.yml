@@ -32,7 +32,8 @@ jobs:
         && conda install mamba python=3.9 \
         && mamba install pyvirtualdisplay python=3.9 \
         && mamba install --file reqs.txt \
-        && mamba install --file requirements.d/development.txt)
+        && mamba install --file requirements.d/development.txt \
+        && mamba install -c conda-forge gsl)
 
     - name: Run tests
       timeout-minutes: 25
