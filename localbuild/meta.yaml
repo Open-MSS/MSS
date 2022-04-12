@@ -32,7 +32,6 @@ requirements:
     - chameleon
     - execnet
     - fastkml  =0.11
-    - gsl
     - isodate
     - lxml
     - netcdf4
