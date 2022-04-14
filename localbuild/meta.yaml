@@ -62,7 +62,7 @@ requirements:
     - flask-cors
     - passlib
     - gitpython
-    - git <2.35.2
+    - git
     - psycopg2
     - PyMySQL >=0.9.3
     - validate_email
