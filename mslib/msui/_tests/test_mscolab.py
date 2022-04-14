@@ -432,6 +432,7 @@ class Test_Mscolab(object):
         assert item.operation_path == "example"
         assert item.access_level == "creator"
 
+    @pytest.mark.skip("fails often on github on a timeout >60s")
     @mock.patch("PyQt5.QtWidgets.QErrorMessage")
     def test_add_operation(self, mockbox):
         self._connect_to_mscolab()
