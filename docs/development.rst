@@ -92,34 +92,35 @@ Setting up a git remote
 -----------------------
 
 1. Now you have to set up remote repositories
-
 2. Type ``git remote -v`` in terminal to list remote connections to your repo.
-
 3. It will show something like this::
 
-   origin  git@github.com:<your-user-name>/MSS.git (fetch)
-   origin  git@github.com:<your-user-name>/MSS.git (push)
+     origin  git@github.com:<your-user-name>/MSS.git (fetch)
+     origin  git@github.com:<your-user-name>/MSS.git (push)
 
-4. Now type the command git remote add upstream ``git@github.com:Open-MSS/MSS.git`` this will set upstream as main directory
+4. Add an upstream remote by the command ::
+
+     git remote add upstream git@github.com:Open-MSS/MSS.git
 
 
-5. Again type in command git remote -v to check if remote has been set up correctly
 
-6. It should show something like this::
+5. Again type in command ``git remote -v`` to check if remote has been set up correctly
+6. It should show something like this ::
 
-   origin	git@github.com:<your-user-name>/MSS.git (fetch)
-   origin	git@github.com:<your-user-name>/MSS.git (push)
-   upstream	git@github.com:Open-MSS/MSS.git (fetch)
-   upstream	git@github.com:Open-MSS/MSS.git (push)
+     origin	git@github.com:<your-user-name>/MSS.git (fetch)
+     origin	git@github.com:<your-user-name>/MSS.git (push)
+     upstream	git@github.com:Open-MSS/MSS.git (fetch)
+     upstream	git@github.com:Open-MSS/MSS.git (push)
 
 Update local stable branch
 --------------------------
 
 If you don't have a stable branch, create one first or change to that branch::
 
-   git checkout [-b] stable
-   git pull git@github.com:Open-MSS/MSS.git stable
-   git push
+
+  git checkout [-b] stable
+  git pull git@github.com:Open-MSS/MSS.git stable
+  git push
 
 
 

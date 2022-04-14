@@ -122,6 +122,7 @@ class MapCanvas(basemap.Basemap):
 
         # Set up the map appearance.
         if self.appearance["draw_coastlines"]:
+            self.map_coastlines = None
             if len(self.coastsegs) > 0 and len(self.coastsegs[0]) > 0:
                 self.map_coastlines = self.drawcoastlines(zorder=3)
             self.map_countries = self.drawcountries(zorder=3)
@@ -535,11 +536,14 @@ class MapCanvas(basemap.Basemap):
         """
         self.appearance["draw_coastlines"] = visible
         if visible and self.map_coastlines is None and self.map_countries is None:
-            self.map_coastlines = self.drawcoastlines(zorder=3)
+            self.map_coastlines = None
+            if len(self.coastsegs) > 0 and len(self.coastsegs[0]) > 0:
+                self.map_coastlines = self.drawcoastlines(zorder=3)
             self.map_countries = self.drawcountries(zorder=3)
             self.ax.figure.canvas.draw()
-        elif not visible and self.map_coastlines is not None and self.map_countries is not None:
-            self.map_coastlines.remove()
+        elif not visible and (self.map_coastlines is not None or self.map_countries is not None):
+            if self.map_coastlines is not None:
+                self.map_coastlines.remove()
             self.map_countries.remove()
             del self.cntrysegs
             self.map_coastlines = None
