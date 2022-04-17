@@ -151,7 +151,7 @@ class FileManager(object):
         operation = Operation.query.filter_by(id=op_id).first()
         if attribute == "path":
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
-                logging.debug("malicious request: %s", user)
+                logging.debug("malicious request: %s" % user)
                 return False
             data = fs.open_fs(self.data_dir)
             if data.exists(value):

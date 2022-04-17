@@ -40,7 +40,7 @@ if '://' in MSS_CONFIG_PATH:
     except fs.errors.CreateFailed:
         _fs.makedirs(MSS_CONFIG_PATH)
     except fs.opener.errors.UnsupportedProtocol:
-        logging.error(f'FS url "{MSS_CONFIG_PATH}" not supported')
+        logging.error('FS url "%s" not supported' % MSS_CONFIG_PATH)
 else:
     _dir = os.path.expanduser(MSS_CONFIG_PATH)
     if not os.path.exists(_dir):
@@ -60,14 +60,14 @@ if '://' in MSS_SETTINGS:
             with _fs.open(file_name, 'w') as fid:
                 fid.write("{}")
     except fs.errors.CreateFailed:
-        logging.error(f'"{MSS_SETTINGS}" can''t be created')
+        logging.error('"%s" can''t be created' % MSS_SETTINGS)
 else:
     if not os.path.exists(MSS_SETTINGS):
         try:
             with open(MSS_SETTINGS, 'w') as fid:
                 fid.write("{}")
         except IOError:
-            logging.error(f'"{MSS_SETTINGS}" can''t be created')
+            logging.error('"%s" can''t be created' % MSS_SETTINGS)
 
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}
