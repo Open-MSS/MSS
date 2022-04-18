@@ -361,6 +361,12 @@ class CheckableComboBox(QtWidgets.QComboBox):
         return res
 
 
+class NoLayersError(Exception):
+    def __init__(self, message="No Layers found in WMS get capabilities"):
+        self.message = message
+        super().__init__(self.message)
+
+
 class Worker(QtCore.QThread):
     """
     Can be used to run a function through a QThread without much struggle,
@@ -388,7 +394,12 @@ class Worker(QtCore.QThread):
     def run(self):
         try:
             result = self.function()
-            self.finished.emit(result)
+            # ToDo the capbilities worker member needs the possibility to terminate itselfs.
+            # ToDo refactoring needed
+            if "MSSWebMapService" in repr(result) and not result.contents:
+                raise NoLayersError
+            else:
+                self.finished.emit(result)
         except Exception as e:
             self.failed.emit(e)
         finally:

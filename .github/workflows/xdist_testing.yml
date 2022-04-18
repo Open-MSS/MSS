@@ -25,6 +25,8 @@ jobs:
       image: openmss/mss-test:latest
 
     steps:
+    - name: Trust My Directory
+      run: git config --global --add safe.directory /__w/MSS/MSS
     - uses: actions/checkout@v2
         
     - name: Reinstall dependencies if changed
@@ -36,7 +38,6 @@ jobs:
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
         && source /opt/conda/bin/activate mssenv \
-        && conda config --add channels conda-forge \
         && conda install --revision 0 \
         && conda install mamba python \
         && mamba install pyvirtualdisplay python \
