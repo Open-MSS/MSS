@@ -43,8 +43,7 @@ class LS_DefaultStyle(AbstractLinearSectionStyle):
         self.required_datafields = [(filetype, self.variable, None)]
         if filetype != "pl":
             self.required_datafields.insert(0, (filetype, "air_pressure", "Pa"))
-        abbreviation = "".join([text[0] for text in self.variable.split("_")])
-        self.name = f"LS_{str.upper(abbreviation)}"
+        self.name = f"LS_Default_{variable}"
         self.title = f"{self.variable} Linear Plot"
 
 
