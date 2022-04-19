@@ -249,7 +249,7 @@ class WMSServer(object):
             tmp_path = tempfile.mkdtemp()
             path = DOCS_LOCATION if sphinx else STATIC_LOCATION
 
-            if not plot_list:
+            if plot_list is None:
                 plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
                              [self.vsec_drivers, self.vsec_layer_registry],
                              [self.hsec_drivers, self.hsec_layer_registry]]
@@ -441,6 +441,9 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.hsec_drivers[dataset])
+                # ToDo figure how this layer_class gets used
+                if layer.name == "HS_GenericStyle":
+                    continue
             except KeyError as ex:
                 logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
@@ -455,6 +458,9 @@ class WMSServer(object):
             if layer.name in self.hsec_layer_registry[dataset]:
                 raise ValueError(f"new layer is already registered? dataset={dataset} layer.name={layer.name} "
                                  f"new={layer} old={self.hsec_layer_registry[dataset][layer.name]}")
+            if layer.name == "HS_GenericStyle":
+                raise ValueError(f"problem in configuration for dataset={dataset}. We found layer.name={layer.name}"
+                                 f"  The class HS_GenericStyle should never be used.")
             self.hsec_layer_registry[dataset][layer.name] = layer
 
     def register_vsec_layer(self, datasets, layer_class):
@@ -469,6 +475,9 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.vsec_drivers[dataset])
+                # ToDo figure how this layer_class gets used
+                if layer.name == "VS_GenericStyle":
+                    continue
             except KeyError as ex:
                 logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
@@ -483,6 +492,9 @@ class WMSServer(object):
             if layer.name in self.vsec_layer_registry[dataset]:
                 raise ValueError(f"new layer is already registered? dataset={dataset} layer.name={layer.name} "
                                  f"new={layer} old={self.vsec_layer_registry[dataset][layer.name]}")
+            if layer.name == "VS_GenericStyle":
+                raise ValueError(f"problem in configuration for dataset={dataset}. We found layer.name={layer.name}"
+                                 f" The class VS_GenericStyle should never be used.")
             self.vsec_layer_registry[dataset][layer.name] = layer
 
     def register_lsec_layer(self, datasets, variable=None, filetype="ml", layer_class=None):
