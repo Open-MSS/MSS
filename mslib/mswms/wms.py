@@ -173,137 +173,137 @@ def squash_multiple_xml(xml_strings):
 
 class WMSServer(object):
 
-    def __init__(self):
-        """
-        init method for wms server
-        """
-        data_access_dict = mss_wms_settings.data
+	def __init__(self):
+		"""
+		init method for wms server
+		"""
+		data_access_dict = mss_wms_settings.data
 
-        for key in data_access_dict:
-            data_access_dict[key].setup()
+		for key in data_access_dict:
+			data_access_dict[key].setup()
 
-        self.hsec_drivers = {}
-        for key in data_access_dict:
-            self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
-                data_access_dict[key])
+		self.hsec_drivers = {}
+		for key in data_access_dict:
+			self.hsec_drivers[key] = mss_plot_driver.HorizontalSectionDriver(
+				data_access_dict[key])
 
-        self.vsec_drivers = {}
-        for key in data_access_dict:
-            self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
-                data_access_dict[key])
+		self.vsec_drivers = {}
+		for key in data_access_dict:
+			self.vsec_drivers[key] = mss_plot_driver.VerticalSectionDriver(
+				data_access_dict[key])
 
-        self.lsec_drivers = {}
-        for key in data_access_dict:
-            self.lsec_drivers[key] = mss_plot_driver.LinearSectionDriver(
-                data_access_dict[key])
+		self.lsec_drivers = {}
+		for key in data_access_dict:
+			self.lsec_drivers[key] = mss_plot_driver.LinearSectionDriver(
+				data_access_dict[key])
 
-        self.hsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_horizontal_layers:
-            self.register_hsec_layer(datasets, layer)
+		self.hsec_layer_registry = {}
+		for layer, datasets in mss_wms_settings.register_horizontal_layers:
+			self.register_hsec_layer(datasets, layer)
 
-        self.vsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_vertical_layers:
-            self.register_vsec_layer(datasets, layer)
+		self.vsec_layer_registry = {}
+		for layer, datasets in mss_wms_settings.register_vertical_layers:
+			self.register_vsec_layer(datasets, layer)
 
-        self.lsec_layer_registry = {}
-        if not hasattr(mss_wms_settings, "register_linear_layers"):
-            logging.info("Since 4.0.0 MSS has support for linear layers in the mss_wms_settings.py.\n"
-                         "Look at the documentation for an example "
-                         "https://mss.readthedocs.io/en/stable/deployment.html#configuration-file-of-the-wms-server")
-            mss_wms_settings.register_linear_layers = []
-        for layer in mss_wms_settings.register_linear_layers:
-            if len(layer) == 3:
-                self.register_lsec_layer(layer[2], layer[1], layer_class=layer[0])
-            elif len(layer) == 4:
-                self.register_lsec_layer(layer[3], layer[1], layer[2], layer[0])
-            else:
-                self.register_lsec_layer(layer[1], layer_class=layer[0])
+		self.lsec_layer_registry = {}
+		if not hasattr(mss_wms_settings, "register_linear_layers"):
+			logging.info("Since 4.0.0 MSS has support for linear layers in the mss_wms_settings.py.\n"
+						 "Look at the documentation for an example "
+						 "https://mss.readthedocs.io/en/stable/deployment.html#configuration-file-of-the-wms-server")
+			mss_wms_settings.register_linear_layers = []
+		for layer in mss_wms_settings.register_linear_layers:
+			if len(layer) == 3:
+				self.register_lsec_layer(layer[2], layer[1], layer_class=layer[0])
+			elif len(layer) == 4:
+				self.register_lsec_layer(layer[3], layer[1], layer[2], layer[0])
+			else:
+				self.register_lsec_layer(layer[1], layer_class=layer[0])
 
-    def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
-                         all_plots=False, url_prefix="", levels="", itimes="", vtimes="", simple_naming=False):
-        """
-        Iterates through all registered layers, draws their plots and puts them in the gallery
-        """
-        if mss_wms_settings.__file__:
-            if all_plots:
-                # Imports here due to some circular import issue if imported too soon
-                from mslib.mswms import mpl_hsec_styles, mpl_vsec_styles, mpl_lsec_styles
+	def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
+						 all_plots=False, url_prefix="", levels="", itimes="", vtimes="", simple_naming=False):
+		"""
+		Iterates through all registered layers, draws their plots and puts them in the gallery
+		"""
+		if mss_wms_settings.__file__:
+			if all_plots:
+				# Imports here due to some circular import issue if imported too soon
+				from mslib.mswms import mpl_hsec_styles, mpl_vsec_styles, mpl_lsec_styles
 
-                dataset = [next(iter(mss_wms_settings.data))]
-                mss_wms_settings.register_horizontal_layers = [
-                    (plot[1], dataset) for plot in inspect.getmembers(mpl_hsec_styles, inspect.isclass)
-                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
-                ]
-                mss_wms_settings.register_vertical_layers = [
-                    (plot[1], dataset) for plot in inspect.getmembers(mpl_vsec_styles, inspect.isclass)
-                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
-                ]
-                mss_wms_settings.register_linear_layers = [
-                    (plot[1], dataset) for plot in inspect.getmembers(mpl_lsec_styles, inspect.isclass)
-                ]
-                self.__init__()
+				dataset = [next(iter(mss_wms_settings.data))]
+				mss_wms_settings.register_horizontal_layers = [
+					(plot[1], dataset) for plot in inspect.getmembers(mpl_hsec_styles, inspect.isclass)
+					if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+				]
+				mss_wms_settings.register_vertical_layers = [
+					(plot[1], dataset) for plot in inspect.getmembers(mpl_vsec_styles, inspect.isclass)
+					if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+				]
+				mss_wms_settings.register_linear_layers = [
+					(plot[1], dataset) for plot in inspect.getmembers(mpl_lsec_styles, inspect.isclass)
+				]
+				self.__init__()
 
-            if not (create or generate_code or all_plots or plot_list):
-                return
+			if not (create or generate_code or all_plots or plot_list):
+				return
 
-            tmp_path = tempfile.mkdtemp()
-            path = DOCS_LOCATION if sphinx else STATIC_LOCATION
+			tmp_path = tempfile.mkdtemp()
+			path = DOCS_LOCATION if sphinx else STATIC_LOCATION
 
-            if not plot_list:
-                plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
-                             [self.vsec_drivers, self.vsec_layer_registry],
-                             [self.hsec_drivers, self.hsec_layer_registry]]
+			if not plot_list:
+				plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
+							 [self.vsec_drivers, self.vsec_layer_registry],
+							 [self.hsec_drivers, self.hsec_layer_registry]]
 
-            # Iterate through all plots of all datasets, create the plot and build the gallery with it
-            for driver, registry in plot_list:
-                multiple_datasets = len(driver) > 1
-                for dataset in driver:
-                    plot_driver = driver[dataset]
-                    if dataset not in registry:
-                        continue
-                    for plot in registry[dataset]:
-                        plot_object = registry[dataset][plot]
-                        l_type = "Linear" if driver == self.lsec_drivers else \
-                            "Side" if driver == self.vsec_drivers else "Top"
+			# Iterate through all plots of all datasets, create the plot and build the gallery with it
+			for driver, registry in plot_list:
+				multiple_datasets = len(driver) > 1
+				for dataset in driver:
+					plot_driver = driver[dataset]
+					if dataset not in registry:
+						continue
+					for plot in registry[dataset]:
+						plot_object = registry[dataset][plot]
+						l_type = "Linear" if driver == self.lsec_drivers else \
+							"Side" if driver == self.vsec_drivers else "Top"
 
-                        try:
-                            file_types = [field[0] for field in plot_object.required_datafields
-                                          if field[0] != "sfc"]
-                            file_type = file_types[0] if file_types else "sfc"
+						try:
+							file_types = [field[0] for field in plot_object.required_datafields
+										  if field[0] != "sfc"]
+							file_type = file_types[0] if file_types else "sfc"
 
-                            # All specified init times, or the latest if empty, or all if "all",
-                            # or None if there are no init times
-                            init_times = [parse_iso_datetime(itime) if isinstance(itime, str) else itime
-                                          for itime in (itimes.split(",") if itimes != "all" and itimes != "" else
-                                                        plot_driver.get_init_times() if itimes == "all" else
-                                                        [plot_driver.get_init_times()[-1]])] or [None]
+							# All specified init times, or the latest if empty, or all if "all",
+							# or None if there are no init times
+							init_times = [parse_iso_datetime(itime) if isinstance(itime, str) else itime
+										  for itime in (itimes.split(",") if itimes != "all" and itimes != "" else
+														plot_driver.get_init_times() if itimes == "all" else
+														[plot_driver.get_init_times()[-1]])] or [None]
 
-                            for itime in sorted(init_times):
-                                if itime and plot_driver.get_init_times() and itime not in plot_driver.get_init_times():
-                                    logging.warning("Requested itime %s not present for "
-                                                    "%s %s! itimes present: "
-                                                    "%s" % (itime, dataset, plot_object.name, plot_driver.get_init_times()))
-                                    continue
-                                elif not plot_driver.get_init_times():
-                                    itime = None
+							for itime in sorted(init_times):
+								if itime and plot_driver.get_init_times() and itime not in plot_driver.get_init_times():
+									logging.warning("Requested itime %s not present for "
+													"%s %s! itimes present: "
+													"%s" % (itime, dataset, plot_object.name, plot_driver.get_init_times()))
+									continue
+								elif not plot_driver.get_init_times():
+									itime = None
 
-                                # All valid times for the specific init time
-                                i_vtimes = plot_driver.get_valid_times(plot_object.required_datafields[0][1], file_type,
-                                                                       itime)
+								# All valid times for the specific init time
+								i_vtimes = plot_driver.get_valid_times(plot_object.required_datafields[0][1], file_type,
+																	   itime)
 
-                                # All specified valid times, or the latest if empty, or all if "all",
-                                # or None if there are no valid times for the init time
-                                valid_times = [parse_iso_datetime(vtime) if isinstance(vtime, str) else vtime
-                                               for vtime in (vtimes.split(",") if vtimes != "all" and vtimes != "" else
-                                                             i_vtimes if vtimes == "all" else [i_vtimes[-1]])] or [None]
+								# All specified valid times, or the latest if empty, or all if "all",
+								# or None if there are no valid times for the init time
+								valid_times = [parse_iso_datetime(vtime) if isinstance(vtime, str) else vtime
+											   for vtime in (vtimes.split(",") if vtimes != "all" and vtimes != "" else
+															 i_vtimes if vtimes == "all" else [i_vtimes[-1]])] or [None]
 
-                                for vtime in sorted(valid_times):
-                                    if vtime and i_vtimes and vtime not in i_vtimes:
-                                        logging.warning("Requested vtime %s at %s not present for "
-                                                        "%s %s! vtimes present: %s" % (vtime, itime, dataset, plot_object.name, i_vtimes))
-                                        continue
-                                    elif not i_vtimes:
-                                        vtime = None
+								for vtime in sorted(valid_times):
+									if vtime and i_vtimes and vtime not in i_vtimes:
+										logging.warning("Requested vtime %s at %s not present for "
+											"%s %s! vtimes present: %s" % (vtime, itime, dataset, plot_object.name, i_vtimes))
+										continue
+									elif not i_vtimes:
+										vtime = None
 
                                     style = plot_object.styles[0][0] if plot_object.styles else None
                                     kwargs = {"plot_object": plot_object,
