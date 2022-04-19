@@ -350,7 +350,10 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
 
         if self._plot_countries:
             # Set up the map appearance.
-            bm.drawcoastlines(color='0.25')
+            try:
+                bm.drawcoastlines(color='0.25')
+            except ValueError as ex:
+                logging.error("Error in basemap/matplotlib call of drawcoastlines: %s", ex)
             bm.drawcountries(color='0.5')
             bm.drawmapboundary(fill_color='white')
 
