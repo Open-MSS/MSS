@@ -135,7 +135,7 @@ def add_user(email, username, password):
             db.session.close()
             logging.info("Userdata: %s %s %s" % (email, username, password))
             logging.info(template)
-            return Tr, e
+            return True
         else:
             logging.info("%s already in db" % user_name_exists)
     return False
