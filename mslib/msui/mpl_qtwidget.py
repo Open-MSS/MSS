@@ -257,6 +257,7 @@ class NavigationToolbar(NavigationToolbar2QT):
     update all plots and elements in case the pan or zoom elements were
     triggered by the user.
     """
+
     def __init__(self, canvas, parent, sideview=False, coordinates=True):
         self.sideview = sideview
 
@@ -744,7 +745,7 @@ class MplSideViewCanvas(MplCanvas):
                 try:
                     self.ax.lines.remove(line)
                 except ValueError as e:
-                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                    logging.debug("Vertical line was somehow already removed:\n%s" % e)
                 self.vertical_lines.remove(line)
 
             # Add vertical lines
@@ -1052,7 +1053,7 @@ class MplLinearViewCanvas(MplCanvas):
                 try:
                     self.ax.lines.remove(line)
                 except ValueError as e:
-                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                    logging.debug("Vertical line was somehow already removed:\n%s" % e)
                 self.vertical_lines.remove(line)
 
             ipoint = 0

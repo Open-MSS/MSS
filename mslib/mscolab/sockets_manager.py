@@ -226,7 +226,7 @@ class SocketsManager(object):
                 # emit file-changed event to trigger reload of flight track
                 socketio.emit('file-changed', json.dumps({"op_id": op_id, "u_id": user.id}))
         else:
-            logging.debug(f'login expired for {user.username}, state unauthorized!')
+            logging.debug('login expired for %s, state unauthorized!' % user.username)
 
     def emit_file_change(self, op_id):
         socketio.emit('file-changed', json.dumps({"op_id": op_id}))
