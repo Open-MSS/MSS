@@ -232,11 +232,13 @@ class WMSServer(object):
                 dataset = [next(iter(mss_wms_settings.data))]
                 mss_wms_settings.register_horizontal_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_hsec_styles, inspect.isclass)
-                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+                    if plot[0] != "HS_GenericStyle" and
+                    not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
                 ]
                 mss_wms_settings.register_vertical_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_vsec_styles, inspect.isclass)
-                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+                    if plot[0] != "VS_GenericStyle" and
+                    not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
                 ]
                 mss_wms_settings.register_linear_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_lsec_styles, inspect.isclass)
@@ -441,9 +443,6 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.hsec_drivers[dataset])
-                # ToDo figure how this layer_class gets used
-                if layer.name == "HS_GenericStyle":
-                    continue
             except KeyError as ex:
                 logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
@@ -475,9 +474,6 @@ class WMSServer(object):
         for dataset in datasets:
             try:
                 layer = layer_class(self.vsec_drivers[dataset])
-                # ToDo figure how this layer_class gets used
-                if layer.name == "VS_GenericStyle":
-                    continue
             except KeyError as ex:
                 logging.debug("ERROR: %s %s", type(ex), ex)
                 continue
