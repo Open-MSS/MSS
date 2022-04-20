@@ -297,7 +297,7 @@ class WMSServer(object):
                                     # ToDo fix demodata for sfc
                                     logging.debug("plot_object.required_datafields incomplete"
                                                   " for filetype: %s in dataset: %s for l_type: %s",
-                                                  (file_type,dataset, l_type))
+                                                  (file_type, dataset, l_type))
 
                                 # All specified valid times, or the latest if empty, or all if "all",
                                 # or None if there are no valid times for the init time
