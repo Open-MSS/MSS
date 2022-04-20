@@ -289,9 +289,15 @@ class WMSServer(object):
                                 elif not plot_driver.get_init_times():
                                     itime = None
 
-                                # All valid times for the specific init time
-                                i_vtimes = plot_driver.get_valid_times(plot_object.required_datafields[0][1], file_type,
-                                                                       itime)
+                                try:
+                                    # All valid times for the specific init time
+                                    i_vtimes = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
+                                                                           file_type, itime)
+                                except IndexError:
+                                    # ToDo fix demodata for sfc
+                                    logging.debug("plot_object.required_datafields incomplete"
+                                                  " for filetype: %s in dataset: %s for l_type: %s",
+                                                  (file_type,dataset, l_type))
 
                                 # All specified valid times, or the latest if empty, or all if "all",
                                 # or None if there are no valid times for the init time
