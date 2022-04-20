@@ -1,4 +1,4 @@
-name: Build Docs
+name: Build Gallery
 
 on: pull_request
 
