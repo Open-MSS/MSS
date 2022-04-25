@@ -138,9 +138,7 @@ def main():
             list(Worker.workers)[0].wait()
         sys.exit()
 
-    updater.on_update_available.connect(lambda old, new: logging.info("MSS can be updated from %s to %s.\nRun"
-                                                                      " the --update argument to update the server."
-                                                                      % (old, new)))
+    updater.on_update_available.connect(lambda old, new: logging.info("MSS can be updated from %s to %s.\nRun the --update argument to update the server." % (old, new)))
     updater.run()
 
     if args.action == "start":
