@@ -299,8 +299,7 @@ class WMSServer(object):
 
                                 for vtime in sorted(valid_times):
                                     if vtime and i_vtimes and vtime not in i_vtimes:
-                                        logging.warning(f"Requested vtime {vtime} at {itime} not present for "
-                                                        f"{dataset} {plot_object.name}! vtimes present: {i_vtimes}")
+                                        logging.warning("Requested vtime %s at %s not present for %s %S! vtimes present: %s" % (vtime, itime, dataset, plot_object, i_vtimes))
                                         continue
                                     elif not i_vtimes:
                                         vtime = None
