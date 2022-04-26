@@ -33,6 +33,7 @@ import pytest
 from mslib import utils
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
+from mslib.utils.config import merge_dict
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
 
@@ -255,3 +256,41 @@ class TestConfigLoader(object):
         }
         with pytest.raises(KeyError):
             modify_config_file(data_to_save_in_config_file)
+
+
+class TestMergeDict:
+    """
+    merge_dict can only merge keys which are predefined in the mss_default. All other have to be skipped
+    """
+    def setup(self):
+        self.default_dict = dict(mss_default.__dict__)
+
+    def test_no_differences(self):
+        users_options_dict = self.default_dict
+        assert merge_dict(self.default_dict, users_options_dict) == self.default_dict
+        users_options_dict = {}
+        assert merge_dict(self.default_dict, users_options_dict) == self.default_dict
+
+    def test_user_option_changed(self):
+        users_options_dict = {
+            "new_flighttrack_template": ["Kona", "Anchorage"],
+            "new_flighttrack_flightlevel": 350,
+        }
+        assert self.default_dict["num_interpolation_points"] == 201
+        assert self.default_dict["new_flighttrack_template"] == ['Nagpur', 'Delhi']
+        assert self.default_dict["new_flighttrack_flightlevel"] == 0
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["num_interpolation_points"] == 201
+        assert changed_dict["new_flighttrack_template"] == ["Kona", "Anchorage"]
+        assert changed_dict["new_flighttrack_flightlevel"] == 350
+
+    def test_user_unknown_option(self):
+        users_options_dict = {"unknown_option": 1}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict.get("num_interpolation_points") == 201
+        assert changed_dict.get("unknown_option", None) is None
+
+    def test_add_filepicker_default_to_plugins(self):
+        users_options_dict = {"export_plugins": {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]}}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["export_plugins"]["Text"] == ["txt", "mslib.plugins.io.text", "save_to_txt", "default"]
