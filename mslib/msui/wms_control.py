@@ -1547,7 +1547,10 @@ class VSecWMSControlWidget(WMSControlWidget):
         self.view.draw_image(self.squash_multiple_images(imgs))
         self.view.draw_legend(self.append_multiple_images(legend_imgs))
         style_title = self.multilayers.get_current_layer().get_style()
-        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+        title = self.multilayers.get_current_layer().layerobj.title
+        if len(self.multilayers.get_active_layers()) > 1 and self.multilayers.get_current_layer().checkState(0):
+            title = f"{title} (and {len(self.multilayers.get_active_layers()) - 1} more)"
+        self.view.draw_metadata(title=title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 style=style_title)
@@ -1607,7 +1610,11 @@ class HSecWMSControlWidget(WMSControlWidget):
     def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
         style_title = self.multilayers.get_current_layer().get_style()
-        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+        title = self.multilayers.get_current_layer().layerobj.title
+        if len(self.multilayers.get_active_layers()) > 1 and self.multilayers.get_current_layer().checkState(0):
+            title = f"{title} (and {len(self.multilayers.get_active_layers()) - 1} more)"
+
+        self.view.draw_metadata(title=title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 level=level,
@@ -1688,7 +1695,10 @@ class LSecWMSControlWidget(WMSControlWidget):
         self.view.draw_image(imgs, colors, scales)
         self.view.draw_legend(self.append_multiple_images(legend_imgs))
         style_title = self.multilayers.get_current_layer().get_style()
-        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+        title = self.multilayers.get_current_layer().layerobj.title
+        if len(self.multilayers.get_active_layers()) > 1 and self.multilayers.get_current_layer().checkState(0):
+            title = f"{title} (and {len(self.multilayers.get_active_layers()) - 1} more)"
+        self.view.draw_metadata(title=title,
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 style=style_title)
