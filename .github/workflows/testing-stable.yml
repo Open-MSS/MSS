@@ -1,0 +1,20 @@
+name: test stable
+
+on:
+  push:
+    branches:
+    - stable
+  pull_request:
+    branches:
+    - stable
+
+jobs:     
+  test-develop:
+    uses: 
+      ./.github/workflows/testing.yml
+    with:
+      branch_name: stable
+      event_name: ${{ github.event_name }}
+    secrets: inherit
+
+

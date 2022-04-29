@@ -1,17 +1,21 @@
 name: Pytest MSS
 
-on:
-  push:
-    branches:
-    - develop
-    - stable
-  pull_request:
-    branches:
-    - develop
-    - stable
+on:                                                                                  
+  workflow_call:
+    inputs:
+      branch_name:
+        required: true
+        type: string
+      event_name:
+        required: true
+        type: string
+    secrets:
+      PAT:
+        required: true
 
 env:
   PAT: ${{ secrets.PAT }}
+  EVENT: ${{ inputs.event_name }}
 
 jobs:
   Test-MSS:
@@ -21,17 +25,22 @@ jobs:
       run:
         shell: bash
 
+    outputs:
+      output1: ${{ steps.step1.outputs.triggerdockerbuild }}
+
     container:
-      image: openmss/mss-test:latest
+      image: openmss/testing-${{ inputs.branch_name }}
 
     steps:
     - name: Trust My Directory
       run: git config --global --add safe.directory /__w/MSS/MSS
+
     - uses: actions/checkout@v2
-        
     - name: Reinstall dependencies if changed
+      id: step1
       run: |
         cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
+        && echo "::set-output name=triggerdockerbuild::yes" \
         && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
@@ -55,9 +64,8 @@ jobs:
           && break \
         ; done)
 
-        
-    - name: coveralls
-      if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
+    - name: Collect coverage
+      if: ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' }}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -66,17 +74,18 @@ jobs:
         && mamba install coveralls \
         && coveralls --service=github
 
+          
+
   Update-Images:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    needs: [Test-MSS]
+    needs: Test-MSS
     
     steps:
-      - if: env.PAT != ''
-        name: Invoke dockerhub image creation
+      - if: env.PAT != '' && ${{ inputs.event_name }} == 'push' && ${{ needs.Test-MSS.step1.outputs.triggerdockerbuild }} == 'yes'
+        name: Invoke dockertesting image creation
         uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
         with:
-          workflow: Update all images
-          repo: Open-MSS/dockerhub
-          ref: stable
+          workflow: Update Image testing-${{ inputs.branch_name }}
+          repo: Open-MSS/dockertesting
+          ref: main
           token: ${{ secrets.PAT }}
