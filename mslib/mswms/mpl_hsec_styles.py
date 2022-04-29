@@ -398,6 +398,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
     """
     Pressure level version for Chemical Mixing ratios.
     """
+    name = "HS_GenericStyle"
     styles = [
         ("auto", "auto colour scale"),
         ("autolog", "auto logcolour scale"), ]
