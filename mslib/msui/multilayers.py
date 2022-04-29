@@ -289,6 +289,15 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                     active_layers.append(widget)
         return sorted(active_layers, key=lambda layer: self.get_multilayer_priority(layer))
 
+    def get_plot_title(self):
+        """
+        Returns the plot title
+        """
+        title = self.get_current_layer().layerobj.title
+        if len(self.get_active_layers()) > 1 and self.get_current_layer().checkState(0):
+            title = f"{title} (and {len(self.get_active_layers()) - 1} more)"
+        return title
+
     def update_priority_selection(self):
         """
         Updates the priority numbers for the selected layers to the sorted self.layers_priority list
