@@ -114,6 +114,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
     """
     Vertical section of chemical species/other stuff
     """
+    name = "VS_GenericStyle"
     styles = [
         ("auto", "auto colour scale"),
         ("autolog", "auto log colour scale"), ]

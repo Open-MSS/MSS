@@ -232,11 +232,13 @@ class WMSServer(object):
                 dataset = [next(iter(mss_wms_settings.data))]
                 mss_wms_settings.register_horizontal_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_hsec_styles, inspect.isclass)
-                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+                    if plot[0] != "HS_GenericStyle" and
+                    not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
                 ]
                 mss_wms_settings.register_vertical_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_vsec_styles, inspect.isclass)
-                    if not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
+                    if plot[0] != "VS_GenericStyle" and
+                    not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
                 ]
                 mss_wms_settings.register_linear_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_lsec_styles, inspect.isclass)
@@ -249,7 +251,7 @@ class WMSServer(object):
             tmp_path = tempfile.mkdtemp()
             path = DOCS_LOCATION if sphinx else STATIC_LOCATION
 
-            if not plot_list:
+            if plot_list is None:
                 plot_list = [[self.lsec_drivers, self.lsec_layer_registry],
                              [self.vsec_drivers, self.vsec_layer_registry],
                              [self.hsec_drivers, self.hsec_layer_registry]]
@@ -287,9 +289,16 @@ class WMSServer(object):
                                 elif not plot_driver.get_init_times():
                                     itime = None
 
-                                # All valid times for the specific init time
-                                i_vtimes = plot_driver.get_valid_times(plot_object.required_datafields[0][1], file_type,
-                                                                       itime)
+                                try:
+                                    # All valid times for the specific init time
+                                    i_vtimes = plot_driver.get_valid_times(plot_object.required_datafields[0][1],
+                                                                           file_type, itime)
+                                except IndexError:
+                                    # ToDo fix demodata for sfc
+                                    logging.debug("plot_object.required_datafields incomplete"
+                                                  " for filetype: %s in dataset: %s for l_type: %s",
+                                                  file_type, dataset, l_type)
+                                    continue
 
                                 # All specified valid times, or the latest if empty, or all if "all",
                                 # or None if there are no valid times for the init time
@@ -455,6 +464,9 @@ class WMSServer(object):
             if layer.name in self.hsec_layer_registry[dataset]:
                 raise ValueError(f"new layer is already registered? dataset={dataset} layer.name={layer.name} "
                                  f"new={layer} old={self.hsec_layer_registry[dataset][layer.name]}")
+            if layer.name == "HS_GenericStyle":
+                raise ValueError(f"problem in configuration for dataset={dataset}. We found layer.name={layer.name}"
+                                 f"  The class HS_GenericStyle should never be used.")
             self.hsec_layer_registry[dataset][layer.name] = layer
 
     def register_vsec_layer(self, datasets, layer_class):
@@ -483,6 +495,9 @@ class WMSServer(object):
             if layer.name in self.vsec_layer_registry[dataset]:
                 raise ValueError(f"new layer is already registered? dataset={dataset} layer.name={layer.name} "
                                  f"new={layer} old={self.vsec_layer_registry[dataset][layer.name]}")
+            if layer.name == "VS_GenericStyle":
+                raise ValueError(f"problem in configuration for dataset={dataset}. We found layer.name={layer.name}"
+                                 f" The class VS_GenericStyle should never be used.")
             self.vsec_layer_registry[dataset][layer.name] = layer
 
     def register_lsec_layer(self, datasets, variable=None, filetype="ml", layer_class=None):
