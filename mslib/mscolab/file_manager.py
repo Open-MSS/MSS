@@ -396,16 +396,18 @@ class FileManager(object):
             return False
 
     def delete_bulk_permission(self, op_id, user, u_ids):
-        if not self.is_admin(user.id, op_id):
+        if self.is_admin(user.id, op_id) and user.id in u_ids:
             return False
+        elif not self.is_admin(user.id, op_id) and (len(u_ids) != 1 or user.id not in u_ids):
+            return False
+        else:
+            Permission.query \
+                .filter(Permission.op_id == op_id) \
+                .filter(Permission.u_id.in_(u_ids)) \
+                .delete(synchronize_session='fetch')
 
-        Permission.query \
-            .filter(Permission.op_id == op_id) \
-            .filter(Permission.u_id.in_(u_ids)) \
-            .delete(synchronize_session='fetch')
-
-        db.session.commit()
-        return True
+            db.session.commit()
+            return True
 
     def import_permissions(self, import_op_id, current_op_id, u_id):
         if not self.is_admin(u_id, current_op_id):
