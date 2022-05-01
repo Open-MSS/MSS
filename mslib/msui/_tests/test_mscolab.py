@@ -44,8 +44,6 @@ from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-from mslib.mscolab.sockets_manager import SocketsManager
-
 
 PORTS = list(range(25000, 25500))
 
@@ -277,10 +275,10 @@ class Test_Mscolab(object):
         assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2])
         assert add_operation(self.operation_name3, "test kerala")
         assert add_user_to_operation(path=self.operation_name3, emailid=self.userdata2[0])
-        
+
         self.userdata3 = 'anand@anand.org', 'anand', 'anand'
         assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2])
-        assert add_user_to_operation(path=self.operation_name3, access_level= "collaborator", emailid=self.userdata3[0])
+        assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
