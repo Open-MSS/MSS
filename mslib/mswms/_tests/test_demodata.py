@@ -26,8 +26,6 @@
     limitations under the License.
 """
 
-from past.builtins import basestring
-
 import numpy as np
 from mslib._tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FILE
 import mslib.mswms.demodata as demodata
@@ -56,14 +54,14 @@ class TestDemodata(object):
     def test_generate_field(self):
         data, unit = demodata.generate_field("air_pressure", [10, 100, 500], "geopotential_height", 2, 4, 5)
         assert isinstance(data, np.ndarray)
-        assert isinstance(unit, basestring)
+        assert isinstance(unit, str)
         assert len(data.shape) == 4
         assert all(_x == _y for _x, _y in zip(data.shape, (2, 3, 4, 5)))
 
     def test_generate_surface(self):
         data, unit = demodata.generate_surface("atmosphere_boundary_layer_thickness", 2, 4, 5)
         assert isinstance(data, np.ndarray)
-        assert isinstance(unit, basestring)
+        assert isinstance(unit, str)
         assert len(data.shape) == 3
         assert all(_x == _y for _x, _y in zip(data.shape, (2, 4, 5)))
 
@@ -72,7 +70,7 @@ class TestDemodata(object):
         for key, entry in list(demodata._SURFACE.items()):
             assert "data" in entry
             assert "unit" in entry
-            assert isinstance(entry["unit"], basestring)
+            assert isinstance(entry["unit"], str)
             assert isinstance(entry["data"], np.ndarray)
 
     def test_PROFILES(self):
@@ -80,5 +78,5 @@ class TestDemodata(object):
         for key, entry in list(demodata._PROFILES.items()):
             assert "data" in entry
             assert "unit" in entry
-            assert isinstance(entry["unit"], basestring)
+            assert isinstance(entry["unit"], str)
             assert isinstance(entry["data"], np.ndarray)

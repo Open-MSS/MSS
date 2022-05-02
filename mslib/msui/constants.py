@@ -46,6 +46,8 @@ else:
     if not os.path.exists(_dir):
         os.makedirs(_dir)
 
+GRAVATAR_DIR_PATH = fs.path.join(MSS_CONFIG_PATH, "gravatars")
+
 MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
 
 # We try to create an empty MSS_SETTINGS file if not existing

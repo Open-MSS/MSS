@@ -58,7 +58,7 @@ from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
-from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings
+from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -236,12 +236,12 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         return r
 
     def login_handler(self):
+        # get mscolab /token http auth credentials from cache
         for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE:
+            if key not in constants.MSC_LOGIN_CACHE or constants.MSC_LOGIN_CACHE[key] != value:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
 
-        # get mscolab /token http auth credentials from cache
         emailid = self.loginEmailLe.text()
         password = self.loginPasswordLe.text()
         data = {
@@ -268,7 +268,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", 'Oh no, your credentials were incorrect.')
         elif r.text == "Unauthorized Access":
             # Server auth required for logging in
-            self.login_data = [data, r, url, auth]
+            self.login_data = [data, r, url]
             self.connectBtn.setEnabled(False)
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
             # ToDo disconnect functions already connected to httpBb buttonBox
@@ -277,21 +277,39 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
+    def save_user_credentials_to_config_file(self, emailid, password):
+        data_to_save_in_config_file = {
+            "MSCOLAB_mailid": emailid,
+            "MSCOLAB_password": password
+        }
+
+        if config_loader(dataset="MSCOLAB_mailid") != "" and config_loader(dataset="MSCOLAB_password") != "":
+            ret = QtWidgets.QMessageBox.question(
+                self, self.tr("Update Credentials"),
+                self.tr("You are using new credentials. "
+                        "Should your settings file be updated with the new credentials?"),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Yes:
+                modify_config_file(data_to_save_in_config_file)
+        else:
+            modify_config_file(data_to_save_in_config_file)
+
     def login_server_auth(self):
-        data, r, url, auth = self.login_data
+        data, r, url = self.login_data
         emailid = data['email']
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
             if r.status_code == 200 and r.text not in ["False", "Unauthorized Access"]:
-                constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (auth[0], auth[1])
+                self.save_auth_credentials_to_config_file()
                 self.mscolab.after_login(emailid, self.mscolab_server_url, r)
             else:
                 self.set_status("Error", 'Oh no, server authentication were incorrect.')
                 self.stackedWidget.setCurrentWidget(self.loginPage)
 
     def new_user_handler(self):
+        # get mscolab /token http auth credentials from cache
         for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE:
+            if key not in constants.MSC_LOGIN_CACHE or constants.MSC_LOGIN_CACHE[key] != value:
                 constants.MSC_LOGIN_CACHE[key] = value
         auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
 
@@ -325,10 +343,16 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         if r.status_code == 204:
             self.set_status("Success", 'You are registered, confirm your email to log in.')
+            self.save_user_credentials_to_config_file(emailid, password)
             self.stackedWidget.setCurrentWidget(self.loginPage)
+            self.loginEmailLe.setText(emailid)
+            self.loginPasswordLe.setText(password)
         elif r.status_code == 201:
-            self.set_status("Success", 'You are registered')
-            self.stackedWidget.setCurrentWidget(self.loginPage)
+            self.set_status("Success", 'You are registered.')
+            self.save_user_credentials_to_config_file(emailid, password)
+            self.loginEmailLe.setText(emailid)
+            self.loginPasswordLe.setText(password)
+            self.login_handler()
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
@@ -343,13 +367,41 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 error_msg = "Unexpected error occured. Please try again."
             self.set_status("Error", error_msg)
 
+    def save_auth_credentials_to_config_file(self):
+        msc_login_data = config_loader(dataset="MSC_login")
+        msc_login_data[self.mscolab_server_url] = (
+            self.settings["auth"][self.mscolab_server_url][0],
+            self.settings["auth"][self.mscolab_server_url][1]
+        )
+        data_to_save_in_config_file = {
+            "MSC_login": msc_login_data
+        }
+        modify_config_file(data_to_save_in_config_file)
+
     def newuser_server_auth(self):
         data, r, url = self.newuser_data
         r = self.authenticate(data, r, url)
         if r.status_code == 201:
-            constants.MSC_LOGIN_CACHE[self.mscolab_server_url] = (data['username'], data['password'])
-            self.set_status("Success", "You are registered, you can now log in.")
+            self.save_auth_credentials_to_config_file()
+            self.set_status("Success", "You are registered.")
+            self.save_user_credentials_to_config_file(data['email'], data['password'])
+            self.loginEmailLe.setText(data['email'])
+            self.loginPasswordLe.setText(data['password'])
+            self.login_handler()
+        elif r.status_code == 200:
+            try:
+                error_msg = json.loads(r.text)["message"]
+            except Exception as e:
+                logging.debug(f"Unexpected error occured {e}")
+                error_msg = "Unexpected error occured. Please try again."
+            self.set_status("Error", error_msg)
+        elif r.status_code == 204:
+            self.save_auth_credentials_to_config_file()
+            self.set_status("Success", 'You are registered, confirm your email to log in.')
+            self.save_user_credentials_to_config_file(data['email'], data['password'])
             self.stackedWidget.setCurrentWidget(self.loginPage)
+            self.loginEmailLe.setText(data['email'])
+            self.loginPasswordLe.setText(data['password'])
         else:
             self.set_status("Error", "Oh no, server authentication were incorrect.")
             self.stackedWidget.setCurrentWidget(self.newuserPage)
@@ -373,6 +425,13 @@ class MSSMscolab(QtCore.QObject):
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
         self.hide_operation_options()
+        self.ui.activeOperationDesc.setHidden(True)
+
+        # reset operation description label for flight tracks and open views
+        self.ui.listFlightTracks.itemDoubleClicked.connect(
+            lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
+        self.ui.listViews.itemDoubleClicked.connect(
+            lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
 
         # connect operation options menu actions
         self.ui.actionAddOperation.triggered.connect(self.add_operation_handler)
@@ -380,6 +439,12 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
+        self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
+        self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
+        self.ui.actionDescription.triggered.connect(
+            lambda: QtWidgets.QMessageBox.information(None,
+                                                      "Operation Description",
+                                                      f"{self.active_operation_desc}"))
 
         self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
         # connect slot for handling operation options combobox
@@ -410,10 +475,10 @@ class MSSMscolab(QtCore.QObject):
         self.waypoints_model = None
         # Store active operation's file path
         self.local_ftml_file = None
+        # Store active_operation_description
+        self.active_operation_desc = None
         # connection object to interact with sockets
         self.conn = None
-        # assign ids to view-window
-        # self.view_id = 0
         # operation window
         self.chat_window = None
         # Admin Window
@@ -430,7 +495,9 @@ class MSSMscolab(QtCore.QObject):
         self.mscolab_server_url = None
         # User email
         self.email = None
+        # Display all categories by default
         self.selected_category = "ANY"
+        # Gravatar image path
         self.gravatar = None
 
         # set data dir, uri
@@ -523,32 +590,46 @@ class MSSMscolab(QtCore.QObject):
             # Show category list
             self.show_categories_to_ui()
 
+            # show operation_description
+            self.ui.activeOperationDesc.setHidden(False)
+            # disable update operation description button
+            self.ui.actionUpdateOperationDesc.setEnabled(False)
+            # disable delete operation button
+            self.ui.actionDeleteOperation.setEnabled(False)
+            # disable category change selector
+            self.ui.filterCategoryCb.setEnabled(False)
+
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
-        email_in_settings = self.email in config_loader(dataset="gravatar_ids")
-        gravatar_path = os.path.join(constants.MSS_CONFIG_PATH, 'gravatars')
-        gravatar = os.path.join(gravatar_path, f"{email_hash}.png")
+        email_in_config = self.email in config_loader(dataset="gravatar_ids")
+        gravatar_img_path = fs.path.join(constants.GRAVATAR_DIR_PATH, f"{email_hash}.png")
+        config_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
 
-        if refresh or email_in_settings:
-            if not os.path.exists(gravatar_path):
+        # refresh is used to fetch new gravatar associated with the email
+        if refresh or email_in_config:
+            # create directory to store cached gravatar images
+            if not config_fs.exists("gravatars"):
                 try:
-                    os.makedirs(gravatar_path)
-                except Exception as e:
-                    logging.debug("Error %s", str(e))
-                    show_popup(self.prof_diag, "Error", "Could not create gravatar folder in config folder")
+                    config_fs.makedirs("gravatars")
+                except fs.errors.CreateFailed:
+                    logging.error('Creation of gravatar directory failed')
+                    return
+                except fs.opener.errors.UnsupportedProtocol:
+                    logging.error('FS url not supported')
                     return
 
-            if not refresh and email_in_settings and os.path.exists(gravatar):
-                self.set_gravatar(gravatar)
+            # use cached image if refresh not requested
+            if not refresh and email_in_config and \
+                    config_fs.exists(fs.path.join("gravatars", f"{email_hash}.png")):
+                self.set_gravatar(gravatar_img_path)
+                return
 
-            gravatar = os.path.join(gravatar_path, f"{email_hash}.jpg")
-            gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}?s=80&d=404"
+            # fetch gravatar image
+            gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}.png?s=80&d=404"
             try:
-                urllib.request.urlretrieve(gravatar_url, gravatar)
-                img = Image.open(gravatar)
-                img.save(gravatar.replace(".jpg", ".png"))
-                os.remove(gravatar)
-                gravatar = gravatar.replace(".jpg", ".png")
+                urllib.request.urlretrieve(gravatar_url, gravatar_img_path)
+                img = Image.open(gravatar_img_path)
+                img.save(gravatar_img_path)
             except urllib.error.HTTPError:
                 if refresh:
                     show_popup(self.prof_diag, "Error", "Gravatar not found")
@@ -558,15 +639,15 @@ class MSSMscolab(QtCore.QObject):
                     show_popup(self.prof_diag, "Error", "Could not fetch Gravatar")
                 return
 
-        if refresh and not email_in_settings:
+        if refresh and not email_in_config:
             show_popup(
                 self.prof_diag,
                 "Information",
                 "Please add your email to the gravatar_ids section in your "
                 "mss_settings.json to automatically fetch your gravatar",
-                icon=1,)
+                icon=1, )
 
-        self.set_gravatar(gravatar)
+        self.set_gravatar(gravatar_img_path)
 
     def set_gravatar(self, gravatar=None):
         self.gravatar = gravatar
@@ -596,15 +677,18 @@ class MSSMscolab(QtCore.QObject):
         if self.gravatar is None:
             return
 
-        if os.path.exists(self.gravatar):
-            os.remove(self.gravatar)
-            if self.email in config_loader(dataset="gravatar_ids"):
-                show_popup(
-                    self.prof_diag,
-                    "Information",
-                    "Please remove your email from gravatar_ids section in your "
-                    "mss_settings.json to not fetch gravatar automatically",
-                    icon=1,)
+        # remove cached gravatar image if not found in config
+        config_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
+        if config_fs.exists("gravatars"):
+            if fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
+                fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
+                if self.email in config_loader(dataset="gravatar_ids"):
+                    show_popup(
+                        self.prof_diag,
+                        "Information",
+                        "Please remove your email from gravatar_ids section in your "
+                        "mss_settings.json to not fetch gravatar automatically",
+                        icon=1, )
 
         self.set_gravatar()
 
@@ -914,6 +998,86 @@ class MSSMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
+    def set_operation_desc_label(self, op_desc):
+        self.active_operation_desc = op_desc
+        desc_count = len(str(self.active_operation_desc))
+        if desc_count < 95:
+            self.ui.activeOperationDesc.setText(
+                self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
+        else:
+            self.ui.activeOperationDesc.setText(
+                "Description is too long to show here, for long descriptions go "
+                "to operations menu.")
+
+    def update_description_handler(self):
+        # only after login
+        if verify_user_token(self.mscolab_server_url, self.token):
+            entered_operation_desc, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr(f"{self.active_operation_name} - Update Description"),
+                self.ui.tr(
+                    "You're about to update the operation description"
+                    "\nEnter new operation description: "
+                ),
+                text=self.active_operation_desc
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "attribute": 'description',
+                    "value": entered_operation_desc
+                }
+                url = url_join(self.mscolab_server_url, 'update_operation')
+                r = requests.post(url, data=data)
+                if r.text == "True":
+                    # Update active operation description label
+                    self.set_operation_desc_label(entered_operation_desc)
+
+                    self.reload_operation_list()
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Description is updated successfully.")
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def rename_operation_handler(self):
+        # only after login
+        if verify_user_token(self.mscolab_server_url, self.token):
+            entered_operation_name, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr("Rename Operation"),
+                self.ui.tr(
+                    f"You're about to rename the operation - '{self.active_operation_name}' "
+                    f"Enter new operation name: "
+                ),
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "attribute": 'path',
+                    "value": entered_operation_name
+                }
+                url = url_join(self.mscolab_server_url, 'update_operation')
+                r = requests.post(url, data=data)
+                if r.text == "True":
+                    # Update active operation name
+                    self.active_operation_name = entered_operation_name
+
+                    # Update active operation description
+                    self.set_operation_desc_label(self.active_operation_desc)
+                    self.reload_operation_list()
+                    self.reload_windows_slot()
+                    # Update other user's operation list
+                    self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
+
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Operation is renamed successfully.")
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
     def handle_work_locally_toggle(self):
         if verify_user_token(self.mscolab_server_url, self.token):
             if self.ui.workLocallyCheckbox.isChecked():
@@ -1149,6 +1313,8 @@ class MSSMscolab(QtCore.QObject):
             # self.ui.workingStatusLabel.setEnabled(False)
             self.close_external_windows()
             self.hide_operation_options()
+            # reset operation_description label text
+            self.ui.activeOperationDesc.setText("Select Operation to View Description.")
 
         # Update operation list
         remove_item = None
@@ -1214,6 +1380,7 @@ class MSSMscolab(QtCore.QObject):
                 for operation in operations:
                     operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                     widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
+                    widgetItem.active_operation_desc = operation["description"]
                     widgetItem.op_id = operation["op_id"]
                     widgetItem.access_level = operation["access_level"]
                     widgetItem.operation_path = operation["path"]
@@ -1251,8 +1418,11 @@ class MSSMscolab(QtCore.QObject):
             self.active_op_id = item.op_id
             self.access_level = item.access_level
             self.active_operation_name = item.operation_path
+            self.active_operation_desc = item.active_operation_desc
             self.waypoints_model = None
 
+            # Set active operation description
+            self.set_operation_desc_label(self.active_operation_desc)
             # set active flightpath here
             self.load_wps_from_server()
             # display working status
@@ -1308,7 +1478,8 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProperties.setEnabled(False)
+        self.ui.menuProperties.setEnabled(True)
+        self.ui.actionRenameOperation.setEnabled(False)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
@@ -1330,12 +1501,15 @@ class MSSMscolab(QtCore.QObject):
 
         if self.access_level in ["creator", "admin"]:
             self.ui.actionManageUsers.setEnabled(True)
+            self.ui.actionUpdateOperationDesc.setEnabled(True)
+            self.ui.filterCategoryCb.setEnabled(True)
         else:
             if self.admin_window is not None:
                 self.admin_window.close()
 
         if self.access_level in ["creator"]:
-            self.ui.menuProperties.setEnabled(True)
+            self.ui.actionDeleteOperation.setEnabled(True)
+            self.ui.actionRenameOperation.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 
@@ -1502,6 +1676,12 @@ class MSSMscolab(QtCore.QObject):
         self.ui.userOptionsTb.hide()
         self.ui.connectBtn.show()
         self.ui.actionAddOperation.setEnabled(False)
+        # hide operation description
+        self.ui.activeOperationDesc.setHidden(True)
+        # reset description label text
+        self.ui.activeOperationDesc.setText(self.ui.tr("Select Operation to View Description."))
+        # set usernameLabel back to default
+        self.ui.usernameLabel.setText("User")
         # disconnect socket
         if self.conn is not None:
             self.conn.disconnect()
@@ -1512,12 +1692,11 @@ class MSSMscolab(QtCore.QObject):
         self.ui.workLocallyCheckbox.blockSignals(False)
 
         # remove temporary gravatar image
-        if self.gravatar is not None:
-            if self.email not in config_loader(dataset="gravatar_ids") and os.path.exists(self.gravatar):
-                try:
-                    os.remove(self.gravatar)
-                except Exception as e:
-                    logging.debug(f"Error while removing gravatar cache... {e}")
+        config_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
+        if config_fs.exists("gravatars") and self.gravatar is not None:
+            if self.email not in config_loader(dataset="gravatar_ids") and \
+                    fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
+                fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
         # clear gravatar image path
         self.gravatar = None
         # clear user email

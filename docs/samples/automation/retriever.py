@@ -39,6 +39,7 @@ import matplotlib.pyplot as plt
 import mslib
 import mslib.utils
 from mslib.utils import thermolib
+from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 import mslib.msui
 import mslib.msui.mpl_map
@@ -129,8 +130,8 @@ def main():
         sys.exit()
 
     mslib.utils.setup_logging(args)
-
-    config = mslib.utils.config_loader()
+    read_config_file(path=mslib.msui.constants.MSS_SETTINGS)
+    config = config_loader()
     num_interpolation_points = config["num_interpolation_points"]
     num_labels = config["num_labels"]
     tick_index_step = num_interpolation_points // num_labels
@@ -138,7 +139,7 @@ def main():
     fig = plt.figure()
     for flight, section, vertical, filename, init_time, time in \
             config["automated_plotting"]["flights"]:
-        params = mslib.utils.get_projection_params(
+        params = mslib.utils.coordinate.get_projection_params(
             config["predefined_map_sections"][section]["CRS"].lower())
         params["basemap"].update(config["predefined_map_sections"][section]["map"])
         wps = load_from_ftml(filename)
@@ -188,8 +189,9 @@ def main():
 
         # prepare vsec plots
         path = [(wp[0], wp[1], datetime.datetime.now()) for wp in wps]
-        lats, lons, _ = mslib.utils.path_points(
-            path, numpoints=num_interpolation_points + 1, connection="greatcircle")
+        lats, lons = mslib.utils.coordinate.path_points(
+            [_x[0] for _x in path],
+            [_x[1] for _x in path], numpoints=num_interpolation_points + 1, connection="greatcircle")
         intermediate_indexes = []
         ipoint = 0
         for i, (lat, lon) in enumerate(zip(lats, lons)):
@@ -207,7 +209,7 @@ def main():
             ax.set_yscale("log")
             p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
             bbox = ",".join(str(x) for x in (num_interpolation_points, p_bot / 100, num_labels, p_top / 100))
-            ax.grid(b=True)
+            ax.grid(visible=True)
             ax.patch.set_facecolor("None")
             pres_maj = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_maj
             pres_min = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_min

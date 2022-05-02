@@ -36,6 +36,7 @@ from mslib import __version__
 from mslib._tests.constants import ROOT_DIR
 import mslib.msui.mss_pyui as mss_pyui
 from mslib._tests.utils import ExceptionMock
+from mslib.utils.config import read_config_file
 
 
 class Test_MSS_AboutDialog():
@@ -119,6 +120,14 @@ class Test_MSSSideViewWindow(object):
     }
 
     def setup(self):
+        self.sample_path = os.path.join(
+            os.path.dirname(os.path.abspath(mss_pyui.__file__)),
+            '../',
+            '../',
+            'docs',
+            'samples',
+            'config',
+            'mss')
         self.application = QtWidgets.QApplication(sys.argv)
 
         self.window = mss_pyui.MSSMainWindow()
@@ -129,6 +138,11 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        config_file = os.path.join(
+            self.sample_path,
+            'empty_mss_settings.json.sample',
+        )
+        read_config_file(path=config_file)
         for i in range(self.window.listViews.count()):
             self.window.listViews.item(i).window.hide()
         self.window.hide()
@@ -219,7 +233,7 @@ class Test_MSSSideViewWindow(object):
             os.remove(save_file[0])
 
     @pytest.mark.parametrize(
-        "open_file", [(open_ftml, "actionImportFlightTrackFTML"), (open_csv, "actionImportFlightTrackCSV"),
+        "open_file", [(open_ftml, "actionImportFlightTrackFTML"),
                       (open_txt, "actionImportFlightTrackText"), (open_fls, "actionImportFlightTrackFliteStar")])
     def test_plugin_import(self, open_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
@@ -238,7 +252,6 @@ class Test_MSSSideViewWindow(object):
             assert self.window.listFlightTracks.count() == 2
 
     @pytest.mark.parametrize("save_file", [[save_ftml, "actionExportFlightTrackFTML"],
-                                           [save_csv, "actionExportFlightTrackCSV"],
                                            [save_txt, "actionExportFlightTrackText"]])
     def test_plugin_export(self, save_file):
         with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):

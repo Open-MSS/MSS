@@ -1547,7 +1547,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         self.view.draw_image(self.squash_multiple_images(imgs))
         self.view.draw_legend(self.append_multiple_images(legend_imgs))
         style_title = self.multilayers.get_current_layer().get_style()
-        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+        self.view.draw_metadata(title=self.multilayers.get_plot_title(),
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 style=style_title)
@@ -1607,7 +1607,7 @@ class HSecWMSControlWidget(WMSControlWidget):
     def display_retrieved_image(self, imgs, legend_imgs, layer, style, init_time, valid_time, level):
         # Plot the image on the view canvas.
         style_title = self.multilayers.get_current_layer().get_style()
-        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+        self.view.draw_metadata(title=self.multilayers.get_plot_title(),
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 level=level,
@@ -1688,7 +1688,7 @@ class LSecWMSControlWidget(WMSControlWidget):
         self.view.draw_image(imgs, colors, scales)
         self.view.draw_legend(self.append_multiple_images(legend_imgs))
         style_title = self.multilayers.get_current_layer().get_style()
-        self.view.draw_metadata(title=self.multilayers.get_current_layer().layerobj.title,
+        self.view.draw_metadata(title=self.multilayers.get_plot_title(),
                                 init_time=init_time,
                                 valid_time=valid_time,
                                 style=style_title)

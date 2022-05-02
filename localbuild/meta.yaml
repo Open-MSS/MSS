@@ -28,10 +28,10 @@ requirements:
     - python
     - defusedxml
     - menuinst  # [win]
-    - basemap  >1.2.1
+    - basemap >1.2.1
     - chameleon
     - execnet
-    - fastkml  =0.11
+    - fastkml =0.11
     - gsl =2.7.0
     - isodate
     - lxml
