@@ -76,6 +76,7 @@ class Test_MscolabOperation(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown(self):
+        self.window.mscolab.logout()
         if self.window.mscolab.chat_window:
             self.window.mscolab.chat_window.hide()
         if self.window.mscolab.conn:

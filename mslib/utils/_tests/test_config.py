@@ -32,7 +32,8 @@ import pytest
 
 from mslib import utils
 from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
-from mslib.utils.config import config_loader, read_config_file
+from mslib.utils.config import config_loader, read_config_file, modify_config_file
+from mslib.utils.config import merge_dict
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib._tests.utils import create_mss_settings_file
 
@@ -63,9 +64,24 @@ class TestConfigLoader(object):
     tests config file for client
     """
 
+    def setup(self):
+        self.sample_path = os.path.join(
+            os.path.dirname(os.path.abspath(utils.__file__)),
+            '../',
+            '../',
+            'docs',
+            'samples',
+            'config',
+            'mss')
+
     def teardown(self):
         if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
             fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
+        config_file = os.path.join(
+            self.sample_path,
+            'empty_mss_settings.json.sample'
+        )
+        read_config_file(config_file)
 
     def test_option_types(self):
         # check if all config options are added to the appropriate type of options
@@ -94,15 +110,8 @@ class TestConfigLoader(object):
             read_config_file(path="foo.json")
 
     def test_sample_config_file(self):
-        utils_path = os.path.dirname(os.path.abspath(utils.__file__))
         config_file = os.path.join(
-            utils_path,
-            '../',
-            '../',
-            'docs',
-            'samples',
-            'config',
-            'mss',
+            self.sample_path,
             'mss_settings.json.sample',
         )
         read_config_file(path=config_file)
@@ -112,18 +121,6 @@ class TestConfigLoader(object):
             config_loader(dataset="UNDEFINED")
         with pytest.raises(KeyError):
             assert config_loader(dataset="UNDEFINED")
-        with pytest.raises(FileNotFoundError):
-            config_file = os.path.join(
-                utils_path,
-                '../',
-                '../',
-                'docs',
-                'samples',
-                'config',
-                'mss',
-                'non_existent_mss_settings.json.sample',
-            )
-            read_config_file(config_file)
 
     def test_existing_empty_config_file(self):
         """
@@ -213,3 +210,87 @@ class TestConfigLoader(object):
         assert "num_labels" in file_content
         with pytest.raises(utils.FatalUserError):
             read_config_file(path=config_file)
+
+    def test_modify_config_file_with_empty_parameters(self):
+        """
+        Test to check if modify_config_file properly stores a key-value pair in an empty config file
+        """
+        create_mss_settings_file('{ }')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        data_to_save_in_config_file = {
+            "MSCOLAB_mailid": "something@something.org"
+        }
+        modify_config_file(data_to_save_in_config_file)
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        read_config_file(path=config_file)
+        data = config_loader()
+        assert data["MSCOLAB_mailid"] == "something@something.org"
+
+    def test_modify_config_file_with_existing_parameters(self):
+        """
+        Test to check if modify_config_file properly modifies a key-value pair in the config file
+        """
+        create_mss_settings_file('{"MSCOLAB_mailid": "anand@something.org"}')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        data_to_save_in_config_file = {
+            "MSCOLAB_mailid": "sree@something.org"
+        }
+        modify_config_file(data_to_save_in_config_file)
+        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        read_config_file(path=config_file)
+        data = config_loader()
+        assert data["MSCOLAB_mailid"] == "sree@something.org"
+
+    def test_modify_config_file_with_invalid_parameters(self):
+        """
+        Test to check if modify_config_file raises a KeyError when a key is empty
+        """
+        create_mss_settings_file('{ }')
+        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
+            pytest.skip('undefined test mss_settings.json')
+        data_to_save_in_config_file = {
+            "": "sree",
+            "MSCOLAB_mailid": "sree@something.org"
+        }
+        with pytest.raises(KeyError):
+            modify_config_file(data_to_save_in_config_file)
+
+
+class TestMergeDict:
+    """
+    merge_dict can only merge keys which are predefined in the mss_default. All other have to be skipped
+    """
+    def setup(self):
+        self.default_dict = dict(mss_default.__dict__)
+
+    def test_no_differences(self):
+        users_options_dict = self.default_dict
+        assert merge_dict(self.default_dict, users_options_dict) == self.default_dict
+        users_options_dict = {}
+        assert merge_dict(self.default_dict, users_options_dict) == self.default_dict
+
+    def test_user_option_changed(self):
+        users_options_dict = {
+            "new_flighttrack_template": ["Kona", "Anchorage"],
+            "new_flighttrack_flightlevel": 350,
+        }
+        assert self.default_dict["num_interpolation_points"] == 201
+        assert self.default_dict["new_flighttrack_template"] == ['Nagpur', 'Delhi']
+        assert self.default_dict["new_flighttrack_flightlevel"] == 0
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["num_interpolation_points"] == 201
+        assert changed_dict["new_flighttrack_template"] == ["Kona", "Anchorage"]
+        assert changed_dict["new_flighttrack_flightlevel"] == 350
+
+    def test_user_unknown_option(self):
+        users_options_dict = {"unknown_option": 1}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict.get("num_interpolation_points") == 201
+        assert changed_dict.get("unknown_option", None) is None
+
+    def test_add_filepicker_default_to_plugins(self):
+        users_options_dict = {"export_plugins": {"Text": ["txt", "mslib.plugins.io.text", "save_to_txt"]}}
+        changed_dict = merge_dict(self.default_dict, users_options_dict)
+        assert changed_dict["export_plugins"]["Text"] == ["txt", "mslib.plugins.io.text", "save_to_txt", "default"]

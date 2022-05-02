@@ -1,6 +1,17 @@
 Changelog
 =========
 
+Version 6.1.0
+~~~~~~~~~~~~~
+
+This release includes some small improvements of the usablity.
+A few bug fixes, a new plugin for NAVAID waypoints is decribed and
+mscolab gots few improvements for user creation.
+Wind speed plots can now be created for altitudes > 25km.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/70?closed=1
+
 
 Version 6.0.6
 ~~~~~~~~~~~~~

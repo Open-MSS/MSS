@@ -42,6 +42,7 @@ import requests
 import shutil
 import sys
 import fs
+import warnings
 
 from mslib import __version__
 from mslib.msui.mss_qt import ui_mainwindow as ui
@@ -485,8 +486,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         picker_default = config_loader(dataset="filepicker_default")
         self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
         self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
-        self.import_plugins = {"CSV": (load_from_csv, "csv")}
-        self.export_plugins = {"CSV": (save_to_csv, "csv")}
+        self.import_plugins = {}
+        self.export_plugins = {}
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
 
@@ -977,6 +978,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 
 def main():
+    warnings.warn("In the next major version we will rename the mss command to msui"
+                  " and the module from mss_pyui to msui", DeprecationWarning)
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
     except KeyError:

@@ -349,7 +349,7 @@ class MapCanvas(basemap.Basemap):
         """
         Sets airports to visible or not visible
         """
-        if (reload or not value) and self.airports:
+        if (reload or not value or len(port_type) == 0) and self.airports:
             if OURAIRPORTS_NOTICE in self.crs_text.get_text():
                 self.crs_text.set_text(self.crs_text.get_text().replace(f"{OURAIRPORTS_NOTICE}\n", ""))
             self.airports.remove()
@@ -357,14 +357,14 @@ class MapCanvas(basemap.Basemap):
             self.airports = None
             self.airtext = None
             self.ax.figure.canvas.mpl_disconnect(self.airports_event)
-        if value:
+        if value and len(port_type) > 0:
             self.draw_airports(port_type)
 
     def set_draw_airspaces(self, value, airspaces=[], range_km=None, reload=True):
         """
         Sets airspaces to visible or not visible
         """
-        if (reload or not value) and self.airspaces:
+        if (reload or not value or len(airspaces) == 0) and self.airspaces:
             if OPENAIP_NOTICE in self.crs_text.get_text():
                 self.crs_text.set_text(self.crs_text.get_text().replace(f"{OPENAIP_NOTICE}\n", ""))
             self.airspaces.remove()
@@ -372,7 +372,7 @@ class MapCanvas(basemap.Basemap):
             self.airspaces = None
             self.airspacetext = None
             self.ax.figure.canvas.mpl_disconnect(self.airspace_event)
-        if value:
+        if value and len(airspaces) > 0:
             country_codes = [airspace.split(" ")[-1] for airspace in airspaces]
             self.draw_airspaces(country_codes, range_km)
 
@@ -383,7 +383,7 @@ class MapCanvas(basemap.Basemap):
         if not self.airspaces:
             airspaces = copy.deepcopy(get_airspaces(countries))
             if not airspaces:
-                logging.error("Tried to draw airspaces without .aip files.")
+                logging.error("Tried to draw airspaces without asp files.")
                 return
 
             for i, airspace in enumerate(airspaces):

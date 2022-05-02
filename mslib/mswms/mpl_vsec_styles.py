@@ -114,6 +114,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
     """
     Vertical section of chemical species/other stuff
     """
+    name = "VS_GenericStyle"
     styles = [
         ("auto", "auto colour scale"),
         ("autolog", "auto log colour scale"), ]
@@ -190,7 +191,7 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
     class fnord(VS_GenericStyle):
         name = f"VS_{entity}_{vert}"
         dataname = entity
-        units, _ = Targets.get_unit(dataname)
+        units = Targets.get_unit(dataname)
         title = Targets.TITLES.get(entity, entity)
         if units:
             title += f" ({units})"

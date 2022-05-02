@@ -1,6 +1,15 @@
 name: Pytest MSS
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches:
+    - develop
+    - stable
+  pull_request:
+    branches:
+    - develop
+    - stable
+
 env:
   PAT: ${{ secrets.PAT }}
 

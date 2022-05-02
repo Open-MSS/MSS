@@ -379,11 +379,51 @@ def read_config_file(path=constants.MSS_SETTINGS):
 
     global user_options
     if json_file_data:
-        user_options = merge_data(copy.deepcopy(default_options), json_file_data)
+        user_options = merge_dict(copy.deepcopy(default_options), json_file_data)
         logging.debug("Merged default and user settings")
     else:
         user_options = copy.deepcopy(default_options)
         logging.debug("No user settings found, using default settings")
+
+
+def modify_config_file(data, path=constants.MSS_SETTINGS):
+    """
+    modifies a config file
+
+    Args:
+        data: data to be modified/written
+        path: path of config file
+
+    Note:
+        sole purpose of the path argument is to be able to test with example config files
+    """
+    path = path.replace("\\", "/")
+    dir_name, file_name = fs.path.split(path)
+    json_file_data = {}
+    with fs.open_fs(dir_name) as _fs:
+        if _fs.exists(file_name):
+            try:
+                file_content = _fs.readtext(file_name)
+                json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
+                json_file_data_copy = copy.deepcopy(json_file_data)
+                for key in data:
+                    if key not in json_file_data:
+                        json_file_data_copy[key] = config_loader(dataset=key, default=True)
+                modified_data = merge_dict(json_file_data_copy, data)
+                logging.debug("Merged default and user settings")
+                _fs.writetext(file_name, json.dumps(modified_data, indent=4))
+                read_config_file()
+            except json.JSONDecodeError as e:
+                logging.error(f"Error while loading json file {e}")
+                error_message = f"Unexpected error while loading config\n{e}"
+                raise FatalUserError(error_message)
+            except ValueError as e:
+                logging.error(f"Error while loading json file {e}")
+                error_message = f"Invalid keys detected in config\n{e}"
+                raise FatalUserError(error_message)
+        else:
+            error_message = f"MSS config File '{path}' not found"
+            raise FileNotFoundError(error_message)
 
 
 def config_loader(dataset=None, default=False):
@@ -464,19 +504,21 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     return default_settings
 
 
-def merge_data(options, json_file_data):
+def merge_dict(existing_dict, new_dict):
     """
     Merge two dictionaries by comparing all the options from
     the MissionSupportSystemDefaultConfig class
 
     Arguments:
-    options -- Dict to merge options into
-    json_file_data -- Dict with new values
+    existing_dict -- Dict to merge new_dict into
+    new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
     for key in MissionSupportSystemDefaultConfig.fixed_dict_options:
-        if key in json_file_data:
-            options[key] = compare_data(options[key], json_file_data[key])[0]
+        if key in new_dict:
+            existing_dict[key] = compare_data(
+                existing_dict[key], new_dict[key]
+            )[0]
 
     # Check if dictionary options with predefined structure match data types from default
     dos = copy.deepcopy(MissionSupportSystemDefaultConfig.dict_option_structure)
@@ -485,46 +527,48 @@ def merge_data(options, json_file_data):
     dos["import_plugins"]["plugin-name-a"] = dos["import_plugins"]["plugin-name"][:3]
     dos["export_plugins"]["plugin-name-a"] = dos["export_plugins"]["plugin-name"][:3]
     for key in dos:
-        if key in json_file_data:
+        if key in new_dict:
             temp_data = {}
-            for option_key in json_file_data[key]:
+            for option_key in new_dict[key]:
                 for dos_key_key in dos[key]:
-                    data, match = compare_data(dos[key][dos_key_key], json_file_data[key][option_key])
+                    data, match = compare_data(dos[key][dos_key_key], new_dict[key][option_key])
                     if match:
-                        temp_data[option_key] = json_file_data[key][option_key]
+                        temp_data[option_key] = new_dict[key][option_key]
                         break
             if temp_data != {}:
-                options[key] = temp_data
+                existing_dict[key] = temp_data
 
     # Check if list options with predefined structure match data types from default
     los = copy.deepcopy(MissionSupportSystemDefaultConfig.list_option_structure)
     for key in los:
-        if key in json_file_data:
+        if key in new_dict:
             temp_data = []
-            for i in range(len(json_file_data[key])):
+            for i in range(len(new_dict[key])):
                 for los_key_item in los[key]:
-                    data, match = compare_data(los_key_item, json_file_data[key][i])
+                    data, match = compare_data(los_key_item, new_dict[key][i])
                     if match:
                         temp_data.append(data)
                         break
             if temp_data != []:
-                options[key] = temp_data
+                existing_dict[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MissionSupportSystemDefaultConfig.key_value_options:
-        if key in json_file_data:
-            data, match = compare_data(options[key], json_file_data[key])
+        if key in new_dict:
+            data, match = compare_data(existing_dict[key], new_dict[key])
             if match:
-                options[key] = data
+                existing_dict[key] = data
 
     # add filepicker default to import and export plugins if missing
     for plugin_type in ["import_plugins", "export_plugins"]:
-        if plugin_type in options:
-            for plugin in options[plugin_type]:
-                if len(options[plugin_type][plugin]) == 3:
-                    options[plugin_type][plugin].append(options.get("filepicker_default", "default"))
+        if plugin_type in existing_dict:
+            for plugin in existing_dict[plugin_type]:
+                if len(existing_dict[plugin_type][plugin]) == 3:
+                    existing_dict[plugin_type][plugin].append(
+                        existing_dict.get("filepicker_default", "default")
+                    )
 
-    return options
+    return existing_dict
 
 
 def compare_data(default, user_data):
