@@ -443,7 +443,7 @@ class FileManager(object):
         else:
             # if the user is admin and is trying to leave the operation, return false
             if user.id in u_ids:
-               return False
+                return False
             # if the user is admin and is trying to remove a user not in this operation
             for u_id in u_ids:
                 if not self.is_member(u_id, op_id):

@@ -218,7 +218,7 @@ class Test_FileManager(TestCase):
         flight_path, operation1 = self._create_operation(flight_path="testflight", user=self.user)
         assert self.fm.is_admin(self.user.id, operation1.id)
         assert self.user.id is not None
-        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.user.id]) == False
+        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.user.id]) is False
 
         self.fm.add_bulk_permission(operation1.id, self.user, [self.anotheruser.id], "collaborator")
         assert self.fm.is_collaborator(self.anotheruser.id, operation1.id)
@@ -226,17 +226,17 @@ class Test_FileManager(TestCase):
         assert self.fm.is_collaborator(self.collaboratoruser.id, operation1.id)
         self.fm.add_bulk_permission(operation1.id, self.user, [self.vieweruser.id], "viewer")
         assert self.fm.is_viewer(self.vieweruser.id, operation1.id)
-        assert self.fm.delete_bulk_permission(operation1.id, self.anotheruser, [self.vieweruser.id]) == False
-        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) == True
-        assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) == True
-        assert self.fm.delete_bulk_permission(operation1.id, self.op2user, [self.anotheruser.id]) == False
+        assert self.fm.delete_bulk_permission(operation1.id, self.anotheruser, [self.vieweruser.id]) is False
+        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) is True
+        assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
+        assert self.fm.delete_bulk_permission(operation1.id, self.op2user, [self.anotheruser.id]) is False
 
         flight_path1, operation2 = self._create_operation(flight_path="testflight1", user=self.op2user)
         assert self.fm.is_admin(self.op2user.id, operation2.id)
         assert self.op2user.id is not None
-        assert self.fm.delete_bulk_permission(operation2.id, self.op2user, [self.collaboratoruser.id]) == False
+        assert self.fm.delete_bulk_permission(operation2.id, self.op2user, [self.collaboratoruser.id]) is False
         self.fm.add_bulk_permission(operation2.id, self.op2user, [self.op2vieweruser.id], "collaborator")
-        assert self.fm.delete_bulk_permission(operation2.id, self.op2vieweruser, [self.collaboratoruser.id]) == False
+        assert self.fm.delete_bulk_permission(operation2.id, self.op2vieweruser, [self.collaboratoruser.id]) is False
 
     def test_import_permission(self):
         with self.app.test_client():
