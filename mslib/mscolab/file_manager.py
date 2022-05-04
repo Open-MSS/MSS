@@ -104,6 +104,17 @@ class FileManager(object):
             })
         return operations
 
+    def is_member(self, u_id, op_id):
+        """
+        op_id: operation id
+        u_id: user-id
+        """
+        # return true only if the user is a member
+        permi = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
+        if not permi:
+            return False
+        return True
+
     def is_admin(self, u_id, op_id):
         """
         op_id: operation id
@@ -117,6 +128,19 @@ class FileManager(object):
             return False
         return True
 
+    def is_non_admin_member(self, u_id, op_id):
+        """
+        op_id: operation id
+        u_id: user-id
+        """
+        # return true only if the user is a member but not admin
+        perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
+        if not perm:
+            return False
+        elif perm.access_level == "admin" or perm.access_level == "creator":
+            return False
+        return True
+
     def is_collaborator(self, u_id, op_id):
         """
         op_id: operation id
@@ -127,6 +151,19 @@ class FileManager(object):
         if not permi:
             return False
         elif permi.access_level != "collaborator":
+            return False
+        return True
+
+    def is_viewer(self, u_id, op_id):
+        """
+        op_id: operation id
+        u_id: user-id
+        """
+        # return true only if the user is viewer
+        permi = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
+        if not permi:
+            return False
+        elif permi.access_level != "viewer":
             return False
         return True
 
@@ -396,18 +433,29 @@ class FileManager(object):
             return False
 
     def delete_bulk_permission(self, op_id, user, u_ids):
-        if self.is_admin(user.id, op_id) and user.id in u_ids:
+        # if the user is not a member of the operation, return false
+        if not self.is_member(user.id, op_id):
             return False
-        elif not self.is_admin(user.id, op_id) and (len(u_ids) != 1 or user.id not in u_ids):
-            return False
+        elif self.is_non_admin_member(user.id, op_id):
+            # if the user is non-admin and is trying to remove any other user, return false
+            if len(u_ids) != 1 or user.id not in u_ids:
+                return False
         else:
-            Permission.query \
-                .filter(Permission.op_id == op_id) \
-                .filter(Permission.u_id.in_(u_ids)) \
-                .delete(synchronize_session='fetch')
+            # if the user is admin and is trying to leave the operation, return false
+            if user.id in u_ids:
+               return False
+            # if the user is admin and is trying to remove a user not in this operation
+            for u_id in u_ids:
+                if not self.is_member(u_id, op_id):
+                    return False
 
-            db.session.commit()
-            return True
+        Permission.query \
+            .filter(Permission.op_id == op_id) \
+            .filter(Permission.u_id.in_(u_ids)) \
+            .delete(synchronize_session='fetch')
+
+        db.session.commit()
+        return True
 
     def import_permissions(self, import_op_id, current_op_id, u_id):
         if not self.is_admin(u_id, current_op_id):

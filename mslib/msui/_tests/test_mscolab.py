@@ -35,6 +35,7 @@ import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
+from mslib.mscolab.server import get_operation_details
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader
@@ -44,6 +45,7 @@ from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib._tests.constants import MSS_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.mscolab.file_manager import FileManager
 
 PORTS = list(range(25000, 25500))
 
