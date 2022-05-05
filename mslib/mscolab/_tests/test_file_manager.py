@@ -72,6 +72,8 @@ class Test_FileManager(TestCase):
         self.op2user = get_user('UV50@uv50')
         assert add_user('UV60@uv60', 'UV60', 'uv60')
         self.op2vieweruser = get_user('UV60@uv60')
+        assert add_user('UV70@uv70', 'UV70', 'uv70')
+        self.user1 = get_user('UV70@uv70')
         self._example_data()
 
     def tearDown(self):
@@ -208,7 +210,7 @@ class Test_FileManager(TestCase):
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation9")
-            assert len(self.fm.fetch_users_without_permission(operation.id, self.user.id)) == 5
+            assert len(self.fm.fetch_users_without_permission(operation.id, self.user.id)) == 6
 
     def test_fetch_users_with_permission(self):
         with self.app.test_client():
@@ -225,28 +227,38 @@ class Test_FileManager(TestCase):
         assert self.fm.is_collaborator(self.collaboratoruser.id, operation1.id)
         self.fm.add_bulk_permission(operation1.id, self.user, [self.vieweruser.id], "viewer")
         assert self.fm.is_viewer(self.vieweruser.id, operation1.id)
-
-        # user(admin of operation1) has no right to remove itself from the operation1
-        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.user.id]) is False
-        # anotheruser of operation1 has no right to remove vieweruser from the operation1
-        assert self.fm.delete_bulk_permission(operation1.id, self.anotheruser, [self.vieweruser.id]) is False
-        # user(admin of operation1) has the right to remove anotheruser from the operation1
-        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) is True
-        # vieweruser of operation1 has the right to remove itself from the operation1
-        assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
-
         flight_path1, operation2 = self._create_operation(flight_path="testflight1", user=self.op2user)
         assert self.fm.is_admin(self.op2user.id, operation2.id)
         assert self.op2user.id is not None
         self.fm.add_bulk_permission(operation2.id, self.op2user, [self.op2vieweruser.id], "collaborator")
-        # op2user(admin of operation2) has no right to remove collaboratoruser of operation1 from operation1
+
+        # admin operations
+        # user (admin of operation1) has no right leave operation1
+        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.user.id]) is False
+        # user (admin of operation1) has the right to remove anotheruser from the operation1
+        assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) is True
+        # op2user (admin of operation2) has no right to remove collaboratoruser of operation1 from operation1
         assert self.fm.delete_bulk_permission(operation1.id, self.op2user, [self.collaboratoruser.id]) is False
-        # op2user(admin of operation2) has no right to remove collaboratoruser of operation1 from operation2
+        # op2user (admin of operation2) has no right to remove anotheruser of operation1 from operation2
         assert self.fm.delete_bulk_permission(operation2.id, self.op2user, [self.anotheruser.id]) is False
+
+        # member operations
+        # collaboratoruser of operation1 has no right to remove vieweruser from the operation1
+        assert self.fm.delete_bulk_permission(operation1.id, self.collaboratoruser, [self.vieweruser.id]) is False
+        # The below assertion fails in stable 6.1
+        # The change is so that vieweruser (any user other than admin) can leave the operation
+        # vieweruser of operation1 has the right to leave operation1
+        assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True 
         # collaboratoruser of operation1 has no right to remove op2vieweruser of operation2 from operation2
         assert self.fm.delete_bulk_permission(operation2.id, self.collaboratoruser, [self.op2vieweruser.id]) is False
         # op2vieweruser of operation2 has no right to remove collaboratoruser of operation1 from operation2
         assert self.fm.delete_bulk_permission(operation2.id, self.op2vieweruser, [self.collaboratoruser.id]) is False
+
+        # non-member operations
+        # user1 (not a member of operation1) has no right to remove collaboratoruser of operation1 from operation1
+        assert self.fm.delete_bulk_permission(operation1.id, self.user1, [self.collaboratoruser.id]) is False
+        # collaboratoruser of operation1 has no right to remove user1 (not a member of operation1) from operation1
+        assert self.fm.delete_bulk_permission(operation1.id, self.collaboratoruser, [self.user1.id]) is False
 
     def test_import_permission(self):
         with self.app.test_client():
