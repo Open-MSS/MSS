@@ -248,7 +248,7 @@ class Test_FileManager(TestCase):
         # The below assertion fails in stable 6.1
         # The change is so that vieweruser (any user other than admin) can leave the operation
         # vieweruser of operation1 has the right to leave operation1
-        assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True 
+        assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
         # collaboratoruser of operation1 has no right to remove op2vieweruser of operation2 from operation2
         assert self.fm.delete_bulk_permission(operation2.id, self.collaboratoruser, [self.op2vieweruser.id]) is False
         # op2vieweruser of operation2 has no right to remove collaboratoruser of operation1 from operation2
