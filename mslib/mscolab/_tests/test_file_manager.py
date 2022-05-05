@@ -234,7 +234,7 @@ class Test_FileManager(TestCase):
         assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) is True
         # vieweruser of operation1 has the right to remove itself from the operation1
         assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
-        
+
         flight_path1, operation2 = self._create_operation(flight_path="testflight1", user=self.op2user)
         assert self.fm.is_admin(self.op2user.id, operation2.id)
         assert self.op2user.id is not None
