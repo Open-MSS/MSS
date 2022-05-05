@@ -110,8 +110,8 @@ class FileManager(object):
         u_id: user-id
         """
         # return true only if the user is a member
-        permi = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if not permi:
+        perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
+        if perm is None:
             return False
         return True
 
@@ -122,7 +122,7 @@ class FileManager(object):
         """
         # return true only if the user is admin or creator
         perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if not perm:
+        if perm is None:
             return False
         elif perm.access_level != "admin" and perm.access_level != "creator":
             return False
@@ -135,7 +135,7 @@ class FileManager(object):
         """
         # return true only if the user is a member but not admin
         perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if not perm:
+        if perm is None:
             return False
         elif perm.access_level == "admin" or perm.access_level == "creator":
             return False
@@ -147,10 +147,10 @@ class FileManager(object):
         u_id: user-id
         """
         # return true only if the user is collaborator
-        permi = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if not permi:
+        perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
+        if perm is None:
             return False
-        elif permi.access_level != "collaborator":
+        elif perm.access_level != "collaborator":
             return False
         return True
 
@@ -160,10 +160,10 @@ class FileManager(object):
         u_id: user-id
         """
         # return true only if the user is viewer
-        permi = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if not permi:
+        perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
+        if perm is None:
             return False
-        elif permi.access_level != "viewer":
+        elif perm.access_level != "viewer":
             return False
         return True
 
@@ -173,7 +173,7 @@ class FileManager(object):
         u_id: user-id
         """
         perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if not perm:
+        if perm is None:
             return False
         return perm.access_level
 
@@ -272,10 +272,10 @@ class FileManager(object):
         user: user of this request
         """
         perm = Permission.query.filter_by(u_id=user.id, op_id=op_id).first()
-        if not perm:
+        if perm is None:
             return False
         operation = Operation.query.filter_by(id=op_id).first()
-        if not operation:
+        if operation is None:
             return False
         with fs.open_fs(self.data_dir) as data:
             operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'r')
@@ -291,7 +291,7 @@ class FileManager(object):
         to render the recent changes.
         """
         perm = Permission.query.filter_by(u_id=user.id, op_id=op_id).first()
-        if not perm:
+        if perm is None:
             return False
         # Get all changes
         if named_version is None:
@@ -462,7 +462,7 @@ class FileManager(object):
             return False, None, "Not an admin of this operation"
 
         perm = Permission.query.filter_by(u_id=u_id, op_id=import_op_id).first()
-        if not perm:
+        if perm is None:
             return False, None, "Not a member of this operation"
 
         existing_perms = Permission.query \
