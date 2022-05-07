@@ -703,7 +703,10 @@ class MSSMscolab(QtCore.QObject):
         self.profile_dialog.usernameLabel_2.setText(self.user['username'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
+        self.profile_dialog.fullname_label2.setText(self.user["fullname"])
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
+        self.profile_dialog.editFullnameBtn.clicked.connect(self.editfull_name)
+        # self.profile_dialog.editNicknameBtn.clicked.connect(self.editnick_name)
 
         # add context menu for right click on image
         self.gravatar_menu = QtWidgets.QMenu()
@@ -734,6 +737,34 @@ class MSSMscolab(QtCore.QObject):
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
             self.logout()
+
+    def editfull_name(self):
+        if verify_user_token(self.mscolab_server_url, self.token):
+            fullname, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr("Edit Full Name"),
+                self.ui.tr(
+                    f"You're about to change the full name - '{self.active_operation_name}' "
+                    f"Enter new full name: "
+                ),
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "fullname": str(fullname)
+                }
+                url = url_join(self.mscolab_server_url, 'edit_full_name')
+                r = requests.post(url, data=data)
+                if r.text == "true":
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Fullname is updated successfully.")
+                    self.profile_dialog.fullname_label2.setText(self.user["fullname"])
+        else:
+            show_popup(self, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def editnick_name(self):
+        pass
 
     def add_operation_handler(self):
         if verify_user_token(self.mscolab_server_url, self.token):

@@ -322,6 +322,28 @@ def delete_user():
     return jsonify({"success": True}), 200
 
 
+@APP.route("/edit_full_name", methods=["POST"])
+@verify_user
+def edit_full_name():
+    user = g.user
+    fullname = request.form.get("fullname")
+    name = User.query.filter_by(id=int(user.id)).first()
+    name.fullname = str(fullname)
+    db.session.commit()
+    return jsonify({"success": True}), 200
+
+
+# @APP.route("/edit_nick_name", methods=["POST"])
+# @verify_user
+# def edit_nick_name():
+#     user = g.user
+#     nickname = request.form.get("nickname")
+#     name = User.query.filter_by(id=int(user.id)).first()
+#     name.nickname = str(nickname)
+#     db.session.commit()
+#     return jsonify({"success": True}), 200
+
+
 # Chat related routes
 @APP.route("/messages", methods=["GET"])
 @verify_user
