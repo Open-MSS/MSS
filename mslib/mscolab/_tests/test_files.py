@@ -105,7 +105,7 @@ class Test_Files(TestCase):
             assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
             op_id = get_recent_op_id(self.fm, self.user)
             u_id = self.user.id
-            assert self.fm.is_admin(u_id, op_id) is True
+            assert self.fm.is_creator(u_id, op_id) is True
             undefined_op_id = 123
             assert self.fm.is_admin(u_id, undefined_op_id) is False
             no_perm_op_id = 2
