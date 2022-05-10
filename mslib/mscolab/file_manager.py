@@ -388,7 +388,7 @@ class FileManager(object):
             return False
 
     def fetch_users_without_permission(self, op_id, u_id):
-        if not self.is_creator(u_id, op_id):
+        if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
             return False
 
         user_list = User.query\
@@ -400,7 +400,7 @@ class FileManager(object):
         return users
 
     def fetch_users_with_permission(self, op_id, u_id):
-        if not self.is_creator(u_id, op_id):
+        if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
             return False
 
         user_list = User.query\

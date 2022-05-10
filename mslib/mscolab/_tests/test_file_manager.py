@@ -157,23 +157,6 @@ class Test_FileManager(TestCase):
             assert self.fm.is_member(82322, operation.id) is False
             assert self.fm.is_member(self.user.id, operation.id) is True
 
-    # def test_is_admin(self):
-    #     with self.app.test_client():
-    #         flight_path, operation = self._create_operation(flight_path="halfmoon")
-    #         assert operation.path == flight_path
-    #         assert self.fm.is_admin(self.user.id, operation.id) is True
-
-    # def test_is_collaborator(self):
-    #     with self.app.test_client():
-    #         flight_path, operation = self._create_operation(flight_path="fullmoon")
-    #         assert operation.path == flight_path
-    #         self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
-    #         assert self.fm.is_creator(self.collaboratoruser.id, operation.id) is False
-    #         assert self.fm.is_non_admin_member(self.collaboratoruser.id, operation.id) is True
-    #         assert self.fm.is_collaborator(self.collaboratoruser.id, operation.id) is True
-    #         assert self.fm.is_viewer(self.collaboratoruser.id, operation.id) is False
-    #         assert self.fm.is_member(self.collaboratoruser.id, operation.id) is True
-
     def test_auth_type(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="aa")
