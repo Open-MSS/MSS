@@ -141,19 +141,6 @@ class FileManager(object):
             return False
         return True
 
-    def is_non_admin_and_non_creator_member(self, u_id, op_id):
-        """
-        op_id: operation id
-        u_id: user-id
-        """
-        # return true only if the user is a member but not admin and not creator
-        perm = Permission.query.filter_by(u_id=u_id, op_id=op_id).first()
-        if perm is None:
-            return False
-        elif perm.access_level == "admin" or perm.access_level == "creator":
-            return False
-        return True
-
     def is_collaborator(self, u_id, op_id):
         """
         op_id: operation id
@@ -196,7 +183,7 @@ class FileManager(object):
         attribute: attribute to be changed, eg path
         user: logged in user
         """
-        if self.is_non_admin_and_non_creator_member(user.id, op_id):
+        if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
         operation = Operation.query.filter_by(id=op_id).first()
         if attribute == "path":
@@ -345,7 +332,7 @@ class FileManager(object):
         return change_content
 
     def set_version_name(self, ch_id, op_id, u_id, version_name):
-        if self.is_non_admin_and_non_creator_member(u_id, op_id) or self.is_collaborator(u_id, op_id):
+        if (not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id)) or self.is_collaborator(u_id, op_id):
             return False
         Change.query\
             .filter(Change.id == ch_id)\
@@ -362,7 +349,7 @@ class FileManager(object):
         # ToDo a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
-        if self.is_non_admin_and_non_creator_member(user.id, ch.op_id):
+        if not self.is_admin(user.id, ch.op_id) and not self.is_creator(user.id, ch.op_id):
             return False
         if ch is None:
             return False
@@ -413,7 +400,7 @@ class FileManager(object):
         return users
 
     def add_bulk_permission(self, op_id, user, new_u_ids, access_level):
-        if self.is_non_admin_and_non_creator_member(user.id, op_id):
+        if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
 
         new_permissions = []
@@ -429,7 +416,7 @@ class FileManager(object):
             return False
 
     def modify_bulk_permission(self, op_id, user, u_ids, new_access_level):
-        if self.is_non_admin_and_non_creator_member(user.id, op_id):
+        if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
 
         # TODO: Check whether we need synchronize_session False Or Fetch
@@ -449,7 +436,7 @@ class FileManager(object):
         # if the user is not a member of the operation, return false
         if not self.is_member(user.id, op_id):
             return False
-        elif self.is_non_admin_and_non_creator_member(user.id, op_id):
+        elif not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             # if the user is a member but non-admin and non-creator, and is trying to remove any other user
             if len(u_ids) != 1 or user.id not in u_ids:
                 return False
