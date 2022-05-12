@@ -81,7 +81,7 @@ jobs:
     needs: Test-MSS
     
     steps:
-      - if: env.PAT != '' && ${{ inputs.event_name }} == 'push' && ${{ needs.Test-MSS.step1.outputs.triggerdockerbuild }} == 'yes'
+      - if: ${{ env.PAT != '' && inputs.event_name == 'push' && needs.Test-MSS.step1.outputs.triggerdockerbuild == 'yes' }}
         name: Invoke dockertesting image creation
         uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
         with:
