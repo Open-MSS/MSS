@@ -281,7 +281,7 @@ class Test_FileManager(TestCase):
             # collaboratoruser of operation1 has no right to remove vieweruser from the operation1
             assert self.fm.delete_bulk_permission(operation1.id, self.collaboratoruser, [self.vieweruser.id]) is False
             # The below assertion fails in stable 6.1
-            # The change is so that vieweruser (any user other than admin) can leave the operation
+            # The change is so that vieweruser (any user other than creator) can leave the operation
             # vieweruser of operation1 has the right to leave operation1
             assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
             # collaboratoruser of operation1 has no right to remove op2vieweruser of operation2 from operation2
@@ -329,8 +329,8 @@ class Test_FileManager(TestCase):
             # equal permissions, nothing to do
             result = (False, None, 'Permissions are already given')
             assert self.fm.import_permissions(operation10.id, operation11.id, self.user.id) == result
-            # no admin rights
-            result = (False, None, 'Not the creator of this operation')
+            # no admin or creator rights
+            result = (False, None, 'Not the creator or admin of this operation')
             assert self.fm.import_permissions(operation10.id, operation12.id, self.user.id) == result
             # not a member
             result = (False, None, 'Not a member of this operation')

@@ -459,8 +459,8 @@ class FileManager(object):
         return True
 
     def import_permissions(self, import_op_id, current_op_id, u_id):
-        if not self.is_creator(u_id, current_op_id):
-            return False, None, "Not the creator of this operation"
+        if not self.is_creator(u_id, current_op_id) and not self.is_admin(u_id, current_op_id):
+            return False, None, "Not the creator or admin of this operation"
 
         perm = Permission.query.filter_by(u_id=u_id, op_id=import_op_id).first()
         if perm is None:
