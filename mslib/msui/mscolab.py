@@ -1487,7 +1487,6 @@ class MSSMscolab(QtCore.QObject):
             return
 
         if self.access_level in ["creator", "admin", "collaborator"]:
-            self.ui.actionUpdateOperationDesc.setEnabled(True)
             if self.ui.workLocallyCheckbox.isChecked():
                 self.ui.actionChat.setEnabled(True)
             else:
@@ -1504,6 +1503,7 @@ class MSSMscolab(QtCore.QObject):
 
         if self.access_level in ["creator", "admin"]:
             self.ui.actionManageUsers.setEnabled(True)
+            self.ui.actionUpdateOperationDesc.setEnabled(True)
             self.ui.actionUpdateOperationDesc.setEnabled(True)
             self.ui.filterCategoryCb.setEnabled(True)
         else:
