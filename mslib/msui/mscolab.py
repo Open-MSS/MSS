@@ -1480,6 +1480,8 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionManageUsers.setEnabled(False)
         self.ui.menuProperties.setEnabled(True)
         self.ui.actionRenameOperation.setEnabled(False)
+        self.ui.actionDeleteOperation.setEnabled(False)
+        self.ui.actionUpdateOperationDesc.setEnabled(False)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
