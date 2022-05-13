@@ -1504,7 +1504,6 @@ class MSSMscolab(QtCore.QObject):
         if self.access_level in ["creator", "admin"]:
             self.ui.actionManageUsers.setEnabled(True)
             self.ui.actionUpdateOperationDesc.setEnabled(True)
-            self.ui.actionUpdateOperationDesc.setEnabled(True)
             self.ui.filterCategoryCb.setEnabled(True)
         else:
             if self.admin_window is not None:
