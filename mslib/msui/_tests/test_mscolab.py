@@ -463,7 +463,10 @@ class Test_Mscolab(object):
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
-        self._create_operation("flight7", "Description flight7")
+        operation_name = "flight7"
+        self._create_operation(operation_name, "Description flight7")
+        # check for operation dir is created on server
+        assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name))
         assert self.window.mscolab.active_op_id is None
         self._activate_operation_at_index(0)
         op_id = self.window.mscolab.get_recent_op_id()
@@ -475,6 +478,8 @@ class Test_Mscolab(object):
         assert op_id is None
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
+        # check operation dir name removed
+        assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
         assert mockbox.call_count == 1
 
     def test_get_recent_op_id(self):
