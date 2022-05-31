@@ -9,7 +9,7 @@ on:
     - stable
 
 jobs:     
-  test-develop:
+  test-stable:
     uses: 
       ./.github/workflows/testing.yml
     with:
@@ -18,7 +18,7 @@ jobs:
       event_name: ${{ github.event_name }}
     secrets: inherit
 
-  test-develop-xdist:
+  test-stable-xdist:
     uses: 
       ./.github/workflows/testing.yml
     with:
