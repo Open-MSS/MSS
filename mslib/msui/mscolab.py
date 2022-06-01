@@ -1288,6 +1288,7 @@ class MSSMscolab(QtCore.QObject):
                 widgetItem.catgegory = operation["category"]
                 widgetItem.operation_path = operation["path"]
                 widgetItem.access_level = operation["access_level"]
+                widgetItem.active_operation_desc = operation["description"]
                 self.ui.listOperationsMSC.addItem(widgetItem)
             if self.chat_window is not None:
                 self.chat_window.load_users()
@@ -1514,6 +1515,8 @@ class MSSMscolab(QtCore.QObject):
         self.ui.menuProperties.setEnabled(True)
         self.ui.actionRenameOperation.setEnabled(False)
         self.ui.actionLeaveOperation.setEnabled(True)
+        self.ui.actionDeleteOperation.setEnabled(False)
+        self.ui.actionUpdateOperationDesc.setEnabled(False)
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
