@@ -1,0 +1,30 @@
+name: test develop
+
+on:
+  push:
+    branches:
+    - develop
+  pull_request:
+    branches:
+    - develop
+
+jobs:     
+  test-develop:
+    uses: 
+      ./.github/workflows/testing.yml
+    with:
+      xdist: no
+      branch_name: develop
+      event_name: ${{ github.event_name }}
+    secrets: inherit
+
+  test-develop-xdist:
+    uses: 
+      ./.github/workflows/testing.yml
+    with:
+      xdist: yes
+      branch_name: develop
+      event_name: ${{ github.event_name }}
+    secrets: inherit
+
+

@@ -1,17 +1,24 @@
 name: Pytest MSS
 
-on:
-  push:
-    branches:
-    - develop
-    - stable
-  pull_request:
-    branches:
-    - develop
-    - stable
+on:                                                                                  
+  workflow_call:
+    inputs:
+      xdist:
+        required: true
+        type: string
+      branch_name:
+        required: true
+        type: string
+      event_name:
+        required: true
+        type: string
+    secrets:
+      PAT:
+        required: true
 
 env:
   PAT: ${{ secrets.PAT }}
+  EVENT: ${{ inputs.event_name }}
 
 jobs:
   Test-MSS:
@@ -21,17 +28,22 @@ jobs:
       run:
         shell: bash
 
+    outputs:
+      output1: ${{ steps.step1.outputs.triggerdockerbuild }}
+
     container:
-      image: openmss/mss-test:latest
+      image: openmss/testing-${{ inputs.branch_name }}
 
     steps:
     - name: Trust My Directory
       run: git config --global --add safe.directory /__w/MSS/MSS
+
     - uses: actions/checkout@v2
-        
     - name: Reinstall dependencies if changed
+      id: step1
       run: |
         cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
+        && echo "::set-output name=triggerdockerbuild::yes" \
         && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
@@ -39,12 +51,13 @@ jobs:
         | sed -e "s/.*://" > reqs.txt \
         && source /opt/conda/bin/activate mssenv \
         && conda install --revision 0 \
-        && conda install mamba python=3.9.12 \
-        && mamba install pyvirtualdisplay python=3.9.12 \
+        && conda install mamba python=3.9.13 \
+        && mamba install pyvirtualdisplay python=3.9.13 \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 
     - name: Run tests
+      if: ${{ always() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -55,9 +68,20 @@ jobs:
           && break \
         ; done)
 
-        
-    - name: coveralls
-      if: ${{ always() && github.event_name == 'push' && github.ref == 'refs/heads/develop' }}
+    - name: Run tests in parallel
+      if: ${{ always() && inputs.xdist == 'yes' }}
+      timeout-minutes: 25
+      run: |
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
+        && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib \
+        || (for i in {1..5} \
+          ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib --last-failed --lfnf=none \
+          && break \
+        ; done)
+
+    - name: Collect coverage
+      if: ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -66,17 +90,17 @@ jobs:
         && mamba install coveralls \
         && coveralls --service=github
 
+
   Update-Images:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push'
-    needs: [Test-MSS]
+    needs: Test-MSS
     
     steps:
-      - if: env.PAT != ''
-        name: Invoke dockerhub image creation
+      - if: ${{ env.PAT != '' && inputs.event_name == 'push' && needs.Test-MSS.step1.outputs.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
+        name: Invoke dockertesting image creation
         uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
         with:
-          workflow: Update all images
-          repo: Open-MSS/dockerhub
-          ref: stable
+          workflow: Update Image testing-${{ inputs.branch_name }}
+          repo: Open-MSS/dockertesting
+          ref: main
           token: ${{ secrets.PAT }}
