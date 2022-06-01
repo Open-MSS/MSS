@@ -773,7 +773,7 @@ class WMSServer(object):
                 level = query.get('ELEVATION')
                 level = float(level) if level is not None else None
                 layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
-                from mslib.utils.netCDF4tools import VERTICAL AXIS
+                from mslib.utils.netCDF4tools import VERTICAL_AXIS
                 if level is None and any(_x in layer_datatypes for _x in VERTICAL_AXIS):
                     # Use the default value.
                     level = -1
