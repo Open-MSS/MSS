@@ -52,6 +52,8 @@ jobs:
         && conda update -n base conda \
         && source /opt/conda/bin/activate mssenv \
         && conda install --revision 0 \
+        && conda config --add channels conda-forge \
+        && conda config --remove channels defaults \
         && conda install mamba python=3.9.13 \
         && mamba search basemap \
         && mamba install pyvirtualdisplay python=3.9.13 \
