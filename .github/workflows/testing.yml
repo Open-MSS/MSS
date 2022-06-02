@@ -49,11 +49,10 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
+        && conda env remove -n mssenv \
+        && conda create -n mssenv  mamba python=3.9.13 \
+        && conda activate mssenv
         && conda update -n base conda \
-        && source /opt/conda/bin/activate mssenv \
-        && conda install --revision 0 \
-        && conda config --add channels conda-forge \
-        && conda install mamba python=3.9.13 \
         && mamba search basemap \
         && mamba install pyvirtualdisplay python=3.9.13 \
         && mamba install --file reqs.txt \
