@@ -50,18 +50,18 @@ jobs:
         && mamba activate mssenv \
         && cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
         && echo "::set-output name=triggerdockerbuild::yes" \
-        && cat /meta.yaml \
+        && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
+        && cat requirements.d/development.txt >> reqs.txt \
+        && cat reqs.txt \
         && which conda \
         && which mamba \
         && which python \
         && mamba deactivate \
         && mamba env remove -n mssenv \
-        && cat reqs.txt \
-        && cat /development.txt >> reqs.txt \
         && mamba create -y -n mssenv python=3.9 --file reqs.txt \
         && mamba activate mssenv \
         && mamba list)
