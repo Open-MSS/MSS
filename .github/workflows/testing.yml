@@ -50,7 +50,7 @@ jobs:
         && mamba activate mssenv \
         && cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
         && echo "::set-output name=triggerdockerbuild::yes" \
-        && cat localbuild/meta.yaml \
+        && cat /meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
@@ -61,9 +61,10 @@ jobs:
         && mamba deactivate \
         && mamba env remove -n mssenv \
         && cat reqs.txt \
-        && cat requirements.d/development.txt >> reqs.txt \
+        && cat /development.txt >> reqs.txt \
         && mamba create -y -n mssenv python=3.9 --file reqs.txt \
-        && mamba activate mssenv)
+        && mamba activate mssenv \
+        && mamba list)
 
     - name: Run tests
       if: ${{ success() && inputs.xdist == 'no' }}
