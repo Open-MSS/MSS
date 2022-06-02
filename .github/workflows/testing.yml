@@ -61,6 +61,7 @@ jobs:
         && mamba deactivate \
         && mamba env remove -n mssenv \
         && cat reqs.txt \
+        && cat development.txt >> reqs.txt \
         && mamba create -y -n mssenv --file reqs.txt \
         && mamba activate mssenv)
 
