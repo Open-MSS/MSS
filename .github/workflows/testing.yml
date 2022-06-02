@@ -49,6 +49,7 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
+        && conda deactivate \
         && conda env remove -n mssenv \
         && conda create -n mssenv mamba python=3.9.13 \
         && conda activate mssenv \
