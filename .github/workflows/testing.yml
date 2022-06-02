@@ -49,17 +49,16 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && source /opt/conda/bin/activate mssenv \
-        && conda install --revision 0 \
-        && conda list \
+        && conda env remove --name mssenv \
         && conda update -n base conda \
-        && conda install mamba python=3.9.13 \
+        && conda create -n mssenv mamba python=3.9.13 \
+        && source /opt/conda/bin/activate mssenv \
         && mamba install pyvirtualdisplay python=3.9.13 \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 
     - name: Run tests
-      if: ${{ success() }} && ${{ always() && inputs.xdist == 'no' }}
+      if: ${{ always() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -71,7 +70,7 @@ jobs:
         ; done)
 
     - name: Run tests in parallel
-      if: ${{ success() }} && ${{ always() && inputs.xdist == 'yes' }}
+      if: ${{ always() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -83,7 +82,7 @@ jobs:
         ; done)
 
     - name: Collect coverage
-      if: ${{ success() }} && ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
+      if: ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -98,7 +97,7 @@ jobs:
     needs: Test-MSS
     
     steps:
-      - if: ${{ success() }} && ${{ env.PAT != '' && inputs.event_name == 'push' && needs.Test-MSS.step1.outputs.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
+      - if: ${{ env.PAT != '' && inputs.event_name == 'push' && needs.Test-MSS.step1.outputs.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
         name: Invoke dockertesting image creation
         uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
         with:
