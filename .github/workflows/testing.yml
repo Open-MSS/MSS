@@ -63,7 +63,7 @@ jobs:
         && source activate mssenv)
 
     - name: Run tests
-      if: ${{ successful() && inputs.xdist == 'no' }}
+      if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
         source activate mssenv \
@@ -75,7 +75,7 @@ jobs:
         ; done)
 
     - name: Run tests in parallel
-      if: ${{ successful() && inputs.xdist == 'yes' }}
+      if: ${{ success() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
         source activate mssenv \
