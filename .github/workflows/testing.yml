@@ -52,7 +52,7 @@ jobs:
         && conda create -n new_mssenv mamba python=3.9.13 \
         && conda activate new_mssenv \
         && mamba search -c conda-forge basemap \
-        && mamba install -c conda-fotge pyvirtualdisplay python=3.9.13 \
+        && mamba install -c conda-forge pyvirtualdisplay python=3.9.13 \
         && mamba install -c conda-forge --file reqs.txt \
         && mamba install -c conda-forge --file requirements.d/development.txt \
         && conda create --name mssenv --copy new_mssenv)
