@@ -49,11 +49,8 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && source /opt/conda/bin/deactivate \
-        && conda env remove --name mssenv \
         && conda update -n base conda \
-        && conda create -n mssenv mamba python=3.9.13 \
-        && source /opt/conda/bin/activate mssenv \
+        && conda install --revision 0 \
         && mamba install pyvirtualdisplay python=3.9.13 \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
