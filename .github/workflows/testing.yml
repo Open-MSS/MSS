@@ -55,6 +55,7 @@ jobs:
         && mamba install -c conda-forge pyvirtualdisplay python=3.9.13 \
         && mamba install -c conda-forge --file reqs.txt \
         && mamba install -c conda-forge --file requirements.d/development.txt \
+        && conda env remove -n mssenv \
         && conda create --name mssenv --copy new_mssenv)
 
     - name: Run tests
