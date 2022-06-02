@@ -52,13 +52,13 @@ jobs:
         && which conda \
         && which mamba \
         && which python \
-        && source activate mssenv \
+        && conda activate mssenv \
         && which conda \
         && which mamba \
         && which python \
-        && source deactivate mssenv \
-        && mamba install pyvirtualdisplay python=3.9.13 \
-        && cat requirements.d/development.txt >> reqs.txt \
+        && conda deactivate mssenv \
+        && conda env remove -n mssenv \
+        && cat reqs.txt \
         && mamba create -y -n mssenv --file reqs.txt \
         && source activate mssenv)
 
