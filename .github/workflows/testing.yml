@@ -39,41 +39,49 @@ jobs:
 
     - name: Check for changed dependencies
       run: |
-        cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
-        && echo "triggerdockerbuild=yes" >> $GITHUB_ENV )
+        cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt \
+        || (echo Dependencies differ \
+            && echo "triggerdockerbuild=yes" >> $GITHUB_ENV )
 
     - name: Always rebuild dependencies for scheduled builds
-      if: ${{inputs.event_name == 'schedule' && inputs.branch_name == 'stable' && env.triggerdockerbuild != 'yes'}}
+      if: ${{ success() && inputs.event_name == 'schedule' && inputs.branch_name == 'stable' && env.triggerdockerbuild != 'yes' }}
       run: |
         echo "triggerdockerbuild=yes" >> $GITHUB_ENV
 
     - name: Reinstall dependencies if changed
-      if: ${{env.triggerdockerbuild == 'yes'}}
+      if: ${{ success() && env.triggerdockerbuild == 'yes' }}
       run: |
-        cat localbuild/meta.yaml \
+        cd $GITHUB_WORKSPACE \
+        && source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mssenv \
+        && mamba deactivate \
+        && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && conda create -n new_mssenv mamba python\<3.10 \
-        && conda activate new_mssenv \
-        && mamba install -c conda-forge pyvirtualdisplay python\<3.10 -y \
-        && mamba install -c conda-forge --file reqs.txt -y \
-        && mamba install -c conda-forge --file requirements.d/development.txt -y \
-        && mamba list \
-        && conda create --name mssenv --copy --clone new_mssenv -y
+        && cat requirements.d/development.txt >> reqs.txt \
+        && echo pyvirtualdisplay >> reqs.txt \
+        && cat reqs.txt \
+        && mamba env remove -n mssenv \
+        && mamba create -y -n mssenv --file reqs.txt
 
     - name: Print conda list
       run: |
-        source /opt/conda/bin/activate mssenv \
-        && conda list
+        source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mssenv \
+        && mamba list
 
     - name: Run tests
       if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
-        source /opt/conda/bin/activate mssenv \
-        && cd $GITHUB_WORKSPACE \
+        cd $GITHUB_WORKSPACE \
+        && source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mssenv \
         && pytest -v --durations=20 --reverse --cov=mslib mslib \
         || (for i in {1..5} \
           ; do pytest mslib -v --durations=0 --reverse --last-failed --lfnf=none \
@@ -85,7 +93,9 @@ jobs:
       timeout-minutes: 25
       run: |
         cd $GITHUB_WORKSPACE \
-        && source /opt/conda/bin/activate mssenv \
+        && source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mssenv \
         && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib \
         || (for i in {1..5} \
           ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib --last-failed --lfnf=none \
@@ -93,12 +103,14 @@ jobs:
         ; done)
 
     - name: Collect coverage
-      if: ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
+      if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        source /opt/conda/bin/activate mssenv \
-        && cd $GITHUB_WORKSPACE \
+        cd $GITHUB_WORKSPACE \
+        && source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mssenv \
         && mamba install coveralls \
         && coveralls --service=github
 
