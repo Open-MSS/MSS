@@ -68,7 +68,7 @@ jobs:
       if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
-        && source /opt/conda/etc/profile.d/conda.sh \
+        source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mssenv \
         && cd $GITHUB_WORKSPACE \
@@ -82,7 +82,7 @@ jobs:
       if: ${{ success() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
-        && source /opt/conda/etc/profile.d/conda.sh \
+        source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mssenv \
         && cd $GITHUB_WORKSPACE \
@@ -97,7 +97,7 @@ jobs:
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        && source /opt/conda/etc/profile.d/conda.sh \
+        source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mssenv \
         && cd $GITHUB_WORKSPACE \
