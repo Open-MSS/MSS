@@ -53,8 +53,8 @@ jobs:
         && conda install --revision 0 \
         && conda list \
         && conda update -n base conda \
-        && conda install mamba python=3.9.13 \
-        && mamba install pyvirtualdisplay python=3.9.13 \
+        && conda install mamba python=3.9.12 \
+        && mamba install pyvirtualdisplay python=3.9.12 \
         && mamba install --file reqs.txt \
         && mamba install --file requirements.d/development.txt)
 
