@@ -51,11 +51,10 @@ jobs:
         | sed -e "s/.*://" > reqs.txt \
         && conda create -n new_mssenv mamba python=3.9.13 \
         && conda activate new_mssenv \
-        && conda update -n base conda \
-        && mamba search basemap \
+        && mamba search -c conda-forge basemap \
         && mamba install pyvirtualdisplay python=3.9.13 \
-        && mamba install --file reqs.txt \
-        && mamba install --file requirements.d/development.txt \
+        && mamba install -c conda-forge --file reqs.txt \
+        && mamba install -c conda-forge --file requirements.d/development.txt \
         && conda create --name mssenv --copy new_mssenv)
 
     - name: Run tests
