@@ -49,15 +49,14 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && conda deactivate \
-        && conda env remove -n mssenv \
-        && conda create -n mssenv mamba python=3.9.13 \
-        && conda activate mssenv \
+        && conda create -n new_mssenv mamba python=3.9.13 \
+        && conda activate new_mssenv \
         && conda update -n base conda \
         && mamba search basemap \
         && mamba install pyvirtualdisplay python=3.9.13 \
         && mamba install --file reqs.txt \
-        && mamba install --file requirements.d/development.txt)
+        && mamba install --file requirements.d/development.txt \
+        && conda create --name mssenv --copy new_mssenv)
 
     - name: Run tests
       if: ${{ always() && inputs.xdist == 'no' }}
