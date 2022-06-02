@@ -58,7 +58,7 @@ jobs:
         && which conda \
         && which mamba \
         && which python \
-        && Rmambadeactivate \
+        && mamba deactivate \
         && mamba env remove -n mssenv \
         && cat reqs.txt \
         && mamba create -y -n mssenv --file reqs.txt \
