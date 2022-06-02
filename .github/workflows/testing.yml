@@ -42,19 +42,19 @@ jobs:
     - name: Reinstall dependencies if changed
       id: step1
       run: |
-        cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
+        source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && which conda \
+        && which mamba \
+        && which python \
+        && mamba activate mssenv \
+        && cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
         && echo "::set-output name=triggerdockerbuild::yes" \
         && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && source /opt/conda/etc/profile.d/conda.sh \
-        && source /opt/conda/etc/profile.d/mamba.sh \
-        && which conda \
-        && which mamba \
-        && which python \
-        && mamba activate mssenv \
         && which conda \
         && which mamba \
         && which python \
@@ -68,10 +68,10 @@ jobs:
       if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
-        source /opt/conda/etc/profile.d/conda.sh \
-        && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mssenv \
-        && cd $GITHUB_WORKSPACE \
+        cd $GITHUB_WORKSPACE \
+        && which conda \
+        && which mamba \
+        && which python \
         && pytest -v --durations=20 --reverse --cov=mslib mslib \
         || (for i in {1..5} \
           ; do pytest mslib -v --durations=0 --reverse --last-failed --lfnf=none \
@@ -82,10 +82,10 @@ jobs:
       if: ${{ success() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
-        source /opt/conda/etc/profile.d/conda.sh \
-        && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mssenv \
-        && cd $GITHUB_WORKSPACE \
+        cd $GITHUB_WORKSPACE \
+        && which conda \
+        && which mamba \
+        && which python \
         && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib \
         || (for i in {1..5} \
           ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib --last-failed --lfnf=none \
