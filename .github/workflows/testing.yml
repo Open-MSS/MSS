@@ -51,6 +51,7 @@ jobs:
         | sed -e "s/.*://" > reqs.txt \
         && source /opt/conda/bin/activate mssenv \
         && conda install --revision 0 \
+        && conda update -n base conda \
         && conda install mamba python=3.9.13 \
         && mamba install pyvirtualdisplay python=3.9.13 \
         && mamba install --file reqs.txt \
