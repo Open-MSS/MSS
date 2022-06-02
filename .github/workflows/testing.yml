@@ -59,7 +59,7 @@ jobs:
         && mamba install --file requirements.d/development.txt)
 
     - name: Run tests
-      if: ${{ always() && inputs.xdist == 'no' }}
+      if: ${{ success() }} && ${{ always() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -71,7 +71,7 @@ jobs:
         ; done)
 
     - name: Run tests in parallel
-      if: ${{ always() && inputs.xdist == 'yes' }}
+      if: ${{ success() }} && ${{ always() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -83,7 +83,7 @@ jobs:
         ; done)
 
     - name: Collect coverage
-      if: ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
+      if: ${{ success() }} && ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -98,7 +98,7 @@ jobs:
     needs: Test-MSS
     
     steps:
-      - if: ${{ env.PAT != '' && inputs.event_name == 'push' && needs.Test-MSS.step1.outputs.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
+      - if: ${{ success() }} && ${{ env.PAT != '' && inputs.event_name == 'push' && needs.Test-MSS.step1.outputs.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
         name: Invoke dockertesting image creation
         uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
         with:
