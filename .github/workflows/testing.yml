@@ -49,20 +49,24 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && conda create -n new_mssenv mamba python=3.9.13 \
-        && conda activate new_mssenv \
-        && conda update -n base conda \
-        && mamba search basemap \
+        && which conda \
+        && which mamba \
+        && which python \
+        && source activate mssenv \
+        && which conda \
+        && which mamba \
+        && which python \
+        && source deactivate mssenv \
         && mamba install pyvirtualdisplay python=3.9.13 \
-        && mamba install --file reqs.txt \
-        && mamba install --file requirements.d/development.txt \
-        && conda create --name mssenv --copy new_mssenv)
+        && cat requirements.d/development.txt >> reqs.txt \
+        && mamba create -y -n mssenv --file reqs.txt \
+        && source activate mssenv)
 
     - name: Run tests
-      if: ${{ always() && inputs.xdist == 'no' }}
+      if: ${{ successful() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
-        source /opt/conda/bin/activate mssenv \
+        source activate mssenv \
         && cd $GITHUB_WORKSPACE \
         && pytest -v --durations=20 --reverse --cov=mslib mslib \
         || (for i in {1..5} \
@@ -71,10 +75,10 @@ jobs:
         ; done)
 
     - name: Run tests in parallel
-      if: ${{ always() && inputs.xdist == 'yes' }}
+      if: ${{ successful() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
-        source /opt/conda/bin/activate mssenv \
+        source activate mssenv \
         && cd $GITHUB_WORKSPACE \
         && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib \
         || (for i in {1..5} \
@@ -83,7 +87,7 @@ jobs:
         ; done)
 
     - name: Collect coverage
-      if: ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
+      if: ${{ succesful() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
