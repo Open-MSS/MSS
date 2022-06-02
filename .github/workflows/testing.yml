@@ -62,7 +62,7 @@ jobs:
         && mamba env remove -n mssenv \
         && cat reqs.txt \
         && cat requirements.d/development.txt >> reqs.txt \
-        && mamba create -y -n mssenv --file reqs.txt \
+        && mamba create -y -n mssenv python=3.9 --file reqs.txt \
         && mamba activate mssenv)
 
     - name: Run tests
