@@ -86,11 +86,13 @@ def get_airports(force_download=False):
     global _airports, _airports_mtime
     file_exists = os.path.exists(os.path.join(MSUI_CONFIG_PATH, "airports.csv"))
 
-    if _airports and file_exists and os.path.getmtime(os.path.join(MSUI_CONFIG_PATH, "airports.csv")) == _airports_mtime:
+    if _airports and file_exists and \
+            os.path.getmtime(os.path.join(MSUI_CONFIG_PATH, "airports.csv")) == _airports_mtime:
         return _airports
 
-    is_outdated = file_exists \
-                  and (time.time() - os.path.getmtime(os.path.join(MSUI_CONFIG_PATH, "airports.csv"))) > 60 * 60 * 24 * 30
+    time_outdated = 60 * 60 * 24 * 30  # 30 days
+    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(MSUI_CONFIG_PATH,
+                                                                               "airports.csv"))) > time_outdated
 
     if (force_download or is_outdated or not file_exists) \
             and QtWidgets.QMessageBox.question(None, "Allow download", f"You selected airports to be "
