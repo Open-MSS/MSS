@@ -1234,21 +1234,21 @@ def main():
     args = parser.parse_args()
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System (msui)\n")
+        print("\n            Mission Support System WMS Demodata \n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
     if args.seed:
         root_fs = fs.open_fs("~/")
-        if not root_fs.exists("msui/testdata"):
-            root_fs.makedirs("msui/testdata")
+        if not root_fs.exists("mss/testdata"):
+            root_fs.makedirs("mss/testdata")
 
-        examples = DataFiles(data_fs=fs.open_fs("~/msui/testdata"),
-                             server_config_fs=fs.open_fs("~/msui"))
+        examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
+                             server_config_fs=fs.open_fs("~/mss"))
         examples.create_server_config(detailed_information=True)
         examples.create_data()
-        print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/msui")
+        print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
 
 
 if __name__ == '__main__':
