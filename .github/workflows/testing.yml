@@ -3,9 +3,6 @@ name: Pytest MSS
 on:                                                                                  
   workflow_call:
     inputs:
-      ENVIRONMENT:
-        required: true
-        type: string
       xdist:
         required: true
         type: string
@@ -26,9 +23,6 @@ env:
 jobs:
   Test-MSS:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.ENVIRONMENT }}
-    env:
-      PAT: ${{ secrets.PAT }}
 
     defaults:
       run:
@@ -36,9 +30,6 @@ jobs:
 
     container:
       image: openmss/testing-${{ inputs.branch_name }}
-    environment: ${{ inputs.ENVIRONMENT }}
-    env:
-      PAT: ${{ secrets.PAT }}
 
     steps:
     - name: Trust My Directory
@@ -73,7 +64,7 @@ jobs:
           ; do pytest mslib -v --durations=0 --reverse --last-failed --lfnf=none \
           && break \
         ; done)
-        
+
     - name: Run tests in parallel
       if: ${{ success() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
