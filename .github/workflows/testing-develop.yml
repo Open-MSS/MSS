@@ -12,12 +12,12 @@ jobs:
   test-develop:
     uses: 
       ./.github/workflows/testing.yml
+    env:
+      PAT: ${{ secrets.PAT }}
     with:
       xdist: no
       branch_name: develop
       event_name: ${{ github.event_name }}
-      env: 
-        PAT: ${{ secrets.PAT }}
     secrets: inherit
 
   test-develop-xdist:
