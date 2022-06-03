@@ -151,7 +151,7 @@ register_horizontal_layers = [
 
     # MSS-Chem chemistry forecasts
     #
-    # The MSS-Chem project (http://mss-chem.rtfd.io) provides an easy way to
+    # The MSS-Chem project (http://msui-chem.rtfd.io) provides an easy way to
     # download and prepare chemical weather forecasts from a range of different
     # CTMs.  The plot style classes are called `HS_MSSChemStyle_XL_YYY_zzzzz`
     # and `VS_MSSChemStyle_XL_YYY_zzzzz` for horizontal and vertical sections,

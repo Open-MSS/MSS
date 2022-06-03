@@ -1,7 +1,7 @@
-# (mss)
+# (msui)
 from PyQt5 import QtGui, QtCore
 
-# (mss)
+# (msui)
 from mslib.support.qt_json_view.datatypes import match_type, TypeRole, ListType, DictType
 
 
@@ -40,7 +40,7 @@ class JsonModel(QtGui.QStandardItemModel):
         return data
 
 
-class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):  # (mss)
+class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):  # (msui)
     """Show ALL occurences by keeping the parents of each occurence visible."""
 
     def filterAcceptsRow(self, sourceRow, sourceParent):

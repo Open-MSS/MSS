@@ -4,10 +4,10 @@
 
     This module contains functions for generating the plots.html file, aka the gallery.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,9 +47,9 @@ DOCS_LOCATION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "
 
 
 code_header = """\"\"\"
-    This file is part of mss.
+    This file is part of MSS.
 
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -422,7 +422,7 @@ def write_code_pages(path, sphinx=False, url_prefix=None):
     from mslib.index import SCRIPT_NAME
     for layer in plot_htmls:
         code_path = f"code/{layer}.html" if sphinx \
-            else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{layer}.md"
+            else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}msui/code/{layer}.md"
         if not sphinx:
             with open(os.path.join(path, "code", code_path.split('/')[-1]), "w+") as f:
                 f.write(plot_htmls[layer])
@@ -587,7 +587,7 @@ def get_plot_details(path, plot_object, l_type="top", sphinx=False, image_path="
                 text += "**If you want to modify the plot**  \n"
         if source:
             text += f"1. [Download this file]({code_path}?download=True)  \n" \
-                    f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`  \n" \
+                    f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/msui`  \n" \
                     f"3. Append this code into your `mss_wms_settings.py`:  \n"
             text += f"---\n```python\n{instructions}\n```\n---\n"
             text += f"<details><summary>{l_type}_{dataset}{plot_object.name}.py</summary>\n```python\n" + source + \
@@ -624,7 +624,7 @@ Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field 
 
 1. Download this :download:`file <downloads/{l_type}_{dataset}{plot_object.name}.py>`
 
-2. Put this file into your mss_wms_settings.py directory, e.g. `~/mss`
+2. Put this file into your mss_wms_settings.py directory, e.g. `~/msui`
 
 3. Append this code into your `mss_wms_settings.py`:
 
@@ -699,7 +699,7 @@ def add_image(path, plot, plot_object, generate_code=False, sphinx=False, url_pr
     img_path = f"../_static/{filename}.png" if sphinx \
         else f"{url_prefix}/static/plots/{filename}.png"
     code_path = f"code/{l_type}_{dataset}{plot_object.name}.html" if sphinx \
-        else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{dataset}{plot_object.name}.md"
+        else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}msui/code/{l_type}_{dataset}{plot_object.name}.md"
 
     if generate_code:
         if f"{l_type}_{dataset}{plot_object.name}" not in plot_htmls:

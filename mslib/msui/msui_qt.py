@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.mss_qt
+    mslib.msui.msui_qt
     ~~~~~~~~~~~~~~~~~
 
     This module helps with qt
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017-2018 Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -171,7 +171,7 @@ def variant_to_float(variant, locale=QtCore.QLocale()):
 
 
 # to store config by QSettings
-QtCore.QCoreApplication.setOrganizationName("mss")
+QtCore.QCoreApplication.setOrganizationName("msui")
 
 
 # PyQt5 silently aborts on a Python Exception
@@ -473,7 +473,7 @@ class Updater(QtCore.QObject):
         """
         Checks if conda search has a newer version of MSS
         """
-        # Don't notify on updates if mss is in a git repo, as you are most likely a developer
+        # Don't notify on updates if msui is in a git repo, as you are most likely a developer
         try:
             git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"],
                                  startupinfo=subprocess_startupinfo(),
@@ -493,10 +493,10 @@ class Updater(QtCore.QObject):
 
         self.on_status_update.emit("Checking for updates...")
 
-        # Check if "search mss" yields a higher version than the currently running one
-        search = self._execute_command(f"{self.command} search mss")
+        # Check if "search msui" yields a higher version than the currently running one
+        search = self._execute_command(f"{self.command} search msui")
         self.new_version = search.split("\n")[-2].split()[1]
-        c_list = self._execute_command(f"{self.command} list -f mss")
+        c_list = self._execute_command(f"{self.command} list -f msui")
         self.old_version = c_list.split("\n")[-2].split()[1]
         if any(c.isdigit() for c in self.new_version):
             if self.new_version > self.old_version:
@@ -507,7 +507,7 @@ class Updater(QtCore.QObject):
 
     def _restart_mss(self):
         """
-        Restart mss with all the same parameters, not entirely
+        Restart msui with all the same parameters, not entirely
         safe in case parameters change in higher versions, or while debugging
         """
         command = [sys.executable.split(os.sep)[-1]] + sys.argv
@@ -517,10 +517,10 @@ class Updater(QtCore.QObject):
 
     def _try_updating(self):
         """
-        Execute 'conda/mamba install mss=newest python -y' and return if it worked or not
+        Execute 'conda/mamba install msui=newest python -y' and return if it worked or not
         """
         self.on_status_update.emit("Trying to update MSS...")
-        self._execute_command(f"{self.command} install mss={self.new_version} python -y")
+        self._execute_command(f"{self.command} install msui={self.new_version} python -y")
         if self._verify_newest_mss():
             return True
 
@@ -538,9 +538,9 @@ class Updater(QtCore.QObject):
 
     def _verify_newest_mss(self):
         """
-        Return if the newest mss exists in the environment or not
+        Return if the newest msui exists in the environment or not
         """
-        verify = self._execute_command(f"{self.command} list -f mss")
+        verify = self._execute_command(f"{self.command} list -f msui")
         if self.new_version in verify:
             return True
 
@@ -570,7 +570,7 @@ class Updater(QtCore.QObject):
 
     def update_mss(self):
         """
-        Installs the newest mss version
+        Installs the newest msui version
         """
         def on_failure(e: Exception):
             self.on_status_update.emit("Update failed, please do it manually.")

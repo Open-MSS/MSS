@@ -6,10 +6,10 @@
 
     setuptools script
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,6 +52,6 @@ setup(
     zip_safe=False,
     install_requires=[],  # we use conda build recipe
     entry_points=dict(
-        console_scripts=['mss = mslib.msui.mss_pyui:main'],
+        console_scripts=['msui = mslib.msui.msui:main'],
     ),
 )

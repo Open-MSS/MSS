@@ -7,10 +7,10 @@
 
     creates netCDF test data files and also a mss_wms_settings for accessing this data
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -865,12 +865,12 @@ class DataFiles(object):
 
     Configuration module for programs accessing data on the MSS server.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -905,12 +905,12 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 
     Configuration module for programs accessing data on the MSS server.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: 2011-2014 Marc Rautenhaus
     :copyright: Copyright 2017 Jens-Uwe Grooss, Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -936,8 +936,8 @@ import sys
 # If you already have set up the PYTHONPATH environment variable for the
 # stuff you see below, you don't need to do a1) and a2).
 
-# a1) Path of the directory where the mss code package is located.
-# sys.path.insert(0, '/home/mss/miniconda3/lib/python3.7/site-packages')
+# a1) Path of the directory where the msui code package is located.
+# sys.path.insert(0, '/home/msui/miniconda3/lib/python3.7/site-packages')
 
 # a2) Path of the directory where mss_wms_settings.py is located
 
@@ -1234,21 +1234,21 @@ def main():
     args = parser.parse_args()
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System (mss)\n")
+        print("\n            Mission Support System (msui)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
     if args.seed:
         root_fs = fs.open_fs("~/")
-        if not root_fs.exists("mss/testdata"):
-            root_fs.makedirs("mss/testdata")
+        if not root_fs.exists("msui/testdata"):
+            root_fs.makedirs("msui/testdata")
 
-        examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
-                             server_config_fs=fs.open_fs("~/mss"))
+        examples = DataFiles(data_fs=fs.open_fs("~/msui/testdata"),
+                             server_config_fs=fs.open_fs("~/msui"))
         examples.create_server_config(detailed_information=True)
         examples.create_data()
-        print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
+        print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/msui")
 
 
 if __name__ == '__main__':

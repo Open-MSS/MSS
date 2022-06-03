@@ -6,10 +6,10 @@
 
     This module defines the performance settings dialog
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,8 +31,8 @@ from PyQt5 import QtCore, QtWidgets
 
 from mslib.utils import FatalUserError
 from mslib.msui import aircrafts, constants
-from mslib.msui.mss_qt import get_open_filename
-from mslib.msui.mss_qt import ui_performance_dockwidget as ui_dw
+from mslib.msui.msui_qt import get_open_filename
+from mslib.msui.msui_qt import ui_performance_dockwidget as ui_dw
 
 
 DEFAULT_PERFORMANCE = {
@@ -103,7 +103,7 @@ class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockW
         Gets a filename for a JSON file specifying aircraft performance and initializes an SimpleAircraft model.
         """
         filename = get_open_filename(
-            self, "Open Aircraft Performance JSON File", constants.MSS_CONFIG_PATH,
+            self, "Open Aircraft Performance JSON File", constants.MSUI_CONFIG_PATH,
             "Performance File (*.json)", pickertag="filepicker_default")
         if filename is not None:
             try:

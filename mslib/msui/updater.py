@@ -2,12 +2,12 @@
     mslib.msui.updater
     ~~~~~~~~~~~~~~~~~~~
 
-    This UI interface for the updater util, handles detection of an outdated mss version and automatic updating.
+    This UI interface for the updater util, handles detection of an outdated msui version and automatic updating.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@
 """
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from mslib.msui.mss_qt import ui_updater_dialog, Updater
+from mslib.msui.msui_qt import ui_updater_dialog, Updater
 from mslib import __version__
 
 

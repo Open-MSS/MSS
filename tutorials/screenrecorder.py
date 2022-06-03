@@ -1,13 +1,13 @@
 """
-    mss.tutorials.screenrecorder
+    msui.tutorials.screenrecorder
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script is meant for recording the screens while automated  tutorials are running.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

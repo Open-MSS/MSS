@@ -8,11 +8,11 @@
     See the reference documentation, Supplement, for details on the
     implementation.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,8 +33,8 @@ import logging
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
-from mslib.msui.mss_qt import ui_topview_window as ui
-from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
+from mslib.msui.msui_qt import ui_topview_window as ui
+from mslib.msui.msui_qt import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
@@ -238,7 +238,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.update_predefined_maps()
 
         # Initialise the map and the flight track. Get the initial projection
-        # parameters from the tables in mss_settings.
+        # parameters from the tables in msui_settings.
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.init_map(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
@@ -308,7 +308,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         Change the current map section to one of the predefined regions.
         """
-        # Get the initial projection parameters from the tables in mss_settings.
+        # Get the initial projection parameters from the tables in msui_settings.
         current_map_key = self.cbChangeMapSection.currentText()
         predefined_map_sections = config_loader(
             dataset="predefined_map_sections")

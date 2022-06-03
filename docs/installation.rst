@@ -76,7 +76,7 @@ leave out the 'source' here and below). ::
     $ conda create -n mssenv mamba
     $ conda activate mssenv
     (mssenv) $ mamba install mss=$mss_version python
-    (mssenv) $ mss
+    (mssenv) $ msui
 
 Update
 ++++++
@@ -88,7 +88,7 @@ With 5.0 we provide a new feature for updating MSS by the UI or the command line
 After you started the MSS UI it informs you after a while if there is a new update available.
 From the command line you can trigger this update feature by ::
 
-    (mssenv) $ mss --update
+    (mssenv) $ msui --update
 
 
 
@@ -129,7 +129,7 @@ The alternative is to use a new environment and install mss.
 
 
 
-For further details of configurating mss :ref:`mss-configuration`
+For further details of configurating mss :ref:`msui-configuration`
 
 
 
@@ -176,7 +176,7 @@ You can start server and client by loading the image ::
 
  $ xhost +local:docker
  $ docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix openmss/mss:latest  /bin/bash
- $ /opt/conda/envs/mssenv/bin/mss &
+ $ /opt/conda/envs/mssenv/bin/msui &
  $ /opt/conda/envs/mssenv/bin/mswms --port 80 &
  $ /opt/conda/envs/mssenv/bin/mscolab start &
  $ curl http://localhost/?service=WMS&request=GetCapabilities&version=1.1.1
@@ -203,7 +203,7 @@ You can start server and client by loading the image ::
   $ host +
   $ singularity build -f mss.sif Singularity.def
   $ singularity shell mss.sif
-  $ Singularity > mss # starts the ui
+  $ Singularity > msui # starts the ui
   $ Singularity > mswms_demodata --seed  # creates in your $HOME a mss/ folder with testdata
   $ Singularity > export PYTHONPATH=$HOME/mss; mswms # starts the development server
   $ Singularity > mscolab db --init; mscolab start # starts the mscolab development server

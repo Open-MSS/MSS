@@ -11,10 +11,10 @@
     chapter 14/16 of 'Rapid GUI Programming with Python and Qt: The
     Definitive Guide to PyQt Programming' (Mark Summerfield).
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019- Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -51,12 +51,12 @@ from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.verify_user_token import verify_user_token
-from mslib.msui.mss_qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
-from mslib.msui.mss_qt import ui_mscolab_help_dialog as msc_help_dialog
-from mslib.msui.mss_qt import ui_add_operation_dialog as add_operation_ui
-from mslib.msui.mss_qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
-from mslib.msui.mss_qt import ui_mscolab_connect_dialog as ui_conn
-from mslib.msui.mss_qt import ui_mscolab_profile_dialog as ui_profile
+from mslib.msui.msui_qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
+from mslib.msui.msui_qt import ui_mscolab_help_dialog as msc_help_dialog
+from mslib.msui.msui_qt import ui_add_operation_dialog as add_operation_ui
+from mslib.msui.msui_qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
+from mslib.msui.msui_qt import ui_mscolab_connect_dialog as ui_conn
+from mslib.msui.msui_qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
 
@@ -604,7 +604,7 @@ class MSSMscolab(QtCore.QObject):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
         gravatar_img_path = fs.path.join(constants.GRAVATAR_DIR_PATH, f"{email_hash}.png")
-        config_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
+        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
 
         # refresh is used to fetch new gravatar associated with the email
         if refresh or email_in_config:
@@ -645,7 +645,7 @@ class MSSMscolab(QtCore.QObject):
                 self.prof_diag,
                 "Information",
                 "Please add your email to the gravatar_ids section in your "
-                "mss_settings.json to automatically fetch your gravatar",
+                "msui_settings.json to automatically fetch your gravatar",
                 icon=1, )
 
         self.set_gravatar(gravatar_img_path)
@@ -679,7 +679,7 @@ class MSSMscolab(QtCore.QObject):
             return
 
         # remove cached gravatar image if not found in config
-        config_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
+        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
         if config_fs.exists("gravatars"):
             if fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
                 fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
@@ -688,7 +688,7 @@ class MSSMscolab(QtCore.QObject):
                         self.prof_diag,
                         "Information",
                         "Please remove your email from gravatar_ids section in your "
-                        "mss_settings.json to not fetch gravatar automatically",
+                        "msui_settings.json to not fetch gravatar automatically",
                         icon=1, )
 
         self.set_gravatar()
@@ -1730,7 +1730,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.workLocallyCheckbox.blockSignals(False)
 
         # remove temporary gravatar image
-        config_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
+        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
         if config_fs.exists("gravatars") and self.gravatar is not None:
             if self.email not in config_loader(dataset="gravatar_ids") and \
                     fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):

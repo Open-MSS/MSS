@@ -6,10 +6,10 @@
 
     Control widget to configure remote sensing overlays.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Joern Ungermann, Stefan Ensmann
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ import numpy as np
 import logging
 
 from PyQt5 import QtWidgets
-from mslib.msui.mss_qt import ui_hexagon_dockwidget as ui
+from mslib.msui.msui_qt import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.utils.coordinate import rotate_point
 from mslib.utils.config import config_loader

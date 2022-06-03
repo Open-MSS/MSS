@@ -6,10 +6,10 @@
 
     Linear view module of the msui
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Baer
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,8 +27,8 @@
 
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from PyQt5 import QtGui, QtWidgets
-from mslib.msui.mss_qt import ui_linearview_window as ui
-from mslib.msui.mss_qt import ui_linearview_options as ui_opt
+from mslib.msui.msui_qt import ui_linearview_window as ui
+from mslib.msui.msui_qt import ui_linearview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons

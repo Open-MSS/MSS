@@ -6,10 +6,10 @@
 
     This module provides pytest functions to tests msui.tableview
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -107,7 +107,7 @@ class Test_TableView(object):
     @mock.patch("mslib.msui.performance_settings.get_open_filename",
                 return_value=fs.path.join(
                     os.path.dirname(__file__), "..", "..", "..", "docs", "samples", "config",
-                    "mss", "performance_simple.json.sample"))
+                    "msui", "performance_simple.json.sample"))
     def test_performance(self, mockopen, mockcrit):
         """
         Check effect of performance settings on TableView

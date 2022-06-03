@@ -6,10 +6,10 @@
 
     This module provides common functions for MSS testing
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Reimar Bauer, Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,19 +40,19 @@ else:
 CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mss_wms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
-ROOT_FS = TempFS(identifier=f"mss{SHA}")
+ROOT_FS = TempFS(identifier=f"msui{SHA}")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
 
 ROOT_DIR = ROOT_FS.getsyspath("")
 
-if not ROOT_FS.exists("mss/testdata"):
-    ROOT_FS.makedirs("mss/testdata")
-SERVER_CONFIG_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mss"))
-DATA_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mss/testdata"))
+if not ROOT_FS.exists("msui/testdata"):
+    ROOT_FS.makedirs("msui/testdata")
+SERVER_CONFIG_FS = fs.open_fs(fs.path.join(ROOT_DIR, "msui"))
+DATA_FS = fs.open_fs(fs.path.join(ROOT_DIR, "msui/testdata"))
 
-MSS_CONFIG_PATH = OSFS_URL
-# MSS_CONFIG_PATH = SERVER_CONFIG_FS.getsyspath("") would use a none osfs path
-os.environ["MSS_CONFIG_PATH"] = MSS_CONFIG_PATH
+MSUI_CONFIG_PATH = OSFS_URL
+# MSUI_CONFIG_PATH = SERVER_CONFIG_FS.getsyspath("") would use a none osfs path
+os.environ["MSUI_CONFIG_PATH"] = MSUI_CONFIG_PATH
 SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.getsyspath(""), SERVER_CONFIG_FILE)
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2

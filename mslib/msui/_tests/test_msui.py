@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_mss_pyui
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.msui._tests.test_msui
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.mss_pyui
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,7 +34,7 @@ from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
 from mslib._tests.constants import ROOT_DIR
-import mslib.msui.mss_pyui as mss_pyui
+import mslib.msui.msui as mss_pyui
 from mslib._tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 
@@ -60,7 +60,7 @@ class Test_MSS_AboutDialog():
 class Test_MSS_ShortcutDialog():
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.main_window = mss_pyui.MSSMainWindow()
+        self.main_window = mss_pyui.MSUIMainWindow()
         self.main_window.show()
         self.shortcuts = mss_pyui.MSS_ShortcutsDialog()
 
@@ -127,10 +127,10 @@ class Test_MSSSideViewWindow(object):
             'docs',
             'samples',
             'config',
-            'mss')
+            'msui')
         self.application = QtWidgets.QApplication(sys.argv)
 
-        self.window = mss_pyui.MSSMainWindow()
+        self.window = mss_pyui.MSUIMainWindow()
         self.window.create_new_flight_track()
         self.window.show()
         QtWidgets.QApplication.processEvents()
@@ -140,7 +140,7 @@ class Test_MSSSideViewWindow(object):
     def teardown(self):
         config_file = os.path.join(
             self.sample_path,
-            'empty_mss_settings.json.sample',
+            'empty_msui_settings.json.sample',
         )
         read_config_file(path=config_file)
         for i in range(self.window.listViews.count()):
@@ -220,9 +220,9 @@ class Test_MSSSideViewWindow(object):
 
     @pytest.mark.parametrize("save_file", [[save_ftml]])
     def test_plugin_saveas(self, save_file):
-        with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
+        with mock.patch("mslib.msui.msui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
-        with mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_file[0]) as mocksave:
+        with mock.patch("mslib.msui.msui.get_save_filename", return_value=save_file[0]) as mocksave:
             assert self.window.listFlightTracks.count() == 1
             assert mocksave.call_count == 0
             self.window.last_save_directory = ROOT_DIR
@@ -236,9 +236,9 @@ class Test_MSSSideViewWindow(object):
         "open_file", [(open_ftml, "actionImportFlightTrackFTML"),
                       (open_txt, "actionImportFlightTrackText"), (open_fls, "actionImportFlightTrackFliteStar")])
     def test_plugin_import(self, open_file):
-        with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
+        with mock.patch("mslib.msui.msui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=open_file[0]) as mockopen:
+        with mock.patch("mslib.msui.msui.get_open_filename", return_value=open_file[0]) as mockopen:
             assert self.window.listFlightTracks.count() == 1
             assert mockopen.call_count == 0
             self.window.last_save_directory = ROOT_DIR
@@ -254,9 +254,9 @@ class Test_MSSSideViewWindow(object):
     @pytest.mark.parametrize("save_file", [[save_ftml, "actionExportFlightTrackFTML"],
                                            [save_txt, "actionExportFlightTrackText"]])
     def test_plugin_export(self, save_file):
-        with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
+        with mock.patch("mslib.msui.msui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
-        with mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_file[0]) as mocksave:
+        with mock.patch("mslib.msui.msui.get_save_filename", return_value=save_file[0]) as mocksave:
             assert self.window.listFlightTracks.count() == 1
             assert mocksave.call_count == 0
             self.window.last_save_directory = ROOT_DIR
@@ -272,7 +272,7 @@ class Test_MSSSideViewWindow(object):
 
     @pytest.mark.skip("needs to be refactored to become independent")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.mss_pyui.config_loader", return_value=export_plugins)
+    @mock.patch("mslib.msui.msui.config_loader", return_value=export_plugins)
     def test_add_plugins(self, mockopen, mockbox):
         assert len(self.window.menuImportFlightTrack.actions()) == 2
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
@@ -295,7 +295,8 @@ class Test_MSSSideViewWindow(object):
             assert mockbox.critical.call_count == 2
 
         self.window.remove_plugins()
-        with mock.patch("mslib.msui.mss_pyui.MSSMainWindow.add_plugin_submenu",
+        with mock.patch("mslib.msui.ms"
+                        "ui.MSUIMainWindow.add_plugin_submenu",
                         new=ExceptionMock(Exception()).raise_exc):
             self.window.add_import_plugins("qt")
             self.window.add_export_plugins("qt")
@@ -311,8 +312,8 @@ class Test_MSSSideViewWindow(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    @mock.patch("mslib.msui.mss_pyui.get_save_filename", return_value=save_ftml)
-    @mock.patch("mslib.msui.mss_pyui.get_open_filename", return_value=save_ftml)
+    @mock.patch("mslib.msui.msui.get_save_filename", return_value=save_ftml)
+    @mock.patch("mslib.msui.msui.get_open_filename", return_value=save_ftml)
     def test_flight_track_io(self, mockload, mocksave, mockq, mocki, mockw, mockbox):
         self.window.actionCloseSelectedFlightTrack.trigger()
         assert mocki.call_count == 1

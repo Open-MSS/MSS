@@ -6,10 +6,10 @@
 
     common definitions for py.test
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,15 +45,15 @@ sample_path = os.path.join(os.path.dirname(__file__), "docs", "samples", "flight
 shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
 def pytest_addoption(parser):
-    parser.addoption("--mss_settings", action="store")
+    parser.addoption("--msui_settings", action="store")
 
 
 def pytest_generate_tests(metafunc):
-    option_value = metafunc.config.option.mss_settings
+    option_value = metafunc.config.option.msui_settings
     if option_value is not None:
-        mss_settings_file_fs = fs.open_fs(constants.MSS_CONFIG_PATH)
-        mss_settings_file_fs.writetext("mss_settings.json", option_value)
-        mss_settings_file_fs.close()
+        msui_settings_file_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
+        msui_settings_file_fs.writetext("msui_settings.json", option_value)
+        msui_settings_file_fs.close()
 
 
 if os.getenv("TESTS_VISIBLE") == "TRUE":
@@ -81,10 +81,10 @@ if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
 
     config for mscolab.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

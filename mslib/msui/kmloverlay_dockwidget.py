@@ -6,10 +6,10 @@
 
     Control widget to configure kml overlays.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,8 +32,8 @@ from lxml import etree as et, objectify
 import os
 from matplotlib import patheffects
 
-from mslib.msui.mss_qt import get_open_filenames, get_save_filename
-from mslib.msui.mss_qt import ui_kmloverlay_dockwidget as ui
+from mslib.msui.msui_qt import get_open_filenames, get_save_filename
+from mslib.msui.msui_qt import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 

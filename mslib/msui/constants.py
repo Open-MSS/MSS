@@ -6,12 +6,12 @@
 
     This module provides constants
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Tongxi Lou (tl)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,49 +33,49 @@ import logging
 
 # ToDo refactor to generic functions, keep only constants
 HOME = os.path.expanduser(f"~{os.path.sep}")
-MSS_CONFIG_PATH = os.getenv("MSS_CONFIG_PATH", os.path.join(HOME, ".config", "mss"))
-if '://' in MSS_CONFIG_PATH:
+MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui"))
+if '://' in MSUI_CONFIG_PATH:
     try:
-        _fs = fs.open_fs(MSS_CONFIG_PATH)
+        _fs = fs.open_fs(MSUI_CONFIG_PATH)
     except fs.errors.CreateFailed:
-        _fs.makedirs(MSS_CONFIG_PATH)
+        _fs.makedirs(MSUI_CONFIG_PATH)
     except fs.opener.errors.UnsupportedProtocol:
-        logging.error(f'FS url "{MSS_CONFIG_PATH}" not supported')
+        logging.error(f'FS url "{MSUI_CONFIG_PATH}" not supported')
 else:
-    _dir = os.path.expanduser(MSS_CONFIG_PATH)
+    _dir = os.path.expanduser(MSUI_CONFIG_PATH)
     if not os.path.exists(_dir):
         os.makedirs(_dir)
 
-GRAVATAR_DIR_PATH = fs.path.join(MSS_CONFIG_PATH, "gravatars")
+GRAVATAR_DIR_PATH = fs.path.join(MSUI_CONFIG_PATH, "gravatars")
 
-MSS_SETTINGS = os.getenv('MSS_SETTINGS', os.path.join(MSS_CONFIG_PATH, "mss_settings.json"))
+msui_settings = os.getenv('msui_settings', os.path.join(MSUI_CONFIG_PATH, "msui_settings.json"))
 
-# We try to create an empty MSS_SETTINGS file if not existing
+# We try to create an empty msui_settings file if not existing
 # but there can be a permission problem
-if '://' in MSS_SETTINGS:
-    dir_path, file_name = fs.path.split(MSS_SETTINGS)
+if '://' in msui_settings:
+    dir_path, file_name = fs.path.split(msui_settings)
     try:
         _fs = fs.open_fs(dir_path)
         if not _fs.exists(file_name):
             with _fs.open(file_name, 'w') as fid:
                 fid.write("{}")
     except fs.errors.CreateFailed:
-        logging.error(f'"{MSS_SETTINGS}" can''t be created')
+        logging.error(f'"{msui_settings}" can''t be created')
 else:
-    if not os.path.exists(MSS_SETTINGS):
+    if not os.path.exists(msui_settings):
         try:
-            with open(MSS_SETTINGS, 'w') as fid:
+            with open(msui_settings, 'w') as fid:
                 fid.write("{}")
         except IOError:
-            logging.error(f'"{MSS_SETTINGS}" can''t be created')
+            logging.error(f'"{msui_settings}" can''t be created')
 
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}
 
-POSIX = {"application_destination": os.path.join(HOME, ".local/share/applications/mss{}.desktop"),
-         "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/mss-logo{}.png"),
+POSIX = {"application_destination": os.path.join(HOME, ".local/share/applications/msui{}.desktop"),
+         "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/msui-logo{}.png"),
          "desktop": """[Desktop Entry]
-Name=mss {}
+Name=msui {}
 Comment=A web service based tool to plan atmospheric research flights (mission support system).
 Keywords=documentation;information;
 Exec={}
@@ -84,5 +84,5 @@ Type=Application
 Categories=Science;Education;
 StartupNotify=true
 X-GNOME-SingleWindow=false
-X-Ubuntu-Gettext-Domain=mss
+X-Ubuntu-Gettext-Domain=msui
 """}

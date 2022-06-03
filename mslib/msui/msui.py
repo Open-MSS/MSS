@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-    mslib.msui.mss_pyui
-    ~~~~~~~~~~~~~~~~~~~
+    mslib.msui.msui
+    ~~~~~~~~~~~~~~~
 
     Mission Support System Python/Qt User Interface
     Main window of the user interface application. Manages view and tool windows
     (the user can open multiple windows) and provides functionality to open, save,
     and switch between flight tracks.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,9 +45,9 @@ import fs
 import warnings
 
 from mslib import __version__
-from mslib.msui.mss_qt import ui_mainwindow as ui
-from mslib.msui.mss_qt import ui_about_dialog as ui_ab
-from mslib.msui.mss_qt import ui_shortcuts as ui_sh
+from mslib.msui.msui_qt import ui_mainwindow as ui
+from mslib.msui.msui_qt import ui_about_dialog as ui_ab
+from mslib.msui.msui_qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview, topview, sideview, linearview
 from mslib.msui import editor
@@ -58,12 +58,12 @@ from mslib.msui.updater import UpdaterUI
 from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.msui.mss_qt import get_open_filename, get_save_filename, Worker, Updater
+from mslib.msui.msui_qt import get_open_filename, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
-sys.path.append(constants.MSS_CONFIG_PATH)
+sys.path.append(constants.MSUI_CONFIG_PATH)
 
 
 def clean_string(string):
@@ -331,7 +331,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.lblPython.setPixmap(blub)
 
 
-class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
+class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     """MSUI new main window class. Provides user interface elements for managing
        flight tracks, views and MSColab functionalities.
     """
@@ -339,14 +339,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
 
     def __init__(self, mscolab_data_dir=None, *args):
-        super(MSSMainWindow, self).__init__(*args)
+        super(MSUIMainWindow, self).__init__(*args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
         # instead of the default Icon of python/pythonw
         try:
             import ctypes
-            myappid = f"mss.mss_pyui.{__version__}"  # arbitrary string
+            myappid = f"msui.mss_pyui.{__version__}"  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
@@ -505,7 +505,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             raise ValueError(f"'{action_name}' has already been set!")
         action = QtWidgets.QAction(self)
         action.setObjectName(action_name)
-        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
+        action.setText(QtCore.QCoreApplication.translate("MSUIMainWindow", name, None))
         action.triggered.connect(functools.partial(handler, extension, function, pickertype))
         menu.addAction(action)
         setattr(self, action_name, action)
@@ -937,7 +937,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if config_loader() != config_loader(default=True):
             return ("Status : System Configuration")
         else:
-            return (f"Status : User Configuration '{constants.MSS_SETTINGS}' loaded")
+            return (f"Status : User Configuration '{constants.msui_settings}' loaded")
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -978,7 +978,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 
 def main():
-    warnings.warn("In the next major version we will rename the mss command to msui"
+    warnings.warn("In the next major version we will rename the msui command to msui"
                   " and the module from mss_pyui to msui", DeprecationWarning)
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
@@ -993,16 +993,16 @@ def main():
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
-                        default=os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log"))
-    parser.add_argument("-m", "--menu", help="adds mss to menu", action="store_true", default=False)
-    parser.add_argument("-d", "--deinstall", help="removes mss from menu", action="store_true", default=False)
+                        default=os.path.join(constants.MSUI_CONFIG_PATH, "mss_pyui.log"))
+    parser.add_argument("-m", "--menu", help="adds msui to menu", action="store_true", default=False)
+    parser.add_argument("-d", "--deinstall", help="removes msui from menu", action="store_true", default=False)
     parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     args = parser.parse_args()
 
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System (mss)\n")
+        print("\n            Mission Support System (msui)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
@@ -1021,7 +1021,7 @@ def main():
     setup_logging(args)
 
     if args.menu:
-        # Experimental feature to get mss into application menu
+        # Experimental feature to get msui into application menu
         if platform.system() == "Linux":
             icon_size = '48x48'
             src_icon_path = icons(icon_size)
@@ -1038,7 +1038,7 @@ def main():
             if prefix:
                 prefix = f"({prefix})"
             desktop = desktop.format(prefix,
-                                     os.path.join(sys.prefix, "bin", "mss"),
+                                     os.path.join(sys.prefix, "bin", "msui"),
                                      icon_destination)
             with open(application_destination, 'w') as f:
                 f.write(desktop)
@@ -1062,7 +1062,7 @@ def main():
     try:
         read_config_file()
     except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
-        message = f'\n\nFix the setup of your "MSS_SETTINGS" configuration.\n{ex}'
+        message = f'\n\nFix the setup of your "MSUI_SETTINGS" configuration.\n{ex}'
         logging.error(message)
         sys.exit()
 
@@ -1083,9 +1083,9 @@ def main():
     application.notify = notify
 
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
-    application.setApplicationDisplayName("MSS")
+    application.setApplicationDisplayName("MSUI")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
-    mainwindow = MSSMainWindow()
+    mainwindow = MSUIMainWindow()
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()

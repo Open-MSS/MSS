@@ -6,11 +6,11 @@
 
     Collection of functions all around config handling.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,15 +41,15 @@ from mslib.msui import constants
 from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 
-class MissionSupportSystemDefaultConfig(object):
+class MSUIDefaultConfig(object):
     """Central configuration for the Mission Support System User Interface
-       Application (mss).
+       Application (msui).
 
     DESCRIPTION:
     ============
 
     This file includes configuration settings central to the entire
-    Mission Support User Interface (mss). Among others, define
+    Mission Support User Interface (msui). Among others, define
      -- available map projections
      -- vertical section interpolation options
      -- the lists of predefined web service URLs
@@ -57,7 +57,7 @@ class MissionSupportSystemDefaultConfig(object):
     in this file.
 
     Do not change any value for good reasons.
-    Your values can be set in your personal mss_settings.json file
+    Your values can be set in your personal msui_settings.json file
     """
     # this skips the verification of the user token on each mscolab request
     mscolab_skip_verify_user_token = True
@@ -65,7 +65,7 @@ class MissionSupportSystemDefaultConfig(object):
     # Default for general filepicker. Pick "default", "qt", or "fs"
     filepicker_default = "default"
 
-    # dir where mss output files are stored
+    # dir where msui output files are stored
     data_dir = "~/mssdata"
 
     # layout of different views, with immutable they can't resized
@@ -202,7 +202,7 @@ class MissionSupportSystemDefaultConfig(object):
     # mscolab server
     mscolab_server_url = "http://localhost:8083"
     # ToDo refactor to rename this to data_dir/mss_data_dir
-    # mss dir
+    # msui dir
     mss_dir = "~/mss"
 
     # list of gravatar email ids to automatically fetch
@@ -328,7 +328,7 @@ class MissionSupportSystemDefaultConfig(object):
 
 
 # default options as dictionary
-default_options = dict(MissionSupportSystemDefaultConfig.__dict__)
+default_options = dict(MSUIDefaultConfig.__dict__)
 for key in [
     "__module__",
     "__doc__",
@@ -347,7 +347,7 @@ for key in [
 user_options = copy.deepcopy(default_options)
 
 
-def read_config_file(path=constants.MSS_SETTINGS):
+def read_config_file(path=constants.msui_settings):
     """
     reads a config file and updates global user_options
 
@@ -386,7 +386,7 @@ def read_config_file(path=constants.MSS_SETTINGS):
         logging.debug("No user settings found, using default settings")
 
 
-def modify_config_file(data, path=constants.MSS_SETTINGS):
+def modify_config_file(data, path=constants.msui_settings):
     """
     modifies a config file
 
@@ -463,7 +463,7 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     if not ignore_test and "pytest" in sys.modules:
         return settings
 
-    q_settings = QtCore.QSettings("mss", "mss-core")
+    q_settings = QtCore.QSettings("msui", "msui-core")
     file_path = q_settings.fileName()
     logging.debug("storing settings for %s to %s", tag, file_path)
     try:
@@ -491,7 +491,7 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
         return default_settings
 
     settings = {}
-    q_settings = QtCore.QSettings("mss", "mss-core")
+    q_settings = QtCore.QSettings("msui", "msui-core")
     file_path = q_settings.fileName()
     logging.debug("loading settings for %s from %s", tag, file_path)
     try:
@@ -507,21 +507,21 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
 def merge_dict(existing_dict, new_dict):
     """
     Merge two dictionaries by comparing all the options from
-    the MissionSupportSystemDefaultConfig class
+    the MSUIDefaultConfig class
 
     Arguments:
     existing_dict -- Dict to merge new_dict into
     new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
-    for key in MissionSupportSystemDefaultConfig.fixed_dict_options:
+    for key in MSUIDefaultConfig.fixed_dict_options:
         if key in new_dict:
             existing_dict[key] = compare_data(
                 existing_dict[key], new_dict[key]
             )[0]
 
     # Check if dictionary options with predefined structure match data types from default
-    dos = copy.deepcopy(MissionSupportSystemDefaultConfig.dict_option_structure)
+    dos = copy.deepcopy(MSUIDefaultConfig.dict_option_structure)
     # adding plugin structure : ["extension", "module", "function"] to
     # recognize user plugin options that don't have the optional filepicker option set
     dos["import_plugins"]["plugin-name-a"] = dos["import_plugins"]["plugin-name"][:3]
@@ -539,7 +539,7 @@ def merge_dict(existing_dict, new_dict):
                 existing_dict[key] = temp_data
 
     # Check if list options with predefined structure match data types from default
-    los = copy.deepcopy(MissionSupportSystemDefaultConfig.list_option_structure)
+    los = copy.deepcopy(MSUIDefaultConfig.list_option_structure)
     for key in los:
         if key in new_dict:
             temp_data = []
@@ -553,7 +553,7 @@ def merge_dict(existing_dict, new_dict):
                 existing_dict[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
-    for key in MissionSupportSystemDefaultConfig.key_value_options:
+    for key in MSUIDefaultConfig.key_value_options:
         if key in new_dict:
             data, match = compare_data(existing_dict[key], new_dict[key])
             if match:

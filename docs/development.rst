@@ -201,12 +201,12 @@ We have implemented demodata as data base for testing. On first call of pytest a
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
 
 
-Setup mss_settings.json for special tests
+Setup msui_settings.json for special tests
 +++++++++++++++++++++++++++++++++++++++++
 
 On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
-If you want to overwrite this setup and try out a special configuration add an mss_settings.json
-file to the testings base dir in your tmp directory. You call it by the custom `--mss_settings` option
+If you want to overwrite this setup and try out a special configuration add an msui_settings.json
+file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
 
 
 Testing

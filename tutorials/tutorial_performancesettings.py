@@ -1,13 +1,13 @@
 """
-    mss.tutorials.tutorial_performancesettings
+    msui.tutorials.tutorial_performancesettings
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to change the performance of flight track in table
     view such as managing fuel capacity, etc.
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ from sys import platform
 from pyscreeze import ImageNotFoundException
 
 from tutorials import screenrecorder as sr
-from mslib.msui import mss_pyui
+from mslib.msui import msui
 
 
 def initial_ops():
@@ -98,7 +98,7 @@ def automate_performance():
 
     # Satellite Predictor file path
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    ps_file_path = os.path.join(path, 'docs/samples/config/mss/performance_simple.json')
+    ps_file_path = os.path.join(path, 'docs/samples/config/msui/performance_simple.json')
 
     # Maximizing the window
     try:

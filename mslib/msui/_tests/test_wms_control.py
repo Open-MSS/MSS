@@ -6,10 +6,10 @@
 
     This module provides pytest functions to tests msui.wms_control
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
-from mslib.msui.mss_pyui import MSSMainWindow
+from mslib.msui.msui import MSUIMainWindow
 from mslib._tests.utils import wait_until_signal
 
 
@@ -459,7 +459,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.window.image_displayed)
 
-        urlstr = f"http://127.0.0.1:{self.port}/mss/logo.png"
+        urlstr = f"http://127.0.0.1:{self.port}/msui/logo.png"
         md5_filname = os.path.join(self.window.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
         self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
         self.window.fetcher.fetch_legend(urlstr, use_cache=True, md5_filename=md5_filname)
@@ -472,7 +472,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     def test_preload(self):
         assert len(wc.WMS_SERVICE_CACHE) == 0
         assert f"http://127.0.0.1:{self.port}/" not in wc.WMS_SERVICE_CACHE
-        MSSMainWindow.preload_wms([f"http://127.0.0.1:{self.port}/"])
+        MSUIMainWindow.preload_wms([f"http://127.0.0.1:{self.port}/"])
         assert f"http://127.0.0.1:{self.port}/" in wc.WMS_SERVICE_CACHE
 
 

@@ -39,7 +39,7 @@
 # Contact email: sgillies@frii.com
 #
 # ******************************************************************************
-# Changes made for the MSS (flagged with "(mss)"):
+# Changes made for the MSS (flagged with "(msui)"):
 #   -- added 'Abstract' to Layer keywords (2010-08).
 #   -- bugfix: copy parent SRS only if it has been defined (2010-09-22)
 #   -- added dimensions and extents parsing (2011-01-13)
@@ -75,8 +75,8 @@ def openURL(url_base, data=None, method='Get', cookies=None,
             username=None, password=None,
             timeout=config_loader(dataset="WMS_request_timeout"),
             headers=None, verify=None, cert=None, auth=None, proxies=None):
-    # (mss) added proxies
-    # (mss) timeout default of 30secs set by the config_loader
+    # (msui) added proxies
+    # (msui) timeout default of 30secs set by the config_loader
     """
     Function to open URLs.
 
@@ -112,7 +112,7 @@ def openURL(url_base, data=None, method='Get', cookies=None,
             etree.fromstring(data)
             headers['Content-Type'] = 'text/xml'
         except (ParseError, UnicodeEncodeError) as error:
-            # (mss)
+            # (msui)
             logging.debug("ParseError, UnicodeEncodeError %s", error)
 
         rkwargs['data'] = data
@@ -214,9 +214,9 @@ class WebMapService(wms111.WebMapService_1_1_1):
             err_message = str(se.text).strip()
             raise ServiceException(err_message)
 
-        # (mss) Store capabilities document.
+        # (msui) Store capabilities document.
         self.capabilities_document = reader.capabilities_document
-        # (mss)
+        # (msui)
 
         # build metadata objects
         self._buildMetadata(parse_remote_metadata)
@@ -302,7 +302,7 @@ def ContentMetadata(elem, parent=None, children=None, index=0,
         metadata = wms111.ContentMetadata(elem, parent=parent, children=children, index=index,
                                           parse_remote_metadata=parse_remote_metadata, timeout=timeout, auth=auth)
 
-    # (mss) Parse dimensions and their extents.
+    # (msui) Parse dimensions and their extents.
     metadata.dimensions = {}
     metadata.extents = {}
     for dim in elem.findall(f'{WMS_NAMESPACE}Dimension'):
@@ -319,19 +319,19 @@ def ContentMetadata(elem, parent=None, children=None, index=0,
                 metadata.extents[extname]["values"] = extent.text.strip().split(",")
             else:
                 metadata.extents[extname]["values"] = []
-    # (mss)
+    # (msui)
 
-    # (mss) Added "Abstract".
+    # (msui) Added "Abstract".
     for key in ('Name', 'Title', 'Abstract'):
         val = elem.find(WMS_NAMESPACE + key)
-        # (mss) Added " and val.text is not None".
+        # (msui) Added " and val.text is not None".
         if val is not None and val.text is not None:
             setattr(metadata, key.lower(), val.text.strip())
         else:
             setattr(metadata, key.lower(), None)
         metadata.id = metadata.name  # conform to new interface
 
-    # (mss) Replace owslib ContentMetadata children with ogcwms ContentMetadata
+    # (msui) Replace owslib ContentMetadata children with ogcwms ContentMetadata
     metadata.layers = []
     for child in elem.findall('Layer'):
         metadata.layers.append(ContentMetadata(child, metadata, version=version))
@@ -346,9 +346,9 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
     def __init__(self, version='1.3.0', url=None, un=None, pw=None, headers=None, auth=None):
         """Initialize"""
         super().__init__(version, url, un, pw, headers, auth)
-        # (mss) Store capabilities document.
+        # (msui) Store capabilities document.
         self.capabilities_document = None
-        # (mss)
+        # (msui)
 
     def read(self, service_url,
              timeout=config_loader(dataset="WMS_request_timeout")):
@@ -369,10 +369,10 @@ class WMSCapabilitiesReader(common.WMSCapabilitiesReader):
         spliturl = getcaprequest.split('?')
         u = openURL(spliturl[0], spliturl[1], method='Get', auth=self.auth, proxies=proxies)
 
-        # (mss) Store capabilities document.
+        # (msui) Store capabilities document.
         self.capabilities_document = strip_bom(u.read())
         return etree.fromstring(self.capabilities_document)
-        # (mss)
+        # (msui)
 
     def readString(self, st):
         """Parse a WMS capabilities document, returning an elementtree instance

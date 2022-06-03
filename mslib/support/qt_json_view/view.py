@@ -1,7 +1,7 @@
-# (mss)
+# (msui)
 from PyQt5 import QtCore, QtWidgets
 
-# (mss)
+# (msui)
 from mslib.support.qt_json_view import delegate
 from mslib.support.qt_json_view.datatypes import TypeRole
 

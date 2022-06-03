@@ -6,10 +6,10 @@
 
     Server for mscolab module
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,7 +39,7 @@ from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operat
     add_all_users_to_all_operations, delete_user
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
-from mslib.msui.mss_qt import Worker, Updater
+from mslib.msui.msui_qt import Worker, Updater
 
 
 def handle_start(args):
@@ -122,7 +122,7 @@ def main():
 
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System (mss)\n")
+        print("\n            Mission Support System (msui)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)

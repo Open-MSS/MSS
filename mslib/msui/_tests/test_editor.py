@@ -6,10 +6,10 @@
 
     testscript for the config editor
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2020 Vaibhav Mehra <veb7vmehra@gmail.com>
-    :copyright: Copyright 2020-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ from mslib._tests.constants import ROOT_DIR
 @pytest.mark.skip("To be done for new UI")
 class Test_Editor(object):
     sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "docs",
-                                  "samples", "config", "mss", "mss_settings.json.sample"))
+                                  "samples", "config", "msui", "msui_settings.json.sample"))
     sample_file = sample_file.replace('\\', '/')
 
     save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")

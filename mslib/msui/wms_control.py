@@ -6,11 +6,11 @@
 
     Control widget to access Web Map Services.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,9 +46,9 @@ from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
 
 from mslib.msui import constants, wms_capabilities
-from mslib.msui.mss_qt import ui_wms_dockwidget as ui
-from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
-from mslib.msui.mss_qt import Worker
+from mslib.msui.msui_qt import ui_wms_dockwidget as ui
+from mslib.msui.msui_qt import ui_wms_password_dialog as ui_pw
+from mslib.msui.msui_qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
@@ -145,7 +145,7 @@ class MSSWebMapService(ogcwms.WebMapService):
         request['bgcolor'] = '0x' + bgcolor[1:7]
         request['exceptions'] = str(exceptions)
 
-        # ++(mss)
+        # ++(msui)
         if bbox is not None:
             request['bbox'] = ','.join([str(x) for x in bbox])
         if path_str is not None:
@@ -179,11 +179,11 @@ class MSSWebMapService(ogcwms.WebMapService):
         (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(base_url)
         base_url = urllib.parse.urlunparse((scheme, netloc, path, params, "", fragment))
         request.update(dict(urllib.parse.parse_qsl(query)))
-        # --(mss)
+        # --(msui)
 
         data = urllib.parse.urlencode(request)
 
-        # ++(mss)
+        # ++(msui)
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
@@ -192,9 +192,9 @@ class MSSWebMapService(ogcwms.WebMapService):
         if return_only_url:
             return complete_url
         logging.debug("Retrieving image from '%s'", complete_url)
-        # --(mss)
+        # --(msui)
 
-        # (mss) owslib.util.openURL checks for ServiceExceptions and raises a
+        # (msui) owslib.util.openURL checks for ServiceExceptions and raises a
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
@@ -1404,7 +1404,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def service_cache(self):
         """Service the cache: Remove all files older than the maximum file
-           age specified in mss_settings, and remove the oldest files if the
+           age specified in msui_settings, and remove the oldest files if the
            maximum cache size has been reached.
         """
         logging.debug("servicing cache...")

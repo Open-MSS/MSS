@@ -6,10 +6,10 @@
 
     This module provides pytest functions to tests msui.remotesensing module
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Reimar Bauer, Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

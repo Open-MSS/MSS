@@ -1,13 +1,13 @@
 """
-    mss.tutorials.tutorial_mscolab
+    msui.tutorials.tutorial_mscolab
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to use Mission Support System Collaboration for users
     to collaborate in flight planning and thereby explain how to use it's various functionalities.
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ from sys import platform
 from pyscreeze import ImageNotFoundException
 
 from tutorials import screenrecorder as sr
-from mslib.msui import mss_pyui
+from mslib.msui import msui
 
 
 def initial_ops():
@@ -109,9 +109,9 @@ def automate_mscolab():
     search_message = 'chat feature of MSCOLAB'
     localhost_url = 'http://localhost:8083'
 
-    # Example upload of mss logo during Chat Window demonstration.
+    # Example upload of msui logo during Chat Window demonstration.
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    example_image_path = os.path.join(path, 'docs/mss-logo.png')
+    example_image_path = os.path.join(path, 'docs/msui-logo.png')
 
     file_x, file_y = None, None
     open_operations_x, open_operations_y = None, None
@@ -381,7 +381,7 @@ def automate_mscolab():
         pag.press(enter)
         pag.sleep(2)
 
-        # Uploading an example image of mss logo.
+        # Uploading an example image of msui logo.
         pag.moveTo(x, y + 40, duration=2)
         pag.click(x, y + 40, duration=2)
         pag.sleep(1)

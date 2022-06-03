@@ -116,4 +116,4 @@ class Ui_AirdataDockwidget(object):
         self.sbFrom.setSuffix(_translate("AirdataDockwidget", " km"))
         self.label_4.setText(_translate("AirdataDockwidget", "to"))
         self.sbTo.setSuffix(_translate("AirdataDockwidget", " km"))
-from mslib.msui.mss_qt import CheckableComboBox
+from mslib.msui.msui_qt import CheckableComboBox

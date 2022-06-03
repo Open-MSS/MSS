@@ -6,11 +6,11 @@
 
     This module provides utils for pytest to test mslib modules
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ from PyQt5 import QtTest
 from werkzeug.urls import url_join
 from mslib.mscolab.server import register_user
 from flask import json
-from mslib._tests.constants import MSS_CONFIG_PATH
+from mslib._tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers, start_server
 from mslib.mscolab.mscolab import handle_db_init
@@ -228,9 +228,9 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=5
     return process, url, _app, sockio, cm, fm
 
 
-def create_mss_settings_file(content):
-    with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
-        file_dir.writetext("mss_settings.json", content)
+def create_msui_settings_file(content):
+    with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
+        file_dir.writetext("msui_settings.json", content)
 
 
 def wait_until_signal(signal, timeout=5):

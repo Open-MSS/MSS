@@ -6,10 +6,10 @@
 
     This module is used to test mscolab related gui.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,11 +38,11 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader
-from mslib._tests.utils import mscolab_start_server, create_mss_settings_file, ExceptionMock
-import mslib.msui.mss_pyui as mss_pyui
+from mslib._tests.utils import mscolab_start_server, create_msui_settings_file, ExceptionMock
+import mslib.msui.msui as mss_pyui
 from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib._tests.constants import MSS_CONFIG_PATH
+from mslib._tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 PORTS = list(range(25000, 25500))
@@ -62,7 +62,7 @@ class Test_Mscolab_connect_window():
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.main_window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.main_window = mss_pyui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.main_window.show()
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
         self.window.urlCb.setEditText(self.url)
@@ -150,7 +150,7 @@ class Test_Mscolab_connect_window():
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_add_users_without_updating_credentials_in_config_file(self, mockmessage):
-        create_mss_settings_file('{"MSCOLAB_mailid": "something@something.org", "MSCOLAB_password": "something"}')
+        create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org", "MSCOLAB_password": "something"}')
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
@@ -166,7 +166,7 @@ class Test_Mscolab_connect_window():
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
-        create_mss_settings_file('{"MSCOLAB_mailid": "something@something.org", "MSCOLAB_password": "something"}')
+        create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org", "MSCOLAB_password": "something"}')
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
@@ -241,8 +241,8 @@ class Test_Mscolab_connect_window():
         QtWidgets.QApplication.processEvents()
 
     def _reset_config_file(self):
-        create_mss_settings_file('{ }')
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        create_msui_settings_file('{ }')
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
 
 
@@ -282,7 +282,7 @@ class Test_Mscolab(object):
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window = mss_pyui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
 
     def teardown(self):
@@ -650,8 +650,8 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
 
     def _reset_config_file(self):
-        create_mss_settings_file('{ }')
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        create_msui_settings_file('{ }')
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
