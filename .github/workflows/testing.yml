@@ -28,9 +28,6 @@ jobs:
       run:
         shell: bash
 
-    outputs:
-      output1: ${{ steps.step1.outputs.triggerdockerbuild }}
-
     container:
       image: openmss/testing-${{ inputs.branch_name }}
 
@@ -43,21 +40,21 @@ jobs:
       id: step1
       run: |
         cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
-        && echo "::set-output name=triggerdockerbuild::yes" \
+        && echo "triggerdockerbuild=yes" >> $GITHUB_ENV \
         && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && conda create -n new_mssenv mamba python=3.9.13 \
+        && conda create -n new_mssenv mamba python\<3.10 \
         && conda activate new_mssenv \
-        && mamba install -c conda-forge pyvirtualdisplay python=3.9.13 -y \
+        && mamba install -c conda-forge pyvirtualdisplay python\<3.10 -y \
         && mamba install -c conda-forge --file reqs.txt -y \
         && mamba install -c conda-forge --file requirements.d/development.txt -y  \
         && conda create --name mssenv --copy --clone new_mssenv -y)
 
     - name: Run tests
-      if: ${{ always() && inputs.xdist == 'no' }}
+      if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -69,7 +66,7 @@ jobs:
         ; done)
 
     - name: Run tests in parallel
-      if: ${{ always() && inputs.xdist == 'yes' }}
+      if: ${{ success() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -90,17 +87,11 @@ jobs:
         && mamba install coveralls \
         && coveralls --service=github
 
-
-  Update-Images:
-    runs-on: ubuntu-latest
-    needs: Test-MSS
-    
-    steps:
-      - if: ${{ env.PAT != '' && inputs.event_name == 'push' && needs.Test-MSS.step1.outputs.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
-        name: Invoke dockertesting image creation
-        uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
-        with:
-          workflow: Update Image testing-${{ inputs.branch_name }}
-          repo: Open-MSS/dockertesting
-          ref: main
-          token: ${{ secrets.PAT }}
+    - name: Invoke dockertesting image creation
+      if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
+      uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
+      with:
+        workflow: Update Image testing-${{ inputs.branch_name }}
+        repo: Open-MSS/dockertesting
+        ref: main
+        token: ${{ secrets.PAT }}
