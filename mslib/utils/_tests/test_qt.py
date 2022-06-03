@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_local
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.utils._tests.test_qt
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions for msui.msui_qt
+    This module provides pytest functions for mslib.utils.qt
 
     This file is part of MSS.
 
