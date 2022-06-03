@@ -30,7 +30,5 @@ jobs:
   test-nothing:
      uses:
       ./.github/workflows/testing.yml
-     run: |
-       "echo hello"
 
 
