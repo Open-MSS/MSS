@@ -57,7 +57,7 @@ jobs:
         && conda create --name mssenv --copy --clone new_mssenv -y)
 
     - name: Run tests
-      if: ${{ always() && inputs.xdist == 'no' }}
+      if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
@@ -69,7 +69,7 @@ jobs:
         ; done)
 
     - name: Run tests in parallel
-      if: ${{ always() && inputs.xdist == 'yes' }}
+      if: ${{ success() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
       run: |
         source /opt/conda/bin/activate mssenv \
