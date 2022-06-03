@@ -1,14 +1,11 @@
 name: Pytest MSS
 
-cd:
-  needs: ci
-  uses: Open-MSS/MSS/.github/workflows/testing-develop.yml@${{ inputs.branch_name }}
-  secrets:
-    PAT: ${{ secrets.PAT }}
-
 on:                                                                                  
   workflow_call:
     inputs:
+      ENVIRONMENT:
+        required: true
+        type: string
       xdist:
         required: true
         type: string
@@ -36,6 +33,7 @@ jobs:
 
     container:
       image: openmss/testing-${{ inputs.branch_name }}
+    environment: ${{ inputs.ENVIRONMENT }}
 
     steps:
     - name: Trust My Directory
@@ -62,30 +60,26 @@ jobs:
     - name: Run tests
       if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
-      with:
-        run: |
-          source /opt/conda/bin/activate mssenv \
-          && cd $GITHUB_WORKSPACE \
-          && pytest -v --durations=20 --reverse --cov=mslib mslib \
-          || (for i in {1..5} \
-            ; do pytest mslib -v --durations=0 --reverse --last-failed --lfnf=none \
-            && break \
-          ; done)
-        token: ${{ secrets.PAT }}
-
+      run: |
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
+        && pytest -v --durations=20 --reverse --cov=mslib mslib \
+        || (for i in {1..5} \
+          ; do pytest mslib -v --durations=0 --reverse --last-failed --lfnf=none \
+          && break \
+        ; done)
+        
     - name: Run tests in parallel
       if: ${{ success() && inputs.xdist == 'yes' }}
       timeout-minutes: 25
-      with:
-        run: |
-          source /opt/conda/bin/activate mssenv \
-          && cd $GITHUB_WORKSPACE \
-          && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib \
-          || (for i in {1..5} \
-            ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib --last-failed --lfnf=none \
-            && break \
-          ; done)
-        token: ${{ secrets.PAT }}
+      run: |
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
+        && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib \
+        || (for i in {1..5} \
+          ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 mslib --last-failed --lfnf=none \
+          && break \
+        ; done)
 
     - name: Collect coverage
       if: ${{ always() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}

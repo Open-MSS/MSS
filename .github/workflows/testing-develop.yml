@@ -16,6 +16,7 @@ jobs:
       xdist: no
       branch_name: develop
       event_name: ${{ github.event_name }}
+      ENVIRONMENT: newp
     secrets: inherit
 
   test-develop-xdist:
@@ -25,6 +26,7 @@ jobs:
       xdist: yes
       branch_name: develop
       event_name: ${{ github.event_name }}
+      ENVIRONMENT: newp
     secrets: inherit
 
 
