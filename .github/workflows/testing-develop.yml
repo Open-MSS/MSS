@@ -16,7 +16,8 @@ jobs:
       xdist: no
       branch_name: develop
       event_name: ${{ github.event_name }}
-    secrets: inherit
+    secrets: 
+      PAT: ${{ secrets.PAT }}
 
   test-develop-xdist:
     uses: 
@@ -25,6 +26,7 @@ jobs:
       xdist: yes
       branch_name: develop
       event_name: ${{ github.event_name }}
-    secrets: inherit
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
 
