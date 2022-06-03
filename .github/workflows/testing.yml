@@ -38,7 +38,7 @@ jobs:
     - name: Trust My Directory
       run: git config --global --add safe.directory /__w/MSS/MSS
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Reinstall dependencies if changed
       id: step1
       run: |
@@ -49,12 +49,12 @@ jobs:
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
-        && source /opt/conda/bin/activate mssenv \
-        && conda install --revision 0 \
-        && conda install mamba python=3.9.13 \
-        && mamba install pyvirtualdisplay python=3.9.13 \
-        && mamba install --file reqs.txt \
-        && mamba install --file requirements.d/development.txt)
+        && conda create -n new_mssenv mamba python=3.9.13 \
+        && conda activate new_mssenv \
+        && mamba install -c conda-forge pyvirtualdisplay python=3.9.13 -y \
+        && mamba install -c conda-forge --file reqs.txt -y \
+        && mamba install -c conda-forge --file requirements.d/development.txt -y  \
+        && conda create --name mssenv --copy --clone new_mssenv -y)
 
     - name: Run tests
       if: ${{ always() && inputs.xdist == 'no' }}
