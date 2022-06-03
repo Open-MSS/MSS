@@ -1,5 +1,5 @@
-msui   (MSS - User Interface)
-=============================
+msui   (Mission Support User Interface)
+=======================================
 
 The executable for the user interface application is "**msui**".
 A short description of how to start the program is given by the --help option.
