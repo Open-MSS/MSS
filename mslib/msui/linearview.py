@@ -27,8 +27,8 @@
 
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from PyQt5 import QtGui, QtWidgets
-from mslib.msui.msui_qt import ui_linearview_window as ui
-from mslib.msui.msui_qt import ui_linearview_options as ui_opt
+from mslib.utils.qt import ui_linearview_window as ui
+from mslib.utils.qt import ui_linearview_options as ui_opt
 from mslib.msui.viewwindows import MSSMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons

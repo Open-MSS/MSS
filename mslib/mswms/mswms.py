@@ -33,7 +33,7 @@ from mslib import __version__
 from mslib.mswms.wms import mss_wms_settings, server
 from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging
-from mslib.msui.msui_qt import Updater, Worker
+from mslib.utils.qt import Updater, Worker
 
 
 def main():

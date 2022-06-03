@@ -29,7 +29,7 @@
 import collections
 
 from PyQt5 import QtWidgets
-from mslib.msui.msui_qt import ui_wms_capabilities as ui
+from mslib.utils.qt import ui_wms_capabilities as ui
 
 
 class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):

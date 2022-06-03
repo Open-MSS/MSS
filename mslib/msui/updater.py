@@ -24,7 +24,7 @@
 """
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from mslib.msui.msui_qt import ui_updater_dialog, Updater
+from mslib.utils.qt import ui_updater_dialog, Updater
 from mslib import __version__
 
 

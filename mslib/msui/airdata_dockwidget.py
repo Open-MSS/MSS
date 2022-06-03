@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pycountry
-from mslib.msui.msui_qt import ui_airdata_dockwidget as ui
+from mslib.utils.qt import ui_airdata_dockwidget as ui
 from PyQt5 import QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.airdata import get_available_airspaces, update_airspace, get_airports

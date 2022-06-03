@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.msui_qt
+    mslib.utils.msui_qt
     ~~~~~~~~~~~~~~~~~
 
     This module helps with qt

@@ -46,9 +46,9 @@ from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
 
 from mslib.msui import constants, wms_capabilities
-from mslib.msui.msui_qt import ui_wms_dockwidget as ui
-from mslib.msui.msui_qt import ui_wms_password_dialog as ui_pw
-from mslib.msui.msui_qt import Worker
+from mslib.utils.qt import ui_wms_dockwidget as ui
+from mslib.utils.qt import ui_wms_password_dialog as ui_pw
+from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration

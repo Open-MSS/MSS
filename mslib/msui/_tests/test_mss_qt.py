@@ -25,7 +25,7 @@
     limitations under the License.
 """
 
-import mslib.msui.msui_qt as mqt
+import mslib.utils.qt as mqt
 import PyQt5 as pqt
 
 

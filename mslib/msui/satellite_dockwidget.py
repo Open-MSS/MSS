@@ -31,8 +31,8 @@ import os
 from datetime import datetime, timedelta
 import numpy as np
 
-from mslib.msui.msui_qt import get_open_filename
-from mslib.msui.msui_qt import ui_satellite_dockwidget as ui
+from mslib.utils.qt import get_open_filename
+from mslib.utils.qt import ui_satellite_dockwidget as ui
 from PyQt5 import QtWidgets
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from fs import open_fs

@@ -30,8 +30,8 @@ import fs
 import logging
 import json
 
-from mslib.msui.msui_qt import get_open_filename, get_save_filename, show_popup
-from mslib.msui.msui_qt import ui_configuration_editor_window as ui_conf
+from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
+from mslib.utils.qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
 from mslib.msui.constants import msui_settings
 from mslib.msui.icons import icons

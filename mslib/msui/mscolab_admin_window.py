@@ -32,7 +32,7 @@ from werkzeug.urls import url_join
 from PyQt5 import QtCore, QtWidgets
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
-from mslib.msui.msui_qt import show_popup
+from mslib.utils.qt import show_popup
 from mslib.utils.config import config_loader
 
 

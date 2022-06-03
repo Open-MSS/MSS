@@ -43,7 +43,7 @@ from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 import mslib.msui
 import mslib.msui.mpl_map
-import mslib.msui.msui_qt
+import mslib.utils.qt
 
 
 TEXT_CONFIG = {

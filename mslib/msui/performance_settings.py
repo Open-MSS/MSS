@@ -31,8 +31,8 @@ from PyQt5 import QtCore, QtWidgets
 
 from mslib.utils import FatalUserError
 from mslib.msui import aircrafts, constants
-from mslib.msui.msui_qt import get_open_filename
-from mslib.msui.msui_qt import ui_performance_dockwidget as ui_dw
+from mslib.utils.qt import get_open_filename
+from mslib.utils.qt import ui_performance_dockwidget as ui_dw
 
 
 DEFAULT_PERFORMANCE = {

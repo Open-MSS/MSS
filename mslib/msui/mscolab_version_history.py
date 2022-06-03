@@ -35,7 +35,7 @@ from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtWidgets, QtGui
 from mslib.msui.qt5 import ui_mscolab_version_history as ui
-from mslib.msui.msui_qt import show_popup
+from mslib.utils.qt import show_popup
 from mslib.utils.config import config_loader
 from mslib.utils.time import utc_to_local_datetime
 

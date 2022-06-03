@@ -50,7 +50,7 @@ from mslib.utils.coordinate import find_location, path_points, get_distance
 from mslib.utils import thermolib
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.config import MSUIDefaultConfig as mss_default
-from mslib.msui.msui_qt import variant_to_string, variant_to_float
+from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
 from mslib.utils import writexml

@@ -45,9 +45,9 @@ import fs
 import warnings
 
 from mslib import __version__
-from mslib.msui.msui_qt import ui_mainwindow as ui
-from mslib.msui.msui_qt import ui_about_dialog as ui_ab
-from mslib.msui.msui_qt import ui_shortcuts as ui_sh
+from mslib.utils.qt import ui_mainwindow as ui
+from mslib.utils.qt import ui_about_dialog as ui_ab
+from mslib.utils.qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview, topview, sideview, linearview
 from mslib.msui import editor
@@ -58,7 +58,7 @@ from mslib.msui.updater import UpdaterUI
 from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.msui.msui_qt import get_open_filename, get_save_filename, Worker, Updater
+from mslib.utils.qt import get_open_filename, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
