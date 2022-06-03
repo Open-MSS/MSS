@@ -28,9 +28,6 @@ jobs:
       run:
         shell: bash
 
-    outputs:
-      output1: ${{ steps.step1.outputs.triggerdockerbuild }}
-
     container:
       image: openmss/testing-${{ inputs.branch_name }}
 
@@ -43,7 +40,7 @@ jobs:
       id: step1
       run: |
         cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
-        && echo "triggerdockerbuild::yes" >> $GITHUB_ENV \
+        && echo "triggerdockerbuild=yes" >> $GITHUB_ENV \
         && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
