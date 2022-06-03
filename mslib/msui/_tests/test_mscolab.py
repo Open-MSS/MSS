@@ -270,6 +270,16 @@ class Test_Mscolab(object):
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
+        self.userdata2 = 'sree@sree.org', 'sree', 'sree'
+        self.operation_name3 = "kerala"
+        assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2])
+        assert add_operation(self.operation_name3, "test kerala")
+        assert add_user_to_operation(path=self.operation_name3, emailid=self.userdata2[0])
+
+        self.userdata3 = 'anand@anand.org', 'anand', 'anand'
+        assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2])
+        assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
+
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
@@ -481,6 +491,35 @@ class Test_Mscolab(object):
         # check operation dir name removed
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
         assert mockbox.call_count == 1
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_handle_leave_operation(self, mockmessage):
+        self._connect_to_mscolab()
+
+        self._login(self.userdata3[0], self.userdata3[2])
+        QtWidgets.QApplication.processEvents()
+        assert self.window.usernameLabel.text() == self.userdata3[1]
+        assert self.window.connectBtn.isVisible() is False
+
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        assert self.window.mscolab.active_op_id is None
+        self._activate_operation_at_index(0)
+        op_id = self.window.mscolab.get_recent_op_id()
+        assert op_id is not None
+
+        self.window.actionTopView.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.get_active_views()) == 1
+        self.window.actionSideView.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.get_active_views()) == 2
+
+        self.window.actionLeaveOperation.trigger()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
+        assert self.window.mscolab.active_op_id is None
+        assert self.window.listViews.count() == 0
+        assert self.window.listOperationsMSC.model().rowCount() == 0
 
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()

@@ -58,7 +58,6 @@ class Test_FileManager(TestCase):
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
 
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         self.user = get_user(self.userdata[0])
@@ -69,7 +68,14 @@ class Test_FileManager(TestCase):
         self.vieweruser = get_user('UV30@uv30')
         assert add_user('UV40@uv40', 'UV40', 'uv40')
         self.collaboratoruser = get_user('UV40@uv40')
-
+        assert add_user('UV50@uv50', 'UV50', 'uv50')
+        self.op2user = get_user('UV50@uv50')
+        assert add_user('UV60@uv60', 'UV60', 'uv60')
+        self.op2vieweruser = get_user('UV60@uv60')
+        assert add_user('UV70@uv70', 'UV70', 'uv70')
+        self.user1 = get_user('UV70@uv70')
+        assert add_user('UV80@uv80', 'UV80', 'uv80')
+        self.adminuser = get_user('UV80@uv80')
         self._example_data()
 
     def tearDown(self):
@@ -107,10 +113,10 @@ class Test_FileManager(TestCase):
                                 'path': 'second'}]
             assert self.fm.list_operations(self.user) == expected_result
 
-    def test_is_admin(self):
+    def test_is_creator(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='third')
-            assert self.fm.is_admin(self.user.id, operation.id)
+            assert self.fm.is_creator(self.user.id, operation.id)
 
     def test_is_collaborator(self):
         with self.app.test_client():
@@ -118,6 +124,37 @@ class Test_FileManager(TestCase):
             assert self.anotheruser.id is not None
             self.fm.add_bulk_permission(operation.id, self.user, [self.anotheruser.id], "collaborator")
             assert self.fm.is_collaborator(self.anotheruser.id, operation.id)
+
+    def test_is_non_admin_member(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path='fifth')
+            assert self.anotheruser.id is not None
+            self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.vieweruser.id is not None
+            assert self.fm.is_admin(self.vieweruser.id, operation.id) is False
+
+    def test_is_viewer(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="test_flight")
+            assert operation.path == flight_path
+            self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.is_admin(self.vieweruser.id, operation.id) is False
+            assert self.fm.is_creator(self.vieweruser.id, operation.id) is False
+            assert self.fm.is_collaborator(self.vieweruser.id, operation.id) is False
+            assert self.fm.is_viewer(self.vieweruser.id, operation.id) is True
+            assert self.fm.is_member(self.vieweruser.id, operation.id) is True
+
+            # cross check with creator self.user
+            assert self.fm.is_creator(self.user.id, operation.id) is True
+            assert self.fm.is_collaborator(self.user.id, operation.id) is False
+            assert self.fm.is_viewer(self.user.id, operation.id) is False
+
+    def test_is_member(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="sunset")
+            assert operation.path == flight_path
+            assert self.fm.is_member(82322, operation.id) is False
+            assert self.fm.is_member(self.user.id, operation.id) is True
 
     def test_auth_type(self):
         with self.app.test_client():
@@ -198,12 +235,88 @@ class Test_FileManager(TestCase):
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation9")
-            assert len(self.fm.fetch_users_without_permission(operation.id, self.user.id)) == 3
+            assert len(self.fm.fetch_users_without_permission(operation.id, self.user.id)) == 7
 
     def test_fetch_users_with_permission(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation9")
             assert self.fm.fetch_users_with_permission(operation.id, self.user.id) == []
+
+    def test_delete_bulk_permission_for_creators(self):
+        with self.app.test_client():
+            flight_path, operation1 = self._create_operation(flight_path="testflight", user=self.user)
+            assert self.fm.is_creator(self.user.id, operation1.id)
+            assert self.user.id is not None
+            self.fm.add_bulk_permission(operation1.id, self.user, [self.anotheruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.anotheruser.id, operation1.id)
+            self.fm.add_bulk_permission(operation1.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation1.id)
+            flight_path1, operation2 = self._create_operation(flight_path="testflight1", user=self.op2user)
+            assert self.fm.is_creator(self.op2user.id, operation2.id)
+            assert self.op2user.id is not None
+            # user (creator of operation1) has no right leave operation1
+            assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.user.id]) is False
+            # user (creator of operation1) has the right to remove anotheruser from the operation1
+            assert self.fm.delete_bulk_permission(operation1.id, self.user, [self.anotheruser.id]) is True
+            # op2user (creator of operation2) has no right to remove collaboratoruser of operation1 from operation1
+            assert self.fm.delete_bulk_permission(operation1.id, self.op2user, [self.collaboratoruser.id]) is False
+            # op2user (creator of operation2) has no right to remove anotheruser of operation1 from operation2
+            assert self.fm.delete_bulk_permission(operation2.id, self.op2user, [self.anotheruser.id]) is False
+
+    def test_delete_bulk_permission_for_members(self):
+        with self.app.test_client():
+            flight_path, operation1 = self._create_operation(flight_path="testflight", user=self.user)
+            assert self.fm.is_creator(self.user.id, operation1.id)
+            assert self.user.id is not None
+            self.fm.add_bulk_permission(operation1.id, self.user, [self.anotheruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.anotheruser.id, operation1.id)
+            self.fm.add_bulk_permission(operation1.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation1.id)
+            self.fm.add_bulk_permission(operation1.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.is_viewer(self.vieweruser.id, operation1.id)
+            flight_path1, operation2 = self._create_operation(flight_path="testflight1", user=self.op2user)
+            assert self.fm.is_creator(self.op2user.id, operation2.id)
+            assert self.op2user.id is not None
+            self.fm.add_bulk_permission(operation2.id, self.op2user, [self.op2vieweruser.id], "collaborator")
+            # collaboratoruser of operation1 has no right to remove vieweruser from the operation1
+            assert self.fm.delete_bulk_permission(operation1.id, self.collaboratoruser, [self.vieweruser.id]) is False
+            # The below assertion fails in stable 6.1
+            # The change is so that vieweruser (any user other than creator) can leave the operation
+            # vieweruser of operation1 has the right to leave operation1
+            assert self.fm.delete_bulk_permission(operation1.id, self.vieweruser, [self.vieweruser.id]) is True
+            # collaboratoruser of operation1 has no right to remove op2vieweruser of operation2 from operation2
+            assert self.fm.delete_bulk_permission(
+                operation2.id, self.collaboratoruser, [self.op2vieweruser.id]
+            ) is False
+            # op2vieweruser of operation2 has no right to remove collaboratoruser of operation1 from operation2
+            assert self.fm.delete_bulk_permission(
+                operation2.id, self.op2vieweruser, [self.collaboratoruser.id]
+            ) is False
+
+    def test_delete_bulk_permission_for_non_members(self):
+        with self.app.test_client():
+            flight_path, operation1 = self._create_operation(flight_path="testflight", user=self.user)
+            assert self.fm.is_creator(self.user.id, operation1.id)
+            assert self.user.id is not None
+            self.fm.add_bulk_permission(operation1.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation1.id)
+            # user1 (not a member of operation1) has no right to remove collaboratoruser of operation1 from operation1
+            assert self.fm.delete_bulk_permission(operation1.id, self.user1, [self.collaboratoruser.id]) is False
+            # collaboratoruser of operation1 has no right to remove user1 (not a member of operation1) from operation1
+            assert self.fm.delete_bulk_permission(operation1.id, self.collaboratoruser, [self.user1.id]) is False
+
+    def test_delete_bulk_permission_for_admin_members(self):
+        # creator is the one who creates the operation
+        # admin is a role to add users.
+        # the creator has also this role. But there could be more admins
+        # admins have the right to remove themselves
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="saturn")
+            assert operation.path == flight_path
+            self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
+            assert self.fm.is_admin(self.adminuser.id, operation.id) is True
+            assert self.fm.delete_bulk_permission(operation.id, self.user, [self.user.id]) is False
+            assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.adminuser.id]) is True
 
     def test_import_permission(self):
         with self.app.test_client():
@@ -216,8 +329,8 @@ class Test_FileManager(TestCase):
             # equal permissions, nothing to do
             result = (False, None, 'Permissions are already given')
             assert self.fm.import_permissions(operation10.id, operation11.id, self.user.id) == result
-            # no admin rights
-            result = (False, None, 'Not an admin of this operation')
+            # no admin or creator rights
+            result = (False, None, 'Not the creator or admin of this operation')
             assert self.fm.import_permissions(operation10.id, operation12.id, self.user.id) == result
             # not a member
             result = (False, None, 'Not a member of this operation')

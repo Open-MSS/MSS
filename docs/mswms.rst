@@ -131,6 +131,8 @@ The vertical coordinate variable is identified by the standard_name being one of
 
 - atmosphere_potential_temperature_coordinate - "tl"
 
+- fligth_level_coordinate -"fl"
+
 The two-letter abbreviation is used for brief identification in the plotting routines in addition
 to the standard_name of the variable to uniquely identify which data shall be used.
 The data shall be organized with the dimensions in the order of "time", "vertical coordinate",

@@ -439,6 +439,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionVersionHistory.triggered.connect(self.operation_options_handler)
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
+        self.ui.actionLeaveOperation.triggered.connect(self.operation_options_handler)
         self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
         self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
         self.ui.actionDescription.triggered.connect(
@@ -860,6 +861,8 @@ class MSSMscolab(QtCore.QObject):
             self.open_admin_window()
         elif self.sender() == self.ui.actionDeleteOperation:
             self.handle_delete_operation()
+        elif self.sender() == self.ui.actionLeaveOperation:
+            self.handle_leave_operation()
 
     def open_chat_window(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -997,6 +1000,36 @@ class MSSMscolab(QtCore.QObject):
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
+
+    def handle_leave_operation(self):
+        w = QtWidgets.QWidget()
+        qm = QtWidgets.QMessageBox
+        reply = qm.question(w, self.tr('Mission Support System'),
+                            self.tr("Do you want to leave this operation?"),
+                            qm.Yes, qm.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            if verify_user_token(self.mscolab_server_url, self.token):
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "selected_userids": json.dumps([self.user["id"]])
+                }
+                url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
+                res = requests.post(url, data=data)
+                if res.text != "False":
+                    res = res.json()
+                    if res["success"]:
+                        for window in self.ui.get_active_views():
+                            window.handle_force_close()
+                        self.reload_operations()
+                    else:
+                        show_popup(self.ui, "Error", "Some error occurred! Could not leave operation.")
+                else:
+                    show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                    self.logout()
+            else:
+                show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                self.logout()
 
     def set_operation_desc_label(self, op_desc):
         self.active_operation_desc = op_desc
@@ -1481,6 +1514,7 @@ class MSSMscolab(QtCore.QObject):
         self.ui.actionManageUsers.setEnabled(False)
         self.ui.menuProperties.setEnabled(True)
         self.ui.actionRenameOperation.setEnabled(False)
+        self.ui.actionLeaveOperation.setEnabled(True)
         self.ui.actionDeleteOperation.setEnabled(False)
         self.ui.actionUpdateOperationDesc.setEnabled(False)
         if self.access_level == "viewer":
@@ -1513,6 +1547,7 @@ class MSSMscolab(QtCore.QObject):
         if self.access_level in ["creator"]:
             self.ui.actionDeleteOperation.setEnabled(True)
             self.ui.actionRenameOperation.setEnabled(True)
+            self.ui.actionLeaveOperation.setEnabled(False)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 

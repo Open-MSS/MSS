@@ -100,16 +100,16 @@ class Test_Files(TestCase):
             operations = self.fm.list_operations(self.user)
             assert len(operations) == 1
 
-    def test_is_admin(self):
+    def test_is_creator(self):
         with self.app.test_client():
             assert self.fm.create_operation('test_path', 'test desc.', self.user) is True
             op_id = get_recent_op_id(self.fm, self.user)
             u_id = self.user.id
-            assert self.fm.is_admin(u_id, op_id) is True
+            assert self.fm.is_creator(u_id, op_id) is True
             undefined_op_id = 123
-            assert self.fm.is_admin(u_id, undefined_op_id) is False
+            assert self.fm.is_creator(u_id, undefined_op_id) is False
             no_perm_op_id = 2
-            assert self.fm.is_admin(u_id, no_perm_op_id) is False
+            assert self.fm.is_creator(u_id, no_perm_op_id) is False
 
     def test_file_save(self):
         with self.app.test_client():

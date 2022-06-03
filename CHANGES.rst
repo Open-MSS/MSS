@@ -1,6 +1,18 @@
 Changelog
 =========
 
+Version 6.2.0
+~~~~~~~~~~~~~
+
+This release includes the use of the new basemap-1.3.3 release and enables packaging for python 3.10.x.
+We added the possibility of flight level as vertical coordinate.
+A user can now leave on his own an operation. 
+
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/80?closed=1
+
+
 Version 6.1.1
 ~~~~~~~~~~~~~
 
