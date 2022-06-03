@@ -346,7 +346,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         # instead of the default Icon of python/pythonw
         try:
             import ctypes
-            myappid = f"msui.mss_pyui.{__version__}"  # arbitrary string
+            myappid = f"msui.msui.{__version__}"  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
@@ -425,7 +425,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
         self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
-        # Don't start the updater during a test run of mss_pyui
+        # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
@@ -979,7 +979,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 def main():
     warnings.warn("In the next major version we will rename the msui command to msui"
-                  " and the module from mss_pyui to msui", DeprecationWarning)
+                  " and the module from msui to msui", DeprecationWarning)
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
     except KeyError:
@@ -993,7 +993,7 @@ def main():
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
-                        default=os.path.join(constants.MSUI_CONFIG_PATH, "mss_pyui.log"))
+                        default=os.path.join(constants.MSUI_CONFIG_PATH, "msui.log"))
     parser.add_argument("-m", "--menu", help="adds msui to menu", action="store_true", default=False)
     parser.add_argument("-d", "--deinstall", help="removes msui from menu", action="store_true", default=False)
     parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)

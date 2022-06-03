@@ -39,7 +39,7 @@ from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader
 from mslib._tests.utils import mscolab_start_server, create_msui_settings_file, ExceptionMock
-import mslib.msui.msui as mss_pyui
+from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib._tests.constants import MSUI_CONFIG_PATH
@@ -62,7 +62,7 @@ class Test_Mscolab_connect_window():
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.main_window = mss_pyui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.main_window.show()
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
         self.window.urlCb.setEditText(self.url)
@@ -282,7 +282,7 @@ class Test_Mscolab(object):
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mss_pyui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
 
     def teardown(self):
@@ -360,9 +360,9 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
         self.window.remove_plugins()
-        with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.import_plugins):
+        with mock.patch("mslib.msui.msui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.mss_pyui.config_loader", return_value=self.export_plugins):
+        with mock.patch("mslib.msui.msui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
         file_path = fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}')
         with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(file_path, None)):

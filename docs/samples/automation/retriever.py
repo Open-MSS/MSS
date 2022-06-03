@@ -118,7 +118,7 @@ def main():
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
-                        default=os.path.join(mslib.msui.constants.MSUI_CONFIG_PATH, "mss_pyui.log"))
+                        default=os.path.join(mslib.msui.constants.MSUI_CONFIG_PATH, "msui.log"))
     args = parser.parse_args()
 
     if args.version:

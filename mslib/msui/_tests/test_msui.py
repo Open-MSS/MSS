@@ -4,7 +4,7 @@
     mslib.msui._tests.test_msui
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests msui.mss_pyui
+    This module provides pytest functions to tests msui.msui
 
     This file is part of MSS.
 
@@ -34,7 +34,7 @@ from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
 from mslib._tests.constants import ROOT_DIR
-import mslib.msui.msui as mss_pyui
+from mslib.msui import msui
 from mslib._tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 
@@ -42,7 +42,7 @@ from mslib.utils.config import read_config_file
 class Test_MSS_AboutDialog():
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mss_pyui.MSS_AboutDialog()
+        self.window = msui.MSS_AboutDialog()
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
@@ -60,9 +60,9 @@ class Test_MSS_AboutDialog():
 class Test_MSS_ShortcutDialog():
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.main_window = mss_pyui.MSUIMainWindow()
+        self.main_window = msui.MSUIMainWindow()
         self.main_window.show()
-        self.shortcuts = mss_pyui.MSS_ShortcutsDialog()
+        self.shortcuts = msui.MSS_ShortcutsDialog()
 
     def teardown(self):
         self.shortcuts.hide()
@@ -121,7 +121,7 @@ class Test_MSSSideViewWindow(object):
 
     def setup(self):
         self.sample_path = os.path.join(
-            os.path.dirname(os.path.abspath(mss_pyui.__file__)),
+            os.path.dirname(os.path.abspath(msui.__file__)),
             '../',
             '../',
             'docs',
@@ -130,7 +130,7 @@ class Test_MSSSideViewWindow(object):
             'msui')
         self.application = QtWidgets.QApplication(sys.argv)
 
-        self.window = mss_pyui.MSUIMainWindow()
+        self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()
         self.window.show()
         QtWidgets.QApplication.processEvents()
