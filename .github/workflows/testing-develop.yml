@@ -16,6 +16,8 @@ jobs:
       xdist: no
       branch_name: develop
       event_name: ${{ github.event_name }}
+      env: 
+        PAT: ${{ secrets.PAT }}
     secrets: inherit
 
   test-develop-xdist:
