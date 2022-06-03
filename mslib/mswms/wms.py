@@ -773,11 +773,12 @@ class WMSServer(object):
                 level = query.get('ELEVATION')
                 level = float(level) if level is not None else None
                 layer_datatypes = self.hsec_layer_registry[dataset][layer].required_datatypes()
-                if level is None and any(_x in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]):
+                from mslib.utils.netCDF4tools import VERTICAL_AXIS
+                if level is None and any(_x in layer_datatypes for _x in VERTICAL_AXIS):
                     # Use the default value.
                     level = -1
                 elif ("sfc" in layer_datatypes) and \
-                        all(_x not in layer_datatypes for _x in ["pl", "al", "ml", "tl", "pv"]) and \
+                        all(_x not in layer_datatypes for _x in VERTICAL_AXIS) and \
                         level is not None:
                     return self.create_service_exception(
                         text=f"ELEVATION argument not applicable for layer '{layer}'. Please omit this argument.",
