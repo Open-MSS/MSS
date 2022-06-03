@@ -26,6 +26,9 @@ env:
 jobs:
   Test-MSS:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.ENVIRONMENT }}
+    env:
+      PAT: ${{ secrets.PAT }}
 
     defaults:
       run:
@@ -34,6 +37,8 @@ jobs:
     container:
       image: openmss/testing-${{ inputs.branch_name }}
     environment: ${{ inputs.ENVIRONMENT }}
+    env:
+      PAT: ${{ secrets.PAT }}
 
     steps:
     - name: Trust My Directory

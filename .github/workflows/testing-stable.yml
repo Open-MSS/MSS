@@ -16,7 +16,7 @@ jobs:
       xdist: no
       branch_name: stable
       event_name: ${{ github.event_name }}
-      ENVIRONMENT: newp
+      ENVIRONMENT: PAT
     secrets: inherit
 
   test-stable-xdist:
@@ -26,7 +26,7 @@ jobs:
       xdist: yes
       branch_name: stable
       event_name: ${{ github.event_name }}
-      ENVIRONMENT: newp
+      ENVIRONMENT: PAT
     secrets: inherit
 
 
