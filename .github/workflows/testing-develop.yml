@@ -27,4 +27,10 @@ jobs:
       event_name: ${{ github.event_name }}
     secrets: inherit
 
+  test-nothing:
+     uses:
+      ./.github/workflows/testing.yml
+     run: |
+       "echo hello"
+
 
