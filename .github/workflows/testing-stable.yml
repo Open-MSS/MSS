@@ -1,0 +1,32 @@
+name: test stable
+
+on:
+  push:
+    branches:
+    - stable
+  pull_request:
+    branches:
+    - stable
+
+jobs:     
+  test-stable:
+    uses: 
+      ./.github/workflows/testing.yml
+    with:
+      xdist: no
+      branch_name: stable
+      event_name: ${{ github.event_name }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+  test-stable-xdist:
+    uses: 
+      ./.github/workflows/testing.yml
+    with:
+      xdist: yes
+      branch_name: stable
+      event_name: ${{ github.event_name }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
+
+
