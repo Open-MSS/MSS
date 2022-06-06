@@ -66,7 +66,7 @@ def call_mss():
     """
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
-    mss_pyui.main()
+    msui.main()
 
 
 def automate_mscolab():
