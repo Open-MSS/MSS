@@ -62,7 +62,7 @@ def call_recorder():
     rec.stop_capture()
 
 
-def call_mss():
+def call_msui():
     """
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
@@ -364,7 +364,7 @@ def main():
     This function runs the above functions as different processes at the same time and can be
     controlled from here. (This is the main process.)
     """
-    p1 = multiprocessing.Process(target=call_mss)
+    p1 = multiprocessing.Process(target=call_msui)
     p2 = multiprocessing.Process(target=automate_hexagoncontrol)
     p3 = multiprocessing.Process(target=call_recorder)
 
