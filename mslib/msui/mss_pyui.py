@@ -566,7 +566,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             self.export_plugins[name] = (imported_function, extension)
 
     def remove_plugins(self):
-        for name, _ in self.import_plugins.items():
+        items = list(self.import_plugins.items())
+        # add builtin plugin to remove it too
+        items.append(('CSV', None))
+        for name, _ in items:
             full_name = "actionImportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuImportFlightTrack.actions()
                        if _x.objectName() == full_name]
@@ -575,7 +578,10 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             delattr(self, full_name)
         self.import_plugins = {}
 
-        for name, _ in self.export_plugins.items():
+        items = list(self.export_plugins.items())
+        # add builtin plugin to remove it too
+        items.append(('CSV', None))
+        for name, _ in items:
             full_name = "actionExportFlightTrack" + clean_string(name)
             actions = [_x for _x in self.menuExportActiveFlightTrack.actions()
                        if _x.objectName() == full_name]
