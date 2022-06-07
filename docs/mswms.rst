@@ -7,7 +7,7 @@ from numerical weather predictions to the Mission Support User Interface.
 Supported operations are GetCapabilities and GetMap for (WMS 1.1.1/1.3.0 compliant)
 maps and (non-compliant) vertical sections.
 
-1) Configure the WMS server by modifying the settings in mss_wms_settings.py
+1) Configure the WMS server by modifying the settings in mswms_settings.py
 (address, products that shall be offered, ..).
 
 2) If you want to define new visualisation styles, the files to put them
@@ -86,9 +86,9 @@ Replace the name INSTANCE in the following examples by your service name.
 
 The configuration file have to become added to the /home/mss/INSTANCE/config directory
 
-**/home/mss/config/mss_wms_settings.py**
+**/home/mss/config/mswms_settings.py**
 
- .. literalinclude:: samples/config/wms/mss_wms_settings.py.sample
+ .. literalinclude:: samples/config/wms/mswms_settings.py.sample
 
 
 You have to adopt this file to your data.
@@ -236,7 +236,7 @@ INSTANCE is a placeholder for your service name::
  .
  ├── INSTANCE
  |   ├── config
- │   |   └── mss_wms_settings.py
+ │   |   └── mswms_settings.py
  |   |   └── mss_wms_auth.py
  |   ├── log
  │   |   └── mss_error.log
@@ -354,7 +354,7 @@ See also https://flask.palletsprojects.com/en/latest/tutorial/deploy/?highlight=
 .. _mswms-deployment:
 
 
-For the standalone server *mswms* you need the path of your mss_wms_settings.py and other configuration files
+For the standalone server *mswms* you need the path of your mswms_settings.py and other configuration files
 added to the PYTHONPATH. E.g.::
 
  export PYTHONPATH=/home/mss/INSTANCE/config
@@ -369,7 +369,7 @@ The next configuration exemplarily shows how to include user defined plots:
 
  .. literalinclude:: samples/config/wms/mss_chem_plots.py
 
- .. literalinclude:: samples/config/wms/mss_wms_settings.py.chem_plots
+ .. literalinclude:: samples/config/wms/mswms_settings.py.chem_plots
 
 
 .. _meteo_data:
@@ -408,13 +408,13 @@ Simulated Data and its configuration
 
 We provide demodata by executing the :code:`mswms_demodata --seed` program. This creates in your home directory
 data files and also the needed server configuration files. The program creates 70MB of examples.
-This script does not overwrite an existing mss_wms_settings.py.
+This script does not overwrite an existing mswms_settings.py.
 
 ::
 
   mss
   ├── mss_wms_auth.py
-  ├── mss_wms_settings.py
+  ├── mswms_settings.py
   └── testdata
       ├── 20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc
       ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
@@ -447,9 +447,9 @@ e.g.
 
 
 
-Detailed server configuration *mss_wms_settings.py* for this demodata
+Detailed server configuration *mswms_settings.py* for this demodata
 
- .. literalinclude:: samples/config/wms/mss_wms_settings.py.demodata
+ .. literalinclude:: samples/config/wms/mswms_settings.py.demodata
 
 For setting authentication see *mss_wms_auth.py*
 

@@ -158,7 +158,7 @@ MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data a
 
    $(mssdev) python mslib/mswms/demodata.py --seed
 
-To use this data add the mss_wms_settings.py in your python path::
+To use this data add the mswms_settings.py in your python path::
 
    $(mssdev) cd $HOME/PycharmProjects/mss
    $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
@@ -266,13 +266,13 @@ Profiling can be done by e.g.::
 
 example::
 
-   /!\ existing server config: "mss_wms_settings.py" for demodata not overwritten!
+   /!\ existing server config: "mswms_settings.py" for demodata not overwritten!
 
 
    /!\ existing server auth config: "mss_wms_auth.py" for demodata not overwritten!
 
 
-   To use this setup you need the mss_wms_settings.py in your python path e.g.
+   To use this setup you need the mswms_settings.py in your python path e.g.
    export PYTHONPATH=~/mss
          557395 function calls (543762 primitive calls) in 0.980 seconds
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mss_wms_settings
+    mswms_settings
     ~~~~~~~~~~~~~~~~
 
     Configuration module for programs accessing data on the MSS server.
@@ -39,7 +39,7 @@ import sys
 # a1) Path of the directory where the mss code package is located.
 # sys.path.insert(0, '/home/mss/miniconda3/envs/instance/lib/python3.X/site-packages')
 
-# a2) Path of the directory where mss_wms_settings.py is located
+# a2) Path of the directory where mswms_settings.py is located
 MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
 sys.path.insert(0, MSSCONFIGPATH)
 os.chdir(MSSCONFIGPATH)

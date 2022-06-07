@@ -34,10 +34,10 @@ from mslib._tests.constants import SERVER_CONFIG_FILE
 
 class TestMPLBasemapHorizontalSectionStyle(object):
     def setup(self):
-        self.mss_wms_settings = importlib.import_module("mss_wms_settings", SERVER_CONFIG_FILE)
+        self.mswms_settings = importlib.import_module("mswms_settings", SERVER_CONFIG_FILE)
 
     def test_supported_epsg_codes(self):
-        assert list(self.mss_wms_settings.epsg_to_mpl_basemap_table.keys()) == [4326]
+        assert list(self.mswms_settings.epsg_to_mpl_basemap_table.keys()) == [4326]
 
     def test_supported_crs(self):
         example = MPLBasemapHorizontalSectionStyle()

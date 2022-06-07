@@ -5,7 +5,7 @@
     mslib.mswms.demodata
     ~~~~~~~~~~~~~~~~~~~~
 
-    creates netCDF test data files and also a mss_wms_settings for accessing this data
+    creates netCDF test data files and also a mswms_settings for accessing this data
 
     This file is part of MSS.
 
@@ -852,15 +852,15 @@ class DataFiles(object):
     def __init__(self, data_fs=None, server_config_fs=None):
         self.data_fs = data_fs
         self.server_config_fs = server_config_fs
-        self.server_config_file = "mss_wms_settings.py"
-        self.server_auth_config_file = "mss_wms_auth.py"
+        self.server_config_file = "mswms_settings.py"
+        self.server_auth_config_file = "mswms_auth.py"
         # define file dimension / geographical  range
 
     def create_server_config(self, detailed_information=False):
         simple_auth_config = '''# -*- coding: utf-8 -*-
 """
 
-    mss_wms_settings
+    mswms_settings
     ~~~~~~~~~~~~~~~~
 
     Configuration module for programs accessing data on the MSS server.
@@ -900,7 +900,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
             simple_server_config = f'''# -*- coding: utf-8 -*-
 """
 
-    mss_wms_settings
+    mswms_settings
     ~~~~~~~~~~~~~~~~
 
     Configuration module for programs accessing data on the MSS server.
@@ -939,7 +939,7 @@ import sys
 # a1) Path of the directory where the msui code package is located.
 # sys.path.insert(0, '/home/msui/miniconda3/lib/python3.7/site-packages')
 
-# a2) Path of the directory where mss_wms_settings.py is located
+# a2) Path of the directory where mswms_settings.py is located
 
 #MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
 #sys.path.insert(0, MSSCONFIGPATH)
@@ -952,7 +952,7 @@ from mslib.mswms import mpl_lsec_styles
 import mslib.mswms
 
 
-# Configuration for mss_wms_settings accessing data on the MSS server.
+# Configuration for mswms_settings accessing data on the MSS server.
 # This is the data organisation structure of demodata.
 
 
@@ -1248,7 +1248,7 @@ def main():
                              server_config_fs=fs.open_fs("~/mss"))
         examples.create_server_config(detailed_information=True)
         examples.create_data()
-        print("\nTo use this setup you need the mss_wms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
+        print("\nTo use this setup you need the mswms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
 
 
 if __name__ == '__main__':

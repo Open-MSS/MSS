@@ -35,11 +35,11 @@ from mslib.mswms.mpl_lsec import AbstractLinearSectionStyle
 
 STATIC_LOCATION = ""
 try:
-    import mss_wms_settings
-    if hasattr(mss_wms_settings, "_gallerypath"):
-        STATIC_LOCATION = mss_wms_settings._gallerypath
+    import mswms_settings
+    if hasattr(mswms_settings, "_gallerypath"):
+        STATIC_LOCATION = mswms_settings._gallerypath
     else:
-        STATIC_LOCATION = os.path.join(os.path.dirname(os.path.abspath(mss_wms_settings.__file__)), "gallery")
+        STATIC_LOCATION = os.path.join(os.path.dirname(os.path.abspath(mswms_settings.__file__)), "gallery")
 except ImportError as e:
     logging.warning(f"{e}. Can't generate gallery.")
 
@@ -580,15 +580,15 @@ def get_plot_details(path, plot_object, l_type="top", sphinx=False, image_path="
                 f"Make sure you have the required datafields " \
                 f"({', '.join(f'`{field[1]}`' for field in plot_object.required_datafields)})  \n"
         if instructions_native:
-            text += "You can use it as is by appending this code into your `mss_wms_settings.py`:  \n"
+            text += "You can use it as is by appending this code into your `mswms_settings.py`:  \n"
             text += f"---\n```python\n{instructions_native}\n```" \
                     f"\n---\n"
             if source:
                 text += "**If you want to modify the plot**  \n"
         if source:
             text += f"1. [Download this file]({code_path}?download=True)  \n" \
-                    f"2. Put this file into your mss_wms_settings.py directory, e.g. `~/msui`  \n" \
-                    f"3. Append this code into your `mss_wms_settings.py`:  \n"
+                    f"2. Put this file into your mswms_settings.py directory, e.g. `~/msui`  \n" \
+                    f"3. Append this code into your `mswms_settings.py`:  \n"
             text += f"---\n```python\n{instructions}\n```\n---\n"
             text += f"<details><summary>{l_type}_{dataset}{plot_object.name}.py</summary>\n```python\n" + source + \
                     "\n```\n</details>"
@@ -612,7 +612,7 @@ Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field 
 
 """
     if instructions_native:
-        text += f"""You can use it as is by appending this code into your `mss_wms_settings.py`:
+        text += f"""You can use it as is by appending this code into your `mswms_settings.py`:
 
 .. code-block:: python
 
@@ -624,9 +624,9 @@ Make sure you have the required datafields ({', '.join(f'`{field[1]}`'for field 
 
 1. Download this :download:`file <downloads/{l_type}_{dataset}{plot_object.name}.py>`
 
-2. Put this file into your mss_wms_settings.py directory, e.g. `~/msui`
+2. Put this file into your mswms_settings.py directory, e.g. `~/msui`
 
-3. Append this code into your `mss_wms_settings.py`:
+3. Append this code into your `mswms_settings.py`:
 
 .. code-block:: python
 

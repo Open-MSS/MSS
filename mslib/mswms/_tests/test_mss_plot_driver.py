@@ -37,7 +37,7 @@ from PIL import Image
 from xml.etree import ElementTree
 import io
 from mslib.mswms.mss_plot_driver import VerticalSectionDriver, HorizontalSectionDriver, LinearSectionDriver
-import mss_wms_settings
+import mswms_settings
 import mslib.mswms.mpl_vsec_styles as mpl_vsec_styles
 import mslib.mswms.mpl_hsec_styles as mpl_hsec_styles
 import mslib.mswms.mpl_lsec_styles as mpl_lsec_styles
@@ -62,7 +62,7 @@ class Test_VSec(object):
         p2 = [50.00, 12.]
         p3 = [51.00, 15.]
         p4 = [48.00, 11.]
-        data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data = mswms_settings.data["ecmwf_EUR_LL015"]
         data.setup()
 
         self.path = [p1, p2, p3, p4]
@@ -211,7 +211,7 @@ class Test_LSec(object):
         p2 = [50.00, 12., 25000]
         p3 = [51.00, 15., 25000]
         p4 = [48.00, 11., 25000]
-        data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data = mswms_settings.data["ecmwf_EUR_LL015"]
         data.setup()
 
         self.path = [p1, p2, p3, p4]
@@ -269,7 +269,7 @@ class Test_LSec(object):
 
 class Test_HSec(object):
     def setup(self):
-        data = mss_wms_settings.data["ecmwf_EUR_LL015"]
+        data = mswms_settings.data["ecmwf_EUR_LL015"]
         data.setup()
 
         self.bbox = [-22.5, 27.5, 55, 62.5]

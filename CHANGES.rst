@@ -189,7 +189,7 @@ HINT:
 ~~~~~
 
 For using the 1-D samples along the flight path you have to add a configuration to your
-mss_wms_settings.py. Similiar as to the other layers add:
+mswms_settings.py. Similiar as to the other layers add:
 
 .. code-block:: python
 
@@ -947,7 +947,7 @@ Version 1.2.1
 -------------
 
 Bug Fixes:
- - server throws useful messages if mss_wms_settings.py is missing necessary variables, #58
+ - server throws useful messages if mswms_settings.py is missing necessary variables, #58
 
 Other Changes:
  - most version pinning removed, #59. Thanks to ocefpaf (conda-forge-member)
@@ -961,7 +961,7 @@ New Features:
  - wsgi and standalone server refactored and merged into one application,
    mswms is the new name of the standalone server #30
  - server configuration files simplified, #39
- - server templates got more variables defined in mss_wms_settings.py, #44, #45
+ - server templates got more variables defined in mswms_settings.py, #44, #45
  - geopy distance calculation dependency replaced by pyproj, #34
  - Simplification for adding or removing CLaMS parameters, #12
 

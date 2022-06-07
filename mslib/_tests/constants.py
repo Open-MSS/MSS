@@ -38,7 +38,7 @@ else:
     SHA = repo.head.object.hexsha[0:10]
 
 CACHED_CONFIG_FILE = None
-SERVER_CONFIG_FILE = "mss_wms_settings.py"
+SERVER_CONFIG_FILE = "mswms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 ROOT_FS = TempFS(identifier=f"msui{SHA}")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")

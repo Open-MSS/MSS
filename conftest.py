@@ -171,7 +171,7 @@ class mscolab_settings(object):
     parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
 
 
-importlib.machinery.SourceFileLoader('mss_wms_settings', constants.SERVER_CONFIG_FILE_PATH).load_module()
+importlib.machinery.SourceFileLoader('mswms_settings', constants.SERVER_CONFIG_FILE_PATH).load_module()
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
 importlib.machinery.SourceFileLoader('mscolab_settings', path).load_module()
 sys.path.insert(0, parent_path)
