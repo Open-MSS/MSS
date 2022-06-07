@@ -33,7 +33,7 @@ requirements:
     - execnet
     - fastkml =0.11
     - isodate
-    - lxml <4.9
+    - lxml
     - netcdf4
     - hdf4
     - pillow
