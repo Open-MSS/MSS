@@ -8,6 +8,6 @@ Components
    plugins
    mswms
    mscolab
-   tutorials
+   gentutorials
 
 

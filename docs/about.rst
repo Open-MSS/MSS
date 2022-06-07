@@ -1,5 +1,3 @@
-
-
 About
 -----
 
@@ -47,6 +45,5 @@ and Forschungszentrum Jülich. Improving the software will improve the quality o
 will also enable its use for other scientific areas, e.g. planning of ship routes.
 
 
-
- * `Simple issues <https://github.com/Open-MSS/MSS/wiki/Getting-Started>`_
+ * `Simple issues for getting started with contributing to MSS  <https://github.com/Open-MSS/MSS/wiki/Getting-Started>`_
  * `Contact <https://github.com/Open-MSS/MSS/wiki/Contact>`_
