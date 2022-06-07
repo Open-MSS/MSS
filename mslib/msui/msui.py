@@ -1002,7 +1002,7 @@ def main():
 
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System (msui)\n")
+        print("\n            Mission Support System (MSS)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
