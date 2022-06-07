@@ -405,6 +405,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         picker_default = config_loader(dataset="filepicker_default")
         self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Import")
         self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Export")
+        self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
+        self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
         self.add_plugins()
 
         preload_urls = config_loader(dataset="WMS_preload")
@@ -484,8 +486,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     def add_plugins(self):
         picker_default = config_loader(dataset="filepicker_default")
-        self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
-        self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
         self.import_plugins = {}
         self.export_plugins = {}
         self.add_import_plugins(picker_default)
