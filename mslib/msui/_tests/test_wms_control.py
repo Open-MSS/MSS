@@ -459,7 +459,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.window.image_displayed)
 
-        urlstr = f"http://127.0.0.1:{self.port}/msui/logo.png"
+        urlstr = f"http://127.0.0.1:{self.port}/mss/logo.png"
         md5_filname = os.path.join(self.window.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
         self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
         self.window.fetcher.fetch_legend(urlstr, use_cache=True, md5_filename=md5_filname)
