@@ -1,4 +1,4 @@
-# (msui)
+# (mss)
 from PyQt5 import QtGui, QtCore
 
 # (msui)
