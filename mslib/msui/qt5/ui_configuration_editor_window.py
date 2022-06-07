@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_configuration_editor_window.ui'
+# Form implementation generated from reading ui file 'ui_configuration_editor_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -67,7 +67,7 @@ class Ui_ConfigurationEditorWindow(object):
 
     def retranslateUi(self, ConfigurationEditorWindow):
         _translate = QtCore.QCoreApplication.translate
-        ConfigurationEditorWindow.setWindowTitle(_translate("ConfigurationEditorWindow", "MSS Configuration Editor"))
+        ConfigurationEditorWindow.setWindowTitle(_translate("ConfigurationEditorWindow", "MSUI Configuration Editor"))
         self.label.setText(_translate("ConfigurationEditorWindow", "Filter :"))
         self.optCb.setToolTip(_translate("ConfigurationEditorWindow", "Select option to filter the view"))
         self.addOptBtn.setToolTip(_translate("ConfigurationEditorWindow", "Select an option to add new value"))
