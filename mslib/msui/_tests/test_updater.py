@@ -40,15 +40,15 @@ class SubprocessDifferentVersionMock:
     def __init__(self, args=None, **named_args):
         self.returncode = 0
         self.args = args
-        if args and "list" in args and "msui" in args:
-            self.stdout = "*msui 0.0.0\n"
+        if args and "list" in args and "mss" in args:
+            self.stdout = "*mss 0.0.0\n"
         else:
-            self.stdout = "*msui 999.999.999\n"
+            self.stdout = "*mss 999.999.999\n"
 
 
 class SubprocessSameMock:
     def __init__(self, args=None, **named_args):
-        self.stdout = "*msui 999.999.999\n"
+        self.stdout = "*mss 999.999.999\n"
         self.returncode = 0
         self.args = args
 

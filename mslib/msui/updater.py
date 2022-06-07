@@ -51,7 +51,7 @@ class UpdaterUI(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         self.updater.on_update_available.connect(self.notify_on_update)
         self.updater.on_update_finished.connect(lambda: self.btRestart.setEnabled(True))
         self.btUpdate.clicked.connect(lambda: (self.updater.update_mss(), self.btUpdate.setEnabled(False)))
-        self.btRestart.clicked.connect(self.updater._restart_mss)
+        self.btRestart.clicked.connect(self.updater._restart_msui)
         self.updater.run()
 
     def notify_on_update(self, old, new):
