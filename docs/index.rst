@@ -17,12 +17,12 @@ Topics
 
    about
    components
-   gallery/index
    dependencies
    installation
    development
    authors
-   help
+   tutorial
+   gallery/index
 
 
 Indices and tables
