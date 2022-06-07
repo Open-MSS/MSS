@@ -426,7 +426,6 @@ class Test_WMS(object):
             do_test()
 
     def test_gallery(self, tmpdir):
-        pytest.skip("strange crashes")
         tempdir = tmpdir.mkdir("static")
         docsdir = tmpdir.mkdir("docs")
         mslib.mswms.wms.STATIC_LOCATION = tempdir
