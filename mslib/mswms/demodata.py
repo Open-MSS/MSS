@@ -1234,7 +1234,7 @@ def main():
     args = parser.parse_args()
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System WMS Demodata \n")
+        print("\n            Mission Support System (MSS) \n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
