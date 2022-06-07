@@ -48,26 +48,26 @@ else:
 
 GRAVATAR_DIR_PATH = fs.path.join(MSUI_CONFIG_PATH, "gravatars")
 
-msui_settings = os.getenv('msui_settings', os.path.join(MSUI_CONFIG_PATH, "msui_settings.json"))
+MSUI_SETTINGS = os.getenv('MSUI_SETTINGS', os.path.join(MSUI_CONFIG_PATH, "msui_settings.json"))
 
-# We try to create an empty msui_settings file if not existing
+# We try to create an empty MSUI_SETTINGS file if not existing
 # but there can be a permission problem
-if '://' in msui_settings:
-    dir_path, file_name = fs.path.split(msui_settings)
+if '://' in MSUI_SETTINGS:
+    dir_path, file_name = fs.path.split(MSUI_SETTINGS)
     try:
         _fs = fs.open_fs(dir_path)
         if not _fs.exists(file_name):
             with _fs.open(file_name, 'w') as fid:
                 fid.write("{}")
     except fs.errors.CreateFailed:
-        logging.error(f'"{msui_settings}" can''t be created')
+        logging.error(f'"{MSUI_SETTINGS}" can''t be created')
 else:
-    if not os.path.exists(msui_settings):
+    if not os.path.exists(MSUI_SETTINGS):
         try:
-            with open(msui_settings, 'w') as fid:
+            with open(MSUI_SETTINGS, 'w') as fid:
                 fid.write("{}")
         except IOError:
-            logging.error(f'"{msui_settings}" can''t be created')
+            logging.error(f'"{MSUI_SETTINGS}" can''t be created')
 
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}

@@ -33,7 +33,7 @@ import json
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.utils.qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
-from mslib.msui.constants import msui_settings
+from mslib.msui.constants import MSUI_SETTINGS
 from mslib.msui.icons import icons
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_dict
@@ -134,7 +134,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.setupUi(self)
 
         options = config_loader()
-        self.path = msui_settings
+        self.path = MSUI_SETTINGS
         self.last_saved = copy.deepcopy(options)
 
         self.optCb.addItem("All")

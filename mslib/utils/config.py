@@ -347,7 +347,7 @@ for key in [
 user_options = copy.deepcopy(default_options)
 
 
-def read_config_file(path=constants.msui_settings):
+def read_config_file(path=constants.MSUI_SETTINGS):
     """
     reads a config file and updates global user_options
 
@@ -386,7 +386,7 @@ def read_config_file(path=constants.msui_settings):
         logging.debug("No user settings found, using default settings")
 
 
-def modify_config_file(data, path=constants.msui_settings):
+def modify_config_file(data, path=constants.MSUI_SETTINGS):
     """
     modifies a config file
 

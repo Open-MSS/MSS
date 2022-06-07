@@ -937,7 +937,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if config_loader() != config_loader(default=True):
             return ("Status : System Configuration")
         else:
-            return (f"Status : User Configuration '{constants.msui_settings}' loaded")
+            return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also

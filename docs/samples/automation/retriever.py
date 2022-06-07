@@ -130,7 +130,7 @@ def main():
         sys.exit()
 
     mslib.utils.setup_logging(args)
-    read_config_file(path=mslib.msui.constants.msui_settings)
+    read_config_file(path=mslib.msui.constants.MSUI_SETTINGS)
     config = config_loader()
     num_interpolation_points = config["num_interpolation_points"]
     num_labels = config["num_labels"]
