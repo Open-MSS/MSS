@@ -12,8 +12,8 @@ mslib/msui/mss.sideview.cfg
 mslib/msui/mss.topview.cfg
 mslib/msui/msui_settings.py
 mslib/msui/wms_cache/
-mslib/mswms/mss_wms_settings.py
-mslib/mswms/mss_wms_auth.py
+mslib/mswms/mswms_settings.py
+mslib/mswms/mswms_auth.py
 mslib/mscolab/colabdata/
 docs/_build
 docs/gallery/plots

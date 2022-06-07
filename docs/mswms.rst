@@ -88,7 +88,7 @@ The configuration file have to become added to the /home/mss/INSTANCE/config dir
 
 **/home/mss/config/mswms_settings.py**
 
- .. literalinclude:: samples/config/wms/mswms_settings.py.sample
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.sample
 
 
 You have to adopt this file to your data.
@@ -237,7 +237,7 @@ INSTANCE is a placeholder for your service name::
  ├── INSTANCE
  |   ├── config
  │   |   └── mswms_settings.py
- |   |   └── mss_wms_auth.py
+ |   |   └── mswms_auth.py
  |   ├── log
  │   |   └── mss_error.log
  |   └── wsgi
@@ -271,7 +271,7 @@ could add it also to wms.wsgi.
 By this setting you override the PYTHONPATH environment variable. So you have also to add
 the site-packes directory of your miniconda or anaconda installation besides the config file path.
 
-If your server hosts different instances by different users you want to setup this path in mss_wms_setting.py.
+If your server hosts different instances by different users you want to setup this path in mswms_setting.py.
 
 
 Configuration of wsgi for wms
@@ -299,9 +299,9 @@ To restrict access to your data use this script.
 
  .. literalinclude:: samples/wsgi/auth.wsgi
 
-This needs also a configuration **/home/mss/INSTANCE/config/mss_wms_auth.py** script.
+This needs also a configuration **/home/mss/INSTANCE/config/mswms_auth.py** script.
 
- .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
+ .. literalinclude:: samples/config/mswms/mswms_auth.py.sample
 
 
 At the moment you have many different instances with different users or different versions of mss you have to use
@@ -367,9 +367,9 @@ user to define their own plotting classes based on the the MSS infrastructure fo
 Some less tested plots are given as examples in the *samples* part of the documentation as templates.
 The next configuration exemplarily shows how to include user defined plots:
 
- .. literalinclude:: samples/config/wms/mss_chem_plots.py
+ .. literalinclude:: samples/config/mswms/mss_chem_plots.py
 
- .. literalinclude:: samples/config/wms/mswms_settings.py.chem_plots
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.chem_plots
 
 
 .. _meteo_data:
@@ -413,7 +413,7 @@ This script does not overwrite an existing mswms_settings.py.
 ::
 
   mss
-  ├── mss_wms_auth.py
+  ├── mswms_auth.py
   ├── mswms_settings.py
   └── testdata
       ├── 20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc
@@ -449,8 +449,8 @@ e.g.
 
 Detailed server configuration *mswms_settings.py* for this demodata
 
- .. literalinclude:: samples/config/wms/mswms_settings.py.demodata
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.demodata
 
-For setting authentication see *mss_wms_auth.py*
+For setting authentication see *mswms_auth.py*
 
- .. literalinclude:: samples/config/wms/mss_wms_auth.py.sample
+ .. literalinclude:: samples/config/mswms/mswms_auth.py.sample

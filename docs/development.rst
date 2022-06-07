@@ -269,7 +269,7 @@ example::
    /!\ existing server config: "mswms_settings.py" for demodata not overwritten!
 
 
-   /!\ existing server auth config: "mss_wms_auth.py" for demodata not overwritten!
+   /!\ existing server auth config: "mswms_auth.py" for demodata not overwritten!
 
 
    To use this setup you need the mswms_settings.py in your python path e.g.
