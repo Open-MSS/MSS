@@ -42,7 +42,7 @@ from mslib.utils.config import read_config_file
 class Test_MSS_AboutDialog():
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = msui.MSS_AboutDialog()
+        self.window = msui.MSUI_AboutDialog()
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
@@ -62,7 +62,7 @@ class Test_MSS_ShortcutDialog():
         self.application = QtWidgets.QApplication(sys.argv)
         self.main_window = msui.MSUIMainWindow()
         self.main_window.show()
-        self.shortcuts = msui.MSS_ShortcutsDialog()
+        self.shortcuts = msui.MSUI_ShortcutsDialog()
 
     def teardown(self):
         self.shortcuts.hide()

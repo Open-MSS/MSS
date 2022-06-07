@@ -74,7 +74,7 @@ class Test_MSSTopViewWindow(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSTopViewWindow(model=waypoints_model)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -310,7 +310,7 @@ class Test_TopViewWMS(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSTopViewWindow(model=waypoints_model)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)

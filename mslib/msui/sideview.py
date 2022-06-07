@@ -33,7 +33,7 @@ from PyQt5 import QtGui, QtWidgets
 
 from mslib.utils.qt import ui_sideview_window as ui
 from mslib.utils.qt import ui_sideview_options as ui_opt
-from mslib.msui.viewwindows import MSSMplViewWindow
+from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.utils import thermolib
@@ -266,7 +266,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.setBotTopLimits(self.cbVerticalAxis.currentText())
 
 
-class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
+class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     """
     PyQt window implementing a matplotlib canvas as an interactive
     side view flight track editor.
@@ -277,7 +277,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSSSideViewWindow, self).__init__(parent, model, _id)
+        super(MSUISideViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -331,7 +331,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super(MSSSideViewWindow, self).setFlightTrackModel(model)
+        super(MSUISideViewWindow, self).setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 

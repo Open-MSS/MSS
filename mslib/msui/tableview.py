@@ -40,7 +40,7 @@ from PyQt5 import QtWidgets, QtGui
 from mslib.utils.qt import ui_tableview_window as ui
 from mslib.utils.qt import dropEvent, dragEnterEvent
 from mslib.msui import flighttrack as ft
-from mslib.msui.viewwindows import MSSViewWindow
+from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
 
 try:
@@ -49,7 +49,7 @@ except ImportError:
     import pyproj
 
 
-class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
+class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
     """
     Implements the table view of the flight plan. Data comes from a
     flight track data model.
@@ -60,7 +60,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
     def __init__(self, parent=None, model=None, _id=None):
         """
         """
-        super(MSSTableViewWindow, self).__init__(parent, model, _id)
+        super(MSUITableViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -270,7 +270,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         Set the QAbstractItemModel instance that the table displays.
         """
-        super(MSSTableViewWindow, self).setFlightTrackModel(model)
+        super(MSUITableViewWindow, self).setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes

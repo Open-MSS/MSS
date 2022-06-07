@@ -101,7 +101,7 @@ class Test_MSSSideViewWindow(object):
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSSSideViewWindow(model=waypoints_model)
+        self.window = tv.MSUISideViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -187,7 +187,7 @@ class Test_SideViewWMS(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSSideViewWindow(model=waypoints_model)
+        self.window = tv.MSUISideViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)

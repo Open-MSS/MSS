@@ -29,7 +29,7 @@ from mslib.utils.config import config_loader, save_settings_qsettings, load_sett
 from PyQt5 import QtGui, QtWidgets
 from mslib.utils.qt import ui_linearview_window as ui
 from mslib.utils.qt import ui_linearview_options as ui_opt
-from mslib.msui.viewwindows import MSSMplViewWindow
+from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 
@@ -80,7 +80,7 @@ class MSS_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog
         return settings_dict
 
 
-class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
+class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     """
     PyQt window implementing a matplotlib canvas as linear flight track view.
     """
@@ -90,7 +90,7 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSSLinearViewWindow, self).__init__(parent, model, _id)
+        super(MSUILinearViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -143,7 +143,7 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super(MSSLinearViewWindow, self).setFlightTrackModel(model)
+        super(MSUILinearViewWindow, self).setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 

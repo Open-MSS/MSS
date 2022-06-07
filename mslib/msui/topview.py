@@ -35,7 +35,7 @@ from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils.qt import ui_topview_window as ui
 from mslib.utils.qt import ui_topview_mapappearance as ui_ma
-from mslib.msui.viewwindows import MSSMplViewWindow
+from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
@@ -177,7 +177,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             button.setPalette(palette)
 
 
-class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
+class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     """
     PyQt window implementing a MapCanvas as an interactive flight track
     editor.
@@ -188,7 +188,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSSTopViewWindow, self).__init__(parent, model, _id)
+        super(MSUITopViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
@@ -332,7 +332,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
-        super(MSSTopViewWindow, self).setIdentifier(identifier)
+        super(MSUITopViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.map.set_identifier(identifier)
 
     def settings_dialogue(self):

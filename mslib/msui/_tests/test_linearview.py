@@ -75,7 +75,7 @@ class Test_MSSLinearViewWindow(object):
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSSLinearViewWindow(model=waypoints_model)
+        self.window = tv.MSUILinearViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -131,7 +131,7 @@ class Test_LinearViewWMS(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSLinearViewWindow(model=waypoints_model)
+        self.window = tv.MSUILinearViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)

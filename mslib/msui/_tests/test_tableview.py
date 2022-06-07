@@ -52,7 +52,7 @@ class Test_TableView(object):
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSSTableViewWindow(model=waypoints_model)
+        self.window = tv.MSUITableViewWindow(model=waypoints_model)
         self.window.show()
 
         QtWidgets.QApplication.processEvents()

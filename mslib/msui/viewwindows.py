@@ -33,7 +33,7 @@ from PyQt5 import QtCore, QtWidgets
 import logging
 
 
-class MSSViewWindow(QtWidgets.QMainWindow):
+class MSUIViewWindow(QtWidgets.QMainWindow):
     """
     Derives QMainWindow to provide some common functionality to all
     MSUI view windows.
@@ -46,7 +46,7 @@ class MSSViewWindow(QtWidgets.QMainWindow):
     # viewClosesId = QtCore.Signal(int, name="viewClosesId")
 
     def __init__(self, parent=None, model=None, _id=None):
-        super(MSSViewWindow, self).__init__(parent)
+        super(MSUIViewWindow, self).__init__(parent)
 
         # Object variables:
         self.waypoints_model = model  # pointer to the current flight track.
@@ -207,13 +207,13 @@ class MSSViewWindow(QtWidgets.QMainWindow):
             self.tableWayPoints.setEnabled(False)
 
 
-class MSSMplViewWindow(MSSViewWindow):
+class MSUIMplViewWindow(MSUIViewWindow):
     """
-    Adds Matplotlib-specific functionality to MSSViewWindow.
+    Adds Matplotlib-specific functionality to MSUIViewWindow.
     """
 
     def __init__(self, parent=None, model=None, _id=None):
-        super(MSSMplViewWindow, self).__init__(parent, model, _id)
+        super(MSUIMplViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
         self.mpl = None
 

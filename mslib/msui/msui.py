@@ -137,12 +137,12 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         self.flighttrack_model = flighttrack_model
 
 
-class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
+class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
     def __init__(self):
-        super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
+        super(MSUI_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
         self.current_shortcuts = None
         self.treeWidget.itemDoubleClicked.connect(self.double_clicked)
@@ -312,7 +312,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         self.filterRemoveAction.setVisible(len(text) > 0)
 
 
-class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
+class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
        defined in the QtDesigner file.
     """
@@ -322,7 +322,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         Arguments:
         parent -- Qt widget that is parent to this widget.
         """
-        super(MSS_AboutDialog, self).__init__(parent)
+        super(MSUI_AboutDialog, self).__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText(f"Version: {__version__}")
         self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
@@ -331,7 +331,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.lblPython.setPixmap(blub)
 
 
-class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
+class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     """MSUI new main window class. Provides user interface elements for managing
        flight tracks, views and MSColab functionalities.
     """
@@ -810,23 +810,23 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSSTopViewWindow(model=model)
+            view_window = topview.MSUITopViewWindow(model=model)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-            view_window = sideview.MSSSideViewWindow(model=model)
+            view_window = sideview.MSUISideViewWindow(model=model)
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
         elif _type == "tableview":
             # Table view.
-            view_window = tableview.MSSTableViewWindow(model=model)
+            view_window = tableview.MSUITableViewWindow(model=model)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSSLinearViewWindow(model=model)
+            view_window = linearview.MSUILinearViewWindow(model=model)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
@@ -905,7 +905,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def show_about_dialog(self):
         """Show the 'About MSUI' dialog to the user.
         """
-        dlg = MSS_AboutDialog(parent=self)
+        dlg = MSUI_AboutDialog(parent=self)
         dlg.setModal(True)
         dlg.exec_()
 
@@ -915,13 +915,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if QtWidgets.QApplication.activeWindow() == self.shortcuts_dlg:
             return
 
-        self.shortcuts_dlg = MSS_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
+        self.shortcuts_dlg = MSUI_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
 
         # In case the dialog gets deleted by QT, recreate it
         try:
             self.shortcuts_dlg.setModal(True)
         except RuntimeError:
-            self.shortcuts_dlg = MSS_ShortcutsDialog()
+            self.shortcuts_dlg = MSUI_ShortcutsDialog()
 
         self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
         self.shortcuts_dlg.fill_list()
