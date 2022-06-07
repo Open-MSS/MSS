@@ -2,7 +2,7 @@
 
 
 package:
-  name: msui
+  name: mss
   version: {{ version }}
 
 source:

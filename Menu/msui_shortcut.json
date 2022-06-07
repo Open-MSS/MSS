@@ -2,8 +2,8 @@
     "menu_name": "Anaconda${PY_VER} ${PLATFORM}",
     "menu_items": [
             {
-                "name": "MSS",
-                "pywscript": "${PYTHON_SCRIPTS}/mss-script.py",
+                "name": "MSUI",
+                "pywscript": "${PYTHON_SCRIPTS}/msui-script.py",
                 "icon": "${MENU_DIR}/mss.ico"
             }
         ]
