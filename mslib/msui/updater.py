@@ -2,7 +2,7 @@
     mslib.msui.updater
     ~~~~~~~~~~~~~~~~~~~
 
-    This UI interface for the updater util, handles detection of an outdated msui version and automatic updating.
+    This UI interface for the updater util, handles detection of an outdated mss version and automatic updating.
 
     This file is part of MSS.
 
