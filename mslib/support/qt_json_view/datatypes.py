@@ -2,7 +2,7 @@ from functools import partial
 import re
 import webbrowser
 
-# (msui)
+# (mss)
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -12,7 +12,7 @@ TypeRole = QtCore.Qt.UserRole + 1
 class DataType(object):
     """Base class for data types."""
 
-    # (msui)
+    # (mss)
     COLOR = QtCore.Qt.black
 
     def matches(self, data):
@@ -111,7 +111,7 @@ class StrType(DataType):
     """Strings and unicodes"""
 
     def matches(self, data):
-        # (msui)
+        # (mss)
         return isinstance(data, str)
 
 
@@ -350,7 +350,7 @@ class UrlType(DataType):
     REGEX = re.compile(r'(?:https?):\/\/|(?:file):\/\/')
 
     def matches(self, data):
-        # (msui)
+        # (mss)
         if isinstance(data, str):
             if self.REGEX.match(data) is not None:
                 return True
@@ -369,7 +369,7 @@ class FilepathType(DataType):
     REGEX = re.compile(r'(\/.*)|([A-Z]:\\.*)')
 
     def matches(self, data):
-        # (msui)
+        # (mss)
         if isinstance(data, str):
             if self.REGEX.match(data) is not None:
                 return True
