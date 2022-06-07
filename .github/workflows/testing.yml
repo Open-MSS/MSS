@@ -60,7 +60,7 @@ jobs:
         && mamba install -c conda-forge pyvirtualdisplay python\<3.10 -y \
         && mamba install -c conda-forge --file reqs.txt -y \
         && mamba install -c conda-forge --file requirements.d/development.txt -y  \
-        && conda create --name mssenv --copy --clone new_mssenv -y)
+        && conda create --name mssenv --copy --clone new_mssenv -y
 
     - name: Run tests
       if: ${{ success() && inputs.xdist == 'no' }}
