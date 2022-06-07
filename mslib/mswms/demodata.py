@@ -936,8 +936,8 @@ import sys
 # If you already have set up the PYTHONPATH environment variable for the
 # stuff you see below, you don't need to do a1) and a2).
 
-# a1) Path of the directory where the msui code package is located.
-# sys.path.insert(0, '/home/msui/miniconda3/lib/python3.7/site-packages')
+# a1) Path of the directory where the MSS code package is located.
+# sys.path.insert(0, '/home/mss/miniconda3/lib/python3.10/site-packages')
 
 # a2) Path of the directory where mswms_settings.py is located
 
