@@ -73,7 +73,7 @@ WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}
 
 POSIX = {"application_destination": os.path.join(HOME, ".local/share/applications/msui{}.desktop"),
-         "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/msui-logo{}.png"),
+         "icon_destination": os.path.join(HOME, ".local/share/icons/hicolor/{}/apps/mss-logo{}.png"),
          "desktop": """[Desktop Entry]
 Name=msui {}
 Comment=A web service based tool to plan atmospheric research flights (mission support system).
