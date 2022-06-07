@@ -36,12 +36,21 @@ jobs:
       run: git config --global --add safe.directory /__w/MSS/MSS
 
     - uses: actions/checkout@v3
-    - name: Reinstall dependencies if changed
-      id: step1
+
+    - name: check for dependencies
       run: |
         cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt || (echo Dependencies differ \
-        && echo "triggerdockerbuild=yes" >> $GITHUB_ENV \
-        && cat localbuild/meta.yaml \
+        && echo "triggerdockerbuild=yes" >> $GITHUB_ENV)
+
+    - name: check for dependencies
+      if: ${{inputs.event_name == 'schedule' && inputs.branch_name == 'stable' && env.triggerdockerbuild != 'yes'}}
+      run: |
+        echo "triggerdockerbuild=yes" >> $GITHUB_ENV
+
+    - name: Reinstall dependencies if changed
+      if: ${{env.triggerdockerbuild == 'yes'}}
+      run: |
+        cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
         | sed -e "s/.*- //" \
         | sed -e "s/menuinst.*//" \
