@@ -122,12 +122,13 @@ def automate_mscolab():
     work_async_x, work_async_y = None, None
     wp1_x, wp1_y = None, None
     wp2_x, wp2_y = None, None
-
+    sc_width, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
     # Maximizing the window
     try:
         pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
+        raise
     pag.sleep(4)
 
     # Connecting to Mscolab (Mscolab localhost server must be activated beforehand for this to work)
@@ -144,6 +145,7 @@ def automate_mscolab():
             pag.sleep(1)
             pag.hotkey(ctrl, 'a')
             pag.sleep(1)
+            pag.hotkey(ctrl, 'a')
             pag.typewrite(localhost_url, interval=0.2)
             pag.sleep(1)
             pag.click(x1, y1, duration=2)
@@ -183,16 +185,12 @@ def automate_mscolab():
             pag.press('tab')
             pag.typewrite(password, interval=0.2)
 
-            try:
-                x3, y3 = pag.locateCenterOnScreen(f'{mscolab_path}login.png')
-                pag.click(x3, y3, duration=2)
-                pag.sleep(3)
-            except (ImageNotFoundException, OSError, Exception):
-                print("\nException :\'Login (User login)\' button not found on the screen.")
         except (ImageNotFoundException, OSError, Exception):
             print("\nException :\'Add user\' button not found on the screen.")
+            raise
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Connect to Mscolab\' button not found on the screen.")
+        raise
 
     # Opening a new Mscolab Operation
     try:
@@ -220,9 +218,10 @@ def automate_mscolab():
             pag.sleep(2)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException :\'Ok\' button when adding a new operation not found on the screen.")
+            raise
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'File\' menu button not found on the screen.")
-
+        raise
     try:
         open_operations_x, open_operations_y = pag.locateCenterOnScreen(f'{mscolab_path}openop.png')
         pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
@@ -231,6 +230,7 @@ def automate_mscolab():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Operations\' label not found on the screen.")
+        raise
 
     # Managing Users for the operation that you are working on
     if file_x is not None and file_y is not None:
@@ -245,7 +245,8 @@ def automate_mscolab():
 
     # Demonstrating search and select of the users present in the network.
     try:
-        selectall_left_x, selectall_left_y = pag.locateCenterOnScreen(f'{mscolab_path}manageusers_left_selectall.png')
+        selectall_left_x, selectall_left_y = pag.locateCenterOnScreen(f'{mscolab_path}manageusers_left_selectall.png',
+                                                                      region=(0, 0, 600, sc_height))
         pag.moveTo(selectall_left_x, selectall_left_y, duration=2)
         pag.click(selectall_left_x, selectall_left_y, duration=1)
         pag.sleep(2)
@@ -271,16 +272,13 @@ def automate_mscolab():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Select All\' leftside button not found on the screen.")
+        raise
 
     # Selecting and adding users for collaborating in the operation.
     if selectall_left_x is not None and selectall_left_y is not None:
-        row_gap = 30
-        pag.moveTo(selectall_left_x, selectall_left_y + 57, duration=1)
-        pag.click(selectall_left_x, selectall_left_y + 57, duration=1)
-        for _ in range(3):
-            pag.move(None, row_gap, duration=1)
-            pag.click(duration=1)
-            pag.sleep(2)
+        for count in range(4):
+            pag.moveTo(selectall_left_x, selectall_left_y + 57 * count, duration=1)
+            pag.click(selectall_left_x, selectall_left_y + 57 * count, duration=1)
 
         try:
             x, y = pag.locateCenterOnScreen(f'{mscolab_path}manageusers_add.png')
@@ -289,29 +287,31 @@ def automate_mscolab():
             pag.sleep(1)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException :\'Add (all the users)\' button not found on the screen.")
+            raise
     else:
         print('Not able to select users for adding')
 
     # Searching and changing user permissions and deleting users
     try:
-        selectall_right_x, selectall_right_y = pag.locateCenterOnScreen(f'{mscolab_path}manageusers_right_selectall.png'
-                                                                        )
+        selectall_right_x, selectall_right_y = pag.locateCenterOnScreen(f'{mscolab_path}manageusers_right_selectall.png',
+                                                                         region=(600, 0, 1200, sc_height))
         pag.moveTo(selectall_right_x - 170, selectall_right_y, duration=2)
         pag.click(selectall_right_x - 170, selectall_right_y, duration=2)
-        pag.typewrite('risehr', interval=0.3)
+        pag.typewrite('t', interval=0.3)
         pag.sleep(1)
         pag.hotkey(ctrl, 'a')
         pag.press('backspace')
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Select All (modifying permissions)\' button not found on the screen.")
+        raise
 
     # Selecting and modifying user roles
     if selectall_right_x is not None and selectall_right_y is not None:
         row_gap = 30
         for i in range(3):
             pag.moveTo(selectall_right_x, selectall_right_y + 56, duration=1)
-            pag.move(None, row_gap * (i + 1), duration=1)
+            # pag.move(selectall_right_x, row_gap * (i + 1), duration=1)
             pag.click(duration=1)
             pag.sleep(2)
             try:
@@ -328,6 +328,7 @@ def automate_mscolab():
                 pag.sleep(1)
             except (ImageNotFoundException, OSError, Exception):
                 print("\nException :\'Modify (access permissions)\' button not found on the screen.")
+                raise
 
         # Deleting the first user in the list
         pag.moveTo(selectall_right_x, selectall_right_y + 56, duration=1)
@@ -394,7 +395,7 @@ def automate_mscolab():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Send (while in chat window)\' button not found on the screen.")
-
+        raise
     # Searching messages in the chatbox using the search bar
     try:
         previous_x, previous_y = pag.locateCenterOnScreen(f'{mscolab_path}chat_previous.png')
@@ -411,7 +412,7 @@ def automate_mscolab():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Previous (while in chat window searching operation)\' button not found on the screen.")
-
+        raise
     # Closing the Chat Window
     pag.hotkey('command', 'w') if platform == 'darwin' else pag.hotkey(alt, 'f4')
     pag.sleep(2)
@@ -448,6 +449,7 @@ def automate_mscolab():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Add waypoint (in topview) button not found on the screen.")
+        raise
 
     # Closing the topview
     pag.hotkey('command', 'w') if platform == 'darwin' else pag.hotkey(alt, 'f4')
@@ -523,9 +525,10 @@ def automate_mscolab():
             pag.sleep(3)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : Name Version (in topview) button not found on the screen.")
+            raise
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Refresh Window (in version history window) button not found on the screen.")
-
+        raise
     # Closing the Version History Window
     pag.hotkey('command', 'w') if platform == 'darwin' else pag.hotkey(alt, 'f4')
     pag.sleep(4)
@@ -560,7 +563,7 @@ def automate_mscolab():
                 pag.sleep(3)
         except (ImageNotFoundException, OSError, Exception):
             print("\n Exception : Move Waypoint button could not be located on the screen")
-
+            raise
         # Closing topview after displacing waypoints
         pag.hotkey('command', 'w') if platform == 'darwin' else pag.hotkey(alt, 'f4')
         pag.press('left')
@@ -588,6 +591,7 @@ def automate_mscolab():
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : Overwrite with local waypoints (during saving to server) button"
                   " not found on the screen.")
+            raise
 
         # Unchecking work asynchronously
         pag.moveTo(work_async_x, work_async_y, duration=2)
@@ -595,6 +599,7 @@ def automate_mscolab():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Work Asynchronously (in mscolab) checkbox not found on the screen.")
+        raise
 
     # Activating a local flight track
     if open_operations_x is not None and open_operations_y is not None:
@@ -637,6 +642,7 @@ def automate_mscolab():
             pag.hotkey('ctrl', 'up')
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : Add waypoint (in topview again) button not found on the screen.")
+            raise
 
     # Activating the opened mscolab operation
     if open_operations_x is not None and open_operations_y is not None:
@@ -695,6 +701,7 @@ def automate_mscolab():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : John Doe (in mscolab window) Profile/Logo button not found on the screen.")
+        raise
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 
@@ -735,7 +742,7 @@ def automate_mscolab():
             pag.press('q')
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
-
+        raise
 
 def main():
     """
