@@ -16,11 +16,11 @@ Topics
    :maxdepth: 2
 
    about
+   authors
    components
    dependencies
    installation
    development
-   authors
    tutorial
    gallery/index
 
