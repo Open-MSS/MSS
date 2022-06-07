@@ -16,7 +16,7 @@ jobs:
     steps:
     - name: Trust My Directory
       run: git config --global --add safe.directory /__w/MSS/MSS
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Create gallery
       timeout-minutes: 25
