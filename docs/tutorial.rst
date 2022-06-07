@@ -1,5 +1,5 @@
-Help
-====
+Tutorial Videos
+===============
 
 Some videos about the Mission Support System Collaboration Platform
 
