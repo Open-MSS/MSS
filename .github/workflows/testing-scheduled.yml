@@ -1,4 +1,9 @@
 name: Pytest MSS (scheduled)
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+    branches:
+    - stable
 
 jobs:
   Test-MSS:
