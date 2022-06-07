@@ -72,8 +72,8 @@ jobs:
       if: ${{ success() && inputs.xdist == 'no' }}
       timeout-minutes: 25
       run: |
-        cd $GITHUB_WORKSPACE \
-        && source /opt/conda/bin/activate mssenv \
+        source /opt/conda/bin/activate mssenv \
+        && cd $GITHUB_WORKSPACE \
         && pytest -v --durations=20 --reverse --cov=mslib mslib \
         || (for i in {1..5} \
           ; do pytest mslib -v --durations=0 --reverse --last-failed --lfnf=none \
