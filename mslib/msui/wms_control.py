@@ -145,7 +145,7 @@ class MSSWebMapService(ogcwms.WebMapService):
         request['bgcolor'] = '0x' + bgcolor[1:7]
         request['exceptions'] = str(exceptions)
 
-        # ++(msui)
+        # ++(mss)
         if bbox is not None:
             request['bbox'] = ','.join([str(x) for x in bbox])
         if path_str is not None:
@@ -179,11 +179,11 @@ class MSSWebMapService(ogcwms.WebMapService):
         (scheme, netloc, path, params, query, fragment) = urllib.parse.urlparse(base_url)
         base_url = urllib.parse.urlunparse((scheme, netloc, path, params, "", fragment))
         request.update(dict(urllib.parse.parse_qsl(query)))
-        # --(msui)
+        # --(mss)
 
         data = urllib.parse.urlencode(request)
 
-        # ++(msui)
+        # ++(mss)
         base_url = base_url.replace("ogctest.iblsoft", "ogcie.iblsoft")  # IBL Bugfix!
         base_url = base_url.replace("ogcie/obs", "ogcie.iblsoft.com/obs")  # IBL Bugfix!
         base_url = base_url.replace(", staging1", "")  # geo.beopen.eu bugfix
@@ -192,9 +192,9 @@ class MSSWebMapService(ogcwms.WebMapService):
         if return_only_url:
             return complete_url
         logging.debug("Retrieving image from '%s'", complete_url)
-        # --(msui)
+        # --(mss)
 
-        # (msui) owslib.util.openURL checks for ServiceExceptions and raises a
+        # (mss) owslib.util.openURL checks for ServiceExceptions and raises a
         # owslib.wms.ServiceException. However, openURL only checks for mime
         # types text/xml and application/xml. application/vnd.ogc.se_xml is
         # not considered. For some reason, the check below doesn't work, though..
