@@ -1,0 +1,41 @@
+name: Pytest MSS (scheduled)
+
+jobs:
+  Test-MSS:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: openmss/testing-stable
+
+    steps:
+    - name: Trust My Directory
+      run: git config --global --add safe.directory /__w/MSS/MSS
+
+    - uses: actions/checkout@v3
+    - name: Reinstall dependencies if changed
+      run: |
+        cat localbuild/meta.yaml \
+        | sed -n '/^requirements:/,/^test:/p' \
+        | sed -e "s/.*- //" \
+        | sed -e "s/menuinst.*//" \
+        | sed -e "s/.*://" > reqs.txt \
+        && conda create -n new_mssenv mamba python\<3.10 \
+        && conda activate new_mssenv \
+        && mamba install -c conda-forge pyvirtualdisplay python\<3.10 -y \
+        && mamba install -c conda-forge --file reqs.txt -y \
+        && mamba install -c conda-forge --file requirements.d/development.txt -y  \
+        && conda create --name mssenv --copy --clone new_mssenv -y
+
+    - name: Run tests forward
+      timeout-minutes: 25
+      run: |
+        && cd $GITHUB_WORKSPACE \
+        && pytest -v --durations=20 mslib \
+        || (for i in {1..5} \
+          ; do pytest mslib -v --durations=0 --last-failed --lfnf=none \
+          && break \
+        ; done)
