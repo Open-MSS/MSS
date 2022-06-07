@@ -1,7 +1,6 @@
-name: test stable (scheduled)
+name: new dependency test (scheduled)
 
 on:
-  workflow_dispatch:
   schedule:
     - cron: '30 5 * * 1' 
 
