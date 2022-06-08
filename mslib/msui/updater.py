@@ -4,10 +4,10 @@
 
     This UI interface for the updater util, handles detection of an outdated mss version and automatic updating.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,7 +24,7 @@
 """
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from mslib.msui.mss_qt import ui_updater_dialog, Updater
+from mslib.utils.qt import ui_updater_dialog, Updater
 from mslib import __version__
 
 
@@ -51,7 +51,7 @@ class UpdaterUI(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
         self.updater.on_update_available.connect(self.notify_on_update)
         self.updater.on_update_finished.connect(lambda: self.btRestart.setEnabled(True))
         self.btUpdate.clicked.connect(lambda: (self.updater.update_mss(), self.btUpdate.setEnabled(False)))
-        self.btRestart.clicked.connect(self.updater._restart_mss)
+        self.btRestart.clicked.connect(self.updater._restart_msui)
         self.updater.run()
 
     def notify_on_update(self, old, new):

@@ -6,10 +6,10 @@
 
     tests for mscolab/utils
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ class Test_Utils(TestCase):
         assert result["message_type"] == MessageType.TEXT
 
     def test_os_fs_create_dir(self):
-        _fs = TempFS(identifier="mss")
+        _fs = TempFS(identifier="msui")
         _dir = _fs.getsyspath("")
         os_fs_create_dir(_dir)
         assert os.path.exists(_dir)

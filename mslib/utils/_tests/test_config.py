@@ -6,10 +6,10 @@
 
     This module provides pytest functions to test mslib.utils.config
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,11 +31,11 @@ import fs
 import pytest
 
 from mslib import utils
-from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib.utils.config import merge_dict
-from mslib._tests.constants import MSS_CONFIG_PATH
-from mslib._tests.utils import create_mss_settings_file
+from mslib._tests.constants import MSUI_CONFIG_PATH
+from mslib._tests.utils import create_msui_settings_file
 
 LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ LOGGER = logging.getLogger(__name__)
 class TestSettingsSave(object):
     """
     tests save_settings_qsettings and load_settings_qsettings from ./utils.py
-    # TODO make sure do a clean setup, not inside the 'mss' config file.
+    # TODO make sure do a clean setup, not inside the 'msui' config file.
     """
     tag = "test_automated"
 
@@ -72,14 +72,14 @@ class TestConfigLoader(object):
             'docs',
             'samples',
             'config',
-            'mss')
+            'msui')
 
     def teardown(self):
-        if fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            fs.open_fs(MSS_CONFIG_PATH).remove("mss_settings.json")
+        if fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            fs.open_fs(MSUI_CONFIG_PATH).remove("msui_settings.json")
         config_file = os.path.join(
             self.sample_path,
-            'empty_mss_settings.json.sample'
+            'empty_msui_settings.json.sample'
         )
         read_config_file(config_file)
 
@@ -112,7 +112,7 @@ class TestConfigLoader(object):
     def test_sample_config_file(self):
         config_file = os.path.join(
             self.sample_path,
-            'mss_settings.json.sample',
+            'msui_settings.json.sample',
         )
         read_config_file(path=config_file)
         data = config_loader(dataset="new_flighttrack_flightlevel")
@@ -124,16 +124,16 @@ class TestConfigLoader(object):
 
     def test_existing_empty_config_file(self):
         """
-        on a user defined empty mss_settings_json this test should return the default value for num_labels
+        on a user defined empty msui_settings_json this test should return the default value for num_labels
         """
-        create_mss_settings_file('{ }')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
-        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("mss_settings.json")
+        create_msui_settings_file('{ }')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
+        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("msui_settings.json")
         assert ":" not in file_content
         default_data = config_loader(default=True)
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
         assert data["num_labels"] == default_data["num_labels"]
@@ -146,16 +146,16 @@ class TestConfigLoader(object):
 
     def test_existing_config_file_different_parameters(self):
         """
-        on a user defined mss_settings_json without a defined num_labels this test should return its default value
+        on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
-        create_mss_settings_file('{"num_interpolation_points": 20 }')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
-        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("mss_settings.json")
+        create_msui_settings_file('{"num_interpolation_points": 20 }')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
+        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" not in file_content
         default_data = config_loader(default=True)
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
         assert data["num_labels"] == default_data["num_labels"]
@@ -171,15 +171,15 @@ class TestConfigLoader(object):
 
     def test_existing_config_file_defined_parameters(self):
         """
-        on a user defined mss_settings_json without a defined num_labels this test should return its default value
+        on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
-        create_mss_settings_file('{"num_interpolation_points": 201, "num_labels": 10 }')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
-        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("mss_settings.json")
+        create_msui_settings_file('{"num_interpolation_points": 201, "num_labels": 10 }')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
+        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" in file_content
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         num_labels = config_loader(dataset="num_labels")
         assert num_labels == 10
@@ -190,23 +190,23 @@ class TestConfigLoader(object):
 
     def test_existing_config_file_invalid_parameters(self):
         """
-        on a user defined mss_settings_json with duplicate and empty keys should raise FatalUserError
+        on a user defined msui_settings_json with duplicate and empty keys should raise FatalUserError
         """
-        create_mss_settings_file('{"num_interpolation_points": 201, "num_interpolation_points": 10 }')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
-        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("mss_settings.json")
+        create_msui_settings_file('{"num_interpolation_points": 201, "num_interpolation_points": 10 }')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
+        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("msui_settings.json")
         assert "num_interpolation_points" in file_content
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         with pytest.raises(utils.FatalUserError):
             read_config_file(path=config_file)
 
-        create_mss_settings_file('{"": 201, "num_labels": 10 }')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
-        with fs.open_fs(MSS_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("mss_settings.json")
+        create_msui_settings_file('{"": 201, "num_labels": 10 }')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
+        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
+            file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" in file_content
         with pytest.raises(utils.FatalUserError):
             read_config_file(path=config_file)
@@ -215,14 +215,14 @@ class TestConfigLoader(object):
         """
         Test to check if modify_config_file properly stores a key-value pair in an empty config file
         """
-        create_mss_settings_file('{ }')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
+        create_msui_settings_file('{ }')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
             "MSCOLAB_mailid": "something@something.org"
         }
         modify_config_file(data_to_save_in_config_file)
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
         assert data["MSCOLAB_mailid"] == "something@something.org"
@@ -231,14 +231,14 @@ class TestConfigLoader(object):
         """
         Test to check if modify_config_file properly modifies a key-value pair in the config file
         """
-        create_mss_settings_file('{"MSCOLAB_mailid": "anand@something.org"}')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
+        create_msui_settings_file('{"MSCOLAB_mailid": "anand@something.org"}')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
             "MSCOLAB_mailid": "sree@something.org"
         }
         modify_config_file(data_to_save_in_config_file)
-        config_file = fs.path.combine(MSS_CONFIG_PATH, "mss_settings.json")
+        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
         assert data["MSCOLAB_mailid"] == "sree@something.org"
@@ -247,9 +247,9 @@ class TestConfigLoader(object):
         """
         Test to check if modify_config_file raises a KeyError when a key is empty
         """
-        create_mss_settings_file('{ }')
-        if not fs.open_fs(MSS_CONFIG_PATH).exists("mss_settings.json"):
-            pytest.skip('undefined test mss_settings.json')
+        create_msui_settings_file('{ }')
+        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
+            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
             "": "sree",
             "MSCOLAB_mailid": "sree@something.org"

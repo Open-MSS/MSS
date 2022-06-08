@@ -6,10 +6,10 @@
 
     Control to load airports and airspaces into the top view.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pycountry
-from mslib.msui.mss_qt import ui_airdata_dockwidget as ui
+from mslib.utils.qt import ui_airdata_dockwidget as ui
 from PyQt5 import QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.airdata import get_available_airspaces, update_airspace, get_airports

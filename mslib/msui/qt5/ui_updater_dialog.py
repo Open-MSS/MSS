@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_updater_dialog.ui'
+# Form implementation generated from reading ui file 'ui_updater_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -60,6 +60,6 @@ class Ui_Updater(object):
         Updater.setWindowTitle(_translate("Updater", "Updater"))
         self.labelVersion.setText(_translate("Updater", "Newest Version: x.x.x"))
         self.btUpdate.setText(_translate("Updater", "Update"))
-        self.btRestart.setText(_translate("Updater", "Restart MSS"))
+        self.btRestart.setText(_translate("Updater", "Restart MSUI"))
         self.label.setText(_translate("Updater", "<html><head/><body><p><a href=\"https://mss.readthedocs.io/en/stable/installation.html#install\"><span style=\" text-decoration: underline; color:#0000ff;\">Manual update instructions</span></a></p></body></html>"))
         self.statusLabel.setText(_translate("Updater", "Nothing to do"))

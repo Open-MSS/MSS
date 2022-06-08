@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MSSMainWindow</class>
- <widget class="QMainWindow" name="MSSMainWindow">
+ <class>MSUIMainWindow</class>
+ <widget class="QMainWindow" name="MSUIMainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -279,7 +279,7 @@ Double click a operation to activate and view its description.</string>
      <x>0</x>
      <y>0</y>
      <width>738</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
@@ -527,7 +527,7 @@ Double click a operation to activate and view its description.</string>
     <string>Rename Operation</string>
    </property>
   </action>
-   <action name="actionLeaveOperation">
+  <action name="actionLeaveOperation">
    <property name="text">
     <string>&amp;Leave Operation</string>
    </property>
@@ -547,7 +547,7 @@ Double click a operation to activate and view its description.</string>
   <connection>
    <sender>actionQuit</sender>
    <signal>triggered()</signal>
-   <receiver>MSSMainWindow</receiver>
+   <receiver>MSUIMainWindow</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">

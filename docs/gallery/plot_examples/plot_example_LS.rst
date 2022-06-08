@@ -1,7 +1,7 @@
 Creating your own Linear-View plot
 ----------------------------------
 
-Linear-View plots are very simple, and thus simple to create. If you wish to add your own quantity to a Linear-View all you need to do is add the following to your mss_wms_settings.py
+Linear-View plots are very simple, and thus simple to create. If you wish to add your own quantity to a Linear-View all you need to do is add the following to your mswms_settings.py
 
 .. code-block:: python
 

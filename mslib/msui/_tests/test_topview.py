@@ -6,10 +6,10 @@
 
     This module provides pytest functions to tests msui.topview
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ PORTS = list(range(28000, 28500))
 class Test_MSS_TV_MapAppearanceDialog(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSS_TV_MapAppearanceDialog()
+        self.window = tv.MSUI_TV_MapAppearanceDialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -74,7 +74,7 @@ class Test_MSSTopViewWindow(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSTopViewWindow(model=waypoints_model)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -310,7 +310,7 @@ class Test_TopViewWMS(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSTopViewWindow(model=waypoints_model)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)

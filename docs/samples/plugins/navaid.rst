@@ -27,7 +27,7 @@ waypoint is more than 500 nm.
 Installation
 ~~~~~~~~~~~~
 
-1. Copy :download:`navaid.py <samples/plugins/navaid.py>` to a PYTHONPATH directory e.g. .config/mss
+1. Copy :download:`navaid.py </samples/plugins/navaid.py>` to a PYTHONPATH directory e.g. .config/mss
 
 1. Save the NAVAID waypoint from https://adds-faa.opendata.arcgis.com/search?collection=Dataset select "Pending NAVAID System" and Download as CSV to your local directory `.config/mss/plugins/NAVAID_System.csv`
 
