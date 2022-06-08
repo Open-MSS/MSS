@@ -978,8 +978,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
 
 def main():
-    warnings.warn("In the next major version we will rename the msui command to msui"
-                  " and the module from msui to msui", DeprecationWarning)
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
     except KeyError:
