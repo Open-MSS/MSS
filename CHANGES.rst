@@ -1,6 +1,53 @@
 Changelog
 =========
 
+Version 7.0.0 (preliminary)
+~~~~~~~~~~~~~
+
+This is a refactoring release for consistent nameings.
+Over the last six years MSS has grown and we created the Open-MSS organization with the move to github in 2021.
+In this we have many repositories that support our work on the Mission Support System.
+We use the term MSS for the whole thing today.
+Therefore, we would like to give more appropriate names to the individual components.
+
+HINT:
+~~~~~
+
+We changed:
+- command mss was renamed to msui
+- constants.MSS_CONFIG_PATH to constants.MSUI_CONFIG_PATH
+- constants.MSS_SETTINGS to constants.MSUI_SETTINGS
+- class MissionSupportSystemDefaultConfig to class MSUIDefaultConfig
+- class MSS_AboutDialog to class class MSUI_AboutDialog
+- class MSS_LV_Options_Dialog to class MSUI_LV_Options_Dialog
+- class MSS_PerformanceSettingsWidget to class MSUI_PerformanceSettingsWidget
+- class MSS_ShortcutsDialog to class MSUI_ShortcutsDialog
+- class MSS_SV_OptionsDialog to class MSUI_SV_OptionsDialog
+- class MSS_TV_MapAppearanceDialog to class MSUI_TV_MapAppearanceDialog
+- class MSSLinearViewWindow to class MSUILinearViewWindow
+- class MSSMainWindow to class MSUIMainWindow
+- class MSSMplViewWindow to class MSUIMplViewWindow
+- class MSSMscolab to class MSUIMscolab
+- class MSSSideViewWindow to class MSUISideViewWindow
+- class MSSTableViewWindow to class MSUITableViewWindow
+- class MSSTopViewWindow to class MSUITopViewWindow
+- class MSSWebMapService to class MSUIWebMapService
+
+Configurations:
+- Env var MSS_CONFIG_PATH to MSUI_CONFIG_PATH
+- directory for msui_settings.json from ~/.config/mss to ~/.config/msui
+- mss_settings.json to msui_settings.json
+- mss_wms_settings.py to mswms_settings.py
+- mss_wms_auth.py to mswms_auth.py
+- mss_mscolab_auth.py to mscolab_auth.py
+
+We moved:
+- mslib.msui.mss_qt to mslib.utils.qt
+- mslib.msui.mss_pyui to mslib.msui.msui
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/68?closed=1
+
 Version 6.2.1
 ~~~~~~~~~~~~~
 
@@ -197,7 +244,7 @@ HINT:
 ~~~~~
 
 For using the 1-D samples along the flight path you have to add a configuration to your
-mswms_settings.py. Similiar as to the other layers add:
+mss_wms_settings.py. Similiar as to the other layers add:
 
 .. code-block:: python
 
@@ -955,7 +1002,7 @@ Version 1.2.1
 -------------
 
 Bug Fixes:
- - server throws useful messages if mswms_settings.py is missing necessary variables, #58
+ - server throws useful messages if mss_wms_settings.py is missing necessary variables, #58
 
 Other Changes:
  - most version pinning removed, #59. Thanks to ocefpaf (conda-forge-member)
@@ -969,7 +1016,7 @@ New Features:
  - wsgi and standalone server refactored and merged into one application,
    mswms is the new name of the standalone server #30
  - server configuration files simplified, #39
- - server templates got more variables defined in mswms_settings.py, #44, #45
+ - server templates got more variables defined in mss_wms_settings.py, #44, #45
  - geopy distance calculation dependency replaced by pyproj, #34
  - Simplification for adding or removing CLaMS parameters, #12
 
