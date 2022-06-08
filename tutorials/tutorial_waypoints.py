@@ -145,7 +145,8 @@ def automate_waypoints():
     # Changing map to Global
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            x, y = pag.locateCenterOnScreen('pictures/europe(cyl).PNG')
+            print(pag.position())
+            x, y = pag.locateCenterOnScreen('pictures/europe_cyl.png')
             pag.click(x, y, interval=2)
         elif platform == 'win32':
             x, y = pag.locateCenterOnScreen('pictures/europe(cyl)win.PNG')
