@@ -6,10 +6,10 @@
 
     This module is used to test mscolab-operation related gui.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +36,7 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import (mscolab_start_server, mscolab_register_and_login, mscolab_create_operation,
                                 mscolab_delete_all_operations, mscolab_delete_user)
 from mslib.msui import mscolab
-import mslib.msui.mss_pyui as mss_pyui
+from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 
 
@@ -51,7 +51,7 @@ class Test_Mscolab_Merge_Waypoints(object):
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.emailid = 'merge@alpha.org'
 
     def teardown(self):

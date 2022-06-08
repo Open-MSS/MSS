@@ -6,11 +6,11 @@
 
     Side view module of the msui
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,9 +31,9 @@ import functools
 
 from PyQt5 import QtGui, QtWidgets
 
-from mslib.msui.mss_qt import ui_sideview_window as ui
-from mslib.msui.mss_qt import ui_sideview_options as ui_opt
-from mslib.msui.viewwindows import MSSMplViewWindow
+from mslib.utils.qt import ui_sideview_window as ui
+from mslib.utils.qt import ui_sideview_options as ui_opt
+from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.utils import thermolib
@@ -44,7 +44,7 @@ from mslib.utils.units import units, convert_to
 WMS = 0
 
 
-class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
+class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     """
     Dialog to specify sideview options. User interface is specified
     in "ui_sideview_options.py".
@@ -56,7 +56,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing sideview options.
         """
-        super(MSS_SV_OptionsDialog, self).__init__(parent)
+        super(MSUI_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
 
         default_settings_dict = {
@@ -266,7 +266,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.setBotTopLimits(self.cbVerticalAxis.currentText())
 
 
-class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
+class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     """
     PyQt window implementing a matplotlib canvas as an interactive
     side view flight track editor.
@@ -277,7 +277,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSSSideViewWindow, self).__init__(parent, model, _id)
+        super(MSUISideViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -331,7 +331,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super(MSSSideViewWindow, self).setFlightTrackModel(model)
+        super(MSUISideViewWindow, self).setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
@@ -340,7 +340,7 @@ class MSSSideViewWindow(MSSMplViewWindow, ui.Ui_SideViewWindow):
         Slot to open a dialog that lets the user specifiy sideview options.
         """
         settings = self.getView().get_settings()
-        dlg = MSS_SV_OptionsDialog(parent=self, settings_dict=settings)
+        dlg = MSUI_SV_OptionsDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()

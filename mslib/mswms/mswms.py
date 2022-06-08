@@ -9,7 +9,7 @@
     python mswms.py.
 
     :copyright: Copyright 2016 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,10 +30,10 @@ import logging
 import sys
 
 from mslib import __version__
-from mslib.mswms.wms import mss_wms_settings, server
+from mslib.mswms.wms import mswms_settings, server
 from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging
-from mslib.msui.mss_qt import Updater, Worker
+from mslib.utils.qt import Updater, Worker
 
 
 def main():
@@ -80,7 +80,7 @@ def main():
 
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System (mss)\n")
+        print("\n            Mission Support System (MSS)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
@@ -110,7 +110,7 @@ def main():
                                                                       " the --update argument to update the server."))
     updater.run()
 
-    logging.info("Configuration File: '%s'", mss_wms_settings.__file__)
+    logging.info("Configuration File: '%s'", mswms_settings.__file__)
 
     application.run(args.host, args.port)
 

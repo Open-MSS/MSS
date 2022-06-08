@@ -16,13 +16,13 @@ Topics
    :maxdepth: 2
 
    about
+   authors
    components
-   gallery/index
    dependencies
    installation
    development
-   authors
-   help
+   tutorial
+   gallery/index
 
 
 Indices and tables

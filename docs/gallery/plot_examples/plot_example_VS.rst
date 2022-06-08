@@ -73,8 +73,8 @@ and play around with it however you like.
 
 If you wish to include this into your WMS server
 
-1. Put the file into your mss_wms_settings.py directory, e.g. **~/mss**
-2. Assuming you didn't change the file or class name, append the following lines into your mss_wms_settings.py
+1. Put the file into your mswms_settings.py directory, e.g. **~/mss**
+2. Assuming you didn't change the file or class name, append the following lines into your mswms_settings.py
 
 .. code-block:: python
 

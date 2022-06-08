@@ -1,14 +1,14 @@
 """
-    mss.tutorials.tutorial_hexagoncontrol.py
+    msui.tutorials.tutorial_hexagoncontrol.py
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to create a hexagon flightrack with the waypoints.
     Placing a centre waypoint, how we can draw a perfect hexagon flight path around it with variable radius of
     hexagon and variable angle of first waypoint of the hexagon.
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ from sys import platform
 from pyscreeze import ImageNotFoundException
 
 from tutorials import screenrecorder as sr
-from mslib.msui import mss_pyui
+from mslib.msui import msui
 
 
 def initial_ops():
@@ -62,11 +62,11 @@ def call_recorder():
     rec.stop_capture()
 
 
-def call_mss():
+def call_msui():
     """
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
-    mss_pyui.main()
+    msui.main()
 
 
 def automate_hexagoncontrol():
@@ -364,7 +364,7 @@ def main():
     This function runs the above functions as different processes at the same time and can be
     controlled from here. (This is the main process.)
     """
-    p1 = multiprocessing.Process(target=call_mss)
+    p1 = multiprocessing.Process(target=call_msui)
     p2 = multiprocessing.Process(target=automate_hexagoncontrol)
     p3 = multiprocessing.Process(target=call_recorder)
 

@@ -6,10 +6,10 @@
 
     This module is used to test the functionality of mpl_map.py
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

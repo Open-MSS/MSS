@@ -1,13 +1,13 @@
-mss - User Interface
-======================================
+msui   (Mission Support User Interface)
+=======================================
 
-The executable for the user interface application is "**mss**".
+The executable for the user interface application is "**msui**".
 A short description of how to start the program is given by the --help option.
 The program should open the main window of the user interface, from which you can
 open further windows, including top view, side view and so on.
 
 Configuration for the user interface is located in
-"mss_settings.json". In this file, you can specify, for instance, the
+"msui_settings.json". In this file, you can specify, for instance, the
 default WMS URLs for the WMS client, the size of the local image cache
 (the MSUI caches retrieved WMS images to accelerate repeated
 retrievals), or the predefined locations that the user can select in
@@ -17,7 +17,7 @@ A few options influencing the appearance of the displayed plots and
 flight tracks (colours etc.) can be set directly in the user
 interface (top view and side view).
 
-.. _mss-configuration:
+.. _msui-configuration:
 
 Configuration of mss
 ++++++++++++++++++++
@@ -70,17 +70,17 @@ Mission Support User Interface (mss). Among others, define
  - the lists of predefined web service URLs
  - predefined waypoints for the table view
 
-If you don't have a mss_settings.json then default configuration is in place.
+If you don't have a msui_settings.json then default configuration is in place.
 
-Store this mss_settings.json in a path, e.g. "$HOME/.config/mss"
+Store this msui_settings.json in a path, e.g. "$HOME/.config/mss"
 
 The file could be loaded by the File Configuration dialog or
-by the environment variable MSS_SETTINGS pointing to your mss_settings.json.
+by the environment variable msui_settings pointing to your msui_settings.json.
 
-**/$HOME/.config/mss/mss_settings.json**
+**/$HOME/.config/mss/msui_settings.json**
 
 
-.. literalinclude:: samples/config/mss/mss_settings.json.sample
+.. literalinclude:: samples/config/msui/msui_settings.json.sample
 
 
 MSUI Flight track import/export plugins
@@ -107,9 +107,9 @@ Web Proxy
 ~~~~~~~~~
 
 If you are in an area with a very low bandwidth you may consider to use a squid web proxy
-and add those lines in your mss_settings pointing to the proxy server.
+and add those lines in your msui_settings pointing to the proxy server.
 
-.. literalinclude:: samples/config/mss/snippets/proxies.sample
+.. literalinclude:: samples/config/msui/snippets/proxies.sample
 
 
 Caching
@@ -118,7 +118,7 @@ Caching
 For changing the default cache directory and behaviour to a named directory
 you can use these parameters. If you use shared directories you may have to solve access rights.
 
-.. literalinclude:: samples/config/mss/snippets/caching.sample
+.. literalinclude:: samples/config/msui/snippets/caching.sample
 
 
 Docking Widgets Configurations
@@ -134,7 +134,7 @@ aircraft performance. Such a file may be loaded using the 'performance settings'
 in Table View. The aircraft performance is specified using tables given in the JSON format.
 A basic configuration looks like the following file:
 
-.. literalinclude:: samples/config/mss/performance_simple.json
+.. literalinclude:: samples/config/msui/performance_simple.json.sample
 
 This example file assumes a constant speed of 400 nm/h and a constant fuel consumption of
 2900 lbs/h irrespective of flight level changes. The aircraft weight and available fuel are

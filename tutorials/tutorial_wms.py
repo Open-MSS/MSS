@@ -1,14 +1,14 @@
 """
-    mss.tutorials.tutorial_wms
+    msui.tutorials.tutorial_wms
     ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to use the web map service section of Mission
     Support System and plan flighttracks accordingly.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ import sys
 from sys import platform
 from pyscreeze import ImageNotFoundException
 from tutorials import screenrecorder as sr
-from mslib.msui import mss_pyui
+from mslib.msui import msui
 
 
 def initial_ops():
@@ -58,11 +58,11 @@ def call_recorder():
     sr.main()
 
 
-def call_mss():
+def call_msui():
     """
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
-    mss_pyui.main()
+    msui.main()
 
 
 def automate_waypoints():
@@ -88,6 +88,7 @@ def automate_waypoints():
             pag.hotkey('win', 'up')
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
+        raise
     pag.sleep(2)
     pag.hotkey('ctrl', 'h')
     pag.sleep(1)
@@ -106,6 +107,7 @@ def automate_waypoints():
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Server\\Layers\' button/option not found on the screen.")
+        raise
 
     # Entering wms URL
     try:
@@ -115,6 +117,7 @@ def automate_waypoints():
         pag.write('http://open-mss.org/', interval=0.25)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'WMS URL\' editbox button/option not found on the screen.")
+        raise
 
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}get_capabilities.png')
@@ -122,6 +125,7 @@ def automate_waypoints():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Get capabilities\' button/option not found on the screen.")
+        raise
 
     # Selecting some layers
     if platform == 'win32':
@@ -130,24 +134,13 @@ def automate_waypoints():
         gap = 18
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}divergence_layer.png')
+        x, y = pag.locateCenterOnScreen(f'{dir_path}equivalent_layer.png')
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
         pag.sleep(1)
-        pag.move(None, gap, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
-        pag.move(None, gap * 2, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
-        pag.move(None, gap, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
-        pag.move(None, -gap * 4, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence Layer\' option not found on the screen.")
+        raise
 
     # Filter layer
     try:
@@ -155,12 +148,11 @@ def automate_waypoints():
         pag.click(x + 150, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Layer filter editbox\' button/option not found on the screen.")
+        raise
+
     if x is not None and y is not None:
         pag.write('temperature', interval=0.25)
         pag.moveTo(temp1, temp2, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
-        pag.move(None, gap, duration=1)
         pag.click(interval=2)
         pag.sleep(1)
 
@@ -177,11 +169,12 @@ def automate_waypoints():
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
         pag.moveTo(x, y, duration=2)
-        pag.move(-48, None)
+        # pag.move(-48, None)
         pag.click()
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
+        raise
 
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}checkbox_unselected_divergence.png')
@@ -191,26 +184,20 @@ def automate_waypoints():
             pag.moveTo(x - 228, y, duration=2)
         pag.click(interval=1)
         pag.sleep(2)
-        pag.move(None, gap * 4, duration=1)
-        pag.click(interval=1)
-        pag.sleep(2)
-        pag.move(None, -gap * 4, duration=1)
-        pag.click(interval=1)
-        pag.sleep(2)
-        pag.move(None, gap * 4, duration=1)
-        pag.click(interval=1)
-        pag.sleep(2)
+
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer multilayering checkbox\' option not found on the screen.")
+        raise
 
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
         pag.moveTo(x, y, duration=2)
-        pag.move(-48, None)
+        # pag.move(-48, None)
         pag.click()
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
+        raise
 
     # Starring the layers
     try:
@@ -221,14 +208,10 @@ def automate_waypoints():
             pag.moveTo(x - 231, y, duration=2)
         pag.click(interval=1)
         pag.sleep(1)
-        pag.move(None, gap * 4, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
-        pag.move(None, -gap, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
+
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Divergence layer star\' button/option not found on the screen.")
+        raise
 
     # Filtering starred layers.
     try:
@@ -236,17 +219,10 @@ def automate_waypoints():
         pag.click(x, y, interval=2)
         pag.click(temp1, temp2, duration=1)
         pag.sleep(1)
-        pag.move(None, gap, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
-        pag.move(None, gap, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
-        pag.moveTo(x - 20, y, duration=1)
-        pag.click(interval=1)
-        pag.sleep(1)
+
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Starred filter\' button/option not found on the screen.")
+        raise
 
     # Setting different levels and valid time
     if temp1 is not None and temp2 is not None:
@@ -254,19 +230,11 @@ def automate_waypoints():
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}level.png')
         pag.click(x + 200, y, interval=2)
-        pag.move(None, 20, duration=1)
-        pag.click(interval=1)
-        pag.sleep(3)
-        pag.click(x + 200, y, interval=1)
-        pag.move(None, 100, duration=1)
-        pag.click(interval=1)
-        pag.sleep(3)
-        pag.click(x + 200, y, interval=1)
-        pag.move(None, 140, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Pressure level\' button/option not found on the screen.")
+        raise
 
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}initialization.png')
@@ -276,20 +244,17 @@ def automate_waypoints():
         pag.click(x + 200, y, interval=1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Initialization\' button/option not found on the screen.")
+        raise
 
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}valid.png')
         validx, validy = x, y
         pag.click(x + 200, y, interval=2)
-        pag.move(None, 20, duration=1)
-        pag.click(interval=1)
-        pag.sleep(3)
-        pag.click(x + 200, y, interval=1)
-        pag.move(None, 80, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Valid till\' button/option not found on the screen.")
+        raise
 
     # Time gap for initialization and valid
     if initx is not None and inity is not None and validx is not None and validy is not None:
@@ -323,6 +288,8 @@ def automate_waypoints():
         pag.click(x - 53, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\' auto update checkbox\' button/option not found on the screen.")
+        raise
+
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2, interval=1)
         try:
@@ -337,6 +304,7 @@ def automate_waypoints():
             pag.sleep(2)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException :\' retrieve\' button/option not found on the screen.")
+            raise
 
     # Using and not using Cache
     try:
@@ -351,6 +319,7 @@ def automate_waypoints():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Use Cache checkbox\' button/option not found on the screen.")
+        raise
 
     # Clearing cache. The layers load slower
     try:
@@ -368,6 +337,7 @@ def automate_waypoints():
         pag.sleep(4)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Clear cache\' button/option not found on the screen.")
+        raise
 
     # qrent layer
     if temp1 is not None and temp2 is not None:
@@ -385,6 +355,7 @@ def automate_waypoints():
             pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Transparent Checkbox\' button/option not found on the screen.")
+        raise
 
     # Removing a Layer from the map
     if temp1 is not None and temp2 is not None:
@@ -397,7 +368,7 @@ def automate_waypoints():
             pag.sleep(1)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException :\'Transparent Checkbox\' button/option not found on the screen.")
-
+            raise
     # Deleting All layers
     try:
         x, y = pag.locateCenterOnScreen(f'{dir_path}delete_layers.png')
@@ -411,6 +382,7 @@ def automate_waypoints():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Deleting all layers bin\' button/option not found on the screen.")
+        raise
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 
@@ -454,15 +426,15 @@ def automate_waypoints():
             pag.press('q')
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
-    # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
-
+        # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
+        raise
 
 def main():
     """
     This function runs the above functions as different processes at the same time and can be
     controlled from here. (This is the main process.)
     """
-    p1 = multiprocessing.Process(target=call_mss)
+    p1 = multiprocessing.Process(target=call_msui)
     p2 = multiprocessing.Process(target=automate_waypoints)
     p3 = multiprocessing.Process(target=call_recorder)
 

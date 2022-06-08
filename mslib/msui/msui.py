@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-    mslib.msui.mss_pyui
-    ~~~~~~~~~~~~~~~~~~~
+    mslib.msui.msui
+    ~~~~~~~~~~~~~~~
 
     Mission Support System Python/Qt User Interface
     Main window of the user interface application. Manages view and tool windows
     (the user can open multiple windows) and provides functionality to open, save,
     and switch between flight tracks.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,12 +42,11 @@ import requests
 import shutil
 import sys
 import fs
-import warnings
 
 from mslib import __version__
-from mslib.msui.mss_qt import ui_mainwindow as ui
-from mslib.msui.mss_qt import ui_about_dialog as ui_ab
-from mslib.msui.mss_qt import ui_shortcuts as ui_sh
+from mslib.utils.qt import ui_mainwindow as ui
+from mslib.utils.qt import ui_about_dialog as ui_ab
+from mslib.utils.qt import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview, topview, sideview, linearview
 from mslib.msui import editor
@@ -58,12 +57,12 @@ from mslib.msui.updater import UpdaterUI
 from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.msui.mss_qt import get_open_filename, get_save_filename, Worker, Updater
+from mslib.utils.qt import get_open_filename, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
-sys.path.append(constants.MSS_CONFIG_PATH)
+sys.path.append(constants.MSUI_CONFIG_PATH)
 
 
 def clean_string(string):
@@ -137,12 +136,12 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         self.flighttrack_model = flighttrack_model
 
 
-class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
+class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
     def __init__(self):
-        super(MSS_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
+        super(MSUI_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
         self.current_shortcuts = None
         self.treeWidget.itemDoubleClicked.connect(self.double_clicked)
@@ -312,7 +311,7 @@ class MSS_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         self.filterRemoveAction.setVisible(len(text) > 0)
 
 
-class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
+class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
     """Dialog showing information about MSUI. Most of the displayed text is
        defined in the QtDesigner file.
     """
@@ -322,7 +321,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         Arguments:
         parent -- Qt widget that is parent to this widget.
         """
-        super(MSS_AboutDialog, self).__init__(parent)
+        super(MSUI_AboutDialog, self).__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText(f"Version: {__version__}")
         self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
@@ -331,7 +330,7 @@ class MSS_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         self.lblPython.setPixmap(blub)
 
 
-class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
+class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     """MSUI new main window class. Provides user interface elements for managing
        flight tracks, views and MSColab functionalities.
     """
@@ -339,14 +338,14 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
 
     def __init__(self, mscolab_data_dir=None, *args):
-        super(MSSMainWindow, self).__init__(*args)
+        super(MSUIMainWindow, self).__init__(*args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
         # instead of the default Icon of python/pythonw
         try:
             import ctypes
-            myappid = f"mss.mss_pyui.{__version__}"  # arbitrary string
+            myappid = f"msui.msui.{__version__}"  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
@@ -405,6 +404,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         picker_default = config_loader(dataset="filepicker_default")
         self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Import")
         self.add_plugin_submenu("FTML", "ftml", None, picker_default, plugin_type="Export")
+        self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
+        self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
         self.add_plugins()
 
         preload_urls = config_loader(dataset="WMS_preload")
@@ -414,7 +415,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
-        self.mscolab = mscolab.MSSMscolab(parent=self, data_dir=mscolab_data_dir)
+        self.mscolab = mscolab.MSUIMscolab(parent=self, data_dir=mscolab_data_dir)
 
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
@@ -425,7 +426,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
         self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
-        # Don't start the updater during a test run of mss_pyui
+        # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
@@ -456,8 +457,8 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
                 if pdlg.wasCanceled():
                     break
 
-                wms = wms_control.MSSWebMapService(request.url, version=None,
-                                                   username=username, password=password)
+                wms = wms_control.MSUIWebMapService(request.url, version=None,
+                                                    username=username, password=password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)
             except Exception as ex:
@@ -484,8 +485,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
     def add_plugins(self):
         picker_default = config_loader(dataset="filepicker_default")
-        self.add_plugin_submenu("CSV", "csv", load_from_csv, picker_default, plugin_type="Import")
-        self.add_plugin_submenu("CSV", "csv", save_to_csv, picker_default, plugin_type="Export")
         self.import_plugins = {}
         self.export_plugins = {}
         self.add_import_plugins(picker_default)
@@ -505,7 +504,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
             raise ValueError(f"'{action_name}' has already been set!")
         action = QtWidgets.QAction(self)
         action.setObjectName(action_name)
-        action.setText(QtCore.QCoreApplication.translate("MSSMainWindow", name, None))
+        action.setText(QtCore.QCoreApplication.translate("MSUIMainWindow", name, None))
         action.triggered.connect(functools.partial(handler, extension, function, pickertype))
         menu.addAction(action)
         setattr(self, action_name, action)
@@ -810,23 +809,23 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSSTopViewWindow(model=model)
+            view_window = topview.MSUITopViewWindow(model=model)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-            view_window = sideview.MSSSideViewWindow(model=model)
+            view_window = sideview.MSUISideViewWindow(model=model)
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
         elif _type == "tableview":
             # Table view.
-            view_window = tableview.MSSTableViewWindow(model=model)
+            view_window = tableview.MSUITableViewWindow(model=model)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSSLinearViewWindow(model=model)
+            view_window = linearview.MSUILinearViewWindow(model=model)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])
@@ -905,7 +904,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
     def show_about_dialog(self):
         """Show the 'About MSUI' dialog to the user.
         """
-        dlg = MSS_AboutDialog(parent=self)
+        dlg = MSUI_AboutDialog(parent=self)
         dlg.setModal(True)
         dlg.exec_()
 
@@ -915,13 +914,13 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if QtWidgets.QApplication.activeWindow() == self.shortcuts_dlg:
             return
 
-        self.shortcuts_dlg = MSS_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
+        self.shortcuts_dlg = MSUI_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
 
         # In case the dialog gets deleted by QT, recreate it
         try:
             self.shortcuts_dlg.setModal(True)
         except RuntimeError:
-            self.shortcuts_dlg = MSS_ShortcutsDialog()
+            self.shortcuts_dlg = MSUI_ShortcutsDialog()
 
         self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
         self.shortcuts_dlg.fill_list()
@@ -937,7 +936,7 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
         if config_loader() != config_loader(default=True):
             return ("Status : System Configuration")
         else:
-            return (f"Status : User Configuration '{constants.MSS_SETTINGS}' loaded")
+            return (f"Status : User Configuration '{constants.MSUI_SETTINGS}' loaded")
 
     def closeEvent(self, event):
         """Ask user if he/she wants to close the application. If yes, also
@@ -978,8 +977,6 @@ class MSSMainWindow(QtWidgets.QMainWindow, ui.Ui_MSSMainWindow):
 
 
 def main():
-    warnings.warn("In the next major version we will rename the mss command to msui"
-                  " and the module from mss_pyui to msui", DeprecationWarning)
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
     except KeyError:
@@ -993,16 +990,16 @@ def main():
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
-                        default=os.path.join(constants.MSS_CONFIG_PATH, "mss_pyui.log"))
-    parser.add_argument("-m", "--menu", help="adds mss to menu", action="store_true", default=False)
-    parser.add_argument("-d", "--deinstall", help="removes mss from menu", action="store_true", default=False)
+                        default=os.path.join(constants.MSUI_CONFIG_PATH, "msui.log"))
+    parser.add_argument("-m", "--menu", help="adds msui to menu", action="store_true", default=False)
+    parser.add_argument("-d", "--deinstall", help="removes msui from menu", action="store_true", default=False)
     parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     args = parser.parse_args()
 
     if args.version:
         print("***********************************************************************")
-        print("\n            Mission Support System (mss)\n")
+        print("\n            Mission Support System (MSS)\n")
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
@@ -1021,7 +1018,7 @@ def main():
     setup_logging(args)
 
     if args.menu:
-        # Experimental feature to get mss into application menu
+        # Experimental feature to get msui into application menu
         if platform.system() == "Linux":
             icon_size = '48x48'
             src_icon_path = icons(icon_size)
@@ -1038,7 +1035,7 @@ def main():
             if prefix:
                 prefix = f"({prefix})"
             desktop = desktop.format(prefix,
-                                     os.path.join(sys.prefix, "bin", "mss"),
+                                     os.path.join(sys.prefix, "bin", "msui"),
                                      icon_destination)
             with open(application_destination, 'w') as f:
                 f.write(desktop)
@@ -1062,7 +1059,7 @@ def main():
     try:
         read_config_file()
     except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
-        message = f'\n\nFix the setup of your "MSS_SETTINGS" configuration.\n{ex}'
+        message = f'\n\nFix the setup of your "MSUI_SETTINGS" configuration.\n{ex}'
         logging.error(message)
         sys.exit()
 
@@ -1083,9 +1080,9 @@ def main():
     application.notify = notify
 
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
-    application.setApplicationDisplayName("MSS")
+    application.setApplicationDisplayName("MSUI")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
-    mainwindow = MSSMainWindow()
+    mainwindow = MSUIMainWindow()
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()

@@ -13,7 +13,7 @@ build:
   number: 1000
   script: "{{ PYTHON }} -m pip install . --no-deps -vv"  # [not win]
   entry_points:
-    - mss = mslib.msui.mss_pyui:main
+    - msui = mslib.msui.msui:main
     - mswms = mslib.mswms.mswms:main
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
@@ -38,9 +38,9 @@ requirements:
     - hdf4
     - pillow
     - pytz
-    - pyqt >=5, <6
+    - pyqt >=5, <5.13
     - pygeoif
-    - qt >=5.10, <6
+    - qt >=5.10, <5.13
     - requests
     - scipy
     - skyfield >=1.12
@@ -85,7 +85,7 @@ test:
   commands:
     - mswms -h
     - mswms_demodata -h
-    - mss -h
+    - msui -h
     - mscolab -h
 
 about:

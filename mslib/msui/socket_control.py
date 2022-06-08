@@ -6,10 +6,10 @@
 
     client socket connection handler
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import json
 import logging
 
 from PyQt5 import QtCore
-from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.verify_user_token import verify_user_token
 
 

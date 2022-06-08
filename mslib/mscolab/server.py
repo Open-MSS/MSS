@@ -6,10 +6,10 @@
 
     Server for mscolab module
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -76,11 +76,11 @@ APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
 auth = HTTPBasicAuth()
 
 try:
-    from mss_mscolab_auth import mss_mscolab_auth
+    from mscolab_auth import mscolab_auth
 except ImportError as ex:
-    logging.warning("Couldn't import mss_mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
+    logging.warning("Couldn't import mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
 
-    class mss_mscolab_auth(object):
+    class mscolab_auth(object):
         allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
@@ -92,7 +92,7 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
     import hashlib
 
     def authfunc(username, password):
-        for u, p in mss_mscolab_auth.allowed_users:
+        for u, p in mscolab_auth.allowed_users:
             if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
                 return True
         return False
