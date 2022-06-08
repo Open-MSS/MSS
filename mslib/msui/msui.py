@@ -42,7 +42,6 @@ import requests
 import shutil
 import sys
 import fs
-import warnings
 
 from mslib import __version__
 from mslib.utils.qt import ui_mainwindow as ui
