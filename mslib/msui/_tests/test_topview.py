@@ -44,7 +44,7 @@ PORTS = list(range(28000, 28500))
 class Test_MSS_TV_MapAppearanceDialog(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSS_TV_MapAppearanceDialog()
+        self.window = tv.MSUI_TV_MapAppearanceDialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)

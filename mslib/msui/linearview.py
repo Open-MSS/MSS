@@ -37,7 +37,7 @@ from mslib.msui.icons import icons
 WMS = 0
 
 
-class MSS_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog):
+class MSUI_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog):
     """
     Dialog class to specify Linear View Options.
     """
@@ -48,7 +48,7 @@ class MSS_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing sideview options.
         """
-        super(MSS_LV_Options_Dialog, self).__init__(parent)
+        super(MSUI_LV_Options_Dialog, self).__init__(parent)
         self.setupUi(self)
 
         default_settings_dict = {
@@ -149,7 +149,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
     def set_options(self):
         settings = self.getView().get_settings()
-        dlg = MSS_LV_Options_Dialog(parent=self, settings_dict=settings)
+        dlg = MSUI_LV_Options_Dialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()

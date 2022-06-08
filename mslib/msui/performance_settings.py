@@ -45,7 +45,7 @@ DEFAULT_PERFORMANCE = {
 }
 
 
-class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockWidget):
+class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockWidget):
     """
     This class implements setting the performance settings as a dockable widget.
     """
@@ -57,7 +57,7 @@ class MSS_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDockW
         view -- reference to mpl canvas class
         settings_dict -- dictionary containing topview options
         """
-        super(MSS_PerformanceSettingsWidget, self).__init__(parent)
+        super(MSUI_PerformanceSettingsWidget, self).__init__(parent)
         self.setupUi(self)
         self.view = view
         self.parent = parent

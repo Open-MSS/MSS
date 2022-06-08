@@ -52,7 +52,7 @@ KMLOVERLAY = 3
 AIRDATA = 4
 
 
-class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
+class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
     """
     Dialog to set map appearance parameters. User interface is
     defined in "ui_topview_mapappearance.py".
@@ -64,7 +64,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing topview options.
         """
-        super(MSS_TV_MapAppearanceDialog, self).__init__(parent)
+        super(MSUI_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
 
         if settings_dict is None:
@@ -339,7 +339,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         """
         settings = self.getView().get_map_appearance()
-        dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
+        dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
         dlg.setModal(False)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()

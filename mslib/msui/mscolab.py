@@ -407,14 +407,14 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.stackedWidget.setCurrentWidget(self.newuserPage)
 
 
-class MSSMscolab(QtCore.QObject):
+class MSUIMscolab(QtCore.QObject):
     """
     Class for implementing MSColab functionalities
     """
     name = "Mscolab"
 
     def __init__(self, parent=None, data_dir=None):
-        super(MSSMscolab, self).__init__(parent)
+        super(MSUIMscolab, self).__init__(parent)
         self.ui = parent
 
         # connect mscolab help action from help menu

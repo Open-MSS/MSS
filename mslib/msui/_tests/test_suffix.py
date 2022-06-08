@@ -35,7 +35,7 @@ import mslib.msui.sideview as tv
 class Test_SuffixChange(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSS_SV_OptionsDialog()
+        self.window = tv.MSUI_SV_OptionsDialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)

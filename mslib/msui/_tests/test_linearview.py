@@ -44,7 +44,7 @@ PORTS = list(range(26000, 26500))
 class Test_MSS_LV_Options_Dialog(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSS_LV_Options_Dialog()
+        self.window = tv.MSUI_LV_Options_Dialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -102,7 +102,7 @@ class Test_MSSLinearViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.linearview.MSS_LV_Options_Dialog")
+    @mock.patch("mslib.msui.linearview.MSUI_LV_Options_Dialog")
     def test_options(self, mockdlg, mockbox):
         QtTest.QTest.mouseClick(self.window.lvoptionbtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()

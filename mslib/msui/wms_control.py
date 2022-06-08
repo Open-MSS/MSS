@@ -64,7 +64,7 @@ def add_wms_urls(combo_box, url_list):
         combo_box.addItem(url)
 
 
-class MSSWebMapService(ogcwms.WebMapService):
+class MSUIWebMapService(ogcwms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 
         added parameters are
@@ -550,12 +550,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.get_map([self.multilayers.get_current_layer()])
 
     def initialise_wms(self, base_url, version="1.3.0"):
-        """Initialises a MSSWebMapService object with the specified base_url.
+        """Initialises a MSUIWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
         username and password.
 
-        NOTE: owslib (from which MSSWebMapService is derived) only supports
+        NOTE: owslib (from which MSUIWebMapService is derived) only supports
         the basic HTTP authentication. You might hence have to dig deeper into
         the code for more sophisticated authentication methods.
 
@@ -616,7 +616,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         username, password = dlg.getAuthInfo()
                         # If user & pw have been entered, cache them.
                         constants.WMS_LOGIN_CACHE[base_url] = (username, password)
-                        self.capabilities_worker.function = lambda: MSSWebMapService(
+                        self.capabilities_worker.function = lambda: MSUIWebMapService(
                             base_url, version=version,
                             username=username, password=password)
                         self.capabilities_worker.start()
@@ -646,7 +646,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
             self.cpdlg.close()
 
-        Worker.create(lambda: MSSWebMapService(base_url, version=version, username=username, password=password),
+        Worker.create(lambda: MSUIWebMapService(base_url, version=version, username=username, password=password),
                       on_success, on_failure)
 
     def wms_url_changed(self, text):

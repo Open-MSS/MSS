@@ -416,7 +416,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
-        self.mscolab = mscolab.MSSMscolab(parent=self, data_dir=mscolab_data_dir)
+        self.mscolab = mscolab.MSUIMscolab(parent=self, data_dir=mscolab_data_dir)
 
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
@@ -458,8 +458,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 if pdlg.wasCanceled():
                     break
 
-                wms = wms_control.MSSWebMapService(request.url, version=None,
-                                                   username=username, password=password)
+                wms = wms_control.MSUIWebMapService(request.url, version=None,
+                                                    username=username, password=password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)
             except Exception as ex:

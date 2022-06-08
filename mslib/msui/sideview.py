@@ -44,7 +44,7 @@ from mslib.utils.units import units, convert_to
 WMS = 0
 
 
-class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
+class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     """
     Dialog to specify sideview options. User interface is specified
     in "ui_sideview_options.py".
@@ -56,7 +56,7 @@ class MSS_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing sideview options.
         """
-        super(MSS_SV_OptionsDialog, self).__init__(parent)
+        super(MSUI_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
 
         default_settings_dict = {
@@ -340,7 +340,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         Slot to open a dialog that lets the user specifiy sideview options.
         """
         settings = self.getView().get_settings()
-        dlg = MSS_SV_OptionsDialog(parent=self, settings_dict=settings)
+        dlg = MSUI_SV_OptionsDialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()

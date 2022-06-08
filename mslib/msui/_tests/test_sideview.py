@@ -44,7 +44,7 @@ PORTS = list(range(19000, 19500))
 class Test_MSS_SV_OptionsDialog(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSS_SV_OptionsDialog()
+        self.window = tv.MSUI_SV_OptionsDialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -128,7 +128,7 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.sideview.MSS_SV_OptionsDialog")
+    @mock.patch("mslib.msui.sideview.MSUI_SV_OptionsDialog")
     def test_options(self, mockdlg, mockbox):
         QtTest.QTest.mouseClick(self.window.btOptions, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
