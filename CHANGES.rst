@@ -1,7 +1,7 @@
 Changelog
 =========
 
-Version 7.0.0 (preliminary)
+Version 7.0.0
 ~~~~~~~~~~~~~
 
 This is a refactoring release for consistent nameings.
