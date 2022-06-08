@@ -45,8 +45,7 @@ shall be updated, it is important to update all packages in this
 environment. :
 
     $ conda activate mssenv
-    $ mamba update --all
-    $ mss
+    $ msui --update
 
 For further details mss-configuration
 
