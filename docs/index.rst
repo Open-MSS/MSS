@@ -6,7 +6,7 @@ Mission Support System's Documentation
 
 .. image:: https://anaconda.org/conda-forge/mss/badges/version.svg
 
-.. attention:: We refactored this release for consistent nameings.
+.. attention:: We refactored this software for consistent nameings.
 
    - The UI **mss** was renamed to **msui**
    - User configuration **msui_settings.json** former mss_settings.json is stored in  **~/.config/msui**
