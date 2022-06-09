@@ -225,6 +225,10 @@ class MSUIDefaultConfig(object):
     linearview = {"plot_title_size": 10,
                   "axes_label_size": 10}
 
+    automated_plotting_flights= [["", "", "", "", "", ""]]
+    automated_plotting_hsecs = [["", "", "", ""]]
+    automated_plotting_vsecs = [["", "", ""]]
+
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
 
@@ -289,6 +293,9 @@ class MSUIDefaultConfig(object):
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
+        "automated_plotting_flights": [["", "", "", "", "", ""]],
+        "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
+        "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", ""]],
     }
 
     config_descriptions = {
@@ -325,6 +332,8 @@ class MSUIDefaultConfig(object):
         "sideview": "Documentation Required",
         "linearview": "Documentation Required",
     }
+
+    #automated_plotting = {"flights": [["", "", "", "", "", ""]], "hsecs": [["", "",""]], "vsecs": []}
 
 
 # default options as dictionary
@@ -613,7 +622,6 @@ def compare_data(default, user_data):
                     matches.append(False)
         else:
             return default, False
-
     return data, all(matches)
 
 

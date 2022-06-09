@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="1.9.1.">
+    <ListOfWaypoints>
+      <Waypoint flightlevel="100.0" lat="-53.778" location="SAWE" lon="-67.749">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="150.0" lat="-53.833" location="LAT/L" lon="-67.667">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="150.0" lat="-53.778" location="SAWE" lon="-67.749">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="200.0" lat="-53.59" location="GEDAB" lon="-68.407">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="400.0" lat="-52.803" location="MUBES" lon="-68.479">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="400.0" lat="-56.0" location="WP4" lon="-71.5">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="410.0" lat="-51.0" location="WP5" lon="-63.5">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="410.0" lat="-48.333" location="WP6" lon="-58.667">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="430.0" lat="-45.667" location="WP7" lon="-54.333">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="430.0" lat="-45.0" location="WP8" lon="-53.167">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="430.0" lat="-45.5" location="WP9" lon="-51.833">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="430.0" lat="-46.167" location="WP10" lon="-49.5">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="430.0" lat="-50.667" location="WP11" lon="-48.5">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="450.0" lat="-55.833" location="WP12" lon="-46.0">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="470.0" lat="-61.667" location="WP13" lon="-42.333">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="470.0" lat="-62.833" location="WP14" lon="-71.833">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="470.0" lat="-55.5" location="TO" lon="-68.5">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="430.0" lat="-54.0" location="DESCE" lon="-64.667">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="410.0" lat="-53.778" location="SAWE" lon="-67.749">
+        <Comments></Comments>
+      </Waypoint>
+    </ListOfWaypoints>
+  </FlightTrack>
