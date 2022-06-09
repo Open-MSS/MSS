@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mss_wms_settings
+    mswms_settings
     ~~~~~~~~~~~~~~~~
 
     Configuration module for programs accessing data on the MSS server.
@@ -40,7 +40,7 @@ import sys
 # a1) Path of the directory where the mss code package is located.
 # sys.path.insert(0, '/home/mss/INSTANCE/miniconda3/lib/python3.X/site-packages')
 
-# a2) Path of the directory where mss_wms_settings.py is located
+# a2) Path of the directory where mswms_settings.py is located
 #MSSCONFIGPATH = os.path.abspath(os.path.normpath(os.path.dirname(sys.argv[0])))
 #sys.path.insert(0, MSSCONFIGPATH)
 #os.chdir(MSSCONFIGPATH)
@@ -50,10 +50,9 @@ from mslib.mswms import mpl_hsec_styles
 from mslib.mswms import mpl_vsec_styles
 from mslib.mswms import mpl_lsec_styles
 import mslib.mswms
-import mss_chem_plots
 
 
-# Configuration for mss_wms_settings accessing data on the MSS server.
+# Configuration for mswms_settings accessing data on the MSS server.
 # This is the data organisation structure of demodata.
 
 
@@ -120,8 +119,6 @@ if mpl_hsec_styles is not None:
         (mpl_hsec_styles.HS_EQPTStyle_PL_01, ["ecmwf_EUR_LL015"]),
         (mpl_hsec_styles.HS_WStyle_PL_01, ["ecmwf_EUR_LL015"]),
         (mpl_hsec_styles.HS_DivStyle_PL_01, ["ecmwf_EUR_LL015"]),
-        (mpl_hsec_styles.HS_DivStyle_PL_01, ["ecmwf_EUR_LL015"]),
-        (mss_chem_plots.HS_MSSChemStyle_PL_NH3_nfrac, ["ecmwf_EUR_LL015"]),
     ]
 
 
@@ -139,7 +136,6 @@ if mpl_vsec_styles is not None:
         (mpl_vsec_styles.VS_RelativeHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_SpecificHumdityStyle_01, ["ecmwf_EUR_LL015"]),
         (mpl_vsec_styles.VS_TemperatureStyle_01, ["ecmwf_EUR_LL015"])
-        (mss_chem_plots.VS_MSSChemStyle_PL_NH3_nfrac, ["ecmwf_EUR_LL015"]),
     ]
 
 

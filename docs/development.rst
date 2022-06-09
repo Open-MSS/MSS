@@ -158,7 +158,7 @@ MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data a
 
    $(mssdev) python mslib/mswms/demodata.py --seed
 
-To use this data add the mss_wms_settings.py in your python path::
+To use this data add the mswms_settings.py in your python path::
 
    $(mssdev) cd $HOME/PycharmProjects/mss
    $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
@@ -201,12 +201,12 @@ We have implemented demodata as data base for testing. On first call of pytest a
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
 
 
-Setup mss_settings.json for special tests
+Setup msui_settings.json for special tests
 +++++++++++++++++++++++++++++++++++++++++
 
 On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
-If you want to overwrite this setup and try out a special configuration add an mss_settings.json
-file to the testings base dir in your tmp directory. You call it by the custom `--mss_settings` option
+If you want to overwrite this setup and try out a special configuration add an msui_settings.json
+file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
 
 
 Testing
@@ -266,13 +266,13 @@ Profiling can be done by e.g.::
 
 example::
 
-   /!\ existing server config: "mss_wms_settings.py" for demodata not overwritten!
+   /!\ existing server config: "mswms_settings.py" for demodata not overwritten!
 
 
-   /!\ existing server auth config: "mss_wms_auth.py" for demodata not overwritten!
+   /!\ existing server auth config: "mswms_auth.py" for demodata not overwritten!
 
 
-   To use this setup you need the mss_wms_settings.py in your python path e.g.
+   To use this setup you need the mswms_settings.py in your python path e.g.
    export PYTHONPATH=~/mss
          557395 function calls (543762 primitive calls) in 0.980 seconds
 

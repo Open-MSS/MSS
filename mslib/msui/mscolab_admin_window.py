@@ -6,10 +6,10 @@
 
     Mscolab operation window, to display chat, file change
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: 2020 Tanish Grover
-    :copyright: Copyright 2020-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ from werkzeug.urls import url_join
 from PyQt5 import QtCore, QtWidgets
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
-from mslib.msui.mss_qt import show_popup
+from mslib.utils.qt import show_popup
 from mslib.utils.config import config_loader
 
 

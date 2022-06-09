@@ -7,11 +7,11 @@
     Horizontal section style super classes for use with the
     HorizontalSectionDriver class.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@
 import io
 import logging
 from abc import abstractmethod
-import mss_wms_settings
+import mswms_settings
 
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -97,7 +97,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         pass
 
     def supported_epsg_codes(self):
-        return list(mss_wms_settings.epsg_to_mpl_basemap_table.keys())
+        return list(mswms_settings.epsg_to_mpl_basemap_table.keys())
 
     def support_epsg_code(self, crs):
         """
@@ -299,9 +299,9 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Some additional code to store the last 20 coastlines in memory for quicker
         # access.
         key = repr((proj_params, bbox, bbox_units))
-        basemap_use_cache = getattr(mss_wms_settings, "basemap_use_cache", False)
-        basemap_request_size = getattr(mss_wms_settings, "basemap_request_size ", 200)
-        basemap_cache_size = getattr(mss_wms_settings, "basemap_cache_size", 20)
+        basemap_use_cache = getattr(mswms_settings, "basemap_use_cache", False)
+        basemap_request_size = getattr(mswms_settings, "basemap_request_size ", 200)
+        basemap_cache_size = getattr(mswms_settings, "basemap_cache_size", 20)
         bm_params = {"area_thresh": 1000., "ax": ax, "fix_aspect": (not noframe)}
         bm_params.update(proj_params)
         if bbox_units == "degree":

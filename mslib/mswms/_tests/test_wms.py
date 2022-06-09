@@ -6,11 +6,11 @@
 
     This module provides pytest functions to tests mswms.wms
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -376,13 +376,13 @@ class Test_WMS(object):
         callback_ok_xml(result.status, result.headers)
 
     def test_import_error(self):
-        with mock.patch.dict("sys.modules", {"mss_wms_settings": None, "mss_wms_auth": None}):
+        with mock.patch.dict("sys.modules", {"mswms_settings": None, "mswms_auth": None}):
             reload(mslib.mswms.wms)
-            assert mslib.mswms.wms.mss_wms_settings.__file__ is None
-            assert mslib.mswms.wms.mss_wms_auth.__file__ is None
+            assert mslib.mswms.wms.mswms_settings.__file__ is None
+            assert mslib.mswms.wms.mswms_auth.__file__ is None
         reload(mslib.mswms.wms)
-        assert mslib.mswms.wms.mss_wms_settings.__file__ is not None
-        assert mslib.mswms.wms.mss_wms_auth.__file__ is not None
+        assert mslib.mswms.wms.mswms_settings.__file__ is not None
+        assert mslib.mswms.wms.mswms_auth.__file__ is not None
 
     def test_files_changed(self):
         def do_test():
@@ -418,7 +418,7 @@ class Test_WMS(object):
             do_test()
 
         watch_access = mslib.mswms.dataaccess.WatchModificationDataAccess(
-            mslib.mswms.wms.mss_wms_settings._datapath, "EUR_LL015")
+            mslib.mswms.wms.mswms_settings._datapath, "EUR_LL015")
         watch_access.setup()
         with mock.patch.object(
             mslib.mswms.wms.server.hsec_layer_registry["ecmwf_EUR_LL015"]["PLDiv01"].driver,

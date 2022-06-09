@@ -6,10 +6,10 @@
 
     Control widget to configure remote sensing overlays.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ from skyfield.api import Loader, Topos, utc
 import skyfield_data
 
 from PyQt5 import QtGui, QtWidgets
-from mslib.msui.mss_qt import ui_remotesensing_dockwidget as ui
+from mslib.utils.qt import ui_remotesensing_dockwidget as ui
 from mslib.utils.time import jsec_to_datetime, datetime_to_jsec
 from mslib.utils.coordinate import get_distance, rotate_point, fix_angle
 

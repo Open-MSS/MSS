@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mss_wms_auth
+    mswms_auth
     ~~~~~~~~~~~~
 
     Configuration module for authentication to the MSS server.

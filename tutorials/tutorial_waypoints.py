@@ -1,14 +1,14 @@
 """
-    mss.tutorials.tutorial_waypoints
+    msui.tutorials.tutorial_waypoints
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to play with and use waypoints
     for activating/creating a flight track.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ from sys import platform
 from pyscreeze import ImageNotFoundException
 
 from tutorials import screenrecorder as sr
-from mslib.msui import mss_pyui
+from mslib.msui import msui
 
 
 def initial_ops():
@@ -61,11 +61,11 @@ def call_recorder():
     sr.main()
 
 
-def call_mss():
+def call_msui():
     """
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
-    mss_pyui.main()
+    msui.main()
 
 
 def automate_waypoints():
@@ -145,7 +145,8 @@ def automate_waypoints():
     # Changing map to Global
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            x, y = pag.locateCenterOnScreen('pictures/europe(cyl).PNG')
+            print(pag.position())
+            x, y = pag.locateCenterOnScreen('pictures/europe_cyl.png')
             pag.click(x, y, interval=2)
         elif platform == 'win32':
             x, y = pag.locateCenterOnScreen('pictures/europe(cyl)win.PNG')
@@ -275,7 +276,7 @@ def main():
     This function runs the above functions as different processes at the same time and can be
     controlled from here. (This is the main process.)
     """
-    p1 = multiprocessing.Process(target=call_mss)
+    p1 = multiprocessing.Process(target=call_msui)
     p2 = multiprocessing.Process(target=automate_waypoints)
     p3 = multiprocessing.Process(target=call_recorder)
 

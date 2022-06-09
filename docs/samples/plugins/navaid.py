@@ -6,9 +6,9 @@
 
     plugin for navaid format flight track export
 
-    This file is part of mss.
+    This file is part of MSS.
 
-    :copyright: Copyright 2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,13 +30,13 @@ import numpy as np
 import geomag
 from geopy.distance import geodesic
 from geographiclib.geodesic import Geodesic
-from mslib.msui.constants import MSS_CONFIG_PATH
+from mslib.msui.constants import MSUI_CONFIG_PATH
 
 
 def radial_dme(lat, lon, elev=12., test_date=datetime.date.today(), maxdist = 250.):
     # Read the list of NAVAIDs
     # PATH needs to be replaced by generic
-    navaid_file = os.path.join(MSS_CONFIG_PATH, 'plugins', 'NAVAID_System.csv')
+    navaid_file = os.path.join(MSUI_CONFIG_PATH, 'plugins', 'NAVAID_System.csv')
     navaid = open(navaid_file, encoding='utf-8-sig' )
     csvreader = csv.reader(navaid)
     header = next(csvreader)

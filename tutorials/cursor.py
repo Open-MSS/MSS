@@ -1,15 +1,15 @@
 """
-    mss.tutorials.cursor
+    msui.tutorials.cursor
     ~~~~~~~~~~~~~~~~~~~~
 
     This python script generates the png image of the cursor for linux systems and store it in
     'tutorials/cursor_image.png.' Then, this image is used inside screenrecorder.py file. This displays
     the cursor movement in screen recordings while running automated tutorials.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

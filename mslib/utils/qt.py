@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.mss_qt
+    mslib.utils.msui_qt
     ~~~~~~~~~~~~~~~~~
 
     This module helps with qt
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017-2018 Joern Ungermann, Reimar Bauer
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -171,7 +171,7 @@ def variant_to_float(variant, locale=QtCore.QLocale()):
 
 
 # to store config by QSettings
-QtCore.QCoreApplication.setOrganizationName("mss")
+QtCore.QCoreApplication.setOrganizationName("msui")
 
 
 # PyQt5 silently aborts on a Python Exception
@@ -396,7 +396,7 @@ class Worker(QtCore.QThread):
             result = self.function()
             # ToDo the capbilities worker member needs the possibility to terminate itselfs.
             # ToDo refactoring needed
-            if "MSSWebMapService" in repr(result) and not result.contents:
+            if "MSUIWebMapService" in repr(result) and not result.contents:
                 raise NoLayersError
             else:
                 self.finished.emit(result)
@@ -505,9 +505,9 @@ class Updater(QtCore.QObject):
             else:
                 self.on_status_update.emit("Your MSS is up to date.")
 
-    def _restart_mss(self):
+    def _restart_msui(self):
         """
-        Restart mss with all the same parameters, not entirely
+        Restart msui with all the same parameters, not entirely
         safe in case parameters change in higher versions, or while debugging
         """
         command = [sys.executable.split(os.sep)[-1]] + sys.argv

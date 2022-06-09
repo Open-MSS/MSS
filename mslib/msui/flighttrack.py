@@ -14,11 +14,11 @@
     The model includes a method for computing the distance between waypoints
     and for the entire flight track.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -49,8 +49,8 @@ from mslib.utils.units import units
 from mslib.utils.coordinate import find_location, path_points, get_distance
 from mslib.utils import thermolib
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
-from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
-from mslib.msui.mss_qt import variant_to_string, variant_to_float
+from mslib.utils.config import MSUIDefaultConfig as mss_default
+from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 
 from mslib.utils import writexml
