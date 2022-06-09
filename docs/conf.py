@@ -55,10 +55,10 @@ import importlib
 # Generate template plots
 from docs.gallery.plot_examples import HS_template, VS_template
 from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
-dataset = [next(iter(mslib.mswms.wms.mss_wms_settings.data))]
-mslib.mswms.wms.mss_wms_settings.register_horizontal_layers = [(HS_template.HS_Template, dataset)]
-mslib.mswms.wms.mss_wms_settings.register_vertical_layers = [(VS_template.VS_Template, dataset)]
-mslib.mswms.wms.mss_wms_settings.register_linear_layers = [(LS_DefaultStyle, dataset)]
+dataset = [next(iter(mslib.mswms.wms.mswms_settings.data))]
+mslib.mswms.wms.mswms_settings.register_horizontal_layers = [(HS_template.HS_Template, dataset)]
+mslib.mswms.wms.mswms_settings.register_vertical_layers = [(VS_template.VS_Template, dataset)]
+mslib.mswms.wms.mswms_settings.register_linear_layers = [(LS_DefaultStyle, dataset)]
 mslib.mswms.wms.server.__init__()
 mslib.mswms.wms.server.generate_gallery(sphinx=True, create=True, clear=True, simple_naming=True)
 importlib.reload(mslib.mswms.gallery_builder)

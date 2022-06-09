@@ -42,7 +42,7 @@
         <bool>false</bool>
        </property>
        <property name="text">
-        <string>Restart MSS</string>
+        <string>Restart MSUI</string>
        </property>
       </widget>
      </item>

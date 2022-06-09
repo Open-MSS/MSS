@@ -4,13 +4,13 @@
     mslib.retriever
     ~~~~~~~~~~~~~~~~~~~~
 
-    automation within mss to create for instance a number of the same plots
+    automation within msui to create for instance a number of the same plots
     for several flights or several forecast steps
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2020 Joern Ungermann
-    :copyright: Copyright 2020-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,7 @@ from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 import mslib.msui
 import mslib.msui.mpl_map
-import mslib.msui.mss_qt
+import mslib.utils.qt
 
 
 TEXT_CONFIG = {
@@ -118,7 +118,7 @@ def main():
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
-                        default=os.path.join(mslib.msui.constants.MSS_CONFIG_PATH, "mss_pyui.log"))
+                        default=os.path.join(mslib.msui.constants.MSUI_CONFIG_PATH, "msui.log"))
     args = parser.parse_args()
 
     if args.version:
@@ -130,7 +130,7 @@ def main():
         sys.exit()
 
     mslib.utils.setup_logging(args)
-    read_config_file(path=mslib.msui.constants.MSS_SETTINGS)
+    read_config_file(path=mslib.msui.constants.MSUI_SETTINGS)
     config = config_loader()
     num_interpolation_points = config["num_interpolation_points"]
     num_labels = config["num_labels"]

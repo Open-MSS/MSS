@@ -186,4 +186,5 @@ For cropping the video
 For merging audios into the video ::
 
     (mssdev)$ ffmpeg -i input.mp4 -i audio.mp3 -c:v copy -c:a aac output.mp4
+
 In this case, the video and audio must be in same directory and you should cd into that directory.

@@ -12,11 +12,11 @@
     chapter 14/16 of 'Rapid GUI Programming with Python and Qt: The
     Definitive Guide to PyQt Programming' (Mark Summerfield).
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,10 +37,10 @@ import types
 from mslib.msui import hexagon_dockwidget as hex
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtWidgets, QtGui
-from mslib.msui.mss_qt import ui_tableview_window as ui
-from mslib.msui.mss_qt import dropEvent, dragEnterEvent
+from mslib.utils.qt import ui_tableview_window as ui
+from mslib.utils.qt import dropEvent, dragEnterEvent
 from mslib.msui import flighttrack as ft
-from mslib.msui.viewwindows import MSSViewWindow
+from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
 
 try:
@@ -49,7 +49,7 @@ except ImportError:
     import pyproj
 
 
-class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
+class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
     """
     Implements the table view of the flight plan. Data comes from a
     flight track data model.
@@ -60,7 +60,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
     def __init__(self, parent=None, model=None, _id=None):
         """
         """
-        super(MSSTableViewWindow, self).__init__(parent, model, _id)
+        super(MSUITableViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -118,7 +118,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
                 widget = hex.HexagonControlWidget(view=self)
             elif index == 1:
                 title = "Performance Settings"
-                widget = perfset.MSS_PerformanceSettingsWidget(
+                widget = perfset.MSUI_PerformanceSettingsWidget(
                     parent=self,
                     view=self,
                     settings_dict=self.waypoints_model.performance_settings
@@ -270,7 +270,7 @@ class MSSTableViewWindow(MSSViewWindow, ui.Ui_TableViewWindow):
         """
         Set the QAbstractItemModel instance that the table displays.
         """
-        super(MSSTableViewWindow, self).setFlightTrackModel(model)
+        super(MSUITableViewWindow, self).setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes

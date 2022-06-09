@@ -6,10 +6,10 @@
 
     config for mscolab.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,7 +43,7 @@ except ImportError as ex:
         # Which origins are allowed to communicate with your server
         CORS_ORIGINS = ["*"]
 
-        # dir where mss output files are stored
+        # dir where msui output files are stored
         BASE_DIR = os.path.expanduser("~")
 
         DATA_DIR = os.path.join(BASE_DIR, "colabdata")

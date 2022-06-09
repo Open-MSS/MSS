@@ -6,11 +6,11 @@
 
     Control widget to access Web Map Services.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,9 +46,9 @@ from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
 
 from mslib.msui import constants, wms_capabilities
-from mslib.msui.mss_qt import ui_wms_dockwidget as ui
-from mslib.msui.mss_qt import ui_wms_password_dialog as ui_pw
-from mslib.msui.mss_qt import Worker
+from mslib.utils.qt import ui_wms_dockwidget as ui
+from mslib.utils.qt import ui_wms_password_dialog as ui_pw
+from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
@@ -64,7 +64,7 @@ def add_wms_urls(combo_box, url_list):
         combo_box.addItem(url)
 
 
-class MSSWebMapService(ogcwms.WebMapService):
+class MSUIWebMapService(ogcwms.WebMapService):
     """Overloads the getmap() method of owslib.wms.WebMapService:
 
         added parameters are
@@ -550,12 +550,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.get_map([self.multilayers.get_current_layer()])
 
     def initialise_wms(self, base_url, version="1.3.0"):
-        """Initialises a MSSWebMapService object with the specified base_url.
+        """Initialises a MSUIWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
         username and password.
 
-        NOTE: owslib (from which MSSWebMapService is derived) only supports
+        NOTE: owslib (from which MSUIWebMapService is derived) only supports
         the basic HTTP authentication. You might hence have to dig deeper into
         the code for more sophisticated authentication methods.
 
@@ -616,7 +616,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         username, password = dlg.getAuthInfo()
                         # If user & pw have been entered, cache them.
                         constants.WMS_LOGIN_CACHE[base_url] = (username, password)
-                        self.capabilities_worker.function = lambda: MSSWebMapService(
+                        self.capabilities_worker.function = lambda: MSUIWebMapService(
                             base_url, version=version,
                             username=username, password=password)
                         self.capabilities_worker.start()
@@ -646,7 +646,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
             self.cpdlg.close()
 
-        Worker.create(lambda: MSSWebMapService(base_url, version=version, username=username, password=password),
+        Worker.create(lambda: MSUIWebMapService(base_url, version=version, username=username, password=password),
                       on_success, on_failure)
 
     def wms_url_changed(self, text):
@@ -1404,7 +1404,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def service_cache(self):
         """Service the cache: Remove all files older than the maximum file
-           age specified in mss_settings, and remove the oldest files if the
+           age specified in msui_settings, and remove the oldest files if the
            maximum cache size has been reached.
         """
         logging.debug("servicing cache...")

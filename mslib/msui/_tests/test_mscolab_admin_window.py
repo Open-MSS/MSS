@@ -6,10 +6,10 @@
 
     This module is used to test mscolab-operation related gui.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib._tests.utils import mscolab_start_server
 from mslib.msui import mscolab
-import mslib.msui.mss_pyui as mss_pyui
+from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
@@ -67,7 +67,7 @@ class Test_MscolabAdminWindow(object):
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = mss_pyui.MSSMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()

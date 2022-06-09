@@ -6,10 +6,10 @@
 
     This module provides pytest functions to tests msui.sideview
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ PORTS = list(range(19000, 19500))
 class Test_MSS_SV_OptionsDialog(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSS_SV_OptionsDialog()
+        self.window = tv.MSUI_SV_OptionsDialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -101,7 +101,7 @@ class Test_MSSSideViewWindow(object):
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSSSideViewWindow(model=waypoints_model)
+        self.window = tv.MSUISideViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -128,7 +128,7 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.sideview.MSS_SV_OptionsDialog")
+    @mock.patch("mslib.msui.sideview.MSUI_SV_OptionsDialog")
     def test_options(self, mockdlg, mockbox):
         QtTest.QTest.mouseClick(self.window.btOptions, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -187,7 +187,7 @@ class Test_SideViewWMS(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSSideViewWindow(model=waypoints_model)
+        self.window = tv.MSUISideViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)

@@ -6,10 +6,10 @@
 
     Linear view module of the msui
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Baer
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,9 +27,9 @@
 
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from PyQt5 import QtGui, QtWidgets
-from mslib.msui.mss_qt import ui_linearview_window as ui
-from mslib.msui.mss_qt import ui_linearview_options as ui_opt
-from mslib.msui.viewwindows import MSSMplViewWindow
+from mslib.utils.qt import ui_linearview_window as ui
+from mslib.utils.qt import ui_linearview_options as ui_opt
+from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 
@@ -37,7 +37,7 @@ from mslib.msui.icons import icons
 WMS = 0
 
 
-class MSS_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog):
+class MSUI_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog):
     """
     Dialog class to specify Linear View Options.
     """
@@ -48,7 +48,7 @@ class MSS_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing sideview options.
         """
-        super(MSS_LV_Options_Dialog, self).__init__(parent)
+        super(MSUI_LV_Options_Dialog, self).__init__(parent)
         self.setupUi(self)
 
         default_settings_dict = {
@@ -80,7 +80,7 @@ class MSS_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog
         return settings_dict
 
 
-class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
+class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     """
     PyQt window implementing a matplotlib canvas as linear flight track view.
     """
@@ -90,7 +90,7 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSSLinearViewWindow, self).__init__(parent, model, _id)
+        super(MSUILinearViewWindow, self).__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -143,13 +143,13 @@ class MSSLinearViewWindow(MSSMplViewWindow, ui.Ui_LinearWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super(MSSLinearViewWindow, self).setFlightTrackModel(model)
+        super(MSUILinearViewWindow, self).setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
     def set_options(self):
         settings = self.getView().get_settings()
-        dlg = MSS_LV_Options_Dialog(parent=self, settings_dict=settings)
+        dlg = MSUI_LV_Options_Dialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()

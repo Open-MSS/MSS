@@ -8,11 +8,11 @@
     See the reference documentation, Supplement, for details on the
     implementation.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,9 +33,9 @@ import logging
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
-from mslib.msui.mss_qt import ui_topview_window as ui
-from mslib.msui.mss_qt import ui_topview_mapappearance as ui_ma
-from mslib.msui.viewwindows import MSSMplViewWindow
+from mslib.utils.qt import ui_topview_window as ui
+from mslib.utils.qt import ui_topview_mapappearance as ui_ma
+from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
@@ -52,7 +52,7 @@ KMLOVERLAY = 3
 AIRDATA = 4
 
 
-class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
+class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
     """
     Dialog to set map appearance parameters. User interface is
     defined in "ui_topview_mapappearance.py".
@@ -64,7 +64,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing topview options.
         """
-        super(MSS_TV_MapAppearanceDialog, self).__init__(parent)
+        super(MSUI_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
 
         if settings_dict is None:
@@ -177,7 +177,7 @@ class MSS_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog
             button.setPalette(palette)
 
 
-class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
+class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     """
     PyQt window implementing a MapCanvas as an interactive flight track
     editor.
@@ -188,7 +188,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSSTopViewWindow, self).__init__(parent, model, _id)
+        super(MSUITopViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
@@ -238,7 +238,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.update_predefined_maps()
 
         # Initialise the map and the flight track. Get the initial projection
-        # parameters from the tables in mss_settings.
+        # parameters from the tables in msui_settings.
         kwargs = self.changeMapSection(only_kwargs=True)
         self.mpl.canvas.init_map(**kwargs)
         self.setFlightTrackModel(self.waypoints_model)
@@ -308,7 +308,7 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         """
         Change the current map section to one of the predefined regions.
         """
-        # Get the initial projection parameters from the tables in mss_settings.
+        # Get the initial projection parameters from the tables in msui_settings.
         current_map_key = self.cbChangeMapSection.currentText()
         predefined_map_sections = config_loader(
             dataset="predefined_map_sections")
@@ -332,14 +332,14 @@ class MSSTopViewWindow(MSSMplViewWindow, ui.Ui_TopViewWindow):
         self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
-        super(MSSTopViewWindow, self).setIdentifier(identifier)
+        super(MSUITopViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.map.set_identifier(identifier)
 
     def settings_dialogue(self):
         """
         """
         settings = self.getView().get_map_appearance()
-        dlg = MSS_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
+        dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
         dlg.setModal(False)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()

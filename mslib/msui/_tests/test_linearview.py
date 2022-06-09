@@ -6,10 +6,10 @@
 
     This module provides pytest functions to tests msui.linearview
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,7 +44,7 @@ PORTS = list(range(26000, 26500))
 class Test_MSS_LV_Options_Dialog(object):
     def setup(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSS_LV_Options_Dialog()
+        self.window = tv.MSUI_LV_Options_Dialog()
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -75,7 +75,7 @@ class Test_MSSLinearViewWindow(object):
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSSLinearViewWindow(model=waypoints_model)
+        self.window = tv.MSUILinearViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -102,7 +102,7 @@ class Test_MSSLinearViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    @mock.patch("mslib.msui.linearview.MSS_LV_Options_Dialog")
+    @mock.patch("mslib.msui.linearview.MSUI_LV_Options_Dialog")
     def test_options(self, mockdlg, mockbox):
         QtTest.QTest.mouseClick(self.window.lvoptionbtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -131,7 +131,7 @@ class Test_LinearViewWMS(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSSLinearViewWindow(model=waypoints_model)
+        self.window = tv.MSUILinearViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)

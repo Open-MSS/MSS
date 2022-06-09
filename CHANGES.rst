@@ -1,6 +1,61 @@
 Changelog
 =========
 
+Version 7.0.0
+~~~~~~~~~~~~~
+
+This is a refactoring release for consistent nameings.
+Over the last six years MSS has grown and we created the Open-MSS organization with the move to github in 2021.
+In this we have many repositories that support our work on the Mission Support System.
+We use the term MSS for the whole thing today.
+Therefore, we would like to give more appropriate names to the individual components.
+
+HINT:
+~~~~~
+
+We changed:
+- command mss was renamed to msui
+- constants.MSS_CONFIG_PATH to constants.MSUI_CONFIG_PATH
+- constants.MSS_SETTINGS to constants.MSUI_SETTINGS
+- class MissionSupportSystemDefaultConfig to class MSUIDefaultConfig
+- class MSS_AboutDialog to class class MSUI_AboutDialog
+- class MSS_LV_Options_Dialog to class MSUI_LV_Options_Dialog
+- class MSS_PerformanceSettingsWidget to class MSUI_PerformanceSettingsWidget
+- class MSS_ShortcutsDialog to class MSUI_ShortcutsDialog
+- class MSS_SV_OptionsDialog to class MSUI_SV_OptionsDialog
+- class MSS_TV_MapAppearanceDialog to class MSUI_TV_MapAppearanceDialog
+- class MSSLinearViewWindow to class MSUILinearViewWindow
+- class MSSMainWindow to class MSUIMainWindow
+- class MSSMplViewWindow to class MSUIMplViewWindow
+- class MSSMscolab to class MSUIMscolab
+- class MSSSideViewWindow to class MSUISideViewWindow
+- class MSSTableViewWindow to class MSUITableViewWindow
+- class MSSTopViewWindow to class MSUITopViewWindow
+- class MSSWebMapService to class MSUIWebMapService
+
+Configurations:
+- Env var MSS_CONFIG_PATH to MSUI_CONFIG_PATH
+- directory for msui_settings.json from ~/.config/mss to ~/.config/msui
+- mss_settings.json to msui_settings.json
+- mss_wms_settings.py to mswms_settings.py
+- mss_wms_auth.py to mswms_auth.py
+- mss_mscolab_auth.py to mscolab_auth.py
+
+We moved:
+- mslib.msui.mss_qt to mslib.utils.qt
+- mslib.msui.mss_pyui to mslib.msui.msui
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/68?closed=1
+
+Version 6.2.1
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/82?closed=1
+
 Version 6.2.0
 ~~~~~~~~~~~~~
 

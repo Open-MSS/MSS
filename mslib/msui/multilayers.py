@@ -6,10 +6,10 @@
     Improves upon the old method of loading each layer on UI changes,
     the layers are all persistent and fully functional without requiring user input.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,7 +28,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import logging
 import mslib.msui.wms_control
 from mslib.msui.icons import icons
-from mslib.msui.mss_qt import ui_wms_multilayers as ui
+from mslib.utils.qt import ui_wms_multilayers as ui
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 
 

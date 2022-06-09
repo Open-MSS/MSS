@@ -4,12 +4,12 @@
     mslib.msui.editor
     ~~~~~~~~~~~~~~~~~~~~~~
 
-    config editor for mss_settings.json.
+    config editor for msui_settings.json.
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2020 Vaibhav Mehra <veb7vmehra@gmail.com>
-    :copyright: Copyright 2020-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,12 +30,12 @@ import fs
 import logging
 import json
 
-from mslib.msui.mss_qt import get_open_filename, get_save_filename, show_popup
-from mslib.msui.mss_qt import ui_configuration_editor_window as ui_conf
+from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
+from mslib.utils.qt import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
-from mslib.msui.constants import MSS_SETTINGS
+from mslib.msui.constants import MSUI_SETTINGS
 from mslib.msui.icons import icons
-from mslib.utils.config import MissionSupportSystemDefaultConfig as mss_default
+from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_dict
 
 
@@ -124,7 +124,7 @@ class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
 
 class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationEditorWindow):
-    """MSUI configuration editor class. Provides user interface elements for editing mss_settings.json
+    """MSUI configuration editor class. Provides user interface elements for editing msui_settings.json
     """
 
     restartApplication = QtCore.pyqtSignal(name="restartApplication")
@@ -134,7 +134,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         self.setupUi(self)
 
         options = config_loader()
-        self.path = MSS_SETTINGS
+        self.path = MSUI_SETTINGS
         self.last_saved = copy.deepcopy(options)
 
         self.optCb.addItem("All")
@@ -673,7 +673,7 @@ only an empty json file would be exported.\nDo you still want to continue?"""
             if ret == QtWidgets.QMessageBox.No:
                 return
 
-        path = get_save_filename(self, "Export configuration", "mss_settings", "JSON files (*.json)")
+        path = get_save_filename(self, "Export configuration", "msui_settings", "JSON files (*.json)")
         if path:
             self._save_to_path(path)
 
@@ -686,7 +686,7 @@ only an empty json file would be exported.\nDo you still want to continue?"""
             msg = self.tr("Dummy keys/values found in config.\nDo you want to rectify and save changes?")
         elif self.check_modified():
             msg = self.tr(
-                "Save Changes to default mss_settings.json?\nYou need to restart the gui for changes to take effect.")
+                "Save Changes to default msui_settings.json?\nYou need to restart the gui for changes to take effect.")
         if msg != "":
             ret = QtWidgets.QMessageBox.warning(
                 self, self.tr("Mission Support System"), self.tr(msg),

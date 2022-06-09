@@ -11,7 +11,7 @@
     Supported operations are GetCapabilities and GetMap for (WMS 1.1.1/1.3.0 compliant)
     maps and (non-compliant) vertical sections.
 
-    1) Configure the WMS server by modifying the settings in mss_wms_settings.py
+    1) Configure the WMS server by modifying the settings in mswms_settings.py
     (address, products that shall be offered, ..).
 
     2) If you want to define new visualisation styles, the files to put them
@@ -20,12 +20,12 @@
 
     For more information on WMS, see http://www.opengeospatial.org/standards/wms
 
-    This file is part of mss.
+    This file is part of MSS.
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Omar Qunsul (oq)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,11 +80,11 @@ realm = 'Mission Support Web Map Service'
 app.config['realm'] = realm
 
 try:
-    import mss_wms_settings
+    import mswms_settings
 except ImportError as ex:
-    logging.warning("Couldn't import mss_wms_settings (ImportError:'%s'), creating dummy config.", ex)
+    logging.warning("Couldn't import mswms_settings (ImportError:'%s'), creating dummy config.", ex)
 
-    class mss_wms_settings(object):
+    class mswms_settings(object):
         base_dir = os.path.abspath(os.path.dirname(__file__))
         xml_template_location = os.path.join(base_dir, "xml_templates")
         service_name = "OGC:WMS"
@@ -108,22 +108,22 @@ except ImportError as ex:
         __file__ = None
 
 try:
-    import mss_wms_auth
+    import mswms_auth
 except ImportError as ex:
-    logging.warning("Couldn't import mss_wms_auth (ImportError:'{%s), creating dummy config.", ex)
+    logging.warning("Couldn't import mswms_auth (ImportError:'{%s), creating dummy config.", ex)
 
-    class mss_wms_auth(object):
+    class mswms_auth(object):
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-if mss_wms_settings.__dict__.get('enable_basic_http_authentication', False):
+if mswms_settings.__dict__.get('enable_basic_http_authentication', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
     import hashlib
 
     def authfunc(username, password):
-        for u, p in mss_wms_auth.allowed_users:
+        for u, p in mswms_auth.allowed_users:
             if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
                 return True
         return False
@@ -147,7 +147,7 @@ logging.basicConfig(level=logging.DEBUG,
 # Chameleon XMl template
 base_dir = os.path.abspath(os.path.dirname(__file__))
 xml_template_location = os.path.join(base_dir, "xml_templates")
-templates = PageTemplateLoader(mss_wms_settings.__dict__.get("xml_template_location", xml_template_location))
+templates = PageTemplateLoader(mswms_settings.__dict__.get("xml_template_location", xml_template_location))
 
 
 def squash_multiple_images(imgs):
@@ -177,7 +177,7 @@ class WMSServer(object):
         """
         init method for wms server
         """
-        data_access_dict = mss_wms_settings.data
+        data_access_dict = mswms_settings.data
 
         for key in data_access_dict:
             data_access_dict[key].setup()
@@ -198,20 +198,20 @@ class WMSServer(object):
                 data_access_dict[key])
 
         self.hsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_horizontal_layers:
+        for layer, datasets in mswms_settings.register_horizontal_layers:
             self.register_hsec_layer(datasets, layer)
 
         self.vsec_layer_registry = {}
-        for layer, datasets in mss_wms_settings.register_vertical_layers:
+        for layer, datasets in mswms_settings.register_vertical_layers:
             self.register_vsec_layer(datasets, layer)
 
         self.lsec_layer_registry = {}
-        if not hasattr(mss_wms_settings, "register_linear_layers"):
-            logging.info("Since 4.0.0 MSS has support for linear layers in the mss_wms_settings.py.\n"
+        if not hasattr(mswms_settings, "register_linear_layers"):
+            logging.info("Since 4.0.0 MSS has support for linear layers in the mswms_settings.py.\n"
                          "Look at the documentation for an example "
                          "https://mss.readthedocs.io/en/stable/deployment.html#configuration-file-of-the-wms-server")
-            mss_wms_settings.register_linear_layers = []
-        for layer in mss_wms_settings.register_linear_layers:
+            mswms_settings.register_linear_layers = []
+        for layer in mswms_settings.register_linear_layers:
             if len(layer) == 3:
                 self.register_lsec_layer(layer[2], layer[1], layer_class=layer[0])
             elif len(layer) == 4:
@@ -224,23 +224,23 @@ class WMSServer(object):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
-        if mss_wms_settings.__file__:
+        if mswms_settings.__file__:
             if all_plots:
                 # Imports here due to some circular import issue if imported too soon
                 from mslib.mswms import mpl_hsec_styles, mpl_vsec_styles, mpl_lsec_styles
 
-                dataset = [next(iter(mss_wms_settings.data))]
-                mss_wms_settings.register_horizontal_layers = [
+                dataset = [next(iter(mswms_settings.data))]
+                mswms_settings.register_horizontal_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_hsec_styles, inspect.isclass)
                     if plot[0] != "HS_GenericStyle" and
                     not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
                 ]
-                mss_wms_settings.register_vertical_layers = [
+                mswms_settings.register_vertical_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_vsec_styles, inspect.isclass)
                     if plot[0] != "VS_GenericStyle" and
                     not any(x in plot[0] or x in str(plot[1]) for x in ["Abstract", "Target", "fnord"])
                 ]
-                mss_wms_settings.register_linear_layers = [
+                mswms_settings.register_linear_layers = [
                     (plot[1], dataset) for plot in inspect.getmembers(mpl_lsec_styles, inspect.isclass)
                 ]
                 self.__init__()
@@ -551,7 +551,7 @@ class WMSServer(object):
     def get_capabilities(self, query, server_url=None):
         # ToDo find a more elegant method to do the same
         # Preferable we don't want a seperate data_access module to be configured
-        data_access_dict = mss_wms_settings.data
+        data_access_dict = mswms_settings.data
 
         for key in data_access_dict:
             data_access_dict[key].setup()
@@ -610,7 +610,7 @@ class WMSServer(object):
                     continue
                 lsec_layers.append((dataset, layer))
 
-        settings = mss_wms_settings.__dict__
+        settings = mswms_settings.__dict__
         return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, lsec_layers=lsec_layers,
                                server_url=server_url,
                                service_name=settings.get("service_name", "OGC:WMS"),
@@ -941,7 +941,7 @@ server = WMSServer()
 
 
 @app.route('/')
-@conditional_decorator(auth.login_required, mss_wms_settings.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth.login_required, mswms_settings.__dict__.get('enable_basic_http_authentication', False))
 def application():
     try:
         # Request info
