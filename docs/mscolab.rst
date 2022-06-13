@@ -204,9 +204,10 @@ For further options read `<https://flask.palletsoperations.com/en/1.1.x/deployin
 If you want to use nginx to proxy this gunicorn server have a look on the example
 :download:`mss_proxy.conf <samples/nginx/sites-available/mss_proxy.conf>`.
 
-Note about gunicorn:
-You may need to build gunicorn on your own until the new release > 20.1.0:
-https://github.com/benoitc/gunicorn/pull/2581#issuecomment-1154008037
+.. tip:: update gunicorn
+
+  You may need to build gunicorn on your own until the new release > 20.1.0:
+  https://github.com/benoitc/gunicorn/pull/2581#issuecomment-1154008037
 
 Data Base Migration
 ~~~~~~~~~~~~~~~~~~~
