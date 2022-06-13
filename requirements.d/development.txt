@@ -20,6 +20,6 @@ pynco
 conda-verify
 Flask-Testing
 pytest-reverse
-eventlet
+eventlet>0.30.2
 dnspython>=2.0.0
 gsl==2.7.0
