@@ -188,7 +188,7 @@ Instructions to use mscolab wsgi
 make a file called :code:`server.py`
 and install ::
 
-   mamba install eventlet==0.30.2 gunicorn
+   mamba install eventlet>0.30.2 gunicorn
 
 **server.py**::
 
@@ -196,7 +196,7 @@ and install ::
 
 Then run the following commands. ::
 
-  $ mamba install gunicorn eventlet==0.30.2
+  $ mamba install gunicorn eventlet>0.30.2
   $ gunicorn -b 0.0.0.0:8087 server:app
 
 For further options read `<https://flask.palletsoperations.com/en/1.1.x/deploying/wsgi-standalone/#gunicorn>`_
@@ -204,7 +204,10 @@ For further options read `<https://flask.palletsoperations.com/en/1.1.x/deployin
 If you want to use nginx to proxy this gunicorn server have a look on the example
 :download:`mss_proxy.conf <samples/nginx/sites-available/mss_proxy.conf>`.
 
+.. tip:: update gunicorn
 
+  You may need to build gunicorn on your own until the new release > 20.1.0:
+  https://github.com/benoitc/gunicorn/pull/2581#issuecomment-1154008037
 
 Data Base Migration
 ~~~~~~~~~~~~~~~~~~~
