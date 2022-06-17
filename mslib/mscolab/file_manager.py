@@ -39,7 +39,7 @@ class FileManager(object):
     def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_operation(self, path, description, user, content=None, category="default"):
+    def create_operation(self, path, description, user, last_used, content=None, category="default"):
         """
         path: path to the operation
         description: description of the operation
@@ -51,7 +51,7 @@ class FileManager(object):
         proj_available = Operation.query.filter_by(path=path).first()
         if proj_available is not None:
             return False
-        operation = Operation(path, description, category)
+        operation = Operation(path, description, last_used, category)
         db.session.add(operation)
         db.session.flush()
         operation_id = operation.id
@@ -100,7 +100,8 @@ class FileManager(object):
                 "access_level": permission.access_level,
                 "path": operation.path,
                 "description": operation.description,
-                "category": operation.category
+                "category": operation.category,
+                "state": operation.state
             })
         return operations
 
