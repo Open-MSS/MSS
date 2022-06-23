@@ -16,7 +16,7 @@ import mslib.utils.qt
 import mslib.utils.thermolib
 from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
-
+from mslib.msui import wms_control
 import matplotlib.pyplot as plt
 
 
@@ -109,7 +109,7 @@ def main():
     print("OO")
     print(config["predefined_map_sections"])
     print(config["automated_plotting_flights"])
-    
+
     num_interpolation_points = config["num_interpolation_points"]
     num_labels = config["num_labels"]
     tick_index_step = num_interpolation_points // num_labels
@@ -137,35 +137,35 @@ def main():
                 x, y = bm(lon, lat)
                 plt.text(x, y, textlabel, **TEXT_CONFIG)
 
-            # retrieve and draw WMS image
+            # retrieve and draw WMS imageimg = wms.getmap(layers=[layer],
+                             styles=[style],
+                            )
+
             ax_bounds = plt.gca().bbox.bounds
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
             bbox = params['basemap']
-            rparams = {"version": "1.1.1", "request": "GetMap", "format": "image/png",
-                       "exceptions": "application/vnd.ogc.se_xml",
-                       "srs": config["predefined_map_sections"][section]["CRS"],
-                       "layers": layer, "styles": style, "elevation": elevation,
-                       "dim_init_time": init_time, "time": time,
-                       "width": width, "height": height,
-                       "bbox": f"{bbox['llcrnrlon']},{bbox['llcrnrlat']},{bbox['urcrnrlon']},{bbox['urcrnrlat']}"}
+
             if not init_time:
-                del rparams["dim_init_time"]
-            req = requests.get(
-                url, auth=tuple(config["WMS_login"][url]),
-                params=rparams)
-            if req.headers['Content-Type'].startswith("text/"):
-                print("WMS Error:")
-                print(req.text)
-                print(url, rparams)
-                print("O")
-                raise RuntimeError
-                exit(1)
-            image_io = io.BytesIO(req.content)
-            try:
-                img = PIL.Image.open(image_io)
-            except Exception as ex:
-                print(ex, req.content)
-                raise
+                init_time = None
+
+            wms = wms_control.MSUIWebMapService(url,
+                                                username=config["WMS_login"][url][0],
+                                                password=config["WMS_login"][url][1],
+                                                version='1.1.1'
+                                                )
+            img = wms.getmap(layers=[layer],
+                             styles=[style],
+                             time=time,
+                             init_time=init_time,
+                             exceptions='application/vnd.ogc.se_xml',
+                             level=elevation,
+                             srs=config["predefined_map_sections"][section]["CRS"],
+                             bbox=(bbox['llcrnrlon'], bbox['llcrnrlat'], bbox['urcrnrlon'], bbox['urcrnrlat']),
+                             format='image/png',
+                             size=(width, height)
+                            )
+            image_io = io.BytesIO(img.read())
+            img = PIL.Image.open(image_io)
 
             bm.imshow(img, interpolation="nearest", origin="upper")
             bm.drawcoastlines()
