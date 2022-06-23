@@ -14,6 +14,7 @@ build:
   script: "{{ PYTHON }} -m pip install . --no-deps -vv"  # [not win]
   entry_points:
     - msui = mslib.msui.msui:main
+    - mss = mslib.msui.mss:main
     - mswms = mslib.mswms.mswms:main
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
