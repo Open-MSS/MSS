@@ -45,7 +45,8 @@ from mslib.mswms import mss_2D_sections
 from mslib.utils.coordinate import get_projection_params
 from mslib.utils.units import convert_to
 from mslib.mswms.utils import make_cbar_labels_readable
-
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 BASEMAP_CACHE = {}
 BASEMAP_REQUESTS = []
