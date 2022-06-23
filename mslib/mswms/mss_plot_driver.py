@@ -698,18 +698,18 @@ class LinearSectionDriver(VerticalSectionDriver):
 
     def set_plot_parameters(self, plot_object=None, lsec_path=None,
                             lsec_numpoints=101, lsec_path_connection='linear',
-                            init_time=None, valid_time=None, bbox=None):
+                            init_time=None, valid_time=None, bbox=None, return_format=None):
         """
         """
         MSSPlotDriver.set_plot_parameters(self, plot_object,
                                           init_time=init_time,
                                           valid_time=valid_time,
-                                          bbox=bbox)
+                                          bbox=bbox, return_format=return_format)
         self._set_linear_section_path(lsec_path, lsec_numpoints, lsec_path_connection)
 
     def update_plot_parameters(self, plot_object=None, lsec_path=None,
                                lsec_numpoints=None, lsec_path_connection=None,
-                               init_time=None, valid_time=None, bbox=None):
+                               init_time=None, valid_time=None, bbox=None, return_format=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -720,13 +720,15 @@ class LinearSectionDriver(VerticalSectionDriver):
         lsec_numpoints = lsec_numpoints if lsec_numpoints is not None else self.lsec_numpoints
         if lsec_path_connection is None:
             lsec_path_connection = self.lsec_path_connection
+        return_format = return_format if return_format is not None else self.return_format
         self.set_plot_parameters(plot_object=plot_object,
                                  lsec_path=lsec_path,
                                  lsec_numpoints=lsec_numpoints,
                                  lsec_path_connection=lsec_path_connection,
                                  init_time=init_time,
                                  valid_time=valid_time,
-                                 bbox=bbox)
+                                 bbox=bbox,
+                                 return_format=return_format)
 
     def _set_linear_section_path(self, lsec_path, lsec_numpoints=101, lsec_path_connection='linear'):
         """

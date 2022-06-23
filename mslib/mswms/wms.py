@@ -914,7 +914,8 @@ class WMSServer(object):
                                                     lsec_path_connection="greatcircle",
                                                     init_time=init_time,
                                                     valid_time=valid_time,
-                                                    bbox=bbox)
+                                                    bbox=bbox,
+                                                    return_format=return_format)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:
                     logging.error("ERROR: %s %s", type(ex), ex)
