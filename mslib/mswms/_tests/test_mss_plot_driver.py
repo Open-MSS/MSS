@@ -224,13 +224,14 @@ class Test_LSec(object):
         self.valid_time = datetime(2012, 10, 17, 12)
         self.lsec = LinearSectionDriver(data)
 
-    def plot(self, plot_object):
+    def plot(self, plot_object, return_format="text/xml"):
         self.lsec.set_plot_parameters(plot_object=plot_object,
                                       bbox=self.bbox,
                                       lsec_path=self.path,
                                       lsec_numpoints=self.bbox[0],
                                       init_time=self.init_time,
-                                      valid_time=self.valid_time)
+                                      valid_time=self.valid_time,
+                                      return_format=return_format)
         return self.lsec.plot()
 
     def test_repeated_locations(self):
@@ -269,6 +270,12 @@ class Test_LSec(object):
     def test_LS_VerticalVelocityStyle_01(self):
         img = self.plot(mpl_lsec_styles.LS_VerticalVelocityStyle_01(driver=self.lsec))
         assert img is not None
+
+    def test_LS_wrong_return_format(self):
+        with pytest.raises(RuntimeError):
+            self.plot(mpl_lsec_styles.LS_RelativeHumdityStyle_01(driver=self.lsec), return_format="stupid/stuff")
+        with pytest.raises(RuntimeError):
+            self.plot(mpl_lsec_styles.LS_RelativeHumdityStyle_01(driver=self.lsec), return_format="image/png")
 
 
 class Test_HSec(object):
