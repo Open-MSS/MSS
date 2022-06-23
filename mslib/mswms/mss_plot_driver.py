@@ -150,8 +150,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         # Load and check time dimension. self.dataset will remain None
         # if an Exception is raised here.
         timename, timevar = netCDF4tools.identify_CF_time(dataset)
-        if self.return_format not in ("image/png", "text/xml"):
-            raise RuntimeError(f"Unexpected format for horizontal sections '{self.return_format}'.")
+
         times = netCDF4tools.num2date(timevar[:], timevar.units)
         # removed after discussion, see
         # https://mss-devel.slack.com/archives/emerge/p1486658769000007

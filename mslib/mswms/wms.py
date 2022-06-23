@@ -329,7 +329,8 @@ class WMSServer(object):
                                         plot_driver.set_plot_parameters(**kwargs,
                                                                         lsec_path=[[0, 0, 20000], [1, 1, 20000]],
                                                                         lsec_numpoints=201,
-                                                                        lsec_path_connection="linear")
+                                                                        lsec_path_connection="linear",
+                                                                        return_format="text/xml")
                                         lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
                                         lpath = [[min(plot_driver.lat_data), min(lon_data), 20000],
                                                  [max(plot_driver.lat_data), max(lon_data), 20000]]
@@ -339,7 +340,8 @@ class WMSServer(object):
                                         plot_driver.set_plot_parameters(**kwargs, vsec_path=[[0, 0], [1, 1]],
                                                                         vsec_numpoints=201, figsize=[800, 600],
                                                                         vsec_path_connection="linear", style=style,
-                                                                        noframe=False, bbox=[101, 1050, 10, 180])
+                                                                        noframe=False, bbox=[101, 1050, 10, 180],
+                                                                        return_format="image/png")
                                         lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
                                         lpath = [[min(plot_driver.lat_data), min(lon_data)],
                                                  [max(plot_driver.lat_data), max(lon_data)]]
@@ -352,7 +354,8 @@ class WMSServer(object):
                                         plot_driver.set_plot_parameters(**kwargs, noframe=False, figsize=[800, 600],
                                                                         crs="EPSG:4326", style=style,
                                                                         bbox=[-15, 35, 30, 65],
-                                                                        level=elevation)
+                                                                        level=elevation,
+                                                                        return_format="image/png")
                                         lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
                                         bbox = [min(lon_data), min(plot_driver.lat_data),
                                                 max(lon_data), max(plot_driver.lat_data)]
