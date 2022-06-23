@@ -137,10 +137,6 @@ def main():
                 x, y = bm(lon, lat)
                 plt.text(x, y, textlabel, **TEXT_CONFIG)
 
-            # retrieve and draw WMS imageimg = wms.getmap(layers=[layer],
-                             styles=[style],
-                            )
-
             ax_bounds = plt.gca().bbox.bounds
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
             bbox = params['basemap']
