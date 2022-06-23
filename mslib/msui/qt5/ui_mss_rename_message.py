@@ -36,7 +36,7 @@ class Ui_MSSMainWindow(object):
     def retranslateUi(self, MSSMainWindow):
         _translate = QtCore.QCoreApplication.translate
         MSSMainWindow.setWindowTitle(_translate("MSSMainWindow", "Mission Support System"))
-        self.label.setText(_translate("MSSMainWindow", "MIssion Support System"))
+        self.label.setText(_translate("MSSMainWindow", "Mission Support System"))
         self.textBrowser.setHtml(_translate("MSSMainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"

@@ -18,7 +18,7 @@
     <item>
      <widget class="QLabel" name="label">
       <property name="text">
-       <string>MIssion Support System</string>
+       <string>Mission Support System</string>
       </property>
      </widget>
     </item>
