@@ -150,6 +150,8 @@ class MSSPlotDriver(metaclass=ABCMeta):
         # Load and check time dimension. self.dataset will remain None
         # if an Exception is raised here.
         timename, timevar = netCDF4tools.identify_CF_time(dataset)
+        if self.return_format not in ("image/png", "text/xml"):
+            raise RuntimeError(f"Unexpected format for horizontal sections '{self.return_format}'.")
         times = netCDF4tools.num2date(timevar[:], timevar.units)
         # removed after discussion, see
         # https://mss-devel.slack.com/archives/emerge/p1486658769000007
@@ -533,6 +535,9 @@ class VerticalSectionDriver(MSSPlotDriver):
         else:
             resolution = (-1, -1)
 
+        if self.return_format not in ("image/png", "text/xml"):
+            raise RuntimeError(f"Unexpected format for vertical sections '{self.return_format}'.")
+
         # Call the plotting method of the vertical section style instance.
         image = self.plot_object.plot_vsection(data, self.lats, self.lons,
                                                valid_time=self.fc_time,
@@ -655,6 +660,9 @@ class HorizontalSectionDriver(MSSPlotDriver):
             resolution = (self.lat_data[1] - self.lat_data[0])
         else:
             resolution = 0
+
+        if self.return_format != "image/png":
+            raise RuntimeError(f"Unexpected format for horizontal sections '{self.return_format}'.")
 
         # Call the plotting method of the horizontal section style instance.
         image = self.plot_object.plot_hsection(data,
@@ -847,6 +855,9 @@ class LinearSectionDriver(VerticalSectionDriver):
         # standard names as specified by <self.lsec_style_instance>.
         data = self._load_interpolate_timestep()
         d2 = datetime.now()
+
+        if self.return_format != "text/xml":
+            raise RuntimeError(f"Unexpected format for linear sections '{self.return_format}'.")
 
         # Call the plotting method of the linear section style instance.
         image = self.plot_object.plot_lsection(data, self.lats, self.lons,
