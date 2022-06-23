@@ -42,6 +42,9 @@ from mslib.mswms import mss_2D_sections
 from mslib.utils.units import convert_to, units
 from mslib.mswms.utils import make_cbar_labels_readable
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning) 
+
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
 
