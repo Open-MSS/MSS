@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_msui
+    mslib.msui._tests.test_mss
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests msui.msui
+    This module provides pytest functions to tests msui.mss
 
     This file is part of MSS.
 
-    :copyright: Copyright 2017 Joern Ungermann
+    :copyright: Copyright 2022 Joern Ungermann
     :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 

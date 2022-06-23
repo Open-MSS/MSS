@@ -4,10 +4,9 @@
     mslib.msui.mss
     ~~~~~~~~~~~~~~~
 
-    Mission Support System Python/Qt User Interface
-    Main window of the user interface application. Manages view and tool windows
-    (the user can open multiple windows) and provides functionality to open, save,
-    and switch between flight tracks.
+    Mission Support System Python/Qt Rename Message
+
+    Message to inform the user of the rename from mss to msui.
 
     This file is part of MSS.
 
