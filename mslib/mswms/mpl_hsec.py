@@ -45,8 +45,7 @@ from mslib.mswms import mss_2D_sections
 from mslib.utils.coordinate import get_projection_params
 from mslib.utils.units import convert_to
 from mslib.mswms.utils import make_cbar_labels_readable
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
+
 
 BASEMAP_CACHE = {}
 BASEMAP_REQUESTS = []
@@ -400,7 +399,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         # Read the above stored png into a PIL image and create an adaptive
         # colour palette.
         output.seek(0)  # necessary for PIL.Image.open()
-        palette_img = PIL.Image.open(output).convert(mode="RGB").convert("P", palette=PIL.Image.ADAPTIVE)
+        palette_img = PIL.Image.open(output).convert(mode="RGB").convert("P", palette=PIL.Image.Palette.ADAPTIVE)
         output = io.BytesIO()
         if not transparent:
             logging.debug("saving figure as non-transparent PNG.")
