@@ -42,8 +42,6 @@ from mslib.mswms import mss_2D_sections
 from mslib.utils.units import convert_to, units
 from mslib.mswms.utils import make_cbar_labels_readable
 
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning) 
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
@@ -251,7 +249,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # colour palette.
             output.seek(0)  # necessary for PIL.Image.open()
             palette_img = PIL.Image.open(output).convert(
-                mode="RGB").convert("P", palette=PIL.Image.ADAPTIVE)
+                mode="RGB").convert("P", palette=PIL.Image.Palette.ADAPTIVE)
             output = io.BytesIO()
             if not transparent:
                 logging.debug("saving figure as non-transparent PNG.")
