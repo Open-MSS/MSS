@@ -615,6 +615,7 @@ for mod in [
         "ui_add_operation_dialog",
         "ui_mscolab_merge_waypoints_dialog",
         "ui_mscolab_profile_dialog",
+        "ui_mss_rename_message",
         "ui_performance_dockwidget",
         "ui_remotesensing_dockwidget",
         "ui_satellite_dockwidget",
