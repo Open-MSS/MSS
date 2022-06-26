@@ -50,7 +50,7 @@ def initial_ops():
         pag.alert(text="Sorry, no support on this platform!", title="platform Exception", button='OK')
 
 
-def call_recorder(x_start=80, y_start=20, x_width=int(pag.size()[0]), y_width=int(pag.size()[1])):
+def call_recorder(x_start=0, y_start=0, x_width=int(pag.size()[0]), y_width=int(pag.size()[1])):
     """
     Calls the screen recorder class to start the recording of the automation.
     """

@@ -743,7 +743,7 @@ def automate_views():
         x, y = pag.locateCenterOnScreen(picture('views', 'layers.png'),
                                         region=(900, 830, sc_width, sc_height))
         pag.click(x, y, interval=2)
-        
+
         # Entering wms URL
         try:
             x, y = pag.locateCenterOnScreen(picture('views', 'wms_url.png'), region=(0, int(sc_height * 0.65), sc_width,

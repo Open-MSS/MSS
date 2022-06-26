@@ -96,7 +96,8 @@ def automate_waypoints():
         gap = 18
 
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'divergence_layer.png'))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'equivalent_layer.png'))
+        pag.click(x, y, interval=2)
         x, y = pag.locateCenterOnScreen(picture('wms', 'divergence_layer.png'))
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
@@ -144,7 +145,9 @@ def automate_waypoints():
         if platform == 'win32':
             pag.moveTo(x - 268, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.moveTo(x - 228, y, duration=2)
+            pag.moveTo(x - 55, y, duration=2)
+        pag.click(interval=1)
+        pag.moveTo(x - 55, y + 30, duration=2)
         pag.click(interval=1)
         pag.sleep(2)
 
@@ -164,7 +167,10 @@ def automate_waypoints():
 
     # Starring the layers
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'unselected_divergence_layer.png'))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'equivalent_layer.png'))
+        pag.moveTo(x, y, duration=2)
+        pag.click(interval=1)
+        x, y = pag.locateCenterOnScreen(picture('wms', 'divergence_layer.png'))
         if platform == 'win32':
             pag.moveTo(x - 255, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
