@@ -25,11 +25,10 @@
 """
 
 import pyautogui as pag
-import multiprocessing
-import sys
+
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils.__init__ import initial_ops, call_recorder, call_msui, platform_keys, finish
+from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
 
@@ -61,7 +60,7 @@ def automate_views():
     pag.hotkey('ctrl', 'h')
     pag.sleep(2)
 
-    # Shfting topview window to upper right corner
+    # Shifting topview window to upper right corner
     try:
         x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
         pag.click(x, y - 56, interval=2)
@@ -691,26 +690,26 @@ def automate_views():
     pag.click(interval=1)
     pag.hotkey('ctrl', 'l')
     pag.sleep(4)
+    pag.hotkey(win, 'up')
+    pag.click(10, 10, interval=2)
+    pag.dragRel(853, 360, duration=3)
+    pag.sleep(2)
+
 
     # Relocating Linear View
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'))
-        pag.moveTo(x, y - 587, duration=1)
-        if platform == 'linux' or platform == 'linux2':
-            pag.dragRel(1053, 860, duration=3)
-        elif platform == 'win32' or platform == 'darwin':
-            pag.dragRel(553, 660, duration=2)
-        pag.sleep(2)
+        x, y = pag.locateCenterOnScreen(picture('views', 'selecttoopencontrol.png'))
 
         if platform == 'linux' or platform == 'linux2':
             pag.keyDown('altleft')
             pag.press('tab')
-            pag.press('right')
+            pag.press('tab')
             pag.keyUp('altleft')
             pag.sleep(1)
             pag.keyDown('altleft')
             pag.press('tab')
-            pag.press('right', presses=2)
+            pag.press('tab')
+            pag.press('tab')
             pag.keyUp('altleft')
         elif platform == 'win32':
             pag.keyDown('alt')
@@ -738,55 +737,42 @@ def automate_views():
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : Linearview's window header not found on the screen.")
         raise
-    # Opening Linear WMS
+
+    # Locating Server Layer
     try:
-        if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'),
-                                            region=(0, int(sc_height * 0.85), sc_width, int(sc_height * 0.15)))
-        elif platform == 'win32':
-            x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'),
-                                            region=(0, int(sc_height * 0.75), sc_width, int(sc_height * 0.25)))
-        pag.click(x, y, duration=1)
-        pag.press('down')
-        pag.press('return') if platform == 'darwin' else pag.press('enter')
-        pag.sleep(1)
-        # Locating Server Layer
+        x, y = pag.locateCenterOnScreen(picture('views', 'layers.png'),
+                                        region=(900, 830, sc_width, sc_height))
+        pag.click(x, y, interval=2)
+        
+        # Entering wms URL
         try:
-            x, y = pag.locateCenterOnScreen(picture('wms', 'layers.png'), region=(0, int(sc_height * 0.75), sc_width,
-                                                                             int(sc_height * 0.25)))
-            pag.click(x, y, interval=2)
-            # Entering wms URL
-            try:
-                x, y = pag.locateCenterOnScreen(picture('wms', 'wms_url.png'), region=(0, int(sc_height * 0.65), sc_width,
-                                                                                  int(sc_height * 0.35)))
-                pag.click(x + 220, y, interval=2)
-                pag.hotkey('ctrl', 'a', interval=1)
-                pag.write('http://open-mss.org/', interval=0.25)
-            except (ImageNotFoundException, OSError, Exception):
-                print("\nException : Linearviews' \'WMS URL\' editbox button/option not found on the screen.")
-                raise
-            try:
-                x, y = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'),
-                                                region=(0, int(sc_height * 0.65), sc_width, int(sc_height * 0.35)))
-                pag.click(x, y, interval=2)
-                pag.sleep(3)
-            except (ImageNotFoundException, OSError, Exception):
-                print("\nException : LinearView's \'Get capabilities\' button/option not found on the screen.")
-                raise
-            if platform == 'win32':
-                pag.move(-171, -390, duration=1)
-                pag.dragRel(-867, 135, duration=2)
-            elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-                pag.move(-171, -390, duration=1)
-                pag.dragRel(-900, 245, duration=2)
-            # Storing screen coordinates for List layer of side view
-            ll_lv_x, ll_lv_y = pag.position()
-            pag.sleep(1)
+            x, y = pag.locateCenterOnScreen(picture('views', 'wms_url.png'), region=(0, int(sc_height * 0.65), sc_width,
+                                                                              int(sc_height * 0.35)))
+            pag.click(x + 220, y, interval=2)
+            pag.hotkey('ctrl', 'a', interval=1)
+            pag.write('http://open-mss.org/', interval=0.25)
         except (ImageNotFoundException, OSError, Exception):
-            print("\nException : Linearview's WMS \'Server\\Layers\' button/option not found on the screen.")
+            print("\nException : Linearviews' \'WMS URL\' editbox button/option not found on the screen.")
             raise
-    except (ImageNotFoundException, OSError, TypeError, Exception):
-        print("\nException : Linearview's selecttoopencontrol not found on the screen.")
+        try:
+            x, y = pag.locateCenterOnScreen(picture('views', 'get_capabilities.png'),
+                                            region=(0, int(sc_height * 0.65), sc_width, int(sc_height * 0.35)))
+            pag.click(x, y, interval=2)
+            pag.sleep(3)
+        except (ImageNotFoundException, OSError, Exception):
+            print("\nException : LinearView's \'Get capabilities\' button/option not found on the screen.")
+            raise
+        if platform == 'win32':
+            pag.move(-171, -390, duration=1)
+            pag.dragRel(-867, 135, duration=2)
+        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            pag.move(-171, -390, duration=1)
+            pag.dragRel(-900, 245, duration=2)
+        # Storing screen coordinates for List layer of side view
+        ll_lv_x, ll_lv_y = pag.position()
+        pag.sleep(1)
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException : Linearview's WMS \'Server\\Layers\' button/option not found on the screen.")
         raise
     # Selecting Some Layers in Linear wms section
     if platform == 'win32':
@@ -794,8 +780,11 @@ def automate_views():
     elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
         gap = 16
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'horizontalwind.png'), region=(0, int(sc_height / 2), sc_width,
-                                                                                 int(sc_height / 2)))
+        x, y = pag.locateCenterOnScreen(picture('views', 'vertical_velocity.png'),
+                                        region=(0, int(sc_height / 2), sc_width, int(sc_height / 2)))
+        pag.click(x, y, interval=2)
+        x, y = pag.locateCenterOnScreen(picture('views', 'horizontal_wind.png'),
+                                        region=(0, int(sc_height / 2), sc_width, int(sc_height / 2)))
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
         pag.sleep(1)
@@ -846,28 +835,6 @@ def automate_views():
     # Close Everything!
     finish()
 
-def main():
-    """
-    This function runs the above functions as different processes at the same time and can be
-    controlled from here. (This is the main process.)
-    """
-    p1 = multiprocessing.Process(target=call_msui)
-    p2 = multiprocessing.Process(target=automate_views)
-    p3 = multiprocessing.Process(target=call_recorder)
-
-    print("\nINFO : Starting Automation.....\n")
-    p3.start()
-    pag.sleep(5)
-    initial_ops()
-    p1.start()
-    p2.start()
-
-    p2.join()
-    p1.join()
-    p3.join()
-    print("\n\nINFO : Automation Completes Successfully!")
-    sys.exit()
-
 
 if __name__ == '__main__':
-    main()
+    start(target=automate_views)

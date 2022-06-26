@@ -24,12 +24,11 @@
 """
 
 import pyautogui as pag
-import multiprocessing
-import sys
 import os.path
+
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils.__init__ import initial_ops, call_recorder, call_msui, platform_keys, finish
+from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
 def automate_mscolab():
@@ -655,28 +654,6 @@ def automate_mscolab():
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
-def main():
-    """
-    This function runs the above functions as different processes at the same time and can be
-    controlled from here. (This is the main process.)
-    """
-    p1 = multiprocessing.Process(target=call_msui)
-    p2 = multiprocessing.Process(target=automate_mscolab)
-    p3 = multiprocessing.Process(target=call_recorder)
-
-    print("\nINFO : Starting Automation.....\n")
-    p3.start()
-    pag.sleep(3)
-    initial_ops()
-    p1.start()
-    p2.start()
-
-    p2.join()
-    p1.join()
-    p3.join()
-    print("\n\nINFO : Automation Completes Successfully!")
-    sys.exit()
-
 
 if __name__ == '__main__':
-    main()
+    start(target=automate_mscolab)

@@ -26,6 +26,7 @@
     limitations under the License.
 """
 import sys
+import multiprocessing
 import pyautogui as pag
 from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
@@ -123,3 +124,29 @@ def finish():
     except Exception:
         print("Cannot automate : Enable Shortcuts for your system or try again")
         raise
+
+
+def start(target=None):
+    """
+    This function runs the above functions as different processes at the same time and can be
+    controlled from here. (This is the main process.)
+    """
+    if target is None:
+        return
+    p1 = multiprocessing.Process(target=call_msui)
+    p2 = multiprocessing.Process(target=target)
+    p3 = multiprocessing.Process(target=call_recorder)
+
+    print("\nINFO : Starting Automation.....\n")
+    p3.start()
+    pag.sleep(5)
+    initial_ops()
+    p1.start()
+    p2.start()
+
+    p2.join()
+    p1.join()
+    p3.join()
+    print("\n\nINFO : Automation Completes Successfully!")
+    # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
+    sys.exit()

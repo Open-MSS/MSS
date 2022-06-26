@@ -8,7 +8,7 @@ export LC_ALL=C
 set -e
 
 # the directory of the script
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+DIR="/tmp/"
 
 # the temp directory used, within $DIR
 # omit the -p parameter to create a temporal directory in the default location
@@ -46,3 +46,4 @@ exec "$@"
 
 # sometimes the pointer is still active
 killall highlight-pointer
+rm -rf "$WORK_DIR"
