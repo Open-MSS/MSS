@@ -32,6 +32,7 @@ from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
+
 def automate_kml():
     """
     This is the main automating script of the MSS remote sensing tutorial which will be recorded and saved

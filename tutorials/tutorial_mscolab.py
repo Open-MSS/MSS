@@ -31,6 +31,7 @@ from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
+
 def automate_mscolab():
     """
     This is the main automating script of the Mission Support System Collaboration or Mscolab tutorial which will be
@@ -58,17 +59,8 @@ def automate_mscolab():
     # Example upload of msui logo during Chat Window demonstration.
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
     example_image_path = os.path.join(path, 'docs/mss-logo.png')
-
-    file_x, file_y = None, None
-    open_operations_x, open_operations_y = None, None
-    selectall_left_x, selectall_left_y = None, None
-    selectall_right_x, selectall_right_y = None, None
     modify_x, modify_y = None, None
-    previous_x, previous_y = None, None
-    work_async_x, work_async_y = None, None
-    wp1_x, wp1_y = None, None
-    wp2_x, wp2_y = None, None
-    sc_width, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
+    _, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
     # Maximizing the window
     try:
         pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
@@ -193,7 +185,7 @@ def automate_mscolab():
     try:
         selectall_left_x, selectall_left_y = pag.locateCenterOnScreen(picture('mscolab',
                                                                               'manageusers_left_selectall.png'),
-                                                                              region=(0, 0, 600, sc_height))
+                                                                      region=(0, 0, 600, sc_height))
         pag.moveTo(selectall_left_x, selectall_left_y, duration=2)
         pag.click(selectall_left_x, selectall_left_y, duration=1)
         pag.sleep(2)
@@ -242,7 +234,7 @@ def automate_mscolab():
     try:
         selectall_right_x, selectall_right_y = pag.locateCenterOnScreen(picture('mscolab',
                                                                                 'manageusers_right_selectall.png'),
-                                                                                region=(600, 0, 1200, sc_height))
+                                                                        region=(600, 0, 1200, sc_height))
         pag.moveTo(selectall_right_x - 170, selectall_right_y, duration=2)
         pag.click(selectall_right_x - 170, selectall_right_y, duration=2)
         pag.typewrite('t', interval=0.3)
@@ -256,7 +248,6 @@ def automate_mscolab():
 
     # Selecting and modifying user roles
     if selectall_right_x is not None and selectall_right_y is not None:
-        row_gap = 30
         for i in range(3):
             pag.moveTo(selectall_right_x, selectall_right_y + 56, duration=1)
             # pag.move(selectall_right_x, row_gap * (i + 1), duration=1)

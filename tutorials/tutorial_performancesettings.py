@@ -33,6 +33,7 @@ from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
+
 def automate_performance():
     """
     This is the main automating script of the performance settings of table view tutorial which will be recorded and

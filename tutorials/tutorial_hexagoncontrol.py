@@ -31,6 +31,7 @@ from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
+
 def automate_hexagoncontrol():
     """
     This is the main automating script of the MSS hexagon control of table view which will be recorded and saved

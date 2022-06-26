@@ -31,6 +31,7 @@ from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
+
 def automate_waypoints():
     """
     This is the main automating script of the MSS web map service tutorial which will be recorded and saved
@@ -54,7 +55,6 @@ def automate_waypoints():
     pag.sleep(2)
     pag.hotkey('ctrl', 'h')
     pag.sleep(1)
-
 
     # Locating Server Layer
     try:
