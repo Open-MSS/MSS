@@ -1,5 +1,9 @@
 #!/bin/bash
-
+##
+## This file is part of MSS
+##
+## copyright: Copyright 2022 by the mss team, see AUTHORS.
+## license: APACHE-2.0, see LICENSE for details.
 ##
 ## ./start_tutorial.sh python ./tutorial_hexagoncontrol.py
 ##
@@ -23,6 +27,7 @@ fi
 # deletes the temp directory
 function cleanup {      
   killall highlight-pointer
+  killall mscolab.py 
   rm -rf "$WORK_DIR"
   echo "Deleted temp working directory $WORK_DIR"
 }
@@ -44,6 +49,7 @@ export MSUI_CONFIG_PATH=$WORK_DIR
 
 exec "$@"
 
+# ToDo improve cleanup
 # sometimes the pointer is still active
 killall highlight-pointer
 rm -rf "$WORK_DIR"
