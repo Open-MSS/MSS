@@ -27,47 +27,12 @@ import pyautogui as pag
 import multiprocessing
 import sys
 import os.path
+import tempfile
+import shutil
 from sys import platform
-
 from pyscreeze import ImageNotFoundException
-
-from tutorials import screenrecorder as sr
-from mslib.msui import msui
-
-
-def initial_ops():
-    """
-    Executes the initial operations such as closing all opened windows and showing the desktop.
-    """
-    pag.sleep(5)
-    if platform == "linux" or platform == "linux2":
-        pag.hotkey('winleft', 'd')
-        print("\n INFO : Automation is running on Linux system..\n")
-    elif platform == "darwin":
-        pag.hotkey('option', 'command', 'm')
-        print("\n INFO : Automation is running on Mac OS..\n")
-    elif platform == "win32":
-        pag.hotkey('win', 'd')
-        print("\nINFO : Automation is running on Windows OS..\n")
-    else:
-        pag.alert(text="Sorry, no support on this platform!", title="Platform Exception", button='OK')
-
-
-def call_recorder():
-    """
-    Calls the screen recorder class to start the recording of the automation.
-    """
-    rec = sr.ScreenRecorder(80, 80, int(pag.size()[0]) - 400, int(pag.size()[1]) - 150)
-    rec.capture()
-    rec.stop_capture()
-
-
-def call_msui():
-    """
-    Calls the main MSS GUI window since operations are to be performed on it only.
-    """
-    msui.main()
-
+from tutorials.utils.__init__ import initial_ops, call_recorder, call_msui, platform_keys, finish
+from tutorials.pictures import picture
 
 def automate_performance():
     """
@@ -77,28 +42,14 @@ def automate_performance():
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
 
-    # Platform specific things
-    if platform == 'linux' or platform == 'linux2':
-        enter = 'enter'
-        wms_path = 'pictures/tutorial_wms/linux/'
-        ps_path = 'pictures/performance_settings/linux/'
-        win = 'winleft'
-        ctrl = 'ctrl'
-    elif platform == 'win32':
-        enter = 'enter'
-        wms_path = 'pictures/tutorial_wms/win32/'
-        ps_path = 'pictures/performance_settings/linux/'
-        win = 'win'
-        ctrl = 'ctrl'
-    elif platform == 'darwin':
-        enter = 'return'
-        wms_path = 'pictures/tutorial_wms/linux/'
-        ps_path = 'pictures/performance_settings/linux/'
-        ctrl = 'command'
+    ctrl, enter, win, alt = platform_keys()
 
     # Satellite Predictor file path
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    ps_file_path = os.path.join(path, 'docs/samples/config/msui/performance_simple.json')
+    ps_file_path = os.path.join(path, 'docs/samples/config/msui/performance_simple.json.sample')
+    dirpath = tempfile.mkdtemp()
+    sample = os.path.join(dirpath, 'example.json')
+    shutil.copy(ps_file_path, sample)
 
     # Maximizing the window
     try:
@@ -111,47 +62,55 @@ def automate_performance():
 
     # Opening Performance Settings dockwidget
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
-        # Relocating the table view window
-        pag.moveTo(x, y - 462, duration=1)
+        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'selecttoopencontrol.png'))
+        pag.moveTo(x + 250, y - 462, duration=1)
         if platform == 'linux' or platform == 'linux2':
-            pag.dragRel(10, 100, duration=3)
+            # the window need to be moved a bit below the topview window
+            pag.dragRel(400, 387, duration=2)
         elif platform == 'win32' or platform == 'darwin':
-            pag.dragRel(10, 10, duration=2)
-        pag.sleep(2)
-        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-        pag.press('down', presses=2, interval=1)
-        pag.sleep(1)
-        pag.press(enter)
+            pag.dragRel(200, 487, duration=2)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'select to open control\' button/option not found on the screen.")
+        raise
+
+    tv_x, tv_y = pag.position()
+    # Opening Hexagon Control dockwidget
+    if tv_x is not None and tv_y is not None:
+        pag.moveTo(tv_x - 250, tv_y + 462, duration=2)
+        pag.click(duration=2)
+        pag.sleep(1)
+        pag.press('down')
+        pag.sleep(1)
+        pag.press('down')
+        pag.sleep(1)
+        pag.press(enter)
+        pag.sleep(2)
 
     # Exploring through the file system and loading the performance settings json file for a dummy aircraft.
     try:
-        x, y = pag.locateCenterOnScreen(f'{ps_path}select.png')
+        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'select.png'))
         pag.click(x, y, duration=2)
         pag.sleep(1)
-        pag.typewrite(ps_file_path, interval=0.1)
+        pag.typewrite(sample, interval=0.1)
         pag.sleep(1)
         pag.press(enter)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Select\' button (for loading performance_settings.json file) not found on the screen.")
-
+        raise
     # Checking the Show Performance checkbox to display the settings file in the table view
     try:
-        x, y = pag.locateCenterOnScreen(f'{ps_path}show_performance.png')
+        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'show_performance.png'))
         pag.click(x, y, duration=2)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Show Performance\' checkbox not found on the screen.")
+        raise
 
     # Changing the maximum take off weight
     try:
-        x, y = pag.locateCenterOnScreen(f'{ps_path}maximum_takeoff_weight.png')
+        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'maximum_takeoff_weight.png'))
         pag.click(x + 318, y, duration=2)
         pag.sleep(4)
         pag.hotkey(ctrl, 'a')
@@ -162,10 +121,10 @@ def automate_performance():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Maximum Takeoff Weight\' fill box not found on the screen.")
-
+        raise
     # Changing the aircraft weight of the dummy aircraft
     try:
-        x, y = pag.locateCenterOnScreen(f'{ps_path}aircraft_weight.png')
+        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'aircraft_weight.png'))
         pag.click(x + 300, y, duration=2)
         pag.sleep(4)
         pag.hotkey(ctrl, 'a')
@@ -176,10 +135,11 @@ def automate_performance():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Aircraft weight\' fill box not found on the screen.")
+        raise
 
     # Changing the take off time of the dummy aircraft
     try:
-        x, y = pag.locateCenterOnScreen(f'{ps_path}take_off_time.png')
+        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'take_off_time.png'))
         pag.click(x + 410, y, duration=2)
         pag.sleep(4)
         pag.hotkey(ctrl, 'a')
@@ -192,10 +152,11 @@ def automate_performance():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Take off time\' fill box not found on the screen.")
+        raise
 
     # Showing and hiding the performance settings
     try:
-        x, y = pag.locateCenterOnScreen(f'{ps_path}show_performance.png')
+        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'show_performance.png'))
         pag.click(x, y, duration=2)
         pag.sleep(3)
 
@@ -206,47 +167,10 @@ def automate_performance():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Show Performance\' checkbox not found on the screen.")
+        raise
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-
-    # Close Everything!
-    try:
-        if platform == 'linux' or platform == 'linux2':
-            for _ in range(2):
-                pag.hotkey('altleft', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
-            pag.keyDown('altleft')
-            pag.press('tab')
-            pag.press('left')
-            pag.keyUp('altleft')
-            pag.press('q')
-        if platform == 'win32':
-            for _ in range(2):
-                pag.hotkey('alt', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
-            pag.hotkey('alt', 'tab')
-            pag.press('q')
-        elif platform == 'darwin':
-            for _ in range(2):
-                pag.hotkey('command', 'w')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('return')
-                pag.sleep(2)
-            pag.hotkey('command', 'tab')
-            pag.press('q')
-    except Exception:
-        print("Cannot automate : Enable Shortcuts for your system or try again")
-
+    finish()
 
 def main():
     """

@@ -29,41 +29,8 @@ import multiprocessing
 import sys
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials import screenrecorder as sr
-from mslib.msui import msui
-
-
-def initial_ops():
-    """
-    Executes the initial operations such as closing all opened windows and showing the desktop.
-    """
-    pag.sleep(5)
-    if platform == "linux" or platform == "linux2":
-        pag.hotkey('winleft', 'd')
-        print("\n INFO : Automation is running on Linux system..\n")
-    elif platform == "darwin":
-        pag.hotkey('option', 'command', 'm')
-        print("\n INFO : Automation is running on Mac OS..\n")
-    elif platform == "win32":
-        pag.hotkey('win', 'd')
-        print("\n INFO : Automation is running on Windows OS..\n")
-    else:
-        pag.alert(text="Sorry, no support on this platform!", title="Platform Exception", button='OK')
-
-
-def call_recorder():
-    """
-    Calls the screen recorder class to start the recording of the automation.
-    """
-    sr.main()
-
-
-def call_msui():
-    """
-    Calls the main MSS GUI window since operations are to be performed on it only.
-    """
-    msui.main()
-
+from tutorials.utils.__init__ import initial_ops, call_recorder, call_msui, platform_keys, finish
+from tutorials.pictures import picture
 
 def automate_waypoints():
     """
@@ -72,11 +39,7 @@ def automate_waypoints():
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
-
-    if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-        dir_path = 'pictures/tutorial_wms/linux/'
-    elif platform == 'win32':
-        dir_path = 'pictures/tutorial_wms/win/'
+    ctrl, enter, win, alt = platform_keys()
 
     # Maximizing the window
     try:
@@ -96,7 +59,7 @@ def automate_waypoints():
 
     # Locating Server Layer
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}layers.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'layers.png'))
         pag.click(x, y, interval=2)
         if platform == 'win32':
             pag.move(35, -485, duration=1)
@@ -111,7 +74,7 @@ def automate_waypoints():
 
     # Entering wms URL
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}wms_url.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'wms_url.png'))
         pag.click(x + 220, y, interval=2)
         pag.hotkey('ctrl', 'a', interval=1)
         pag.write('http://open-mss.org/', interval=0.25)
@@ -120,7 +83,7 @@ def automate_waypoints():
         raise
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}get_capabilities.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'))
         pag.click(x, y, interval=2)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
@@ -134,7 +97,8 @@ def automate_waypoints():
         gap = 18
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}equivalent_layer.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'divergence_layer.png'))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'divergence_layer.png'))
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
         pag.sleep(1)
@@ -144,7 +108,7 @@ def automate_waypoints():
 
     # Filter layer
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}layer_filter.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'layer_filter.png'))
         pag.click(x + 150, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Layer filter editbox\' button/option not found on the screen.")
@@ -167,7 +131,7 @@ def automate_waypoints():
 
     # Multilayering
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'multilayering.png'))
         pag.moveTo(x, y, duration=2)
         # pag.move(-48, None)
         pag.click()
@@ -177,7 +141,7 @@ def automate_waypoints():
         raise
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}checkbox_unselected_divergence.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'checkbox_unselected_divergence.png'))
         if platform == 'win32':
             pag.moveTo(x - 268, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
@@ -190,7 +154,7 @@ def automate_waypoints():
         raise
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}multilayering.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'multilayering.png'))
         pag.moveTo(x, y, duration=2)
         # pag.move(-48, None)
         pag.click()
@@ -201,7 +165,7 @@ def automate_waypoints():
 
     # Starring the layers
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}unselected_divergence_layer.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'unselected_divergence_layer.png'))
         if platform == 'win32':
             pag.moveTo(x - 255, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
@@ -215,7 +179,7 @@ def automate_waypoints():
 
     # Filtering starred layers.
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}star_filter.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'star_filter.png'))
         pag.click(x, y, interval=2)
         pag.click(temp1, temp2, duration=1)
         pag.sleep(1)
@@ -228,7 +192,7 @@ def automate_waypoints():
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2 + (gap * 4), interval=2)
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}level.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'level.png'))
         pag.click(x + 200, y, interval=2)
         pag.click(interval=1)
         pag.sleep(3)
@@ -237,7 +201,7 @@ def automate_waypoints():
         raise
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}initialization.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'initialization.png'))
         initx, inity = x, y
         pag.click(x + 200, y, interval=1)
         pag.sleep(1)
@@ -247,7 +211,7 @@ def automate_waypoints():
         raise
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}valid.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'valid.png'))
         validx, validy = x, y
         pag.click(x + 200, y, interval=2)
         pag.click(interval=1)
@@ -284,7 +248,7 @@ def automate_waypoints():
 
     # Auto-update feature of wms
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}auto_update.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'auto_update.png'))
         pag.click(x - 53, y, interval=2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\' auto update checkbox\' button/option not found on the screen.")
@@ -293,7 +257,7 @@ def automate_waypoints():
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2, interval=1)
         try:
-            retx, rety = pag.locateCenterOnScreen(f'{dir_path}retrieve.png')
+            retx, rety = pag.locateCenterOnScreen(picture('wms', 'retrieve.png'))
             pag.click(retx, rety, interval=2)
             pag.sleep(3)
             pag.click(temp1, temp2 + (gap * 4), interval=2)
@@ -308,7 +272,7 @@ def automate_waypoints():
 
     # Using and not using Cache
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}use_cache.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'use_cache.png'))
         pag.click(x - 46, y, interval=2)
         pag.click(temp1, temp2, interval=2)
         pag.sleep(4)
@@ -323,7 +287,7 @@ def automate_waypoints():
 
     # Clearing cache. The layers load slower
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}clear_cache.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'clear_cache.png'))
         pag.click(x, y, interval=2)
         if platform == 'linux' or platform == 'linux2' or platform == 'win32':
             pag.press('enter', interval=1)
@@ -344,7 +308,7 @@ def automate_waypoints():
         pag.click(temp1, temp2, interval=2)
         pag.sleep(1)
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}transparent.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'transparent.png'))
         pag.click(x - 53, y, interval=2)
         if retx is not None and rety is not None:
             pag.click(retx, rety, interval=2)
@@ -360,7 +324,7 @@ def automate_waypoints():
     # Removing a Layer from the map
     if temp1 is not None and temp2 is not None:
         try:
-            x, y = pag.locateCenterOnScreen(f'{dir_path}remove.png')
+            x, y = pag.locateCenterOnScreen(picture('wms', 'remove.png'))
             pag.click(x, y, interval=2)
             pag.sleep(1)
             pag.click(temp1, temp2 + (gap * 4), interval=2)
@@ -371,13 +335,13 @@ def automate_waypoints():
             raise
     # Deleting All layers
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}delete_layers.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'delete_layers.png'))
         if platform == 'win32':
             pag.click(x - 74, y, interval=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             pag.click(x - 70, y, interval=2)
         pag.sleep(1)
-        x1, y1 = pag.locateCenterOnScreen(f'{dir_path}get_capabilities.png')
+        x1, y1 = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'))
         pag.click(x1, y1, interval=2)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
@@ -385,49 +349,7 @@ def automate_waypoints():
         raise
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-
-    # Close Everything!
-    try:
-        if platform == 'linux' or platform == 'linux2':
-            pag.hotkey('altleft', 'f4', interval=1)
-            for _ in range(2):
-                pag.hotkey('altleft', 'f4')
-                pag.sleep(1)
-                pag.press('left')
-                pag.sleep(1)
-                pag.press('enter')
-                pag.sleep(1)
-            pag.keyDown('altleft')
-            pag.press('tab')
-            pag.press('left')
-            pag.keyUp('altleft')
-            pag.press('q')
-        if platform == 'win32':
-            pag.hotkey('alt', 'f4', interval=1)
-            for _ in range(2):
-                pag.hotkey('alt', 'f4')
-                pag.sleep(1)
-                pag.press('left')
-                pag.sleep(1)
-                pag.press('enter')
-                pag.sleep(1)
-            pag.hotkey('alt', 'tab')
-            pag.press('q')
-        elif platform == 'darwin':
-            pag.hotkey('command', 'w', interval=1)
-            for _ in range(2):
-                pag.hotkey('command', 'w')
-                pag.sleep(1)
-                pag.press('left')
-                pag.sleep(1)
-                pag.press('return')
-                pag.sleep(1)
-            pag.hotkey('command', 'tab')
-            pag.press('q')
-    except Exception:
-        print("Cannot automate : Enable Shortcuts for your system or try again")
-        # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
-        raise
+    finish()
 
 def main():
     """

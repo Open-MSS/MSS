@@ -26,45 +26,9 @@ import pyautogui as pag
 import multiprocessing
 import sys
 from sys import platform
-
 from pyscreeze import ImageNotFoundException
-
-from tutorials import screenrecorder as sr
-from mslib.msui import msui
-
-
-def initial_ops():
-    """
-    Executes the initial operations such as closing all opened windows and showing the desktop.
-    """
-    pag.sleep(5)
-    if platform == "linux" or platform == "linux2":
-        pag.hotkey('winleft', 'd')
-        print("\n INFO : Automation is running on Linux system..\n")
-    elif platform == "darwin":
-        pag.hotkey('option', 'command', 'm')
-        print("\n INFO : Automation is running on Mac OS..\n")
-    elif platform == "win32":
-        pag.hotkey('win', 'd')
-        print("\n INFO : Automation is running on Windows OS..\n")
-    else:
-        pag.alert(text="Sorry, no support on this platform!", title="Platform Exception", button='OK')
-
-
-def call_recorder():
-    """
-    Calls the screen recorder class to start the recording of the automation.
-    """
-    rec = sr.ScreenRecorder(80, 20, int(pag.size()[0] / 1.5), int(pag.size()[1]))
-    rec.capture()
-    rec.stop_capture()
-
-
-def call_msui():
-    """
-    Calls the main MSS GUI window since operations are to be performed on it only.
-    """
-    msui.main()
+from tutorials.utils.__init__ import initial_ops, call_recorder, call_msui, platform_keys, finish
+from tutorials.pictures import picture
 
 
 def automate_rs():
@@ -75,23 +39,7 @@ def automate_rs():
     # Giving time for loading of the MSS GUI.
     pag.sleep(10)
 
-    # Platform specific things
-    if platform == 'linux' or platform == 'linux2':
-        enter = 'enter'
-        wms_path = 'pictures/tutorial_wms/linux/'
-        rs_path = 'pictures/remote_sensing/linux/'
-        win = 'winleft'
-        ctrl = 'ctrl'
-    elif platform == 'win32':
-        enter = 'enter'
-        wms_path = 'pictures/tutorial_wms/win32/'
-        rs_path = 'pictures/remote_sensing/win32/'
-        win = 'win'
-        ctrl = 'ctrl'
-    elif platform == 'darwin':
-        enter = 'return'
-        wms_path = 'pictures/tutorial_wms/linux/'
-        ctrl = 'command'
+    ctrl, enter, win, alt = platform_keys()
 
     # Maximizing the window
     try:
@@ -104,7 +52,7 @@ def automate_rs():
 
     # Opening Remote Sensing dockwidget
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'))
         pag.click(x, y, interval=2)
         pag.sleep(1)
         pag.press('down', presses=3, interval=1)
@@ -116,7 +64,7 @@ def automate_rs():
 
     # Adding waypoints for demonstrating remote sensing
     try:
-        x, y = pag.locateCenterOnScreen('pictures/add_waypoint.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
         pag.click(x, y, interval=2)
         pag.move(-50, 150, duration=1)
         pag.click(interval=2)
@@ -133,10 +81,11 @@ def automate_rs():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Add waypoint button in topview not found on the screen.")
+        raise
 
     # Showing Solar Angle Colors
     try:
-        x, y = pag.locateCenterOnScreen(f'{rs_path}showangle.png')
+        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'showangle.png'))
         pag.sleep(1)
         pag.click(x, y, duration=2)
         pag.sleep(1)
@@ -162,10 +111,11 @@ def automate_rs():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Show angle\' checkbox not found on the screen.")
+        raise
 
     # Changing azimuth angles
     try:
-        x, y = pag.locateCenterOnScreen(f'{rs_path}azimuth.png')
+        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'azimuth.png'))
         pag.click(x + 70, y, duration=1)
         azimuth_x, azimuth_y = pag.position()
         pag.sleep(2)
@@ -181,10 +131,11 @@ def automate_rs():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Azimuth\' spinbox not found on the screen.")
+        raise
 
     # Changing elevation angles
     try:
-        x, y = pag.locateCenterOnScreen(f'{rs_path}elevation.png')
+        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'elevation.png'))
         pag.click(x + 70, y, duration=1)
         pag.sleep(2)
         pag.hotkey(ctrl, 'a')
@@ -199,10 +150,11 @@ def automate_rs():
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Elevation\' spinbox not found on the screen.")
+        raise
 
     # Drawing tangents to the waypoints and path
     try:
-        x, y = pag.locateCenterOnScreen(f'{rs_path}drawtangent.png')
+        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'drawtangent.png'))
         pag.click(x, y, duration=1)
         pag.sleep(2)
         # Changing color of tangents
@@ -222,13 +174,14 @@ def automate_rs():
 
         # Zooming into the map
         try:
-            x, y = pag.locateCenterOnScreen('pictures/zoom.PNG')
+            x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'))
             pag.click(x, y, interval=2)
-            pag.move(None, 150, duration=1)
+            pag.move(0, 150, duration=1)
             pag.dragRel(230, 150, duration=2)
             pag.sleep(5)
         except ImageNotFoundException:
             print("\n Exception : Zoom button could not be located on the screen")
+            raise
 
         # Rotating the tangent through various angles
         try:
@@ -246,48 +199,13 @@ def automate_rs():
             pag.sleep(1)
         except UnboundLocalError:
             print('Azimuth spinbox coordinates are not stored. Hence cannot change values.')
+            raise
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Tangent\' checkbox not found on the screen.")
+        raise
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-
-    # Close Everything!
-    try:
-        if platform == 'linux' or platform == 'linux2':
-            for _ in range(2):
-                pag.hotkey('altleft', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
-            pag.keyDown('altleft')
-            pag.press('tab')
-            pag.press('left')
-            pag.keyUp('altleft')
-            pag.press('q')
-        if platform == 'win32':
-            for _ in range(2):
-                pag.hotkey('alt', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
-            pag.hotkey('alt', 'tab')
-            pag.press('q')
-        elif platform == 'darwin':
-            for _ in range(2):
-                pag.hotkey('command', 'w')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('return')
-                pag.sleep(2)
-            pag.hotkey('command', 'tab')
-            pag.press('q')
-    except Exception:
-        print("Cannot automate : Enable Shortcuts for your system or try again")
+    finish()
 
 
 def main():
