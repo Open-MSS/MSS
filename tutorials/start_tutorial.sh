@@ -32,13 +32,13 @@ trap cleanup EXIT
 
 ~/bin/highlight-pointer -r 10 &
 
-# ToDo mscolab needs a -Y and a stop
-# python $PYTHONPATH/mslib/mscolab/mscolab.py db --reset
-# sleep(2)
-# python $PYTHONPATH/mslib/mscolab/mscolab.py db --seed
-# sleep(2)
-# python $PYTHONPATH/mslib/mscolab/mscolab.py start &
-# sleep(2)
+if [[ "$2" == "./tutorial_mscolab.py" ]]; then
+  # ToDo mscolab needs a -Y and a stop
+  python $PYTHONPATH/mslib/mscolab/mscolab.py db --seed
+  # sleep(2)
+  python $PYTHONPATH/mslib/mscolab/mscolab.py start &
+  # sleep(2)
+fi
 
 export MSUI_CONFIG_PATH=$WORK_DIR
 

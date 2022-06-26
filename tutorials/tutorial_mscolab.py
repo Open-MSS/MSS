@@ -57,7 +57,7 @@ def automate_mscolab():
 
     # Example upload of msui logo during Chat Window demonstration.
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    example_image_path = os.path.join(path, 'docs/msui-logo.png')
+    example_image_path = os.path.join(path, 'docs/mss-logo.png')
 
     file_x, file_y = None, None
     open_operations_x, open_operations_y = None, None
