@@ -2,13 +2,14 @@
 ##
 ## This file is part of MSS
 ##
-## copyright: Copyright 2022 by the mss team, see AUTHORS.
+## copyright: Copyright 2022 by the MSS team, see AUTHORS.
 ## license: APACHE-2.0, see LICENSE for details.
 ##
 ## ./start_tutorial.sh python ./tutorial_hexagoncontrol.py
+## xvfb-run --server-args="-screen 0 1920x1080x24" ./start_tutorial.sh python ./tutorial_commands.py
 ##
 export LC_ALL=C
-
+# fluxbox &
 set -e
 
 # the directory of the script
