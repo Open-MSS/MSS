@@ -60,6 +60,7 @@ def automate_rs():
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'select to open control\' button/option not found on the screen.")
+        raise
 
     # Adding waypoints for demonstrating remote sensing
     try:
@@ -208,4 +209,4 @@ def automate_rs():
 
 
 if __name__ == '__main__':
-    start(target=automate_rs)
+    start(target=automate_rs, duration=300)

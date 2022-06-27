@@ -98,11 +98,13 @@ class ScreenRecorder:
 
         return fps
 
-    def capture(self):
+    def capture(self, duration=120):
         """
         Captures the frames of the screen at the rate of fps frames/second and writes into the
         video writer object with the defined fourcc, codec and colour format.
         """
+        ini_time_for_now = datetime.datetime.now()
+        future_date_after_120seconds = ini_time_for_now + datetime.timedelta(seconds=duration)
         if platform == 'linux' or platform == 'linux2':
             cursor = Xcursor()
             cursor_imgarray = cursor.getCursorImageArray()
@@ -151,6 +153,9 @@ class ScreenRecorder:
                         self.recorded_video.write(img_final)
                 # Exits the screen capturing when user press 'q'
                 if cv2.waitKey(max(int(surplus * frame_time_ms), 1)) & 0xFF == ord('q'):
+                    break
+                # exit after duration of seconds anyway
+                if datetime.datetime.now() >= future_date_after_120seconds:
                     break
 
     def stop_capture(self):

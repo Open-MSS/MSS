@@ -50,13 +50,13 @@ def initial_ops():
         pag.alert(text="Sorry, no support on this platform!", title="platform Exception", button='OK')
 
 
-def call_recorder(x_start=0, y_start=0, x_width=int(pag.size()[0]), y_width=int(pag.size()[1])):
+def call_recorder(x_start=0, y_start=0, x_width=int(pag.size()[0]), y_width=int(pag.size()[1]), duration=120):
     """
     Calls the screen recorder class to start the recording of the automation.
     """
     sr.ScreenRecorder()
     rec = sr.ScreenRecorder(x_start, y_start, x_width, y_width)
-    rec.capture()
+    rec.capture(duration=duration)
     rec.stop_capture()
 
 
@@ -126,7 +126,7 @@ def finish():
         raise
 
 
-def start(target=None):
+def start(target=None, duration=120):
     """
     This function runs the above functions as different processes at the same time and can be
     controlled from here. (This is the main process.)
@@ -135,7 +135,7 @@ def start(target=None):
         return
     p1 = multiprocessing.Process(target=call_msui)
     p2 = multiprocessing.Process(target=target)
-    p3 = multiprocessing.Process(target=call_recorder)
+    p3 = multiprocessing.Process(target=call_recorder, kwargs={"duration": duration})
 
     print("\nINFO : Starting Automation.....\n")
     p3.start()

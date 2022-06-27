@@ -225,4 +225,4 @@ def automate_kml():
 
 
 if __name__ == '__main__':
-    start(target=automate_kml)
+    start(target=automate_kml, duration=300)

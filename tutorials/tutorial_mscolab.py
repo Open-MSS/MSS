@@ -647,4 +647,4 @@ def automate_mscolab():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab)
+    start(target=automate_mscolab, duration=720)

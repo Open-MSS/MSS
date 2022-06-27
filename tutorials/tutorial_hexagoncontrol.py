@@ -279,4 +279,4 @@ def automate_hexagoncontrol():
 
 
 if __name__ == '__main__':
-    start(target=automate_hexagoncontrol)
+    start(target=automate_hexagoncontrol, duration=300)
