@@ -146,7 +146,7 @@ def main():
             wms = wms_control.MSUIWebMapService(url,
                                                 username=config["WMS_login"][url][0],
                                                 password=config["WMS_login"][url][1],
-                                                version='1.1.1'
+                                                version='1.3.0'
                                                 )
             img = wms.getmap(layers=[layer],
                              styles=[style],
