@@ -18,6 +18,8 @@ from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui import wms_control
 import matplotlib.pyplot as plt
+from mslib.msui import mpl_pathinteractor as mp
+from mslib.msui import flighttrack as ft
 
 
 TEXT_CONFIG = {
@@ -129,14 +131,11 @@ def main():
             bm = mslib.msui.mpl_map.MapCanvas(ax=ax, **(params["basemap"]))
 
             # plot path and labels
-            bm.plot(wp_lons, wp_lats,
-                    color="blue", marker="o", linewidth=2, markerfacecolor="red",
-                    latlon=True, markersize=4, zorder=100)
-            for i, (lon, lat, loc) in enumerate(zip(wp_lons, wp_lats, wp_locs)):
-                textlabel = "{:}   ".format(loc if loc else str(i))
-                x, y = bm(lon, lat)
-                plt.text(x, y, textlabel, **TEXT_CONFIG)
+            fig.canvas.draw()
+            waypoints = ft.WaypointsTableModel(filename=filename)
+            mp.HPathInteractor(bm, waypoints)
 
+            # retrieve and draw WMS image
             ax_bounds = plt.gca().bbox.bounds
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
             bbox = params['basemap']
