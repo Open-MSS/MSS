@@ -243,3 +243,38 @@ class Test_KmlOverlayDockWidget(object):
         self.select_file("geometry_collection.kml")
         assert self.count_patches() == 3  # 1 Point, 1 Text, 1 Polygon Patch
         self.window.remove_file()
+
+    def test_select_fir_file(self):
+        # this fails with dependencies given by python 3.10 and MSS before 7.0.1
+        # because we have not verified to pass always int to QtGui.QColor
+        @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
+        def test_customize_kml(self, mock_colour_button):
+            """
+            Test the pushbutton for color and double spin box for linewidth and checking specific
+            file gets desired linewidth and colour
+            """
+            path = self.select_file("fir.kml")  # selects file and returns path
+            assert self.window.listWidget.count() == 1
+            item = self.window.listWidget.item(0)
+            rect = self.window.listWidget.visualItemRect(item)
+            # in testing, need to add mouseclick and click the listWidget item
+            QtTest.QTest.mouseClick(self.window.listWidget.viewport(),
+                                    QtCore.Qt.LeftButton,
+                                    pos=rect.center())
+            QtWidgets.QApplication.processEvents()
+
+            # Clicking on Push Button Colour
+            QtTest.QTest.mouseClick(self.window.pushButton_color, QtCore.Qt.LeftButton)
+            QtWidgets.QApplication.processEvents()
+            assert mock_colour_button.call_count == 1
+
+            # Testing the Double Spin Box for linewidth
+            self.window.dsbx_linewidth.setValue(3)
+            assert self.window.dsbx_linewidth.value() == 3
+
+            # Testing the dictionary of files for color and linewidth
+            assert self.window.dict_files[path]["color"] == (0, 0, 0, 1)
+            assert self.window.dict_files[path]["linewidth"] == 3
+
+            self.window.remove_file()
+            assert self.window.listWidget.count() == 0
