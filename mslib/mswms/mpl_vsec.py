@@ -292,13 +292,15 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             xmldoc.documentElement.appendChild(node)
 
             # Time information of this section.
-            node = xmldoc.createElement("ValidTime")
-            node.appendChild(xmldoc.createTextNode(self.valid_time.strftime("%Y-%m-%dT%H:%M:%SZ")))
-            xmldoc.documentElement.appendChild(node)
+            if self.valid_time is not None:
+                node = xmldoc.createElement("ValidTime")
+                node.appendChild(xmldoc.createTextNode(self.valid_time.strftime("%Y-%m-%dT%H:%M:%SZ")))
+                xmldoc.documentElement.appendChild(node)
 
-            node = xmldoc.createElement("InitTime")
-            node.appendChild(xmldoc.createTextNode(self.init_time.strftime("%Y-%m-%dT%H:%M:%SZ")))
-            xmldoc.documentElement.appendChild(node)
+            if self.init_time is not None:
+                node = xmldoc.createElement("InitTime")
+                node.appendChild(xmldoc.createTextNode(self.init_time.strftime("%Y-%m-%dT%H:%M:%SZ")))
+                xmldoc.documentElement.appendChild(node)
 
             # Longitude data.
             node = xmldoc.createElement("Longitude")
@@ -347,3 +349,5 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
             # Return the XML document as formatted string.
             return xmldoc.toprettyxml(indent="  ")
+        else:
+            raise RuntimeError
