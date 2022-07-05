@@ -899,7 +899,7 @@ class HPathInteractor(PathInteractor):
 
         Arguments:
         mplmap -- mpl_map.MapCanvas instance into which the path should be drawn.
-        waypoints -- flighttrack.WaypointsModel instance.
+        waypoints -- flighttrack.WaypointsTableModel instance.
         """
         self.map = mplmap
         self.wp_scatter = None
