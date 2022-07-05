@@ -102,13 +102,13 @@ class Targets(object):
 
     UNITS = {
         "air_temperature": "K",
-        "eastward_wind": "1/ms",
+        "eastward_wind": "m/s",
         "equivalent_latitude": "degree N",
         "ertel_potential_vorticity": "PVU",
         "gravity_wave_temperature_perturbation": "K",
         "mean_age_of_air": "month",
         "median_of_age_of_air_spectrum": "month",
-        "northward_wind": "1/ms",
+        "northward_wind": "m/s",
         "square_of_brunt_vaisala_frequency_in_air": "1/s²",
         "tropopause_altitude": "km",
         "cloud_ice_mixing_ratio": "ppmv",

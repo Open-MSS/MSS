@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.version
-    ~~~~~~~~~~~~~~~~
+    mslib.msui._tests.test_mss
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides the version number
+    This module provides pytest functions to tests msui.mss
 
     This file is part of MSS.
 
-    :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022 Joern Ungermann
+    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,4 +24,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-__version__ = u'7.0.1.'
+
+
+import sys
+from PyQt5 import QtWidgets, QtTest, QtCore
+from mslib.msui import mss
+
+
+def test_mss_rename_message():
+    application = QtWidgets.QApplication(sys.argv)
+    main_window = mss.MSSMainWindow()
+    main_window.show()
+    QtTest.QTest.mouseClick(main_window.pushButton, QtCore.Qt.LeftButton)
+    QtWidgets.QApplication.processEvents()
+    application.quit()
+    QtWidgets.QApplication.processEvents()
