@@ -101,7 +101,7 @@ class FileManager(object):
                 "path": operation.path,
                 "description": operation.description,
                 "category": operation.category,
-                "state": operation.state
+                "active": operation.active
             })
         return operations
 

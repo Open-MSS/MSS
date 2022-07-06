@@ -44,7 +44,7 @@ from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, User, db, Operation
+from mslib.mscolab.models import Change, MessageType, User, Operation, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -500,9 +500,9 @@ def get_operation_details():
     return json.dumps(fm.get_operation_details(int(op_id), user))
 
 
-@APP.route('/set_counter', methods=["POST"])
+@APP.route('/set_last_used', methods=["POST"])
 @verify_user
-def set_last_used_counter():
+def set_last_used():
     op_id = request.form.get('op_id', None)
     operation = Operation.query.filter_by(id=int(op_id)).first()
     operation.last_used = datetime.datetime.utcnow()
@@ -511,16 +511,16 @@ def set_last_used_counter():
     return jsonify({"success": True}), 200
 
 
-@APP.route('/update_counter', methods=["POST"])
+@APP.route('/update_last_used', methods=["POST"])
 @verify_user
-def update_counter():
+def update_last_used():
     operations = Operation.query.filter().all()
     for operation in operations:
         a = (datetime.datetime.utcnow() - operation.last_used).days
         if a > 30:
-            operation.state = "inactive"
+            operation.active = False
         else:
-            operation.state = "active"
+            operation.active = True
     db.session.commit()
     return jsonify({"success": True}), 200
 

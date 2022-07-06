@@ -125,10 +125,10 @@ class Operation(db.Model):
     path = db.Column(db.String(255), unique=True)
     category = db.Column(db.String(255))
     description = db.Column(db.String(255))
-    state = db.Column(db.String(255))
+    active = db.Column(db.Boolean)
     last_used = db.Column(db.DateTime)
 
-    def __init__(self, path, description, last_used, category="default", state="active"):
+    def __init__(self, path, description, last_used, category="default", active=True):
         """
         path: path to the operation
         description: small description of operation
@@ -137,7 +137,7 @@ class Operation(db.Model):
         self.path = path
         self.description = description
         self.category = category
-        self.state = state
+        self.active = active
         self.last_used = last_used
 
     def __repr__(self):

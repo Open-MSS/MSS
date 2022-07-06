@@ -575,7 +575,7 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.post(f"{self.mscolab_server_url}/update_counter", data=data)
+            r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data)
             logging.info(f"Responses returned: {r}")
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
             self.conn.signal_reload.connect(self.reload_window)
@@ -1432,10 +1432,10 @@ class MSUIMscolab(QtCore.QObject):
                     widgetItem.access_level = operation["access_level"]
                     widgetItem.operation_path = operation["path"]
                     widgetItem.operation_category = operation["category"]
-                    widgetItem.state = operation["state"]
+                    widgetItem.active = operation["active"]
                     if widgetItem.op_id == self.active_op_id:
                         selectedOperation = widgetItem
-                    if widgetItem.state == "active":
+                    if widgetItem.active:
                         self.ui.listOperationsMSC.addItem(widgetItem)
                     else:
                         self.ui.listInactiveOperationsMSC.addItem(widgetItem)
@@ -1443,7 +1443,7 @@ class MSUIMscolab(QtCore.QObject):
                     self.ui.listOperationsMSC.setCurrentItem(selectedOperation)
                     self.ui.listOperationsMSC.itemActivated.emit(selectedOperation)
                 self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
-                self.ui.listInactiveOperationsMSC.itemActivated.connect(self.select_inactive_op)
+                self.ui.listInactiveOperationsMSC.itemActivated.connect(self.select_inactive_operation)
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
                 self.logout()
@@ -1458,7 +1458,7 @@ class MSUIMscolab(QtCore.QObject):
         font.setBold(False)
         item.setFont(font)
 
-    def select_inactive_op(self, item):
+    def select_inactive_operation(self, item):
         self.inactive_op_id = item.op_id
         self.active_op_id = None
         font = QtGui.QFont()
@@ -1476,7 +1476,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": self.inactive_op_id,
             }
-            r = requests.post(f'{self.mscolab_server_url}/set_counter', data=data)
+            r = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data)
             logging.info(f"Print: {r.text}")
             if r.text != "False":
                 remove_item = None
@@ -1487,7 +1487,6 @@ class MSUIMscolab(QtCore.QObject):
                         break
                 if remove_item is not None:
                     self.ui.listInactiveOperationsMSC.takeItem(self.ui.listInactiveOperationsMSC.row(remove_item))
-
                     self.ui.listOperationsMSC.addItem(remove_item)
 
                     return remove_item.operation_path
@@ -1524,7 +1523,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": item.op_id,
             }
-            requests.post(f'{self.mscolab_server_url}/set_counter', data=data)
+            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data)
 
             # set active_op_id here
             self.active_op_id = item.op_id
