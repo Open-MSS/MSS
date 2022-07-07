@@ -47,6 +47,9 @@ from mslib.msui import wms_control
 import matplotlib.pyplot as plt
 from mslib.msui import mpl_pathinteractor as mp
 from mslib.msui import flighttrack as ft
+import matplotlib.patches as mpatches
+import matplotlib.path as mpath
+
 
 
 TEXT_CONFIG = {
@@ -159,8 +162,23 @@ def main():
 
             # plot path and labels
             fig.canvas.draw()
-            waypoints = ft.WaypointsTableModel(filename=filename)
-            mp.HPathInteractor(bm, waypoints)
+            vertices = [list(a) for a in (zip(wp_lats, wp_lons))]
+            print(vertices)
+            # lons, lats = bm(x, y, inverse=True)
+            x, y = bm.gcpoints_path([a[0] for a in vertices], [a[1] for a in vertices])
+            vertices = list(zip(x, y))
+            line, = ax.plot(wp_lons, wp_lats, color="blue", marker="o", linewidth=2, markerfacecolor="red", zorder=100)
+            line.set_data(list(zip(*vertices)))
+
+            # path = mpath.Path
+            # pathpatch = mpatches.PathPatch(path, facecolor="white",
+            #                                edgecolor="none", alpha=0.5)
+            # pathpatch.vertices = vertices
+            # ax.add_patch(pathpatch)
+            # ax.draw_artist(pathpatch)
+            ax.draw_artist(line)
+            wp_scatter = ax.scatter(x, y, color="blue", s=20, zorder=3, animated=True, visible=True)
+            ax.draw_artist(wp_scatter)
 
             # retrieve and draw WMS image
             ax_bounds = plt.gca().bbox.bounds
