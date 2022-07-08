@@ -571,12 +571,11 @@ class MSUIMscolab(QtCore.QObject):
                                          "New Login required!")
             self.logout()
         else:
-            # Update Counter
+            # Update Last Used
             data = {
                 "token": self.token
             }
             r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data)
-            logging.info(f"Responses returned: {r}")
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_new_permission.connect(self.render_new_permission)
@@ -1451,13 +1450,6 @@ class MSUIMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def unselect_operation(self, op_id, item):
-        font = QtGui.QFont()
-        for i in range(self.ui.listInactiveOperationsMSC.count()):
-            self.ui.listInactiveOperationsMSC.item(i).setFont(font)
-        font.setBold(False)
-        item.setFont(font)
-
     def select_inactive_operation(self, item):
         self.inactive_op_id = item.op_id
         self.active_op_id = None
@@ -1466,33 +1458,35 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.listInactiveOperationsMSC.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
-        self.ui.actionActivateOperation.setEnabled(True)
+        self.show_operation_options_in_inactivated_state(item.access_level)
+
+    def show_operation_options_in_inactivated_state(self, access_level):
+        self.ui.actionChat.setEnabled(False)
+        self.ui.actionVersionHistory.setEnabled(False)
+        self.ui.actionManageUsers.setEnabled(False)
+        self.ui.menuProperties.setEnabled(False)
+        self.ui.actionRenameOperation.setEnabled(False)
+        self.ui.actionLeaveOperation.setEnabled(False)
+        self.ui.actionDeleteOperation.setEnabled(False)
+        self.ui.actionUpdateOperationDesc.setEnabled(False)
+        self.ui.actionActivateOperation.setEnabled(False)
+        if access_level == "creator":
+            self.ui.actionActivateOperation.setEnabled(True)
 
     def activate_operation(self):
         if verify_user_token(self.mscolab_server_url, self.token):
-            logging.info(f"Jatin Check: {self.inactive_op_id}")
             # set last used date for operation
             data = {
                 "token": self.token,
                 "op_id": self.inactive_op_id,
             }
-            r = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data)
-            logging.info(f"Print: {r.text}")
-            if r.text != "False":
-                remove_item = None
-                for i in range(self.ui.listInactiveOperationsMSC.count()):
-                    item = self.ui.listInactiveOperationsMSC.item(i)
-                    if item.op_id == self.inactive_op_id:
-                        remove_item = item
-                        break
-                if remove_item is not None:
-                    self.ui.listInactiveOperationsMSC.takeItem(self.ui.listInactiveOperationsMSC.row(remove_item))
-                    self.ui.listOperationsMSC.addItem(remove_item)
-
-                    return remove_item.operation_path
+            res = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data)
+            if res.text != "False":
+                res = res.json()
+                if res["success"]:
+                    self.reload_operations()
                 else:
-                    show_popup(self.ui, "Error", "Session expired, new login required")
-                    self.logout()
+                    show_popup(self.ui, "Error", "Some error occurred! Could not activate operation")
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
                 self.logout()
