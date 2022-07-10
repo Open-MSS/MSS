@@ -160,25 +160,37 @@ def main():
             ax = fig.add_subplot(111, zorder=99)
             bm = mslib.msui.mpl_map.MapCanvas(ax=ax, **(params["basemap"]))
 
-            # plot path and labels
+            # plot path
             fig.canvas.draw()
-            vertices = [list(a) for a in (zip(wp_lats, wp_lons))]
-            print(vertices)
-            # lons, lats = bm(x, y, inverse=True)
+            vertices = [list(a) for a in (zip(wp_lons, wp_lats))]
             x, y = bm.gcpoints_path([a[0] for a in vertices], [a[1] for a in vertices])
+            x, y = bm(wp_lons, wp_lats)
             vertices = list(zip(x, y))
-            line, = ax.plot(wp_lons, wp_lats, color="blue", marker="o", linewidth=2, markerfacecolor="red", zorder=100)
+            line, = ax.plot(x, y, color="blue", linestyle='-', linewidth=2, zorder=100)
             line.set_data(list(zip(*vertices)))
-
-            # path = mpath.Path
-            # pathpatch = mpatches.PathPatch(path, facecolor="white",
-            #                                edgecolor="none", alpha=0.5)
-            # pathpatch.vertices = vertices
-            # ax.add_patch(pathpatch)
-            # ax.draw_artist(pathpatch)
             ax.draw_artist(line)
-            wp_scatter = ax.scatter(x, y, color="blue", s=20, zorder=3, animated=True, visible=True)
+            wp_scatter = ax.scatter(x, y, color="red", s=20, zorder=3, animated=True, visible=True)
             ax.draw_artist(wp_scatter)
+
+            # plot labels
+            x, y = list(zip(*vertices))
+            for i in range(len(wps)):
+                textlabel = f"{wp_locs[i] if wp_locs[i] else str(i)}   "
+                x, y = bm(wp_lons, wp_lats)
+                ax.text(x[i],
+                        y[i],
+                        textlabel,
+                        bbox=dict(boxstyle="round",
+                                  facecolor="white",
+                                  alpha=0.5,
+                                  edgecolor="none"),
+                        fontweight="bold",
+                        zorder=4,
+                        rotation=90,
+                        animated=True,
+                        clip_on=True,
+                        visible=True
+                        )
 
             # retrieve and draw WMS image
             ax_bounds = plt.gca().bbox.bounds
