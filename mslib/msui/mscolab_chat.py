@@ -518,22 +518,35 @@ class MessageItem(QtWidgets.QWidget):
         self.messageBox.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.messageBox.customContextMenuRequested.connect(self.open_context_menu)
 
+    def set_time_label(self):
+        time_label = QtWidgets.QLabel(f"{self.time}")
+        time_label.setContentsMargins(5, 5, 5, 0)
+        time_label.setAlignment(QtCore.Qt.AlignRight)
+        label_font = QtGui.QFont()
+        label_font.setItalic(True)
+        time_label.setFont(label_font)
+        return time_label
+
     def setup_message_box_layout(self):
         container_layout = QtWidgets.QHBoxLayout()
         text_area_layout = QtWidgets.QVBoxLayout()
         if self.chat_window.user["username"] == self.username:
             text_area_layout.addWidget(self.messageBox)
+            time_label = self.set_time_label()
+            text_area_layout.addWidget(time_label)
             self.textArea.setLayout(text_area_layout)
             container_layout.addStretch()
             container_layout.addWidget(self.textArea)
         else:
             username_label = QtWidgets.QLabel(f"{self.username}")
             username_label.setContentsMargins(5, 5, 5, 0)
+            time_label = self.set_time_label()
             label_font = QtGui.QFont()
             label_font.setBold(True)
             username_label.setFont(label_font)
             text_area_layout.addWidget(username_label)
             text_area_layout.addWidget(self.messageBox)
+            text_area_layout.addWidget(time_label)
             self.textArea.setLayout(text_area_layout)
             container_layout.addWidget(self.textArea)
             container_layout.addStretch()
@@ -577,6 +590,9 @@ class MessageItem(QtWidgets.QWidget):
         self.replyScroll.setWidget(self.replyArea)
         self.replyScroll.setContentsMargins(0, 0, 0, 0)
         self.textArea.layout().addWidget(self.replyScroll)
+        time_label = self.set_time_label()
+        self.textArea.layout().addWidget(time_label)
+
         if self.username == self.chat_window.user["username"]:
             color = "#c3f39e"
         else:
