@@ -95,6 +95,29 @@ class Test_MSS_ShortcutDialog():
                 break
         assert self.shortcuts.treeWidget.topLevelItemCount() == 2
 
+    def test_available_shortcuts_level(self):
+        initial_locations = [msui.ft.Waypoint(40., 25., 0),
+                             msui.ft.Waypoint(60., -10., 0),
+                             msui.ft.Waypoint(40., 10, 0)]
+        waypoints_model = msui.ft.WaypointsTableModel(name="", waypoints=initial_locations)
+        self.shortcuts.fill_list()
+        assert self.shortcuts.treeWidget.topLevelItemCount() == 1
+        # open topview
+        self.main_window.create_view("topview", waypoints_model)
+        # open config_editor
+        self.main_window.open_config_editor()
+        self.shortcuts.fill_list()
+        assert self.shortcuts.treeWidget.topLevelItemCount() == 3
+        self.shortcuts.reset_highlight()
+        # close topview
+        self.main_window.listViews.item(0).window.handle_force_close()
+        self.shortcuts.reset_highlight()
+        assert self.shortcuts.treeWidget.topLevelItemCount() == 2
+        # destroy config_editor window
+        self.main_window.config_editor.destroy()
+        self.shortcuts.reset_highlight()
+        assert self.shortcuts.treeWidget.topLevelItemCount() == 1
+
 
 class Test_MSSSideViewWindow(object):
     # temporary file paths to test open feature

@@ -175,6 +175,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         Iterates through all shortcuts and resets the stylesheet
         """
+        self.fill_list()
         if self.current_shortcuts:
             for shortcuts in self.current_shortcuts.values():
                 for shortcut in shortcuts.values():
@@ -212,7 +213,6 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         Fills the treeWidget with all relevant windows as top level items and their shortcuts as children
         """
-        self.reset_highlight()
         self.treeWidget.clear()
         self.current_shortcuts = self.get_shortcuts()
         for widget in self.current_shortcuts:
@@ -923,6 +923,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.shortcuts_dlg = MSUI_ShortcutsDialog()
 
         self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
+        self.shortcuts_dlg.reset_highlight()
         self.shortcuts_dlg.fill_list()
         self.shortcuts_dlg.show()
         if search_mode:

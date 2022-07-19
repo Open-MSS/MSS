@@ -150,6 +150,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         # Load and check time dimension. self.dataset will remain None
         # if an Exception is raised here.
         timename, timevar = netCDF4tools.identify_CF_time(dataset)
+
         times = netCDF4tools.num2date(timevar[:], timevar.units)
         # removed after discussion, see
         # https://mss-devel.slack.com/archives/emerge/p1486658769000007
@@ -533,6 +534,9 @@ class VerticalSectionDriver(MSSPlotDriver):
         else:
             resolution = (-1, -1)
 
+        if self.return_format not in ("image/png", "text/xml"):
+            raise RuntimeError(f"Unexpected format for vertical sections '{self.return_format}'.")
+
         # Call the plotting method of the vertical section style instance.
         image = self.plot_object.plot_vsection(data, self.lats, self.lons,
                                                valid_time=self.fc_time,
@@ -656,6 +660,9 @@ class HorizontalSectionDriver(MSSPlotDriver):
         else:
             resolution = 0
 
+        if self.return_format != "image/png":
+            raise RuntimeError(f"Unexpected format for horizontal sections '{self.return_format}'.")
+
         # Call the plotting method of the horizontal section style instance.
         image = self.plot_object.plot_hsection(data,
                                                self.lat_data,
@@ -690,18 +697,18 @@ class LinearSectionDriver(VerticalSectionDriver):
 
     def set_plot_parameters(self, plot_object=None, lsec_path=None,
                             lsec_numpoints=101, lsec_path_connection='linear',
-                            init_time=None, valid_time=None, bbox=None):
+                            init_time=None, valid_time=None, bbox=None, return_format=None):
         """
         """
         MSSPlotDriver.set_plot_parameters(self, plot_object,
                                           init_time=init_time,
                                           valid_time=valid_time,
-                                          bbox=bbox)
+                                          bbox=bbox, return_format=return_format)
         self._set_linear_section_path(lsec_path, lsec_numpoints, lsec_path_connection)
 
     def update_plot_parameters(self, plot_object=None, lsec_path=None,
                                lsec_numpoints=None, lsec_path_connection=None,
-                               init_time=None, valid_time=None, bbox=None):
+                               init_time=None, valid_time=None, bbox=None, return_format=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -712,13 +719,15 @@ class LinearSectionDriver(VerticalSectionDriver):
         lsec_numpoints = lsec_numpoints if lsec_numpoints is not None else self.lsec_numpoints
         if lsec_path_connection is None:
             lsec_path_connection = self.lsec_path_connection
+        return_format = return_format if return_format is not None else self.return_format
         self.set_plot_parameters(plot_object=plot_object,
                                  lsec_path=lsec_path,
                                  lsec_numpoints=lsec_numpoints,
                                  lsec_path_connection=lsec_path_connection,
                                  init_time=init_time,
                                  valid_time=valid_time,
-                                 bbox=bbox)
+                                 bbox=bbox,
+                                 return_format=return_format)
 
     def _set_linear_section_path(self, lsec_path, lsec_numpoints=101, lsec_path_connection='linear'):
         """
@@ -847,6 +856,9 @@ class LinearSectionDriver(VerticalSectionDriver):
         # standard names as specified by <self.lsec_style_instance>.
         data = self._load_interpolate_timestep()
         d2 = datetime.now()
+
+        if self.return_format != "text/xml":
+            raise RuntimeError(f"Unexpected format for linear sections '{self.return_format}'.")
 
         # Call the plotting method of the linear section style instance.
         image = self.plot_object.plot_lsection(data, self.lats, self.lons,
