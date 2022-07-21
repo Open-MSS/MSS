@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import datetime
 import fs
 import difflib
 import logging
@@ -39,7 +40,7 @@ class FileManager(object):
     def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_operation(self, path, description, user, last_used, content=None, category="default"):
+    def create_operation(self, path, description, user, last_used=datetime.datetime.utcnow(), content=None, category="default"):
         """
         path: path to the operation
         description: description of the operation
