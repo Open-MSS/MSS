@@ -31,7 +31,6 @@ import datetime
 import io
 import os
 import xml
-import requests
 from fs import open_fs
 import PIL.Image
 
@@ -45,11 +44,6 @@ from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui import wms_control
 import matplotlib.pyplot as plt
-from mslib.msui import mpl_pathinteractor as mp
-from mslib.msui import flighttrack as ft
-import matplotlib.patches as mpatches
-import matplotlib.path as mpath
-
 
 
 TEXT_CONFIG = {
@@ -228,7 +222,10 @@ def main():
         # prepare vsec plots
         path = [(wp[0], wp[1], datetime.datetime.now()) for wp in wps]
         lats, lons = mslib.utils.coordinate.path_points(
-            [_x[0] for _x in path], [_x[1] for _x in path], numpoints=num_interpolation_points + 1, connection="greatcircle")
+            [_x[0] for _x in path], [_x[1] for _x in path],
+            numpoints=num_interpolation_points + 1,
+            connection="greatcircle"
+        )
         intermediate_indexes = []
         ipoint = 0
         for i, (lat, lon) in enumerate(zip(lats, lons)):
@@ -245,7 +242,7 @@ def main():
             ax = fig.add_subplot(111, zorder=99)
             ax.set_yscale("log")
             p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
-            bbox = ",".join(str(x) for x in (num_interpolation_points, p_bot / 100, num_labels, p_top / 100))
+            bbox = tuple([x for x in (num_interpolation_points, p_bot / 100, num_labels, p_top / 100)])
             ax.grid(b=True)
             ax.patch.set_facecolor("None")
             pres_maj = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_maj
@@ -284,37 +281,30 @@ def main():
             # retrieve and draw WMS image
             ax_bounds = plt.gca().bbox.bounds
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
-            rparams = {"version": "1.1.1", "request": "GetMap", "format": "image/png",
-                       "exceptions": "application/vnd.ogc.se_xml",
-                       "srs": "VERT:LOGP", "layers": layer, "styles": style,
-                       "dim_init_time": init_time, "time": time,
-                       "width": width, "height": height,
-                       "path": ",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),
-                       "bbox": bbox}
-            if not init_time:
-                del rparams["dim_init_time"]
-            req = requests.get(
-                url, auth=tuple(config["WMS_login"][url]),
-                params=rparams)
 
-            if req.headers['Content-Type'].startswith("text/"):
-                print("WMS Error:")
-                print(req.text)
-                print(url, params)
-                print(rparams)
-                print("P")
-                raise RuntimeError
-                exit(1)
-            print(url, params)
-            print(rparams)
-            image_io = io.BytesIO(req.content)
-            try:
-                img = PIL.Image.open(image_io)
-            except Exception as ex:
-                print(ex)
-                print(req.headers)
-                print(req.content)
-                raise
+            if not init_time:
+                init_time = None
+
+            wms = wms_control.MSUIWebMapService(url,
+                                                username=config["WMS_login"][url][0],
+                                                password=config["WMS_login"][url][1],
+                                                version='1.3.0'
+                                                )
+
+            img = wms.getmap(layers=[layer],
+                             styles=[style],
+                             time=time,
+                             init_time=init_time,
+                             exceptions='application/vnd.ogc.se_xml',
+                             srs="VERT:LOGP",
+                             path_str=",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),
+                             bbox=bbox,
+                             format='image/png',
+                             size=(width, height)
+                            )
+
+            image_io = io.BytesIO(img.read())
+            img = PIL.Image.open(image_io)
             imgax = fig.add_axes(ax.get_position(), frameon=True,
                                  xticks=[], yticks=[], label="ax2", zorder=0)
             imgax.imshow(img, interpolation="nearest", aspect="auto", origin="upper")
