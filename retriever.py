@@ -44,6 +44,8 @@ from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui import wms_control
 import matplotlib.pyplot as plt
+import numpy as np
+from mslib.utils import thermolib
 
 
 TEXT_CONFIG = {
@@ -245,29 +247,77 @@ def main():
             bbox = tuple([x for x in (num_interpolation_points, p_bot / 100, num_labels, p_top / 100)])
             ax.grid(b=True)
             ax.patch.set_facecolor("None")
+            sideview_size_settings = config_loader(dataset="sideview")
+            plot_title_size = sideview_size_settings["plot_title_size"]
+            axes_label_size = sideview_size_settings["axes_label_size"]
             pres_maj = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_maj
             pres_min = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_min
-            major_ticks = pres_maj[(pres_maj <= p_bot) & (pres_maj >= p_top)]
-            minor_ticks = pres_min[(pres_min <= p_bot) & (pres_min >= p_top)]
-            labels = ["{}".format(int(l / 100.))
-                      if (l / 100.) - int(l / 100.) == 0 else "{}".format(float(l / 100.)) for l in major_ticks]
-            if len(labels) > 20:
-                labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
-            elif len(labels) > 10:
-                labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
-            ax.set_ylabel("pressure (hPa)")
+            lat_inds = np.arange(len(lats))
+            tick_index_step = len(lat_inds) // num_labels
+            type = config_loader(dataset="type")
+
+            if type == "no secondary axis":
+                major_ticks = [] * units.pascal
+                minor_ticks = [] * units.pascal
+                labels = []
+                ylabel = ""
+            elif type == "pressure":
+                # Compute the position of major and minor ticks. Major ticks are labelled.
+                major_ticks = pres_maj[(pres_maj <= p_bot) & (pres_maj >= p_top)]
+                minor_ticks = pres_min[(pres_min <= p_bot) & (pres_min >= p_top)]
+                labels = [f"{int(_x / 100)}"
+                        if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks]
+                if len(labels) > 20:
+                    labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
+                elif len(labels) > 10:
+                    labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
+                ylabel = "pressure (hPa)"
+            elif type == "pressure altitude":
+                bot_km = thermolib.pressure2flightlevel(p_bot * units.Pa).to(units.km).magnitude
+                top_km = thermolib.pressure2flightlevel(p_top * units.Pa).to(units.km).magnitude
+                ma_dist, mi_dist = 4, 1.0
+                if (top_km - bot_km) <= 20:
+                    ma_dist, mi_dist = 1, 0.5
+                elif (top_km - bot_km) <= 40:
+                    ma_dist, mi_dist = 2, 0.5
+                major_heights = np.arange(0, top_km + 1, ma_dist)
+                minor_heights = np.arange(0, top_km + 1, mi_dist)
+                major_ticks = thermolib.flightlevel2pressure(major_heights * units.km).magnitude
+                minor_ticks = thermolib.flightlevel2pressure(minor_heights * units.km).magnitude
+                labels = major_heights
+                ylabel = "pressure altitude (km)"
+            elif type == "flight level":
+                bot_km = thermolib.pressure2flightlevel(p_bot * units.Pa).to(units.km).magnitude
+                top_km = thermolib.pressure2flightlevel(p_top * units.Pa).to(units.km).magnitude
+                ma_dist, mi_dist = 50, 10
+                if (top_km - bot_km) <= 10:
+                    ma_dist, mi_dist = 20, 10
+                elif (top_km - bot_km) <= 40:
+                    ma_dist, mi_dist = 40, 10
+                major_fl = np.arange(0, 2132, ma_dist)
+                minor_fl = np.arange(0, 2132, mi_dist)
+                major_ticks = thermolib.flightlevel2pressure(major_fl * units.hft).magnitude
+                minor_ticks = thermolib.flightlevel2pressure(minor_fl * units.hft).magnitude
+                labels = major_fl
+                ylabel = "flight level (hft)"
+            else:
+                raise RuntimeError(f"Unsupported vertical axis type: '{type}'")
+
+            ax.tick_params(axis='x', labelsize=axes_label_size)
+            ax.set_title("vertical flight profile", fontsize=plot_title_size, horizontalalignment="left", x=0)
+            ax.set_xlabel("lat/lon", fontsize=plot_title_size)
+            ax.set_ylabel(ylabel, fontsize=plot_title_size)
             ax.set_yticks(minor_ticks, minor=True)
             ax.set_yticks(major_ticks, minor=False)
-            ax.set_yticklabels([], minor=True, fontsize=10)
-            ax.set_yticklabels(labels, minor=False, fontsize=10)
+            ax.set_yticklabels([], minor=True)
+            ax.set_yticklabels(labels, minor=False, fontsize=axes_label_size)
             ax.set_ylim(p_bot, p_top)
-            ax.set_xlim(0, num_interpolation_points)
-            ax.set_xticks(range(0, num_interpolation_points, tick_index_step))
-            ax.set_xticklabels(
-                [f"{x[0]:2.1f}, {x[1]:2.1f}"
-                 for x in zip(lats[::tick_index_step], lons[::tick_index_step])],
-                rotation=25, fontsize=10, horizontalalignment="right")
-            ax.set_xlabel("lat/lon")
+            ax.set_xlim(0, len(lats) - 1)
+            ax.set_xticks(lat_inds[::tick_index_step])
+            ax.set_xticklabels([f"{x[0]:2.1f}, {x[1]:2.1f}"
+                               for x in zip(lats[::tick_index_step], lons[::tick_index_step])],
+                               rotation=25, fontsize=10, horizontalalignment="right"
+                               )
 
             # plot path
             fig.canvas.draw()

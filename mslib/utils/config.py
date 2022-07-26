@@ -229,6 +229,8 @@ class MSUIDefaultConfig(object):
     automated_plotting_hsecs = []
     automated_plotting_vsecs = []
 
+    type = "pressure"
+
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
 
