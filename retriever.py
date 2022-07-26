@@ -269,14 +269,32 @@ def main():
                 rotation=25, fontsize=10, horizontalalignment="right")
             ax.set_xlabel("lat/lon")
 
-            # plot path and waypoint labels
-            ax.plot(intermediate_indexes, wp_presss,
-                    color="blue", marker="o", linewidth=2, markerfacecolor="red",
-                    markersize=4)
-            for i, (idx, press, loc) in enumerate(zip(intermediate_indexes, wp_presss, wp_locs)):
-                textlabel = "{:} ".format(loc if loc else str(i))
-                plt.text(idx + 1, press, textlabel, rotation=90, **TEXT_CONFIG)
-            plt.tight_layout()
+            # plot path
+            fig.canvas.draw()
+            line, = ax.plot(intermediate_indexes, wp_presss, color="blue", linestyle='-', linewidth=2, zorder=100)
+            line.set_visible(True)
+
+            # plot waypoint labels
+            wp_labels = []
+            for i in range(len(wps)):
+                textlabel = f"{wp_locs[i] if wp_locs[i] else str(i)}"
+                t = ax.text(intermediate_indexes[i],
+                            wp_presss[i],
+                            textlabel,
+                            bbox=dict(boxstyle="round",
+                                      facecolor="white",
+                                      alpha=0.5,
+                                      edgecolor="none"),
+                            fontweight="bold",
+                            zorder=4,
+                            rotation=90,
+                            animated=True,
+                            clip_on=True,
+                            visible=True
+                            )
+                wp_labels.append(t)
+            for t in wp_labels:
+                ax.draw_artist(t)
 
             # retrieve and draw WMS image
             ax_bounds = plt.gca().bbox.bounds
