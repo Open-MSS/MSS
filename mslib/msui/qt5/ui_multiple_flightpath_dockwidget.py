@@ -65,12 +65,3 @@ class Ui_MultipleViewWidget(object):
         self.btActivate.setText(_translate("MultipleViewWidget", "Activate Flighttrack"))
         self.labelStatus.setText(_translate("MultipleViewWidget", "Status: "))
 
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MultipleViewWidget = QtWidgets.QWidget()
-    ui = Ui_MultipleViewWidget()
-    ui.setupUi(MultipleViewWidget)
-    MultipleViewWidget.show()
-    sys.exit(app.exec_())
