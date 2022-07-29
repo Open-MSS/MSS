@@ -2,14 +2,14 @@
 """
 
     mslib.multiple_flightpath_dockwidget
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Control Widget to configure multiple flightpath on topview.
 
     This file is part of MSS.
 
-    :copyright: Copyright 2017 Main Contributor
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022 Jatin Jain
+    :copyright: Copyright 2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,13 +33,19 @@ from mslib.utils.qt import get_open_filenames
 from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
 
 
-class MultipleFlightpath(MplTopViewCanvas):
+class MultipleFlightpath(object):
     """
     Represent a Multiple FLightpath
     """
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, mapcanvas):
+        self.map = mapcanvas
+
+    def parse_ftml(self):
+        pass
+
+    def draw(self):
+        pass
 
 
 class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidget):
