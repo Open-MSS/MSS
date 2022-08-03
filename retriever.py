@@ -461,11 +461,11 @@ def main():
                 if unit:
                     par.set_ylabel(unit)
 
-                fig.tight_layout()
-                fig.subplots_adjust(top=0.85, bottom=0.20)
-                fig.canvas.draw()
+            fig.tight_layout()
+            fig.subplots_adjust(top=0.85, bottom=0.20)
+            fig.canvas.draw()
 
-                plt.savefig(f"{flight}_{layer}.png")
+            plt.savefig(f"{flight}_{layer}.png")
 
 
 if __name__ == "__main__":
