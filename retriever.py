@@ -33,6 +33,7 @@ import os
 import xml
 from fs import open_fs
 import PIL.Image
+import hashlib
 
 import mslib
 import mslib.utils
@@ -46,6 +47,7 @@ from mslib.msui import wms_control
 import matplotlib.pyplot as plt
 import numpy as np
 from mslib.utils import thermolib
+import defusedxml.ElementTree as etree
 
 
 TEXT_CONFIG = {
@@ -379,7 +381,91 @@ def main():
             imgax.set_xlim(0, img.size[0] - 1)
             imgax.set_ylim(img.size[1] - 1, 0)
 
-            plt.savefig(f"{flight}_{layer}.png")
+            plt.savefig(f"{flight}_{layer}.xml")
+
+        for url, layer, style in config["automated_plotting_lsecs"]:
+            fig.clear()
+            linearview_size_settings = config_loader(dataset="linearview")
+            plot_title_size = linearview_size_settings["plot_title_size"]
+            axes_label_size = linearview_size_settings["axes_label_size"]
+
+            bbox = (num_interpolation_points,)
+            lat_inds = np.arange(len(lats))
+            tick_index_step = len(lat_inds) // num_labels
+            ax = fig.add_subplot(111, zorder=99)
+
+            fig.canvas.draw()
+            ax.tick_params(axis='both', labelsize=axes_label_size)
+            ax.set_title("Linear flight profile", fontsize=plot_title_size, horizontalalignment='left', x=0)
+            ax.set_xlim(0, len(lats) - 1)
+            # Set xticks so that they display lat/lon. Plot "numlabels" labels.
+
+            ax.set_xticks(lat_inds[::tick_index_step])
+            ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
+                                for d in zip(lats[::tick_index_step],
+                                lons[::tick_index_step])],
+                                rotation=25, horizontalalignment="right"
+                               )
+            par = ax.twinx()
+            ax.set_yscale("linear")
+            fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
+            ax_bounds = plt.gca().bbox.bounds
+            width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
+
+            if not init_time:
+                init_time = None
+
+            wms = wms_control.MSUIWebMapService(url,
+                                                username=config["WMS_login"][url][0],
+                                                password=config["WMS_login"][url][1],
+                                                version='1.3.0'
+                                                )
+            kwargs = {"layers": [layer],
+                      "styles": [style],
+                      "srs": "LINE:1",
+                      "bbox": bbox,
+                      "exceptions": 'application/vnd.ogc.se_xml',
+                      "path_str":",".join(f"{wp_presss},{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),
+                      "time": time,
+                      "init_time": init_time,
+                      "size": (width, height),
+                      "format": "text/xml"}
+
+            xmls = wms.getmap(**kwargs)
+
+            wms_cache = config_loader(dataset="wms_cache")
+            urlstr = wms.getmap(return_only_url=True, **kwargs)
+            ending = ".xml"
+            md5_filename = os.path.join(wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
+
+            with open(md5_filename, "w") as cache:
+                cache.write(str(xmls.read(), encoding="utf8"))
+                xmli = etree.fromstring(xmls.read())
+
+            for i, xm in enumerate(xmli):
+                data = xm.find("Data")
+                values = [float(value) for value in data.text.split(",")]
+                unit = data.attrib["unit"]
+                numpoints = int(data.attrib["num_waypoints"])
+
+                color = "#00AAFF"
+                scale = "linear"
+                offset = 40
+
+                par = ax.twinx() if i > 0 else ax
+                par.set_yscale(scale)
+
+                par.plot(range(numpoints), values, color)
+                if i > 0:
+                    par.spines["right"].set_position(("outward", (i - 1) * offset))
+                if unit:
+                    par.set_ylabel(unit)
+
+                fig.tight_layout()
+                fig.subplots_adjust(top=0.85, bottom=0.20)
+                fig.canvas.draw()
+
+                plt.savefig(f"{flight}_{layer}.png")
 
 
 if __name__ == "__main__":

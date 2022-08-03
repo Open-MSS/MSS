@@ -228,8 +228,8 @@ class MSUIDefaultConfig(object):
     automated_plotting_flights = []
     automated_plotting_hsecs = []
     automated_plotting_vsecs = []
+    automated_plotting_lsecs = []
 
-    type = "pressure"
 
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
@@ -298,6 +298,7 @@ class MSUIDefaultConfig(object):
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", ""]],
+        "automated_plotting_lsecs": [["http://www.your-wms-server.de", "", ""]]
     }
 
     config_descriptions = {
