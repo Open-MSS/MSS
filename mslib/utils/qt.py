@@ -446,13 +446,15 @@ class Updater(QtCore.QObject):
         self.is_git_env = False
         self.new_version = None
         self.old_version = None
-        self.command = "conda"
-
+        # we are using the installer version of the env
+        self.conda_prefix = os.getenv("CONDA_PREFIX")
+        self.command = os.path.join(self.conda_prefix, 'bin', "conda")
+        self.mamba_cmd = os.path.join(self.conda_prefix, 'bin', 'mamba')
         # Check if mamba is installed
         try:
-            subprocess.run(["mamba"], startupinfo=subprocess_startupinfo(),
+            subprocess.run([self.mamba_cmd], startupinfo=subprocess_startupinfo(),
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            self.command = "mamba"
+            self.command = self.mamba_cmd
         except FileNotFoundError:
             pass
 
