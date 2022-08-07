@@ -105,9 +105,9 @@ def main():
        ],
        "automated_plotting_vsecs": [
                ["https://forecast.fz-juelich.de/campaigns2019",
-                "ecmwf.VS_ertel_potential_vorticity_ml", "ertel_potential_vorticity_bh"],
+                "ecmwf.VS_ertel_potential_vorticity_ml", "ertel_potential_vorticity_bh", "pressure"],
                ["https://forecast.fz-juelich.de/campaigns2019",
-                "ecmwf.TroposphereInversionLayer", ""]
+                "ecmwf.TroposphereInversionLayer", "", "pressure"]
        ]
 
        will plot flight "ST25" with configured map section "01 SADPAP (stereo)" and
