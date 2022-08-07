@@ -297,7 +297,7 @@ class MSUIDefaultConfig(object):
         "WMS_preload": ["https://wms-preload-url.com"],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
-        "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", ""]],
+        "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_lsecs": [["http://www.your-wms-server.de", "", ""]]
     }
 

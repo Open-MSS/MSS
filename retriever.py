@@ -239,7 +239,7 @@ def main():
             if ipoint >= len(wps):
                 break
 
-        for url, layer, style in config["automated_plotting_vsecs"]:
+        for url, layer, style, vsec_type in config["automated_plotting_vsecs"]:
             fig.clear()
 
             # setup ticks and labels
@@ -256,7 +256,6 @@ def main():
             pres_min = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_min
             lat_inds = np.arange(len(lats))
             tick_index_step = len(lat_inds) // num_labels
-            vsec_type = config_loader(dataset="type")
 
             if vsec_type == "no secondary axis":
                 major_ticks = [] * units.pascal
@@ -381,7 +380,7 @@ def main():
             imgax.set_xlim(0, img.size[0] - 1)
             imgax.set_ylim(img.size[1] - 1, 0)
 
-            plt.savefig(f"{flight}_{layer}.xml")
+            plt.savefig(f"{flight}_{layer}.png")
 
         for url, layer, style in config["automated_plotting_lsecs"]:
 
