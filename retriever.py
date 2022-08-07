@@ -256,25 +256,25 @@ def main():
             pres_min = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_min
             lat_inds = np.arange(len(lats))
             tick_index_step = len(lat_inds) // num_labels
-            type = config_loader(dataset="type")
+            vsec_type = config_loader(dataset="type")
 
-            if type == "no secondary axis":
+            if vsec_type == "no secondary axis":
                 major_ticks = [] * units.pascal
                 minor_ticks = [] * units.pascal
                 labels = []
                 ylabel = ""
-            elif type == "pressure":
+            elif vsec_type == "pressure":
                 # Compute the position of major and minor ticks. Major ticks are labelled.
                 major_ticks = pres_maj[(pres_maj <= p_bot) & (pres_maj >= p_top)]
                 minor_ticks = pres_min[(pres_min <= p_bot) & (pres_min >= p_top)]
                 labels = [f"{int(_x / 100)}"
-                        if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks]
+                          if (_x / 100) - int(_x / 100) == 0 else f"{float(_x / 100)}" for _x in major_ticks]
                 if len(labels) > 20:
                     labels = ["" if x.split(".")[-1][0] in "975" else x for x in labels]
                 elif len(labels) > 10:
                     labels = ["" if x.split(".")[-1][0] in "9" else x for x in labels]
                 ylabel = "pressure (hPa)"
-            elif type == "pressure altitude":
+            elif vsec_type == "pressure altitude":
                 bot_km = thermolib.pressure2flightlevel(p_bot * units.Pa).to(units.km).magnitude
                 top_km = thermolib.pressure2flightlevel(p_top * units.Pa).to(units.km).magnitude
                 ma_dist, mi_dist = 4, 1.0
@@ -288,7 +288,7 @@ def main():
                 minor_ticks = thermolib.flightlevel2pressure(minor_heights * units.km).magnitude
                 labels = major_heights
                 ylabel = "pressure altitude (km)"
-            elif type == "flight level":
+            elif vsec_type == "flight level":
                 bot_km = thermolib.pressure2flightlevel(p_bot * units.Pa).to(units.km).magnitude
                 top_km = thermolib.pressure2flightlevel(p_top * units.Pa).to(units.km).magnitude
                 ma_dist, mi_dist = 50, 10
@@ -303,7 +303,7 @@ def main():
                 labels = major_fl
                 ylabel = "flight level (hft)"
             else:
-                raise RuntimeError(f"Unsupported vertical axis type: '{type}'")
+                raise RuntimeError(f"Unsupported vertical axis type: '{vsec_type}'")
 
             ax.tick_params(axis='x', labelsize=axes_label_size)
             ax.set_title("vertical flight profile", fontsize=plot_title_size, horizontalalignment="left", x=0)
@@ -384,6 +384,8 @@ def main():
             plt.savefig(f"{flight}_{layer}.xml")
 
         for url, layer, style in config["automated_plotting_lsecs"]:
+
+            # prepare lsec plots
             fig.clear()
             linearview_size_settings = config_loader(dataset="linearview")
             plot_title_size = linearview_size_settings["plot_title_size"]
@@ -398,15 +400,13 @@ def main():
             ax.tick_params(axis='both', labelsize=axes_label_size)
             ax.set_title("Linear flight profile", fontsize=plot_title_size, horizontalalignment='left', x=0)
             ax.set_xlim(0, len(lats) - 1)
-            # Set xticks so that they display lat/lon. Plot "numlabels" labels.
 
+            # setup ticks and labels
             ax.set_xticks(lat_inds[::tick_index_step])
-            ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
-                                for d in zip(lats[::tick_index_step],
-                                lons[::tick_index_step])],
-                                rotation=25, horizontalalignment="right"
-                               )
-            par = ax.twinx()
+            ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'for d in zip(lats[::tick_index_step],
+                               lons[::tick_index_step])],
+                               rotation=25, horizontalalignment="right"
+                              )
             ax.set_yscale("linear")
             fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
             ax_bounds = plt.gca().bbox.bounds
@@ -418,31 +418,45 @@ def main():
             wms = wms_control.MSUIWebMapService(url,
                                                 username=config["WMS_login"][url][0],
                                                 password=config["WMS_login"][url][1],
-                                                version='1.3.0'
-                                                )
+                                                version='1.3.0')
+
+            path_string = ""
+            for i, wp in enumerate(wps):
+                path_string += f"{wp[0]:.2f},{wp[1]:.2f},{wp_presss[i]},"
+            path_string = path_string[:-1]
+
+            # retrieve and draw image
             kwargs = {"layers": [layer],
                       "styles": [style],
-                      "srs": "LINE:1",
-                      "bbox": bbox,
-                      "exceptions": 'application/vnd.ogc.se_xml',
-                      "path_str":",".join(f"{wp_presss},{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),
                       "time": time,
                       "init_time": init_time,
-                      "size": (width, height),
-                      "format": "text/xml"}
+                      "exceptions": 'application/vnd.ogc.se_xml',
+                      "srs": "LINE:1",
+                      "path_str": path_string,
+                      "bbox": bbox,
+                      "format": "text/xml",
+                      "size": (width, height)
+                     }
 
             xmls = wms.getmap(**kwargs)
-
             wms_cache = config_loader(dataset="wms_cache")
             urlstr = wms.getmap(return_only_url=True, **kwargs)
             ending = ".xml"
-            md5_filename = os.path.join(wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
 
+            if not os.path.exists(wms_cache):
+                os.makedirs(wms_cache)
+            md5_filename = os.path.join(wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
             with open(md5_filename, "w") as cache:
                 cache.write(str(xmls.read(), encoding="utf8"))
-                xmli = etree.fromstring(xmls.read())
+            if not type(xmls) == 'list':
+                xmls = [xmls]
 
-            for i, xm in enumerate(xmli):
+            xml_objects = []
+            for xml_ in xmls:
+                xml_data = etree.fromstring(xml_.read())
+                xml_objects.append(xml_data)
+
+            for i, xm in enumerate(xml_objects):
                 data = xm.find("Data")
                 values = [float(value) for value in data.text.split(",")]
                 unit = data.attrib["unit"]
@@ -461,6 +475,18 @@ def main():
                 if unit:
                     par.set_ylabel(unit)
 
+            par.yaxis.label.set_color(color.replace("0x", "#"))
+
+            # draw vertical lines
+            vertical_lines = []
+            ipoint = 0
+            highlight = [[wp[0], wp[1]] for wp in wps]
+            for i, (lat, lon) in enumerate(zip(lats, lons)):
+                if (ipoint < len(highlight) and
+                        np.hypot(lat - highlight[ipoint][0],
+                                 lon - highlight[ipoint][1]) < 2E-10):
+                    vertical_lines.append(ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
+                    ipoint += 1
             fig.tight_layout()
             fig.subplots_adjust(top=0.85, bottom=0.20)
             fig.canvas.draw()
