@@ -175,12 +175,16 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         Iterates through all shortcuts and resets the stylesheet
         """
-        self.fill_list()
         if self.current_shortcuts:
             for shortcuts in self.current_shortcuts.values():
                 for shortcut in shortcuts.values():
-                    if shortcut[-1] and hasattr(shortcut[-1], "setStyleSheet"):
-                        shortcut[-1].setStyleSheet("")
+                    try:
+                        if shortcut[-1]  and hasattr(shortcut[-1], "setStyleSheet"):
+                            shortcut[-1].setStyleSheet("")
+                    except RuntimeError:
+                        # when we have deleted a QAction we have to update the list
+                        # Because we cannot test if the underlying object exist we have to catch that
+                        self.fill_list()
 
     def clicked(self, item):
         """
