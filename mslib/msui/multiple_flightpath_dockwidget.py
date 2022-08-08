@@ -26,8 +26,6 @@
 """
 import logging
 import os
-
-import fs
 from PyQt5 import QtWidgets, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.utils.qt import get_open_filenames
@@ -91,10 +89,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.flight_path = None  # flightpath object
         self.dict_files = {}  # Dictionary of files added; key: patch, waypoints
         self.waypoint_list = []  # List of waypoints parsed from FTML file
+        self.directory_location = None
 
         # Connect Signals and Slots
         self.bt_addFile.clicked.connect(self.get_file)
         self.btRemove_file.clicked.connect(self.remove_item)
+        # self.btActivate.clicked.connect(self.activate_track)
+
+        self.list_flighttrack.itemChanged.connect(self.load_flighttrack)
 
         self.settings_tag = "multipledock"
         settings = load_settings_qsettings(
@@ -196,9 +198,17 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Load Multiple Flighttracks simultaneously and construct corresponding
         flight patches on topview.
         """
+
+        for entry in self.dict_files.values():  # removes all patches from map, but not from dict files
+            if entry["track"] is not None:  # since newly initialized files will have patch:None
+                entry["track"].remove()
+
         for index in range(self.list_flighttrack.count()):
-            if self.list_flighttrack.item(index).text() in self.dict_files:
-                if self.dict_files[self.list_flighttrack.item(index).text()]["track"] is None:
+            if hasattr(self.list_flighttrack.item(index), "checkState") and (
+                    self.list_flighttrack.item(index).checkState() == QtCore.Qt.Checked):
+                if self.list_flighttrack.item(index).text() in self.dict_files:
+                    # if self.dict_files[self.list_flighttrack.item(index).text()]["track"] is None:
+                    # ToDO: Don't create new patch object if flighttrack patch object is Not None
                     self.directory_location = str(self.list_flighttrack.item(index).text())
                     self.waypoint_list = self.parse_ftml(self.directory_location)
                     patch = MultipleFlightpath(self.view.map, self.waypoint_list)
@@ -217,6 +227,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         Remove FTML file from list widget.
         """
+        flag = 0  # used to set label, if not file is selected
         for index in range(self.list_flighttrack.count()):
             if hasattr(self.list_flighttrack.item(index), "checkState") and \
                     (self.list_flighttrack.item(index).checkState() == QtCore.Qt.Checked):  # If item is checked
@@ -225,4 +236,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 del self.dict_files[self.list_flighttrack.item(index).text()]
                 self.list_flighttrack.takeItem(index)
                 self.remove_item()
-        self.labelStatus.setText("Status: FTML File is Removed")
+                flag = 1
+                self.labelStatus.setText("Status: FTML File is Removed")
+        if not flag:
+            self.labelStatus.setText("Status: Select FTML File to Delete")
