@@ -34,7 +34,6 @@ from mslib.utils.qt import get_open_filenames
 from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
 from fs import open_fs
 import xml
-import lxml.etree as et
 
 
 class MultipleFlightpath(object):
@@ -51,8 +50,7 @@ class MultipleFlightpath(object):
         self.draw()
 
     def draw_line(self, x, y):
-        self.patches.append(self.map.plot(x, y, color='blue', linestyle='-',
-                                          linewidth='3'))
+        self.patches.append(self.map.plot(x, y, color='blue', linewidth='2'))
 
     def compute_xy(self, lon, lat):
         x, y = self.map.gcpoints_path(lon, lat)
@@ -91,7 +89,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.setupUi(self)
         self.view = view  # canvas
         self.flight_path = None  # flightpath object
-        self.dict_files = {}
+        self.dict_files = {}  # Dictionary of files added; key: patch, waypoints
         self.waypoint_list = []  # List of waypoints parsed from FTML file
 
         # Connect Signals and Slots
@@ -100,9 +98,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         self.settings_tag = "multipledock"
         settings = load_settings_qsettings(
-            self.settings_tag, {"filename": "", "waypoints": [], "saved_files": {}})
+            self.settings_tag, {"saved_files": {}})
 
-        self.directory_location = settings["filename"]
         if parent is not None:
             parent.viewCloses.connect(self.save_settings)
         # Restore previously stored sessions
@@ -112,13 +109,12 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             for fn in self.dict_files:
                 if os.path.isfile(fn) is True:
                     self.create_list_item(fn)
-                    self.waypoint_list = settings["waypoints"]
-                    self.load_flighttrack()
                 else:
                     delete_files.append(fn)  # add non-existent files to list
                     logging.info("'%s' does not exist in the directory anymore.", fn)
             for fn in delete_files:
                 del self.dict_files[fn]  # remove non-existent files from dictionary
+            self.load_flighttrack()
         self.view.plot_multiple_flightpath(self)
 
     def checkListItem(self, filename):
@@ -147,14 +143,11 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             if text not in self.dict_files:
                 self.dict_files[text] = {}
                 self.dict_files[text]["track"] = None
-
-                self.directory_location = text
                 self.create_list_item(text)
+                self.load_flighttrack()
             else:
                 logging.info("%s file already added", text)
         self.labelStatus.setText("Status: Files added successfully.")
-        self.waypoint_list = self.parse_ftml(self.directory_location)
-        self.load_flighttrack()
 
     def parse_ftml(self, filename):
         """Load a flight track from an XML file at <filename>.
@@ -194,8 +187,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         for entry in self.dict_files.values():
             entry["track"] = None
         settings = {
-            "filename": str(self.directory_location),
-            "waypoints": self.waypoint_list,
             "saved_files": self.dict_files
         }
         save_settings_qsettings(self.settings_tag, settings)
@@ -207,9 +198,11 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         for index in range(self.list_flighttrack.count()):
             if self.list_flighttrack.item(index).text() in self.dict_files:
-                # if self.dict_files[self.list_flighttrack.item(index).text()]["track"] is not None:
-                patch = MultipleFlightpath(self.view.map, self.waypoint_list)
-                self.dict_files[self.list_flighttrack.item(index).text()]["track"] = patch
+                if self.dict_files[self.list_flighttrack.item(index).text()]["track"] is None:
+                    self.directory_location = str(self.list_flighttrack.item(index).text())
+                    self.waypoint_list = self.parse_ftml(self.directory_location)
+                    patch = MultipleFlightpath(self.view.map, self.waypoint_list)
+                    self.dict_files[self.list_flighttrack.item(index).text()]["track"] = patch
 
     def create_list_item(self, text):
         """
@@ -226,7 +219,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         for index in range(self.list_flighttrack.count()):
             if hasattr(self.list_flighttrack.item(index), "checkState") and \
-                    (self.list_flighttrack.item(index).checkState() == QtCore.Qt.Checked):
+                    (self.list_flighttrack.item(index).checkState() == QtCore.Qt.Checked):  # If item is checked
                 if self.dict_files[self.list_flighttrack.item(index).text()]['track'] is not None:
                     self.dict_files[self.list_flighttrack.item(index).text()]['track'].remove()
                 del self.dict_files[self.list_flighttrack.item(index).text()]
