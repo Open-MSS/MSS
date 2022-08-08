@@ -179,7 +179,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
             for shortcuts in self.current_shortcuts.values():
                 for shortcut in shortcuts.values():
                     try:
-                        if shortcut[-1]  and hasattr(shortcut[-1], "setStyleSheet"):
+                        if shortcut[-1] and hasattr(shortcut[-1], "setStyleSheet"):
                             shortcut[-1].setStyleSheet("")
                     except RuntimeError:
                         # when we have deleted a QAction we have to update the list
