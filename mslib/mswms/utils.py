@@ -458,7 +458,7 @@ def _style_square_of_brunt_vaisala_frequency_in_air(_dataname, style, cmin, cmax
     return cmin, cmax, clev, cmap, norm, None
 
 
-def _style_log_ice_cloud(dataname, _style, cmin, cmax, cmap, _data):
+def _style_number_concentration_of_ice_crystals_in_air(dataname, _style, cmin, cmax, cmap, _data):
     cmap = matplotlib.pyplot.cm.colors.ListedColormap(
         [(0.8, 0.8, 0.8, 1.0),
          (1., 1., 1.0, 1.0),
@@ -469,18 +469,30 @@ def _style_log_ice_cloud(dataname, _style, cmin, cmax, cmap, _data):
          (1.0, 0., 0.0, 1.0),
          (0.212, 0.114, 0.075, 1.0),
          ], name="ice_map_log")
-    if dataname == "number_concentration_of_ice_crystals_in_air":
-        clev = np.append(np.array([-1e31, -0.1]), get_log_levels(1e-4, 100., 7))
-        ticks = np.append(np.array([0.]), get_log_levels(1e-4, 100., 7))
-    else:
-        assert dataname == "cloud_ice_mixing_ratio"
-        clev = np.append(np.array([-1e31, -0.1]), get_log_levels(1e-3, 1e3, 7))
-        ticks = np.append(np.array([0.]), get_log_levels(1e-3, 1e3, 7))
+    clev = np.append(np.array([-1e31, -0.1]), get_log_levels(1e-4, 100., 7))
+    ticks = np.append(np.array([0.]), get_log_levels(1e-4, 100., 7))
     norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     return cmin, cmax, clev, cmap, norm, ticks
 
 
-def _style_ice_cloud(dataname, _style, cmin, cmax, cmap, _data):
+def _style_cloud_ice_mixing_ratio(_dataname, _style, cmin, cmax, cmap, _data):
+    cmap = matplotlib.pyplot.cm.colors.ListedColormap(
+        [(0.8, 0.8, 0.8, 1.0),
+         (1., 1., 1.0, 1.0),
+         (0., 0., 1.0, 1.0),
+         (0., 0.949, 0.988, 1.0),
+         (0., 1., 0., 1.0),
+         (1., 1.0, 0.0, 1.0),
+         (1.0, 0., 0.0, 1.0),
+         (0.212, 0.114, 0.075, 1.0),
+         ], name="ice_map_log")
+    clev = np.append(np.array([-1e31, -0.1]), get_log_levels(1e-3, 1e3, 7))
+    ticks = np.append(np.array([0.]), get_log_levels(1e-3, 1e3, 7))
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, ticks
+
+
+def _style_mean_mass_radius_of_cloud_ice_crystals(dataname, _style, cmin, cmax, cmap, _data):
     cmap = matplotlib.pyplot.cm.colors.ListedColormap(
         [(1., 1., 1.0, 1.0),
          (0., 0., 1.0, 1.0),
@@ -490,10 +502,8 @@ def _style_ice_cloud(dataname, _style, cmin, cmax, cmap, _data):
          (1.0, 0., 0.0, 1.0),
          (0.212, 0.114, 0.075, 1.0),
          ], name="ice_map")
-    clev, norm = None, None
-    if dataname == "mean_mass_radius_of_cloud_ice_crystals":
-        clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     return cmin, cmax, clev, cmap, norm, None
 
 
@@ -510,8 +520,9 @@ _styles = {
     "equivalent_latitude_sh": _style_equivalent_latitude_sh,
     "gravity_wave_temperature_perturbation": _style_gravity_wave_temperature_perturbation,
     "square_of_brunt_vaisala_frequency_in_air": _style_square_of_brunt_vaisala_frequency_in_air,
-    "log_ice_cloud": _style_log_ice_cloud,
-    "ice_cloud": _style_ice_cloud,
+    "mean_mass_radius_of_cloud_ice_crystals": _style_mean_mass_radius_of_cloud_ice_crystals,
+    "cloud_ice_mixing_ratio": _style_cloud_ice_mixing_ratio,
+    "number_concentration_of_ice_crystals_in_air": _style_number_concentration_of_ice_crystals_in_air,
 }
 
 
@@ -531,9 +542,9 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
 
     try:
         cmin, cmax, clev, cmap, norm, ticks = \
-            _styles[style](dataname, style, cmin, cmax, data)
+            _styles[style](dataname, style, cmin, cmax, cmap, data)
     except BaseException:
-        logging.ERROR("Illegal plotting style '%s' for dataname '%s'", style, dataname)
+        logging.error("Illegal plotting style '%s' for dataname '%s'", style, dataname)
         raise
     if clev[0] == clev[-1]:
         cmin, cmax = 0, 1
