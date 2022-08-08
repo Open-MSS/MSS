@@ -25,6 +25,7 @@
     limitations under the License.
 """
 
+import logging
 import numpy as np
 import matplotlib
 
@@ -38,12 +39,15 @@ class Targets(object):
     This class defines the names, units, and ranges of supported generic physical
     quantities for vertical and horizontal plots.
 
-    RANGES, UNITS, and THRESHOLDS can be overwritten from outside to determine ranges for plotting in settings.
+    RANGES, UNITS, and THRESHOLDS can be overwritten from outside to determine
+    ranges for plotting in settings.
 
-    Dictionary containing valid value ranges for the different targes. The first level uses CF standard_name as key
-    to determine the target. The second level uses either the level type
-    ("pl", "ml", ...) as key or "total" for the level-overarching valid range. The level-type has a third level
-    using the level altitude as key. The leafs are made of 2-tuples indicating the lowest and the highest valid
+    Dictionary containing valid value ranges for the different targets.
+    The first level uses CF standard_name as key to determine the target.
+    The second level uses either the level type ("pl", "ml", ...) as key or
+    "total" for the level-overarching valid range.
+    The level-type has a third level using the level altitude as key.
+    The leafs are made of 2-tuples indicating the lowest and the highest valid
     value.
     """
     RANGES = {}
@@ -295,6 +299,222 @@ def get_log_levels(cmin, cmax, levels=N_LEVELS):
     return clev
 
 
+def _style_default(_dataname, _style, cmin, cmax, cmap, _data):
+    clev = np.linspace(cmin, cmax, 16)
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_auto(_dataname, _style, cmin, cmax, cmap, data):
+    cmin_p = data.min()
+    cmax_p = data.max()
+    if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
+        cmin, cmax = cmin_p, cmax_p
+    if cmin == cmax:
+        cmin, cmax = 0, 1
+    if 0 < cmin < 0.05 * cmax:
+        cmin = 0.
+    clev = np.linspace(cmin, cmax, 16)
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_log(_dataname, _style, cmin, cmax, cmap, _data):
+    clev = get_log_levels(cmin, cmax, 16)
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_autolog(_dataname, _style, cmin, cmax, cmap, data):
+    cmin_p = data.min()
+    cmax_p = data.max()
+    if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
+        cmin, cmax = cmin_p, cmax_p
+    if cmin == cmax:
+        cmin, cmax = 0, 1
+    clev = get_log_levels(cmin, cmax, 16)
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_nonlinear(dataname, _style, cmin, cmax, cmap, _data):
+    clev = Targets.get_thresholds(dataname)
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_tropopause_altitude(_dataname, _style, cmin, cmax, cmap, _data):
+    cmap = matplotlib.pyplot.cm.terrain
+    clev = np.arange(5, 18.1, 0.25)
+    return cmin, cmax, clev, cmap, None, None
+
+
+def _style_ertel_potential_vorticity(_dataname, style, cmin, cmax, cmap, _data, hemisphere):
+    colors = [
+        (1.0, 0.55000000000000004, 1.0, 1.0),
+        (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
+        (0.64666666666666672, 0.25, 1.0, 1.0),
+        (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
+        (0.69999999999999996, 1.0, 1.0, 1.0),
+        (0.46666666666666667, 0.73333333333333339, 1.0, 1.0),
+        (0.23333333333333334, 0.46666666666666667, 1.0, 1.0),
+        (0.0, 0.20000000000000001, 1.0, 1.0),
+        (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
+        (0.43333333333333335, 0.90000000000000002, 0.43333333333333335, 1.0),
+        (0.21666666666666667, 0.80000000000000004, 0.21666666666666667, 1.0),
+        (0.0, 0.69999999999999996, 0.0, 1.0),
+        (1.0, 1.0, 0.0, 1.0),
+        (1.0, 0.375, 0.0, 1.0),
+        (0.90000000000000002, 0.0, 0.041666666666666664, 1.0),
+        (0.40000000000000002, 0.0, 0.25, 1.0)]
+    clev = list(np.arange(0, 4, 0.5)) + list(range(4, 8)) + list(range(8, 18, 2))
+    if hemisphere == "nh":
+        cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors, name="pv_map")
+        cmap.set_over((0.8, 0.8, 0.8, 1.0))
+    else:
+        assert hemisphere == "sh"
+        cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors[::-1], name="pv_map")
+        cmap.set_under((0.8, 0.8, 0.8, 1.0))
+        clev = [-_x for _x in clev[::-1]]
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_ertel_potential_vorticity_nh(dataname, style, cmin, cmax, cmap, data):
+    return _style_ertel_potential_vorticity(dataname, style, cmin, cmax, cmap, data, "nh")
+
+
+def _style_ertel_potential_vorticity_sh(dataname, style, cmin, cmax, cmap, data):
+    return _style_ertel_potential_vorticity(dataname, style, cmin, cmax, cmap, data, "sh")
+
+
+def _style_equivalent_latitude(_dataname, style, cmin, cmax, cmap, _data, hemisphere):
+    colors = [
+        (1.0, 0.55000000000000004, 1.0, 1.0),
+        (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
+        (0.64666666666666672, 0.25, 1.0, 1.0),
+        (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
+        (0.69999999999999996, 1.0, 1.0, 1.0),
+        (0.46666666666666667, 0.73333333333333339, 1.0, 1.0),
+        (0.23333333333333334, 0.46666666666666667, 1.0, 1.0),
+        (0.0, 0.20000000000000001, 1.0, 1.0),
+        (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
+        (0.43333333333333335, 0.90000000000000002, 0.43333333333333335, 1.0),
+        (0.21666666666666667, 0.80000000000000004, 0.21666666666666667, 1.0),
+        (0.0, 0.69999999999999996, 0.0, 1.0),
+        (1.0, 1.0, 0.0, 1.0),
+        (1.0, 0.375, 0.0, 1.0),
+        (0.90000000000000002, 0.0, 0.041666666666666664, 1.0),
+        (0.40000000000000002, 0.0, 0.25, 1.0)]
+    clev = np.arange(5, 86, 5)
+    if hemisphere == "nh":
+        cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors)
+    else:
+        assert hemisphere == "sh"
+        cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors[::-1])
+        clev = [-_x for _x in clev[::-1]]
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_equivalent_latitude_sh(dataname, style, cmin, cmax, cmap, data):
+    return _style_equivalent_latitude(dataname, style, cmin, cmax, cmap, data, "sh")
+
+
+def _style_equivalent_latitude_nh(dataname, style, cmin, cmax, cmap, data):
+    return _style_equivalent_latitude(dataname, style, cmin, cmax, cmap, data, "nh")
+
+
+def _style_gravity_wave_temperature_perturbation(_dataname, style, _cmin, _cmax, cmap, _data):
+    cmap = matplotlib.pyplot.cm.Spectral_r
+    clev = [-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3]
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    ticks = -3, -2, -1, 1, 2, 3
+    return -3, 3, clev, cmap, norm, ticks
+
+
+def _style_square_of_brunt_vaisala_frequency_in_air(_dataname, style, cmin, cmax, cmap, _data):
+    cmap = matplotlib.pyplot.cm.colors.ListedColormap(
+        [(1.0, 0.55000000000000004, 1.0, 1.0),
+         (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
+         (0.64666666666666672, 0.25, 1.0, 1.0),
+         (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
+         (0.69999999999999996, 1.0, 1.0, 1.0),
+         (0.0, 0.20000000000000001, 1.0, 1.0),
+         (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
+         (0.0, 0.69999999999999996, 0.0, 1.0),
+         (1.0, 1.0, 0.0, 1.0),
+         (1.0, 0.73529411764705888, 0.0, 1.0),
+         (1.0, 0.46323529411764708, 0.0, 1.0),
+         (1.0, 0.21568627450980393, 0.0, 1.0),
+         (1.0, 0.034313725490196068, 0.0, 1.0),
+         (0.8294117647058824, 0.0, 0.071078431372549017, 1.0),
+         (0.61176470588235299, 0.0, 0.16176470588235295, 1.0),
+         (0.40000000000000002, 0.0, 0.25, 1.0),
+         ], name="n2_map")
+    cmap.set_over((0.8, 0.8, 0.8, 1.0))
+    clev = np.arange(0., 8.5 / 1e4, 0.5 / 1e4)
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+def _style_log_ice_cloud(dataname, _style, cmin, cmax, cmap, _data):
+    cmap = matplotlib.pyplot.cm.colors.ListedColormap(
+        [(0.8, 0.8, 0.8, 1.0),
+         (1., 1., 1.0, 1.0),
+         (0., 0., 1.0, 1.0),
+         (0., 0.949, 0.988, 1.0),
+         (0., 1., 0., 1.0),
+         (1., 1.0, 0.0, 1.0),
+         (1.0, 0., 0.0, 1.0),
+         (0.212, 0.114, 0.075, 1.0),
+         ], name="ice_map_log")
+    if dataname == "number_concentration_of_ice_crystals_in_air":
+        clev = np.append(np.array([-1e31, -0.1]), get_log_levels(1e-4, 100., 7))
+        ticks = np.append(np.array([0.]), get_log_levels(1e-4, 100., 7))
+    else:
+        assert dataname == "cloud_ice_mixing_ratio"
+        clev = np.append(np.array([-1e31, -0.1]), get_log_levels(1e-3, 1e3, 7))
+        ticks = np.append(np.array([0.]), get_log_levels(1e-3, 1e3, 7))
+    norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, ticks
+
+
+def _style_ice_cloud(dataname, _style, cmin, cmax, cmap, _data):
+    cmap = matplotlib.pyplot.cm.colors.ListedColormap(
+        [(1., 1., 1.0, 1.0),
+         (0., 0., 1.0, 1.0),
+         (0., 0.949, 0.988, 1.0),
+         (0., 1., 0., 1.0),
+         (1., 1.0, 0.0, 1.0),
+         (1.0, 0., 0.0, 1.0),
+         (0.212, 0.114, 0.075, 1.0),
+         ], name="ice_map")
+    clev, norm = None, None
+    if dataname == "mean_mass_radius_of_cloud_ice_crystals":
+        clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+    return cmin, cmax, clev, cmap, norm, None
+
+
+_styles = {
+    "default": _style_default,
+    "log": _style_log,
+    "auto": _style_auto,
+    "autolog": _style_autolog,
+    "nonlinear": _style_nonlinear,
+    "tropopause_altitude": _style_tropopause_altitude,
+    "ertel_potential_vorticity_nh": _style_ertel_potential_vorticity_nh,
+    "ertel_potential_vorticity_sh": _style_ertel_potential_vorticity_sh,
+    "equivalent_latitude_nh": _style_equivalent_latitude_nh,
+    "equivalent_latitude_sh": _style_equivalent_latitude_sh,
+    "gravity_wave_temperature_perturbation": _style_gravity_wave_temperature_perturbation,
+    "square_of_brunt_vaisala_frequency_in_air": _style_square_of_brunt_vaisala_frequency_in_air,
+    "log_ice_cloud": _style_log_ice_cloud,
+    "ice_cloud": _style_ice_cloud,
+}
+
+
 def get_style_parameters(dataname, style, cmin, cmax, data):
     if cmin is None or cmax is None:
         try:
@@ -309,153 +529,12 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
     if any(isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)):
         cmin, cmax = 0, 1
 
-    if style == "default":
-        clev = np.linspace(cmin, cmax, 16)
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style == "auto":
-        cmin_p = data.min()
-        cmax_p = data.max()
-        if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
-            cmin, cmax = cmin_p, cmax_p
-        if cmin == cmax:
-            cmin, cmax = 0, 1
-        if 0 < cmin < 0.05 * cmax:
-            cmin = 0.
-        clev = np.linspace(cmin, cmax, 16)
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style == "log":
-        clev = get_log_levels(cmin, cmax, 16)
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style == "autolog":
-        cmin_p = data.min()
-        cmax_p = data.max()
-        if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
-            cmin, cmax = cmin_p, cmax_p
-        if cmin == cmax:
-            cmin, cmax = 0, 1
-        clev = get_log_levels(cmin, cmax, 16)
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style == "nonlinear":
-        clev = Targets.get_thresholds(dataname)
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style.startswith("ertel_potential_vorticity"):
-        colors = [
-            (1.0, 0.55000000000000004, 1.0, 1.0),
-            (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
-            (0.64666666666666672, 0.25, 1.0, 1.0),
-            (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
-            (0.69999999999999996, 1.0, 1.0, 1.0),
-            (0.46666666666666667, 0.73333333333333339, 1.0, 1.0),
-            (0.23333333333333334, 0.46666666666666667, 1.0, 1.0),
-            (0.0, 0.20000000000000001, 1.0, 1.0),
-            (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
-            (0.43333333333333335, 0.90000000000000002, 0.43333333333333335, 1.0),
-            (0.21666666666666667, 0.80000000000000004, 0.21666666666666667, 1.0),
-            (0.0, 0.69999999999999996, 0.0, 1.0),
-            (1.0, 1.0, 0.0, 1.0),
-            (1.0, 0.375, 0.0, 1.0),
-            (0.90000000000000002, 0.0, 0.041666666666666664, 1.0),
-            (0.40000000000000002, 0.0, 0.25, 1.0)]
-        clev = list(np.arange(0, 4, 0.5)) + list(range(4, 8)) + list(range(8, 18, 2))
-        if style[-2:] == "nh":
-            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors, name="pv_map")
-            cmap.set_over((0.8, 0.8, 0.8, 1.0))
-        else:
-            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors[::-1], name="pv_map")
-            cmap.set_under((0.8, 0.8, 0.8, 1.0))
-            clev = [-_x for _x in clev[::-1]]
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style.startswith("equivalent_latitude"):
-        colors = [
-            (1.0, 0.55000000000000004, 1.0, 1.0),
-            (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
-            (0.64666666666666672, 0.25, 1.0, 1.0),
-            (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
-            (0.69999999999999996, 1.0, 1.0, 1.0),
-            (0.46666666666666667, 0.73333333333333339, 1.0, 1.0),
-            (0.23333333333333334, 0.46666666666666667, 1.0, 1.0),
-            (0.0, 0.20000000000000001, 1.0, 1.0),
-            (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
-            (0.43333333333333335, 0.90000000000000002, 0.43333333333333335, 1.0),
-            (0.21666666666666667, 0.80000000000000004, 0.21666666666666667, 1.0),
-            (0.0, 0.69999999999999996, 0.0, 1.0),
-            (1.0, 1.0, 0.0, 1.0),
-            (1.0, 0.375, 0.0, 1.0),
-            (0.90000000000000002, 0.0, 0.041666666666666664, 1.0),
-            (0.40000000000000002, 0.0, 0.25, 1.0)]
-        clev = np.arange(5, 86, 5)
-        if style[-2:] == "nh":
-            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors)
-        else:
-            cmap = matplotlib.pyplot.cm.colors.ListedColormap(colors[::-1])
-            clev = [-_x for _x in clev[::-1]]
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style == "gravity_wave_temperature_perturbation":
-        cmap = matplotlib.pyplot.cm.Spectral_r
-        clev = [-3, -2.5, -2, -1.5, -1, -0.5, 0.5, 1, 1.5, 2, 2.5, 3]
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-        ticks = -3, -2, -1, 1, 2, 3
-    elif style == "square_of_brunt_vaisala_frequency_in_air":
-        cmap = matplotlib.pyplot.cm.colors.ListedColormap(
-            [(1.0, 0.55000000000000004, 1.0, 1.0),
-             (0.82333333333333336, 0.40000000000000002, 1.0, 1.0),
-             (0.64666666666666672, 0.25, 1.0, 1.0),
-             (0.46999999999999997, 0.10000000000000001, 1.0, 1.0),
-             (0.69999999999999996, 1.0, 1.0, 1.0),
-             (0.0, 0.20000000000000001, 1.0, 1.0),
-             (0.65000000000000002, 1.0, 0.65000000000000002, 1.0),
-             (0.0, 0.69999999999999996, 0.0, 1.0),
-             (1.0, 1.0, 0.0, 1.0),
-             (1.0, 0.73529411764705888, 0.0, 1.0),
-             (1.0, 0.46323529411764708, 0.0, 1.0),
-             (1.0, 0.21568627450980393, 0.0, 1.0),
-             (1.0, 0.034313725490196068, 0.0, 1.0),
-             (0.8294117647058824, 0.0, 0.071078431372549017, 1.0),
-             (0.61176470588235299, 0.0, 0.16176470588235295, 1.0),
-             (0.40000000000000002, 0.0, 0.25, 1.0),
-             ], name="n2_map")
-        cmap.set_over((0.8, 0.8, 0.8, 1.0))
-        clev = np.arange(0., 8.5 / 1e4, 0.5 / 1e4)
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style == "tropopause_altitude":
-        cmap = matplotlib.pyplot.cm.terrain
-        norm = None
-        clev = np.arange(5, 18.1, 0.25)
-    elif style == "log_ice_cloud":
-        cmap = matplotlib.pyplot.cm.colors.ListedColormap(
-            [(0.8, 0.8, 0.8, 1.0),
-             (1., 1., 1.0, 1.0),
-             (0., 0., 1.0, 1.0),
-             (0., 0.949, 0.988, 1.0),
-             (0., 1., 0., 1.0),
-             (1., 1.0, 0.0, 1.0),
-             (1.0, 0., 0.0, 1.0),
-             (0.212, 0.114, 0.075, 1.0),
-             ], name="ice_map_log")
-        if dataname == "number_concentration_of_ice_crystals_in_air":
-            clev = np.append(np.array([-1e31, -0.1]),
-                             get_log_levels(1e-4, 100., 7))
-            ticks = np.append(np.array([0.]), get_log_levels(1e-4, 100., 7))
-        if dataname == "cloud_ice_mixing_ratio":
-            clev = np.append(np.array([-1e31, -0.1]),
-                             get_log_levels(1e-3, 1e3, 7))
-            ticks = np.append(np.array([0.]), get_log_levels(1e-3, 1e3, 7))
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    elif style == "ice_cloud":
-        cmap = matplotlib.pyplot.cm.colors.ListedColormap(
-            [(1., 1., 1.0, 1.0),
-             (0., 0., 1.0, 1.0),
-             (0., 0.949, 0.988, 1.0),
-             (0., 1., 0., 1.0),
-             (1., 1.0, 0.0, 1.0),
-             (1.0, 0., 0.0, 1.0),
-             (0.212, 0.114, 0.075, 1.0),
-             ], name="ice_map")
-        if dataname == "mean_mass_radius_of_cloud_ice_crystals":
-            clev = np.array([0, 1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100])
-        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
-    else:
-        raise RuntimeError(f"Illegal plotting style?! ({style})")
+    try:
+        cmin, cmax, clev, cmap, norm, ticks = \
+            _styles[style](dataname, style, cmin, cmax, data)
+    except BaseException:
+        logging.ERROR("Illegal plotting style '%s' for dataname '%s'", style, dataname)
+        raise
     if clev[0] == clev[-1]:
         cmin, cmax = 0, 1
         clev = np.linspace(0, 1, len(clev))
