@@ -128,7 +128,7 @@ class Operation(db.Model):
     active = db.Column(db.Boolean)
     last_used = db.Column(db.DateTime)
 
-    def __init__(self, path, description, last_used, category="default", active=True):
+    def __init__(self, path, description, last_used=None, category="default", active=True):
         """
         path: path to the operation
         description: small description of operation

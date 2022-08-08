@@ -40,7 +40,7 @@ class FileManager(object):
     def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_operation(self, path, description, user, last_used=datetime.datetime.utcnow(), content=None, category="default"):
+    def create_operation(self, path, description, user, last_used=None, content=None, category="default"):
         """
         path: path to the operation
         description: description of the operation
@@ -52,6 +52,8 @@ class FileManager(object):
         proj_available = Operation.query.filter_by(path=path).first()
         if proj_available is not None:
             return False
+        if last_used is None:
+            last_used = datetime.datetime.utcnow()
         operation = Operation(path, description, last_used, category)
         db.session.add(operation)
         db.session.flush()
