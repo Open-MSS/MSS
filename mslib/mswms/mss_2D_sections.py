@@ -114,10 +114,11 @@ class Abstract2DSectionStyle(metaclass=ABCMeta):
         all available init times.
         """
         if self.uses_validtime_dimension() and self.driver is not None:
-            valid_times = set()
+            valid_times = None
             for vartype, varname, _ in self.required_datafields:
                 vtimes = self.driver.get_all_valid_times(varname, vartype)
-                if len(valid_times) == 0:
+                if valid_times is None:
+                    valid_times = set()
                     valid_times.update(vtimes)
                 else:
                     valid_times.intersection_update(vtimes)
