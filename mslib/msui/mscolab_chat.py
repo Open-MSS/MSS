@@ -519,6 +519,7 @@ class MessageItem(QtWidgets.QWidget):
         self.messageBox.customContextMenuRequested.connect(self.open_context_menu)
 
     def set_time_label(self):
+        # ToDo: Translate time in user's timezone
         time_label = QtWidgets.QLabel(f"{self.time}")
         time_label.setContentsMargins(5, 5, 5, 0)
         time_label.setAlignment(QtCore.Qt.AlignRight)
