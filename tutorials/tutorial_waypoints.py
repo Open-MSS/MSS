@@ -25,47 +25,12 @@
 """
 
 import pyautogui as pag
-import multiprocessing
-import sys
 import datetime
+
 from sys import platform
-
 from pyscreeze import ImageNotFoundException
-
-from tutorials import screenrecorder as sr
-from mslib.msui import msui
-
-
-def initial_ops():
-    """
-    Executes the initial operations such as closing all opened windows and showing the desktop.
-    """
-    pag.sleep(5)
-    if platform == "linux" or platform == "linux2":
-        pag.hotkey('winleft', 'd')
-        print("\n INFO : Automation is running on Linux system..\n")
-    elif platform == "darwin":
-        pag.hotkey('option', 'command', 'm')
-        print("\n INFO : Automation is running on Mac OS..\n")
-    elif platform == "win32":
-        pag.hotkey('win', 'd')
-        print("\n INFO : Automation is running on Windows OS..\n")
-    else:
-        pag.alert(text="Sorry, no support on this platform!", title="Platform Exception", button='OK')
-
-
-def call_recorder():
-    """
-    Calls the screen recorder class to start the recording of the automation.
-    """
-    sr.main()
-
-
-def call_msui():
-    """
-    Calls the main MSS GUI window since operations are to be performed on it only.
-    """
-    msui.main()
+from tutorials.utils import platform_keys, start, finish
+from tutorials.pictures import picture
 
 
 def automate_waypoints():
@@ -75,6 +40,7 @@ def automate_waypoints():
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(15)
+    ctrl, enter, win, alt = platform_keys()
 
     # Maximizing the window
     try:
@@ -92,10 +58,11 @@ def automate_waypoints():
 
     # Adding waypoints
     try:
-        x, y = pag.locateCenterOnScreen('pictures/add_waypoint.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\nException : Clickable button/option not found on the screen.")
+        raise
     pag.move(-50, 150, duration=1)
     pag.click(interval=2)
     pag.sleep(1)
@@ -114,10 +81,11 @@ def automate_waypoints():
 
     # Moving waypoints
     try:
-        x, y = pag.locateCenterOnScreen('pictures/move_waypoint.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Move Waypoint button could not be located on the screen")
+        raise
 
     pag.moveTo(x2, y2, duration=1)
     pag.click(interval=2)
@@ -128,10 +96,11 @@ def automate_waypoints():
 
     # Deleting waypoints
     try:
-        x, y = pag.locateCenterOnScreen('pictures/remove_waypoint.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'remove_waypoint.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Remove Waypoint button could not be located on the screen")
+        raise
     pag.moveTo(x1, y1, duration=1)
     pag.click(duration=1)
     pag.press('left')
@@ -146,13 +115,11 @@ def automate_waypoints():
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             print(pag.position())
-            x, y = pag.locateCenterOnScreen('pictures/europe_cyl.png')
-            pag.click(x, y, interval=2)
-        elif platform == 'win32':
-            x, y = pag.locateCenterOnScreen('pictures/europe(cyl)win.PNG')
+            x, y = pag.locateCenterOnScreen(picture('wms', 'europe_cyl.png'))
             pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Map change dropdown could not be located on the screen")
+        raise
     pag.press('down', presses=2, interval=0.5)
     if platform == 'linux' or platform == 'linux2' or platform == 'win32':
         pag.press('enter', interval=1)
@@ -162,20 +129,22 @@ def automate_waypoints():
 
     # Zooming into the map
     try:
-        x, y = pag.locateCenterOnScreen('pictures/zoom.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Zoom button could not be located on the screen")
+        raise
     pag.move(150, 200, duration=1)
     pag.dragRel(400, 250, duration=2)
     pag.sleep(5)
 
     # Panning into the map
     try:
-        x, y = pag.locateCenterOnScreen('pictures/pan.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'pan.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Pan button could not be located on the screen")
+        raise
     pag.moveRel(400, 400, duration=1)
     pag.dragRel(-100, -50, duration=2)
     pag.sleep(5)
@@ -186,36 +155,40 @@ def automate_waypoints():
 
     # Switching to the previous appearance of the map
     try:
-        x, y = pag.locateCenterOnScreen('pictures/previous.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'previous.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Previous button could not be located on the screen")
+        raise
     pag.sleep(5)
 
     # Switching to the next appearance of the map
     try:
-        x, y = pag.locateCenterOnScreen('pictures/next.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'next.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Next button could not be located on the screen")
+        raise
     pag.sleep(5)
 
     # Resetting the map to the original size
     try:
-        x, y = pag.locateCenterOnScreen('pictures/home.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'home.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Home button could not be located on the screen")
+        raise
     pag.sleep(5)
 
     # Saving the figure
     try:
-        x, y = pag.locateCenterOnScreen('pictures/save.PNG')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'save.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Save button could not be located on the screen")
+        raise
     current_time = datetime.datetime.now().strftime('%d-%m-%Y %H-%M-%S')
-    fig_filename = f'Fig_{current_time}.PNG'
+    fig_filename = f'Fig_{current_time}.png'
     pag.sleep(3)
     if platform == 'win32':
         pag.write(fig_filename, interval=0.25)
@@ -230,69 +203,8 @@ def automate_waypoints():
         pag.press('return', interval=1)
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-
-    # Close Everything!
-    try:
-        if platform == 'linux' or platform == 'linux2':
-            for _ in range(2):
-                pag.hotkey('altleft', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
-            pag.keyDown('altleft')
-            pag.press('tab')
-            pag.press('left')
-            pag.keyUp('altleft')
-            pag.press('q')
-        if platform == 'win32':
-            for _ in range(2):
-                pag.hotkey('alt', 'f4')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('enter')
-                pag.sleep(2)
-            pag.hotkey('alt', 'tab')
-            pag.press('q')
-        elif platform == 'darwin':
-            for _ in range(2):
-                pag.hotkey('command', 'w')
-                pag.sleep(3)
-                pag.press('left')
-                pag.sleep(3)
-                pag.press('return')
-                pag.sleep(2)
-            pag.hotkey('command', 'tab')
-            pag.press('q')
-    except Exception:
-        print("Cannot automate : Enable Shortcuts for your system or try again")
-    pag.press('q')
-
-
-def main():
-    """
-    This function runs the above functions as different processes at the same time and can be
-    controlled from here. (This is the main process.)
-    """
-    p1 = multiprocessing.Process(target=call_msui)
-    p2 = multiprocessing.Process(target=automate_waypoints)
-    p3 = multiprocessing.Process(target=call_recorder)
-
-    print("\nINFO : Starting Automation.....\n")
-    p3.start()
-    pag.sleep(5)
-    initial_ops()
-    p1.start()
-    p2.start()
-
-    p2.join()
-    p1.join()
-    p3.join()
-    print("\n\nINFO : Automation Completes Successfully!")
-    sys.exit()
+    finish()
 
 
 if __name__ == '__main__':
-    main()
+    start(target=automate_waypoints, duration=200)

@@ -243,3 +243,11 @@ class Test_KmlOverlayDockWidget(object):
         self.select_file("geometry_collection.kml")
         assert self.count_patches() == 3  # 1 Point, 1 Text, 1 Polygon Patch
         self.window.remove_file()
+
+    # this fails with dependencies given by python 3.10 and MSS before 7.0.1
+    # because we have not verified to pass always int to QtGui.QColor
+    def test_show_color_icon(self):
+        filename = self.select_file("fir.kml")  # selects file and returns path
+        assert filename.endswith('kml')
+        clr = [0.6666666, 0.6666666, 0.6666666]
+        assert self.window.show_color_icon(filename, clr) is not None
