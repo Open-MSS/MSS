@@ -95,6 +95,8 @@ class Test_MSS_ShortcutDialog():
                 break
         assert self.shortcuts.treeWidget.topLevelItemCount() == 2
 
+    # ToDo we need a test for reset_highlight when e.g. Transparent was selected and afterwards topview was destroyed
+
 
 class Test_MSSSideViewWindow(object):
     # temporary file paths to test open feature
