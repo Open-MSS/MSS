@@ -64,7 +64,7 @@ class MultipleFlightpath(object):
 
     def draw(self):
         lat, lon = self.get_lonlat()
-        x, y = self.compute_xy(lat, lon)
+        x, y = self.compute_xy(lon, lat)
         self.draw_line(x, y)
         self.map.ax.figure.canvas.draw()
 
