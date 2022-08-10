@@ -82,8 +82,11 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     on the TopView canvas.
     """
 
-    def __init__(self, parent=None, view=None):
+    def __init__(self, parent=None, view=None, listView=None, waypoints_model=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
+        self.listView = listView
+        self.ui = parent
+        self.waypoints_model = waypoints_model
         self.setupUi(self)
         self.view = view  # canvas
         self.flight_path = None  # flightpath object
@@ -240,3 +243,24 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 self.labelStatus.setText("Status: FTML File is Removed")
         if not flag:
             self.labelStatus.setText("Status: Select FTML File to Delete")
+
+    def syncFlighttrackLists(self):
+        """
+        Add Flighttracks from MSUI ListView to multiple_flightpath_dockwidget list
+        """
+        for index in range(self.listView.count()):
+            item = self.listView.item(index).text()
+            # if item not in self.list_flighttrack:
+            self.create_list_item(item)
+
+    def test(self):
+        dict = {}
+        lat = []
+        lon = []
+        all_waypoints_list = self.waypoints_model.all_waypoint_data()
+        for count in range(len(all_waypoints_list)):
+            dict[str(all_waypoints_list[count])] = {}
+            for index in range(all_waypoints_list[count].rowCount()):
+                wp = all_waypoints_list[count].waypoint_data(index)
+                lat.append(wp.lat)
+                lon.append(wp.lon)

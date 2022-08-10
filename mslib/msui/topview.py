@@ -192,6 +192,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         super(MSUITopViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
+        self.ui = parent
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -294,7 +295,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget = ad.AirdataDockwidget(parent=self, view=self.mpl.canvas)
             elif index == MULTIPLEFLIGHTPATH:
                 title = "Multiple Flightpath"
-                widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas)
+                widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
+                                                            listView=self.ui.listFlightTracks, waypoints_model=self.waypoints_model)
             else:
                 raise IndexError("invalid control index")
 

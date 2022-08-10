@@ -252,7 +252,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                  action.objectName(),
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
                 for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
-                self.cbNoShortcut.checkState()])
+                                                                         self.cbNoShortcut.checkState()])
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
                              shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
@@ -276,7 +276,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
             if not any(action for action in actions if action[3] == "actionShortcuts"):
                 actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
-                               "Show Current Shortcuts", "Alt+S", None))
+                                "Show Current Shortcuts", "Alt+S", None))
             if not any(action for action in actions if action[3] == "actionSearch"):
                 actions.append((qobject.window(), "Search for interactive text in the UI",
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
@@ -714,7 +714,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_item.window.enable_navbar_action_buttons()
             if old_flight_track_name is not None:
                 view_item.window.setWindowTitle(view_item.window.windowTitle().replace(old_flight_track_name,
-                                                self.active_flight_track.name))
+                                                                                       self.active_flight_track.name))
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -809,7 +809,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(model=model)
+            view_window = topview.MSUITopViewWindow(parent=self, model=model)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
