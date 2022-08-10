@@ -576,8 +576,8 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
                       "and dataname '%s'", style, dataname)
         raise
     if clev[0] == clev[-1]:
-        cmin, cmax = 0, 1
-        clev = np.linspace(0, 1, len(clev))
+        cmin, cmax = 0., 1.
+        clev = np.linspace(0., 1., len(clev))
     return cmin, cmax, clev, cmap, norm, ticks
 
 
