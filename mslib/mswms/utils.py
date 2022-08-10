@@ -311,7 +311,7 @@ def _style_auto(_dataname, _style, cmin, cmax, cmap, data):
     if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
         cmin, cmax = cmin_p, cmax_p
     if cmin == cmax:
-        cmin, cmax = 0, 1
+        cmin, cmax = 0., 1.
     if 0 < cmin < 0.05 * cmax:
         cmin = 0.
     clev = np.linspace(cmin, cmax, 16)
@@ -331,7 +331,7 @@ def _style_autolog(_dataname, _style, cmin, cmax, cmap, data):
     if not any([isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin_p, cmax_p)]):
         cmin, cmax = cmin_p, cmax_p
     if cmin == cmax:
-        cmin, cmax = 0, 1
+        cmin, cmax = 0., 1.
     clev = get_log_levels(cmin, cmax, 16)
     norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
     return cmin, cmax, clev, cmap, norm, None
@@ -507,7 +507,7 @@ def _style_mean_mass_radius_of_cloud_ice_crystals(dataname, _style, cmin, cmax, 
     return cmin, cmax, clev, cmap, norm, None
 
 
-_styles = {
+STYLES = {
     "default": _style_default,
     "log": _style_log,
     "auto": _style_auto,
@@ -529,24 +529,51 @@ _styles = {
 
 
 def get_style_parameters(dataname, style, cmin, cmax, data):
+    """
+    Returns a list of meaningful values for a BoundaryNorm for plotting.
+
+    All other _style_* functions have the same interface. This function
+    calls the other functions via the STYLES module level variable.
+    This allows to add styles from the server configuration side.
+
+    Args:
+        dataname: standard_name of the data product
+        style: name of the plotting style
+        cmin: configured/precomputed minimal value
+        cmax: configured/precomputed maximal value
+        cmap: default colormap
+        data: the 2-D data field to be plotted
+    Returns:
+        tuple of (minimal data value, maximal data value,
+        list of levels for contour plots, color map, norm,
+        list of tick values for the colorbar)
+    """
     if cmin is None or cmax is None:
         try:
             cmin, cmax = data.min(), data.max()
         except ValueError:
-            cmin, cmax = 0, 1
+            cmin, cmax = 0., 1.
         if 0 < cmin < 0.05 * cmax:
             cmin = 0.
     cmap = matplotlib.pyplot.cm.rainbow
     ticks = None
 
     if any(isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)):
-        cmin, cmax = 0, 1
+        cmin, cmax = 0., 1.
 
     try:
         cmin, cmax, clev, cmap, norm, ticks = \
-            _styles[style](dataname, style, cmin, cmax, cmap, data)
+            STYLES[style](dataname, style, cmin, cmax, cmap, data)
+    except KeyError:
+        logging.error("Unknown plotting style '%s' for dataname '%s'", style, dataname)
+        raise
+    except (ValueError, TypeError):
+        logging.error("Illegal number of arguments/return values for plotting style '%s' "
+                      "and dataname '%s'", style, dataname)
+        raise
     except BaseException:
-        logging.error("Illegal plotting style '%s' for dataname '%s'", style, dataname)
+        logging.error("Unknown error in style call: plotting style '%s' "
+                      "and dataname '%s'", style, dataname)
         raise
     if clev[0] == clev[-1]:
         cmin, cmax = 0, 1
