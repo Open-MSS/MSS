@@ -366,7 +366,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if self.listWidget.currentItem() is not None:
             filename = self.listWidget.currentItem().text()
             clr = self.set_color(filename)
-            colour = QtGui.QColor(clr[0] * 255, clr[1] * 255, clr[2] * 255)
+            colour = QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255))
             self.colour = QtWidgets.QColorDialog.getColor(colour)
             if self.colour.isValid() and filename in self.dict_files:
                 self.dict_files[filename]["color"] = self.colour.getRgbF()
@@ -430,7 +430,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             pixmap = QtGui.QPixmap(20, (2 * int(self.set_linewidth(filename))))
         else:
             pixmap = QtGui.QPixmap(20, 1)
-        pixmap.fill(QtGui.QColor(clr[0] * 255, clr[1] * 255, clr[2] * 255))
+        pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
         return QtGui.QIcon(pixmap)
 
     def show_linewidth(self):

@@ -111,10 +111,14 @@ class Test_VSec(object):
         assert img is not None
         assert is_image_transparent(img)
 
-    def test_xml(self):
+    def test_VS_xml(self):
         img = self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec), return_format="text/xml")
         assert img is not None
         ElementTree.fromstring(img)
+
+    def test_VS_wrong_return_format(self):
+        with pytest.raises(RuntimeError):
+            self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec), return_format="stupid/stuff")
 
     def test_VS_TemperatureStyle_01(self):
         img = self.plot(mpl_vsec_styles.VS_TemperatureStyle_01(driver=self.vsec))
@@ -220,13 +224,14 @@ class Test_LSec(object):
         self.valid_time = datetime(2012, 10, 17, 12)
         self.lsec = LinearSectionDriver(data)
 
-    def plot(self, plot_object):
+    def plot(self, plot_object, return_format="text/xml"):
         self.lsec.set_plot_parameters(plot_object=plot_object,
                                       bbox=self.bbox,
                                       lsec_path=self.path,
                                       lsec_numpoints=self.bbox[0],
                                       init_time=self.init_time,
-                                      valid_time=self.valid_time)
+                                      valid_time=self.valid_time,
+                                      return_format=return_format)
         return self.lsec.plot()
 
     def test_repeated_locations(self):
@@ -266,6 +271,12 @@ class Test_LSec(object):
         img = self.plot(mpl_lsec_styles.LS_VerticalVelocityStyle_01(driver=self.lsec))
         assert img is not None
 
+    def test_LS_wrong_return_format(self):
+        with pytest.raises(RuntimeError):
+            self.plot(mpl_lsec_styles.LS_RelativeHumdityStyle_01(driver=self.lsec), return_format="stupid/stuff")
+        with pytest.raises(RuntimeError):
+            self.plot(mpl_lsec_styles.LS_RelativeHumdityStyle_01(driver=self.lsec), return_format="image/png")
+
 
 class Test_HSec(object):
     def setup(self):
@@ -279,12 +290,12 @@ class Test_HSec(object):
         self.hsec = HorizontalSectionDriver(data)
 
     def plot(self, plot_object, style="default", level=None, crs="EPSG:4326", bbox=None, noframe=False,
-             transparent=False):
+             transparent=False, return_format="image/png"):
         if bbox is None:
             bbox = self.bbox
         self.hsec.set_plot_parameters(plot_object=plot_object, bbox=bbox, level=level, crs=crs,
                                       init_time=self.init_time, valid_time=self.valid_time, style=style,
-                                      noframe=noframe, show=False, transparent=transparent)
+                                      noframe=noframe, show=False, transparent=transparent, return_format=return_format)
         return self.hsec.plot()
 
     @pytest.mark.parametrize("crs", [
@@ -334,6 +345,12 @@ class Test_HSec(object):
         img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), transparent=True)
         assert img is not None
         assert is_image_transparent(img)
+
+    def test_HS_wrong_return_format(self):
+        with pytest.raises(RuntimeError):
+            self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), transparent=True, return_format="stupid/stuff")
+        with pytest.raises(RuntimeError):
+            self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec), transparent=True, return_format="text/xml")
 
     def test_HS_MSLPStyle_01(self):
         img = self.plot(mpl_hsec_styles.HS_MSLPStyle_01(driver=self.hsec))
