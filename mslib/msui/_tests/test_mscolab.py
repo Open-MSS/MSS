@@ -526,45 +526,35 @@ class Test_Mscolab(object):
         assert self.window.listViews.count() == 0
         assert self.window.listOperationsMSC.model().rowCount() == 0
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_name", True))
-    def test_handle_rename_operation(self):
+    def test_handle_rename_operation(self, mockbox, mockpatch):
         self._connect_to_mscolab()
-
-        self._login(self.userdata3[0], self.userdata3[2])
-        QtWidgets.QApplication.processEvents()
-        assert self.window.usernameLabel.text() == self.userdata3[1]
-
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
         assert self.window.listOperationsMSC.model().rowCount() == 1
-        assert self.window.mscolab.active_op_id is None
         self._activate_operation_at_index(0)
-        op_id = self.window.mscolab.get_recent_op_id()
-        assert op_id is not None
-
+        assert self.window.mscolab.active_op_id is not None
         self.window.actionRenameOperation.trigger()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
-        assert self.window.active_operation_name == "new_name"
+        assert self.window.mscolab.active_operation_name == "new_name"
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_desciption", True))
-    def test_update_description(self):
+    def test_update_description(self, mockbox, mockpatch):
         self._connect_to_mscolab()
-
-        self._login(self.userdata3[0], self.userdata3[2])
-        QtWidgets.QApplication.processEvents()
-        assert self.window.usernameLabel.text() == self.userdata3[1]
-
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
         assert self.window.listOperationsMSC.model().rowCount() == 1
-        assert self.window.mscolab.active_op_id is None
         self._activate_operation_at_index(0)
-        op_id = self.window.mscolab.get_recent_op_id()
-        assert op_id is not None
-
+        assert self.window.mscolab.active_op_id is not None
         self.window.actionUpdateOperationDesc.trigger()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
-        assert self.active_operation_desc == "new_desciption"
+        assert self.window.mscolab.active_operation_desc == "new_desciption"
 
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()
@@ -594,16 +584,24 @@ class Test_Mscolab(object):
     def test_open_chat_window(self):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
-
+        self._create_operation("flight1234", "Description flight1234")
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
-        assert self.window.mscolab.active_op_id is None
-
-        QtTest.QTest.mouseClick(self.window.actionChat, QtCore.Qt.LeftButton)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionChat.trigger()
         QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
         assert self.window.mscolab.chat_window is not None
 
     def test_close_chat_window(self):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionChat.trigger()
+        QtWidgets.QApplication.processEvents()
         self.window.mscolab.close_chat_window()
         assert self.window.mscolab.chat_window is None
 
