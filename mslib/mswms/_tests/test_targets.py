@@ -25,18 +25,15 @@
 """
 
 from mslib.utils.units import units
-from mslib.mswms.utils import Targets
+import mslib.mswms.generics as generics
 
 
 def test_targets():
-    for standard_name in Targets.get_targets():
-        unit = Targets.get_unit(standard_name)
+    for standard_name in generics.get_standard_names():
+        unit = generics.get_unit(standard_name)
         units(unit)  # ensure that the unit may be parsed
-        Targets.get_range(standard_name)
-        Targets.get_thresholds(standard_name)
-        Targets.get_range(standard_name)
-        Targets.UNITS[standard_name]
-        Targets.TITLES[standard_name]
-
-    for ent in Targets.THRESHOLDS:
-        units(Targets.THRESHOLDS[ent][0])
+        generics.get_range(standard_name)
+        generics.get_thresholds(standard_name)
+        generics.get_range(standard_name)
+        generics.get_unit(standard_name)
+        generics.get_title(standard_name)

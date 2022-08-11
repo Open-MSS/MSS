@@ -1009,6 +1009,10 @@ basemap_use_cache = True
 # visualisation products for which data files are available. The data
 # sets must be defined in mss_config.py. The WMS will only offer
 # products registered here.
+#
+# For defining new visualisation styles, we provide documentation and examples on
+# https://mss.rtfd.io/en/stable/mswms.html#mswms-wms-a-ogc-web-map-server
+#
 register_horizontal_layers = None
 if mpl_hsec_styles is not None:
     register_horizontal_layers = [
