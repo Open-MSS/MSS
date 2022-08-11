@@ -274,7 +274,7 @@ make_generic_class(
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
                    ["dashed", "solid", "solid", "solid"], 2, True)],
-    fix_styles=[("log_ice_cloud", "iwc")])
+    fix_styles=[("cloud_ice_mixing_ratio", "iwc")])
 
 make_generic_class(
     f"VS_GenericStyle_{vert.upper()}_{'number_concentration_of_ice_crystals_in_air'}",
@@ -285,7 +285,7 @@ make_generic_class(
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
                    ["dashed", "solid", "solid", "solid"], 2, True)],
-    fix_styles=[("log_ice_cloud", "nice")])
+    fix_styles=[("number_concentration_of_ice_crystals_in_air", "nice")])
 
 make_generic_class(
     f"VS_GenericStyle_{vert.upper()}_{'mean_mass_radius_of_cloud_ice_crystals'}",
@@ -296,7 +296,7 @@ make_generic_class(
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
                    ["dimgrey", "dimgrey", "#443322", "#045FB4"],
                    ["dashed", "solid", "solid", "solid"], 2, True)],
-    fix_styles=[("ice_cloud", "radius")])
+    fix_styles=[("mean_mass_radius_of_cloud_ice_crystals", "radius")])
 
 make_generic_class(
     f"VS_GenericStyle_{vert.upper()}_{'maximum_pressure_on_backtrajectory'}",
