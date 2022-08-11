@@ -300,11 +300,6 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
-    def test_connect_dialog(self):
-        self.window.login_handler.trigger()
-        QtWidgets.QApplication.processEvents()
-        assert self.window.MSColab_ConnectDialog is not None
-
     def test_activate_operation(self):
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])

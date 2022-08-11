@@ -138,7 +138,10 @@ class Operation(db.Model):
         self.description = description
         self.category = category
         self.active = active
-        self.last_used = last_used
+        if self.last_used is None:
+            self.last_used = datetime.datetime.utcnow()
+        else:
+            self.last_used = last_used
 
     def __repr__(self):
         return f'<Operation path: {self.path}, desc: {self.description}, cat: {self.category}, active: {self.active}, ' \
