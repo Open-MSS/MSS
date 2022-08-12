@@ -88,7 +88,7 @@ class Test_Seed(TestCase):
             # viewer
             add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
                                             access_level='viewer')
-            expected_result = [{'access_level': 'viewer', 'category': 'default',
+            expected_result = [{'access_level': 'viewer', 'active': True, 'category': 'default',
                                 'description': 'Template', 'op_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
@@ -103,7 +103,7 @@ class Test_Seed(TestCase):
             assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
             add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
                                             access_level='collaborator')
-            expected_result = [{'access_level': 'collaborator', 'category': 'default',
+            expected_result = [{'access_level': 'collaborator', 'active': True, 'category': 'default',
                                 'description': 'Template', 'op_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             assert user is not None
@@ -118,7 +118,7 @@ class Test_Seed(TestCase):
             # creator
             add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
                                             access_level='creator')
-            expected_result = [{'access_level': 'creator', 'category': 'default',
+            expected_result = [{'access_level': 'creator', 'active': True, 'category': 'default',
                                 'description': 'Template', 'op_id': 7, 'path': 'XYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_operations(user)
@@ -132,7 +132,7 @@ class Test_Seed(TestCase):
             # creator added to new operation
             add_all_users_default_operation(path='UVXYZ', description="Operation to keep all users",
                                             access_level='creator')
-            expected_result = [{'access_level': 'creator', 'category': 'default',
+            expected_result = [{'access_level': 'creator', 'active': True, 'category': 'default',
                                 'description': 'Operation to keep all users',
                                 'op_id': 7, 'path': 'UVXYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
