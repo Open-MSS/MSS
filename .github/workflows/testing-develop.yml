@@ -4,9 +4,11 @@ on:
   push:
     branches:
     - develop
+    - GSOC2022-JatinJain
   pull_request:
     branches:
     - develop
+    - GSOC2022-JatinJain
 
 jobs:     
   test-develop:
@@ -29,4 +31,13 @@ jobs:
     secrets:
       PAT: ${{ secrets.PAT }}
 
+  test-filter-flight-paths:
+    uses:
+      ./.github/workflows/testing.yml
+    with:
+      xdist: no
+      branch_name: filter_flight_paths
+      event_name: ${{ github.event_name }}
+    secrets:
+      PAT: ${{ secrets.PAT }}
 
