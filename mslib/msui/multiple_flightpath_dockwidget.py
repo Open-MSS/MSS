@@ -43,12 +43,12 @@ class MultipleFlightpath(object):
         self.map = mapcanvas
         self.flightlevel = None
         self.comments = ''
-        self.patches = []
+        self.inactiveTrackPatches = []
         self.waypoints = wp
         self.draw()
 
     def draw_line(self, x, y):
-        self.patches.append(self.map.plot(x, y, color='blue', linewidth='2'))
+        self.inactiveTrackPatches.append(self.map.plot(x, y, color='blue', linewidth='2'))
 
     def compute_xy(self, lon, lat):
         x, y = self.map.gcpoints_path(lon, lat)
@@ -69,10 +69,10 @@ class MultipleFlightpath(object):
         self.map.ax.figure.canvas.draw()
 
     def remove(self):
-        for patch in self.patches:
+        for patch in self.inactiveTrackPatches:
             for elem in patch:
                 elem.remove()
-        self.patches = []
+        self.inactiveTrackPatches = []
         self.map.ax.figure.canvas.draw()
 
 
@@ -82,24 +82,30 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     on the TopView canvas.
     """
 
-    def __init__(self, parent=None, view=None, listView=None, waypoints_model=None):
+    def __init__(self, parent=None, view=None, listView=None, activeFlightTrack=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
         self.listView = listView
         self.ui = parent
-        self.waypoints_model = waypoints_model
         self.setupUi(self)
         self.view = view  # canvas
         self.flight_path = None  # flightpath object
         self.dict_files = {}  # Dictionary of files added; key: patch, waypoints
         self.waypoint_list = []  # List of waypoints parsed from FTML file
         self.directory_location = None
+        self.waypoints_modelList = []
+        self.active_flight_track = activeFlightTrack
+        self.inactiveTrackPatches = []
 
         # Connect Signals and Slots
         self.bt_addFile.clicked.connect(self.get_file)
         self.btRemove_file.clicked.connect(self.remove_item)
-        # self.btActivate.clicked.connect(self.activate_track)
+
+        # self.btActivate.clicked.connect(self.test)
+        # self.syncFlighttrackLists()
+        self.drawInactiveFlighttracks()
 
         self.list_flighttrack.itemChanged.connect(self.load_flighttrack)
+        self.listView.itemChanged.connect(self.drawInactiveFlighttracks)
 
         self.settings_tag = "multipledock"
         settings = load_settings_qsettings(
@@ -182,7 +188,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 comments = ''
 
             waypoints_list.append((lat, lon, flightlevel, location, comments))
-        # return waypoints_list
         return waypoints_list
 
     def save_settings(self):
@@ -249,18 +254,33 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Add Flighttracks from MSUI ListView to multiple_flightpath_dockwidget list
         """
         for index in range(self.listView.count()):
-            item = self.listView.item(index).text()
-            # if item not in self.list_flighttrack:
+            item = self.listView.item(index).flighttrack_model.name
             self.create_list_item(item)
 
-    def test(self):
-        dict = {}
-        lat = []
-        lon = []
-        all_waypoints_list = self.waypoints_model.all_waypoint_data()
-        for count in range(len(all_waypoints_list)):
-            dict[str(all_waypoints_list[count])] = {}
-            for index in range(all_waypoints_list[count].rowCount()):
-                wp = all_waypoints_list[count].waypoint_data(index)
-                lat.append(wp.lat)
-                lon.append(wp.lon)
+    def drawInactiveFlighttracks(self):
+        dict = {}  # Dictionary of waypointTableModel objects and their waypoints
+
+        if len(self.inactiveTrackPatches) > 0:
+            self.removen()
+
+        for index in range(self.listView.count()):  # Make list of all flighttrack models
+            item = self.listView.item(index).flighttrack_model
+            self.waypoints_modelList.append(item)
+
+        for count in range(len(self.waypoints_modelList)):
+            waypoints_list = []
+            dict[str(self.waypoints_modelList[count])] = {}
+            for wp in self.waypoints_modelList[count].all_waypoint_data():
+                waypoints_list.append((wp.lat, wp.lon,
+                                       wp.flightlevel, wp.location, wp.comments))
+            dict[str(self.waypoints_modelList[count])]["waypoints_list"] = waypoints_list
+
+        for key in dict:   # Draw inactive flighttracks
+            if str(key) != str(self.active_flight_track):
+                patch = MultipleFlightpath(self.view.map, dict[key]["waypoints_list"])
+                self.inactiveTrackPatches.append(patch)
+
+    def removen(self):
+        for pp in range(len(self.inactiveTrackPatches)):
+            if self.inactiveTrackPatches[pp] is not None:
+                self.inactiveTrackPatches[pp].remove()

@@ -296,7 +296,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             elif index == MULTIPLEFLIGHTPATH:
                 title = "Multiple Flightpath"
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
-                                                            listView=self.ui.listFlightTracks, waypoints_model=self.waypoints_model)
+                                                            listView=self.ui.listFlightTracks,
+                                                            activeFlightTrack=self.ui.active_flight_track)
             else:
                 raise IndexError("invalid control index")
 
