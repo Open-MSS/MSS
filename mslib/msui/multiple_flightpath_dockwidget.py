@@ -43,12 +43,12 @@ class MultipleFlightpath(object):
         self.map = mapcanvas
         self.flightlevel = None
         self.comments = ''
-        self.inactiveTrackPatches = []
+        self.patches = []
         self.waypoints = wp
         self.draw()
 
     def draw_line(self, x, y):
-        self.inactiveTrackPatches.append(self.map.plot(x, y, color='blue', linewidth='2'))
+        self.patches.append(self.map.plot(x, y, color='blue', linewidth='2'))
 
     def compute_xy(self, lon, lat):
         x, y = self.map.gcpoints_path(lon, lat)
@@ -69,10 +69,10 @@ class MultipleFlightpath(object):
         self.map.ax.figure.canvas.draw()
 
     def remove(self):
-        for patch in self.inactiveTrackPatches:
+        for patch in self.patches:
             for elem in patch:
                 elem.remove()
-        self.inactiveTrackPatches = []
+        self.patches = []
         self.map.ax.figure.canvas.draw()
 
 
