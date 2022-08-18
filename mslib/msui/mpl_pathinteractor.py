@@ -55,6 +55,7 @@ from mslib.utils.coordinate import get_distance, find_location, latlon_points
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
+from mslib import plot
 
 
 def distance_point_linesegment(p, l1, l2):
@@ -548,20 +549,9 @@ class PathInteractor(QtCore.QObject):
             textlabel = f"{str(i):}   "
             if wpd[i].location != "":
                 textlabel = f"{wpd[i].location:}   "
-            t = self.ax.text(x[i],
-                             y[i],
-                             textlabel,
-                             bbox=dict(boxstyle="round",
-                                       facecolor="white",
-                                       alpha=0.5,
-                                       edgecolor="none"),
-                             fontweight="bold",
-                             zorder=4,
-                             rotation=90,
-                             animated=True,
-                             clip_on=True,
-                             visible=self.showverts and self.label_waypoints)
-            self.wp_labels.append(t)
+        pt = plot.HsecPlotting()
+        wp_labels = pt.plotlabel(x, y, textlabel, len(wpd))
+        self.wp_labels = wp_labels
 
         if self.background:
             self.canvas.restore_region(self.background)
