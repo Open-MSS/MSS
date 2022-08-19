@@ -147,7 +147,7 @@ class HsecPlotting(Plotting):
             wp_labels.append(t)
         return wp_labels
 
-    def Hsecretrieve(self):
+    def HsecRetrieve(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
@@ -181,13 +181,13 @@ class HsecPlotting(Plotting):
                 img = wms.getmap(**kwargs)
                 image_io = io.BytesIO(img.read())
                 img = PIL.Image.open(image_io)
-                wms_image = self.Hsecd(img)
+                wms_image = self.HsecDraw(img)
                 self.bm.drawcoastlines()
                 self.bm.drawcountries()
 
                 self.fig.savefig(f"{flight}_{layer}.png")
 
-    def Hsecd(self, img):
+    def HsecDraw(self, img):
         wms_image = self.bm.imshow(img, interpolation="nearest", origin="upper")
         return wms_image
 
@@ -294,7 +294,7 @@ class VsecPlotting(Plotting):
                                         rotation=25, fontsize=10, horizontalalignment="right"
                                         )
 
-    def Path(self):
+    def VsecPath(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_vsecs"]:
@@ -304,7 +304,7 @@ class VsecPlotting(Plotting):
                                     )
                 line.set_visible(True)
 
-    def Label(self):
+    def VsecLabel(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_vsecs"]:
@@ -330,7 +330,7 @@ class VsecPlotting(Plotting):
                 for t in wp_labels:
                     self.ax.draw_artist(t)
 
-    def retrieve(self):
+    def VsecRetrieve(self):
         self.fig.canvas.draw()
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
@@ -364,13 +364,13 @@ class VsecPlotting(Plotting):
                 img = PIL.Image.open(image_io)
                 imgax = self.fig.add_axes(self.ax.get_position(), frameon=True,
                                           xticks=[], yticks=[], label="ax2", zorder=0)
-                wms_image = self.draw(img, imgax)
+                wms_image = self.VsecDraw(img, imgax)
                 imgax.set_xlim(0, img.size[0] - 1)
                 imgax.set_ylim(img.size[1] - 1, 0)
 
                 plt.savefig(f"{flight}_{layer}.png")
 
-    def draw(self, img, imgax):
+    def VsecDraw(self, img, imgax):
         wms_image = imgax.imshow(img, interpolation="nearest", aspect="auto", origin="upper")
         return wms_image
 
@@ -405,7 +405,7 @@ class LsecPlotting(Plotting):
         self.ax.set_yscale("linear")
         self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
 
-    def draw(self):
+    def LsecDraw(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style in self.config["automated_plotting_lsecs"]:
@@ -490,3 +490,22 @@ class LsecPlotting(Plotting):
                 self.fig.canvas.draw()
 
                 plt.savefig(f"{flight}_{layer}.png")
+
+
+def main():
+    h = HsecPlotting()
+    h.HsecPath()
+    h.HsecLabel()
+    h.HsecRetrieve()
+    v = VsecPlotting()
+    v.setup()
+    v.VsecPath()
+    v.VsecLabel()
+    v.VsecRetrieve()
+    ls = LsecPlotting()
+    ls.setup_ticks_and_labels()
+    ls.LsecDraw()
+
+
+if __name__ == "__main__":
+    main()
