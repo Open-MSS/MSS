@@ -1466,7 +1466,7 @@ class MplTopViewCanvas(MplCanvas):
             ax.set_autoscale_on(False)
             title = self.ax.get_title()
             if title == "":
-                title ="Top View"
+                title = "Top View"
             ax.set_title(title, fontsize=self.tov_pts, horizontalalignment="left", x=0)
 
             # Updates graticule ticklabels/labels fontsize if draw_graticule is True.
