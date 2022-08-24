@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MultipleViewWidget(object):
     def setupUi(self, MultipleViewWidget):
         MultipleViewWidget.setObjectName("MultipleViewWidget")
-        MultipleViewWidget.resize(468, 241)
+        MultipleViewWidget.resize(544, 243)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -43,13 +43,13 @@ class Ui_MultipleViewWidget(object):
         self.btRemove_file = QtWidgets.QPushButton(MultipleViewWidget)
         self.btRemove_file.setObjectName("btRemove_file")
         self.verticalLayout_3.addWidget(self.btRemove_file)
-        self.btActivate = QtWidgets.QPushButton(MultipleViewWidget)
-        self.btActivate.setObjectName("btActivate")
-        self.verticalLayout_3.addWidget(self.btActivate)
         spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_3.addItem(spacerItem)
         self.horizontalLayout.addLayout(self.verticalLayout_3)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
+        self.horizontalLayout_4 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_4.setObjectName("horizontalLayout_4")
+        self.verticalLayout_2.addLayout(self.horizontalLayout_4)
         self.labelStatus = QtWidgets.QLabel(MultipleViewWidget)
         self.labelStatus.setObjectName("labelStatus")
         self.verticalLayout_2.addWidget(self.labelStatus)
@@ -62,6 +62,4 @@ class Ui_MultipleViewWidget(object):
         MultipleViewWidget.setWindowTitle(_translate("MultipleViewWidget", "Form"))
         self.bt_addFile.setText(_translate("MultipleViewWidget", "Add FTML Files"))
         self.btRemove_file.setText(_translate("MultipleViewWidget", "Remove Flighttrack"))
-        self.btActivate.setText(_translate("MultipleViewWidget", "Activate Flighttrack"))
         self.labelStatus.setText(_translate("MultipleViewWidget", "Status: "))
-

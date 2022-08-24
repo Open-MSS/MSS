@@ -673,11 +673,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                         waypoints_model.name += " - imported from file"
                         break
         else:
-            # Create a new flight track from the waypoints template.
+            # Create a new flight track from the waypoints' template.
             self.new_flight_track_counter += 1
             waypoints_model = ft.WaypointsTableModel(
                 name=f"new flight track ({self.new_flight_track_counter:d})")
-            # Make a copy of the template. Otherwise all new flight tracks would
+            # Make a copy of the template. Otherwise, all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
             waypoints_model.insertRows(0, rows=len(template_copy), waypoints=template_copy)

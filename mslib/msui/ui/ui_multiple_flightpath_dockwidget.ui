@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>468</width>
-    <height>241</height>
+    <width>544</width>
+    <height>243</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -56,13 +56,6 @@
         </widget>
        </item>
        <item>
-        <widget class="QPushButton" name="btActivate">
-         <property name="text">
-          <string>Activate Flighttrack</string>
-         </property>
-        </widget>
-       </item>
-       <item>
         <spacer name="verticalSpacer">
          <property name="orientation">
           <enum>Qt::Vertical</enum>
@@ -78,6 +71,9 @@
       </layout>
      </item>
     </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_4"/>
    </item>
    <item>
     <widget class="QLabel" name="labelStatus">
