@@ -38,81 +38,15 @@ from matplotlib import patheffects
 import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
+from mslib.mswms.utils import get_cbar_label_format, make_cbar_labels_readable
+import mslib.mswms.generics as generics
 from mslib.utils import thermolib
 from mslib.utils.units import convert_to
 
 
-class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
-    """
-    Temperature
-    Vertical section of temperature.
-    """
-
-    name = "VS_T01"
-    title = "Temperature (K) Vertical Section"
-    abstract = "Temperature (K) and potential temperature (K)"
-
-    # Variables with the highest number of dimensions first (otherwise
-    # MFDatasetCommonDims will throw an exception)!
-    required_datafields = [
-        ("ml", "air_pressure", "Pa"),
-        ("ml", "air_temperature", "K")]
-
-    def _prepare_datafields(self):
-        """
-        Computes potential temperature from pressure and temperature if
-        it has not been passed as a data field.
-        """
-        self.data['air_potential_temperature'] = thermolib.pot_temp(
-            self.data['air_pressure'], self.data['air_temperature'])
-
-    def _plot_style(self):
-        """
-        Make a temperature/potential temperature vertical section.
-        """
-        ax = self.ax
-        curtain_p = self.data["air_pressure"]
-        curtain_t = self.data["air_temperature"]
-        curtain_pt = self.data["air_potential_temperature"]
-
-        # Filled contour plot of temperature.
-        # INFO on COLORMAPS:
-        #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
-        cs = ax.contourf(self.horizontal_coordinate,
-                         curtain_p, curtain_t, np.arange(180, 250, 2))  # 180-200, gist_earth Greens
-        # Contour line plot of temperature.
-        cs_t = ax.contour(self.horizontal_coordinate,
-                          curtain_p, curtain_t, np.arange(160, 330, 4),
-                          colors='orange', linestyles='solid', linewidths=1)  # gist_earth
-        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
-        # Contour line plot of potential temperature.
-        cs_pt = ax.contour(self.horizontal_coordinate,
-                           curtain_p, curtain_pt, np.arange(200, 700, 10), colors='grey',
-                           linestyles='dashed', linewidths=1)
-        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
-
-        # Pressure decreases with index, i.e. orography is stored at the
-        # zero-p-index (data field is flipped in mss_plot_driver.py if
-        # pressure increases with index).
-        self._latlon_logp_setup(orography=curtain_p[0, :])
-
-        # Add colorbar.
-        if not self.noframe:
-            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
-            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
-            cbar.set_label("Temperature (K)")
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="1%", height="30%", loc=1)
-            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
-            axins1.yaxis.set_ticks_position("left")
-            make_cbar_labels_readable(self.fig, axins1)
-
-
 class VS_GenericStyle(AbstractVerticalSectionStyle):
     """
-    Vertical section of chemical species/other stuff
+    Vertical section plotting layer for general quantities
     """
     name = "VS_GenericStyle"
     styles = [
@@ -125,9 +59,6 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         curtain_cc = np.ma.masked_invalid(curtain_cc)
         curtain_p = self.data["air_pressure"]
 
-        # Filled contour plot of cloud cover.
-        # INFO on COLORMAPS:
-        #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
         if self.p_bot > self.p_top:
             visible = (curtain_p <= self.p_bot) & (curtain_p >= self.p_top)
         else:
@@ -136,8 +67,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         if visible.sum() == 0:
             visible = np.ones_like(curtain_cc, dtype=bool)
 
-        cmin, cmax = Targets.get_range(self.dataname)
-        cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
+        cmin, cmax = generics.get_range(self.dataname)
+        cmin, cmax, clevs, cmap, norm, ticks = generics.get_style_parameters(
             self.dataname, self.style, cmin, cmax, curtain_cc[visible])
 
         cs = ax.contourf(self.horizontal_coordinate, curtain_p, curtain_cc,
@@ -148,15 +79,17 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             if cont_levels is None:
                 pl_cont = ax.plot(self.lat_inds, self.data[cont_data].reshape(-1),
                                   "o", color=cont_colour, zorder=100)
-                plt.setp(pl_cont, path_effects=[
-                    patheffects.withStroke(linewidth=4, foreground="w")])
+                if pe:
+                    plt.setp(pl_cont, path_effects=[
+                        patheffects.withStroke(linewidth=4, foreground="w")])
             else:
                 cs_pv = ax.contour(self.horizontal_coordinate, curtain_p, self.data[cont_data], cont_levels,
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
-                plt.setp(cs_pv.collections,
-                         path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%.0f')
-                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
+                if pe:
+                    plt.setp(cs_pv.collections,
+                             path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                    plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
@@ -179,8 +112,37 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
             make_cbar_labels_readable(self.fig, axins1)
 
 
-def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
+def make_generic_class(name, standard_name, vert, add_data=None, add_contours=None,
                        fix_styles=None, add_styles=None, add_prepare=None):
+    """
+    This function instantiates a plotting class and adds it to the global name space
+    of this module.
+
+    Args:
+        name (str): name of the class, under which it will be added to the module
+            name space
+        standard_name (str): CF standard_name of the main plotting target.
+            This must be registered within the mslib.mswms.generics module.
+        vert (str): vertical level type, e.g. "pl"
+        add_data (list, optional): List of tuples adding data to be read in and
+            provide to the plotting class. E.g. [("pl", "ertel_potential_vorticity", "PVU")]
+            for ertel_potential_vorticity on pressure levels in PVU units. The vertical
+            level type must be the one specified by the vert variable or "sfc".
+            By default ertel_potential_vorticity in PVU is provide.
+        add_contours (list, optional): List of tuples specifying contour lines to be
+            plotted. E.g. [("ertel_potential_vorticity", [2, 4, 8, 16], "green", "red", "dashed", 2, True)]
+            cause PV to be plotted for 2, 4, 8, and 16 PVU with dashed green lines,
+            red labels, and line width 2. The last value defines wether a stroke effect
+            shall be applied.
+        fix_styles (list, optional): A list of plotting styles, which must be defined in the
+            mslib.mswms.generics.STYLES dictionary. Defaults to a list of standard styles
+            ("auto", "logauto", "default", "nonlinear") depending on which ranges and thresholds
+            are defined for the main variable in the generics module.
+        add_styles (list, optional): Similar to fix_styles, but *adds* the supplied styles to
+            the list of support styles instead of overwriting them. Defaults to None.
+        add_prepare (function, optional): a function to overwrite the _prepare_datafield method.
+            Defaults to None.
+    """
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity", "PVU")]
     if add_contours is None:
@@ -189,20 +151,23 @@ def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
             ("air_potential_temperature", np.arange(200, 700, 10), "dimgrey", "dimgrey", "solid", 2, True)]
 
     class fnord(VS_GenericStyle):
-        name = f"VS_{entity}_{vert}"
-        dataname = entity
-        units = Targets.get_unit(dataname)
-        title = Targets.TITLES.get(entity, entity)
+        """
+        Vertical section plotting layer for quantity 'standard_name'
+        """
+        name = f"VS_{standard_name}_{vert}"
+        dataname = standard_name
+        units = generics.get_unit(dataname)
+        title = generics.get_title(standard_name)
         if units:
             title += f" ({units})"
-        required_datafields = [(vert, entity, units)] + add_data
+        required_datafields = [(vert, standard_name, units)] + add_data
         contours = add_contours
 
     fnord.__name__ = name
     fnord.styles = list(fnord.styles)
-    if Targets.get_thresholds(entity) is not None:
+    if generics.get_thresholds(standard_name) is not None:
         fnord.styles = fnord.styles + [("nonlinear", "nonlinear colour scale")]
-    if all(_x is not None for _x in Targets.get_range(entity)):
+    if all(_x is not None for _x in generics.get_range(standard_name)):
         fnord.styles = fnord.styles + [
             ("default", "fixed colour scale"),
             ("log", "fixed logarithmic colour scale")]
@@ -230,10 +195,11 @@ _ADD_DATA = {
            ("tl", "air_pressure", "Pa")],
 }
 
+# Generation of vertical section plotting layers for registered CF standard_names
 for vert in ["al", "ml", "pl", "tl"]:
-    for ent in Targets.get_targets():
+    for sn in generics.get_standard_names():
         make_generic_class(
-            f"VS_GenericStyle_{vert.upper()}_{ent}", ent, vert,
+            f"VS_GenericStyle_{vert.upper()}_{sn}", sn, vert,
             add_data=_ADD_DATA[vert])
     make_generic_class(
         f"VS_GenericStyle_{vert.upper()}_{'ertel_potential_vorticity'}",
@@ -301,6 +267,73 @@ make_generic_class(
 make_generic_class(
     f"VS_GenericStyle_{vert.upper()}_{'maximum_pressure_on_backtrajectory'}",
     "maximum_pressure_on_backtrajectory", vert, [], [])
+
+
+class VS_TemperatureStyle_01(AbstractVerticalSectionStyle):
+    """
+    Temperature
+    Vertical section of temperature.
+    """
+
+    name = "VS_T01"
+    title = "Temperature (K) Vertical Section"
+    abstract = "Temperature (K) and potential temperature (K)"
+
+    # Variables with the highest number of dimensions first (otherwise
+    # MFDatasetCommonDims will throw an exception)!
+    required_datafields = [
+        ("ml", "air_pressure", "Pa"),
+        ("ml", "air_temperature", "K")]
+
+    def _prepare_datafields(self):
+        """
+        Computes potential temperature from pressure and temperature if
+        it has not been passed as a data field.
+        """
+        self.data['air_potential_temperature'] = thermolib.pot_temp(
+            self.data['air_pressure'], self.data['air_temperature'])
+
+    def _plot_style(self):
+        """
+        Make a temperature/potential temperature vertical section.
+        """
+        ax = self.ax
+        curtain_p = self.data["air_pressure"]
+        curtain_t = self.data["air_temperature"]
+        curtain_pt = self.data["air_potential_temperature"]
+
+        # Filled contour plot of temperature.
+        # INFO on COLORMAPS:
+        #    http://matplotlib.sourceforge.net/examples/pylab_examples/show_colormaps.html
+        cs = ax.contourf(self.horizontal_coordinate,
+                         curtain_p, curtain_t, np.arange(180, 250, 2))  # 180-200, gist_earth Greens
+        # Contour line plot of temperature.
+        cs_t = ax.contour(self.horizontal_coordinate,
+                          curtain_p, curtain_t, np.arange(160, 330, 4),
+                          colors='orange', linestyles='solid', linewidths=1)  # gist_earth
+        ax.clabel(cs_t, fontsize=8, fmt='%.0f')
+        # Contour line plot of potential temperature.
+        cs_pt = ax.contour(self.horizontal_coordinate,
+                           curtain_p, curtain_pt, np.arange(200, 700, 10), colors='grey',
+                           linestyles='dashed', linewidths=1)
+        ax.clabel(cs_pt, fontsize=8, fmt='%.0f')
+
+        # Pressure decreases with index, i.e. orography is stored at the
+        # zero-p-index (data field is flipped in mss_plot_driver.py if
+        # pressure increases with index).
+        self._latlon_logp_setup(orography=curtain_p[0, :])
+
+        # Add colorbar.
+        if not self.noframe:
+            self.fig.subplots_adjust(left=0.08, right=0.95, top=0.9, bottom=0.14)
+            cbar = self.fig.colorbar(cs, fraction=0.05, pad=0.01)
+            cbar.set_label("Temperature (K)")
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="1%", height="30%", loc=1)
+            cbar = self.fig.colorbar(cs, cax=axins1, orientation="vertical")
+            axins1.yaxis.set_ticks_position("left")
+            make_cbar_labels_readable(self.fig, axins1)
 
 
 class VS_CloudsStyle_01(AbstractVerticalSectionStyle):
