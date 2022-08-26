@@ -318,7 +318,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Create a keyword arguments dictionary for basemap that contains
         # the projection parameters.
-        kwargs = current_map["map"]
+        kwargs = dict(current_map["map"])
         kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
                        "OPERATION_NAME": self.waypoints_model.name})
         kwargs.update(proj_params["basemap"])
