@@ -31,8 +31,8 @@ from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.utils.qt import get_open_filenames
 from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
 from fs import open_fs
-import flighttrack as ft
-import msui
+import mslib.msui.flighttrack as ft
+from mslib.msui import msui
 import xml
 
 
