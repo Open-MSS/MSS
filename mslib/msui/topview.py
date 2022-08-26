@@ -41,6 +41,7 @@ from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import airdata_dockwidget as ad
+from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -50,6 +51,7 @@ SATELLITE = 1
 REMOTESENSING = 2
 KMLOVERLAY = 3
 AIRDATA = 4
+MULTIPLEFLIGHTPATH = 5
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -190,11 +192,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         super(MSUITopViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
+        self.ui = parent
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
-        # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
-        self.docks = [None, None, None, None, None]
+        # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay, Multiple Flightpath]:
+        self.docks = [None, None, None, None, None, None]
 
         self.settings_tag = "topview"
         self.load_settings()
@@ -230,7 +233,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         are connected).
         """
         toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
-                     "Airports/Airspaces"]
+                     "Airports/Airspaces", "Multiple FLightpath"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
@@ -290,6 +293,11 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             elif index == AIRDATA:
                 title = "Airdata"
                 widget = ad.AirdataDockwidget(parent=self, view=self.mpl.canvas)
+            elif index == MULTIPLEFLIGHTPATH:
+                title = "Multiple Flightpath"
+                widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
+                                                            listView=self.ui.listFlightTracks,
+                                                            activeFlightTrack=self.ui.active_flight_track)
             else:
                 raise IndexError("invalid control index")
 
