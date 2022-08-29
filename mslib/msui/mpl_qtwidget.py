@@ -640,7 +640,10 @@ class MplSideViewCanvas(MplCanvas):
         # Updates the fontsize of the x-axis ticklabels of sideview.
         self.ax.tick_params(axis='x', labelsize=axes_label_size)
         # Updates the fontsize of plot title and x-axis title of sideview.
-        self.ax.set_title("vertical flight profile", fontsize=plot_title_size, horizontalalignment="left", x=0)
+        title = self.ax.get_title()
+        if title == "":
+            title = "vertical flight profile"
+        self.ax.set_title(title, fontsize=plot_title_size, horizontalalignment="left", x=0)
         self.ax.set_xlabel("lat/lon", fontsize=plot_title_size)
 
         for ax, typ in zip((self.ax, self.ax2), (vaxis, vaxis2)):
@@ -1121,7 +1124,10 @@ class MplLinearViewCanvas(MplCanvas):
         als = (self.linearview_size_settings["axes_label_size"] if self.settings_dict["axes_label_size"] == "default"
                else int(self.settings_dict["axes_label_size"]))
         self.ax.tick_params(axis='both', labelsize=als)
-        self.ax.set_title("Linear flight profile", fontsize=pts, horizontalalignment='left', x=0)
+        title = self.ax.get_title()
+        if title == "":
+            title = "Linear flight profile"
+        self.ax.set_title(title, fontsize=pts, horizontalalignment='left', x=0)
         self.draw()
 
 
@@ -1458,7 +1464,10 @@ class MplTopViewCanvas(MplCanvas):
 
             # Updates plot title size as selected from combobox labelled plot title size.
             ax.set_autoscale_on(False)
-            ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
+            title = self.ax.get_title()
+            if title == "":
+                title = "Top View"
+            ax.set_title(title, fontsize=self.tov_pts, horizontalalignment="left", x=0)
 
             # Updates graticule ticklabels/labels fontsize if draw_graticule is True.
             if settings["draw_graticule"]:
