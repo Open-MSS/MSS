@@ -25,45 +25,11 @@
 """
 
 import pyautogui as pag
-import multiprocessing
-import sys
+
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials import screenrecorder as sr
-from mslib.msui import msui
-
-
-def initial_ops():
-    """
-    Executes the initial operations such as closing all opened windows and showing the desktop.
-    """
-    pag.sleep(5)
-    if platform == "linux" or platform == "linux2":
-        pag.hotkey('winleft', 'd')
-        print("\n INFO : Automation is running on Linux system..\n")
-    elif platform == "darwin":
-        pag.hotkey('option', 'command', 'm')
-        print("\n INFO : Automation is running on Mac OS..\n")
-    elif platform == "win32":
-        pag.hotkey('win', 'd')
-        print("\n INFO : Automation is running on Windows OS..\n")
-    else:
-        pag.alert(text="Sorry, no support on this platform!", title="Platform Exception", button='OK')
-    print("\n INFO : We will be learning how to create a operation in MSS with all the views.\n")
-
-
-def call_recorder():
-    """
-    Calls the screen recorder class to start the recording of the automation.
-    """
-    sr.main()
-
-
-def call_msui():
-    """
-    Calls the main MSS GUI window since operations are to be performed on it only.
-    """
-    msui.main()
+from tutorials.utils import platform_keys, start, finish
+from tutorials.pictures import picture
 
 
 def automate_views():
@@ -74,13 +40,7 @@ def automate_views():
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
-
-    if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-        dir_path = 'pictures/tutorial_views/win/'
-        wms_path = 'pictures/tutorial_wms/linux/'
-    elif platform == 'win32':
-        dir_path = 'pictures/tutorial_views/win/'
-        wms_path = 'pictures/tutorial_wms/win/'
+    ctrl, enter, win, alt = platform_keys()
 
     # Screen Resolutions
     sc_width, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
@@ -95,19 +55,20 @@ def automate_views():
             pag.hotkey('win', 'up')
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
+        raise
     pag.sleep(2)
     pag.hotkey('ctrl', 'h')
     pag.sleep(2)
 
-    # Shfting topview window to upper right corner
+    # Shifting topview window to upper right corner
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}add_waypoint.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
         pag.click(x, y - 56, interval=2)
         if platform == 'win32' or platform == 'darwin':
             pag.dragRel(525, -110, duration=2)
         elif platform == 'linux' or platform == 'linux2':
             pag.dragRel(910, -25, duration=2)
-        pag.move(None, 56)
+        pag.move(0, 56)
         add_tv_x, add_tv_y = pag.position()
         pag.move(-486, -56, duration=1)
         pag.click(interval=1)
@@ -118,7 +79,7 @@ def automate_views():
         pag.sleep(4)
         # Shifting Sideview window to upper left corner.
         try:
-            x1, y1 = pag.locateCenterOnScreen(f'{dir_path}add_waypoint.png')
+            x1, y1 = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
             if platform == 'win32' or platform == 'darwin':
                 pag.moveTo(x1, y1 - 56, duration=1)
                 pag.dragRel(-494, -177, duration=2)
@@ -145,8 +106,10 @@ def automate_views():
             pag.sleep(1)
         except (ImageNotFoundException, OSError, Exception):
             print("Exception: \'Side View Window Header\' was not found on the screen")
+            raise
     except (ImageNotFoundException, OSError, Exception):
         print("Exception: \'Topview Window Header\' was not found on the screen")
+        raise
 
     # Adding waypoints
     if add_tv_x is not None and add_tv_y is not None:
@@ -174,27 +137,31 @@ def automate_views():
         pag.sleep(3)
     else:
         print("Screen coordinates not available for add waypoints for topview")
+        raise
 
     # Locating Server Layer
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}layers.png', region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'layers.png'),
+                                        region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
         pag.click(x, y, interval=2)
         # Entering wms URL
         try:
-            x, y = pag.locateCenterOnScreen(f'{wms_path}wms_url.png', region=(int(sc_width / 2), 0,
-                                                                              sc_width, sc_height))
+            x, y = pag.locateCenterOnScreen(picture('wms', 'wms_url.png'),
+                                            region=(int(sc_width / 2), 0, sc_width, sc_height))
             pag.click(x + 220, y, interval=2)
             pag.hotkey('ctrl', 'a', interval=1)
             pag.write('http://open-mss.org/', interval=0.25)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : Topviews' \'WMS URL\' editbox button/option not found on the screen.")
+            raise
         try:
-            x, y = pag.locateCenterOnScreen(f'{wms_path}get_capabilities.png', region=(int(sc_width / 2), 0, sc_width,
-                                                                                       sc_height))
+            x, y = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'),
+                                            region=(int(sc_width / 2), 0, sc_width, sc_height))
             pag.click(x, y, interval=2)
             pag.sleep(4)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : Topviews' \'Get capabilities\' button/option not found on the screen.")
+            raise
 
         # Relocating Layerlist of topview
         if platform == 'win32':
@@ -208,6 +175,7 @@ def automate_views():
         ll_tov_x, ll_tov_y = pag.position()
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Topviews WMS' \'Server\\Layers\' button/option not found on the screen.")
+        raise
 
     # Selecting some layers in topview layerlist
     if platform == 'win32':
@@ -215,50 +183,53 @@ def automate_views():
     elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
         gap = 16
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}divergence_layer.png', region=(int(sc_width / 2), 0, sc_width,
-                                                                                   sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'equivalent_layer.png'),
+                                        region=(int(sc_width / 2), 0, sc_width, sc_height))
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
         pag.sleep(3)
-        pag.move(None, gap, duration=1)
+        pag.move(0, gap, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
-        pag.move(None, gap * 2, duration=1)
+        pag.move(0, gap * 2, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
-        pag.move(None, gap, duration=1)
+        pag.move(0, gap, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
-        pag.move(None, -gap * 4, duration=1)
+        pag.move(0, -gap * 4, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Topview's \'Divergence Layer\' option not found on the screen.")
-
+        raise
     # Setting different levels and valid time
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2 + (gap * 3), interval=2)
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}level.png', region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'level.png'),
+                                        region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
         pag.click(x + 200, y, interval=2)
-        pag.move(None, 140, duration=1)
+        pag.move(0, 140, duration=1)
         pag.click(interval=1)
         pag.sleep(4)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Topview's \'Pressure level\' button/option not found on the screen.")
+        raise
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}valid.png', region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'valid.png'),
+                                        region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
         pag.click(x + 200, y, interval=1)
-        pag.move(None, 80, duration=1)
+        pag.move(0, 80, duration=1)
         pag.click(interval=1)
         pag.sleep(4)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Topview's \'Valid till\' button/option not found on the screen.")
-
+        raise
     # Moving waypoints in Topview
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}move_waypoint.png', region=(int(sc_width / 2) - 100, 0, sc_width,
-                                                                                sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'),
+                                        region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
         if platform == 'win32' or platform == 'darwin':
             pag.click(x, y, interval=2)
             pag.moveTo(x2 + 4, y2 - 96, duration=1)
@@ -278,11 +249,11 @@ def automate_views():
         pag.sleep(1)
     except ImageNotFoundException:
         print("\n Exception : Move Waypoint button could not be located on the screen")
-
+        raise
     # Deleting waypoints
     try:
-        x, y = pag.locateCenterOnScreen('pictures/remove_waypoint.PNG', region=(int(sc_width / 2) - 100, 0, sc_width,
-                                                                                sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'remove_waypoint.png'),
+                                        region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
         pag.click(x, y, interval=2)
         pag.moveTo(x3, y3, duration=1)
         pag.click(duration=1)
@@ -296,16 +267,13 @@ def automate_views():
         pag.sleep(2)
     except ImageNotFoundException:
         print("\n Exception : Remove Waypoint button could not be located on the screen")
+        raise
 
     # Changing map to Global
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            x, y = pag.locateCenterOnScreen('pictures/europe(cyl).PNG', region=(int(sc_width / 2) - 100, 0, sc_width,
-                                                                                sc_height))
-            pag.click(x, y, interval=2)
-        elif platform == 'win32':
-            x, y = pag.locateCenterOnScreen('pictures/europe(cyl)win.PNG', region=(int(sc_width / 2) - 100, 0, sc_width,
-                                                                                   sc_height))
+            x, y = pag.locateCenterOnScreen(picture('wms', 'europe_cyl.png'),
+                                            region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
             pag.click(x, y, interval=2)
         pag.press('down', presses=2, interval=0.5)
         if platform == 'linux' or platform == 'linux2' or platform == 'win32':
@@ -315,10 +283,12 @@ def automate_views():
         pag.sleep(6)
     except (ImageNotFoundException, TypeError, OSError, Exception):
         print("\n Exception : Topview's Map change dropdown could not be located on the screen")
+        raise
 
     # Zooming into the map
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}zoom.png', region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'),
+                                        region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
         pag.click(x, y, interval=2)
         pag.move(155, 121, duration=1)
         pag.click(duration=1)
@@ -326,12 +296,12 @@ def automate_views():
         pag.sleep(4)
     except ImageNotFoundException:
         print("\n Exception : Topview's Zoom button could not be located on the screen")
-
+        raise
     # SideView Operations
     # Opening web map service
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png', region=(0, 0, int(sc_width / 2) - 100,
-                                                                                      sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'),
+                                        region=(0, 0, int(sc_width / 2) - 100, sc_height))
         pag.click(x, y, interval=2)
         pag.press('down', interval=1)
         if platform == 'linux' or platform == 'linux2' or platform == 'win32':
@@ -340,26 +310,29 @@ def automate_views():
             pag.press('return', interval=1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'SideView's select to open control\' button/option not found on the screen.")
-
+        raise
     # Locating Server Layer
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}layers.png', region=(0, 0, int(sc_width / 2) - 100, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'layers.png'), region=(0, 0, int(sc_width / 2) - 100, sc_height))
         pag.click(x, y, interval=2)
         # Entering wms URL
         try:
-            x, y = pag.locateCenterOnScreen(f'{wms_path}wms_url.png', region=(0, 0, int(sc_width / 2) - 100, sc_height))
+            x, y = pag.locateCenterOnScreen(picture('wms', 'wms_url.png'),
+                                            region=(0, 0, int(sc_width / 2) - 100, sc_height))
             pag.click(x + 220, y, interval=2)
             pag.hotkey('ctrl', 'a', interval=1)
             pag.write('http://open-mss.org/', interval=0.25)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : Sideviews' \'WMS URL\' editbox button/option not found on the screen.")
+            raise
         try:
-            x, y = pag.locateCenterOnScreen(f'{wms_path}get_capabilities.png', region=(0, 0, int(sc_width / 2) - 100,
-                                                                                       sc_height))
+            x, y = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'),
+                                            region=(0, 0, int(sc_width / 2) - 100, sc_height))
             pag.click(x, y, interval=2)
             pag.sleep(3)
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : SideView's \'Get capabilities\' button/option not found on the screen.")
+            raise
         if platform == 'win32':
             pag.move(-171, -390, duration=1)
             pag.dragRel(10, 570, duration=2)
@@ -371,51 +344,54 @@ def automate_views():
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Sideviews WMS' \'Server\\Layers\' button/option not found on the screen.")
-
+        raise
     # Selecting some layers in Sideview WMS
     if platform == 'win32':
         gap = 22
     elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
         gap = 16
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}cloudcover.png', region=(0, 0, int(sc_width / 2) - 100, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'cloudcover.png'),
+                                        region=(0, 0, int(sc_width / 2) - 100, sc_height))
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
         pag.sleep(3)
-        pag.move(None, gap, duration=1)
+        pag.move(0, gap, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
-        pag.move(None, gap * 2, duration=1)
+        pag.move(0, gap * 2, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
-        pag.move(None, gap, duration=1)
+        pag.move(0, gap, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
-        pag.move(None, -gap * 4, duration=1)
+        pag.move(0, -gap * 4, duration=1)
         pag.click(interval=1)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Sideview's \'Cloud Cover Layer\' option not found on the screen.")
-
+        raise
     # Setting different levels and valid time
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2 + (gap * 4), interval=2)
 
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}valid.png', region=(0, 0, int(sc_width / 2) - 100, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'valid.png'), region=(0, 0, int(sc_width / 2) - 100, sc_height))
         pag.click(x + 200, y, interval=1)
-        pag.move(None, 80, duration=1)
+        pag.move(0, 80, duration=1)
         pag.click(interval=1)
         pag.sleep(4)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Sideview's \'Valid till\' button/option not found on the screen.")
-
+        raise
     # Move waypoints in SideView
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}move_waypoint.png', region=(0, 0, int(sc_width / 2) - 100, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'),
+                                        region=(0, 0, int(sc_width / 2) - 100, sc_height))
         pag.click(x, y, interval=2)
         try:
-            x, y = pag.locateCenterOnScreen(f'{wms_path}options.png', region=(0, 0, int(sc_width / 2) - 100, sc_height))
+            x, y = pag.locateCenterOnScreen(picture('wms', 'options.png'),
+                                            region=(0, 0, int(sc_width / 2) - 100, sc_height))
             if platform == 'win32' or platform == 'darwin':
                 pag.click(x + 76, y - 80, duration=1)
                 pag.dragRel(-1, -139, duration=2)
@@ -433,12 +409,14 @@ def automate_views():
             pag.sleep(2)
         except (ImageNotFoundException, OSError, TypeError, Exception):
             print("\nException : Sideview's waypoints location (Options button) not found on the screen.")
+            raise
     except ImageNotFoundException:
         print("\n Exception :Sideview's Move Waypoint button could not be located on the screen")
-
+        raise
     # Adding waypoints in SideView
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}add_waypoint.png', region=(0, 0, int(sc_width / 2) - 100, sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'),
+                                        region=(0, 0, int(sc_width / 2) - 100, sc_height))
         pag.click(x, y, duration=1)
         pag.click(x + 239, y + 186, duration=1)
         pag.sleep(3)
@@ -450,7 +428,7 @@ def automate_views():
         pag.sleep(1)
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : Sideview's add waypoint button not found on the screen.")
-
+        raise
     # Closing list layer of sideview and topview to make screen a little less congested.
     pag.click(ll_sv_x, ll_sv_y, duration=2)
     if platform == 'linux' or platform == 'linux2':
@@ -473,6 +451,9 @@ def automate_views():
     pag.move(-80, 120, duration=1)
     # pag.moveTo(1800, 1000, duration=1)
     pag.click(duration=1)
+    # ANY now selected
+    # ToDo ANY should be inactive whithout an OP
+    pag.click(duration=1)
 
     pag.sleep(1)
     pag.hotkey('ctrl', 't')
@@ -480,7 +461,7 @@ def automate_views():
 
     # Relocating Tableview and performing operations on table view
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
+        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'))
         pag.moveTo(x, y - 462, duration=1)
         if platform == 'linux' or platform == 'linux2':
             pag.dragRel(250, 887, duration=3)
@@ -490,12 +471,12 @@ def automate_views():
         if platform == 'linux' or platform == 'linux2':
             pag.keyDown('altleft')
             pag.press('tab')
-            pag.press('right')
+            pag.press('tab')
             pag.keyUp('altleft')
             pag.sleep(1)
             pag.keyDown('altleft')
             pag.press('tab')
-            pag.press('right', presses=2)  # This needs to be checked in Linux
+            pag.press('tab', presses=2)  # This needs to be checked in Linux
             pag.keyUp('altleft')
         elif platform == 'win32':
             pag.keyDown('alt')
@@ -527,7 +508,7 @@ def automate_views():
 
         # Locating the selecttoopencontrol for tableview to perform operations
         try:
-            x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png',
+            x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'),
                                             region=(0, int(sc_height * 0.75), sc_width, int(sc_height * 0.25)))
 
             # Changing names of certain waypoints to predefined names
@@ -535,7 +516,7 @@ def automate_views():
             pag.sleep(1)
             pag.doubleClick(duration=1)
             pag.sleep(2)
-            pag.move(88, None, duration=1) if platform == 'win32' else pag.move(78, None, duration=1)
+            pag.move(88, 0, duration=1) if platform == 'win32' else pag.move(78, 0, duration=1)
             pag.sleep(1)
             pag.click(duration=1)
             pag.press('down', presses=5, interval=0.2)
@@ -604,7 +585,7 @@ def automate_views():
 
             # Cloning the row of waypoint
             try:
-                x1, y1 = pag.locateCenterOnScreen(f'{wms_path}clone.png')
+                x1, y1 = pag.locateCenterOnScreen(picture('wms', 'clone.png'))
                 pag.click(x + 15, y - 130, duration=1) if platform == 'win32' else pag.click(x + 15, y - 263,
                                                                                              duration=1)
                 pag.sleep(1)
@@ -620,7 +601,7 @@ def automate_views():
                 pag.sleep(1)
                 pag.press('return') if platform == 'darwin' else pag.press('enter')
                 pag.sleep(2)
-                pag.move(580, None, duration=1) if platform == 'win32' else pag.move(459, None, duration=1)
+                pag.move(580, 0, duration=1) if platform == 'win32' else pag.move(459, 0, duration=1)
                 pag.doubleClick(duration=1)
                 pag.sleep(2)
                 pag.write('This is a reference comment', interval=0.2)
@@ -629,10 +610,10 @@ def automate_views():
                 pag.sleep(2)
             except (ImageNotFoundException, OSError, TypeError, Exception):
                 print("\nException : Tableview's CLONE button not found on the screen.")
-
+                raise
             # Inserting a new row of waypoints
             try:
-                x1, y1 = pag.locateCenterOnScreen(f'{wms_path}insert.png')
+                x1, y1 = pag.locateCenterOnScreen(picture('wms', 'insert.png'))
                 pag.click(x + 130, y - 160, duration=1) if platform == 'win32' else pag.click(x + 117, y - 294,
                                                                                               duration=1)
                 pag.sleep(2)
@@ -647,14 +628,14 @@ def automate_views():
                 pag.sleep(0.5)
                 pag.press('return') if platform == 'darwin' else pag.press('enter')
                 pag.sleep(2)
-                pag.move(63, None, duration=1) if platform == 'win32' else pag.move(48, None, duration=1)
+                pag.move(63, 0, duration=1) if platform == 'win32' else pag.move(48, 0, duration=1)
                 pag.doubleClick(duration=1)
                 pag.sleep(1)
                 pag.write('-1.64', interval=0.2)
                 pag.sleep(1)
                 pag.press('return') if platform == 'darwin' else pag.press('enter')
                 pag.sleep(2)
-                pag.move(108, None, duration=1) if platform == 'win32' else pag.move(71, None, duration=1)
+                pag.move(108, 0, duration=1) if platform == 'win32' else pag.move(71, 0, duration=1)
                 pag.doubleClick(duration=1)
                 pag.sleep(1)
                 pag.write('360', interval=0.2)
@@ -663,10 +644,10 @@ def automate_views():
                 pag.sleep(2)
             except (ImageNotFoundException, OSError, TypeError, Exception):
                 print("\nException : Tableview's INSERT button not found on the screen.")
-
+                raise
             # Delete Selected waypoints row
             try:
-                x1, y1 = pag.locateCenterOnScreen(f'{wms_path}deleteselected.png')
+                x1, y1 = pag.locateCenterOnScreen(picture('wms', 'deleteselected.png'))
                 pag.click(x + 150, y - 70, duration=1) if platform == 'win32' else pag.click(x + 150, y - 201,
                                                                                              duration=1)
                 pag.sleep(2)
@@ -677,20 +658,22 @@ def automate_views():
                 pag.sleep(2)
             except (ImageNotFoundException, OSError, TypeError, Exception):
                 print("\nException : Tableview's DELETE SELECTED button not found on the screen.")
-
+                raise
             # Reverse waypoints' order
             try:
-                x1, y1 = pag.locateCenterOnScreen(f'{wms_path}reverse.png')
+                x1, y1 = pag.locateCenterOnScreen(picture('wms', 'reverse.png'))
                 for _ in range(3):
                     pag.click(x1, y1, duration=1)
                     pag.sleep(1.5)
             except (ImageNotFoundException, OSError, TypeError, Exception):
                 print("\nException : Tableview's REVERSE button not found on the screen.")
+                raise
         except (ImageNotFoundException, OSError, TypeError, Exception):
             print("\nException : Tableview's selecttoopencontrol button (bottom part) not found on the screen.")
+            raise
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : TableView's Select to open Control option (at the top) not found on the screen.")
-
+        raise
     # Closing Table View to make space on screen
     if tv_x is not None and tv_y is not None:
         pag.click(tv_x, tv_y, duration=1)
@@ -712,30 +695,29 @@ def automate_views():
 
     # Opening Linear View
     pag.sleep(1)
-    pag.move(None, 400, duration=1)
+    pag.move(0, 400, duration=1)
     pag.click(interval=1)
     pag.hotkey('ctrl', 'l')
     pag.sleep(4)
+    pag.hotkey(win, 'up')
+    pag.click(10, 10, interval=2)
+    pag.dragRel(853, 360, duration=3)
+    pag.sleep(2)
 
     # Relocating Linear View
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png')
-        pag.moveTo(x, y - 587, duration=1)
-        if platform == 'linux' or platform == 'linux2':
-            pag.dragRel(1053, 860, duration=3)
-        elif platform == 'win32' or platform == 'darwin':
-            pag.dragRel(553, 660, duration=2)
-        pag.sleep(2)
+        pag.locateCenterOnScreen(picture('views', 'selecttoopencontrol.png'))
 
         if platform == 'linux' or platform == 'linux2':
             pag.keyDown('altleft')
             pag.press('tab')
-            pag.press('right')
+            pag.press('tab')
             pag.keyUp('altleft')
             pag.sleep(1)
             pag.keyDown('altleft')
             pag.press('tab')
-            pag.press('right', presses=2)
+            pag.press('tab')
+            pag.press('tab')
             pag.keyUp('altleft')
         elif platform == 'win32':
             pag.keyDown('alt')
@@ -762,89 +744,83 @@ def automate_views():
         lv_x, lv_y = pag.position()
     except (ImageNotFoundException, OSError, TypeError, Exception):
         print("\nException : Linearview's window header not found on the screen.")
+        raise
 
-    # Opening Linear WMS
+    # Locating Server Layer
     try:
-        if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png',
-                                            region=(0, int(sc_height * 0.85), sc_width, int(sc_height * 0.15)))
-        elif platform == 'win32':
-            x, y = pag.locateCenterOnScreen(f'{wms_path}selecttoopencontrol.png',
-                                            region=(0, int(sc_height * 0.75), sc_width, int(sc_height * 0.25)))
-        pag.click(x, y, duration=1)
-        pag.press('down')
-        pag.press('return') if platform == 'darwin' else pag.press('enter')
-        pag.sleep(1)
-        # Locating Server Layer
-        try:
-            x, y = pag.locateCenterOnScreen(f'{wms_path}layers.png', region=(0, int(sc_height * 0.75), sc_width,
-                                                                             int(sc_height * 0.25)))
-            pag.click(x, y, interval=2)
-            # Entering wms URL
-            try:
-                x, y = pag.locateCenterOnScreen(f'{wms_path}wms_url.png', region=(0, int(sc_height * 0.65), sc_width,
-                                                                                  int(sc_height * 0.35)))
-                pag.click(x + 220, y, interval=2)
-                pag.hotkey('ctrl', 'a', interval=1)
-                pag.write('http://open-mss.org/', interval=0.25)
-            except (ImageNotFoundException, OSError, Exception):
-                print("\nException : Linearviews' \'WMS URL\' editbox button/option not found on the screen.")
-            try:
-                x, y = pag.locateCenterOnScreen(f'{wms_path}get_capabilities.png',
-                                                region=(0, int(sc_height * 0.65), sc_width, int(sc_height * 0.35)))
-                pag.click(x, y, interval=2)
-                pag.sleep(3)
-            except (ImageNotFoundException, OSError, Exception):
-                print("\nException : LinearView's \'Get capabilities\' button/option not found on the screen.")
-            if platform == 'win32':
-                pag.move(-171, -390, duration=1)
-                pag.dragRel(-867, 135, duration=2)
-            elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-                pag.move(-171, -390, duration=1)
-                pag.dragRel(-900, 245, duration=2)
-            # Storing screen coordinates for List layer of side view
-            ll_lv_x, ll_lv_y = pag.position()
-            pag.sleep(1)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException : Linearview's WMS \'Server\\Layers\' button/option not found on the screen.")
-    except (ImageNotFoundException, OSError, TypeError, Exception):
-        print("\nException : Linearview's selecttoopencontrol not found on the screen.")
+        x, y = pag.locateCenterOnScreen(picture('views', 'layers.png'),
+                                        region=(900, 830, sc_width, sc_height))
+        pag.click(x, y, interval=2)
 
+        # Entering wms URL
+        try:
+            x, y = pag.locateCenterOnScreen(picture('views', 'wms_url.png'),
+                                            region=(0, int(sc_height * 0.65), sc_width, int(sc_height * 0.35)))
+            pag.click(x + 220, y, interval=2)
+            pag.hotkey('ctrl', 'a', interval=1)
+            pag.write('http://open-mss.org/', interval=0.25)
+        except (ImageNotFoundException, OSError, Exception):
+            print("\nException : Linearviews' \'WMS URL\' editbox button/option not found on the screen.")
+            raise
+        try:
+            x, y = pag.locateCenterOnScreen(picture('views', 'get_capabilities.png'),
+                                            region=(0, int(sc_height * 0.65), sc_width, int(sc_height * 0.35)))
+            pag.click(x, y, interval=2)
+            pag.sleep(3)
+        except (ImageNotFoundException, OSError, Exception):
+            print("\nException : LinearView's \'Get capabilities\' button/option not found on the screen.")
+            raise
+        if platform == 'win32':
+            pag.move(-171, -390, duration=1)
+            pag.dragRel(-867, 135, duration=2)
+        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
+            pag.move(-171, -390, duration=1)
+            pag.dragRel(-900, 245, duration=2)
+        # Storing screen coordinates for List layer of side view
+        pag.position()
+        pag.sleep(1)
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException : Linearview's WMS \'Server\\Layers\' button/option not found on the screen.")
+        raise
     # Selecting Some Layers in Linear wms section
     if platform == 'win32':
         gap = 22
     elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
         gap = 16
     try:
-        x, y = pag.locateCenterOnScreen(f'{wms_path}horizontalwind.png', region=(0, int(sc_height / 2), sc_width,
-                                                                                 int(sc_height / 2)))
+        x, y = pag.locateCenterOnScreen(picture('views', 'vertical_velocity.png'),
+                                        region=(0, int(sc_height / 2), sc_width, int(sc_height / 2)))
+        pag.click(x, y, interval=2)
+        x, y = pag.locateCenterOnScreen(picture('views', 'horizontal_wind.png'),
+                                        region=(0, int(sc_height / 2), sc_width, int(sc_height / 2)))
         temp1, temp2 = x, y
         pag.click(x, y, interval=2)
         pag.sleep(1)
-        pag.move(None, gap, duration=1)
+        pag.move(0, gap, duration=1)
         pag.click(interval=1)
         pag.sleep(1)
-        pag.move(None, gap * 2, duration=1)
+        pag.move(0, gap * 2, duration=1)
         pag.click(interval=1)
         pag.sleep(1)
-        pag.move(None, gap, duration=1)
+        pag.move(0, gap, duration=1)
         pag.click(interval=1)
         pag.sleep(1)
-        pag.move(None, -gap * 4, duration=1)
+        pag.move(0, -gap * 4, duration=1)
         pag.click(interval=1)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Linearview's \'Horizontal Wind Layer\' option not found on the screen.")
-
+        raise
     # Add waypoints after anaylzing the linear section wms
     try:
-        x, y = pag.locateCenterOnScreen(f'{dir_path}add_waypoint.png', region=(0, 0, int(sc_width / 2), sc_height))
+        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'), region=(0, 0, int(sc_width / 2), sc_height))
         pag.click(x, y, interval=2)
         pag.sleep(1)
         pag.click(x + 30, y + 50, duration=1)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
         print("\n Exception :Sideview's Add Waypoint button could not be located on the screen")
+        raise
 
     # CLosing Linear View Layer List
     if temp1 is not None and temp2 is not None:
@@ -865,70 +841,8 @@ def automate_views():
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 
     # Close Everything!
-    try:
-        if platform == 'linux' or platform == 'linux2':
-            for _ in range(4):
-                pag.hotkey('altleft', 'f4')
-                pag.sleep(1)
-                pag.press('left')
-                pag.sleep(1)
-                pag.press('enter')
-                pag.sleep(1)
-            pag.keyDown('altleft')
-            pag.press('tab')
-            pag.press('left')
-            pag.keyUp('altleft')
-            pag.sleep(1)
-            pag.press('q')
-        if platform == 'win32':
-            for _ in range(4):
-                pag.hotkey('alt', 'f4')
-                pag.sleep(1)
-                pag.press('left')
-                pag.sleep(1)
-                pag.press('enter')
-                pag.sleep(1)
-            pag.hotkey('alt', 'tab')
-            pag.sleep(1)
-            pag.press('q')
-        elif platform == 'darwin':
-            for _ in range(4):
-                pag.hotkey('command', 'w')
-                pag.sleep(1)
-                pag.press('left')
-                pag.sleep(1)
-                pag.press('return')
-                pag.sleep(1)
-            pag.hotkey('command', 'tab')
-            pag.sleep(1)
-            pag.press('q')
-    except Exception:
-        print("Cannot automate : Enable Shortcuts for your system or try again")
-    # pag.press('q')  # In some cases, recording windows does not closes. So it needs to ne there.
-
-
-def main():
-    """
-    This function runs the above functions as different processes at the same time and can be
-    controlled from here. (This is the main process.)
-    """
-    p1 = multiprocessing.Process(target=call_msui)
-    p2 = multiprocessing.Process(target=automate_views)
-    p3 = multiprocessing.Process(target=call_recorder)
-
-    print("\nINFO : Starting Automation.....\n")
-    p3.start()
-    pag.sleep(5)
-    initial_ops()
-    p1.start()
-    p2.start()
-
-    p2.join()
-    p1.join()
-    p3.join()
-    print("\n\nINFO : Automation Completes Successfully!")
-    sys.exit()
+    finish()
 
 
 if __name__ == '__main__':
-    main()
+    start(target=automate_views, duration=300)
