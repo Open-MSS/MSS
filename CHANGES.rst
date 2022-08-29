@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+Version 7.0.4
+~~~~~~~~~~~~~
+
+Bug fix release
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/88?closed=1
+
+
+
 Version 7.0.3
 ~~~~~~~~~~~~~
 
