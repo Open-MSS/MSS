@@ -55,7 +55,7 @@ from mslib.utils.coordinate import get_distance, find_location, latlon_points
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
-from mslib import plot
+from mslib.msui import mpl_qtwidget as qt
 
 
 def distance_point_linesegment(p, l1, l2):
@@ -549,9 +549,20 @@ class PathInteractor(QtCore.QObject):
             textlabel = f"{str(i):}   "
             if wpd[i].location != "":
                 textlabel = f"{wpd[i].location:}   "
-        pt = plot.HsecPlotting()
-        wp_labels = pt.plotlabel(x, y, textlabel, len(wpd))
-        self.wp_labels = wp_labels
+            t = self.ax.text(x[i],
+                             y[i],
+                             textlabel,
+                             bbox=dict(boxstyle="round",
+                                       facecolor="white",
+                                       alpha=0.5,
+                                       edgecolor="none"),
+                             fontweight="bold",
+                             zorder=4,
+                             rotation=90,
+                             animated=True,
+                             clip_on=True,
+                             visible=self.showverts and self.label_waypoints)
+            self.wp_labels.append(t)
 
         if self.background:
             self.canvas.restore_region(self.background)
@@ -1069,6 +1080,7 @@ class HPathInteractor(PathInteractor):
             if len(wp_vertices) == 0:
                 raise IOError("mscolab session expired")
             vertices = self.pathpatch.get_path().vertices
+            x, y = list(zip(*vertices))
         else:
             # If waypoints have been provided, compute the intermediate
             # great circle points for the line instance.
@@ -1077,10 +1089,8 @@ class HPathInteractor(PathInteractor):
             x, y = self.map.gcpoints_path(lons, lats)
             vertices = list(zip(x, y))
 
-        # Set the line to disply great circle points, remove existing
-        # waypoints scatter instance and draw a new one. This is
-        # necessary as scatter() does not provide a set_data method.
-        self.line.set_data(list(zip(*vertices)))
+        hsec = qt.Hsec(self.map)
+        hsec.plotpath(x, y)
 
         wp_heights = [(wp.flightlevel * 0.03048) for wp in self.waypoints_model.all_waypoint_data()]
         wp_times = [wp.utc_time for wp in self.waypoints_model.all_waypoint_data()]
@@ -1105,34 +1115,20 @@ class HPathInteractor(PathInteractor):
         else:
             self.solar_lines = None
 
-        if self.wp_scatter is not None:
-            self.wp_scatter.remove()
-        x, y = list(zip(*wp_vertices))
 
         if self.map.projection == "cyl":  # hack for wraparound
             x = np.array(x)
             x[x < self.map.llcrnrlon] += 360
             x[x > self.map.urcrnrlon] -= 360
-        # (animated is important to remove the old scatter points from the map)
-        self.wp_scatter = self.ax.scatter(
-            x, y, color=self.markerfacecolor, s=20, zorder=3, animated=True, visible=self.show_marker)
 
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
-        for wp_label in self.wp_labels:
-            wp_label.remove()
-        self.wp_labels = []  # remove doesn't seem to be necessary
         wpd = self.waypoints_model.all_waypoint_data()
         for i in range(len(wpd)):
             textlabel = str(i)
             if wpd[i].location != "":
                 textlabel = f"{wpd[i].location:}"
-            t = self.ax.text(
-                x[i] + label_offset, y[i] + label_offset, textlabel,
-                bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.6, "edgecolor": "none"},
-                fontweight="bold", zorder=4, animated=True, clip_on=True,
-                visible=self.showverts and self.label_waypoints)
-            self.wp_labels.append(t)
+            hsec.plotlabel(x, y, textlabel, len(wpd))
 
         # Redraw the artists.
         if self.background:
@@ -1141,11 +1137,7 @@ class HPathInteractor(PathInteractor):
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
             logging.debug("ValueError Exception '%s'", error)
-        self.ax.draw_artist(self.line)
-        self.ax.draw_artist(self.wp_scatter)
 
-        for t in self.wp_labels:
-            self.ax.draw_artist(t)
         if self.show_tangent_points:
             self.ax.draw_artist(self.tangent_lines)
         if self.show_solar_angle is not None:
@@ -1160,7 +1152,6 @@ class HPathInteractor(PathInteractor):
            instance.
         """
         PathInteractor.draw_callback(self, event)
-        self.ax.draw_artist(self.wp_scatter)
         if self.show_solar_angle:
             self.ax.draw_artist(self.solar_lines)
         if self.show_tangent_points:
@@ -1205,7 +1196,6 @@ class HPathInteractor(PathInteractor):
     def set_vertices_visible(self, showverts=True):
         """Set the visibility of path vertices (the line plot).
         """
-        self.wp_scatter.set_visible(self.show_marker)
         PathInteractor.set_vertices_visible(self, showverts)
 
     def set_tangent_visible(self, visible):

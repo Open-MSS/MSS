@@ -34,6 +34,7 @@ import enum
 import os
 import six
 import logging
+import mslib
 import numpy as np
 import matplotlib
 from fs import open_fs
@@ -42,6 +43,7 @@ from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 import matplotlib.backend_bases
 from PyQt5 import QtCore, QtWidgets, QtGui
+from mslib.utils.config import config_loader, read_config_file
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
 from mslib.utils import thermolib, FatalUserError
@@ -50,6 +52,9 @@ from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons
+import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
+
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
@@ -1143,6 +1148,100 @@ class MplLinearViewWidget(MplNavBarWidget):
                 action.setVisible(False)
 
 
+class Hsec():
+    def __init__(self, mplmap):
+        self.line = None
+        read_config_file()
+        self.config = config_loader()
+        self.num_interpolation_points = self.config["num_interpolation_points"]
+        self.num_labels = self.config["num_labels"]
+        self.tick_index_step = self.num_interpolation_points // self.num_labels
+        self.wps = None
+        self.bbox = None
+        self.wms_cache = config_loader(dataset="wms_cache")
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111, zorder=99)
+        self.bm = mplmap
+        self.map = None
+        self.basename = "topview"
+        self.show_marker = True
+
+        # Sets the default fontsize parameters' values for topview from MSSDefaultConfig.
+        self.topview_size_settings = config_loader(dataset="topview")
+
+    def HsecPath(self):
+        self.fig.clear()
+        # plot path
+        self.fig.canvas.draw()
+        self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
+        x, y = self.bm.gcpoints_path([a[0] for a in self.vertices], [a[1] for a in self.vertices])
+        x, y = self.bm(self.wp_lons, self.wp_lats)
+
+    def plotpath(self, x, y):
+        self.fig.canvas.draw()
+        self.vertices = list(zip(x, y))
+        if self.line is None:
+            self.line, = self.ax.plot(x, y, color="blue", linestyle='-', linewidth=2, zorder=100)
+        # Set the line to disply great circle points, remove existing
+        # waypoints scatter instance and draw a new one. This is
+        # necessary as scatter() does not provide a set_data method.
+        self.line.set_data(list(zip(*self.vertices)))
+        self.ax.draw_artist(self.line)
+        # if self.wp_scatter is not None:
+        #     self.wp_scatter.remove()
+        # (animated is important to remove the old scatter points from the map)
+        self.wp_scatter = self.ax.scatter(x, y, color="red", s=20, zorder=3, animated=True, visible=True)
+        self.ax.draw_artist(self.wp_scatter)
+        self.wp_scatter.set_visible(self.show_marker)
+
+    def HsecLabel(self):
+        x, y = list(zip(*self.vertices))
+        for i in range(len(self.wps)):
+            textlabel = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}   "
+            x, y = self.bm(self.wp_lons, self.wp_lats)
+            self.plotlabel(x, y, textlabel, len(self.wps))
+        for t in self.wp_labels:
+            self.ax.draw_artist(t)
+
+    def plotlabel(self, x, y, textlabel, len_wps):
+        self.wp_labels = []
+        for i in range(len_wps):
+            t = self.ax.text(x[i],
+                             y[i],
+                             textlabel,
+                             bbox=dict(boxstyle="round",
+                                       facecolor="white",
+                                       alpha=0.5,
+                                       edgecolor="none"),
+                             fontweight="bold",
+                             zorder=4,
+                             rotation=90,
+                             animated=True,
+                             clip_on=True,
+                             visible=True
+                        )
+            self.wp_labels.append(t)
+
+    def HsecDrawMap(self, img):
+        """
+        Draw the image img on the current plot.
+        """
+        logging.debug("plotting image..")
+        self.wms_image = self.bm.imshow(img, interpolation="nearest", origin=PIL_IMAGE_ORIGIN)
+        # NOTE: imshow always draws the images to the lowest z-level of the
+        # plot.
+        # See these mailing list entries:
+        # http://www.mail-archive.com/matplotlib-devel@lists.sourceforge.net/msg05955.html
+        # http://old.nabble.com/Re%3A--Matplotlib-users--imshow-zorder-tt19047314.html#a19047314
+        #
+        # Question: Is this an issue for us or do we always want the images in the back
+        # anyhow? At least we need to remove filled continents here.
+        # self.map.set_fillcontinents_visible(False)
+        # ** UPDATE 2011/01/14 ** seems to work with version 1.0!
+        logging.debug("done.")
+        return self.wms_image
+
+
 class MplTopViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws a top view (map), together with a
        flight track, trajectories and other items.
@@ -1334,7 +1433,8 @@ class MplTopViewCanvas(MplCanvas):
         """Draw the image img on the current plot.
         """
         logging.debug("plotting image..")
-        self.wms_image = self.map.imshow(img, interpolation="nearest", origin=PIL_IMAGE_ORIGIN)
+        hsec = Hsec(self.map)
+        self.wms_image = hsec.HsecDrawMap()
         # NOTE: imshow always draws the images to the lowest z-level of the
         # plot.
         # See these mailing list entries:

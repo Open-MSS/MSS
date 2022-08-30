@@ -52,7 +52,6 @@ from mslib.utils.config import config_loader, save_settings_qsettings, load_sett
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.qt import variant_to_string, variant_to_float
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
-from mslib import plot
 
 from mslib.utils import writexml
 xml.dom.minidom.Element.writexml = writexml
@@ -564,7 +563,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     def save_to_ftml(self, filename=None):
         """
         Save the flight track to an XML file.
-
         Arguments:
         filename -- complete path to the file to save. If None, a previously
                     specified filename will be used. If no filename has been
@@ -617,9 +615,32 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.load_from_xml_data(xml_content, name)
 
     def load_from_xml_data(self, xml_content, name="Flight track"):
+        try:
+            doc = xml.dom.minidom.parseString(xml_content)
+        except xml.parsers.expat.ExpatError as ex:
+            raise SyntaxError(str(ex))
+
+        ft_el = doc.getElementsByTagName("FlightTrack")[0]
+
         self.name = name
-        pt = plot.Plotting()
-        waypoints_list = pt.load_from_xml_data(xml_content)
+
+        waypoints_list = []
+        for wp_el in ft_el.getElementsByTagName("Waypoint"):
+
+            location = wp_el.getAttribute("location")
+            lat = float(wp_el.getAttribute("lat"))
+            lon = float(wp_el.getAttribute("lon"))
+            flightlevel = float(wp_el.getAttribute("flightlevel"))
+            comments = wp_el.getElementsByTagName("Comments")[0]
+            # If num of comments is 0(null comment), then return ''
+            if len(comments.childNodes):
+                comments = comments.childNodes[0].data.strip()
+            else:
+                comments = str('')
+
+            waypoints_list.append(Waypoint(lat, lon, flightlevel,
+                                           location=location,
+                                           comments=comments))
         self.replace_waypoints(waypoints_list)
 
     def get_filename(self):
