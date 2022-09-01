@@ -34,7 +34,6 @@ import enum
 import os
 import six
 import logging
-import mslib
 import numpy as np
 import matplotlib
 from fs import open_fs
@@ -43,7 +42,6 @@ from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 import matplotlib.backend_bases
 from PyQt5 import QtCore, QtWidgets, QtGui
-from mslib.utils.config import config_loader, read_config_file
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
 from mslib.utils import thermolib, FatalUserError
@@ -52,9 +50,6 @@ from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons
-import matplotlib.pyplot as plt
-from matplotlib import pyplot as plt
-
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
@@ -62,53 +57,22 @@ LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
 matplotlib.rcParams['savefig.directory'] = LAST_SAVE_DIRECTORY
 
 
-class MplCanvas(FigureCanvasQTAgg):
-    """Class to represent the FigureCanvasQTAgg widget.
-
-    Main axes instance has zorder 99 (important when additional
-    axes are added).
-    """
-
-    def __init__(self):
+class MyFigure(object):
+    def __init__(self, fig=None, ax=None):
         # setup Matplotlib Figure and Axis
-        self.fig = figure.Figure(facecolor="w")  # 0.75
-        self.ax = self.fig.add_subplot(111, zorder=99)
-        self.default_filename = "_image"
-
-        # initialization of the canvas
-        super(MplCanvas, self).__init__(self.fig)
-
-        # we define the widget as expandable
-        super(MplCanvas, self).setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-
-        # notify the system of updated policy
-        super(MplCanvas, self).updateGeometry()
-
-    def get_default_filename(self):
-        """
-        defines the image file name for storing from a view
-
-        return: default png filename of a view
-        """
-        result = self.basename + self.default_filename
-        if len(result) > 100:
-            result = result[:100]
-        return result + ".png"
+        self.fig, self.ax = fig, ax
+        if self.fig is None:
+            assert ax is None
+            self.fig = figure.Figure(facecolor="w")  # 0.75
+        if self.ax is None:
+            self.ax = self.fig.add_subplot(111, zorder=99)
 
     def draw_metadata(self, title="", init_time=None, valid_time=None,
                       level=None, style=None):
-        """Draw a title indicating the init and valid time of the
-           image that has been drawn, and the vertical elevation level.
-        """
-        self.default_filename = ""
-        if title:
-            self.default_filename += f"_{title.split()[0]:>5}"
         if style:
             title += f" ({style})"
         if level:
             title += f" at {level}"
-            self.default_filename += f"_{level.split()[0]}"
         if isinstance(valid_time, datetime) and isinstance(init_time, datetime):
             time_step = valid_time - init_time
         else:
@@ -131,40 +95,256 @@ class MplCanvas(FigureCanvasQTAgg):
 
         # Set title.
         self.ax.set_title(title, horizontalalignment='left', x=0)
+
+
+class MyTopViewFigure(MyFigure):
+    def __init__(self, fig=None, ax=None):
+        super().__init__(fig, ax)
+        self.map = None
+        self.legimg = None
+        self.legax = None
+
+    def get_map_appearance(self):
+        """
+        """
+        return self.appearance_settings
+
+    def init_map(self, **kwargs):
+        self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(),
+                                     resolution="l", area_thresh=1000., ax=self.ax,
+                                     **kwargs)
+
+        # Sets the selected fontsize only if draw_graticule box from topview options is checked in.
+        if self.appearance_settings["draw_graticule"]:
+            try:
+                self.map._draw_auto_graticule(self.tov_als)
+            except Exception as ex:
+                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
+        else:
+            self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
+        self.ax.set_autoscale_on(False)
+        self.ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
+
+    def getBBOX(self):
+        axis = self.ax.axis()
+
+        if self.map.bbox_units == "degree":
+            # Convert the current axis corners to lat/lon coordinates.
+            axis0, axis2 = self.map(axis[0], axis[2], inverse=True)
+            axis1, axis3 = self.map(axis[1], axis[3], inverse=True)
+            bbox = (axis0, axis2, axis1, axis3)
+
+        elif self.map.bbox_units.startswith("meter"):
+            center_x, center_y = self.map(
+                *(float(_x) for _x in self.map.bbox_units[6:-1].split(",")))
+            bbox = (axis[0] - center_x, axis[2] - center_y, axis[1] - center_x, axis[3] - center_y)
+
+        else:
+            bbox = axis[0], axis[2], axis[1], axis[3]
+
+        return bbox
+
+    def clear_figure(self):
+        logging.debug("Removing image")
+        if self.map.image is not None:
+            self.map.image.remove()
+            self.map.image = None
+            self.ax.set_title("Top view", horizontalalignment="left", x=0)
+            self.ax.figure.canvas.draw()
+
+    def set_map_appearance(self, settings_dict):
+        """Apply settings from dictionary 'settings_dict' to the view.
+        If settings is None, apply default settings.
+        """
+        # logging.debug("applying map appearance settings %s." % settings)
+        settings = {"draw_graticule": True,
+                    "draw_coastlines": True,
+                    "fill_waterbodies": True,
+                    "fill_continents": True,
+                    "draw_flighttrack": True,
+                    "draw_marker": True,
+                    "label_flighttrack": True,
+                    "tov_plot_title_size": "default",
+                    "tov_axes_label_size": "default",
+                    "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
+                    "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
+                    "colour_ft_vertices": (0, 0, 1, 1),
+                    "colour_ft_waypoints": (1, 0, 0, 1)}
+        if settings_dict is not None:
+            settings.update(settings_dict)
+
+        # Stores the exact value of fontsize for topview plot title size(tov_pts)
+        self.tov_pts = (self.topview_size_settings["plot_title_size"] if settings["tov_plot_title_size"] == "default"
+                        else int(settings["tov_plot_title_size"]))
+        # Stores the exact value of fontsize for topview axes label size(tov_als)
+        self.tov_als = (self.topview_size_settings["axes_label_size"] if settings["tov_axes_label_size"] == "default"
+                        else int(settings["tov_axes_label_size"]))
+
+        self.appearance_settings = settings
+        ax = self.ax
+
+        if self.map is not None:
+            self.map.set_coastlines_visible(settings["draw_coastlines"])
+            self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
+                                                land_color=settings["colour_land"],
+                                                lake_color=settings["colour_water"])
+            self.map.set_mapboundary_visible(visible=settings["fill_waterbodies"],
+                                             bg_color=settings["colour_water"])
+            self.waypoints_interactor.set_path_color(line_color=settings["colour_ft_vertices"],
+                                                     marker_facecolor=settings["colour_ft_waypoints"])
+            self.waypoints_interactor.show_marker = settings["draw_marker"]
+            self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
+            self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
+
+            # Updates plot title size as selected from combobox labelled plot title size.
+            ax.set_autoscale_on(False)
+            ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
+
+            # Updates graticule ticklabels/labels fontsize if draw_graticule is True.
+            if settings["draw_graticule"]:
+                self.map.set_graticule_visible(False)
+                self.map._draw_auto_graticule(self.tov_als)
+            else:
+                self.map.set_graticule_visible(settings["draw_graticule"])
+
+    def redraw_map(self, kwargs_update=None):
+        """Redraw map canvas.
+        Executed on clicked() of btMapRedraw.
+        See MapCanvas.update_with_coordinate_change(). After the map redraw,
+        coordinates of all objects overlain on the map have to be updated.
+        """
+
+        # 2) UPDATE MAP.
+        self.map.update_with_coordinate_change(kwargs_update)
+
+        # Sets the graticule ticklabels/labels fontsize for topview when map is redrawn.
+        if self.appearance_settings["draw_graticule"]:
+            self.map.set_graticule_visible(False)
+            self.map._draw_auto_graticule(self.tov_als)
+        else:
+            self.myfig.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
+        self.ax.figure.canvas.draw()  # this one is required to trigger a
+        # drawevent to update the background
+
+        # self.draw_metadata() ; It is not needed here, since below here already plot title is being set.
+
+        # Setting fontsize for topview plot title when map is redrawn.
+        self.ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment='left', x=0)
+        self.ax.figure.canvas.draw()
+
+    def draw_image(self, img):
+        """Draw the image img on the current plot.
+        """
+        logging.debug("plotting image..")
+        self.wms_image = self.map.imshow(img, interpolation="nearest", origin=PIL_IMAGE_ORIGIN)
+        # NOTE: imshow always draws the images to the lowest z-level of the
+        # plot.
+        # See these mailing list entries:
+        # http://www.mail-archive.com/matplotlib-devel@lists.sourceforge.net/msg05955.html
+        # http://old.nabble.com/Re%3A--Matplotlib-users--imshow-zorder-tt19047314.html#a19047314
+        #
+        # Question: Is this an issue for us or do we always want the images in the back
+        # anyhow? At least we need to remove filled continents here.
+        # self.map.set_fillcontinents_visible(False)
+        # ** UPDATE 2011/01/14 ** seems to work with version 1.0!
+        logging.debug("done.")
+
+    def draw_legend(self, img):
+        """Draw the legend graphics img on the current plot.
+        Adds new axes to the plot that accomodate the legend.
+        """
+        # If the method is called with a "None" image, the current legend
+        # graphic should be removed (if one exists).
+        if self.legimg is not None:
+            logging.debug("removing image %s", self.legimg)
+            self.legimg.remove()
+            self.legimg = None
+
+        if img is not None:
+            # The size of the legend axes needs to be given in relative figure
+            # coordinates. To determine those from the legend graphics size in
+            # pixels, we need to determine the size of the currently displayed
+            # figure in pixels.
+            figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
+            ax_extent_x = float(img.size[0]) / figsize_px[0]
+            ax_extent_y = float(img.size[1]) / figsize_px[1]
+
+            # If no legend axes have been created, do so now.
+            if self.legax is None:
+                # Main axes instance of mplwidget has zorder 99.
+                self.legax = self.fig.add_axes([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y],
+                                               frameon=False,
+                                               xticks=[], yticks=[],
+                                               label="ax2", zorder=0)
+                self.legax.patch.set_facecolor("None")
+                # self.legax.set_yticklabels("ax2", fontsize=32, minor=False)
+                # print("Legax=if" + self.legax)
+
+            # If axes exist, adjust their position.
+            else:
+                self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
+                # self.legax.set_yticklabels("ax2", fontsize=32, minor=False)
+                # print("Legax=else" + self.legax)
+            # Plot the new legimg in the legax axes.
+            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal", interpolation="nearest")
+            # print("Legimg" + self.legimg)
+        self.ax.figure.canvas.draw()
+
+
+class MplCanvas(FigureCanvasQTAgg):
+    """Class to represent the FigureCanvasQTAgg widget.
+    Main axes instance has zorder 99 (important when additional
+    axes are added).
+    """
+
+    def __init__(self, myfig):
+        self.default_filename = "_image"
+        self.myfig = myfig
+        # initialization of the canvas
+        super(MplCanvas, self).__init__(self.myfig.fig)
+
+        # we define the widget as expandable
+        super(MplCanvas, self).setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+        # notify the system of updated policy
+        super(MplCanvas, self).updateGeometry()
+
+    def get_default_filename(self):
+        """
+        defines the image file name for storing from a view
+        return: default png filename of a view
+        """
+        result = self.basename + self.default_filename
+        if len(result) > 100:
+            result = result[:100]
+        return result + ".png"
+
+    def draw_metadata(self, title="", init_time=None, valid_time=None,
+                      level=None, style=None):
+        """Draw a title indicating the init and valid time of the
+           image that has been drawn, and the vertical elevation level.
+        """
+        self.default_filename = ""
+        if title:
+            self.default_filename += f"_{title.split()[0]:>5}"
+        if level:
+            self.default_filename += f"_{level.split()[0]}"
+
+        self.myfig.draw_metadata(title, init_time, valid_time, level, style)
         self.draw()
         # without the repaint the title is not properly updated
         self.repaint()
 
     def get_plot_size_in_px(self):
         """Determines the size of the current figure in pixels.
-
         Returns the tuple width, height.
         """
         # (bounds = left, bottom, width, height)
-        ax_bounds = self.ax.bbox.bounds
+        ax_bounds = self.myfig.ax.bbox.bounds
         width = int(round(ax_bounds[2]))
         height = int(round(ax_bounds[3]))
         return width, height
-
-
-class MplWidget(QtWidgets.QWidget):
-    """Matplotlib canvas widget defined in Qt Designer"""
-
-    def __init__(self, parent=None):
-        # initialization of Qt MainWindow widget
-        super(MplWidget, self).__init__(parent)
-
-        # set the canvas to the Matplotlib widget
-        self.canvas = MplCanvas()
-
-        # create a vertical box layout
-        self.vbl = QtWidgets.QVBoxLayout()
-
-        # add mpl widget to vertical box
-        self.vbl.addWidget(self.canvas)
-
-        # set the layout to th vertical box
-        self.setLayout(self.vbl)
 
 
 def _getSaveFileName(parent, title="Choose a filename to save to", filename="test.png",
@@ -252,16 +432,15 @@ matplotlib.backend_bases._Mode = _Mode
 class NavigationToolbar(NavigationToolbar2QT):
     """
     parts of this class have been copied from the NavigationToolbar2QT class.
-
     According to https://matplotlib.org/users/license.html we shall
     summarise our changes to matplotlib code:
-
     We copied small parts of the given implementation of the navigation
     toolbar class to allow for our custom waypoint buttons. Our code extends
     the matplotlib toolbar to allow for less or additional buttons and properly
     update all plots and elements in case the pan or zoom elements were
     triggered by the user.
     """
+
     def __init__(self, canvas, parent, sideview=False, coordinates=True):
         self.sideview = sideview
 
@@ -1148,100 +1327,6 @@ class MplLinearViewWidget(MplNavBarWidget):
                 action.setVisible(False)
 
 
-class Hsec():
-    def __init__(self, mplmap):
-        self.line = None
-        read_config_file()
-        self.config = config_loader()
-        self.num_interpolation_points = self.config["num_interpolation_points"]
-        self.num_labels = self.config["num_labels"]
-        self.tick_index_step = self.num_interpolation_points // self.num_labels
-        self.wps = None
-        self.bbox = None
-        self.wms_cache = config_loader(dataset="wms_cache")
-        self.fig = plt.figure()
-        self.ax = self.fig.add_subplot(111, zorder=99)
-        self.bm = mplmap
-        self.map = None
-        self.basename = "topview"
-        self.show_marker = True
-
-        # Sets the default fontsize parameters' values for topview from MSSDefaultConfig.
-        self.topview_size_settings = config_loader(dataset="topview")
-
-    def HsecPath(self):
-        self.fig.clear()
-        # plot path
-        self.fig.canvas.draw()
-        self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
-        x, y = self.bm.gcpoints_path([a[0] for a in self.vertices], [a[1] for a in self.vertices])
-        x, y = self.bm(self.wp_lons, self.wp_lats)
-
-    def plotpath(self, x, y):
-        self.fig.canvas.draw()
-        self.vertices = list(zip(x, y))
-        if self.line is None:
-            self.line, = self.ax.plot(x, y, color="blue", linestyle='-', linewidth=2, zorder=100)
-        # Set the line to disply great circle points, remove existing
-        # waypoints scatter instance and draw a new one. This is
-        # necessary as scatter() does not provide a set_data method.
-        self.line.set_data(list(zip(*self.vertices)))
-        self.ax.draw_artist(self.line)
-        # if self.wp_scatter is not None:
-        #     self.wp_scatter.remove()
-        # (animated is important to remove the old scatter points from the map)
-        self.wp_scatter = self.ax.scatter(x, y, color="red", s=20, zorder=3, animated=True, visible=True)
-        self.ax.draw_artist(self.wp_scatter)
-        self.wp_scatter.set_visible(self.show_marker)
-
-    def HsecLabel(self):
-        x, y = list(zip(*self.vertices))
-        for i in range(len(self.wps)):
-            textlabel = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}   "
-            x, y = self.bm(self.wp_lons, self.wp_lats)
-            self.plotlabel(x, y, textlabel, len(self.wps))
-        for t in self.wp_labels:
-            self.ax.draw_artist(t)
-
-    def plotlabel(self, x, y, textlabel, len_wps):
-        self.wp_labels = []
-        for i in range(len_wps):
-            t = self.ax.text(x[i],
-                             y[i],
-                             textlabel,
-                             bbox=dict(boxstyle="round",
-                                       facecolor="white",
-                                       alpha=0.5,
-                                       edgecolor="none"),
-                             fontweight="bold",
-                             zorder=4,
-                             rotation=90,
-                             animated=True,
-                             clip_on=True,
-                             visible=True
-                        )
-            self.wp_labels.append(t)
-
-    def HsecDrawMap(self, img):
-        """
-        Draw the image img on the current plot.
-        """
-        logging.debug("plotting image..")
-        self.wms_image = self.bm.imshow(img, interpolation="nearest", origin=PIL_IMAGE_ORIGIN)
-        # NOTE: imshow always draws the images to the lowest z-level of the
-        # plot.
-        # See these mailing list entries:
-        # http://www.mail-archive.com/matplotlib-devel@lists.sourceforge.net/msg05955.html
-        # http://old.nabble.com/Re%3A--Matplotlib-users--imshow-zorder-tt19047314.html#a19047314
-        #
-        # Question: Is this an issue for us or do we always want the images in the back
-        # anyhow? At least we need to remove filled continents here.
-        # self.map.set_fillcontinents_visible(False)
-        # ** UPDATE 2011/01/14 ** seems to work with version 1.0!
-        logging.debug("done.")
-        return self.wms_image
-
-
 class MplTopViewCanvas(MplCanvas):
     """Specialised MplCanvas that draws a top view (map), together with a
        flight track, trajectories and other items.
@@ -1252,11 +1337,11 @@ class MplTopViewCanvas(MplCanvas):
     def __init__(self, settings=None):
         """
         """
-        super(MplTopViewCanvas, self).__init__()
+        self.myfig = MyTopViewFigure()
+        super(MplTopViewCanvas, self).__init__(self.myfig)
         self.waypoints_interactor = None
         self.satoverpasspatch = []
         self.kmloverlay = None
-        self.map = None
         self.basename = "topview"
 
         # Axes and image object to display the legend graphic, if available.
@@ -1264,10 +1349,10 @@ class MplTopViewCanvas(MplCanvas):
         self.legimg = None
 
         # stores the  topview plot title size(tov_pts) and topview axes label size(tov_als),initially as None.
-        self.tov_pts = None
-        self.tov_als = None
+        self.myfig.tov_pts = None
+        self.myfig.tov_als = None
         # Sets the default fontsize parameters' values for topview from MSSDefaultConfig.
-        self.topview_size_settings = config_loader(dataset="topview")
+        self.myfig.topview_size_settings = config_loader(dataset="topview")
 
         # Set map appearance from parameter or, if not specified, to default
         # values.
@@ -1277,26 +1362,14 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg = QtWidgets.QProgressDialog("redrawing map...", "Cancel", 0, 10, self)
         self.pdlg.close()
 
+    @property
+    def map(self):
+        return self.myfig.map
+
     def init_map(self, model=None, **kwargs):
         """Set up the map view.
         """
-        ax = self.ax
-        self.map = mpl_map.MapCanvas(appearance=self.get_map_appearance(),
-                                     resolution="l", area_thresh=1000., ax=ax,
-                                     **kwargs)
-
-        # Sets the selected fontsize only if draw_graticule box from topview options is checked in.
-        if self.appearance_settings["draw_graticule"]:
-            try:
-                self.map._draw_auto_graticule(self.tov_als)
-            except Exception as ex:
-                logging.error("ERROR: cannot plot graticule (message: %s - '%s')", type(ex), ex)
-        else:
-            self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
-
-        ax.set_autoscale_on(False)
-        ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
-        self.draw()  # necessary?
+        self.myfig.init_map(**kwargs)
 
         if model:
             self.set_waypoints_model(model)
@@ -1315,7 +1388,7 @@ class MplTopViewCanvas(MplCanvas):
             appearance = self.get_map_appearance()
             try:
                 self.waypoints_interactor = mpl_pi.HPathInteractor(
-                    self.map, self.waypoints_model,
+                    self.myfig.map, self.waypoints_model,
                     linecolor=appearance["colour_ft_vertices"],
                     markerfacecolor=appearance["colour_ft_waypoints"],
                     show_marker=appearance["draw_marker"])
@@ -1347,18 +1420,7 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg.setValue(1)
         QtWidgets.QApplication.processEvents()
 
-        # 2) UPDATE MAP.
-        self.map.update_with_coordinate_change(kwargs_update)
-
-        # Sets the graticule ticklabels/labels fontsize for topview when map is redrawn.
-        if self.appearance_settings["draw_graticule"]:
-            self.map.set_graticule_visible(False)
-            self.map._draw_auto_graticule(self.tov_als)
-        else:
-            self.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
-        self.draw()  # this one is required to trigger a
-        # drawevent to update the background
-        # in waypoints_interactor()
+        self.myfig.redraw_map(kwargs_update)
 
         self.pdlg.setValue(5)
         QtWidgets.QApplication.processEvents()
@@ -1373,11 +1435,6 @@ class MplTopViewCanvas(MplCanvas):
         if self.kmloverlay:
             self.kmloverlay.update()
 
-        # self.draw_metadata() ; It is not needed here, since below here already plot title is being set.
-
-        # Setting fontsize for topview plot title when map is redrawn.
-        self.ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment='left', x=0)
-        self.draw()
         self.repaint()
 
         # Update in case of a operationion change
@@ -1395,99 +1452,27 @@ class MplTopViewCanvas(MplCanvas):
     def get_crs(self):
         """Get the coordinate reference system of the displayed map.
         """
-        return self.map.crs
+        return self.myfig.map.crs
 
     def getBBOX(self):
         """
         Get the bounding box of the map
         (returns a 4-tuple llx, lly, urx, ury) in degree or meters.
         """
-
-        axis = self.ax.axis()
-
-        if self.map.bbox_units == "degree":
-            # Convert the current axis corners to lat/lon coordinates.
-            axis0, axis2 = self.map(axis[0], axis[2], inverse=True)
-            axis1, axis3 = self.map(axis[1], axis[3], inverse=True)
-            bbox = (axis0, axis2, axis1, axis3)
-
-        elif self.map.bbox_units.startswith("meter"):
-            center_x, center_y = self.map(
-                *(float(_x) for _x in self.map.bbox_units[6:-1].split(",")))
-            bbox = (axis[0] - center_x, axis[2] - center_y, axis[1] - center_x, axis[3] - center_y)
-
-        else:
-            bbox = axis[0], axis[2], axis[1], axis[3]
-
-        return bbox
+        return self.myfig.getBBOX()
 
     def clear_figure(self):
         logging.debug("Removing image")
-        if self.map.image is not None:
-            self.map.image.remove()
-            self.map.image = None
-            self.ax.set_title("Top view", horizontalalignment="left", x=0)
-            self.ax.figure.canvas.draw()
+        self.myfig.clear_figure()
 
     def draw_image(self, img):
-        """Draw the image img on the current plot.
-        """
-        logging.debug("plotting image..")
-        hsec = Hsec(self.map)
-        self.wms_image = hsec.HsecDrawMap()
-        # NOTE: imshow always draws the images to the lowest z-level of the
-        # plot.
-        # See these mailing list entries:
-        # http://www.mail-archive.com/matplotlib-devel@lists.sourceforge.net/msg05955.html
-        # http://old.nabble.com/Re%3A--Matplotlib-users--imshow-zorder-tt19047314.html#a19047314
-        #
-        # Question: Is this an issue for us or do we always want the images in the back
-        # anyhow? At least we need to remove filled continents here.
-        # self.map.set_fillcontinents_visible(False)
-        # ** UPDATE 2011/01/14 ** seems to work with version 1.0!
-        logging.debug("done.")
+        self.myfig.draw_image(img)
 
     def draw_legend(self, img):
         """Draw the legend graphics img on the current plot.
-
         Adds new axes to the plot that accomodate the legend.
         """
-        # If the method is called with a "None" image, the current legend
-        # graphic should be removed (if one exists).
-        if self.legimg is not None:
-            logging.debug("removing image %s", self.legimg)
-            self.legimg.remove()
-            self.legimg = None
-
-        if img is not None:
-            # The size of the legend axes needs to be given in relative figure
-            # coordinates. To determine those from the legend graphics size in
-            # pixels, we need to determine the size of the currently displayed
-            # figure in pixels.
-            figsize_px = self.fig.get_size_inches() * self.fig.get_dpi()
-            ax_extent_x = float(img.size[0]) / figsize_px[0]
-            ax_extent_y = float(img.size[1]) / figsize_px[1]
-
-            # If no legend axes have been created, do so now.
-            if self.legax is None:
-                # Main axes instance of mplwidget has zorder 99.
-                self.legax = self.fig.add_axes([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y],
-                                               frameon=False,
-                                               xticks=[], yticks=[],
-                                               label="ax2", zorder=0)
-                self.legax.patch.set_facecolor("None")
-                # self.legax.set_yticklabels("ax2", fontsize=32, minor=False)
-                # print("Legax=if" + self.legax)
-
-            # If axes exist, adjust their position.
-            else:
-                self.legax.set_position([1 - ax_extent_x, 0.01, ax_extent_x, ax_extent_y])
-                # self.legax.set_yticklabels("ax2", fontsize=32, minor=False)
-                # print("Legax=else" + self.legax)
-            # Plot the new legimg in the legax axes.
-            self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal", interpolation="nearest")
-            # print("Legimg" + self.legimg)
-        self.draw()
+        self.myfig.draw_legend(img)
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
 
@@ -1511,62 +1496,23 @@ class MplTopViewCanvas(MplCanvas):
         """
         self.kmloverlay = kmloverlay
 
+    def get_map_appearance(self):
+        return self.myfig.get_map_appearance()
+
     def set_map_appearance(self, settings_dict):
         """Apply settings from dictionary 'settings_dict' to the view.
 
         If settings is None, apply default settings.
         """
-        # logging.debug("applying map appearance settings %s." % settings)
-        settings = {"draw_graticule": True,
-                    "draw_coastlines": True,
-                    "fill_waterbodies": True,
-                    "fill_continents": True,
-                    "draw_flighttrack": True,
-                    "draw_marker": True,
-                    "label_flighttrack": True,
-                    "tov_plot_title_size": "default",
-                    "tov_axes_label_size": "default",
-                    "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
-                    "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
-                    "colour_ft_vertices": (0, 0, 1, 1),
-                    "colour_ft_waypoints": (1, 0, 0, 1)}
-        if settings_dict is not None:
-            settings.update(settings_dict)
+        self.myfig.set_map_appearance(settings_dict)
+        if self.waypoints_interactor is not None:
+            self.waypoints_interactor.set_path_color(line_color=settings_dict["colour_ft_vertices"],
+                                                     marker_facecolor=settings_dict["colour_ft_waypoints"])
+            self.waypoints_interactor.show_marker = settings_dict["draw_marker"]
+            self.waypoints_interactor.set_vertices_visible(settings_dict["draw_flighttrack"])
+            self.waypoints_interactor.set_labels_visible(settings_dict["label_flighttrack"])
 
-        # Stores the exact value of fontsize for topview plot title size(tov_pts)
-        self.tov_pts = (self.topview_size_settings["plot_title_size"] if settings["tov_plot_title_size"] == "default"
-                        else int(settings["tov_plot_title_size"]))
-        # Stores the exact value of fontsize for topview axes label size(tov_als)
-        self.tov_als = (self.topview_size_settings["axes_label_size"] if settings["tov_axes_label_size"] == "default"
-                        else int(settings["tov_axes_label_size"]))
-
-        self.appearance_settings = settings
-        ax = self.ax
-
-        if self.map is not None:
-            self.map.set_coastlines_visible(settings["draw_coastlines"])
-            self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
-                                                land_color=settings["colour_land"],
-                                                lake_color=settings["colour_water"])
-            self.map.set_mapboundary_visible(visible=settings["fill_waterbodies"],
-                                             bg_color=settings["colour_water"])
-            self.waypoints_interactor.set_path_color(line_color=settings["colour_ft_vertices"],
-                                                     marker_facecolor=settings["colour_ft_waypoints"])
-            self.waypoints_interactor.show_marker = settings["draw_marker"]
-            self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
-            self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
-
-            # Updates plot title size as selected from combobox labelled plot title size.
-            ax.set_autoscale_on(False)
-            ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
-
-            # Updates graticule ticklabels/labels fontsize if draw_graticule is True.
-            if settings["draw_graticule"]:
-                self.map.set_graticule_visible(False)
-                self.map._draw_auto_graticule(self.tov_als)
-            else:
-                self.map.set_graticule_visible(settings["draw_graticule"])
-            self.draw()
+        self.draw()
 
     def set_remote_sensing_appearance(self, settings):
         self.waypoints_interactor.set_remote_sensing(settings["reference"])
@@ -1574,11 +1520,6 @@ class MplTopViewCanvas(MplCanvas):
         self.waypoints_interactor.set_solar_angle_visible(settings["show_solar_angle"])
 
         self.waypoints_interactor.redraw_path()
-
-    def get_map_appearance(self):
-        """
-        """
-        return self.appearance_settings
 
 
 class MplTopViewWidget(MplNavBarWidget):
