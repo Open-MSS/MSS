@@ -2,7 +2,6 @@ include README.md
 include LICENSE
 
 recursive-include mslib *
-recursive-include *
 global-exclude *.pyc
 global-exclude *.pyo
 global-exclude *.orig
