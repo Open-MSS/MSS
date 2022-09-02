@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Did you know that polygons can contain holes?
+     Did you know that they can contain more than one hole? -->
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+  <Placemark>
+    <name>innerBoundaries</name>
+    <description>
+      <![CDATA[
+      Should look like:<br/><br/>
+      <img src="http://regionator.googlepages.com/polyInnerBoundaries.png"/>
+      ]]>
+    </description>
+    <Polygon>
+      <outerBoundaryIs>
+        <LinearRing>
+          <coordinates>
+            -122.0,37.0
+            -121.9,37.0
+            -121.9,37.1
+            -122.0,37.1
+            -122.0,37.0
+          </coordinates>
+        </LinearRing>
+      </outerBoundaryIs>
+      <innerBoundaryIs>
+        <!-- 0 -->
+        <LinearRing>
+          <coordinates>
+            -121.99,37.01
+            -121.96,37.01
+            -121.96,37.04
+            -121.99,37.04
+            -121.99,37.01
+          </coordinates>
+        </LinearRing>
+      </innerBoundaryIs>
+      <innerBoundaryIs>
+        <!-- 1 -->
+        <LinearRing>
+          <coordinates>
+            -121.94,37.01
+            -121.91,37.01
+            -121.91,37.04
+            -121.94,37.04
+            -121.94,37.01
+          </coordinates>
+        </LinearRing>
+      </innerBoundaryIs>
+      <innerBoundaryIs>
+        <!-- 2 -->
+        <LinearRing>
+          <coordinates>
+            -121.94,37.06
+            -121.91,37.06
+            -121.91,37.09
+            -121.94,37.09
+            -121.94,37.06
+          </coordinates>
+        </LinearRing>
+      </innerBoundaryIs>
+      <innerBoundaryIs>
+        <!-- 3 -->
+        <LinearRing>
+          <coordinates>
+            -121.99,37.06
+            -121.96,37.06
+            -121.96,37.09
+            -121.99,37.09
+            -121.99,37.06
+          </coordinates>
+        </LinearRing>
+      </innerBoundaryIs>
+    </Polygon>
+  </Placemark>
+</Document>
+</kml>

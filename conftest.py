@@ -38,7 +38,7 @@ import pytest
 import fs
 import shutil
 from mslib.mswms.demodata import DataFiles
-import mslib._tests.constants as constants
+import tests.constants as constants
 
 # make a copy for mscolab test, so that we read different pathes during parallel tests.
 sample_path = os.path.join(os.path.dirname(__file__), "docs", "samples", "flight-tracks")
@@ -77,7 +77,7 @@ if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
 """
 
     mslib.mscolab.conf.py.example
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     config for mscolab.
 
