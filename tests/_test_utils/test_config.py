@@ -74,7 +74,7 @@ class TestConfigLoader(object):
             fs.open_fs(MSUI_CONFIG_PATH).remove("msui_settings.json")
         config_file = os.path.join(
             self.sample_path,
-            'empty_msui_settings.json.sample'
+            'empty_msui_settings.json'
         )
         read_config_file(config_file)
 
@@ -107,7 +107,7 @@ class TestConfigLoader(object):
     def test_sample_config_file(self):
         config_file = os.path.join(
             self.sample_path,
-            'msui_settings.json.sample',
+            'msui_settings.json',
         )
         read_config_file(path=config_file)
         data = config_loader(dataset="new_flighttrack_flightlevel")

@@ -159,7 +159,7 @@ class Test_MSSSideViewWindow(object):
     def teardown(self):
         config_file = os.path.join(
             self.sample_path,
-            'empty_msui_settings.json.sample',
+            'empty_msui_settings.json',
         )
         read_config_file(path=config_file)
         for i in range(self.window.listViews.count()):
