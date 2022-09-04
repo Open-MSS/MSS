@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_suffix
-    ~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_suffix
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest function to test msui.sideview method
     'verticalunitsclicked' for change of suffix

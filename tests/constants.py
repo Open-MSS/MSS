@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib._tests.utils
-    ~~~~~~~~~~~~~~~~~~
+    tests.constants
+    ~~~~~~~~~~~~~~~
 
-    This module provides common functions for MSS testing
+    This module provides common testdata for MSS testing
 
     This file is part of MSS.
 

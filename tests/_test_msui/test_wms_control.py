@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_wms_control
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_wms_control
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.wms_control
 

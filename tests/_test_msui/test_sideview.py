@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_sideview
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_sideview
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.sideview
 

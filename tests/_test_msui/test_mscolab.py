@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_mscolab
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_mscolab
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module is used to test mscolab related gui.
 

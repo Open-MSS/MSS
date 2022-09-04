@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_chat_manager
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_chat_manager
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for chat_manager functionalities
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms._tests.utils
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests.utils
+    ~~~~~~~~~~~
 
     This module provides utils for pytest to test mslib modules
 

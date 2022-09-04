@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils._tests.test_qt
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_utils.test_qt
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions for mslib.utils.qt
 

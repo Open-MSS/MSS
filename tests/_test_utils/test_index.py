@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.test_index
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_utils.test_index
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests index
 

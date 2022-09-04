@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils._tests.test_coordinate
-    ~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_utils.test_coordinate
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.utils.coordinate
 

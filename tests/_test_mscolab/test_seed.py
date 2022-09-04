@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_seed
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_seed
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for conf functionalities
 

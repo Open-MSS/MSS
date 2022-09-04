@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms._tests.test_mss_plot_driver
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mswms.test_mss_plot_driver
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.mswms.mss_plot_driver
 

@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_files_api
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_files_api
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     api integration tests for file based handlers
 

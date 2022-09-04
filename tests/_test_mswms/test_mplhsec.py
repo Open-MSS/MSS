@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms._tests.test_mplhsec
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mswms.test_mplhsec
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mswms.mplhsec
 

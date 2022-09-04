@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_topview
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_topview
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.topview
 

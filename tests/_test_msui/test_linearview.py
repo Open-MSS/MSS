@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_linearview
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_linearview
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.linearview
 

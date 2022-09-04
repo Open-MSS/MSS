@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_wms_capabilities
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_wms_capabilities
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.wms_capabilities
 

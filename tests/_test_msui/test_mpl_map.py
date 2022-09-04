@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_mpl_map
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_mpl_map
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module is used to test the functionality of mpl_map.py
 

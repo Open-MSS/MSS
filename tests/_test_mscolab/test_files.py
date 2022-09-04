@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_files
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_files
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for file based handlers
 

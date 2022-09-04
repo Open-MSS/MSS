@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_mss
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_mss
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.mss
 

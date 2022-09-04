@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib._tests.test_utils
-    ~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_utils.test_multidict
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.mss_util
 
     This file is part of MSS.
 
-    :copyright: Copyright 2016-2017 Reimar Bauer
     :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 

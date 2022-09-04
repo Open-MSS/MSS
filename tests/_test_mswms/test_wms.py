@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms._tests.test_wms
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mswms.test_wms
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mswms.wms
 

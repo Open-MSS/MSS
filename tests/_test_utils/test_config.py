@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils._tests.test_config
-    ~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_utils.test_config
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to test mslib.utils.config
 
@@ -34,8 +34,8 @@ from mslib import utils
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib.utils.config import merge_dict
-from tests.constants import MSUI_CONFIG_PATH
-from tests.utils import create_msui_settings_file
+from test_multidict.constants import MSUI_CONFIG_PATH
+from test_multidict.utils import create_msui_settings_file
 
 LOGGER = logging.getLogger(__name__)
 

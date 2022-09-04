@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils._tests.test_time
-    ~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_utils.test_time
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mslib.utils.time
 

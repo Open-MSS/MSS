@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.test_editor
-    ~~~~~~~~~~~~~~~~~~~~~~
+    tests._test.msui.test_editor
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     testscript for the config editor
 

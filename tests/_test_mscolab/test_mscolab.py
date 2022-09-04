@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_mscolab
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_mscolab
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for mscolab functionalities
 

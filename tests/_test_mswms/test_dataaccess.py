@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms._tests.test_dataaccess
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mswms.test_dataaccess
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mswms.dataaccess
 

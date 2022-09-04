@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui._tests.test_updater
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_updater
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.updater
 

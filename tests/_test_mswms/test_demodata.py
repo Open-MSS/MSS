@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms._tests.test_demodata
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mswms.test_demodata
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mswms.demodata
 

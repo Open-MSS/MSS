@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_sockets.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_sockets
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for sockets module
 

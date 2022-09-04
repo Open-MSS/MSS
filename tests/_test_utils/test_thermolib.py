@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib._test.test_thermoblib
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_utils.test_thermoblib
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Tests for the thermolib module.
 

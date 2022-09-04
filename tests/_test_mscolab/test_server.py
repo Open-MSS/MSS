@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests.test_server
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_server
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     tests for server functionalities
 
