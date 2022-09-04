@@ -310,6 +310,7 @@ class Test_TopViewWMS(object):
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
+
         self.window = tv.MSUITopViewWindow(model=waypoints_model)
         self.window.show()
         QtWidgets.QApplication.processEvents()
@@ -352,3 +353,23 @@ class Test_TopViewWMS(object):
         assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()
         assert mockbox.critical.call_count == 0
+
+
+class Test_MSUITopViewWindow():
+    def setup(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+
+    def test_kwargs_update_does_not_harm(self):
+        initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
+        waypoints_model = ft.WaypointsTableModel("")
+        waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model)
+
+        # user_options is a global var
+        from mslib.utils.config import user_options
+
+        assert user_options['predefined_map_sections']['01 Europe (cyl)']['map'] == {'llcrnrlat': 35.0,
+                                                                                     'llcrnrlon': -15.0,
+                                                                                     'urcrnrlat': 65.0,
+                                                                                     'urcrnrlon': 30.0}
+
