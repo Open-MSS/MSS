@@ -1241,7 +1241,6 @@ class MplLinearViewCanvas(MplCanvas):
         """
         self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
 
-
     def getBBOX(self):
         """Get the bounding box of the view.
         """
