@@ -105,7 +105,7 @@ class Test_TableView(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     @mock.patch("mslib.msui.performance_settings.get_open_filename",
-                return_value=fs.path.join(
+                return_value=os.path.join(
                     os.path.dirname(__file__), "..", "data", "performance_simple.json"))
     def test_performance(self, mockopen, mockcrit):
         """
