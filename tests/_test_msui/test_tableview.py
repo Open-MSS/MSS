@@ -26,7 +26,6 @@
 """
 
 import mock
-import fs
 import os
 import pytest
 import sys

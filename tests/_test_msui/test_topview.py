@@ -372,4 +372,3 @@ class Test_MSUITopViewWindow():
                                                                                      'llcrnrlon': -15.0,
                                                                                      'urcrnrlat': 65.0,
                                                                                      'urcrnrlon': 30.0}
-
