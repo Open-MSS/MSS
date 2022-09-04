@@ -41,7 +41,7 @@ from mslib.mswms.demodata import DataFiles
 import tests.constants as constants
 
 # make a copy for mscolab test, so that we read different pathes during parallel tests.
-sample_path = os.path.join(os.path.dirname(__file__), "docs", "samples", "flight-tracks")
+sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
 shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
 def pytest_addoption(parser):
