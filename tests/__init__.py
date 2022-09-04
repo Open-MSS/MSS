@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab._tests
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.tests
+    ~~~~~~~~~~~
 
-    tests for mscolab
+    tests for MSS
 
     This file is part of MSS.
 
