@@ -34,8 +34,8 @@ from mslib import utils
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib.utils.config import merge_dict
-from test_multidict.constants import MSUI_CONFIG_PATH
-from test_multidict.utils import create_msui_settings_file
+from tests.constants import MSUI_CONFIG_PATH
+from tests.utils import create_msui_settings_file
 
 LOGGER = logging.getLogger(__name__)
 

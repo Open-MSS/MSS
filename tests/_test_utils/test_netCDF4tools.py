@@ -33,7 +33,7 @@ from mslib.utils.netCDF4tools import (
     identify_variable, identify_CF_lonlat,
     identify_vertical_axis, identify_CF_time, num2date, get_latlon_data
 )
-from test_multidict.constants import DATA_DIR
+from tests.constants import DATA_DIR
 
 DATA_FILE_ML = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc")
 DATA_FILE_PL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc")
