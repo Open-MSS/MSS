@@ -221,13 +221,13 @@ Our tests are using the pytest framework. You could run tests serial and paralle
 
 ::
 
-   $ pytest mslib
+   $ pytest tests
 
 or parallel
 
 ::
 
-  $ pytest -n auto --dist loadscope --max-worker-restart 0 mslib
+  $ pytest -n auto --dist loadscope --max-worker-restart 0 tests
 
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
@@ -243,7 +243,7 @@ Coverage
 
 ::
 
-   $ pytest --cov mslib
+   $ pytest --cov mslib tests
 
 This plugin produces a coverage report, example::
 
