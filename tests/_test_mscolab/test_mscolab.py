@@ -49,7 +49,6 @@ class Test_Mscolab(TestCase):
     def setUp(self):
         db.init_app(self.app)
         handle_db_reset()
-        handle_db_init()
         assert Operation.query.all() == []
         assert User.query.all() == []
         assert Permission.query.all() == []
@@ -78,7 +77,6 @@ class Test_Mscolab(TestCase):
         assert all_operations == []
 
     def test_handle_db_seed(self):
-        handle_db_reset()
         all_operations = Operation.query.all()
         assert all_operations == []
         handle_db_seed()
