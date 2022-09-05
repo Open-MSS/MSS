@@ -24,9 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import logging
-
-from PyQt5 import QtWidgets, QtGui, QtCore, Qt
+from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import msui
 import threading
@@ -37,16 +35,17 @@ class MultipleFlightpath(object):
     Represent a Multiple FLightpath
     """
 
-    def __init__(self, mapcanvas, wp):
+    def __init__(self, mapcanvas, wp, linewidth=2):
         self.map = mapcanvas
         self.flightlevel = None
         self.comments = ''
         self.patches = []
         self.waypoints = wp
+        self.linewidth = linewidth
         self.draw()
 
     def draw_line(self, x, y):
-        self.patches.append(self.map.plot(x, y, color='blue', linewidth='2'))
+        self.patches.append(self.map.plot(x, y, color='blue', linewidth=self.linewidth))
 
     def compute_xy(self, lon, lat):
         x, y = self.map.gcpoints_path(lon, lat)
@@ -60,7 +59,9 @@ class MultipleFlightpath(object):
             lon.append(self.waypoints[i][1])
         return lat, lon
 
-    def update(self):
+    def update(self, linewidth=None):
+        if linewidth is not None:
+            self.linewidth = linewidth
         self.remove()
         self.draw()
 
@@ -190,15 +191,22 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         font = QtGui.QFont()
 
         for i in range(self.list_flighttrack.count()):
-            if self.dict_files[self.list_flighttrack.item(i).flighttrack_model]["patch"] is not None:
-                self.dict_files[self.list_flighttrack.item(i).flighttrack_model]["patch"].remove()
-                self.list_flighttrack.item(i).setCheckState(QtCore.Qt.Unchecked)
+            listItem = self.list_flighttrack.item(i)
             if self.active_flight_track == self.list_flighttrack.item(i).flighttrack_model:
                 font.setBold(True)
-                # self.list_flighttrack.item(i).setCheckState(QtCore.Qt.Unchecked)
+                if self.dict_files[listItem.flighttrack_model]["patch"] is not None:
+                    self.dict_files[listItem.flighttrack_model]["patch"].remove()
+                listItem.setCheckState(QtCore.Qt.Unchecked)
+                listItem.setFlags(listItem.flags() ^ QtCore.Qt.ItemIsUserCheckable)   # make activated track uncheckable
             else:
                 font.setBold(False)
-            self.list_flighttrack.item(i).setFont(font)
+                listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+            listItem.setFont(font)
+
+    def set_linewidth(self):
+        """
+        """
+        pass
 
     def drawInactiveFlighttracks(self):
         """
