@@ -35,17 +35,18 @@ class MultipleFlightpath(object):
     Represent a Multiple FLightpath
     """
 
-    def __init__(self, mapcanvas, wp, linewidth=2):
+    def __init__(self, mapcanvas, wp, linewidth=2, color='blue'):
         self.map = mapcanvas
         self.flightlevel = None
         self.comments = ''
         self.patches = []
         self.waypoints = wp
         self.linewidth = linewidth
+        self.color = color
         self.draw()
 
     def draw_line(self, x, y):
-        self.patches.append(self.map.plot(x, y, color='blue', linewidth=self.linewidth))
+        self.patches.append(self.map.plot(x, y, color=self.color, linewidth=self.linewidth))
 
     def compute_xy(self, lon, lat):
         x, y = self.map.gcpoints_path(lon, lat)
@@ -101,8 +102,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.listView.model().rowsRemoved.connect(self.flighttrackRemoved)
         self.listView.itemActivated.connect(self.activate_flighttrack)
         # Set flags
-        self.flag = 0
-        self.flag1 = 0
+        self.flighttrack_added = False
+        self.flighttrack_activated = False
 
         # Load default flighttrack.
         for index in range(self.listView.count()):
@@ -130,10 +131,10 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         t2.start()
 
     def flagop(self):
-        if self.flag == 1:       # New flighttrack added
-            self.flag = 0
-        elif self.flag1 == 1:    # Flighttrack activated
-            self.flag1 = 0
+        if self.flighttrack_added:
+            self.flighttrack_added = False
+        elif self.flighttrack_activated:
+            self.flighttrack_activated = False
         else:
             self.drawInactiveFlighttracks()
 
@@ -141,7 +142,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         Slot to add flighttrack.
         """
-        self.flag = 1
+        self.flighttrack_added = True
         wp_model = self.listView.item(start).flighttrack_model
         listItem = self.create_list_item(wp_model)
         self.save_waypoint_model_data(wp_model)
@@ -183,8 +184,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         Activate flighttrack
         """
-        if self.flag != 1:
-            self.flag1 = 1
+        if not self.flighttrack_added:
+            self.flighttrack_activated = True
         self.save_waypoint_model_data(self.active_flight_track)   # Before activating new flighttrack, update waypoints of previous flighttrack
         self.active_flight_track = item.flighttrack_model
 
