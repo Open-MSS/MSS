@@ -151,10 +151,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.activate_flighttrack(listItem)
 
     def save_waypoint_model_data(self, wp_model):
-        lst = []
-        for wp in wp_model.all_waypoint_data():
-            lst.append((wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments))
-        self.dict_files[wp_model]["wp_data"] = lst
+        wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
+        self.dict_files[wp_model]["wp_data"] = wp_data
 
     def create_list_item(self, wp_model):
         """
