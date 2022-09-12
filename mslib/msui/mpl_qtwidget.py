@@ -106,6 +106,24 @@ class MyTopViewFigure(MyFigure):
         # stores the  topview plot title size(tov_pts) and topview axes label size(tov_als),initially as None.
         self.tov_pts = None
         self.tov_als = None
+        # Sets the default fontsize parameters' values for topview from MSSDefaultConfig.
+        self.topview_size_settings = config_loader(dataset="topview")
+        # logging.debug("applying map appearance settings %s." % settings)
+        self.settings = {"draw_graticule": True,
+                        "draw_coastlines": True,
+                        "fill_waterbodies": True,
+                        "fill_continents": True,
+                        "draw_flighttrack": True,
+                        "draw_marker": True,
+                        "label_flighttrack": True,
+                        "tov_plot_title_size": "default",
+                        "tov_axes_label_size": "default",
+                        "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
+                        "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
+                        "colour_ft_vertices": (0, 0, 1, 1),
+                        "colour_ft_waypoints": (1, 0, 0, 1)}
+        self.appearance_settings = self.settings
+        self.ax.figure.canvas.draw()
 
     def get_map_appearance(self):
         """
@@ -155,60 +173,48 @@ class MyTopViewFigure(MyFigure):
             self.ax.set_title("Top view", horizontalalignment="left", x=0)
             self.ax.figure.canvas.draw()
 
+    def set_map(self):
+        self.set_map_appearance(self.settings)
+
     def set_map_appearance(self, settings_dict):
         """Apply settings from dictionary 'settings_dict' to the view.
         If settings is None, apply default settings.
         """
-        # logging.debug("applying map appearance settings %s." % settings)
-        settings = {"draw_graticule": True,
-                    "draw_coastlines": True,
-                    "fill_waterbodies": True,
-                    "fill_continents": True,
-                    "draw_flighttrack": True,
-                    "draw_marker": True,
-                    "label_flighttrack": True,
-                    "tov_plot_title_size": "default",
-                    "tov_axes_label_size": "default",
-                    "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
-                    "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
-                    "colour_ft_vertices": (0, 0, 1, 1),
-                    "colour_ft_waypoints": (1, 0, 0, 1)}
         if settings_dict is not None:
-            settings.update(settings_dict)
+            self.settings.update(settings_dict)
 
         # Stores the exact value of fontsize for topview plot title size(tov_pts)
-        self.tov_pts = (self.topview_size_settings["plot_title_size"] if settings["tov_plot_title_size"] == "default"
-                        else int(settings["tov_plot_title_size"]))
+        self.tov_pts = (self.topview_size_settings["plot_title_size"] if self.settings["tov_plot_title_size"] == "default"
+                        else int(self.settings["tov_plot_title_size"]))
         # Stores the exact value of fontsize for topview axes label size(tov_als)
-        self.tov_als = (self.topview_size_settings["axes_label_size"] if settings["tov_axes_label_size"] == "default"
-                        else int(settings["tov_axes_label_size"]))
+        self.tov_als = (self.topview_size_settings["axes_label_size"] if self.settings["tov_axes_label_size"] == "default"
+                        else int(self.settings["tov_axes_label_size"]))
 
-        self.appearance_settings = settings
         ax = self.ax
 
         if self.map is not None:
-            self.map.set_coastlines_visible(settings["draw_coastlines"])
-            self.map.set_fillcontinents_visible(visible=settings["fill_continents"],
-                                                land_color=settings["colour_land"],
-                                                lake_color=settings["colour_water"])
-            self.map.set_mapboundary_visible(visible=settings["fill_waterbodies"],
-                                             bg_color=settings["colour_water"])
-            self.waypoints_interactor.set_path_color(line_color=settings["colour_ft_vertices"],
-                                                     marker_facecolor=settings["colour_ft_waypoints"])
-            self.waypoints_interactor.show_marker = settings["draw_marker"]
-            self.waypoints_interactor.set_vertices_visible(settings["draw_flighttrack"])
-            self.waypoints_interactor.set_labels_visible(settings["label_flighttrack"])
+            self.map.set_coastlines_visible(self.settings["draw_coastlines"])
+            self.map.set_fillcontinents_visible(visible=self.settings["fill_continents"],
+                                                land_color=self.settings["colour_land"],
+                                                lake_color=self.settings["colour_water"])
+            self.map.set_mapboundary_visible(visible=self.settings["fill_waterbodies"],
+                                             bg_color=self.settings["colour_water"])
+            # self.waypoints_interactor.set_path_color(line_color=self.settings["colour_ft_vertices"],
+            #                                          marker_facecolor=self.settings["colour_ft_waypoints"])
+            # self.waypoints_interactor.show_marker = self.settings["draw_marker"]
+            # self.waypoints_interactor.set_vertices_visible(self.settings["draw_flighttrack"])
+            # self.waypoints_interactor.set_labels_visible(self.settings["label_flighttrack"])
 
             # Updates plot title size as selected from combobox labelled plot title size.
             ax.set_autoscale_on(False)
             ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
 
             # Updates graticule ticklabels/labels fontsize if draw_graticule is True.
-            if settings["draw_graticule"]:
+            if self.settings["draw_graticule"]:
                 self.map.set_graticule_visible(False)
                 self.map._draw_auto_graticule(self.tov_als)
             else:
-                self.map.set_graticule_visible(settings["draw_graticule"])
+                self.map.set_graticule_visible(self.settings["draw_graticule"])
 
     def redraw_map(self, kwargs_update=None):
         """Redraw map canvas.
@@ -453,7 +459,7 @@ class MySideViewFigure(MyFigure):
             self.fig.subplots_adjust(left=0.08, right=0.92, top=0.9, bottom=0.14)
             self.imgax.set_position(self.ax.get_position())
 
-    def redraw_xaxis(self, lats, lons, times):
+    def redraw_xaxis(self, lats, lons, times, times_visible):
         """Redraw the x-axis of the side view on path changes. Also remove
            a vertical section image if one exists, as it is invalid after
            a path change.
@@ -467,7 +473,7 @@ class MySideViewFigure(MyFigure):
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
 
-        if self.waypoints_model is not None and self.waypoints_model.performance_settings["visible"]:
+        if times_visible:
             self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}\n{d[2].strftime("%H:%M")}Z'
                                      for d in zip(lats[::tick_index_step],
                                                   lons[::tick_index_step],
@@ -1090,7 +1096,10 @@ class MplSideViewCanvas(MplCanvas):
            a vertical section image if one exists, as it is invalid after
            a path change.
         """
-        self.myfig.redraw_xaxis(lats, lons, times)
+        times_visible = False
+        if self.waypoints_model is not None:
+            times_visible = self.waypoints_model.performance_settings["visible"]
+        self.myfig.redraw_xaxis(lats, lons, times, times_visible)
 
         for _line in self.ceiling_alt:
             _line.remove()
@@ -1450,9 +1459,6 @@ class MplTopViewCanvas(MplCanvas):
         # Axes and image object to display the legend graphic, if available.
         self.legax = None
         self.legimg = None
-
-        # Sets the default fontsize parameters' values for topview from MSSDefaultConfig.
-        self.myfig.topview_size_settings = config_loader(dataset="topview")
 
         # Set map appearance from parameter or, if not specified, to default
         # values.
