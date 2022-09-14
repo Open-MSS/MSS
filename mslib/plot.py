@@ -85,7 +85,7 @@ class Plotting():
             self.config["predefined_map_sections"][section]["CRS"].lower())
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
         print(self.params)
-        print("hooo")
+        self.bbox_units = self.params["bbox"]
         self.wps = load_from_ftml(filename)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_presss = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
@@ -161,8 +161,7 @@ class TopViewPlotting(Plotting):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
-                ax_bounds = plt.gca().bbox.bounds
-                # ax_bounds = self.myfig.getBBOX()
+                ax_bounds = self.myfig.getBBOX(self.bbox_units)
                 width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
                 self.bbox = self.params['basemap']
 

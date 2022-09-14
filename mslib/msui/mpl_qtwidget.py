@@ -110,18 +110,18 @@ class MyTopViewFigure(MyFigure):
         self.topview_size_settings = config_loader(dataset="topview")
         # logging.debug("applying map appearance settings %s." % settings)
         self.settings = {"draw_graticule": True,
-                        "draw_coastlines": True,
-                        "fill_waterbodies": True,
-                        "fill_continents": True,
-                        "draw_flighttrack": True,
-                        "draw_marker": True,
-                        "label_flighttrack": True,
-                        "tov_plot_title_size": "default",
-                        "tov_axes_label_size": "default",
-                        "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
-                        "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
-                        "colour_ft_vertices": (0, 0, 1, 1),
-                        "colour_ft_waypoints": (1, 0, 0, 1)}
+                         "draw_coastlines": True,
+                         "fill_waterbodies": True,
+                         "fill_continents": True,
+                         "draw_flighttrack": True,
+                         "draw_marker": True,
+                         "label_flighttrack": True,
+                         "tov_plot_title_size": "default",
+                         "tov_axes_label_size": "default",
+                         "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
+                         "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
+                         "colour_ft_vertices": (0, 0, 1, 1),
+                         "colour_ft_waypoints": (1, 0, 0, 1)}
         self.appearance_settings = self.settings
         self.ax.figure.canvas.draw()
 
@@ -146,9 +146,10 @@ class MyTopViewFigure(MyFigure):
         self.ax.set_autoscale_on(False)
         self.ax.set_title("Top view", fontsize=self.tov_pts, horizontalalignment="left", x=0)
 
-    def getBBOX(self):
+    def getBBOX(self, bbox_units=None):
         axis = self.ax.axis()
-
+        if bbox_units is not None:
+            self.map.bbox_units = bbox_units
         if self.map.bbox_units == "degree":
             # Convert the current axis corners to lat/lon coordinates.
             axis0, axis2 = self.map(axis[0], axis[2], inverse=True)
