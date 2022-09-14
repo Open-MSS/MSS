@@ -6,6 +6,7 @@ import os
 import xml
 from fs import open_fs
 import PIL.Image
+import matplotlib
 
 import mslib
 import mslib.utils
@@ -78,65 +79,70 @@ class Plotting():
         self.bbox = None
         self.wms_cache = config_loader(dataset="wms_cache")
         self.fig = plt.figure()
-        for flight, section, vertical, filename, init_time, time in \
-            self.config["automated_plotting_flights"]:
-            self.params = mslib.utils.coordinate.get_projection_params(
-                self.config["predefined_map_sections"][section]["CRS"].lower())
-            self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
-            print(self.params)
-            print("hooo")
-            self.wps = load_from_ftml(filename)
-            self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
-            self.wp_presss = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
-            self.fig.clear()
-            self.ax = self.fig.add_subplot(111, zorder=99)
-            self.path = [(wp[0], wp[1], datetime.datetime.now()) for wp in self.wps]
-            self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path], [_x[1] for _x in self.path],
-                                                                      numpoints=self.num_interpolation_points + 1,
-                                                                      connection="greatcircle")
+        section = self.config["automated_plotting_flights"][0][1]
+        filename = self.config["automated_plotting_flights"][0][3]
+        self.params = mslib.utils.coordinate.get_projection_params(
+            self.config["predefined_map_sections"][section]["CRS"].lower())
+        self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
+        print(self.params)
+        print("hooo")
+        self.wps = load_from_ftml(filename)
+        self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
+        self.wp_presss = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
+        self.fig.clear()
+        self.ax = self.fig.add_subplot(111, zorder=99)
+        self.path = [(wp[0], wp[1], datetime.datetime.now()) for wp in self.wps]
+        self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path], [_x[1] for _x in self.path],
+                                                                  numpoints=self.num_interpolation_points + 1,
+                                                                  connection="greatcircle"
+                                                                  )
 
 
-class HsecPlotting(Plotting):
+class TopViewPlotting(Plotting):
     def __init__(self):
-        super(HsecPlotting, self).__init__()
+        super(TopViewPlotting, self).__init__()
         self.myfig = qt.MyTopViewFigure()
-        self.myfig.fig.clear()
         self.myfig.fig.canvas.draw()
         self.line = None
 
-    def HsecPath(self):
-        self.myfig.fig.clear()
+    def TopViewPath(self):
+        matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
         self.ax = self.myfig.ax
+        self.fig = self.myfig.fig
         self.myfig.init_map(**(self.params["basemap"]))
+        self.myfig.set_map()
 
         # plot path
-        self.myfig.fig.canvas.draw()
+        self.fig.canvas.draw()
         self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
         x, y = self.myfig.map.gcpoints_path([a[0] for a in self.vertices], [a[1] for a in self.vertices])
         x, y = self.myfig.map(self.wp_lons, self.wp_lats)
         self.vertices = list(zip(x, y))
         if self.line is None:
-            line, = self.myfig.ax.plot(x, y, color="blue", linestyle='-', linewidth=2, zorder=100)
+            line, = self.ax.plot(x, y, color="blue", linestyle='-', linewidth=2, zorder=100)
         line.set_data(list(zip(*self.vertices)))
-        self.myfig.ax.draw_artist(line)
-        wp_scatter = self.myfig.ax.scatter(x, y, color="red", s=20, zorder=3, animated=True, visible=True)
-        self.myfig.ax.draw_artist(wp_scatter)
+        self.ax.draw_artist(line)
+        wp_scatter = self.ax.scatter(x, y, color="red", s=20, zorder=3, animated=True, visible=True)
+        self.ax.draw_artist(wp_scatter)
 
-    def HsecLabel(self):
+    def TopViewLabel(self):
+        wp_labels = []
+        textlabel = []
         x, y = list(zip(*self.vertices))
         for i in range(len(self.wps)):
-            textlabel = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}   "
+            tl = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}   "
+            textlabel.append(tl)
             x, y = self.myfig.map(self.wp_lons, self.wp_lats)
-            wp_labels = self.plotlabel(x, y, textlabel, len(self.wps))
-            for t in wp_labels:
-                self.myfig.ax.draw_artist(t)
+        wp_labels = self.PlotLabel(x, y, textlabel, len(self.wps))
+        for t in wp_labels:
+            self.ax.draw_artist(t)
 
-    def plotlabel(self, x, y, textlabel, len_wps):
+    def PlotLabel(self, x, y, textlabel, len_wps):
         wp_labels = []
         for i in range(len_wps):
-            t = self.myfig.ax.text(x[i],
+            t = self.ax.text(x[i],
                              y[i],
-                             textlabel,
+                             textlabel[i],
                              bbox=dict(boxstyle="round",
                                        facecolor="white",
                                        alpha=0.5,
@@ -147,15 +153,16 @@ class HsecPlotting(Plotting):
                              animated=True,
                              clip_on=True,
                              visible=True
-                        )
+                            )
             wp_labels.append(t)
         return wp_labels
 
-    def HsecRetrieve(self):
+    def TopViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
                 ax_bounds = plt.gca().bbox.bounds
+                # ax_bounds = self.myfig.getBBOX()
                 width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
                 self.bbox = self.params['basemap']
 
@@ -186,8 +193,7 @@ class HsecPlotting(Plotting):
                 image_io = io.BytesIO(img.read())
                 img = PIL.Image.open(image_io)
                 self.myfig.draw_image(img)
-                self.myfig.set_map()
-                self.fig.savefig(f"{flight}_{layer}.png")
+                self.myfig.fig.savefig(f"{flight}_{layer}.png")
 
 
 class VsecPlotting(Plotting):
@@ -491,10 +497,10 @@ class LsecPlotting(Plotting):
 
 
 def main():
-    h = HsecPlotting()
-    h.HsecPath()
-    h.HsecLabel()
-    h.HsecRetrieve()
+    h = TopViewPlotting()
+    h.TopViewPath()
+    h.TopViewLabel()
+    h.TopViewDraw()
     v = VsecPlotting()
     v.setup()
     v.VsecPath()

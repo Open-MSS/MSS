@@ -307,13 +307,15 @@ class MySideViewFigure(MyFigure):
     _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
-    def __init__(self, fig=None, ax=None, settings=None, numlabels=None):
+    def __init__(self, fig=None, ax=None, settings=None, numlabels=None, num_interpolation_points=None):
         """
         Arguments:
         model -- WaypointsTableModel defining the vertical section.
         """
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
+        if num_interpolation_points is None:
+            num_interpolation_points = config_loader(dataset='num_interpolation_points')
         super().__init__(fig, ax)
 
         # Default settings.
@@ -338,6 +340,7 @@ class MySideViewFigure(MyFigure):
             self.settings_dict.update(settings)
 
         self.numlabels = numlabels
+        self.num_interpolation_points = num_interpolation_points
         self.ax2 = self.ax.twinx()
         self.ax.patch.set_facecolor("None")
         self.ax2.patch.set_facecolor("None")
@@ -487,6 +490,24 @@ class MySideViewFigure(MyFigure):
                                     rotation=25, horizontalalignment="right")
 
         self.ax.figure.canvas.draw()
+
+    def getBBOX(self):
+        """Get the bounding box of the view (returns a 4-tuple
+           x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])).
+        """
+        # Get the bounding box of the current view
+        # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat; i.e. for the side
+        #  view bbox = x1, y1(p_bot), x2, y2(p_top)).
+        axis = self.ax.axis()
+
+        num_interpolation_points = self.num_interpolation_points
+        num_labels = self.numlabels
+
+        # Return a tuple (num_interpolation_points, p_bot[hPa],
+        #                 num_labels, p_top[hPa]) as BBOX.
+        bbox = (num_interpolation_points, (axis[2] / 100),
+                num_labels, (axis[3] / 100))
+        return bbox
 
     def clear_figure(self):
         logging.debug("path of side view has changed.. removing invalidated "
@@ -1252,11 +1273,13 @@ class MplSideViewCanvas(MplCanvas):
                 self.waypoints_interactor.get_num_interpolation_points()
             num_labels = self.numlabels
 
-        # Return a tuple (num_interpolation_points, p_bot[hPa],
-        #                 num_labels, p_top[hPa]) as BBOX.
-        bbox = (num_interpolation_points, (axis[2] / 100),
-                num_labels, (axis[3] / 100))
-        return bbox
+            # Return a tuple (num_interpolation_points, p_bot[hPa],
+            #                 num_labels, p_top[hPa]) as BBOX.
+            bbox = (num_interpolation_points, (axis[2] / 100),
+                    num_labels, (axis[3] / 100))
+            return bbox
+        else:
+            self.myfig.getBBOX()
 
     def draw_legend(self, img):
         if img is not None:
