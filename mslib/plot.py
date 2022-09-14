@@ -161,8 +161,7 @@ class TopViewPlotting(Plotting):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
-                ax_bounds = self.myfig.getBBOX(self.bbox_units)
-                width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
+                width, height = self.myfig.get_plot_size_in_px()
                 self.bbox = self.params['basemap']
 
                 if not init_time:

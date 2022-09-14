@@ -96,6 +96,16 @@ class MyFigure(object):
         # Set title.
         self.ax.set_title(title, horizontalalignment='left', x=0)
 
+    def get_plot_size_in_px(self):
+        """Determines the size of the current figure in pixels.
+        Returns the tuple width, height.
+        """
+        # (bounds = left, bottom, width, height)
+        ax_bounds = self.ax.bbox.bounds
+        width = int(round(ax_bounds[2]))
+        height = int(round(ax_bounds[3]))
+        return width, height
+
 
 class MyTopViewFigure(MyFigure):
     def __init__(self, fig=None, ax=None):
@@ -723,11 +733,7 @@ class MplCanvas(FigureCanvasQTAgg):
         """Determines the size of the current figure in pixels.
         Returns the tuple width, height.
         """
-        # (bounds = left, bottom, width, height)
-        ax_bounds = self.myfig.ax.bbox.bounds
-        width = int(round(ax_bounds[2]))
-        height = int(round(ax_bounds[3]))
-        return width, height
+        return self.myfig.get_plot_size_in_px()
 
 
 def _getSaveFileName(parent, title="Choose a filename to save to", filename="test.png",
