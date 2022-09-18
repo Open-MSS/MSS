@@ -496,11 +496,33 @@ class MySideViewFigure(MyFigure):
         else:
             self.ax.set_xticklabels([f"{d[0]:2.1f}, {d[1]:2.1f}"
                                      for d in zip(lats[::tick_index_step],
-                                                  lons[::tick_index_step],
-                                                  times[::tick_index_step])],
+                                                  lons[::tick_index_step])],
                                     rotation=25, horizontalalignment="right")
 
         self.ax.figure.canvas.draw()
+
+    def draw_vertical_lines(self, highlight, lats, lons):
+        # Remove all vertical lines
+        for line in self.vertical_lines[:]:
+            try:
+                self.ax.lines.remove(line)
+            except ValueError as e:
+                logging.debug(f"Vertical line was somehow already removed:\n{e}")
+            self.vertical_lines.remove(line)
+
+        # Add vertical lines
+        if self.settings_dict["draw_verticals"]:
+            ipoint = 0
+            for i, (lat, lon) in enumerate(zip(lats, lons)):
+                if (ipoint < len(highlight) and
+                        np.hypot(lat - highlight[ipoint][0],
+                                 lon - highlight[ipoint][1]) < 2E-10):
+                    self.vertical_lines.append(
+                        self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
+                    ipoint += 1
+        # self.fig.tight_layout()
+        # self.fig.subplots_adjust(top=0.85, bottom=0.20)
+        self.fig.canvas.draw()
 
     def getBBOX(self):
         """Get the bounding box of the view (returns a 4-tuple
@@ -619,6 +641,39 @@ class MyLinearViewFigure(MyFigure):
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.ax.figure.patch.set_visible(False)
 
+    def redraw_xaxis(self, lats, lons):
+        # Re-label x-axis.
+        self.ax.set_xlim(0, len(lats) - 1)
+        # Set xticks so that they display lat/lon. Plot "numlabels" labels.
+        lat_inds = np.arange(len(lats))
+        tick_index_step = len(lat_inds) // self.numlabels
+        self.ax.set_xticks(lat_inds[::tick_index_step])
+        self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
+                                        for d in zip(lats[::tick_index_step],
+                                                    lons[::tick_index_step])],
+                                        rotation=25, horizontalalignment="right")
+
+        # Remove all vertical lines
+        for line in self.vertical_lines[:]:
+            try:
+                self.ax.lines.remove(line)
+            except ValueError as e:
+                logging.debug(f"Vertical line was somehow already removed:\n{e}")
+            self.vertical_lines.remove(line)
+
+    def draw_vertical_lines(self, highlight, lats, lons):
+        # draw vertical lines
+        vertical_lines = []
+        ipoint = 0
+        for i, (lat, lon) in enumerate(zip(lats, lons)):
+            if (ipoint < len(highlight) and np.hypot(lat - highlight[ipoint][0],
+                lon - highlight[ipoint][1]) < 2E-10):
+                vertical_lines.append(self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
+                ipoint += 1
+        self.fig.tight_layout()
+        self.fig.subplots_adjust(top=0.85, bottom=0.20)
+        self.fig.canvas.draw()
+
     def draw_legend(self, img):
         if img is not None:
             logging.error("Legends not supported in LinearView mode!")
@@ -655,11 +710,6 @@ class MyLinearViewFigure(MyFigure):
                 par.set_ylabel(unit)
 
             par.yaxis.label.set_color(color.replace("0x", "#"))
-        self.redraw_xaxis()
-        self.fig.tight_layout()
-        self.fig.subplots_adjust(top=0.85, bottom=0.20)
-        # self.set_settings(self.settings_dict)
-        self.ax.figure.canvas.draw()
 
     def get_settings(self):
         """Returns a dictionary containing settings regarding the linear view
@@ -1153,28 +1203,8 @@ class MplSideViewCanvas(MplCanvas):
                 self.update_ceiling(
                     self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.myfig.settings_dict["colour_ceiling"])
-
-            # Remove all vertical lines
-            for line in self.vertical_lines[:]:
-                try:
-                    self.myfig.ax.lines.remove(line)
-                except ValueError as e:
-                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
-                self.vertical_lines.remove(line)
-
-            # Add vertical lines
-            if self.myfig.settings_dict["draw_verticals"]:
-                ipoint = 0
                 highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
-                for i, (lat, lon) in enumerate(zip(lats, lons)):
-                    if (ipoint < len(highlight) and
-                            np.hypot(lat - highlight[ipoint][0],
-                                     lon - highlight[ipoint][1]) < 2E-10):
-                        self.vertical_lines.append(
-                            self.myfig.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
-                        ipoint += 1
-
-        self.draw()
+                self.myfig.draw_vertical_lines(highlight, lats, lons)
 
     def get_vertical_extent(self):
         """Returns the bottom and top pressure (hPa) of the plot.
@@ -1406,6 +1436,7 @@ class MplLinearViewCanvas(MplCanvas):
 
     def draw_image(self, xmls, colors=None, scales=None):
         self.myfig.draw_image(xmls, colors, scales)
+        self.redraw_xaxis()
 
     def redraw_xaxis(self):
         """Redraw the x-axis of the linear view on path changes.
@@ -1415,34 +1446,10 @@ class MplLinearViewCanvas(MplCanvas):
             lons = self.waypoints_interactor.path.ilons
             logging.debug("redrawing x-axis")
 
-            # Re-label x-axis.
-            self.myfig.ax.set_xlim(0, len(lats) - 1)
-            # Set xticks so that they display lat/lon. Plot "numlabels" labels.
-            lat_inds = np.arange(len(lats))
-            tick_index_step = len(lat_inds) // self.numlabels
-            self.myfig.ax.set_xticks(lat_inds[::tick_index_step])
-            self.myfig.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
-                                           for d in zip(lats[::tick_index_step],
-                                                        lons[::tick_index_step])],
-                                          rotation=25, horizontalalignment="right")
+            self.myfig.redraw_xaxis(lats, lons)
 
-            # Remove all vertical lines
-            for line in self.vertical_lines[:]:
-                try:
-                    self.myfig.ax.lines.remove(line)
-                except ValueError as e:
-                    logging.debug(f"Vertical line was somehow already removed:\n{e}")
-                self.vertical_lines.remove(line)
-
-            ipoint = 0
             highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
-            for i, (lat, lon) in enumerate(zip(lats, lons)):
-                if (ipoint < len(highlight) and
-                        np.hypot(lat - highlight[ipoint][0],
-                                 lon - highlight[ipoint][1]) < 2E-10):
-                    self.vertical_lines.append(self.myfig.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
-                    ipoint += 1
-            self.draw()
+            self.myfig.draw_vertical_lines(highlight, lats, lons)
 
     def set_settings(self, settings):
         """
