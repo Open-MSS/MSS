@@ -520,8 +520,6 @@ class MySideViewFigure(MyFigure):
                     self.vertical_lines.append(
                         self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
                     ipoint += 1
-        # self.fig.tight_layout()
-        # self.fig.subplots_adjust(top=0.85, bottom=0.20)
         self.fig.canvas.draw()
 
     def getBBOX(self):

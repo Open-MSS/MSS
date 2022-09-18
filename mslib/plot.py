@@ -287,7 +287,7 @@ class SideViewPlotting(Plotting):
                 image_io = io.BytesIO(img.read())
                 img = PIL.Image.open(image_io)
                 self.myfig.draw_image(img)
-                self.myfig.fig.savefig(f"{flight}_{layer}.png")
+                self.myfig.fig.savefig(f"{flight}_{layer}.png", bbox_inches='tight')
 
 
 class LinearViewPlotting(Plotting):
