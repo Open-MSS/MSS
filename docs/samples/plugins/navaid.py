@@ -33,11 +33,11 @@ from geographiclib.geodesic import Geodesic
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
 
-def radial_dme(lat, lon, elev=12., test_date=datetime.date.today(), maxdist = 250.):
+def radial_dme(lat, lon, elev=12., test_date=datetime.date.today(), maxdist=250.):
     # Read the list of NAVAIDs
     # PATH needs to be replaced by generic
     navaid_file = os.path.join(MSUI_CONFIG_PATH, 'plugins', 'NAVAID_System.csv')
-    navaid = open(navaid_file, encoding='utf-8-sig' )
+    navaid = open(navaid_file, encoding='utf-8-sig')
     csvreader = csv.reader(navaid)
     header = next(csvreader)
     ix = header.index('X')
@@ -113,7 +113,9 @@ def save_to_navaid(filename, name, waypoints):
             max_com_len = len(str(wp.comments))
     with codecs.open(filename, "w", encoding="utf-8") as out_file:
         out_file.write(u"# Do not modify if you plan to import this file again!\n")
-        out_file.write(u"# This file contains NAVAID-DME names for points less than {0:.0f} nm distance from closest NAVAID point\n".format(maxdist))
+        out_file.write(
+            f"# This file contains NAVAID-DME names for points less than {maxdist:.0f} "
+            "nm distance from closest NAVAID point\n")
         out_file.write(f"Track name: {name:}\n")
         line = u"{0:5d}  {1:{2}} {3:11} {4:4.0f}° {5:02.0f}'  {6:4.0f}° {7:02.0f}' {8:7.1f} {9:7.1f}  {10:8.1f}" \
                u"  {11:8.1f}  {12:{13}}\n"

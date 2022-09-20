@@ -328,7 +328,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     empty = True
                     color = QtCore.Qt.red
                 # check if any duplicate values
-                if len(set(values_list)) != len(values_list):
+                if len(set([tuple(_x) if isinstance(_x, list) else _x for _x in values_list])) != len(values_list):
                     duplicate = True
                     color = QtCore.Qt.red
             elif key == 'filepicker_default':

@@ -148,12 +148,12 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
             self.docks[WMS].widget().setFlightTrackModel(model)
 
     def set_options(self):
-        settings = self.getView().get_settings()
+        settings = self.getView().myfig.get_settings()
         dlg = MSUI_LV_Options_Dialog(parent=self, settings_dict=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
-            self.getView().set_settings(settings)
+            self.getView().myfig.set_settings(settings)
             self.save_settings()
         dlg.destroy()
 
@@ -161,7 +161,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         """
         Save the current settings of plot options to the file self.settingsfile.
         """
-        settings = self.getView().get_settings()
+        settings = self.getView().myfig.get_settings()
         save_settings_qsettings(self.settings_tag, settings)
 
     def load_settings(self):
@@ -169,4 +169,4 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         Load settings from the file self.settingsfile.
         """
         settings = load_settings_qsettings(self.settings_tag)
-        self.getView().set_settings(settings)
+        self.getView().myfig.set_settings(settings)

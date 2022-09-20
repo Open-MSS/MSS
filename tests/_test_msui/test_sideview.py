@@ -223,7 +223,7 @@ class Test_SideViewWMS(object):
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.image_displayed)
-        assert self.window.getView().image is not None
-        self.window.getView().clear_figure()
-        assert self.window.getView().image is None
+        assert self.window.getView().myfig.image is not None
+        self.window.getView().myfig.clear_figure()
+        assert self.window.getView().myfig.image is None
         assert mockbox.critical.call_count == 0
