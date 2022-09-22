@@ -1749,6 +1749,9 @@ class MSUIMscolab(QtCore.QObject):
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
 
+        # disable category change selector
+        self.ui.filterCategoryCb.setEnabled(False)
+
         # Don't try to activate local flighttrack while testing
         if "pytest" not in sys.modules:
             # activate first local flighttrack after logging out
