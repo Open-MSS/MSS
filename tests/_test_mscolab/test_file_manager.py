@@ -221,7 +221,16 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content1, self.user)
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
+            # creator
             assert self.fm.set_version_name(all_changes[1]["id"], operation.id, self.user.id, "THIS")
+            # check collaborator
+            self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation.id)
+            assert self.fm.set_version_name(all_changes[1]["id"], operation.id, self.collaboratoruser.id, "THIS")
+            # check viewer
+            self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.is_viewer(self.vieweruser.id, operation.id)
+            assert self.fm.set_version_name(all_changes[1]["id"], operation.id, self.vieweruser.id, "THIS") is False
 
     def test_undo(self):
         with self.app.test_client():
@@ -230,7 +239,16 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content1, self.user)
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
+            # crestor
             assert self.fm.undo(all_changes[1]["id"], self.user)
+            # check collaborator
+            self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation.id)
+            assert self.fm.undo(all_changes[1]["id"], self.collaboratoruser)
+            # check viewer
+            self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.is_viewer(self.vieweruser.id, operation.id)
+            assert self.fm.undo(all_changes[1]["id"], self.vieweruser) is False
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
