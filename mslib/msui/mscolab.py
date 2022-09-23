@@ -597,8 +597,8 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.actionUpdateOperationDesc.setEnabled(False)
             # disable delete operation button
             self.ui.actionDeleteOperation.setEnabled(False)
-            # disable category change selector
-            self.ui.filterCategoryCb.setEnabled(False)
+            # enable category change selector
+            self.ui.filterCategoryCb.setEnabled(True)
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
@@ -1396,7 +1396,11 @@ class MSUIMscolab(QtCore.QObject):
                     categories.add(operation["category"])
                 categories.remove("ANY")
                 categories = ["ANY"] + sorted(categories)
+                category = config_loader(dataset="MSCOLAB_category")
                 self.ui.filterCategoryCb.addItems(categories)
+                if category in categories:
+                    index = categories.index(category)
+                    self.ui.filterCategoryCb.setCurrentIndex(index)
 
     def add_operations_to_ui(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -1744,6 +1748,9 @@ class MSUIMscolab(QtCore.QObject):
         if self.mscolab_server_url in self.settings["auth"].keys():
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
+
+        # disable category change selector
+        self.ui.filterCategoryCb.setEnabled(False)
 
         # Don't try to activate local flighttrack while testing
         if "pytest" not in sys.modules:
