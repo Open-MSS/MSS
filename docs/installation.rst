@@ -17,10 +17,10 @@ This channel conda-forge has builds for osx-64, linux-64, win-64
 The conda-forge `github organization <https://conda-forge.github.io/>`_ uses various automated continuos integration
 build processes.
 
-To install MSS you need the conda installer or its drop-in replacement the mamba installer. We explain below how you
-get by the conda installer the mamba installer. Mamba is a fast cross platform installerr.
+We provide an automatic installation and a manual installation.
 
-Automatic installation
+
+Automatic Installation
 ++++++++++++++++++++++
 
 * For **Windows**, go `here <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
@@ -41,8 +41,12 @@ Automatic installation
 
     * For fully automatic installation, run it with the -a parameter :code:`./LinuxMac.sh -a`
 
-Preparations for installing MSS
-+++++++++++++++++++++++++++++++
+Manual Installation
++++++++++++++++++++
+
+To install MSS you need the conda installer or its drop-in replacement the mamba installer. We explain below how you
+get by the conda installer the mamba installer. Mamba is a fast cross platform installer.
+
 
 The fastest way to get the conda installer is to start with Miniconda or Miniforge.
 This is a small subset of the Anaconda package with only the conda installer and its dependencies.
@@ -57,8 +61,8 @@ If you are an Advanced User you know that `Anaconda <https://docs.continuum.io/a
 or `Miniforge <https://github.com/conda-forge/miniforge/>`_ are compatible too.
 
 
-conda-forge channel
-+++++++++++++++++++++
+Add the conda-forge channel
+---------------------------
 
 Please add the channel conda-forge to your defaults::
 
@@ -67,7 +71,7 @@ Please add the channel conda-forge to your defaults::
 The conda-forge channel must be on top of the list before the anaconda default channel.
 
 Install
-+++++++
+-------
 
 You must install mss into a new environment to ensure the most recent
 versions for dependencies (On the Anaconda Prompt on Windows, you have to 
@@ -78,10 +82,11 @@ leave out the 'source' here and below). ::
     (mssenv) $ mamba install mss=$mss_version python
     (mssenv) $ msui
 
+
 Update
 ++++++
 
-builtin update
+Builtin Update
 --------------
 
 With 5.0 we provide a new feature for updating MSS by the UI or the command line
@@ -92,12 +97,12 @@ From the command line you can trigger this update feature by ::
 
 
 
-other methods
+Other Methods
 -------------
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If your current version is not far behind the new version
-you could try the mamba update mss as described.
+you could try the `mamba update mss` as described.
 
 
 .. Important::
@@ -115,7 +120,7 @@ compare what you have installed ::
 
    (mssenv) $ mamba list mss
 
-     mss                            3.0.2     py39hf3d152e_0    conda-forge
+     mss                            7.0.2     py310hff52083_0    conda-forge
 
 
 We have reports that often an update suceeds by using the install option and the new version number,
@@ -134,7 +139,7 @@ For further details of configurating mss :ref:`msui-configuration`
 
 
 Server based installation
-~~~~~~~~~~~~~~~~~~~~~~~~~
++++++++++++++++++++++++++
 
 For a wms server setup or mscolab setup you may want to have a dedicated user for the apache2 wsgi script.
 We suggest to create a mss user.
@@ -164,8 +169,8 @@ Point a browser for the verification of both servers installed on
 Further details in the components section on `<http://mss.rtfd.io>`_
 
 
-Based on Docker
-+++++++++++++++
+Use Docker
+++++++++++
 
 You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_
 
@@ -189,8 +194,8 @@ The WMS server initialized by demodata, and the mscolab server and the userinter
 
 
 
-Based on Singularity
-++++++++++++++++++++
+Use Singularity
++++++++++++++++
 
 You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_ by converting them to singularity
 or build from our `singularity definition <https://github.com/Open-MSS/singularity>`_

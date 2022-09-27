@@ -430,6 +430,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
         self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
+        # disable category until connected/login into mscolab
+        self.filterCategoryCb.setEnabled(False)
+
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
