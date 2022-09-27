@@ -35,7 +35,7 @@ import skyfield_data
 from PyQt5 import QtGui, QtWidgets
 from mslib.utils.qt import ui_remotesensing_dockwidget as ui
 from mslib.utils.time import jsec_to_datetime, datetime_to_jsec
-from mslib.utils.coordinate import get_distance, rotate_point, fix_angle
+from mslib.utils.coordinate import get_distance, rotate_point, fix_angle, normalize_longitude
 
 
 EARTH_RADIUS = 6371.
@@ -155,25 +155,33 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         """
         x, y = list(zip(*wp_vertices))
         wp_lons, wp_lats = bmap(x, y, inverse=True)
+        if bmap.projection == "cyl":  # hack for wraparound
+            wp_lons = normalize_longitude(wp_lons, -180, 180)
         fine_lines = [bmap.gcpoints2(
                       wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], del_s=10., map_coords=False)
                       for i in range(len(wp_lons) - 1)]
         line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0]))
                         for i in range(len(fine_lines))]
         # fine_lines = list of tuples with x-list and y-list for each segment
-        tplines = [self.tangent_point_coordinates(
-            fine_lines[i][0], fine_lines[i][1], line_heights[i],
-            cut_height=self.dsbTangentHeight.value()) for i in range(len(fine_lines))]
-        dirlines = self.direction_coordinates(wp_lons, wp_lats)
-        lines = tplines + dirlines
+        tp_lines = [self.tangent_point_coordinates(
+            _fine_line[0], _fine_line[1], _line_height,
+            cut_height=self.dsbTangentHeight.value())
+            for _fine_line, _line_height in zip(fine_lines, line_heights)]
+        dir_lines = self.direction_coordinates(fine_lines)
+        lines = tp_lines + dir_lines
         for i, line in enumerate(lines):
-            for j, (lon, lat) in enumerate(line):
-                line[j] = bmap(lon, lat)
+            line = np.asarray(line)
+            if bmap.projection == "cyl":  # hack for wraparound
+                line[:, 0], line[:, 1] = bmap(
+                    normalize_longitude(line[:, 0], bmap.llcrnrlon, bmap.urcrnrlon),
+                    line[:, 1])
+            else:
+                line[:, 0], line[:, 1] = bmap(line[:, 0], line[:, 1])
             lines[i] = line
         return LineCollection(
             lines,
             colors=QtGui.QPalette(self.btTangentsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
-            zorder=2, animated=True, linewidth=3, linestyles=[':'] * len(tplines) + ['-'] * len(dirlines))
+            zorder=2, animated=True, linewidth=3, linestyles=[':'] * len(tp_lines) + ['-'] * len(dir_lines))
 
     def compute_solar_lines(self, bmap, wp_vertices, wp_heights, wp_times, solartype):
         """
@@ -196,7 +204,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         times = [datetime_to_jsec(_wp_time) for _wp_time in wp_times]
         x, y = list(zip(*wp_vertices))
         wp_lons, wp_lats = bmap(x, y, inverse=True)
-
+        if bmap.projection == "cyl":  # hack for wraparound
+            wp_lons = normalize_longitude(wp_lons, bmap.llcrnrlon, bmap.urcrnrlon)
         fine_lines = [bmap.gcpoints2(wp_lons[i], wp_lats[i], wp_lons[i + 1], wp_lats[i + 1], map_coords=False) for i in
                       range(len(wp_lons) - 1)]
         line_heights = [np.linspace(wp_heights[i], wp_heights[i + 1], num=len(fine_lines[i][0])) for i in
@@ -219,6 +228,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             solar_y.extend(fine_lines[i][1][:-1])
         solar_x.extend(fine_lines[-1][0])
         solar_y.extend(fine_lines[-1][1])
+        if bmap.projection == "cyl":  # hack for wraparound
+            solar_x = normalize_longitude(solar_x, bmap.llcrnrlon, bmap.urcrnrlon)
         points = []
         old_wp = None
         total_distance = 0
@@ -266,6 +277,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         Returns: List of tuples of longitude/latitude coordinates
 
         """
+        med_lon = np.median(lon_lin)
+        lon_lin = normalize_longitude(lon_lin, med_lon - 180, med_lon + 180)
         lins = list(zip(lon_lin[0:-1], lon_lin[1:], lat_lin[0:-1], lat_lin[1:]))
         lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
                 for x0, x1, y0, y1 in lins]
@@ -290,7 +303,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         tps = [(x0 / np.cos(np.deg2rad(yp)), y0) for (x0, y0, yp) in tps]
         return tps
 
-    def direction_coordinates(self, lon_lin, lat_lin):
+    def direction_coordinates(self, gc_lines):
         """
         Computes coordinates of tangent points given coordinates of flight path.
 
@@ -303,10 +316,12 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         Returns: List of tuples of longitude/latitude coordinates
 
         """
-        lins = list(zip(lon_lin[0:-1], lon_lin[1:], lat_lin[0:-1], lat_lin[1:]))
+        lins = [(_line[0][mid], _line[0][mid + 1],
+                 _line[1][mid], _line[1][mid + 1]) for _line, mid in
+                zip(gc_lines, [len(_line[0]) // 2 for _line in gc_lines])]
+        lens = [np.hypot(_line[0][0] - _line[0][-1], _line[0][0] - _line[0][-1]) * 110. for _line in gc_lines]
         lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
                 for x0, x1, y0, y1 in lins]
-        lens = [np.hypot(x1 - x0, y1 - y0) * 110. for x0, x1, y0, y1 in lins]
         lins = [_x for _x, _l in zip(lins, lens) if _l > 10]
 
         direction = [(0.5 * (x0 + x1), 0.5 * (y0 + y1), x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
@@ -315,7 +330,6 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         los = [rotate_point(point[2:], -self.dsbObsAngleAzimuth.value()) for point in direction]
 
         dist = 1.
-
         tp_dir = (np.array(los).T * dist).T
 
         tps = [(x0, y0, x0 + tp_x, y0 + tp_y) for

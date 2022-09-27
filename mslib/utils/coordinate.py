@@ -86,6 +86,20 @@ def fix_angle(ang):
     return ang
 
 
+def normalize_longitude(lons, lon_min, lon_max):
+    """
+    normalizes longitudes to a given range.
+    The delta should fix longitudes of lines going
+    across the boundaries, but will fail eventually.
+    This is not cleanly fixable with basemap.
+    """
+    lons = np.asarray(lons)
+    delta = (360 - (lon_max - lon_min)) * 0.5
+    lons[lons < lon_min - delta] += 360
+    lons[lons > lon_max + delta] -= 360
+    return lons
+
+
 def rotate_point(point, angle, origin=(0, 0)):
     """Rotates a point. Angle is in degrees.
     Rotation is counter-clockwise"""
