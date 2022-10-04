@@ -316,10 +316,12 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         Returns: List of tuples of longitude/latitude coordinates
 
         """
-        lins = [(_line[0][mid], _line[0][mid + 1],
-                 _line[1][mid], _line[1][mid + 1]) for _line, mid in
-                zip(gc_lines, [len(_line[0]) // 2 for _line in gc_lines])]
-        lens = [np.hypot(_line[0][0] - _line[0][-1], _line[0][0] - _line[0][-1]) * 110. for _line in gc_lines]
+        lins = [(_line[0][mid], _line[0][mid + 1], _line[1][mid], _line[1][mid + 1])
+                for _line, mid in zip(gc_lines, [len(_line[0]) // 2 for _line in gc_lines])
+                if len(_line[0]) > 2]
+        lens = [np.hypot(_line[0][0] - _line[0][-1], _line[0][0] - _line[0][-1]) * 110.
+                for _line in gc_lines
+                if len(_line[0]) > 2]
         lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
                 for x0, x1, y0, y1 in lins]
         lins = [_x for _x, _l in zip(lins, lens) if _l > 10]
