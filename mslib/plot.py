@@ -26,6 +26,8 @@ import defusedxml.ElementTree as etree
 import hashlib
 from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
+from mslib.msui import mpl_pathinteractor as mpath
+from mslib.msui import flighttrack as ft
 
 
 TEXT_CONFIG = {
@@ -82,6 +84,8 @@ class Plotting():
         self.fig = plt.figure()
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
+        ftrack = ft.WaypointsTableModel(filename=filename)
+        self.wp_model = ftrack.all_waypoint_data()
         self.params = mslib.utils.coordinate.get_projection_params(
             self.config["predefined_map_sections"][section]["CRS"].lower())
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
@@ -112,51 +116,12 @@ class TopViewPlotting(Plotting):
         self.fig = self.myfig.fig
         self.myfig.init_map(**(self.params["basemap"]))
         self.myfig.set_map()
-
-        # plot path
-        self.fig.canvas.draw()
+        HPlotter = mpath.PathH_GCPlotter(self.myfig.map)
         self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
-        x, y = self.myfig.map.gcpoints_path([a[0] for a in self.vertices], [a[1] for a in self.vertices])
-        x, y = self.myfig.map(self.wp_lons, self.wp_lats)
-        self.vertices = list(zip(x, y))
-        if self.line is None:
-            line, = self.ax.plot(x, y, color="blue", linestyle='-', linewidth=2, zorder=100)
-        line.set_data(list(zip(*self.vertices)))
-        self.ax.draw_artist(line)
-        wp_scatter = self.ax.scatter(x, y, color="red", s=20, zorder=3, animated=True, visible=True)
-        self.ax.draw_artist(wp_scatter)
 
-    def TopViewLabel(self):
-        wp_labels = []
-        textlabel = []
-        x, y = list(zip(*self.vertices))
-        for i in range(len(self.wps)):
-            tl = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}   "
-            textlabel.append(tl)
-            x, y = self.myfig.map(self.wp_lons, self.wp_lats)
-        wp_labels = self.PlotLabel(x, y, textlabel, len(self.wps))
-        for t in wp_labels:
-            self.ax.draw_artist(t)
-
-    def PlotLabel(self, x, y, textlabel, len_wps):
-        wp_labels = []
-        for i in range(len_wps):
-            t = self.ax.text(x[i],
-                             y[i],
-                             textlabel[i],
-                             bbox=dict(boxstyle="round",
-                                       facecolor="white",
-                                       alpha=0.5,
-                                       edgecolor="none"),
-                             fontweight="bold",
-                             zorder=4,
-                             rotation=90,
-                             animated=True,
-                             clip_on=True,
-                             visible=True
-                            )
-            wp_labels.append(t)
-        return wp_labels
+        # plot path and label
+        self.fig.canvas.draw()
+        HPlotter.redraw_path(self.vertices, self.wp_model)
 
     def TopViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
@@ -224,33 +189,14 @@ class SideViewPlotting(Plotting):
 
     def SideViewPath(self):
         self.fig.canvas.draw()
-        line, = self.ax.plot(self.intermediate_indexes, self.wp_presss,
-                                color="blue", linestyle='-', linewidth=2, zorder=100
+        line, = self.myfig.plot_path(self.intermediate_indexes, self.wp_presss,
+                                     color="blue", linestyle='-', linewidth=2, zorder=100
                             )
         line.set_visible(True)
 
     def SideViewLabel(self):
-        wp_labels = []
-        for i in range(len(self.wps)):
-            textlabel = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}"
-            t = self.ax.text(self.intermediate_indexes[i],
-                             self.wp_presss[i],
-                             textlabel,
-                             bbox=dict(boxstyle="round",
-                                       facecolor="white",
-                                       alpha=0.5,
-                                       edgecolor="none"),
-                             fontweight="bold",
-                             zorder=4,
-                             rotation=90,
-                             animated=True,
-                             clip_on=True,
-                             visible=True
-                            )
-            wp_labels.append(t)
-        self.fig.canvas.draw()
-        for t in wp_labels:
-            self.ax.draw_artist(t)
+        VPlotter = mpath.PathV_GCPlotter(self.myfig.map)
+        VPlotter.redraw_path(self.vertices, self.wp_model)
 
     def SideViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
@@ -365,7 +311,6 @@ class LinearViewPlotting(Plotting):
 def main():
     h = TopViewPlotting()
     h.TopViewPath()
-    h.TopViewLabel()
     h.TopViewDraw()
     v = SideViewPlotting()
     v.setup()

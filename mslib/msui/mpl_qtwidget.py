@@ -501,6 +501,10 @@ class MySideViewFigure(MyFigure):
 
         self.ax.figure.canvas.draw()
 
+    def plot_path(self, xs, wp_press):
+        ceiling_alt = self.myfig.ax.plot(xs, wp_press, color="k", ls="--")
+        return ceiling_alt
+
     def draw_vertical_lines(self, highlight, lats, lons):
         # Remove all vertical lines
         for line in self.vertical_lines[:]:
@@ -1181,7 +1185,7 @@ class MplSideViewCanvas(MplCanvas):
             _line.remove()
         self.ceiling_alt = []
         if self.waypoints_model is not None and self.waypoints_interactor is not None:
-            vertices = self.waypoints_interactor.pathpatch.get_path().vertices
+            vertices = self.waypoints_interactor.plotter.pathpatch.get_path().vertices
             vx, vy = list(zip(*vertices))
             wpd = self.waypoints_model.all_waypoint_data()
             if len(wpd) > 0:
@@ -1194,10 +1198,9 @@ class MplSideViewCanvas(MplCanvas):
                     ys.extend(ceil)
                 xs.append(vx[-1])
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
-
-                self.ceiling_alt = self.ax.plot(
-                    xs, thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude,
-                    color="k", ls="--")
+                wp_press = []
+                wp_press = thermolib.flightlevel2pressure(np.asarray(wp_press) * units.hft).magnitude
+                self.ceiling_alt = self.myfig.plot_path(xs, wp_press)
                 self.update_ceiling(
                     self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.myfig.settings_dict["colour_ceiling"])
@@ -1273,22 +1276,22 @@ class MplSideViewCanvas(MplCanvas):
         self.update_vertical_extent_from_settings()
 
         if self.waypoints_interactor is not None:
-            self.waypoints_interactor.line.set_marker("o" if settings["draw_marker"] else None)
-            self.waypoints_interactor.set_vertices_visible(
+            self.waypoints_interactor.plotter.line.set_marker("o" if settings["draw_marker"] else None)
+            self.waypoints_interactor.plotter.set_vertices_visible(
                 settings["draw_flighttrack"])
-            self.waypoints_interactor.set_path_color(
+            self.waypoints_interactor.plotter.set_path_color(
                 line_color=settings["colour_ft_vertices"],
                 marker_facecolor=settings["colour_ft_waypoints"],
                 patch_facecolor=settings["colour_ft_fill"])
-            self.waypoints_interactor.set_patch_visible(
+            self.waypoints_interactor.plotter.set_patch_visible(
                 settings["fill_flighttrack"])
-            self.waypoints_interactor.set_labels_visible(
+            self.waypoints_interactor.plotter.set_labels_visible(
                 settings["label_flighttrack"])
 
         if self.waypoints_model is not None and self.waypoints_interactor is not None \
                 and settings["draw_verticals"] != vertical_lines:
-            self.redraw_xaxis(self.waypoints_interactor.path.ilats, self.waypoints_interactor.path.ilons,
-                              self.waypoints_interactor.path.itimes)
+            self.redraw_xaxis(self.waypoints_interactor.plotter.path.ilats, self.waypoints_interactor.plotter.path.ilons,
+                              self.waypoints_interactor.plotter.path.itimes)
 
         self.myfig.settings_dict = settings
 
@@ -1305,7 +1308,7 @@ class MplSideViewCanvas(MplCanvas):
         # number of labels along the x-axis.
         if self.waypoints_interactor is not None:
             num_interpolation_points = \
-                self.waypoints_interactor.get_num_interpolation_points()
+                self.waypoints_interactor.plotter.get_num_interpolation_points()
             num_labels = self.numlabels
 
             # Return a tuple (num_interpolation_points, p_bot[hPa],
@@ -1421,7 +1424,7 @@ class MplLinearViewCanvas(MplCanvas):
         # number of labels along the x-axis.
         if self.waypoints_interactor is not None:
             num_interpolation_points = \
-                self.waypoints_interactor.get_num_interpolation_points()
+                self.waypoints_interactor.plotter.get_num_interpolation_points()
 
         # Return a tuple (num_interpolation_points) as BBOX.
         bbox = (num_interpolation_points,)
@@ -1440,8 +1443,8 @@ class MplLinearViewCanvas(MplCanvas):
         """Redraw the x-axis of the linear view on path changes.
         """
         if self.waypoints_interactor is not None:
-            lats = self.waypoints_interactor.path.ilats
-            lons = self.waypoints_interactor.path.ilons
+            lats = self.waypoints_interactor.plotter.path.ilats
+            lons = self.waypoints_interactor.plotter.path.ilons
             logging.debug("redrawing x-axis")
 
             self.myfig.redraw_xaxis(lats, lons)
