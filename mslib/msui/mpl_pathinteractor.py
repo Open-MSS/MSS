@@ -738,6 +738,41 @@ class PathV_GCPlotter(PathPlotter):
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return (lats[best_index1], lons[best_index1]), best_index
 
+    def plot_label(self, vertices=None, waypoints_model_data=[]):
+        """Redraw the matplotlib artists that represent the flight track
+           (path patch, line and waypoint scatter).
+        If waypoint vertices are specified, they will be applied to the
+        graphics output. Otherwise the vertex array obtained from the path
+        patch will be used.
+        """
+        x, y = list(zip(*vertices))
+        # Draw waypoint labels.
+        for wp in self.wp_labels:
+            wp.remove()
+        self.wp_labels = []  # remove doesn't seem to be necessary
+        x, y = list(zip(*vertices))
+        for i, wpd, in enumerate(waypoints_model_data):
+            textlabel = f"{str(i):}   "
+            if wpd[i].location != "":
+                textlabel = f"{wpd[i].location:}   "
+            text = self.ax.text(
+                x[i], y[i],
+                textlabel,
+                bbox=dict(boxstyle="round",
+                          facecolor="white",
+                          alpha=0.5,
+                          edgecolor="none"),
+                fontweight="bold",
+                zorder=4,
+                rotation=90,
+                animated=True,
+                clip_on=True,
+                visible=self.showverts and self.label_waypoints)
+            self.wp_labels.append(text)
+
+        for t in self.wp_labels:
+            self.ax.draw_artist(t)
+
 
 class PathL_GCPlotter(PathPlotter):
     def __init__(self, ax, redraw_xaxis=None, clear_figure=None, numintpoints=101):
@@ -1083,7 +1118,7 @@ class VPathInteractor(PathInteractor):
             self.redraw_figure()
         elif index1.column() in [ft.TIME_UTC]:
             if self.redraw_xaxis is not None:
-                self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes, times_visible=True)
+                self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
 
 
 class LPathInteractor(PathInteractor):

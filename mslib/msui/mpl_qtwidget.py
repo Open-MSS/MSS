@@ -502,7 +502,7 @@ class MySideViewFigure(MyFigure):
         self.ax.figure.canvas.draw()
 
     def plot_path(self, xs, wp_press):
-        ceiling_alt = self.myfig.ax.plot(xs, wp_press, color="k", ls="--")
+        ceiling_alt = self.ax.plot(xs, wp_press, color="blue", linestyle='-', linewidth=2, zorder=100)
         return ceiling_alt
 
     def draw_vertical_lines(self, highlight, lats, lons):
@@ -641,7 +641,6 @@ class MyLinearViewFigure(MyFigure):
         logging.debug("path of linear view has changed.. removing invalidated plots")
         self.ax.figure.clf()
         self.ax = self.fig.add_subplot(111, zorder=99)
-        self.ax.figure.patch.set_visible(False)
 
     def redraw_xaxis(self, lats, lons):
         # Re-label x-axis.

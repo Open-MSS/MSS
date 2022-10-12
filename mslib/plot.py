@@ -97,6 +97,7 @@ class Plotting():
         self.fig.clear()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.path = [(wp[0], wp[1], datetime.datetime.now()) for wp in self.wps]
+        self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
         self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path], [_x[1] for _x in self.path],
                                                                   numpoints=self.num_interpolation_points + 1,
                                                                   connection="greatcircle"
@@ -117,7 +118,6 @@ class TopViewPlotting(Plotting):
         self.myfig.init_map(**(self.params["basemap"]))
         self.myfig.set_map()
         HPlotter = mpath.PathH_GCPlotter(self.myfig.map)
-        self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
 
         # plot path and label
         self.fig.canvas.draw()
@@ -168,7 +168,6 @@ class SideViewPlotting(Plotting):
         self.fig = self.myfig.fig
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.fig.canvas.draw()
-        self.vertices = None
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
 
     def setup(self):
@@ -189,14 +188,12 @@ class SideViewPlotting(Plotting):
 
     def SideViewPath(self):
         self.fig.canvas.draw()
-        line, = self.myfig.plot_path(self.intermediate_indexes, self.wp_presss,
-                                     color="blue", linestyle='-', linewidth=2, zorder=100
-                            )
+        line, = self.myfig.plot_path(self.intermediate_indexes, self.wp_presss)
         line.set_visible(True)
 
     def SideViewLabel(self):
-        VPlotter = mpath.PathV_GCPlotter(self.myfig.map)
-        VPlotter.redraw_path(self.vertices, self.wp_model)
+        VPlotter = mpath.PathV_GCPlotter(self.myfig.ax)
+        VPlotter.plot_label(self.vertices, self.wp_model)
 
     def SideViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
