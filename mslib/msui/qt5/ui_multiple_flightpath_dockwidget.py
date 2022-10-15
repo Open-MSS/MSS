@@ -31,6 +31,7 @@ class Ui_MultipleViewWidget(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.list_flighttrack.sizePolicy().hasHeightForWidth())
         self.list_flighttrack.setSizePolicy(sizePolicy)
+        self.list_flighttrack.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContents)
         self.list_flighttrack.setObjectName("list_flighttrack")
         self.horizontalLayout_2.addWidget(self.list_flighttrack)
         self.horizontalLayout.addLayout(self.horizontalLayout_2)

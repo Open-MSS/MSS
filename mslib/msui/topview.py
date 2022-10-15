@@ -42,6 +42,7 @@ from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import airdata_dockwidget as ad
 from mslib.msui import multiple_flightpath_dockwidget as mf
+from mslib.msui import flighttrack as ft
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -186,6 +187,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     """
     name = "Top View"
 
+    signal_activate_flighttrack1 = QtCore.Signal(ft.WaypointsTableModel)
+
     def __init__(self, parent=None, model=None, _id=None):
         """
         Set up user interface, connect signal/slots.
@@ -208,6 +211,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Boolean to store active wms connection
         self.wms_connected = False
 
+        # Store active flighttrack waypoint model
+        self.active_flighttrack = None
+
         # Connect slots and signals.
         # ==========================
 
@@ -224,8 +230,19 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
+        # Update flighttrack
+        self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
+
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
+
+    @QtCore.Slot(ft.WaypointsTableModel)
+    def update_active_flighttrack(self, active_flighttrack):
+        """
+        Slot that handles updation of active flighttrack variable.
+        """
+        self.active_flighttrack = active_flighttrack
+        self.signal_activate_flighttrack1.emit(active_flighttrack)
 
     def setup_top_view(self):
         """
@@ -297,7 +314,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 title = "Multiple Flightpath"
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
                                                             listView=self.ui.listFlightTracks,
-                                                            activeFlightTrack=self.ui.active_flight_track)
+                                                            activeFlightTrack=self.active_flighttrack)
             else:
                 raise IndexError("invalid control index")
 

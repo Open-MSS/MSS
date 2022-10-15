@@ -372,7 +372,7 @@ class Worker(QtCore.QThread):
     Can be used to run a function through a QThread without much struggle,
     and receive the return value or exception through signals.
     Beware not to modify the parents connections through the function.
-    You may change the GUI but it may sometimes not update until the Worker is done.
+    You may change the GUI, but it may sometimes not update until the Worker is done.
     """
     # Static set of all workers to avoid segfaults
     workers = set()
