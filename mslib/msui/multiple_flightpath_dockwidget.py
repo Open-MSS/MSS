@@ -62,9 +62,11 @@ class MultipleFlightpath(object):
             lon.append(self.waypoints[i][1])
         return lat, lon
 
-    def update(self, linewidth=None):
+    def update(self, linewidth=None, color=None):
         if linewidth is not None:
             self.linewidth = linewidth
+        if color is not None:
+            self.color = color
         self.remove()
         self.draw()
 
@@ -104,6 +106,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # Set flags
         self.flighttrack_added = False
         self.flighttrack_activated = False
+        self.color_change = None
 
         # Connect Signals and Slots
         self.listView.model().rowsInserted.connect(self.wait)
@@ -117,10 +120,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             wp_model = self.listView.item(index).flighttrack_model
             listItem = self.create_list_item(wp_model, self.list_flighttrack)
 
-        for index in range(self.listOperationsMSC.count()):
-            # wp_model = self.listOperationsMSC.item(index).waypoints_model
-            logging.info(self.listOperationsMSC.item(index).waypoint_model)
-            # listItem = self.create_list_item(wp_model, self.listOperationsMSC)
+        # for index in range(self.listOperationsMSC.count()):
+        # wp_model = self.listOperationsMSC.item(index).waypoints_model
+        # listItem = self.create_list_item(wp_model, self.listOperationsMSC)
 
         self.activate_flighttrack(self.active_flight_track)
 
@@ -144,6 +146,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.flighttrack_added = False
         elif self.flighttrack_activated:
             self.flighttrack_activated = False
+        elif self.color_change:
+            self.color_change = False
         else:
             self.drawInactiveFlighttracks()
 
@@ -173,6 +177,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         self.save_waypoint_model_data(wp_model, listWidget)
 
+        if not self.flighttrack_added:
+            self.flighttrack_added = True
         listItem = msui.QFlightTrackListWidgetItem(wp_model, listWidget)
         listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
         listItem.setCheckState(QtCore.Qt.Unchecked)
@@ -184,17 +190,38 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Sets the color of selected flighttrack when Change Color is clicked.
         """
         if self.list_flighttrack.currentItem() is not None:
-            if hasattr(self.list_flighttrack.currentItem(), "checkState") and (
-                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
+            if hasattr(self.list_flighttrack.currentItem(), "checkState"):
                 wp_model = self.list_flighttrack.currentItem().flighttrack_model
                 color = QtWidgets.QColorDialog.getColor()
                 if color.isValid():
                     self.dict_files[wp_model]["color"] = color.getRgbF()
-                    self.drawInactiveFlighttracks()
+                    self.color_change = True
+                    self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+                    self.dict_files[wp_model]["patch"].update(color=
+                                                              self.dict_files[wp_model]["color"])
             else:
-                self.labelStatus.setText("Select Flighttrack")
+                self.labelStatus.setText("Status: No flight track selected")
         else:
-            self.labelStatus.setText("Select Flighttrack")
+            self.labelStatus.setText("Status: No flight track selected")
+
+    def get_color(self, wp_model):
+        """
+        Returns color of respective flighttrack.
+        """
+        return self.dict_files[wp_model]["color"]
+
+    def show_color_icon(self, clr):
+        """
+        Creating object of QPixmap for displaying icon inside the listWidget.
+        """
+        pixmap = QtGui.QPixmap(20, 10)
+        pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
+        return QtGui.QIcon(pixmap)
+
+    # def select_linewidth(self):
+    #     """
+    #     Change the line width of selected flighttrack.
+    #     """
 
     def flighttrackRemoved(self, parent, start, end):
         """
@@ -254,7 +281,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 if listItem.flighttrack_model != self.active_flight_track:
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_files[listItem.flighttrack_model][
-                                                   "wp_data"], color=self.dict_files[listItem.flighttrack_model]['color'])
+                                                   "wp_data"],
+                                               color=self.dict_files[listItem.flighttrack_model]['color'])
 
                     self.dict_files[listItem.flighttrack_model]["patch"] = patch
             else:
