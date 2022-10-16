@@ -88,13 +88,16 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     on the TopView canvas.
     """
 
-    def __init__(self, parent=None, view=None, listView=None, activeFlightTrack=None):
+    def __init__(self, parent=None, view=None, listView=None,
+                 listOperationsMSC=None, activeFlightTrack=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
+        self.listOperationsMSC = listOperationsMSC
         self.listView = listView
         self.ui = parent
         self.setupUi(self)
         self.view = view  # canvas
         self.flight_path = None  # flightpath object
+        self.colour = None
         self.dict_files = {}  # Dictionary of files added; key: patch, waypoints
         self.active_flight_track = activeFlightTrack
 
@@ -107,11 +110,17 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.listView.model().rowsRemoved.connect(self.flighttrackRemoved)
         self.ui.signal_activate_flighttrack1.connect(self.get_active)
         self.list_flighttrack.itemChanged.connect(self.flagop)
+        self.pushButton_color.clicked.connect(self.select_color)
 
         # Load flighttracks
         for index in range(self.listView.count()):
             wp_model = self.listView.item(index).flighttrack_model
-            listItem = self.create_list_item(wp_model)
+            listItem = self.create_list_item(wp_model, self.list_flighttrack)
+
+        for index in range(self.listOperationsMSC.count()):
+            # wp_model = self.listOperationsMSC.item(index).waypoints_model
+            logging.info(self.listOperationsMSC.item(index).waypoint_model)
+            # listItem = self.create_list_item(wp_model, self.listOperationsMSC)
 
         self.activate_flighttrack(self.active_flight_track)
 
@@ -143,31 +152,49 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Slot to add flighttrack.
         """
         wp_model = self.listView.item(start).flighttrack_model
-        listItem = self.create_list_item(wp_model)
+        listItem = self.create_list_item(wp_model, self.list_flighttrack)
         self.activate_flighttrack(listItem)
 
-    def save_waypoint_model_data(self, wp_model):
+    def save_waypoint_model_data(self, wp_model, listWidget):
         wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
         if self.dict_files[wp_model] is None:
-            self.create_list_item(wp_model)
+            self.create_list_item(wp_model, self.list_flighttrack)
         self.dict_files[wp_model]["wp_data"] = wp_data
 
-    def create_list_item(self, wp_model):
+    def create_list_item(self, wp_model, listWidget):
         """
         PyQt5 method : Add items in list and add checkbox functionality
         """
         # Create new key in dict
         self.dict_files[wp_model] = {}
         self.dict_files[wp_model]["patch"] = None
+        self.dict_files[wp_model]["color"] = 'blue'
         self.dict_files[wp_model]["wp_data"] = []
 
-        self.save_waypoint_model_data(wp_model)
+        self.save_waypoint_model_data(wp_model, listWidget)
 
-        listItem = msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
+        listItem = msui.QFlightTrackListWidgetItem(wp_model, listWidget)
         listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
         listItem.setCheckState(QtCore.Qt.Unchecked)
 
         return listItem
+
+    def select_color(self):
+        """
+        Sets the color of selected flighttrack when Change Color is clicked.
+        """
+        if self.list_flighttrack.currentItem() is not None:
+            if hasattr(self.list_flighttrack.currentItem(), "checkState") and (
+                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
+                wp_model = self.list_flighttrack.currentItem().flighttrack_model
+                color = QtWidgets.QColorDialog.getColor()
+                if color.isValid():
+                    self.dict_files[wp_model]["color"] = color.getRgbF()
+                    self.drawInactiveFlighttracks()
+            else:
+                self.labelStatus.setText("Select Flighttrack")
+        else:
+            self.labelStatus.setText("Select Flighttrack")
 
     def flighttrackRemoved(self, parent, start, end):
         """
@@ -227,7 +254,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 if listItem.flighttrack_model != self.active_flight_track:
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_files[listItem.flighttrack_model][
-                                                   "wp_data"])
+                                                   "wp_data"], color=self.dict_files[listItem.flighttrack_model]['color'])
 
                     self.dict_files[listItem.flighttrack_model]["patch"] = patch
             else:

@@ -239,7 +239,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.Slot(ft.WaypointsTableModel)
     def update_active_flighttrack(self, active_flighttrack):
         """
-        Slot that handles updation of active flighttrack variable.
+        Slot that handles update of active flighttrack variable.
         """
         self.active_flighttrack = active_flighttrack
         self.signal_activate_flighttrack1.emit(active_flighttrack)
@@ -314,6 +314,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 title = "Multiple Flightpath"
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
                                                             listView=self.ui.listFlightTracks,
+                                                            listOperationsMSC=self.ui.listOperationsMSC,
                                                             activeFlightTrack=self.active_flighttrack)
             else:
                 raise IndexError("invalid control index")
