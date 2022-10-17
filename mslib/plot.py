@@ -189,11 +189,7 @@ class SideViewPlotting(Plotting):
     def SideViewPath(self):
         self.fig.canvas.draw()
         self.plotter = mpath.PathV_GCPlotter(self.myfig.ax)
-        line, = self.plotter.plot_path(self.intermediate_indexes, self.wp_presss)
-        line.set_visible(True)
-
-    def SideViewLabel(self):
-        self.plotter.plot_label(self.vertices, self.wp_model)
+        self.plotter.redraw_path(self.vertices, self.wp_model)
 
     def SideViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
@@ -312,7 +308,6 @@ def main():
     v = SideViewPlotting()
     v.setup()
     v.SideViewPath()
-    v.SideViewLabel()
     v.SideViewDraw()
     ls = LinearViewPlotting()
     ls.setup()

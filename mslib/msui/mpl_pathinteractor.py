@@ -387,13 +387,6 @@ class PathPlotter(object):
         self.pathpatch = pathpatch
         self.pathpatch.set_animated(True)  # ensure correct redrawing
 
-        # Draw the line representing flight track or profile (correct
-        # vertices handling for the line needs to be ensured in subclasses).
-        x, y = list(zip(*self.pathpatch.get_path().vertices))
-        self.line, = self.ax.plot(x, y, color=linecolor,
-                                  marker=marker, linewidth=2,
-                                  markerfacecolor=markerfacecolor,
-                                  animated=True)
 
         # List to accomodate waypoint labels.
         self.wp_labels = []
@@ -419,7 +412,6 @@ class PathPlotter(object):
             # it looks fine -- correct length and correct codes. I can't figure
             # out why that error occurs.. (mr, 2013Feb08).
             logging.error("%s %s", ex, type(ex))
-        self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
             # The blit() method makes problems (distorted figure background). However,
@@ -431,7 +423,6 @@ class PathPlotter(object):
         """Set the visibility of path vertices (the line plot).
         """
         self.showverts = showverts
-        self.line.set_visible(self.showverts)
         for t in self.wp_labels:
             t.set_visible(showverts and self.label_waypoints)
         if not self.showverts:
@@ -462,8 +453,6 @@ class PathPlotter(object):
         """
         if vertices is None:
             vertices = self.pathpatch.get_path().vertices
-        self.line.set_data(list(zip(*vertices)))
-
         # Draw waypoint labels.
         for wp in self.wp_labels:
             wp.remove()
@@ -494,7 +483,6 @@ class PathPlotter(object):
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
             logging.error("ValueError Exception %s", error)
-        self.ax.draw_artist(self.line)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
         self.canvas.blit(self.ax.bbox)
@@ -509,10 +497,6 @@ class PathPlotter(object):
         marker_facecolor -- color of the waypoints
         patch_facecolor -- color of the patch covering the path area
         """
-        if line_color is not None:
-            self.line.set_color(line_color)
-        if marker_facecolor is not None:
-            self.line.set_markerfacecolor(marker_facecolor)
         if patch_facecolor is not None:
             self.pathpatch.set_facecolor(patch_facecolor)
 
@@ -571,10 +555,9 @@ class PathH_GCPlotter(PathPlotter):
             x, y = self.map.gcpoints_path(lons, lats)
             vertices = list(zip(x, y))
 
-        # Set the line to disply great circle points, remove existing
-        # waypoints scatter instance and draw a new one. This is
-        # necessary as scatter() does not provide a set_data method.
-        self.line.set_data(list(zip(*vertices)))
+        self.set_patch_visible()
+        self.set_labels_visible()
+        self.set_path_color(line_color='blue', marker_facecolor='red', patch_facecolor='blue')
 
         if self.tangent_lines is not None:
             self.tangent_lines.remove()
@@ -636,7 +619,6 @@ class PathH_GCPlotter(PathPlotter):
             self.ax.draw_artist(self.pathpatch)
         except ValueError as error:
             logging.debug("ValueError Exception '%s'", error)
-        self.ax.draw_artist(self.line)
         self.ax.draw_artist(self.wp_scatter)
 
         for t in self.wp_labels:
@@ -743,10 +725,6 @@ class PathV_GCPlotter(PathPlotter):
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return (lats[best_index1], lons[best_index1]), best_index
 
-    def plot_path(self, xs, wp_press):
-        ceiling_alt = self.ax.plot(xs, wp_press, color="blue", linestyle='-', linewidth=2, zorder=100)
-        return ceiling_alt
-
     def plot_label(self, vertices=None, waypoints_model_data=[]):
         """Redraw the matplotlib artists that represent the flight track
            (path patch, line and waypoint scatter).
@@ -755,6 +733,9 @@ class PathV_GCPlotter(PathPlotter):
         patch will be used.
         """
         x, y = list(zip(*vertices))
+        self.set_patch_visible()
+        self.set_labels_visible()
+        self.set_path_color(line_color='blue', marker_facecolor='red')
         # Draw waypoint labels.
         for wp in self.wp_labels:
             wp.remove()
@@ -779,6 +760,13 @@ class PathV_GCPlotter(PathPlotter):
                 visible=self.showverts and self.label_waypoints)
             self.wp_labels.append(text)
 
+        # Redraw the artists.
+        if self.background:
+            self.canvas.restore_region(self.background)
+        try:
+            self.ax.draw_artist(self.pathpatch)
+        except ValueError as error:
+            logging.debug("ValueError Exception '%s'", error)
         for t in self.wp_labels:
             self.ax.draw_artist(t)
 
