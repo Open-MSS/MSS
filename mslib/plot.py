@@ -117,11 +117,11 @@ class TopViewPlotting(Plotting):
         self.fig = self.myfig.fig
         self.myfig.init_map(**(self.params["basemap"]))
         self.myfig.set_map()
-        HPlotter = mpath.PathH_GCPlotter(self.myfig.map)
+        self.plotter = mpath.PathH_GCPlotter(self.myfig.map)
 
         # plot path and label
         self.fig.canvas.draw()
-        HPlotter.redraw_path(self.vertices, self.wp_model)
+        self.plotter.redraw_path(self.vertices, self.wp_model)
 
     def TopViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
@@ -188,12 +188,12 @@ class SideViewPlotting(Plotting):
 
     def SideViewPath(self):
         self.fig.canvas.draw()
-        line, = self.myfig.plot_path(self.intermediate_indexes, self.wp_presss)
+        self.plotter = mpath.PathV_GCPlotter(self.myfig.ax)
+        line, = self.plotter.plot_path(self.intermediate_indexes, self.wp_presss)
         line.set_visible(True)
 
     def SideViewLabel(self):
-        VPlotter = mpath.PathV_GCPlotter(self.myfig.ax)
-        VPlotter.plot_label(self.vertices, self.wp_model)
+        self.plotter.plot_label(self.vertices, self.wp_model)
 
     def SideViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \

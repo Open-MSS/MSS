@@ -501,10 +501,6 @@ class MySideViewFigure(MyFigure):
 
         self.ax.figure.canvas.draw()
 
-    def plot_path(self, xs, wp_press):
-        ceiling_alt = self.ax.plot(xs, wp_press, color="blue", linestyle='-', linewidth=2, zorder=100)
-        return ceiling_alt
-
     def draw_vertical_lines(self, highlight, lats, lons):
         # Remove all vertical lines
         for line in self.vertical_lines[:]:
@@ -1198,8 +1194,8 @@ class MplSideViewCanvas(MplCanvas):
                 xs.append(vx[-1])
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
                 wp_press = []
-                wp_press = thermolib.flightlevel2pressure(np.asarray(wp_press) * units.hft).magnitude
-                self.ceiling_alt = self.myfig.plot_path(xs, wp_press)
+                wp_press = thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude
+                self.ceiling_alt = self.waypoints_interactor.plotter.plot_path(xs, wp_press)
                 self.update_ceiling(
                     self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.myfig.settings_dict["colour_ceiling"])

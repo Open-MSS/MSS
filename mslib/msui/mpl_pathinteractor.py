@@ -471,8 +471,8 @@ class PathPlotter(object):
         x, y = list(zip(*vertices))
         for i, wpd, in enumerate(waypoints_model_data):
             textlabel = f"{str(i):}   "
-            if wpd[i].location != "":
-                textlabel = f"{wpd[i].location:}   "
+            if wpd.location != "":
+                textlabel = f"{wpd.location:}   "
             text = self.ax.text(
                 x[i], y[i],
                 textlabel,
@@ -518,8 +518,13 @@ class PathPlotter(object):
 
 
 class PathH_GCPlotter(PathPlotter):
-    def __init__(self, mplmap, *args, markerfacecolor=None, show_marker=True, **kwargs):
-        super().__init__(mplmap.ax, *args, **kwargs)
+    def __init__(self, mplmap, mplpath=None, facecolor='none', edgecolor='none',
+                 linecolor='blue', markerfacecolor='red', show_marker=True,
+                 marker='', label_waypoints=True):
+        super().__init__(mplmap.ax, mplpath=PathH_GC([[0, 0]], map=mplmap),
+                         facecolor='none', edgecolor='none', linecolor=linecolor,
+                         markerfacecolor=markerfacecolor, marker='',
+                         label_waypoints=label_waypoints)
         self.map = mplmap
         self.wp_scatter = None
         self.markerfacecolor = markerfacecolor
@@ -738,6 +743,10 @@ class PathV_GCPlotter(PathPlotter):
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return (lats[best_index1], lons[best_index1]), best_index
 
+    def plot_path(self, xs, wp_press):
+        ceiling_alt = self.ax.plot(xs, wp_press, color="blue", linestyle='-', linewidth=2, zorder=100)
+        return ceiling_alt
+
     def plot_label(self, vertices=None, waypoints_model_data=[]):
         """Redraw the matplotlib artists that represent the flight track
            (path patch, line and waypoint scatter).
@@ -753,8 +762,8 @@ class PathV_GCPlotter(PathPlotter):
         x, y = list(zip(*vertices))
         for i, wpd, in enumerate(waypoints_model_data):
             textlabel = f"{str(i):}   "
-            if wpd[i].location != "":
-                textlabel = f"{wpd[i].location:}   "
+            if wpd.location != "":
+                textlabel = f"{wpd.location:}   "
             text = self.ax.text(
                 x[i], y[i],
                 textlabel,
@@ -883,7 +892,7 @@ class PathInteractor(QtCore.QObject):
         wpm.rowsRemoved.connect(self.qt_insert_remove_point_listener)
         # Redraw.
         self.plotter.pathpatch.get_path().update_from_WaypointsTableModel(wpm)
-        self.plotter.redraw_figure()
+        self.redraw_figure()
 
     def qt_insert_remove_point_listener(self, index, first, last):
         """Listens to rowsInserted() and rowsRemoved() signals emitted
@@ -996,7 +1005,9 @@ class VPathInteractor(PathInteractor):
                         points.
         redrawXAxis -- callback function to redraw the x-axis on path changes.
         """
-        plotter = PathV_GCPlotter(ax, redraw_xaxis=None, clear_figure=None, numintpoints=101)
+        plotter = PathV_GCPlotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
+        self.redraw_xaxis = redraw_xaxis
+        self.clear_figure = clear_figure
         super().__init__(plotter=plotter, waypoints=waypoints)
 
     def redraw_figure(self):
@@ -1118,7 +1129,7 @@ class VPathInteractor(PathInteractor):
             self.redraw_figure()
         elif index1.column() in [ft.TIME_UTC]:
             if self.redraw_xaxis is not None:
-                self.redraw_xaxis(self.path.ilats, self.path.ilons, self.path.itimes)
+                self.redraw_xaxis(self.plotter.path.ilats, self.plotter.path.ilons, self.plotter.path.itimes)
 
 
 class LPathInteractor(PathInteractor):
@@ -1138,7 +1149,7 @@ class LPathInteractor(PathInteractor):
                         points.
         redrawXAxis -- callback function to redraw the x-axis on path changes.
         """
-        plotter = PathV_GCPlotter(ax, redraw_xaxis=None, clear_figure=None, numintpoints=101)
+        plotter = PathL_GCPlotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
         super().__init__(plotter=plotter, waypoints=waypoints)
 
     def redraw_figure(self):
@@ -1147,7 +1158,7 @@ class LPathInteractor(PathInteractor):
            redraw of the figure necessary.
         """
         # emit signal to redraw map
-        self.redraw_xaxis()
+        self.plotter.redraw_xaxis()
         self.signal_get_lsec.emit()
 
     def redraw_path(self, vertices=None):
