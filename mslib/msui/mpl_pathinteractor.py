@@ -673,7 +673,7 @@ class PathH_GCPlotter(PathPlotter):
         self.remote_sensing = ref
 
 
-class PathV_GCPlotter(PathPlotter):
+class PathV_Plotter(PathPlotter):
     def __init__(self, ax, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
 
@@ -715,8 +715,8 @@ class PathV_GCPlotter(PathPlotter):
             vertices[best_index, 0], vertices[best_index, 1],
             number_of_intermediate_points, connection="linear")
         lats, lons = latlon_points(
-            wpm.waypoint_data(best_index - 1).lat, wpm.waypoint_data(best_index - 1).lon,
-            wpm.waypoint_data(best_index).lat, wpm.waypoint_data(best_index).lon,
+            wpm[best_index - 1].lat, wpm[best_index - 1].lon,
+            wpm[best_index].lat, wpm[best_index].lon,
             number_of_intermediate_points, connection="greatcircle")
 
         # best_index1 is the best index among the intermediate coordinates to fit the hovered point
@@ -725,53 +725,8 @@ class PathV_GCPlotter(PathPlotter):
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return (lats[best_index1], lons[best_index1]), best_index
 
-    def plot_label(self, vertices=None, waypoints_model_data=[]):
-        """Redraw the matplotlib artists that represent the flight track
-           (path patch, line and waypoint scatter).
-        If waypoint vertices are specified, they will be applied to the
-        graphics output. Otherwise the vertex array obtained from the path
-        patch will be used.
-        """
-        x, y = list(zip(*vertices))
-        self.set_patch_visible()
-        self.set_labels_visible()
-        self.set_path_color(line_color='blue', marker_facecolor='red')
-        # Draw waypoint labels.
-        for wp in self.wp_labels:
-            wp.remove()
-        self.wp_labels = []  # remove doesn't seem to be necessary
-        x, y = list(zip(*vertices))
-        for i, wpd, in enumerate(waypoints_model_data):
-            textlabel = f"{str(i):}   "
-            if wpd.location != "":
-                textlabel = f"{wpd.location:}   "
-            text = self.ax.text(
-                x[i], y[i],
-                textlabel,
-                bbox=dict(boxstyle="round",
-                          facecolor="white",
-                          alpha=0.5,
-                          edgecolor="none"),
-                fontweight="bold",
-                zorder=4,
-                rotation=90,
-                animated=True,
-                clip_on=True,
-                visible=self.showverts and self.label_waypoints)
-            self.wp_labels.append(text)
 
-        # Redraw the artists.
-        if self.background:
-            self.canvas.restore_region(self.background)
-        try:
-            self.ax.draw_artist(self.pathpatch)
-        except ValueError as error:
-            logging.debug("ValueError Exception '%s'", error)
-        for t in self.wp_labels:
-            self.ax.draw_artist(t)
-
-
-class PathL_GCPlotter(PathPlotter):
+class PathL_Plotter(PathPlotter):
     def __init__(self, ax, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
 
@@ -993,7 +948,7 @@ class VPathInteractor(PathInteractor):
                         points.
         redrawXAxis -- callback function to redraw the x-axis on path changes.
         """
-        plotter = PathV_GCPlotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
+        plotter = PathV_Plotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
         self.redraw_xaxis = redraw_xaxis
         self.clear_figure = clear_figure
         super().__init__(plotter=plotter, waypoints=waypoints)
@@ -1062,8 +1017,7 @@ class VPathInteractor(PathInteractor):
         self._ind = None
 
     def get_lat_lon(self, event):
-        wpm = self.waypoints_model
-        lat_lon, ind = self.plotter.get_lat_lon(event, wpm)
+        lat_lon, ind = self.plotter.get_lat_lon(event, self.waypoints_model.all_waypoint_data())
         return lat_lon, ind
 
     def button_release_move_callback(self, event):
@@ -1137,7 +1091,7 @@ class LPathInteractor(PathInteractor):
                         points.
         redrawXAxis -- callback function to redraw the x-axis on path changes.
         """
-        plotter = PathL_GCPlotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
+        plotter = PathL_Plotter(ax, redraw_xaxis=redraw_xaxis, clear_figure=clear_figure, numintpoints=numintpoints)
         super().__init__(plotter=plotter, waypoints=waypoints)
 
     def redraw_figure(self):

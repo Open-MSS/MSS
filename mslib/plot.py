@@ -84,8 +84,8 @@ class Plotting():
         self.fig = plt.figure()
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
-        ftrack = ft.WaypointsTableModel(filename=filename)
-        self.wp_model = ftrack.all_waypoint_data()
+        wp_model = ft.WaypointsTableModel(filename=filename)
+        self.wp_model_data = wp_model.all_waypoint_data()
         self.params = mslib.utils.coordinate.get_projection_params(
             self.config["predefined_map_sections"][section]["CRS"].lower())
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
@@ -121,7 +121,7 @@ class TopViewPlotting(Plotting):
 
         # plot path and label
         self.fig.canvas.draw()
-        self.plotter.redraw_path(self.vertices, self.wp_model)
+        self.plotter.redraw_path(self.vertices, self.wp_model_data)
 
     def TopViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
@@ -188,8 +188,8 @@ class SideViewPlotting(Plotting):
 
     def SideViewPath(self):
         self.fig.canvas.draw()
-        self.plotter = mpath.PathV_GCPlotter(self.myfig.ax)
-        self.plotter.redraw_path(self.vertices, self.wp_model)
+        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
+        self.plotter.redraw_path(self.vertices, self.wp_model_data)
 
     def SideViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \

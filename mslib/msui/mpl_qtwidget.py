@@ -1193,6 +1193,9 @@ class MplSideViewCanvas(MplCanvas):
                     ys.extend(ceil)
                 xs.append(vx[-1])
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
+                self.ceiling_alt = self.ax.plot(xs,
+                                                thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude,
+                                                color="k", ls="--")
                 self.update_ceiling(
                     self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.myfig.settings_dict["colour_ceiling"])
@@ -1268,7 +1271,6 @@ class MplSideViewCanvas(MplCanvas):
         self.update_vertical_extent_from_settings()
 
         if self.waypoints_interactor is not None:
-            # self.waypoints_interactor.plotter.pathpatch.set_marker("o" if settings["draw_marker"] else None)
             self.waypoints_interactor.plotter.set_vertices_visible(
                 settings["draw_flighttrack"])
             self.waypoints_interactor.plotter.set_path_color(
