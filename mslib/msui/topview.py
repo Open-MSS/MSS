@@ -189,7 +189,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     signal_activate_flighttrack1 = QtCore.Signal(ft.WaypointsTableModel)
 
-    def __init__(self, parent=None, model=None, _id=None):
+    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None):
         """
         Set up user interface, connect signal/slots.
         """
@@ -212,7 +212,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.wms_connected = False
 
         # Store active flighttrack waypoint model
-        self.active_flighttrack = None
+        self.active_flighttrack = active_flighttrack
 
         # Connect slots and signals.
         # ==========================

@@ -478,7 +478,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 return
             text = filename
             if text not in self.dict_files:  # prevents same file being added twice
-                # initializing the nested dictionary dict_files
+                # initializing the nested dictionary dict_flighttrack
                 self.dict_files[text] = {}
                 self.dict_files[text]["patch"] = None
                 self.dict_files[text]["color"] = (0, 0, 0, 1)
@@ -536,7 +536,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Loads multiple KML Files simultaneously and constructs the
         corresponding patches.
         """
-        for entry in self.dict_files.values():  # removes all patches from map, but not from dict_files
+        for entry in self.dict_files.values():  # removes all patches from map, but not from dict_flighttrack
             if entry["patch"] is not None:  # since newly initialized files will have patch:None
                 entry["patch"].remove()
 
