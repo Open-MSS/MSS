@@ -189,6 +189,8 @@ class SideViewPlotting(Plotting):
     def SideViewPath(self):
         self.fig.canvas.draw()
         self.plotter = mpath.PathV_Plotter(self.myfig.ax)
+        line, = self.plotter.plot_path(self.intermediate_indexes, self.wp_presss)
+        line.set_visible(True)
         self.plotter.redraw_path(self.vertices, self.wp_model_data)
 
     def SideViewDraw(self):

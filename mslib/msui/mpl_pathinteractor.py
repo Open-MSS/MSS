@@ -555,10 +555,6 @@ class PathH_GCPlotter(PathPlotter):
             x, y = self.map.gcpoints_path(lons, lats)
             vertices = list(zip(x, y))
 
-        self.set_patch_visible()
-        self.set_labels_visible()
-        self.set_path_color(line_color='blue', marker_facecolor='red', patch_facecolor='blue')
-
         if self.tangent_lines is not None:
             self.tangent_lines.remove()
             self.tangent_lines = None
@@ -724,6 +720,10 @@ class PathV_Plotter(PathPlotter):
         best_index1 = np.argmin(abs(vert_xs - x))
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return (lats[best_index1], lons[best_index1]), best_index
+
+    def plot_path(self, xs, wp_press):
+        ceiling_alt = self.ax.plot(xs, wp_press, color="blue", linestyle='-', linewidth=2, zorder=100)
+        return ceiling_alt
 
 
 class PathL_Plotter(PathPlotter):

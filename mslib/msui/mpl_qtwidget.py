@@ -50,6 +50,7 @@ from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons
+from mslib.msui import mpl_pathinteractor as path
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
@@ -210,11 +211,6 @@ class MyTopViewFigure(MyFigure):
                                                 lake_color=self.settings["colour_water"])
             self.map.set_mapboundary_visible(visible=self.settings["fill_waterbodies"],
                                              bg_color=self.settings["colour_water"])
-            # self.waypoints_interactor.set_path_color(line_color=self.settings["colour_ft_vertices"],
-            #                                          marker_facecolor=self.settings["colour_ft_waypoints"])
-            # self.waypoints_interactor.show_marker = self.settings["draw_marker"]
-            # self.waypoints_interactor.set_vertices_visible(self.settings["draw_flighttrack"])
-            # self.waypoints_interactor.set_labels_visible(self.settings["label_flighttrack"])
 
             # Updates plot title size as selected from combobox labelled plot title size.
             ax.set_autoscale_on(False)
@@ -434,6 +430,15 @@ class MySideViewFigure(MyFigure):
             ax.set_ylim(self.p_bot, self.p_top)
 
         self.redraw_yaxis()
+
+    def set_settings(self, settings=None):
+        """Apply settings to view.
+        """
+        if settings is not None:
+            self.settings_dict.update(settings)
+        settings = self.settings_dict
+        self.set_flight_levels(settings["flightlevels"])
+        self.set_flight_levels_visible(settings["draw_flightlevels"])
 
     def redraw_yaxis(self):
         """ Redraws the y-axis on map after setting the values from sideview options dialog box
@@ -1120,6 +1125,7 @@ class MplSideViewCanvas(MplCanvas):
         self.myfig = MySideViewFigure()
         super(MplSideViewCanvas, self).__init__(self.myfig)
 
+        self.plotter = path.PathV_Plotter(self.ax)
         if settings is not None:
             self.myfig.settings_dict.update(settings)
 
@@ -1193,9 +1199,9 @@ class MplSideViewCanvas(MplCanvas):
                     ys.extend(ceil)
                 xs.append(vx[-1])
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
-                self.ceiling_alt = self.ax.plot(xs,
-                                                thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude,
-                                                color="k", ls="--")
+                wp_press = []
+                wp_press = thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude
+                self.ceiling_alt = self.plotter.plot_path(xs, wp_press)
                 self.update_ceiling(
                     self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.myfig.settings_dict["colour_ceiling"])
@@ -1258,11 +1264,7 @@ class MplSideViewCanvas(MplCanvas):
         """Apply settings to view.
         """
         vertical_lines = self.myfig.settings_dict["draw_verticals"]
-        if settings is not None:
-            self.myfig.settings_dict.update(settings)
-        settings = self.myfig.settings_dict
-        self.set_flight_levels(settings["flightlevels"])
-        self.set_flight_levels_visible(settings["draw_flightlevels"])
+        self.myfig.set_settings(settings)
         self.update_ceiling(
             settings["draw_ceiling"] and (
                 self.waypoints_model is not None and
