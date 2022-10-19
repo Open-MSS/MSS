@@ -577,6 +577,34 @@ class MySideViewFigure(MyFigure):
         self.ax.figure.canvas.draw()
         logging.debug("done.")
 
+    def set_flight_levels(self, flightlevels):
+        """
+        """
+        self.flightlevels = flightlevels
+        self.draw_flight_levels()
+
+    def set_flight_levels_visible(self, visible):
+        """Toggle the visibility of the flight level lines.
+        """
+        for gxelement in self.fl_label_list:
+            gxelement.set_visible(visible)
+        self.fig.canvas.draw()
+
+    def draw_flight_levels(self):
+        """Draw horizontal lines indicating the altitude of the flight levels.
+        """
+        # Remove currently displayed flight level artists.
+        for artist in self.fl_label_list:
+            artist.remove()
+        self.fl_label_list = []
+        # Plot lines indicating flight level altitude.
+        ax = self.ax
+        for level in self.flightlevels:
+            pressure = thermolib.flightlevel2pressure(level * units.hft).magnitude
+            self.fl_label_list.append(ax.axhline(pressure, color='k'))
+            self.fl_label_list.append(ax.text(0.1, pressure, f"FL{level:d}"))
+        self.fig.canvas.draw()
+
     def update_vertical_extent_from_settings(self, init=False):
         """ Checks for current units of axis and convert the upper and lower limit
         to pa(pascals) for the internal computation by code """
@@ -1125,7 +1153,7 @@ class MplSideViewCanvas(MplCanvas):
         self.myfig = MySideViewFigure()
         super(MplSideViewCanvas, self).__init__(self.myfig)
 
-        self.plotter = path.PathV_Plotter(self.ax)
+        self.plotter = path.PathV_Plotter(self.myfig.ax)
         if settings is not None:
             self.myfig.settings_dict.update(settings)
 
@@ -1233,19 +1261,6 @@ class MplSideViewCanvas(MplCanvas):
         """
         return self.flightlevels
 
-    def set_flight_levels(self, flightlevels):
-        """
-        """
-        self.flightlevels = flightlevels
-        self.draw_flight_levels()
-
-    def set_flight_levels_visible(self, visible):
-        """Toggle the visibility of the flight level lines.
-        """
-        for gxelement in self.fl_label_list:
-            gxelement.set_visible(visible)
-        self.draw()
-
     def update_ceiling(self, visible, color):
         """Toggle the visibility of the flight level lines.
         """
@@ -1266,26 +1281,26 @@ class MplSideViewCanvas(MplCanvas):
         vertical_lines = self.myfig.settings_dict["draw_verticals"]
         self.myfig.set_settings(settings)
         self.update_ceiling(
-            settings["draw_ceiling"] and (
+            self.myfig.settings_dict["draw_ceiling"] and (
                 self.waypoints_model is not None and
                 self.waypoints_model.performance_settings["visible"]),
-            settings["colour_ceiling"])
+            self.myfig.settings_dict["colour_ceiling"])
         self.update_vertical_extent_from_settings()
 
         if self.waypoints_interactor is not None:
             self.waypoints_interactor.plotter.set_vertices_visible(
-                settings["draw_flighttrack"])
+                self.myfig.settings_dict["draw_flighttrack"])
             self.waypoints_interactor.plotter.set_path_color(
-                line_color=settings["colour_ft_vertices"],
-                marker_facecolor=settings["colour_ft_waypoints"],
-                patch_facecolor=settings["colour_ft_fill"])
+                line_color=self.myfig.settings_dict["colour_ft_vertices"],
+                marker_facecolor=self.myfig.settings_dict["colour_ft_waypoints"]
+                )
             self.waypoints_interactor.plotter.set_patch_visible(
-                settings["fill_flighttrack"])
+                self.myfig.settings_dict["fill_flighttrack"])
             self.waypoints_interactor.plotter.set_labels_visible(
-                settings["label_flighttrack"])
+                self.myfig.settings_dict["label_flighttrack"])
 
         if self.waypoints_model is not None and self.waypoints_interactor is not None \
-                and settings["draw_verticals"] != vertical_lines:
+                and self.myfig.settings_dict["draw_verticals"] != vertical_lines:
             self.redraw_xaxis(self.waypoints_interactor.plotter.path.ilats, self.waypoints_interactor.plotter.path.ilons,
                               self.waypoints_interactor.plotter.path.itimes)
 
