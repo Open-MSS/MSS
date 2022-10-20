@@ -174,6 +174,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.dict_flighttrack[wp_model]["patch"] = None
         self.dict_flighttrack[wp_model]["color"] = 'blue'
         self.dict_flighttrack[wp_model]["wp_data"] = []
+        self.dict_flighttrack[wp_model]["checkState"] = False
 
         self.save_waypoint_model_data(wp_model, listWidget)
 
@@ -192,8 +193,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Sets the color of selected flighttrack when Change Color is clicked.
         """
         if self.list_flighttrack.currentItem() is not None:
-            if hasattr(self.list_flighttrack.currentItem(), "checkState" and (
-                    self.list_flighttrack.currentItem.checkState() == QtCore.Qt.Checked)):
+            if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
+                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
                 wp_model = self.list_flighttrack.currentItem().flighttrack_model
                 color = QtWidgets.QColorDialog.getColor()
                 if color.isValid():
@@ -259,19 +260,20 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         font = QtGui.QFont()
         for i in range(self.list_flighttrack.count()):
             listItem = self.list_flighttrack.item(i)
-            if self.active_flight_track == self.list_flighttrack.item(i).flighttrack_model:  # active flighttrack
+            if self.active_flight_track == listItem.flighttrack_model:  # active flighttrack
                 font.setBold(True)
                 if self.dict_flighttrack[listItem.flighttrack_model]["patch"] is not None:
                     self.dict_flighttrack[listItem.flighttrack_model]["patch"].remove()
-                listItem.setCheckState(QtCore.Qt.Unchecked)
+                listItem.setCheckState(QtCore.Qt.Checked)
                 self.set_activate_flag()
                 listItem.setFlags(listItem.flags() ^ QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
             else:
                 font.setBold(False)
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+                if self.dict_flighttrack[listItem.flighttrack_model]["checkState"]:
+                    listItem.setCheckState(QtCore.Qt.Checked)
             self.set_activate_flag()
             listItem.setFont(font)
-            self.set_activate_flag()
 
     def drawInactiveFlighttracks(self):
         """
@@ -282,9 +284,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 entry["patch"].remove()
 
         for index in range(self.list_flighttrack.count()):
+            listItem = self.list_flighttrack.item(index)
             if hasattr(self.list_flighttrack.item(index), "checkState") and (
                     self.list_flighttrack.item(index).checkState() == QtCore.Qt.Checked):
-                listItem = self.list_flighttrack.item(index)
                 if listItem.flighttrack_model != self.active_flight_track:
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_flighttrack[listItem.flighttrack_model][
@@ -292,8 +294,10 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                                                color=self.dict_flighttrack[listItem.flighttrack_model]['color'])
 
                     self.dict_flighttrack[listItem.flighttrack_model]["patch"] = patch
+                    self.dict_flighttrack[listItem.flighttrack_model]["checkState"] = True
             else:
-                pass
+                # pass
+                self.dict_flighttrack[listItem.flighttrack_model]["checkState"] = False
 
     def set_activate_flag(self):
         if not self.flighttrack_added:
