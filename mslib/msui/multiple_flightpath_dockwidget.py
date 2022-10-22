@@ -24,8 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import copy
-import logging
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
@@ -106,14 +104,18 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # Set flags
         self.flighttrack_added = False
         self.flighttrack_activated = False
-        self.color_change = None
+        self.color_change = False
+        self.change_linewidth = False
+        self.dsbx_linewidth.setValue(2.0)
 
         # Connect Signals and Slots
         self.listView.model().rowsInserted.connect(self.wait)
         self.listView.model().rowsRemoved.connect(self.flighttrackRemoved)
         self.ui.signal_activate_flighttrack1.connect(self.get_active)
         self.list_flighttrack.itemChanged.connect(self.flagop)
+
         self.pushButton_color.clicked.connect(self.select_color)
+        self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
 
         # Load flighttracks
         for index in range(self.listView.count()):
@@ -172,7 +174,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # Create new key in dict
         self.dict_flighttrack[wp_model] = {}
         self.dict_flighttrack[wp_model]["patch"] = None
-        self.dict_flighttrack[wp_model]["color"] = 'blue'
+        self.dict_flighttrack[wp_model]["color"] = None
+        self.dict_flighttrack[wp_model]["linewidth"] = 2
         self.dict_flighttrack[wp_model]["wp_data"] = []
         self.dict_flighttrack[wp_model]["checkState"] = False
 
@@ -222,10 +225,27 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
         return QtGui.QIcon(pixmap)
 
-    # def select_linewidth(self):
-    #     """
-    #     Change the line width of selected flighttrack.
-    #     """
+    def set_linewidth(self):
+        """
+        Change the line width of selected flighttrack.
+        """
+        if self.list_flighttrack.currentItem() is not None:
+            if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
+                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
+                wp_model = self.list_flighttrack.currentItem().flighttrack_model
+                if self.dict_flighttrack[wp_model]["linewidth"] != self.dsbx_linewidth.value():
+                    self.dict_flighttrack[wp_model]["linewidth"] = self.dsbx_linewidth.value()
+
+                    self.dict_flighttrack[wp_model]["patch"].remove()
+                    self.dict_flighttrack[wp_model]["patch"].update(
+                        self.dict_flighttrack[wp_model]["linewidth"], self.dict_flighttrack[wp_model]["color"]
+                    )
+                    self.change_linewidth = True
+                    self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
+            else:
+                self.labelStatus.setText("Status: No flight track selected")
+        else:
+            self.labelStatus.setText("Status: No flight track selected")
 
     def flighttrackRemoved(self, parent, start, end):
         """

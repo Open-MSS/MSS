@@ -740,7 +740,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.save_as_handler()
 
     def save_as_handler(self):
-        """Slot for the 'Save Active Flight Track As' menu entry.
+        """
+        Slot for the 'Save Active Flight Track As' menu entry.
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         file_type = ["Flight track (*.ftml)"]
