@@ -50,7 +50,6 @@ from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons
-from mslib.msui import mpl_pathinteractor as path
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
@@ -324,7 +323,8 @@ class MySideViewFigure(MyFigure):
         if num_interpolation_points is None:
             num_interpolation_points = config_loader(dataset='num_interpolation_points')
         super().__init__(fig, ax)
-
+        self.plotter = mpl_pi.PathV_Plotter(self.ax, redraw_xaxis=self.redraw_xaxis,
+                                            clear_figure=self.clear_figure, numintpoints=num_interpolation_points)
         # Default settings.
         self.settings_dict = {"vertical_extent": (1050, 180),
                               "vertical_axis": "pressure",
@@ -355,6 +355,7 @@ class MySideViewFigure(MyFigure):
         self.imgax = self.fig.add_axes(
             self.ax.get_position(), frameon=True, xticks=[], yticks=[], label="imgax", zorder=0)
         self.vertical_lines = []
+        self.ceiling_alt = []
 
         # Sets the default value of sideview fontsize settings from MSSDefaultConfig.
         self.sideview_size_settings = config_loader(dataset="sideview")
@@ -363,6 +364,7 @@ class MySideViewFigure(MyFigure):
         self.fl_label_list = []
         self.image = None
         self.update_vertical_extent_from_settings(init=True)
+        self.set_settings(self.settings_dict)
 
     def _determine_ticks_labels(self, typ):
         if typ == "no secondary axis":
@@ -431,14 +433,37 @@ class MySideViewFigure(MyFigure):
 
         self.redraw_yaxis()
 
-    def set_settings(self, settings=None):
+    def set_settings(self, settings):
         """Apply settings to view.
         """
+        vertical_lines = self.settings_dict["draw_verticals"]
         if settings is not None:
             self.settings_dict.update(settings)
         settings = self.settings_dict
         self.set_flight_levels(settings["flightlevels"])
         self.set_flight_levels_visible(settings["draw_flightlevels"])
+
+        self.update_ceiling(
+            self.settings_dict["draw_ceiling"] and (
+                self.plotter is not None),
+            self.settings_dict["colour_ceiling"])
+        self.update_vertical_extent_from_settings()
+
+        if self.plotter is not None:
+            self.plotter.set_vertices_visible(
+                self.settings_dict["draw_flighttrack"])
+            self.plotter.set_path_color(
+                line_color=self.settings_dict["colour_ft_vertices"],
+                marker_facecolor=self.settings_dict["colour_ft_waypoints"])
+            self.plotter.set_patch_visible(
+                self.settings_dict["fill_flighttrack"])
+            self.plotter.set_labels_visible(
+                self.settings_dict["label_flighttrack"])
+
+        if self.plotter is not None \
+                and self.settings_dict["draw_verticals"] != vertical_lines:
+            self.redraw_xaxis(self.plotter.path.ilats, self.plotter.path.ilons,
+                              self.plotter.path.itimes)
 
     def redraw_yaxis(self):
         """ Redraws the y-axis on map after setting the values from sideview options dialog box
@@ -527,6 +552,14 @@ class MySideViewFigure(MyFigure):
                     ipoint += 1
         self.fig.canvas.draw()
 
+    def plot_path(self, xs, wp_press, lats, lons, highlight):
+        self.ceiling_alt = []
+        self.ceiling_alt = self.plotter.plot_path(xs, wp_press)
+        # self.update_ceiling(
+        #     self.settings_dict["draw_ceiling"] and self.plotter is not None,
+        #     self.settings_dict["colour_ceiling"])
+        self.draw_vertical_lines(highlight, lats, lons)
+
     def getBBOX(self):
         """Get the bounding box of the view (returns a 4-tuple
            x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])).
@@ -556,7 +589,6 @@ class MySideViewFigure(MyFigure):
 
     def draw_image(self, img):
         """Draw the image img on the current plot.
-
         NOTE: The image is plotted in a separate axes object that is located
         below the axes that display the flight profile. This is necessary
         because imshow() does not work with logarithmic axes.
@@ -603,6 +635,14 @@ class MySideViewFigure(MyFigure):
             pressure = thermolib.flightlevel2pressure(level * units.hft).magnitude
             self.fl_label_list.append(ax.axhline(pressure, color='k'))
             self.fl_label_list.append(ax.text(0.1, pressure, f"FL{level:d}"))
+        self.fig.canvas.draw()
+
+    def update_ceiling(self, visible, color):
+        """Toggle the visibility of the flight level lines.
+        """
+        for line in self.ceiling_alt:
+            line.set_color(color)
+            line.set_visible(visible)
         self.fig.canvas.draw()
 
     def update_vertical_extent_from_settings(self, init=False):
@@ -665,6 +705,8 @@ class MyLinearViewFigure(MyFigure):
         """Set up a linear section view.
         """
         self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
+        self.ax.set_title("Linear flight profile", horizontalalignment='left', x=0)
+        self.ax.figure.canvas.draw()
 
     def clear_figure(self):
         logging.debug("path of linear view has changed.. removing invalidated plots")
@@ -679,9 +721,9 @@ class MyLinearViewFigure(MyFigure):
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
         self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
-                                        for d in zip(lats[::tick_index_step],
-                                                    lons[::tick_index_step])],
-                                        rotation=25, horizontalalignment="right")
+                                for d in zip(lats[::tick_index_step],
+                                             lons[::tick_index_step])],
+                                rotation=25, horizontalalignment="right")
 
         # Remove all vertical lines
         for line in self.vertical_lines[:]:
@@ -1153,7 +1195,6 @@ class MplSideViewCanvas(MplCanvas):
         self.myfig = MySideViewFigure()
         super(MplSideViewCanvas, self).__init__(self.myfig)
 
-        self.plotter = path.PathV_Plotter(self.myfig.ax)
         if settings is not None:
             self.myfig.settings_dict.update(settings)
 

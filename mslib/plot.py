@@ -93,7 +93,7 @@ class Plotting():
         self.bbox_units = self.params["bbox"]
         self.wps = load_from_ftml(filename)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
-        self.wp_presss = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
+        self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.fig.clear()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.path = [(wp[0], wp[1], datetime.datetime.now()) for wp in self.wps]
@@ -110,8 +110,6 @@ class TopViewPlotting(Plotting):
         self.myfig = qt.MyTopViewFigure()
         self.myfig.fig.canvas.draw()
         self.line = None
-
-    def TopViewPath(self):
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
@@ -119,8 +117,11 @@ class TopViewPlotting(Plotting):
         self.myfig.set_map()
         self.plotter = mpath.PathH_GCPlotter(self.myfig.map)
 
+    def TopViewPath(self):
         # plot path and label
         self.fig.canvas.draw()
+        wp_lats, wp_lons, wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
+        self.plotter.plot_path(wp_lons, wp_lats)
         self.plotter.redraw_path(self.vertices, self.wp_model_data)
 
     def TopViewDraw(self):
@@ -166,6 +167,7 @@ class SideViewPlotting(Plotting):
         self.myfig = qt.MySideViewFigure()
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
+        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.fig.canvas.draw()
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
@@ -184,13 +186,10 @@ class SideViewPlotting(Plotting):
         times_visible = False
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
         highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
+        self.myfig.plot_path(self.intermediate_indexes, self.wp_press, self.lats, self.lons, highlight)
 
     def SideViewPath(self):
         self.fig.canvas.draw()
-        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
-        line, = self.plotter.plot_path(self.intermediate_indexes, self.wp_presss)
-        line.set_visible(True)
         self.plotter.redraw_path(self.vertices, self.wp_model_data)
 
     def SideViewDraw(self):
@@ -263,7 +262,7 @@ class LinearViewPlotting(Plotting):
 
                 path_string = ""
                 for i, wp in enumerate(self.wps):
-                    path_string += f"{wp[0]:.2f},{wp[1]:.2f},{self.wp_presss[i]},"
+                    path_string += f"{wp[0]:.2f},{wp[1]:.2f},{self.wp_press[i]},"
                 path_string = path_string[:-1]
 
                 # retrieve and draw image
@@ -300,7 +299,7 @@ class LinearViewPlotting(Plotting):
                 self.myfig.redraw_xaxis(self.lats, self.lons)
                 highlight = [[wp[0], wp[1]] for wp in self.wps]
                 self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
-                self.myfig.fig.savefig(f"{flight}_{layer}.png")
+                self.myfig.fig.savefig(f"{flight}_{layer}.png", bbox_inches='tight')
 
 
 def main():
