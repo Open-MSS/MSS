@@ -332,7 +332,8 @@ class FileManager(object):
         return change_content
 
     def set_version_name(self, ch_id, op_id, u_id, version_name):
-        if (not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id)) or self.is_collaborator(u_id, op_id):
+        if (not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id) and not
+                self.is_collaborator(u_id, op_id)):
             return False
         Change.query\
             .filter(Change.id == ch_id)\
@@ -349,7 +350,8 @@ class FileManager(object):
         # ToDo a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
-        if not self.is_admin(user.id, ch.op_id) and not self.is_creator(user.id, ch.op_id):
+        if (not self.is_admin(user.id, ch.op_id) and not self.is_creator(user.id, ch.op_id) and not
+                self.is_collaborator(user.id, ch.op_id)):
             return False
         if ch is None:
             return False
