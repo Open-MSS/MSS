@@ -36,6 +36,7 @@ from mslib.utils.qt import get_open_filenames, get_save_filename
 from mslib.utils.qt import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
+from mslib.utils.coordinate import normalize_longitude
 
 
 class KMLPatch(object):
@@ -54,6 +55,8 @@ class KMLPatch(object):
     def compute_xy(self, geometry):
         unzipped = list(zip(*geometry.coords))
         x, y = self.map.gcpoints_path(unzipped[0], unzipped[1])
+        if self.map.projection == "cyl":  # hack for wraparound
+            x = normalize_longitude(x, self.map.llcrnrlon, self.map.urcrnrlon)
         return x, y
 
     def add_point(self, point, style, name):
