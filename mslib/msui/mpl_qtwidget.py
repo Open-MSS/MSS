@@ -323,8 +323,7 @@ class MySideViewFigure(MyFigure):
         if num_interpolation_points is None:
             num_interpolation_points = config_loader(dataset='num_interpolation_points')
         super().__init__(fig, ax)
-        self.plotter = mpl_pi.PathV_Plotter(self.ax, redraw_xaxis=self.redraw_xaxis,
-                                            clear_figure=self.clear_figure, numintpoints=num_interpolation_points)
+        self.plotter = None
         # Default settings.
         self.settings_dict = {"vertical_extent": (1050, 180),
                               "vertical_axis": "pressure",
@@ -552,13 +551,6 @@ class MySideViewFigure(MyFigure):
                     ipoint += 1
         self.fig.canvas.draw()
 
-    def plot_path(self, xs, wp_press, lats, lons, highlight):
-        self.ceiling_alt = []
-        self.ceiling_alt = self.plotter.plot_path(xs, wp_press)
-        # self.update_ceiling(
-        #     self.settings_dict["draw_ceiling"] and self.plotter is not None,
-        #     self.settings_dict["colour_ceiling"])
-        self.draw_vertical_lines(highlight, lats, lons)
 
     def getBBOX(self):
         """Get the bounding box of the view (returns a 4-tuple
@@ -1240,6 +1232,7 @@ class MplSideViewCanvas(MplCanvas):
                 numintpoints=config_loader(dataset="num_interpolation_points"),
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.myfig.clear_figure
             )
+        self.myfig.plotter = self.waypoints_interactor.plotter
 
     def redraw_xaxis(self, lats, lons, times):
         """Redraw the x-axis of the side view on path changes. Also remove
@@ -1270,7 +1263,7 @@ class MplSideViewCanvas(MplCanvas):
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
                 wp_press = []
                 wp_press = thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude
-                self.ceiling_alt = self.plotter.plot_path(xs, wp_press)
+                self.ceiling_alt = self.myfig.plotter.plot_path(xs, wp_press)
                 self.update_ceiling(
                     self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.myfig.settings_dict["colour_ceiling"])

@@ -186,7 +186,8 @@ class SideViewPlotting(Plotting):
         times_visible = False
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
         highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.myfig.plot_path(self.intermediate_indexes, self.wp_press, self.lats, self.lons, highlight)
+        self.plotter.plot_path(self.intermediate_indexes, self.wp_press)
+        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def SideViewPath(self):
         self.fig.canvas.draw()
