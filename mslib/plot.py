@@ -105,8 +105,11 @@ class Plotting():
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self):
+    def __init__(self, itime=None, vtime=None, no_of_plots=1):
         super(TopViewPlotting, self).__init__()
+        self.itime = itime
+        self.vtime = vtime
+        self.no_of_plots = no_of_plots
         self.myfig = qt.MyTopViewFigure()
         self.myfig.fig.canvas.draw()
         self.line = None
@@ -130,7 +133,10 @@ class TopViewPlotting(Plotting):
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
                 width, height = self.myfig.get_plot_size_in_px()
                 self.bbox = self.params['basemap']
-
+                if self.itime is not None:
+                    init_time = self.itime
+                if self.vtime is not None:
+                    time = self.vtime
                 if not init_time:
                     init_time = None
 
@@ -158,7 +164,7 @@ class TopViewPlotting(Plotting):
                 image_io = io.BytesIO(img.read())
                 img = PIL.Image.open(image_io)
                 self.myfig.draw_image(img)
-                self.myfig.fig.savefig(f"{flight}_{layer}.png")
+                self.myfig.fig.savefig(f"{flight}_{layer}_{self.no_of_plots}.png")
 
 
 class SideViewPlotting(Plotting):

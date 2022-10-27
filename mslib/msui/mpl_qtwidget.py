@@ -551,7 +551,6 @@ class MySideViewFigure(MyFigure):
                     ipoint += 1
         self.fig.canvas.draw()
 
-
     def getBBOX(self):
         """Get the bounding box of the view (returns a 4-tuple
            x1, y1(p_bot[hPa]), x2, y2(p_top[hPa])).
