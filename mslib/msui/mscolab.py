@@ -414,6 +414,8 @@ class MSUIMscolab(QtCore.QObject):
     """
     name = "Mscolab"
 
+    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
+
     def __init__(self, parent=None, data_dir=None):
         super(MSUIMscolab, self).__init__(parent)
         self.ui = parent
@@ -1525,6 +1527,8 @@ class MSUIMscolab(QtCore.QObject):
             self.active_operation_name = item.operation_path
             self.active_operation_desc = item.active_operation_desc
             self.waypoints_model = None
+
+            self.signal_activate_operation.emit(self.active_op_id)
 
             self.inactive_op_id = None
             font = QtGui.QFont()

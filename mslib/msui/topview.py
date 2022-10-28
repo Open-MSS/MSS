@@ -188,8 +188,10 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     name = "Top View"
 
     signal_activate_flighttrack1 = QtCore.Signal(ft.WaypointsTableModel)
+    signal_activate_operation = QtCore.Signal(int)
 
-    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None):
+    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None
+                 , token=None):
         """
         Set up user interface, connect signal/slots.
         """
@@ -213,6 +215,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Store active flighttrack waypoint model
         self.active_flighttrack = active_flighttrack
+        self.mscolab_server_url = mscolab_server_url
+        self.token = token
 
         # Connect slots and signals.
         # ==========================
@@ -232,6 +236,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Update flighttrack
         self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
+        self.ui.signal_activate_operation.connect(self.update_active_operation)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
@@ -243,6 +248,10 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         self.active_flighttrack = active_flighttrack
         self.signal_activate_flighttrack1.emit(active_flighttrack)
+
+    @QtCore.Slot(int)
+    def update_active_operation(self, active_op_id):
+        self.signal_activate_operation.emit(active_op_id)
 
     def setup_top_view(self):
         """
@@ -315,7 +324,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
                                                             listView=self.ui.listFlightTracks,
                                                             listOperationsMSC=self.ui.listOperationsMSC,
-                                                            activeFlightTrack=self.active_flighttrack)
+                                                            activeFlightTrack=self.active_flighttrack,
+                                                            mscolab_server_url=self.mscolab_server_url,
+                                                            token=self.token)
             else:
                 raise IndexError("invalid control index")
 

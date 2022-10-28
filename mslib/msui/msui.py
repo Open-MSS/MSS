@@ -337,6 +337,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
     signal_activate_flighttrack = QtCore.Signal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
+    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
 
     def __init__(self, mscolab_data_dir=None, *args):
         super(MSUIMainWindow, self).__init__(*args)
@@ -427,6 +428,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
         self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
+        self.mscolab.signal_activate_operation.connect(self.ss)
+
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
@@ -490,6 +493,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.export_plugins = {}
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
+
+    @QtCore.Slot(int)
+    def ss(self, active_op_id):
+        self.signal_activate_operation.emit(active_op_id)
 
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
         if plugin_type == "Import":
@@ -812,7 +819,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(parent=self, model=model, active_flighttrack=self.active_flight_track)
+            view_window = topview.MSUITopViewWindow(parent=self, model=model,
+                                                    active_flighttrack=self.active_flight_track,
+                                                    mscolab_server_url=self.mscolab.mscolab_server_url,
+                                                    token=self.mscolab.token)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
