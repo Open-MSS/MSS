@@ -428,7 +428,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
         self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
-        self.mscolab.signal_activate_operation.connect(self.ss)
+        self.mscolab.signal_activate_operation.connect(self.activate_operation_slot)
 
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
@@ -495,7 +495,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.add_export_plugins(picker_default)
 
     @QtCore.Slot(int)
-    def ss(self, active_op_id):
+    def activate_operation_slot(self, active_op_id):
         self.signal_activate_operation.emit(active_op_id)
 
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):

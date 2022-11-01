@@ -105,17 +105,17 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     on the TopView canvas.
     """
 
-    def __init__(self, parent=None, view=None, listView=None,
+    def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
-        self.listOperationsMSC = listOperationsMSC
-        self.listView = listView
         self.ui = parent
         self.setupUi(self)
         self.view = view  # canvas
         self.flight_path = None  # flightpath object
         self.dict_flighttrack = {}  # Dictionary of flighttrack data: patch,color,wp_model
         self.active_flight_track = activeFlightTrack
+        self.listOperationsMSC = listOperationsMSC
+        self.listFlightTracks = listFlightTracks
 
         # Set flags
         self.flighttrack_added = False
@@ -125,8 +125,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.dsbx_linewidth.setValue(2.0)
 
         # Connect Signals and Slots
-        self.listView.model().rowsInserted.connect(self.wait)
-        self.listView.model().rowsRemoved.connect(self.flighttrackRemoved)
+        self.listFlightTracks.model().rowsInserted.connect(self.wait)
+        self.listFlightTracks.model().rowsRemoved.connect(self.flighttrackRemoved)
         self.ui.signal_activate_flighttrack1.connect(self.get_active)
         self.list_flighttrack.itemChanged.connect(self.flagop)
 
@@ -136,10 +136,13 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
 
         # Load flighttracks
-        for index in range(self.listView.count()):
-            wp_model = self.listView.item(index).flighttrack_model
+        for index in range(self.listFlightTracks.count()):
+            wp_model = self.listFlightTracks.item(index).flighttrack_model
             listItem = self.create_list_item(wp_model, self.list_flighttrack)
 
+        self.activate_flighttrack()
+
+        # Connect Mscolab Operations ListWidget
         if mscolab_server_url is not None:
             self.operations = MultipleFlightpathOperations(mscolab_server_url, token, self.list_operation_track,
                                                            self.listOperationsMSC, self.view)
@@ -147,7 +150,13 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             # Signal emitted, on activation of operation from MSUI
             self.ui.signal_activate_operation.connect(self.update_op_id)
 
-        self.activate_flighttrack()
+            # deactivate vice versa selection of Operation or Flight Track
+            self.listFlightTracks.itemClicked.connect(lambda: self.list_operation_track.setCurrentItem(None))
+            self.listOperationsMSC.itemClicked.connect(lambda: self.list_flighttrack.setCurrentItem(None))
+
+            # deactivate operation or flighttrack
+            self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
+            self.listFlightTracks.itemDoubleClicked.connect(self.operations.deactivate_all_operations)
 
         # self.view.plot_multiple_flightpath(self)
 
@@ -178,7 +187,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         Slot to add flighttrack.
         """
-        wp_model = self.listView.item(start).flighttrack_model
+        wp_model = self.listFlightTracks.item(start).flighttrack_model
         listItem = self.create_list_item(wp_model, self.list_flighttrack)
         self.activate_flighttrack()
 
@@ -308,12 +317,10 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 if listItem.checkState() == QtCore.Qt.Unchecked:
                     listItem.setCheckState(QtCore.Qt.Checked)
                     self.set_activate_flag()
-                listItem.setFlags(listItem.flags() ^ QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
+                listItem.setFlags(listItem.flags() & ~QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
             else:
                 font.setBold(False)
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
-                # if self.dict_flighttrack[listItem.flighttrack_model]["checkState"]:
-                #     listItem.setCheckState(QtCore.Qt.Checked)
             self.set_activate_flag()
             listItem.setFont(font)
 
@@ -348,6 +355,24 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     @QtCore.Slot(int)
     def update_op_id(self, op_id):
         self.operations.get_op_id(op_id)
+
+    def deactivate_all_flighttracks(self):
+        """
+        Remove all flighttrack patches from topview canvas and make flighttracks userCheckable.
+        """
+        for index in range(self.list_flighttrack.count()):
+            listItem = self.list_flighttrack.item(index)
+
+            if self.dict_flighttrack[listItem.flighttrack_model]["patch"] is not None:
+                self.dict_flighttrack[listItem.flighttrack_model]["patch"].remove()
+
+            # Uncheck all flighttracks
+            self.set_activate_flag()
+            listItem.setCheckState(QtCore.Qt.Unchecked)
+            self.set_activate_flag()
+            listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+
+        self.active_flight_track = None
 
 
 class MultipleFlightpathOperations:
@@ -385,6 +410,8 @@ class MultipleFlightpathOperations:
             wp_model = ft.WaypointsTableModel(xml_content=xml_content)
             wp_model.name = operations["path"]
             self.create_operation(wp_model, op_id)
+
+        self.activate_operation()
 
     def set_flag(self):
         if self.operation_added:
@@ -464,7 +491,7 @@ class MultipleFlightpathOperations:
                 if listItem.checkState() == QtCore.Qt.Unchecked:
                     listItem.setCheckState(QtCore.Qt.Checked)
                     self.set_activate_flag()
-                listItem.setFlags(listItem.flags() ^ QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
+                listItem.setFlags(listItem.flags() & ~QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
             else:
                 font.setBold(False)
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
@@ -484,7 +511,7 @@ class MultipleFlightpathOperations:
             listItem = self.list_operation_track.item(index)
             if hasattr(listItem, "checkState") and (
                     listItem.checkState() == QtCore.Qt.Checked):
-                if listItem.flighttrack_model != self.active_flight_track:
+                if listItem.op_id != self.active_op_id:
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_operations[listItem.flighttrack_model][
                                                    "wp_data"])
@@ -497,6 +524,7 @@ class MultipleFlightpathOperations:
 
     def get_op_id(self, op_id):
         self.active_op_id = op_id
+        self.activate_operation()
 
     def wait2(self, parent, start, end):
         self.operation_added = True
@@ -525,3 +553,20 @@ class MultipleFlightpathOperations:
     def set_activate_flag(self):
         if not self.operation_activated:
             self.operation_activated = True
+
+    def deactivate_all_operations(self):
+        """
+        Removes all operations patches from topview canvas and make flighttracks userCheckable
+        """
+        for index in range(self.listOperationsMSC.count()):
+            listItem = self.list_operation_track.item(index)
+
+            if self.dict_operations[listItem.flighttrack_model]["patch"] is not None:
+                self.dict_operations[listItem.flighttrack_model]["patch"].remove()
+
+            # Uncheck all operations
+            self.set_activate_flag()
+            listItem.setCheckState(QtCore.Qt.Unchecked)
+            self.set_activate_flag()
+            listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+        self.active_op_id = None

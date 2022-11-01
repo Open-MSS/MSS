@@ -215,6 +215,11 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Store active flighttrack waypoint model
         self.active_flighttrack = active_flighttrack
+
+        # Stores active mscolab operation id
+        self.active_op_id = None
+
+        # Mscolab Server Url and token
         self.mscolab_server_url = mscolab_server_url
         self.token = token
 
@@ -251,6 +256,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     @QtCore.Slot(int)
     def update_active_operation(self, active_op_id):
+        self.active_op_id = active_op_id
         self.signal_activate_operation.emit(active_op_id)
 
     def setup_top_view(self):
@@ -322,11 +328,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             elif index == MULTIPLEFLIGHTPATH:
                 title = "Multiple Flightpath"
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
-                                                            listView=self.ui.listFlightTracks,
+                                                            listFlightTracks=self.ui.listFlightTracks,
                                                             listOperationsMSC=self.ui.listOperationsMSC,
                                                             activeFlightTrack=self.active_flighttrack,
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
+                self.signal_activate_operation.emit(self.active_op_id)
             else:
                 raise IndexError("invalid control index")
 
