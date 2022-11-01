@@ -204,7 +204,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # Create new key in dict
         self.dict_flighttrack[wp_model] = {}
         self.dict_flighttrack[wp_model]["patch"] = None
-        self.dict_flighttrack[wp_model]["color"] = None
+        self.dict_flighttrack[wp_model]["color"] = (0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
         self.dict_flighttrack[wp_model]["linewidth"] = 2
         self.dict_flighttrack[wp_model]["wp_data"] = []
         self.dict_flighttrack[wp_model]["checkState"] = False
@@ -218,6 +218,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         listItem.setCheckState(QtCore.Qt.Unchecked)
         if not self.flighttrack_added:
             self.flighttrack_added = True
+
+        # Show flighttrack color icon
+        listItem.setIcon(self.show_color_icon(self.get_color(wp_model)))
 
         return listItem
 
