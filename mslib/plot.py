@@ -173,7 +173,6 @@ class SideViewPlotting(Plotting):
         self.myfig = qt.MySideViewFigure()
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
-        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.fig.canvas.draw()
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
@@ -191,13 +190,14 @@ class SideViewPlotting(Plotting):
         times = None
         times_visible = False
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
-        highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.plotter.plot_path(self.intermediate_indexes, self.wp_press)
-        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def SideViewPath(self):
         self.fig.canvas.draw()
+        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
+        self.plotter.plot_path(self.intermediate_indexes, self.wp_press)
         self.plotter.redraw_path(self.vertices, self.wp_model_data)
+        highlight = [[wp[0], wp[1]] for wp in self.wps]
+        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def SideViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \

@@ -570,7 +570,7 @@ class PathH_GCPlotter(PathPlotter):
             x, y = self.map.gcpoints_path(lons, lats)
             vertices = list(zip(x, y))
 
-        # Set the line to disply great circle points, remove existing
+         # Set the line to disply great circle points, remove existing
         # waypoints scatter instance and draw a new one. This is
         # necessary as scatter() does not provide a set_data method.
         self.line.set_data(list(zip(*vertices)))
@@ -649,7 +649,6 @@ class PathH_GCPlotter(PathPlotter):
     def plot_path(self, x, y):
         line, = self.map.plot(x, y, color="blue", marker="o", linewidth=2, markerfacecolor="red",
                               latlon=True, markersize=4, zorder=100)
-        return line
 
     def draw_callback(self, event):
         """Extends PathInteractor.draw_callback() by drawing the scatter

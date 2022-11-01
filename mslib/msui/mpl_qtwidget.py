@@ -712,9 +712,9 @@ class MyLinearViewFigure(MyFigure):
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
         self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
-                                for d in zip(lats[::tick_index_step],
-                                             lons[::tick_index_step])],
-                                rotation=25, horizontalalignment="right")
+                                        for d in zip(lats[::tick_index_step],
+                                                    lons[::tick_index_step])],
+                                        rotation=25, horizontalalignment="right")
 
         # Remove all vertical lines
         for line in self.vertical_lines[:]:
@@ -1126,6 +1126,7 @@ class NavigationToolbar(NavigationToolbar2QT):
             if not event.ydata or not event.xdata:
                 self.set_message(self.mode)
             else:
+                self.canvas.myfig = MySideViewFigure()
                 (lat, lon), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
                 y_value = convert_pressure_to_vertical_axis_measure(
                     self.canvas.myfig.settings_dict["vertical_axis"], event.ydata)
