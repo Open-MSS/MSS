@@ -23,6 +23,7 @@ def autoplot(itime, vtime, intv):
         print(time)
         print(validtime)
         a = plot.TopViewPlotting(inittime, time, no_of_plots=i)
+        a.TopViewPath()
         a.TopViewDraw()
         time = time + timedelta(hours=intv)
         i = i + 1
