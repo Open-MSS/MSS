@@ -172,6 +172,10 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             entry["patch"].remove()
 
     def wait(self, parent, start, end):
+        """
+        Adding of flighttrack take time, to avoid emitting of rowInserted signal before that, a delay is inserted in
+        new thread(it avoid freezing of UI).
+        """
         self.flighttrack_added = True
         t1 = threading.Timer(0.5, self.flighttrackAdded, [parent, start, end])
         t1.start()
@@ -309,7 +313,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def update_last_flighttrack(self):
         """
-        Update waypoint model for last activated flighttrack in dict_flighttrack.
+        Update waypoint model for most recently activated flighttrack in dict_flighttrack.
         """
         if self.active_flight_track is not None:
             self.save_waypoint_model_data(
