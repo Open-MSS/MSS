@@ -100,6 +100,8 @@ class MultipleFlightpath(object):
 
 
 class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidget):
+    # ToDO: Make a new parent class with all the functions in this class and inherit them
+    #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
     """
     This class provides the interface for plotting Multiple Flighttracks
     on the TopView canvas.
@@ -230,7 +232,11 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         Sets the color of selected flighttrack when Change Color is clicked.
         """
-        # ToDO:
+        # ToDO: Use color defined in options for initial color of active flight path.
+        #  afterwards deactivate the color change button in options and it needs also
+        #  the check mark for enabled, but can't be changed (disabled). At the moment
+        #  the dockingwidget is closed the button and checkmark has to become activated again.
+
         if self.operation_list:
             self.operations.select_color()
         else:
