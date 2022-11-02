@@ -117,6 +117,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.listOperationsMSC = listOperationsMSC
         self.listFlightTracks = listFlightTracks
 
+        self.operation_list = False
+        self.flighttrack_list = False
+
         # Set flags
         self.flighttrack_added = False
         self.flighttrack_activated = False
@@ -130,21 +133,19 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.ui.signal_activate_flighttrack1.connect(self.get_active)
         self.list_flighttrack.itemChanged.connect(self.flagop)
 
-        # self.get_wps_from_server()
-
         self.pushButton_color.clicked.connect(self.select_color)
         self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
 
         # Load flighttracks
         for index in range(self.listFlightTracks.count()):
             wp_model = self.listFlightTracks.item(index).flighttrack_model
-            listItem = self.create_list_item(wp_model, self.list_flighttrack)
+            listItem = self.create_list_item(wp_model)
 
         self.activate_flighttrack()
 
         # Connect Mscolab Operations ListWidget
         if mscolab_server_url is not None:
-            self.operations = MultipleFlightpathOperations(mscolab_server_url, token, self.list_operation_track,
+            self.operations = MultipleFlightpathOperations(self, mscolab_server_url, token, self.list_operation_track,
                                                            self.listOperationsMSC, self.view)
 
             # Signal emitted, on activation of operation from MSUI
@@ -188,30 +189,31 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Slot to add flighttrack.
         """
         wp_model = self.listFlightTracks.item(start).flighttrack_model
-        listItem = self.create_list_item(wp_model, self.list_flighttrack)
+        listItem = self.create_list_item(wp_model)
         self.activate_flighttrack()
 
     def save_waypoint_model_data(self, wp_model, listWidget):
         wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
         if self.dict_flighttrack[wp_model] is None:
-            self.create_list_item(wp_model, listWidget)
+            self.create_list_item(wp_model)
         self.dict_flighttrack[wp_model]["wp_data"] = wp_data
 
-    def create_list_item(self, wp_model, listWidget):
+    def create_list_item(self, wp_model):
         """
         PyQt5 method : Add items in list and add checkbox functionality
         """
         # Create new key in dict
         self.dict_flighttrack[wp_model] = {}
         self.dict_flighttrack[wp_model]["patch"] = None
-        self.dict_flighttrack[wp_model]["color"] = (0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
+        self.dict_flighttrack[wp_model]["color"] = (
+            0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
         self.dict_flighttrack[wp_model]["linewidth"] = 2
         self.dict_flighttrack[wp_model]["wp_data"] = []
         self.dict_flighttrack[wp_model]["checkState"] = False
 
-        self.save_waypoint_model_data(wp_model, listWidget)
+        self.save_waypoint_model_data(wp_model, self.list_flighttrack)
 
-        listItem = msui.QFlightTrackListWidgetItem(wp_model, listWidget)
+        listItem = msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
         listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
         if not self.flighttrack_added:
             self.flighttrack_added = True
@@ -228,21 +230,23 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         Sets the color of selected flighttrack when Change Color is clicked.
         """
-        if self.list_flighttrack.currentItem() is not None:
-            if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
-                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
-                wp_model = self.list_flighttrack.currentItem().flighttrack_model
-                color = QtWidgets.QColorDialog.getColor()
-                if color.isValid():
-                    self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
-                    self.color_change = True
-                    self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
-                    self.dict_flighttrack[wp_model]["patch"].update(color=
-                                                                    self.dict_flighttrack[wp_model]["color"])
+        # ToDO:
+        if self.operation_list:
+            self.operations.select_color()
+        else:
+            if self.list_flighttrack.currentItem() is not None:
+                if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
+                        self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
+                    wp_model = self.list_flighttrack.currentItem().flighttrack_model
+                    color = QtWidgets.QColorDialog.getColor()
+                    if color.isValid():
+                        self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
+                        self.color_change = True
+                        self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+                        self.dict_flighttrack[wp_model]["patch"].update(color=
+                                                                        self.dict_flighttrack[wp_model]["color"])
             else:
                 self.labelStatus.setText("Status: No flight track selected")
-        else:
-            self.labelStatus.setText("Status: No flight track selected")
 
     def get_color(self, wp_model):
         """
@@ -369,13 +373,24 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             if self.dict_flighttrack[listItem.flighttrack_model]["patch"] is not None:
                 self.dict_flighttrack[listItem.flighttrack_model]["patch"].remove()
 
+            self.set_listControl(True, False)
+
             # Uncheck all flighttracks
             self.set_activate_flag()
             listItem.setCheckState(QtCore.Qt.Unchecked)
             self.set_activate_flag()
             listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
 
+            if listItem.flighttrack_model == self.active_flight_track:
+                font = QtGui.QFont()
+                font.setBold(False)
+                listItem.setFont(font)
+
         self.active_flight_track = None
+
+    def set_listControl(self, operation, flighttrack):
+        self.operation_list = operation
+        self.flighttrack_list = flighttrack
 
 
 class MultipleFlightpathOperations:
@@ -384,8 +399,10 @@ class MultipleFlightpathOperations:
     on the TopView canvas.
     """
 
-    def __init__(self, mscolab_server_url, token, list_operation_track, listOperationsMSC, view):
+    def __init__(self, parent, mscolab_server_url, token, list_operation_track, listOperationsMSC, view):
+        # super(MultipleFlightpathOperations, self).__init__(parent)
         # Variables related to Mscolab Operations
+        self.parent = parent
         self.active_op_id = None
         self.mscolab_server_url = mscolab_server_url
         self.token = token
@@ -398,6 +415,7 @@ class MultipleFlightpathOperations:
         self.operation_added = False
         self.operation_removed = False
         self.operation_activated = False
+        self.color_change = False
 
         # Connect signals and slots
         self.list_operation_track.itemChanged.connect(self.set_flag)
@@ -421,6 +439,8 @@ class MultipleFlightpathOperations:
             self.operation_added = False
         elif self.operation_removed:
             self.operation_removed = False
+        elif self.color_change:
+            self.color_change = False
         else:
             self.draw_inactive_operations()
 
@@ -465,6 +485,7 @@ class MultipleFlightpathOperations:
         self.dict_operations[wp_model] = {}
         self.dict_operations[wp_model]["patch"] = None
         self.dict_operations[wp_model]["op_id"] = None
+        self.dict_operations[wp_model]["color"] = (0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
         # self.sav
 
         self.save_operation_data(wp_model, op_id)
@@ -477,6 +498,9 @@ class MultipleFlightpathOperations:
         listItem.setCheckState(QtCore.Qt.Unchecked)
         if not self.operation_added:
             self.operation_added = True
+
+        # Show operations color icon
+        listItem.setIcon(self.show_color_icon(self.get_color(wp_model)))
 
         return listItem
 
@@ -517,7 +541,8 @@ class MultipleFlightpathOperations:
                 if listItem.op_id != self.active_op_id:
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_operations[listItem.flighttrack_model][
-                                                   "wp_data"])
+                                                   "wp_data"],
+                                               color=self.dict_operations[listItem.flighttrack_model]["color"])
 
                     self.dict_operations[listItem.flighttrack_model]["patch"] = patch
                     # self.dict_operations[listItem.flighttrack_model]["checkState"] = True
@@ -567,9 +592,47 @@ class MultipleFlightpathOperations:
             if self.dict_operations[listItem.flighttrack_model]["patch"] is not None:
                 self.dict_operations[listItem.flighttrack_model]["patch"].remove()
 
+            self.parent.set_listControl(False, True)
+
             # Uncheck all operations
             self.set_activate_flag()
             listItem.setCheckState(QtCore.Qt.Unchecked)
             self.set_activate_flag()
             listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+
+            if listItem.op_id == self.active_op_id:
+                font = QtGui.QFont()
+                font.setBold(False)
+                listItem.setFont(font)
+
         self.active_op_id = None
+
+    def select_color(self):
+        """
+        Sets the color of selected operation when change Color is clicked.
+        """
+        if self.list_operation_track.currentItem() is not None:
+            if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
+                    self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
+                wp_model = self.list_operation_track.currentItem().flighttrack_model
+                color = QtWidgets.QColorDialog.getColor()
+                if color.isValid():
+                    self.dict_operations[wp_model]["color"] = color.getRgbF()
+                    self.color_change = True
+                    self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+                    self.dict_operations[wp_model]["patch"].update(color=
+                                                                   self.dict_operations[wp_model]["color"])
+
+    def get_color(self, wp_model):
+        """
+        Returns color of respective operation.
+        """
+        return self.dict_operations[wp_model]["color"]
+
+    def show_color_icon(self, clr):
+        """
+        Creating object of QPixmap for displaying icon inside the listWidget.
+        """
+        pixmap = QtGui.QPixmap(20, 10)
+        pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
+        return QtGui.QIcon(pixmap)
