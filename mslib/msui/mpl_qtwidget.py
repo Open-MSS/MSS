@@ -1126,7 +1126,6 @@ class NavigationToolbar(NavigationToolbar2QT):
             if not event.ydata or not event.xdata:
                 self.set_message(self.mode)
             else:
-                self.canvas.myfig = MySideViewFigure()
                 (lat, lon), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
                 y_value = convert_pressure_to_vertical_axis_measure(
                     self.canvas.myfig.settings_dict["vertical_axis"], event.ydata)
