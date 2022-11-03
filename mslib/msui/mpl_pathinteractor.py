@@ -51,7 +51,7 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from PyQt5 import QtCore, QtWidgets
 
-from mslib.utils.coordinate import get_distance, find_location, latlon_points
+from mslib.utils.coordinate import get_distance, find_location, latlon_points, normalize_longitude
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
@@ -1120,9 +1120,7 @@ class HPathInteractor(PathInteractor):
         x, y = list(zip(*wp_vertices))
 
         if self.map.projection == "cyl":  # hack for wraparound
-            x = np.array(x)
-            x[x < self.map.llcrnrlon] += 360
-            x[x > self.map.urcrnrlon] -= 360
+            x = normalize_longitude(x, self.map.llcrnrlon, self.map.urcrnrlon)
         # (animated is important to remove the old scatter points from the map)
         self.wp_scatter = self.ax.scatter(
             x, y, color=self.markerfacecolor, s=20, zorder=3, animated=True, visible=self.show_marker)
@@ -1185,9 +1183,7 @@ class HPathInteractor(PathInteractor):
         """
         xy = np.asarray(self.pathpatch.get_path().wp_vertices)
         if self.map.projection == "cyl":  # hack for wraparound
-            lon_min, lon_max = self.map.llcrnrlon, self.map.urcrnrlon
-            xy[xy[:, 0] < lon_min, 0] += 360
-            xy[xy[:, 0] > lon_max, 0] -= 360
+            xy[:, 0] = normalize_longitude(xy[:, 0], self.map.llcrnrlon, self.map.urcrnrlon)
         xyt = self.pathpatch.get_transform().transform(xy)
         xt, yt = xyt[:, 0], xyt[:, 1]
         d = np.hypot(xt - event.x, yt - event.y)
