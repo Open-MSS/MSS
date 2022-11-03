@@ -1,6 +1,5 @@
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - pip
   - pip:
@@ -19,7 +18,7 @@ dependencies:
       - fs
       - netCDF4
       - future
-      - pint
       - PyQt5
       - owslib
-  - basemap
+  - basemap >=1.3.3
+  - pint <0.20
