@@ -124,8 +124,8 @@ class TopViewPlotting(Plotting):
         # plot path and label
         self.fig.canvas.draw()
         wp_lats, wp_lons, wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
-        self.plotter.plot_path(wp_lons, wp_lats)
-        self.plotter.redraw_path(self.vertices, self.wp_model_data)
+        self.plotter.update_from_waypoints(self.wp_model_data)
+        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def TopViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \

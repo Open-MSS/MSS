@@ -157,11 +157,10 @@ class WaypointsPath(mpath.Path):
         """
         return (0, 0)
 
-    def update_from_WaypointsTableModel(self, wps_model):
+    def update_from_waypoints(self, wps):
         """
         """
         Path = mpath.Path
-        wps = wps_model.all_waypoint_data()
         pathdata = []
         # on a expired mscolab server wps is an empty list
         if len(wps) > 0:
@@ -193,7 +192,7 @@ class PathV(WaypointsPath):
         self.numintpoints = kwargs.pop("numintpoints")
         super().__init__(*args, **kwargs)
 
-    def update_from_WaypointsTableModel(self, wps_model):
+    def update_from_waypoints(self, wps):
         """Extended version of the corresponding WaypointsPath method.
 
         The idea is to generate a field 'intermediate_indexes' that stores
@@ -216,7 +215,7 @@ class PathV(WaypointsPath):
         if lats is not None:
             # Determine indices of waypoints in list of intermediate points.
             # Store these indices.
-            waypoints = [[wp.lat, wp.lon] for wp in wps_model.all_waypoint_data()]
+            waypoints = [[wp.lat, wp.lon] for wp in wps]
             intermediate_indexes = []
             ipoint = 0
             for i, (lat, lon) in enumerate(zip(lats, lons)):
@@ -232,7 +231,7 @@ class PathV(WaypointsPath):
             self.itimes = times
 
             # Call super method.
-            super().update_from_WaypointsTableModel(wps_model)
+            super().update_from_waypoints(wps)
 
     def transform_waypoint(self, wps_list, index):
         """Returns the x-index of the waypoint and its pressure.
@@ -278,14 +277,13 @@ class PathH_GC(PathH):
         self.wp_codes = np.array([], dtype=np.uint8)
         self.wp_vertices = np.array([])
 
-    def update_from_WaypointsTableModel(self, wps_model):
+    def update_from_waypoints(self, wps):
         """Get waypoint coordinates from flight track model, get
            intermediate great circle vertices from map instance.
         """
         Path = mpath.Path
 
         # Waypoint coordinates.
-        wps = wps_model.all_waypoint_data()
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
@@ -515,6 +513,9 @@ class PathPlotter(object):
         if patch_facecolor is not None:
             self.pathpatch.set_facecolor(patch_facecolor)
 
+    def update_from_waypoints(self, wps):
+        self.pathpatch.get_path().update_from_waypoints(wps)
+
 
 class PathH_GCPlotter(PathPlotter):
     def __init__(self, mplmap, mplpath=None, facecolor='none', edgecolor='none',
@@ -570,7 +571,7 @@ class PathH_GCPlotter(PathPlotter):
             x, y = self.map.gcpoints_path(lons, lats)
             vertices = list(zip(x, y))
 
-         # Set the line to disply great circle points, remove existing
+        # Set the line to disply great circle points, remove existing
         # waypoints scatter instance and draw a new one. This is
         # necessary as scatter() does not provide a set_data method.
         self.line.set_data(list(zip(*vertices)))
@@ -611,6 +612,7 @@ class PathH_GCPlotter(PathPlotter):
         # (animated is important to remove the old scatter points from the map)
         self.wp_scatter = self.ax.scatter(
             x, y, color=self.markerfacecolor, s=20, zorder=3, animated=True, visible=self.show_marker)
+        self.wp_scatter = None
 
         # Draw waypoint labels.
         label_offset = self.appropriate_epsilon(px=5)
@@ -621,6 +623,7 @@ class PathH_GCPlotter(PathPlotter):
             textlabel = str(i)
             if wpd.location != "":
                 textlabel = f"{wpd.location}"
+            label_offset=0
             text = self.ax.text(
                 x[i] + label_offset, y[i] + label_offset, textlabel,
                 bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.6, "edgecolor": "none"},
@@ -636,7 +639,8 @@ class PathH_GCPlotter(PathPlotter):
         except ValueError as error:
             logging.debug("ValueError Exception '%s'", error)
         self.ax.draw_artist(self.line)
-        self.ax.draw_artist(self.wp_scatter)
+        if self.wp_scatter is not None:
+            self.ax.draw_artist(self.wp_scatter)
 
         for t in self.wp_labels:
             self.ax.draw_artist(t)
@@ -859,7 +863,7 @@ class PathInteractor(QtCore.QObject):
         wpm.rowsInserted.connect(self.qt_insert_remove_point_listener)
         wpm.rowsRemoved.connect(self.qt_insert_remove_point_listener)
         # Redraw.
-        self.plotter.pathpatch.get_path().update_from_WaypointsTableModel(wpm)
+        self.plotter.update_from_waypoints(wpm.all_waypoint_data())
         self.redraw_figure()
 
     def qt_insert_remove_point_listener(self, index, first, last):
@@ -867,7 +871,7 @@ class PathInteractor(QtCore.QObject):
            by the flight track data model. The view can thus react to
            data changes induced by another view (table, side view).
         """
-        self.plotter.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
+        self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
         self.redraw_figure()
 
     def qt_data_changed_listener(self, index1, index2):
@@ -1029,7 +1033,7 @@ class VPathInteractor(PathInteractor):
         y = event.ydata
         wpm = self.waypoints_model
         flightlevel = float(pressure2flightlevel(y * units.Pa).magnitude)
-        [lat, lon], best_index = self.plotter.get_lat_lon(event, wpm)
+        [lat, lon], best_index = self.plotter.get_lat_lon(event, wpm.all_waypoint_data())
         loc = find_location(lat, lon)  # skipped tolerance which uses appropriate_epsilon_km
         if loc is not None:
             (lat, lon), location = loc
@@ -1089,7 +1093,7 @@ class VPathInteractor(PathInteractor):
         # profile needs to be redrawn (redraw_path()). If the horizontal
         # position of a waypoint has changed, the entire figure needs to be
         # redrawn, as this affects the x-position of all points.
-        self.plotter.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
+        self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
         if index1.column() in [ft.FLIGHTLEVEL, ft.PRESSURE, ft.LOCATION]:
             self.plotter.redraw_path(self.plotter.pathpatch.get_path().vertices, self.waypoints_model.all_waypoint_data())
         elif index1.column() in [ft.LAT, ft.LON]:
@@ -1148,7 +1152,7 @@ class LPathInteractor(PathInteractor):
            data model. The linear view can thus react to data changes
            induced by another view (table, top view, side view).
         """
-        self.plotter.pathpatch.get_path().update_from_WaypointsTableModel(self.waypoints_model)
+        self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
         self.redraw_figure()
 
 #
@@ -1318,8 +1322,7 @@ class HPathInteractor(PathInteractor):
         """Update the path plot by updating coordinates and intermediate
            great circle points from the path patch, then redrawing.
         """
-        self.plotter.pathpatch.get_path().update_from_WaypointsTableModel(
-            self.waypoints_model)
+        self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
         self.redraw_path()
 
     def redraw_path(self, wp_vertices=None):
