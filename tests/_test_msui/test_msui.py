@@ -236,7 +236,7 @@ class Test_MSSSideViewWindow(object):
     def test_plugin_import(self, open_file):
         with mock.patch("mslib.msui.msui.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.msui.get_open_filename", return_value=open_file[0]) as mockopen:
+        with mock.patch("mslib.msui.msui.get_open_filenames", return_value=open_file) as mockopen:
             assert self.window.listFlightTracks.count() == 1
             assert mockopen.call_count == 0
             self.window.last_save_directory = ROOT_DIR
@@ -311,7 +311,7 @@ class Test_MSSSideViewWindow(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("mslib.msui.msui.get_save_filename", return_value=save_ftml)
-    @mock.patch("mslib.msui.msui.get_open_filename", return_value=save_ftml)
+    @mock.patch("mslib.msui.msui.get_open_filenames", return_value=[save_ftml])
     def test_flight_track_io(self, mockload, mocksave, mockq, mocki, mockw, mockbox):
         self.window.actionCloseSelectedFlightTrack.trigger()
         assert mocki.call_count == 1
@@ -323,7 +323,6 @@ class Test_MSSSideViewWindow(object):
         self.window.actionCloseSelectedFlightTrack.trigger()
         assert mocki.call_count == 2
         self.window.last_save_directory = self.sample_path
-        self.window.actionSaveActiveFlightTrack.trigger()
         self.window.actionSaveActiveFlightTrack.trigger()
         self.window.active_flight_track = tmp_ft
         self.window.actionCloseSelectedFlightTrack.trigger()

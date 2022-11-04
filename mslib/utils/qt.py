@@ -50,7 +50,7 @@ def get_open_filenames_qt(*args):
     """
     To select multiple files simultaneously
     """
-    filenames = QtWidgets.QFileDialog.getOpenFileNames(*args)
+    filenames = QtWidgets.QFileDialog.getOpenFileNames(*args, options=QtWidgets.QFileDialog.DontUseNativeDialog)
     return filenames[0] if isinstance(filenames, tuple) else str(filenames)
 
 
