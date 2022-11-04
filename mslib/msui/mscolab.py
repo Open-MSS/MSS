@@ -415,6 +415,8 @@ class MSUIMscolab(QtCore.QObject):
     name = "Mscolab"
 
     signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
+    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
 
     def __init__(self, parent=None, data_dir=None):
         super(MSUIMscolab, self).__init__(parent)
@@ -839,6 +841,7 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog.showMessage('Your operation was created successfully')
             op_id = self.get_recent_op_id()
             self.conn.handle_new_operation(op_id)
+            self.signal_operation_added.emit(op_id, path)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
@@ -1005,6 +1008,7 @@ class MSUIMscolab(QtCore.QObject):
                         res = requests.post(url, data=data)
                         res.raise_for_status()
                         self.reload_operations()
+                        self.signal_operation_removed.emit(self.active_op_id)
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
                         show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")

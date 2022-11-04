@@ -338,6 +338,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
     signal_activate_flighttrack = QtCore.Signal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
     signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
+    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
 
     def __init__(self, mscolab_data_dir=None, *args):
         super(MSUIMainWindow, self).__init__(*args)
@@ -429,6 +431,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
         self.mscolab.signal_activate_operation.connect(self.activate_operation_slot)
+        self.mscolab.signal_operation_added.connect(self.add_operation_slot)
+        self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
 
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
@@ -497,6 +501,14 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     @QtCore.Slot(int)
     def activate_operation_slot(self, active_op_id):
         self.signal_activate_operation.emit(active_op_id)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.signal_operation_added.emit(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.signal_operation_removed.emit(op_id)
 
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
         if plugin_type == "Import":

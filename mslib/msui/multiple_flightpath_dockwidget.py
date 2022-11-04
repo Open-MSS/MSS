@@ -100,15 +100,17 @@ class MultipleFlightpath(object):
 
 
 class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidget):
-    # ToDO: Make a new parent class with all the functions in this class and inherit them
-    #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
     """
     This class provides the interface for plotting Multiple Flighttracks
     on the TopView canvas.
     """
 
+    # ToDO: Make a new parent class with all the functions in this class and inherit them
+    #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
+
     def __init__(self, parent=None, view=None, listFlightTracks=None,
-                 listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
+                 listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None,
+                 color=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
         self.ui = parent
         self.setupUi(self)
@@ -118,6 +120,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.active_flight_track = activeFlightTrack
         self.listOperationsMSC = listOperationsMSC
         self.listFlightTracks = listFlightTracks
+        self.color = color
 
         self.operation_list = False
         self.flighttrack_list = False
@@ -136,6 +139,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.list_flighttrack.itemChanged.connect(self.flagop)
 
         self.pushButton_color.clicked.connect(self.select_color)
+        self.ui.signal_ft_vertices_color_change.connect(self.ft_vertices_color)
         self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
 
         # Load flighttracks
@@ -152,6 +156,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
             # Signal emitted, on activation of operation from MSUI
             self.ui.signal_activate_operation.connect(self.update_op_id)
+            self.ui.signal_operation_added.connect(self.add_operation_slot)
+            self.ui.signal_operation_removed.connect(self.remove_operation_slot)
 
             # deactivate vice versa selection of Operation or Flight Track
             self.listFlightTracks.itemClicked.connect(lambda: self.list_operation_track.setCurrentItem(None))
@@ -162,6 +168,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.listFlightTracks.itemDoubleClicked.connect(self.operations.deactivate_all_operations)
 
         # self.view.plot_multiple_flightpath(self)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.operations.operationsAdded(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.operations.operationRemoved(op_id)
 
     def update(self):
         for entry in self.dict_flighttrack.values():
@@ -176,6 +190,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Adding of flighttrack take time, to avoid emitting of rowInserted signal before that, a delay is inserted in
         new thread(it avoid freezing of UI).
         """
+        # ToDo:
         self.flighttrack_added = True
         t1 = threading.Timer(0.5, self.flighttrackAdded, [parent, start, end])
         t1.start()
@@ -198,6 +213,17 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         listItem = self.create_list_item(wp_model)
         self.activate_flighttrack()
 
+    @QtCore.Slot(tuple)
+    def ft_vertices_color(self, color):
+        self.color = color
+        self.dict_flighttrack[self.active_flight_track]["color"] = color
+
+        for index in range(self.list_flighttrack.count()):
+            if self.list_flighttrack.item(index).flighttrack_model == self.active_flight_track:
+                self.list_flighttrack.item(index).setIcon(
+                    self.show_color_icon(self.get_color(self.active_flight_track)))
+                break
+
     def save_waypoint_model_data(self, wp_model, listWidget):
         wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
         if self.dict_flighttrack[wp_model] is None:
@@ -211,8 +237,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # Create new key in dict
         self.dict_flighttrack[wp_model] = {}
         self.dict_flighttrack[wp_model]["patch"] = None
-        self.dict_flighttrack[wp_model]["color"] = (
-            0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
+        self.dict_flighttrack[wp_model]["color"] = self.color
         self.dict_flighttrack[wp_model]["linewidth"] = 2
         self.dict_flighttrack[wp_model]["wp_data"] = []
         self.dict_flighttrack[wp_model]["checkState"] = False
@@ -248,13 +273,18 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
                         self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
                     wp_model = self.list_flighttrack.currentItem().flighttrack_model
-                    color = QtWidgets.QColorDialog.getColor()
-                    if color.isValid():
-                        self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
-                        self.color_change = True
-                        self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
-                        self.dict_flighttrack[wp_model]["patch"].update(color=
-                                                                        self.dict_flighttrack[wp_model]["color"])
+                    if wp_model == self.active_flight_track:
+                        message_box = QtWidgets.QMessageBox()
+                        message_box.setIcon(QtWidgets.QMessageBox.Information)
+                        message_box.about(self, 'Message', 'Use options to change color of Activated Flighttrack.')
+                    else:
+                        color = QtWidgets.QColorDialog.getColor()
+                        if color.isValid():
+                            self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
+                            self.color_change = True
+                            self.list_flFighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+                            self.dict_flighttrack[wp_model]["patch"].update(color=
+                                                                            self.dict_flighttrack[wp_model]["color"])
             else:
                 self.labelStatus.setText("Status: No flight track selected")
 
@@ -410,7 +440,6 @@ class MultipleFlightpathOperations:
     """
 
     def __init__(self, parent, mscolab_server_url, token, list_operation_track, listOperationsMSC, view):
-        # super(MultipleFlightpathOperations, self).__init__(parent)
         # Variables related to Mscolab Operations
         self.parent = parent
         self.active_op_id = None
@@ -429,13 +458,12 @@ class MultipleFlightpathOperations:
 
         # Connect signals and slots
         self.list_operation_track.itemChanged.connect(self.set_flag)
-        self.listOperationsMSC.model().rowsInserted.connect(self.wait2)
-        self.listOperationsMSC.model().rowsRemoved.connect(self.operationRemoved)
 
         # Load operations from wps server
         server_operations = self.get_wps_from_server()
+        sorted_server_operations = sorted(server_operations, key=lambda d: d["path"])
 
-        for operations in server_operations:
+        for operations in sorted_server_operations:
             op_id = operations["op_id"]
             xml_content = self.request_wps_from_server(op_id)
             wp_model = ft.WaypointsTableModel(xml_content=xml_content)
@@ -495,7 +523,8 @@ class MultipleFlightpathOperations:
         self.dict_operations[wp_model] = {}
         self.dict_operations[wp_model]["patch"] = None
         self.dict_operations[wp_model]["op_id"] = None
-        self.dict_operations[wp_model]["color"] = (0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
+        self.dict_operations[wp_model]["color"] = (
+        0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
         # self.sav
 
         self.save_operation_data(wp_model, op_id)
@@ -555,38 +584,34 @@ class MultipleFlightpathOperations:
                                                color=self.dict_operations[listItem.flighttrack_model]["color"])
 
                     self.dict_operations[listItem.flighttrack_model]["patch"] = patch
-                    # self.dict_operations[listItem.flighttrack_model]["checkState"] = True
-            else:
-                pass
-                # self.dict_operations[listItem.flighttrack_model]["checkState"] = False
 
     def get_op_id(self, op_id):
         self.active_op_id = op_id
         self.activate_operation()
 
-    def wait2(self, parent, start, end):
-        self.operation_added = True
-        t2 = threading.Timer(0.5, self.operationsAdded, [parent, start, end])
-        t2.start()
-
-    def operationsAdded(self, parent, start, end):
+    def operationsAdded(self, op_id, path):
         """
         Slot to add operation.
         """
-        wp_model = self.list_operation_track.item(start).flighttrack_model
-        listItem = self.create_operation(wp_model, self.list_operation_track)
+        wp_model = self.load_wps_from_server(op_id)
+        wp_model.name = path
+        listItem = self.create_operation(wp_model, op_id)
+        self.active_op_id = op_id
         self.activate_operation()
 
-    def operationRemoved(self, parent, start, end):
+    def operationRemoved(self, op_id):
         """
         Slot to remove operation.
         """
         self.operation_removed = True
-        if self.dict_operations[self.list_operation_track.item(start).flighttrack_model]["patch"] is None:
-            del self.dict_operations[self.list_operation_track.item(start).flighttrack_model]
-        else:
-            self.dict_operations[self.list_operation_track.item(start).flighttrack_model]["patch"].remove()
-        self.list_operation_track.takeItem(start)
+        for index in range(self.list_operation_track.count()):
+            if self.list_operation_track.item(index).op_id == op_id:
+                if self.dict_operations[self.list_operation_track.item(index).flighttrack_model]["patch"] is None:
+                    del self.dict_operations[self.list_operation_track.item(index).flighttrack_model]
+                else:
+                    self.dict_operations[self.list_operation_track.item(index).flighttrack_model]["patch"].remove()
+                self.list_operation_track.takeItem(index)
+                break
 
     def set_activate_flag(self):
         if not self.operation_activated:

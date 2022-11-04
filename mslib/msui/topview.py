@@ -60,6 +60,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
     Dialog to set map appearance parameters. User interface is
     defined in "ui_topview_mapappearance.py".
     """
+    signal_ft_vertices_color_change = QtCore.Signal(str, tuple)
 
     def __init__(self, parent=None, settings_dict=None, wms_connected=False):
         """
@@ -176,6 +177,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         colour = palette.color(QtGui.QPalette.Button)
         colour = QtWidgets.QColorDialog.getColor(colour)
         if colour.isValid():
+            self.signal_ft_vertices_color_change.emit(which, colour.getRgbF())
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
 
@@ -189,6 +191,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     signal_activate_flighttrack1 = QtCore.Signal(ft.WaypointsTableModel)
     signal_activate_operation = QtCore.Signal(int)
+    signal_ft_vertices_color_change = QtCore.Signal(tuple)
+    signal_operation_added = QtCore.Signal(int, str)
+    signal_operation_removed = QtCore.Signal(int)
 
     def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None
                  , token=None):
@@ -223,6 +228,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mscolab_server_url = mscolab_server_url
         self.token = token
 
+        #
+        self.ft_vertices_color = None
+
         # Connect slots and signals.
         # ==========================
 
@@ -243,6 +251,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
         self.ui.signal_activate_operation.connect(self.update_active_operation)
 
+        self.ui.signal_operation_added.connect(self.add_operation_slot)
+        self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
 
@@ -258,6 +269,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def update_active_operation(self, active_op_id):
         self.active_op_id = active_op_id
         self.signal_activate_operation.emit(active_op_id)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.signal_operation_added.emit(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.signal_operation_removed.emit(op_id)
 
     def setup_top_view(self):
         """
@@ -327,12 +346,13 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget = ad.AirdataDockwidget(parent=self, view=self.mpl.canvas)
             elif index == MULTIPLEFLIGHTPATH:
                 title = "Multiple Flightpath"
+                self.load_ft_vertices_color()
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
                                                             listFlightTracks=self.ui.listFlightTracks,
                                                             listOperationsMSC=self.ui.listOperationsMSC,
                                                             activeFlightTrack=self.active_flighttrack,
                                                             mscolab_server_url=self.mscolab_server_url,
-                                                            token=self.token)
+                                                            token=self.token, color=self.ft_vertices_color)
                 self.signal_activate_operation.emit(self.active_op_id)
             else:
                 raise IndexError("invalid control index")
@@ -385,12 +405,18 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         settings = self.getView().get_map_appearance()
         dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
         dlg.setModal(False)
+        dlg.signal_ft_vertices_color_change.connect(self.set_ft_vertices_color)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_map_appearance(settings)
             self.save_settings()
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
+
+    @QtCore.Slot(str, tuple)
+    def set_ft_vertices_color(self, which, color):
+        if which == "ft_vertices":
+            self.signal_ft_vertices_color_change.emit(color)
 
     def save_settings(self):
         """
@@ -440,3 +466,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
+    def load_ft_vertices_color(self):
+        settings = load_settings_qsettings(self.settings_tag, {})
+        self.ft_vertices_color = settings["colour_ft_vertices"]
