@@ -194,6 +194,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_ft_vertices_color_change = QtCore.Signal(tuple)
     signal_operation_added = QtCore.Signal(int, str)
     signal_operation_removed = QtCore.Signal(int)
+    signal_login_mscolab = QtCore.Signal(str, str)
+    signal_logout_mscolab = QtCore.Signal()
 
     def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None
                  , token=None):
@@ -227,9 +229,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Mscolab Server Url and token
         self.mscolab_server_url = mscolab_server_url
         self.token = token
-
-        #
-        self.ft_vertices_color = None
 
         # Connect slots and signals.
         # ==========================
@@ -346,13 +345,15 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget = ad.AirdataDockwidget(parent=self, view=self.mpl.canvas)
             elif index == MULTIPLEFLIGHTPATH:
                 title = "Multiple Flightpath"
-                self.load_ft_vertices_color()
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
                                                             listFlightTracks=self.ui.listFlightTracks,
                                                             listOperationsMSC=self.ui.listOperationsMSC,
                                                             activeFlightTrack=self.active_flighttrack,
                                                             mscolab_server_url=self.mscolab_server_url,
-                                                            token=self.token, color=self.ft_vertices_color)
+                                                            token=self.token)
+
+                self.ui.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
+                self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
                 self.signal_activate_operation.emit(self.active_op_id)
             else:
                 raise IndexError("invalid control index")
@@ -467,6 +468,5 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
 
-    def load_ft_vertices_color(self):
-        settings = load_settings_qsettings(self.settings_tag, {})
-        self.ft_vertices_color = settings["colour_ft_vertices"]
+    def get_settings(self):
+        return load_settings_qsettings(self.settings_tag, {})

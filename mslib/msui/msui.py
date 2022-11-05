@@ -140,6 +140,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
+
     def __init__(self):
         super(MSUI_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
@@ -340,6 +341,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
     signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
     signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
+    signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
+    signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
 
     def __init__(self, mscolab_data_dir=None, *args):
         super(MSUIMainWindow, self).__init__(*args)
@@ -433,6 +436,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.signal_activate_operation.connect(self.activate_operation_slot)
         self.mscolab.signal_operation_added.connect(self.add_operation_slot)
         self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
+        self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
+        self.mscolab.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
 
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:

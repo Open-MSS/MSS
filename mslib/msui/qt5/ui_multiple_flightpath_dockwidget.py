@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MultipleViewWidget(object):
     def setupUi(self, MultipleViewWidget):
         MultipleViewWidget.setObjectName("MultipleViewWidget")
-        MultipleViewWidget.resize(544, 235)
+        MultipleViewWidget.resize(778, 235)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Minimum)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -21,6 +21,35 @@ class Ui_MultipleViewWidget(object):
         MultipleViewWidget.setSizePolicy(sizePolicy)
         self.verticalLayout_2 = QtWidgets.QVBoxLayout(MultipleViewWidget)
         self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.frame_2 = QtWidgets.QFrame(MultipleViewWidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.frame_2.sizePolicy().hasHeightForWidth())
+        self.frame_2.setSizePolicy(sizePolicy)
+        self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_2.setObjectName("frame_2")
+        self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.frame_2)
+        self.horizontalLayout_3.setObjectName("horizontalLayout_3")
+        self.ft_color_label = QtWidgets.QLabel(self.frame_2)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.ft_color_label.sizePolicy().hasHeightForWidth())
+        self.ft_color_label.setSizePolicy(sizePolicy)
+        self.ft_color_label.setObjectName("ft_color_label")
+        self.horizontalLayout_3.addWidget(self.ft_color_label)
+        self.colorPixmap = QtWidgets.QLabel(self.frame_2)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.colorPixmap.sizePolicy().hasHeightForWidth())
+        self.colorPixmap.setSizePolicy(sizePolicy)
+        self.colorPixmap.setText("")
+        self.colorPixmap.setObjectName("colorPixmap")
+        self.horizontalLayout_3.addWidget(self.colorPixmap)
+        self.verticalLayout_2.addWidget(self.frame_2)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -84,9 +113,20 @@ class Ui_MultipleViewWidget(object):
     def retranslateUi(self, MultipleViewWidget):
         _translate = QtCore.QCoreApplication.translate
         MultipleViewWidget.setWindowTitle(_translate("MultipleViewWidget", "Form"))
+        self.ft_color_label.setText(_translate("MultipleViewWidget", "(Color shown before flighttracks/operations are only visible in \"deactivated\" state) 𝐀𝐜𝐭𝐢𝐯𝐚𝐭𝐞𝐝 𝐓𝐫𝐚𝐜𝐤 𝐕𝐞𝐫𝐭𝐢𝐜𝐞𝐬 𝐂𝐨𝐥𝐨𝐫 : "))
         self.list_flighttrack.setToolTip(_translate("MultipleViewWidget", "List of Open Flighttracks.\n"
 "Check box to activate and display track on topview."))
         self.list_operation_track.setToolTip(_translate("MultipleViewWidget", "List of Mscolab Operations.\n"
 "Check box to activate and display track on topview."))
         self.pushButton_color.setText(_translate("MultipleViewWidget", "Change Color"))
         self.labelStatus.setText(_translate("MultipleViewWidget", "Status: "))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MultipleViewWidget = QtWidgets.QWidget()
+    ui = Ui_MultipleViewWidget()
+    ui.setupUi(MultipleViewWidget)
+    MultipleViewWidget.show()
+    sys.exit(app.exec_())

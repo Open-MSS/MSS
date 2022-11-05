@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
+
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
@@ -32,11 +34,13 @@ from mslib.utils.verify_user_token import verify_user_token
 import threading
 import requests
 import json
+import gc
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
     """
     """
+
     def __init__(self, flighttrack_model, op_id: int, parent=None, type=QtWidgets.QListWidgetItem.UserType):
         view_name = flighttrack_model.name
         super(QMscolabOperationsListWidgetItem, self).__init__(
@@ -109,8 +113,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
-                 listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None,
-                 color=None):
+                 listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
         self.ui = parent
         self.setupUi(self)
@@ -120,7 +123,11 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.active_flight_track = activeFlightTrack
         self.listOperationsMSC = listOperationsMSC
         self.listFlightTracks = listFlightTracks
-        self.color = color
+        self.mscolab_server_url = mscolab_server_url
+        self.token = token
+        self.ft_settings_dict = self.ui.get_settings()
+        self.color = self.ft_settings_dict["colour_ft_vertices"]
+        self.obb = []
 
         self.operation_list = False
         self.flighttrack_list = False
@@ -141,6 +148,12 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.pushButton_color.clicked.connect(self.select_color)
         self.ui.signal_ft_vertices_color_change.connect(self.ft_vertices_color)
         self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
+        self.ui.signal_login_mscolab.connect(self.login)
+
+        self.colorPixmap.setPixmap(self.show_color_pixmap(self.color))
+
+        if self.mscolab_server_url is not None:
+            self.connect_mscolab_server()
 
         # Load flighttracks
         for index in range(self.listFlightTracks.count()):
@@ -149,33 +162,39 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         self.activate_flighttrack()
 
-        # Connect Mscolab Operations ListWidget
-        if mscolab_server_url is not None:
-            self.operations = MultipleFlightpathOperations(self, mscolab_server_url, token, self.list_operation_track,
-                                                           self.listOperationsMSC, self.view)
+    @QtCore.Slot()
+    def logout(self):
+        self.operations.logout_mscolab()
+        for idx in range(len(self.obb)):
+            del self.obb[idx]
 
-            # Signal emitted, on activation of operation from MSUI
-            self.ui.signal_activate_operation.connect(self.update_op_id)
-            self.ui.signal_operation_added.connect(self.add_operation_slot)
-            self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+    @QtCore.Slot(str, str)
+    def login(self, url, token):
+        self.mscolab_server_url = url
+        self.token = token
+        self.connect_mscolab_server()
 
-            # deactivate vice versa selection of Operation or Flight Track
-            self.listFlightTracks.itemClicked.connect(lambda: self.list_operation_track.setCurrentItem(None))
-            self.listOperationsMSC.itemClicked.connect(lambda: self.list_flighttrack.setCurrentItem(None))
+    def connect_mscolab_server(self):
+        self.operations = MultipleFlightpathOperations(self, self.mscolab_server_url, self.token,
+                                                       self.list_operation_track,
+                                                       self.listOperationsMSC, self.view)
+        self.obb.append(self.operations)
 
-            # deactivate operation or flighttrack
-            self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
-            self.listFlightTracks.itemDoubleClicked.connect(self.operations.deactivate_all_operations)
+        # Signal emitted, on activation of operation from MSUI
+        self.ui.signal_activate_operation.connect(self.update_op_id)
+        self.ui.signal_operation_added.connect(self.add_operation_slot)
+        self.ui.signal_operation_removed.connect(self.remove_operation_slot)
 
-        # self.view.plot_multiple_flightpath(self)
+        # deactivate vice versa selection of Operation or Flight Track
+        self.listFlightTracks.itemClicked.connect(lambda: self.list_operation_track.setCurrentItem(None))
+        self.listOperationsMSC.itemClicked.connect(lambda: self.list_flighttrack.setCurrentItem(None))
 
-    @QtCore.Slot(int, str)
-    def add_operation_slot(self, op_id, path):
-        self.operations.operationsAdded(op_id, path)
+        # deactivate operation or flighttrack
+        self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
+        self.listFlightTracks.itemDoubleClicked.connect(self.operations.deactivate_all_operations)
 
-    @QtCore.Slot(int)
-    def remove_operation_slot(self, op_id):
-        self.operations.operationRemoved(op_id)
+        # Mscolab Server logout signal
+        self.ui.signal_logout_mscolab.connect(self.logout)
 
     def update(self):
         for entry in self.dict_flighttrack.values():
@@ -190,7 +209,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Adding of flighttrack take time, to avoid emitting of rowInserted signal before that, a delay is inserted in
         new thread(it avoid freezing of UI).
         """
-        # ToDo:
+        # ToDo: Use QThread
         self.flighttrack_added = True
         t1 = threading.Timer(0.5, self.flighttrackAdded, [parent, start, end])
         t1.start()
@@ -216,13 +235,35 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     @QtCore.Slot(tuple)
     def ft_vertices_color(self, color):
         self.color = color
-        self.dict_flighttrack[self.active_flight_track]["color"] = color
+        self.colorPixmap.setPixmap(self.show_color_pixmap(color))
 
-        for index in range(self.list_flighttrack.count()):
-            if self.list_flighttrack.item(index).flighttrack_model == self.active_flight_track:
-                self.list_flighttrack.item(index).setIcon(
-                    self.show_color_icon(self.get_color(self.active_flight_track)))
-                break
+        if self.flighttrack_list:
+            self.dict_flighttrack[self.active_flight_track]["color"] = color
+            for index in range(self.list_flighttrack.count()):
+                if self.list_flighttrack.item(index).flighttrack_model == self.active_flight_track:
+                    self.list_flighttrack.item(index).setIcon(
+                        self.show_color_icon(self.get_color(self.active_flight_track)))
+                    break
+        else:
+            self.operations.ft_color_update(color)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.operations.operationsAdded(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.operations.operationRemoved(op_id)
+
+    @QtCore.Slot(int)
+    def update_op_id(self, op_id):
+        self.operations.get_op_id(op_id)
+
+    @QtCore.Slot(ft.WaypointsTableModel)
+    def get_active(self, active_flighttrack):
+        self.update_last_flighttrack()
+        self.active_flight_track = active_flighttrack
+        self.activate_flighttrack()
 
     def save_waypoint_model_data(self, wp_model, listWidget):
         wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
@@ -274,15 +315,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                         self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
                     wp_model = self.list_flighttrack.currentItem().flighttrack_model
                     if wp_model == self.active_flight_track:
-                        message_box = QtWidgets.QMessageBox()
-                        message_box.setIcon(QtWidgets.QMessageBox.Information)
-                        message_box.about(self, 'Message', 'Use options to change color of Activated Flighttrack.')
+                        self.error_dialog = QtWidgets.QErrorMessage()
+                        self.error_dialog.showMessage('Use "options" to change color of an activated flighttrack.')
                     else:
                         color = QtWidgets.QColorDialog.getColor()
                         if color.isValid():
                             self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
                             self.color_change = True
-                            self.list_flFighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+                            self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
                             self.dict_flighttrack[wp_model]["patch"].update(color=
                                                                             self.dict_flighttrack[wp_model]["color"])
             else:
@@ -294,12 +334,16 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         return self.dict_flighttrack[wp_model]["color"]
 
+    def show_color_pixmap(self, clr):
+        pixmap = QtGui.QPixmap(20, 10)
+        pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
+        return pixmap
+
     def show_color_icon(self, clr):
         """
         Creating object of QPixmap for displaying icon inside the listWidget.
         """
-        pixmap = QtGui.QPixmap(20, 10)
-        pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
+        pixmap = self.show_color_pixmap(clr)
         return QtGui.QIcon(pixmap)
 
     def set_linewidth(self):
@@ -334,12 +378,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         else:
             self.dict_flighttrack[self.list_flighttrack.item(start).flighttrack_model]["patch"].remove()
         self.list_flighttrack.takeItem(start)
-
-    @QtCore.Slot(ft.WaypointsTableModel)
-    def get_active(self, active_flighttrack):
-        self.update_last_flighttrack()
-        self.active_flight_track = active_flighttrack
-        self.activate_flighttrack()
 
     def update_last_flighttrack(self):
         """
@@ -399,10 +437,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         if not self.flighttrack_added:
             self.flighttrack_activated = True
 
-    @QtCore.Slot(int)
-    def update_op_id(self, op_id):
-        self.operations.get_op_id(op_id)
-
     def deactivate_all_flighttracks(self):
         """
         Remove all flighttrack patches from topview canvas and make flighttracks userCheckable.
@@ -432,6 +466,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.operation_list = operation
         self.flighttrack_list = flighttrack
 
+    def get_ft_vertices_color(self):
+        return self.color
+
 
 class MultipleFlightpathOperations:
     """
@@ -445,11 +482,10 @@ class MultipleFlightpathOperations:
         self.active_op_id = None
         self.mscolab_server_url = mscolab_server_url
         self.token = token
+        self.view = view
         self.dict_operations = {}
         self.list_operation_track = list_operation_track
         self.listOperationsMSC = listOperationsMSC
-        self.active_flight_track = None
-        self.view = view
 
         self.operation_added = False
         self.operation_removed = False
@@ -468,7 +504,7 @@ class MultipleFlightpathOperations:
             xml_content = self.request_wps_from_server(op_id)
             wp_model = ft.WaypointsTableModel(xml_content=xml_content)
             wp_model.name = operations["path"]
-            self.create_operation(wp_model, op_id)
+            self.create_operation(op_id, wp_model)
 
         self.activate_operation()
 
@@ -510,24 +546,21 @@ class MultipleFlightpathOperations:
             waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
             return waypoints_model
 
-    def save_operation_data(self, wp_model, op_id):
+    def save_operation_data(self, op_id, wp_model):
         wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
-        if self.dict_operations[wp_model] is None:
-            self.create_operation(wp_model, op_id)
-        self.dict_operations[wp_model]["wp_data"] = wp_data
-        self.dict_operations[wp_model]["op_id"] = op_id
+        if self.dict_operations[op_id] is None:
+            self.create_operation(op_id, wp_model)
+        self.dict_operations[op_id]["wp_data"] = wp_data
 
-    def create_operation(self, wp_model, op_id):
+    def create_operation(self, op_id, wp_model):
         """
         """
-        self.dict_operations[wp_model] = {}
-        self.dict_operations[wp_model]["patch"] = None
-        self.dict_operations[wp_model]["op_id"] = None
-        self.dict_operations[wp_model]["color"] = (
-        0.0, 0.3333333333333333, 1.0, 1.0)  # (r,g,b,alpha) value for blue color
-        # self.sav
+        self.dict_operations[op_id] = {}
+        self.dict_operations[op_id]["patch"] = None
+        self.dict_operations[op_id]["wp_data"] = None
+        self.dict_operations[op_id]["color"] = self.parent.get_ft_vertices_color()
 
-        self.save_operation_data(wp_model, op_id)
+        self.save_operation_data(op_id, wp_model)
 
         listItem = QMscolabOperationsListWidgetItem(wp_model, op_id, self.list_operation_track)
         listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
@@ -539,7 +572,7 @@ class MultipleFlightpathOperations:
             self.operation_added = True
 
         # Show operations color icon
-        listItem.setIcon(self.show_color_icon(self.get_color(wp_model)))
+        listItem.setIcon(self.show_color_icon(self.get_color(op_id)))
 
         return listItem
 
@@ -552,8 +585,8 @@ class MultipleFlightpathOperations:
             listItem = self.list_operation_track.item(i)
             if self.active_op_id == listItem.op_id:  # active operation
                 font.setBold(True)
-                if self.dict_operations[listItem.flighttrack_model]["patch"] is not None:
-                    self.dict_operations[listItem.flighttrack_model]["patch"].remove()
+                if self.dict_operations[listItem.op_id]["patch"] is not None:
+                    self.dict_operations[listItem.op_id]["patch"].remove()
                 if listItem.checkState() == QtCore.Qt.Unchecked:
                     listItem.setCheckState(QtCore.Qt.Checked)
                     self.set_activate_flag()
@@ -579,11 +612,11 @@ class MultipleFlightpathOperations:
                     listItem.checkState() == QtCore.Qt.Checked):
                 if listItem.op_id != self.active_op_id:
                     patch = MultipleFlightpath(self.view.map,
-                                               self.dict_operations[listItem.flighttrack_model][
+                                               self.dict_operations[listItem.op_id][
                                                    "wp_data"],
-                                               color=self.dict_operations[listItem.flighttrack_model]["color"])
+                                               color=self.dict_operations[listItem.op_id]["color"])
 
-                    self.dict_operations[listItem.flighttrack_model]["patch"] = patch
+                    self.dict_operations[listItem.op_id]["patch"] = patch
 
     def get_op_id(self, op_id):
         self.active_op_id = op_id
@@ -595,7 +628,7 @@ class MultipleFlightpathOperations:
         """
         wp_model = self.load_wps_from_server(op_id)
         wp_model.name = path
-        listItem = self.create_operation(wp_model, op_id)
+        listItem = self.create_operation(op_id, wp_model)
         self.active_op_id = op_id
         self.activate_operation()
 
@@ -606,10 +639,10 @@ class MultipleFlightpathOperations:
         self.operation_removed = True
         for index in range(self.list_operation_track.count()):
             if self.list_operation_track.item(index).op_id == op_id:
-                if self.dict_operations[self.list_operation_track.item(index).flighttrack_model]["patch"] is None:
-                    del self.dict_operations[self.list_operation_track.item(index).flighttrack_model]
+                if self.dict_operations[self.list_operation_track.item(index).op_id]["patch"] is None:
+                    del self.dict_operations[self.list_operation_track.item(index).op_id]
                 else:
-                    self.dict_operations[self.list_operation_track.item(index).flighttrack_model]["patch"].remove()
+                    self.dict_operations[self.list_operation_track.item(index).op_id]["patch"].remove()
                 self.list_operation_track.takeItem(index)
                 break
 
@@ -624,8 +657,8 @@ class MultipleFlightpathOperations:
         for index in range(self.listOperationsMSC.count()):
             listItem = self.list_operation_track.item(index)
 
-            if self.dict_operations[listItem.flighttrack_model]["patch"] is not None:
-                self.dict_operations[listItem.flighttrack_model]["patch"].remove()
+            if self.dict_operations[listItem.op_id]["patch"] is not None:
+                self.dict_operations[listItem.op_id]["patch"].remove()
 
             self.parent.set_listControl(False, True)
 
@@ -649,25 +682,51 @@ class MultipleFlightpathOperations:
         if self.list_operation_track.currentItem() is not None:
             if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
                     self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
-                wp_model = self.list_operation_track.currentItem().flighttrack_model
-                color = QtWidgets.QColorDialog.getColor()
-                if color.isValid():
-                    self.dict_operations[wp_model]["color"] = color.getRgbF()
-                    self.color_change = True
-                    self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
-                    self.dict_operations[wp_model]["patch"].update(color=
-                                                                   self.dict_operations[wp_model]["color"])
+                op_id = self.list_operation_track.currentItem().op_id
+                if self.list_operation_track.currentItem().op_id == self.active_op_id:
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage('Use "options" to change color of an activated operation.')
+                else:
+                    color = QtWidgets.QColorDialog.getColor()
+                    if color.isValid():
+                        self.dict_operations[op_id]["color"] = color.getRgbF()
+                        self.color_change = True
+                        self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(op_id)))
+                        self.dict_operations[op_id]["patch"].update(color=
+                                                                    self.dict_operations[op_id]["color"])
 
-    def get_color(self, wp_model):
+    def get_color(self, op_id):
         """
         Returns color of respective operation.
         """
-        return self.dict_operations[wp_model]["color"]
+        return self.dict_operations[op_id]["color"]
 
     def show_color_icon(self, clr):
         """
-        Creating object of QPixmap for displaying icon inside the listWidget.
         """
-        pixmap = QtGui.QPixmap(20, 10)
-        pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
+        pixmap = self.parent.show_color_pixmap(clr)
         return QtGui.QIcon(pixmap)
+
+    def ft_color_update(self, color):
+        self.color = color
+        self.dict_operations[self.active_op_id]["color"] = color
+
+        for index in range(self.list_operation_track.count()):
+            if self.list_operation_track.item(index).op_id == self.active_op_id:
+                self.list_operation_track.item(index).setIcon(
+                    self.show_color_icon(self.get_color(self.active_op_id)))
+                break
+
+    def logout_mscolab(self):
+        a = self.list_operation_track.count() - 1
+        while a >= 0:
+            if self.dict_operations[self.list_operation_track.item(0).op_id]['patch'] is None:
+                del self.dict_operations[self.list_operation_track.item(0).op_id]
+            else:
+                self.dict_operations[self.list_operation_track.item(0).op_id]['patch'].remove()
+            self.list_operation_track.takeItem(0)
+            a -= 1
+
+        self.mscolab_server_url = None
+        self.token = None
+        self.dict_operations = {}
