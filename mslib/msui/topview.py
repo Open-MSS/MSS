@@ -270,7 +270,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.Slot(int)
     def update_active_operation(self, active_op_id):
         self.active_op_id = active_op_id
-        self.signal_activate_operation.emit(active_op_id)
+        self.signal_activate_operation.emit(self.active_op_id)
 
     @QtCore.Slot(int, str)
     def add_operation_slot(self, op_id, path):
@@ -363,7 +363,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
                 self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
                 self.ui.signal_listFlighttrack_doubleClicked.connect(lambda: self.signal_listFlighttrack_doubleClicked.emit())
-                self.signal_activate_operation.emit(self.active_op_id)
+                if self.active_op_id is not None:
+                    self.signal_activate_operation.emit(self.active_op_id)
                 widget.signal_parent_closes.connect(self.closed)
             else:
                 raise IndexError("invalid control index")
@@ -375,6 +376,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.ui.signal_login_mscolab.disconnect()
         self.ui.signal_logout_mscolab.disconnect()
         self.ui.signal_listFlighttrack_doubleClicked.disconnect()
+        self.ui.signal_activate_operation.disconnect()
 
     @QtCore.Slot()
     def disable_cbs(self):

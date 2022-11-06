@@ -24,8 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import logging
-
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
@@ -34,7 +32,6 @@ from mslib.utils.verify_user_token import verify_user_token
 import threading
 import requests
 import json
-import gc
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -199,7 +196,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
         self.ui.signal_listFlighttrack_doubleClicked.connect(self.operations.deactivate_all_operations)
 
-        # Mscolab Server logout signal
+        # Mscolab Server logout
         self.ui.signal_logout_mscolab.connect(self.logout)
 
     def update(self):
@@ -603,6 +600,10 @@ class MultipleFlightpathOperations:
             self.set_activate_flag()
             listItem.setFont(font)
 
+    def save_last_used_operation(self, op_id):
+        if self.active_op_id is not None:
+            self.save_operation_data(op_id, self.load_wps_from_server(self.active_op_id))
+
     def draw_inactive_operations(self):
         """
         Draw flighttracks of inactive operations.
@@ -625,6 +626,9 @@ class MultipleFlightpathOperations:
                     self.dict_operations[listItem.op_id]["patch"] = patch
 
     def get_op_id(self, op_id):
+        if self.active_op_id is not None:
+            tmp = self.active_op_id
+            self.save_last_used_operation(tmp)
         self.active_op_id = op_id
         self.activate_operation()
 
