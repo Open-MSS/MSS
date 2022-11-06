@@ -247,14 +247,15 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
-        # Update flighttrack
-        self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
-        self.ui.signal_activate_operation.connect(self.update_active_operation)
+        if parent is not None:
+            # Update flighttrack
+            self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
+            self.ui.signal_activate_operation.connect(self.update_active_operation)
 
-        self.ui.signal_operation_added.connect(self.add_operation_slot)
-        self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+            self.ui.signal_operation_added.connect(self.add_operation_slot)
+            self.ui.signal_operation_removed.connect(self.remove_operation_slot)
 
-        self.ui.signal_login_mscolab.connect(self.login)
+            self.ui.signal_login_mscolab.connect(self.login)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
