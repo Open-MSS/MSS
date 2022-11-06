@@ -161,7 +161,6 @@ class WaypointsPath(mpath.Path):
         """
         """
         Path = mpath.Path
-
         pathdata = []
         # on a expired mscolab server wps is an empty list
         if len(wps) > 0:
@@ -284,7 +283,6 @@ class PathH_GC(PathH):
         Path = mpath.Path
 
         # Waypoint coordinates.
-
         if len(wps) > 0:
             pathdata = [(Path.MOVETO, self.transform_waypoint(wps, 0))]
             for i in range(len(wps[1:])):
@@ -343,6 +341,7 @@ class PathH_GC(PathH):
 class PathPlotter(object):
     """An interactive matplotlib path editor. Allows vertices of a path patch
        to be interactively picked and moved around.
+
     Superclass for the path editors used by the top and side views of the
     Mission Support System.
     """
@@ -453,6 +452,7 @@ class PathPlotter(object):
     def redraw_path(self, vertices=None, waypoints_model_data=[]):
         """Redraw the matplotlib artists that represent the flight track
            (path patch and line).
+
         If vertices are specified, they will be applied to the graphics
         output. Otherwise the vertex array obtained from the path patch
         will be used.
@@ -622,7 +622,7 @@ class PathH_GCPlotter(PathPlotter):
             textlabel = str(i)
             if wpd.location != "":
                 textlabel = f"{wpd.location}"
-            # label_offset = 0
+            label_offset = 0
             text = self.ax.text(
                 x[i] + label_offset, y[i] + label_offset, textlabel,
                 bbox={"boxstyle": "round", "facecolor": "white", "alpha": 0.6, "edgecolor": "none"},
@@ -648,6 +648,10 @@ class PathH_GCPlotter(PathPlotter):
         if self.show_solar_angle is not None:
             self.ax.draw_artist(self.solar_lines)
         self.canvas.blit(self.ax.bbox)
+
+    def plot_path(self, x, y):
+        line, = self.map.plot(x, y, color="blue", marker="o", linewidth=2, markerfacecolor="red",
+                              latlon=True, markersize=4, zorder=100)
 
     def draw_callback(self, event):
         """Extends PathInteractor.draw_callback() by drawing the scatter
@@ -714,6 +718,9 @@ class PathV_Plotter(PathPlotter):
     def get_num_interpolation_points(self):
         return self.numintpoints
 
+    def redraw_path(self, vertices=None, waypoints_model_data=[]):
+        super().redraw_path(vertices, waypoints_model_data)
+
     def get_lat_lon(self, event, wpm):
         x = event.xdata
         vertices = self.pathpatch.get_path().vertices
@@ -745,53 +752,6 @@ class PathV_Plotter(PathPlotter):
         # depends if best_index1 or best_index1 - 1 on closeness to left or right neighbourhood
         return (lats[best_index1], lons[best_index1]), best_index
 
-    def redraw_path(self, vertices=None, waypoints_model_data=[]):
-        """Redraw the matplotlib artists that represent the flight track
-           (path patch and line).
-        If vertices are specified, they will be applied to the graphics
-        output. Otherwise the vertex array obtained from the path patch
-        will be used.
-        """
-        if vertices is None:
-            vertices = self.pathpatch.get_path().vertices
-        self.line.set_data(list(zip(*vertices)))
-        # Draw waypoint labels.
-        for wp in self.wp_labels:
-            wp.remove()
-        self.wp_labels = []  # remove doesn't seem to be necessary
-        x, y = list(zip(*vertices))
-        for i, wpd, in enumerate(waypoints_model_data):
-            textlabel = f"{str(i):}   "
-            if wpd.location != "":
-                textlabel = f"{wpd.location:}   "
-            text = self.ax.text(
-                x[i], y[i],
-                textlabel,
-                bbox=dict(boxstyle="round",
-                          facecolor="white",
-                          alpha=0.5,
-                          edgecolor="none"),
-                fontweight="bold",
-                zorder=4,
-                rotation=90,
-                animated=True,
-                clip_on=True,
-                visible=self.showverts and self.label_waypoints)
-            self.wp_labels.append(text)
-
-        if self.background:
-            self.canvas.restore_region(self.background)
-        try:
-            self.ax.draw_artist(self.pathpatch)
-        except ValueError as error:
-            logging.error("ValueError Exception %s", error)
-        self.ax.draw_artist(self.line)
-        for t in self.wp_labels:
-            self.ax.draw_artist(t)
-        self.canvas.blit(self.ax.bbox)
-
-    redraw_figure = redraw_path
-
     def plot_path(self, xs, wp_press):
         ceiling_alt = self.ax.plot(xs, wp_press, color="blue", linestyle='-', linewidth=2, zorder=100)
         return ceiling_alt
@@ -800,6 +760,7 @@ class PathV_Plotter(PathPlotter):
 class PathL_Plotter(PathPlotter):
     def __init__(self, ax, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
+
         Arguments:
         ax -- matplotlib.Axes object into which the path should be drawn.
         waypoints -- flighttrack.WaypointsModel instance.
@@ -1388,6 +1349,7 @@ class HPathInteractor(PathInteractor):
     def get_ind_under_point(self, event):
         """Get the index of the waypoint vertex under the point
            specified by event within epsilon tolerance.
+
         Uses display coordinates.
         If no waypoint vertex is found, None is returned.
         """
