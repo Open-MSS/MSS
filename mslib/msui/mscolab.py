@@ -420,6 +420,7 @@ class MSUIMscolab(QtCore.QObject):
     signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
     signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
     signal_listFlighttrack_doubleClicked = QtCore.Signal()
+    signal_permission_revoked = QtCore.Signal(int)
 
     def __init__(self, parent=None, data_dir=None):
         super(MSUIMscolab, self).__init__(parent)
@@ -1393,6 +1394,7 @@ class MSUIMscolab(QtCore.QObject):
                 # on import permissions revoked name can not taken from the operation list,
                 # because we update the list first by reloading it.
                 show_popup(self.ui, "Permission Revoked", "Access to an operation was revoked")
+                self.signal_permission_revoked.emit(op_id)
 
     @QtCore.Slot(int)
     def handle_operation_deleted(self, op_id):
