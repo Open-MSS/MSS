@@ -151,6 +151,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         self.colorPixmap.setPixmap(self.show_color_pixmap(self.color))
 
+        self.list_flighttrack.itemClicked.connect(self.listFlighttrack_itemClicked)
+
         if self.mscolab_server_url is not None:
             self.connect_mscolab_server()
 
@@ -193,8 +195,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.ui.signal_operation_removed.connect(self.remove_operation_slot)
 
         # deactivate vice versa selection of Operation or Flight Track
-        self.list_flighttrack.itemClicked.connect(lambda: self.list_operation_track.setCurrentItem(None))
-        self.list_operation_track.itemClicked.connect(lambda: self.list_flighttrack.setCurrentItem(None))
+        self.list_operation_track.itemClicked.connect(self.operations.listOperations_itemClicked)
 
         # deactivate operation or flighttrack
         self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
@@ -362,17 +363,20 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
                     self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
                 wp_model = self.list_flighttrack.currentItem().flighttrack_model
-                if self.dict_flighttrack[wp_model]["linewidth"] != self.dsbx_linewidth.value():
-                    self.dict_flighttrack[wp_model]["linewidth"] = self.dsbx_linewidth.value()
+                if wp_model != self.active_flight_track:
+                    if self.dict_flighttrack[wp_model]["linewidth"] != self.dsbx_linewidth.value():
+                        self.dict_flighttrack[wp_model]["linewidth"] = self.dsbx_linewidth.value()
 
-                    self.dict_flighttrack[wp_model]["patch"].remove()
-                    self.dict_flighttrack[wp_model]["patch"].update(
-                        self.dict_flighttrack[wp_model]["linewidth"], self.dict_flighttrack[wp_model]["color"]
-                    )
-                    self.change_linewidth = True
-                    self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
+                        self.dict_flighttrack[wp_model]["patch"].remove()
+                        self.dict_flighttrack[wp_model]["patch"].update(
+                            self.dict_flighttrack[wp_model]["linewidth"], self.dict_flighttrack[wp_model]["color"]
+                        )
+                        self.change_linewidth = True
+                        self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
             else:
                 self.labelStatus.setText("Status: No flight track selected")
+        elif self.list_operation_track.currentItem() is not None:
+            self.operations.set_linewidth()
         else:
             self.labelStatus.setText("Status: No flight track selected")
 
@@ -477,6 +481,19 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     def get_ft_vertices_color(self):
         return self.color
 
+    def listFlighttrack_itemClicked(self):
+        if self.list_operation_track.currentItem() is not None:
+            self.list_operation_track.setCurrentItem(None)
+
+        if self.list_flighttrack.currentItem() is not None:
+            wp_model = self.list_flighttrack.currentItem().flighttrack_model
+            self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
+
+            if self.list_flighttrack.currentItem().flighttrack_model == self.active_flight_track:
+                self.frame.hide()
+            else:
+                self.frame.show()
+
 
 class MultipleFlightpathOperations:
     """
@@ -566,6 +583,7 @@ class MultipleFlightpathOperations:
         self.dict_operations[op_id] = {}
         self.dict_operations[op_id]["patch"] = None
         self.dict_operations[op_id]["wp_data"] = None
+        self.dict_operations[op_id]["linewidth"] = 2
         self.dict_operations[op_id]["color"] = self.parent.get_ft_vertices_color()
 
         self.save_operation_data(op_id, wp_model)
@@ -626,7 +644,8 @@ class MultipleFlightpathOperations:
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_operations[listItem.op_id][
                                                    "wp_data"],
-                                               color=self.dict_operations[listItem.op_id]["color"])
+                                               color=self.dict_operations[listItem.op_id]["color"],
+                                               linewidth=self.dict_operations[listItem.op_id]["linewidth"])
 
                     self.dict_operations[listItem.op_id]["patch"] = patch
 
@@ -708,7 +727,8 @@ class MultipleFlightpathOperations:
                         self.color_change = True
                         self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(op_id)))
                         self.dict_operations[op_id]["patch"].update(color=
-                                                                    self.dict_operations[op_id]["color"])
+                                                                    self.dict_operations[op_id]["color"], linewidth=
+                                                                    self.dict_operations[op_id]["linewidth"])
             else:
                 self.parent.labelStatus.setText("Check Mark the Operation to change color.")
 
@@ -756,3 +776,34 @@ class MultipleFlightpathOperations:
     @QtCore.Slot(int, str)
     def render_permission(self, op_id, path):
         self.operationsAdded(op_id, path)
+
+    def set_linewidth(self):
+        if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
+                self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
+            op_id = self.list_operation_track.currentItem().op_id
+            if op_id != self.active_op_id:
+                self.parent.frame.show()
+                if self.dict_operations[op_id]["linewidth"] != self.parent.dsbx_linewidth.value():
+                    self.dict_operations[op_id]["linewidth"] = self.parent.dsbx_linewidth.value()
+
+                    self.dict_operations[op_id]["patch"].remove()
+                    self.dict_operations[op_id]["patch"].update(
+                        self.dict_operations[op_id]["linewidth"], self.dict_operations[op_id]["color"]
+                    )
+                    self.change_linewidth = True
+                    self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
+
+    def listOperations_itemClicked(self):
+        if self.parent.list_flighttrack.currentItem() is not None:
+            self.parent.list_flighttrack.setCurrentItem(None)
+
+        if self.list_operation_track.currentItem() is not None:
+            op_id = self.list_operation_track.currentItem().op_id
+            self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
+
+            if self.list_operation_track.currentItem().op_id == self.active_op_id:
+                self.parent.frame.hide()
+
+            else:
+                self.parent.frame.show()
+
