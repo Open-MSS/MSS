@@ -363,7 +363,6 @@ class MySideViewFigure(MyFigure):
         self.fl_label_list = []
         self.image = None
         self.update_vertical_extent_from_settings(init=True)
-        self.set_settings(self.settings_dict)
 
     def _determine_ticks_labels(self, typ):
         if typ == "no secondary axis":
@@ -431,38 +430,6 @@ class MySideViewFigure(MyFigure):
             ax.set_ylim(self.p_bot, self.p_top)
 
         self.redraw_yaxis()
-
-    def set_settings(self, settings):
-        """Apply settings to view.
-        """
-        vertical_lines = self.settings_dict["draw_verticals"]
-        if settings is not None:
-            self.settings_dict.update(settings)
-        settings = self.settings_dict
-        self.set_flight_levels(settings["flightlevels"])
-        self.set_flight_levels_visible(settings["draw_flightlevels"])
-
-        self.update_ceiling(
-            self.settings_dict["draw_ceiling"] and (
-                self.plotter is not None),
-            self.settings_dict["colour_ceiling"])
-        self.update_vertical_extent_from_settings()
-
-        if self.plotter is not None:
-            self.plotter.set_vertices_visible(
-                self.settings_dict["draw_flighttrack"])
-            self.plotter.set_path_color(
-                line_color=self.settings_dict["colour_ft_vertices"],
-                marker_facecolor=self.settings_dict["colour_ft_waypoints"])
-            self.plotter.set_patch_visible(
-                self.settings_dict["fill_flighttrack"])
-            self.plotter.set_labels_visible(
-                self.settings_dict["label_flighttrack"])
-
-        if self.plotter is not None \
-                and self.settings_dict["draw_verticals"] != vertical_lines:
-            self.redraw_xaxis(self.plotter.path.ilats, self.plotter.path.ilons,
-                              self.plotter.path.itimes)
 
     def redraw_yaxis(self):
         """ Redraws the y-axis on map after setting the values from sideview options dialog box
@@ -1312,7 +1279,11 @@ class MplSideViewCanvas(MplCanvas):
         """Apply settings to view.
         """
         vertical_lines = self.myfig.settings_dict["draw_verticals"]
-        self.myfig.set_settings(settings)
+        if settings is not None:
+            self.myfig.settings_dict.update(settings)
+        settings = self.myfig.settings_dict
+        self.myfig.set_flight_levels(settings["flightlevels"])
+        self.myfig.set_flight_levels_visible(settings["draw_flightlevels"])
         self.update_ceiling(
             self.myfig.settings_dict["draw_ceiling"] and (
                 self.waypoints_model is not None and
