@@ -112,6 +112,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     # ToDO: Make a new parent class with all the functions in this class and inherit them
     #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
 
+    signal_parent_closes = QtCore.Signal()
+
     def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
@@ -155,6 +157,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         if self.mscolab_server_url is not None:
             self.connect_mscolab_server()
 
+        if parent is not None:
+            parent.viewCloses.connect(lambda: self.signal_parent_closes.emit())
+
         # Load flighttracks
         for index in range(self.listFlightTracks.count()):
             wp_model = self.listFlightTracks.item(index).flighttrack_model
@@ -165,6 +170,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     @QtCore.Slot()
     def logout(self):
         self.operations.logout_mscolab()
+        self.ui.signal_listFlighttrack_doubleClicked.disconnect()
         for idx in range(len(self.obb)):
             del self.obb[idx]
 
@@ -186,12 +192,12 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.ui.signal_operation_removed.connect(self.remove_operation_slot)
 
         # deactivate vice versa selection of Operation or Flight Track
-        self.listFlightTracks.itemClicked.connect(lambda: self.list_operation_track.setCurrentItem(None))
-        self.listOperationsMSC.itemClicked.connect(lambda: self.list_flighttrack.setCurrentItem(None))
+        self.list_flighttrack.itemClicked.connect(lambda: self.list_operation_track.setCurrentItem(None))
+        self.list_operation_track.itemClicked.connect(lambda: self.list_flighttrack.setCurrentItem(None))
 
         # deactivate operation or flighttrack
         self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
-        self.listFlightTracks.itemDoubleClicked.connect(self.operations.deactivate_all_operations)
+        self.ui.signal_listFlighttrack_doubleClicked.connect(self.operations.deactivate_all_operations)
 
         # Mscolab Server logout signal
         self.ui.signal_logout_mscolab.connect(self.logout)
@@ -727,6 +733,7 @@ class MultipleFlightpathOperations:
             self.list_operation_track.takeItem(0)
             a -= 1
 
+        self.list_operation_track.itemChanged.disconnect()
         self.mscolab_server_url = None
         self.token = None
         self.dict_operations = {}

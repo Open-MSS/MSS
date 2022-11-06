@@ -196,6 +196,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_operation_removed = QtCore.Signal(int)
     signal_login_mscolab = QtCore.Signal(str, str)
     signal_logout_mscolab = QtCore.Signal()
+    signal_listFlighttrack_doubleClicked = QtCore.Signal()
 
     def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None
                  , token=None):
@@ -253,6 +254,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.ui.signal_operation_added.connect(self.add_operation_slot)
         self.ui.signal_operation_removed.connect(self.remove_operation_slot)
 
+        self.ui.signal_login_mscolab.connect(self.login)
+
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
 
@@ -276,6 +279,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.Slot(int)
     def remove_operation_slot(self, op_id):
         self.signal_operation_removed.emit(op_id)
+
+    @QtCore.Slot(str, str)
+    def login(self, mscolab_server_url, token):
+        self.mscolab_server_url = mscolab_server_url
+        self.token = token
+        self.signal_login_mscolab.emit(mscolab_server_url, token)
 
     def setup_top_view(self):
         """
@@ -352,14 +361,20 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
 
-                self.ui.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
                 self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
+                self.ui.signal_listFlighttrack_doubleClicked.connect(lambda: self.signal_listFlighttrack_doubleClicked.emit())
                 self.signal_activate_operation.emit(self.active_op_id)
+                widget.signal_parent_closes.connect(self.closed)
             else:
                 raise IndexError("invalid control index")
 
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
+
+    def closed(self):
+        self.ui.signal_login_mscolab.disconnect()
+        self.ui.signal_logout_mscolab.disconnect()
+        self.ui.signal_listFlighttrack_doubleClicked.disconnect()
 
     @QtCore.Slot()
     def disable_cbs(self):

@@ -419,6 +419,7 @@ class MSUIMscolab(QtCore.QObject):
     signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
     signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
     signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
+    signal_listFlighttrack_doubleClicked = QtCore.Signal()
 
     def __init__(self, parent=None, data_dir=None):
         super(MSUIMscolab, self).__init__(parent)
@@ -435,8 +436,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.activeOperationDesc.setHidden(True)
 
         # reset operation description label for flight tracks and open views
-        self.ui.listFlightTracks.itemDoubleClicked.connect(
-            lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
+        self.ui.listFlightTracks.itemDoubleClicked.connect(self.listFlighttrack_itemDoubleClicked)
         self.ui.listViews.itemDoubleClicked.connect(
             lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
 
@@ -1774,6 +1774,10 @@ class MSUIMscolab(QtCore.QObject):
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
+
+    def listFlighttrack_itemDoubleClicked(self):
+        self.ui.activeOperationDesc.setText("Select Operation to View Description.")
+        self.signal_listFlighttrack_doubleClicked.emit()
 
     def logout(self):
         if self.mscolab_server_url is None:
