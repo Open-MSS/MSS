@@ -591,18 +591,18 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.export_plugins = {}
 
     def handle_import_local(self, extension, function, pickertype):
-        filename = get_open_filenames(
+        filenames = get_open_filenames(
             self, "Import Flight Track",
             self.last_save_directory,
             f"Flight Track (*.{extension});;All files (*.*)",
             pickertype=pickertype)
         if self.local_active:
-            if filename is not None:
-                for name in filename:
+            if filenames is not None:
+                for name in filenames:
                     self.create_new_flight_track(filename=name, function=function)
                 self.last_save_directory = fs.path.dirname(name)
         else:
-            for name in filename:
+            for name in filenames:
                 self.mscolab.handle_import_msc(name, extension, function, pickertype)
 
     def handle_export_local(self, extension, function, pickertype):
