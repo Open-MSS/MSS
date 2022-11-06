@@ -129,7 +129,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.obb = []
 
         self.operation_list = False
-        self.flighttrack_list = False
+        self.flighttrack_list = True
 
         # Set flags
         self.flighttrack_added = False
@@ -240,14 +240,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.color = color
         self.colorPixmap.setPixmap(self.show_color_pixmap(color))
 
-        if self.flighttrack_list:
+        if self.list_flighttrack.currentItem() is not None:
             self.dict_flighttrack[self.active_flight_track]["color"] = color
             for index in range(self.list_flighttrack.count()):
                 if self.list_flighttrack.item(index).flighttrack_model == self.active_flight_track:
                     self.list_flighttrack.item(index).setIcon(
                         self.show_color_icon(self.get_color(self.active_flight_track)))
                     break
-        else:
+        elif self.list_operation_track.currentItem() is not None:
             self.operations.ft_color_update(color)
 
     @QtCore.Slot(int, str)
@@ -310,26 +310,27 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         #  the check mark for enabled, but can't be changed (disabled). At the moment
         #  the dockingwidget is closed the button and checkmark has to become activated again.
 
-        if self.operation_list:
+        if self.list_flighttrack.currentItem() is not None:
+            if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
+                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
+                wp_model = self.list_flighttrack.currentItem().flighttrack_model
+                if wp_model == self.active_flight_track:
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage('Use "options" to change color of an activated flighttrack.')
+                else:
+                    color = QtWidgets.QColorDialog.getColor()
+                    if color.isValid():
+                        self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
+                        self.color_change = True
+                        self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+                        self.dict_flighttrack[wp_model]["patch"].update(color=
+                                                                        self.dict_flighttrack[wp_model]["color"])
+            else:
+                self.labelStatus.setText("Check Mark the flighttrack to change its color.")
+        elif self.list_operation_track.currentItem() is not None:
             self.operations.select_color()
         else:
-            if self.list_flighttrack.currentItem() is not None:
-                if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
-                        self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
-                    wp_model = self.list_flighttrack.currentItem().flighttrack_model
-                    if wp_model == self.active_flight_track:
-                        self.error_dialog = QtWidgets.QErrorMessage()
-                        self.error_dialog.showMessage('Use "options" to change color of an activated flighttrack.')
-                    else:
-                        color = QtWidgets.QColorDialog.getColor()
-                        if color.isValid():
-                            self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
-                            self.color_change = True
-                            self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
-                            self.dict_flighttrack[wp_model]["patch"].update(color=
-                                                                            self.dict_flighttrack[wp_model]["color"])
-            else:
-                self.labelStatus.setText("Status: No flight track selected")
+            self.labelStatus.setText("Status: No flight track selected")
 
     def get_color(self, wp_model):
         """
@@ -704,6 +705,8 @@ class MultipleFlightpathOperations:
                         self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(op_id)))
                         self.dict_operations[op_id]["patch"].update(color=
                                                                     self.dict_operations[op_id]["color"])
+            else:
+                self.parent.labelStatus.setText("Check Mark the Operation to change color.")
 
     def get_color(self, op_id):
         """
