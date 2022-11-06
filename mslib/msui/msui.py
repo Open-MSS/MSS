@@ -344,6 +344,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
     signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
     signal_listFlighttrack_doubleClicked = QtCore.Signal()
+    signal_permission_revoked = QtCore.Signal(int)
+    signal_render_new_permission = QtCore.Signal(int, str)
 
     def __init__(self, mscolab_data_dir=None, *args):
         super(MSUIMainWindow, self).__init__(*args)
@@ -440,6 +442,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
         self.mscolab.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
         self.mscolab.signal_listFlighttrack_doubleClicked.connect(lambda: self.signal_listFlighttrack_doubleClicked.emit())
+        self.mscolab.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
+        self.mscolab.signal_render_new_permission.connect(lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
 
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
@@ -780,6 +784,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.save_flight_track(filename)
             self.active_flight_track.filename = filename
             self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
+            self.signal_saveas_flighttrack.emit(filename)
 
     def save_flight_track(self, file_name):
         ext = ".ftml"

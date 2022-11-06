@@ -197,6 +197,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_login_mscolab = QtCore.Signal(str, str)
     signal_logout_mscolab = QtCore.Signal()
     signal_listFlighttrack_doubleClicked = QtCore.Signal()
+    signal_permission_revoked = QtCore.Signal(int)
+    signal_render_new_permission = QtCore.Signal(int, str)
 
     def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None
                  , token=None):
@@ -364,6 +366,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
                 self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
                 self.ui.signal_listFlighttrack_doubleClicked.connect(lambda: self.signal_listFlighttrack_doubleClicked.emit())
+                self.ui.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
+                self.ui.signal_render_new_permission.connect(lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
                 widget.signal_parent_closes.connect(self.closed)
@@ -378,6 +382,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.ui.signal_logout_mscolab.disconnect()
         self.ui.signal_listFlighttrack_doubleClicked.disconnect()
         self.ui.signal_activate_operation.disconnect()
+        self.ui.signal_permission_revoked.disconnect()
+        self.ui.signal_render_new_permission.disconnect()
 
     @QtCore.Slot()
     def disable_cbs(self):

@@ -421,6 +421,7 @@ class MSUIMscolab(QtCore.QObject):
     signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
     signal_listFlighttrack_doubleClicked = QtCore.Signal()
     signal_permission_revoked = QtCore.Signal(int)
+    signal_render_new_permission = QtCore.Signal(int, str)
 
     def __init__(self, parent=None, data_dir=None):
         super(MSUIMscolab, self).__init__(parent)
@@ -1312,6 +1313,7 @@ class MSUIMscolab(QtCore.QObject):
                 widgetItem.access_level = operation["access_level"]
                 widgetItem.active_operation_desc = operation["description"]
                 self.ui.listOperationsMSC.addItem(widgetItem)
+                self.signal_render_new_permission.emit(operation["op_id"], operation["path"])
             if self.chat_window is not None:
                 self.chat_window.load_users()
         else:

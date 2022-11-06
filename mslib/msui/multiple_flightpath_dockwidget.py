@@ -169,6 +169,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.operations.logout_mscolab()
         self.ui.signal_listFlighttrack_doubleClicked.disconnect()
         self.ui.signal_permission_revoked.disconnect()
+        self.ui.signal_render_new_permission.disconnect()
         for idx in range(len(self.obb)):
             del self.obb[idx]
 
@@ -185,6 +186,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.obb.append(self.operations)
 
         self.ui.signal_permission_revoked.connect(lambda op_id: self.operations.permission_revoked(op_id))
+        self.ui.signal_render_new_permission.connect(lambda op_id, path: self.operations.render_permission(op_id, path))
         # Signal emitted, on activation of operation from MSUI
         self.ui.signal_activate_operation.connect(self.update_op_id)
         self.ui.signal_operation_added.connect(self.add_operation_slot)
@@ -750,3 +752,7 @@ class MultipleFlightpathOperations:
     @QtCore.Slot(int)
     def permission_revoked(self, op_id):
         self.operationRemoved(op_id)
+
+    @QtCore.Slot(int, str)
+    def render_permission(self, op_id, path):
+        self.operationsAdded(op_id, path)
