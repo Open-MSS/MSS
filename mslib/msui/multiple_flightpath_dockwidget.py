@@ -456,14 +456,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         for index in range(self.list_flighttrack.count()):
             listItem = self.list_flighttrack.item(index)
 
-            if self.dict_flighttrack[listItem.flighttrack_model]["patch"] is not None:
-                self.dict_flighttrack[listItem.flighttrack_model]["patch"].remove()
-
             self.set_listControl(True, False)
 
-            # Uncheck all flighttracks
-            self.set_activate_flag()
-            listItem.setCheckState(QtCore.Qt.Unchecked)
             self.set_activate_flag()
             listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
 
@@ -678,6 +672,7 @@ class MultipleFlightpathOperations:
                 else:
                     self.dict_operations[self.list_operation_track.item(index).op_id]["patch"].remove()
                 self.list_operation_track.takeItem(index)
+                self.active_op_id = None
                 break
 
     def set_activate_flag(self):
@@ -691,14 +686,8 @@ class MultipleFlightpathOperations:
         for index in range(self.listOperationsMSC.count()):
             listItem = self.list_operation_track.item(index)
 
-            if self.dict_operations[listItem.op_id]["patch"] is not None:
-                self.dict_operations[listItem.op_id]["patch"].remove()
-
             self.parent.set_listControl(False, True)
 
-            # Uncheck all operations
-            self.set_activate_flag()
-            listItem.setCheckState(QtCore.Qt.Unchecked)
             self.set_activate_flag()
             listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
 
