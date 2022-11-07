@@ -116,6 +116,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
+        # ToDO: Remove all patches, on closing dockwidget.
         self.ui = parent
         self.setupUi(self)
         self.view = view  # canvas
