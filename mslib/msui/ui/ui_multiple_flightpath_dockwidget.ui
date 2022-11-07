@@ -38,13 +38,13 @@
       <item>
        <widget class="QLabel" name="ft_color_label">
         <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
           <horstretch>0</horstretch>
           <verstretch>0</verstretch>
          </sizepolicy>
         </property>
         <property name="text">
-         <string>(Color shown before flighttracks/operations are only visible in &quot;deactivated&quot; state) 𝐀𝐜𝐭𝐢𝐯𝐚𝐭𝐞𝐝 𝐓𝐫𝐚𝐜𝐤 𝐕𝐞𝐫𝐭𝐢𝐜𝐞𝐬 𝐂𝐨𝐥𝐨𝐫 : </string>
+         <string>𝐀𝐜𝐭𝐢𝐯𝐚𝐭𝐞𝐝 𝐓𝐫𝐚𝐜𝐤 𝐕𝐞𝐫𝐭𝐢𝐜𝐞𝐬 𝐂𝐨𝐥𝐨𝐫 : </string>
         </property>
        </widget>
       </item>

@@ -33,7 +33,7 @@ class Ui_MultipleViewWidget(object):
         self.horizontalLayout_3 = QtWidgets.QHBoxLayout(self.frame_2)
         self.horizontalLayout_3.setObjectName("horizontalLayout_3")
         self.ft_color_label = QtWidgets.QLabel(self.frame_2)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.ft_color_label.sizePolicy().hasHeightForWidth())
@@ -113,20 +113,10 @@ class Ui_MultipleViewWidget(object):
     def retranslateUi(self, MultipleViewWidget):
         _translate = QtCore.QCoreApplication.translate
         MultipleViewWidget.setWindowTitle(_translate("MultipleViewWidget", "Form"))
-        self.ft_color_label.setText(_translate("MultipleViewWidget", "(Color shown before flighttracks/operations are only visible in \"deactivated\" state) 𝐀𝐜𝐭𝐢𝐯𝐚𝐭𝐞𝐝 𝐓𝐫𝐚𝐜𝐤 𝐕𝐞𝐫𝐭𝐢𝐜𝐞𝐬 𝐂𝐨𝐥𝐨𝐫 : "))
+        self.ft_color_label.setText(_translate("MultipleViewWidget", "𝐀𝐜𝐭𝐢𝐯𝐚𝐭𝐞𝐝 𝐓𝐫𝐚𝐜𝐤 𝐕𝐞𝐫𝐭𝐢𝐜𝐞𝐬 𝐂𝐨𝐥𝐨𝐫 : "))
         self.list_flighttrack.setToolTip(_translate("MultipleViewWidget", "List of Open Flighttracks.\n"
 "Check box to activate and display track on topview."))
         self.list_operation_track.setToolTip(_translate("MultipleViewWidget", "List of Mscolab Operations.\n"
 "Check box to activate and display track on topview."))
         self.pushButton_color.setText(_translate("MultipleViewWidget", "Change Color"))
         self.labelStatus.setText(_translate("MultipleViewWidget", "Status: "))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MultipleViewWidget = QtWidgets.QWidget()
-    ui = Ui_MultipleViewWidget()
-    ui.setupUi(MultipleViewWidget)
-    MultipleViewWidget.show()
-    sys.exit(app.exec_())

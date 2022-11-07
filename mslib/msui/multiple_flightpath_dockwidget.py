@@ -408,6 +408,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         for i in range(self.list_flighttrack.count()):
             listItem = self.list_flighttrack.item(i)
             if self.active_flight_track == listItem.flighttrack_model:  # active flighttrack
+                listItem.setIcon(self.show_color_icon(self.color))
                 font.setBold(True)
                 if self.dict_flighttrack[listItem.flighttrack_model]["patch"] is not None:
                     self.dict_flighttrack[listItem.flighttrack_model]["patch"].remove()
@@ -416,6 +417,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                     self.set_activate_flag()
                 listItem.setFlags(listItem.flags() & ~QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
             else:
+                listItem.setIcon(self.show_color_icon(self.get_color(listItem.flighttrack_model)))
                 font.setBold(False)
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
             self.set_activate_flag()
@@ -604,6 +606,7 @@ class MultipleFlightpathOperations:
         for i in range(self.list_operation_track.count()):
             listItem = self.list_operation_track.item(i)
             if self.active_op_id == listItem.op_id:  # active operation
+                listItem.setIcon(self.show_color_icon(self.parent.color))
                 font.setBold(True)
                 if self.dict_operations[listItem.op_id]["patch"] is not None:
                     self.dict_operations[listItem.op_id]["patch"].remove()
@@ -612,6 +615,7 @@ class MultipleFlightpathOperations:
                     self.set_activate_flag()
                 listItem.setFlags(listItem.flags() & ~QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
             else:
+                listItem.setIcon(self.show_color_icon(self.get_color(listItem.op_id)))
                 font.setBold(False)
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
             self.set_activate_flag()
@@ -792,7 +796,5 @@ class MultipleFlightpathOperations:
 
             if self.list_operation_track.currentItem().op_id == self.active_op_id:
                 self.parent.frame.hide()
-
             else:
                 self.parent.frame.show()
-
