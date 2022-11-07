@@ -53,7 +53,8 @@ def load_from_xml_data(datasource):
 
     ft_el = doc.getElementsByTagName("FlightTrack")[0]
 
-    waypoints_list = []
+    waypoints_list1 = []
+    waypoints_list2 = []
     for wp_el in ft_el.getElementsByTagName("Waypoint"):
 
         location = wp_el.getAttribute("location")
@@ -67,8 +68,9 @@ def load_from_xml_data(datasource):
         else:
             comments = ''
 
-        waypoints_list.append((lat, lon, flightlevel, location, comments))
-    return waypoints_list
+        waypoints_list1.append((lat, lon, flightlevel, location, comments))
+        waypoints_list2.append(ft.Waypoint(lat, lon, flightlevel, location, comments))
+    return waypoints_list1, waypoints_list2
 
 
 class Plotting():
@@ -84,14 +86,18 @@ class Plotting():
         self.fig = plt.figure()
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
-        wp_model = ft.WaypointsTableModel(filename=filename)
-        self.wp_model_data = wp_model.all_waypoint_data()
+        # wp_model = ft.WaypointsTableModel(filename=filename)
+        # self.wp_model_data = wp_model.all_waypoint_data()
+        # print(self.wp_model_data)
         self.params = mslib.utils.coordinate.get_projection_params(
             self.config["predefined_map_sections"][section]["CRS"].lower())
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
         print(self.params)
         self.bbox_units = self.params["bbox"]
-        self.wps = load_from_ftml(filename)
+        self.wpslist = []
+        self.wpslist = load_from_ftml(filename)
+        self.wps = self.wpslist[0]
+        self.wp_model_data = self.wpslist[1]
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.fig.clear()
