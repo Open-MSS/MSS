@@ -481,6 +481,7 @@ class MySideViewFigure(MyFigure):
         # Set xticks so that they display lat/lon. Plot "numlabels" labels.
         lat_inds = np.arange(len(lats))
         tick_index_step = len(lat_inds) // self.numlabels
+        print(self.numlabels, tick_index_step)
         self.ax.set_xticks(lat_inds[::tick_index_step])
 
         if times_visible:
@@ -1305,8 +1306,10 @@ class MplSideViewCanvas(MplCanvas):
 
         if self.waypoints_model is not None and self.waypoints_interactor is not None \
                 and self.myfig.settings_dict["draw_verticals"] != vertical_lines:
-            self.redraw_xaxis(self.waypoints_interactor.plotter.path.ilats, self.waypoints_interactor.plotter.path.ilons,
-                              self.waypoints_interactor.plotter.path.itimes)
+            self.redraw_xaxis(
+                self.waypoints_interactor.plotter.path.ilats,
+                self.waypoints_interactor.plotter.path.ilons,
+                self.waypoints_interactor.plotter.path.itimes)
 
         self.myfig.settings_dict = settings
 

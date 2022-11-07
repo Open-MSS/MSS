@@ -51,7 +51,7 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from PyQt5 import QtCore, QtWidgets
 
-from mslib.utils.coordinate import get_distance, find_location, latlon_points
+from mslib.utils.coordinate import get_distance, find_location, latlon_points, path_points
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
@@ -209,7 +209,11 @@ class PathV(WaypointsPath):
         waypoints makes no sense).
         """
         # Compute intermediate points.
-        lons, lats = list(zip(*[(wp.lon, wp.lat) for wp in wps]))
+        lats, lons, times = path_points(
+            [wp.lat for wp in wps],
+            [wp.lon for wp in wps],
+            times=[wp.utc_time for wp in wps],
+            numpoints=self.numintpoints, connection="greatcircle")
 
         if lats is not None:
             # Determine indices of waypoints in list of intermediate points.
@@ -227,7 +231,7 @@ class PathV(WaypointsPath):
             self.intermediate_indexes = intermediate_indexes
             self.ilats = lats
             self.ilons = lons
-            self.itimes = None
+            self.itimes = times
 
             # Call super method.
             super().update_from_waypoints(wps)
@@ -469,6 +473,7 @@ class PathPlotter(object):
             textlabel = f"{str(i):}   "
             if wpd.location != "":
                 textlabel = f"{wpd.location:}   "
+            print("LABEL", i, wpd, x[i], y[i], textlabel)
             text = self.ax.text(
                 x[i], y[i],
                 textlabel,

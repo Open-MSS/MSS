@@ -28,6 +28,7 @@ from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
+import datetime
 
 
 TEXT_CONFIG = {
@@ -70,6 +71,7 @@ def load_from_xml_data(datasource):
 
         waypoints_list1.append((lat, lon, flightlevel, location, comments))
         waypoints_list2.append(ft.Waypoint(lat, lon, flightlevel, location, comments))
+        waypoints_list2[-1].utc_time = datetime.datetime.now()
     return waypoints_list1, waypoints_list2
 
 
@@ -195,13 +197,12 @@ class SideViewPlotting(Plotting):
         self.myfig.setup_side_view()
         times = None
         times_visible = False
-        self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
 
     def SideViewPath(self):
         self.fig.canvas.draw()
         self.plotter = mpath.PathV_Plotter(self.myfig.ax)
-        self.plotter.plot_path(self.intermediate_indexes, self.wp_press)
-        self.plotter.redraw_path(self.vertices, self.wp_model_data)
+        self.plotter.update_from_waypoints(self.wp_model_data)
+        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
@@ -316,16 +317,16 @@ class LinearViewPlotting(Plotting):
 
 
 def main():
-    h = TopViewPlotting()
-    h.TopViewPath()
-    h.TopViewDraw()
+    #h = TopViewPlotting()
+    #h.TopViewPath()
+    #h.TopViewDraw()
     v = SideViewPlotting()
     v.setup()
     v.SideViewPath()
     v.SideViewDraw()
-    ls = LinearViewPlotting()
-    ls.setup()
-    ls.LinearViewDraw()
+    #ls = LinearViewPlotting()
+    #ls.setup()
+    #ls.LinearViewDraw()
 
 
 if __name__ == "__main__":
