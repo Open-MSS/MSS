@@ -172,6 +172,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.ui.signal_listFlighttrack_doubleClicked.disconnect()
         self.ui.signal_permission_revoked.disconnect()
         self.ui.signal_render_new_permission.disconnect()
+        self.operations = None
         for idx in range(len(self.obb)):
             del self.obb[idx]
 
@@ -238,6 +239,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         wp_model = self.listFlightTracks.item(start).flighttrack_model
         listItem = self.create_list_item(wp_model)
+        if self.mscolab_server_url is not None:
+            self.operations.deactivate_all_operations()
         self.activate_flighttrack()
 
     @QtCore.Slot(tuple)
@@ -527,8 +530,6 @@ class MultipleFlightpathOperations:
             wp_model.name = operations["path"]
             self.create_operation(op_id, wp_model)
 
-        self.activate_operation()
-
     def set_flag(self):
         if self.operation_added:
             self.operation_added = False
@@ -661,8 +662,6 @@ class MultipleFlightpathOperations:
         wp_model = self.load_wps_from_server(op_id)
         wp_model.name = path
         listItem = self.create_operation(op_id, wp_model)
-        self.active_op_id = op_id
-        self.activate_operation()
 
     def operationRemoved(self, op_id):
         """
@@ -695,10 +694,11 @@ class MultipleFlightpathOperations:
             self.set_activate_flag()
             listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
 
-            if listItem.op_id == self.active_op_id:
-                font = QtGui.QFont()
-                font.setBold(False)
-                listItem.setFont(font)
+            # if listItem.op_id == self.active_op_id:
+            self.set_activate_flag()
+            font = QtGui.QFont()
+            font.setBold(False)
+            listItem.setFont(font)
 
         self.active_op_id = None
 
