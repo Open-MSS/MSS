@@ -784,7 +784,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.save_flight_track(filename)
             self.active_flight_track.filename = filename
             self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
-            self.signal_saveas_flighttrack.emit(filename)
 
     def save_flight_track(self, file_name):
         ext = ".ftml"
