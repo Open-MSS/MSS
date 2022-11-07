@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
+
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
@@ -173,6 +175,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.ui.signal_permission_revoked.disconnect()
         self.ui.signal_render_new_permission.disconnect()
         self.operations = None
+        self.flighttrack_list = True
+        self.operation_list = False
         for idx in range(len(self.obb)):
             del self.obb[idx]
 
@@ -248,14 +252,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.color = color
         self.colorPixmap.setPixmap(self.show_color_pixmap(color))
 
-        if self.list_flighttrack.currentItem() is not None:
+        if self.flighttrack_list:
             self.dict_flighttrack[self.active_flight_track]["color"] = color
             for index in range(self.list_flighttrack.count()):
                 if self.list_flighttrack.item(index).flighttrack_model == self.active_flight_track:
                     self.list_flighttrack.item(index).setIcon(
                         self.show_color_icon(self.get_color(self.active_flight_track)))
                     break
-        elif self.list_operation_track.currentItem() is not None:
+        elif self.operation_list:
             self.operations.ft_color_update(color)
 
     @QtCore.Slot(int, str)
