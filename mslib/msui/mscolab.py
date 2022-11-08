@@ -414,6 +414,15 @@ class MSUIMscolab(QtCore.QObject):
     """
     name = "Mscolab"
 
+    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
+    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
+    signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
+    signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
+    signal_listFlighttrack_doubleClicked = QtCore.Signal()
+    signal_permission_revoked = QtCore.Signal(int)
+    signal_render_new_permission = QtCore.Signal(int, str)
+
     def __init__(self, parent=None, data_dir=None):
         super(MSUIMscolab, self).__init__(parent)
         self.ui = parent
@@ -429,8 +438,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.activeOperationDesc.setHidden(True)
 
         # reset operation description label for flight tracks and open views
-        self.ui.listFlightTracks.itemDoubleClicked.connect(
-            lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
+        self.ui.listFlightTracks.itemDoubleClicked.connect(self.listFlighttrack_itemDoubleClicked)
         self.ui.listViews.itemDoubleClicked.connect(
             lambda: self.ui.activeOperationDesc.setText("Select Operation to View Description."))
 
@@ -610,6 +618,8 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.filterCategoryCb.setEnabled(False)
             # disable activate operation button
             self.ui.actionActivateOperation.setEnabled(False)
+
+            self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
@@ -837,6 +847,7 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog.showMessage('Your operation was created successfully')
             op_id = self.get_recent_op_id()
             self.conn.handle_new_operation(op_id)
+            self.signal_operation_added.emit(op_id, path)
         else:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('The path already exists')
@@ -1003,6 +1014,7 @@ class MSUIMscolab(QtCore.QObject):
                         res = requests.post(url, data=data)
                         res.raise_for_status()
                         self.reload_operations()
+                        self.signal_operation_removed.emit(self.active_op_id)
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
                         show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
@@ -1301,6 +1313,7 @@ class MSUIMscolab(QtCore.QObject):
                 widgetItem.access_level = operation["access_level"]
                 widgetItem.active_operation_desc = operation["description"]
                 self.ui.listOperationsMSC.addItem(widgetItem)
+                self.signal_render_new_permission.emit(operation["op_id"], operation["path"])
             if self.chat_window is not None:
                 self.chat_window.load_users()
         else:
@@ -1383,6 +1396,7 @@ class MSUIMscolab(QtCore.QObject):
                 # on import permissions revoked name can not taken from the operation list,
                 # because we update the list first by reloading it.
                 show_popup(self.ui, "Permission Revoked", "Access to an operation was revoked")
+                self.signal_permission_revoked.emit(op_id)
 
     @QtCore.Slot(int)
     def handle_operation_deleted(self, op_id):
@@ -1525,6 +1539,8 @@ class MSUIMscolab(QtCore.QObject):
             self.active_operation_name = item.operation_path
             self.active_operation_desc = item.active_operation_desc
             self.waypoints_model = None
+
+            self.signal_activate_operation.emit(self.active_op_id)
 
             self.inactive_op_id = None
             font = QtGui.QFont()
@@ -1763,6 +1779,10 @@ class MSUIMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
+    def listFlighttrack_itemDoubleClicked(self):
+        self.ui.activeOperationDesc.setText("Select Operation to View Description.")
+        self.signal_listFlighttrack_doubleClicked.emit()
+
     def logout(self):
         if self.mscolab_server_url is None:
             return
@@ -1823,6 +1843,8 @@ class MSUIMscolab(QtCore.QObject):
         if self.mscolab_server_url in self.settings["auth"].keys():
             del self.settings["auth"][self.mscolab_server_url]
         save_settings_qsettings('mscolab', self.settings)
+
+        self.signal_logout_mscolab.emit()
 
         # Don't try to activate local flighttrack while testing
         if "pytest" not in sys.modules:

@@ -25,15 +25,29 @@
     limitations under the License.
 """
 import logging
-import os
-from PyQt5 import QtWidgets, QtCore
+
+from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
-from mslib.utils.qt import get_open_filenames
-from mslib.utils.config import load_settings_qsettings, save_settings_qsettings
-from fs import open_fs
-import mslib.msui.flighttrack as ft
+from mslib.msui import flighttrack as ft
 from mslib.msui import msui
-import xml
+from mslib.utils.verify_user_token import verify_user_token
+import threading
+import requests
+import json
+
+
+class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
+    """
+    """
+
+    def __init__(self, flighttrack_model, op_id: int, parent=None, type=QtWidgets.QListWidgetItem.UserType):
+        view_name = flighttrack_model.name
+        super(QMscolabOperationsListWidgetItem, self).__init__(
+            view_name, parent, type
+        )
+        self.parent = parent
+        self.flighttrack_model = flighttrack_model
+        self.op_id = op_id
 
 
 class MultipleFlightpath(object):
@@ -41,16 +55,18 @@ class MultipleFlightpath(object):
     Represent a Multiple FLightpath
     """
 
-    def __init__(self, mapcanvas, wp):
+    def __init__(self, mapcanvas, wp, linewidth=2, color='blue'):
         self.map = mapcanvas
         self.flightlevel = None
         self.comments = ''
         self.patches = []
         self.waypoints = wp
+        self.linewidth = linewidth
+        self.color = color
         self.draw()
 
     def draw_line(self, x, y):
-        self.patches.append(self.map.plot(x, y, color='blue', linewidth='2'))
+        self.patches.append(self.map.plot(x, y, color=self.color, linewidth=self.linewidth))
 
     def compute_xy(self, lon, lat):
         x, y = self.map.gcpoints_path(lon, lat)
@@ -63,6 +79,14 @@ class MultipleFlightpath(object):
             lat.append(self.waypoints[i][0])
             lon.append(self.waypoints[i][1])
         return lat, lon
+
+    def update(self, linewidth=None, color=None):
+        if linewidth is not None:
+            self.linewidth = linewidth
+        if color is not None:
+            self.color = color
+        self.remove()
+        self.draw()
 
     def draw(self):
         lat, lon = self.get_lonlat()
@@ -84,185 +108,698 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     on the TopView canvas.
     """
 
-    def __init__(self, parent=None, view=None, listView=None, activeFlightTrack=None):
+    # ToDO: Make a new parent class with all the functions in this class and inherit them
+    #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
+
+    signal_parent_closes = QtCore.Signal()
+
+    def __init__(self, parent=None, view=None, listFlightTracks=None,
+                 listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
         super(MultipleFlightpathControlWidget, self).__init__(parent)
-        self.listView = listView
+        # ToDO: Remove all patches, on closing dockwidget.
         self.ui = parent
         self.setupUi(self)
         self.view = view  # canvas
         self.flight_path = None  # flightpath object
-        self.dict_files = {}  # Dictionary of files added; key: patch, waypoints
-        self.waypoint_list = []  # List of waypoints parsed from FTML file
-        self.directory_location = None
-        self.waypoints_modelList = []
-        self.active_flight_track = None
-        self.inactiveTrackPatches = []
+        self.dict_flighttrack = {}  # Dictionary of flighttrack data: patch,color,wp_model
+        self.active_flight_track = activeFlightTrack
+        self.listOperationsMSC = listOperationsMSC
+        self.listFlightTracks = listFlightTracks
+        self.mscolab_server_url = mscolab_server_url
+        self.token = token
+        self.ft_settings_dict = self.ui.get_settings()
+        self.color = self.ft_settings_dict["colour_ft_vertices"]
+        self.obb = []
+
+        self.operation_list = False
+        self.flighttrack_list = True
+
+        # Set flags
+        self.flighttrack_added = False
+        self.flighttrack_activated = False
+        self.color_change = False
+        self.change_linewidth = False
+        self.dsbx_linewidth.setValue(2.0)
 
         # Connect Signals and Slots
-        self.bt_addFile.clicked.connect(self.get_file)
-        self.btRemove_file.clicked.connect(self.remove_item)
-        self.listView.itemChanged.connect(self.syncListViews)
-        self.listView.itemChanged.connect(self.drawInactiveFlighttracks)
-        self.listView.itemActivated.connect(self.get_active_flighttrack)
+        self.listFlightTracks.model().rowsInserted.connect(self.wait)
+        self.listFlightTracks.model().rowsRemoved.connect(self.flighttrackRemoved)
+        self.ui.signal_activate_flighttrack1.connect(self.get_active)
+        self.list_flighttrack.itemChanged.connect(self.flagop)
 
-        self.view.plot_multiple_flightpath(self)
+        self.pushButton_color.clicked.connect(self.select_color)
+        self.ui.signal_ft_vertices_color_change.connect(self.ft_vertices_color)
+        self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
+        self.ui.signal_login_mscolab.connect(self.login)
 
-        # Update Flighttrack list from MSUI list
-        self.syncListViews()
+        self.colorPixmap.setPixmap(self.show_color_pixmap(self.color))
 
-    def syncListViews(self):
-        self.list_flighttrack.clear()
-        for index in range(self.listView.count()):
-            wp_model = self.listView.item(index).flighttrack_model
-            msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
+        self.list_flighttrack.itemClicked.connect(self.listFlighttrack_itemClicked)
 
-    def get_file(self):
+        if self.mscolab_server_url is not None:
+            self.connect_mscolab_server()
+
+        if parent is not None:
+            parent.viewCloses.connect(lambda: self.signal_parent_closes.emit())
+
+        # Load flighttracks
+        for index in range(self.listFlightTracks.count()):
+            wp_model = self.listFlightTracks.item(index).flighttrack_model
+            listItem = self.create_list_item(wp_model)
+
+        self.activate_flighttrack()
+
+    @QtCore.Slot()
+    def logout(self):
+        self.operations.logout_mscolab()
+        self.ui.signal_listFlighttrack_doubleClicked.disconnect()
+        self.ui.signal_permission_revoked.disconnect()
+        self.ui.signal_render_new_permission.disconnect()
+        self.operations = None
+        self.flighttrack_list = True
+        self.operation_list = False
+        for idx in range(len(self.obb)):
+            del self.obb[idx]
+
+    @QtCore.Slot(str, str)
+    def login(self, url, token):
+        self.mscolab_server_url = url
+        self.token = token
+        self.connect_mscolab_server()
+
+    def connect_mscolab_server(self):
+        self.operations = MultipleFlightpathOperations(self, self.mscolab_server_url, self.token,
+                                                       self.list_operation_track,
+                                                       self.listOperationsMSC, self.view)
+        self.obb.append(self.operations)
+
+        self.ui.signal_permission_revoked.connect(lambda op_id: self.operations.permission_revoked(op_id))
+        self.ui.signal_render_new_permission.connect(lambda op_id, path: self.operations.render_permission(op_id, path))
+        # Signal emitted, on activation of operation from MSUI
+        self.ui.signal_activate_operation.connect(self.update_op_id)
+        self.ui.signal_operation_added.connect(self.add_operation_slot)
+        self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+
+        # deactivate vice versa selection of Operation or Flight Track
+        self.list_operation_track.itemClicked.connect(self.operations.listOperations_itemClicked)
+
+        # deactivate operation or flighttrack
+        self.listOperationsMSC.itemDoubleClicked.connect(self.deactivate_all_flighttracks)
+        self.ui.signal_listFlighttrack_doubleClicked.connect(self.operations.deactivate_all_operations)
+
+        # Mscolab Server logout
+        self.ui.signal_logout_mscolab.connect(self.logout)
+
+    def update(self):
+        for entry in self.dict_flighttrack.values():
+            entry["patch"].update()
+
+    def remove(self):
+        for entry in self.dict_flighttrack.values():
+            entry["patch"].remove()
+
+    def wait(self, parent, start, end):
         """
-        Slot that open a file dialog to choose FTML file.
+        Adding of flighttrack take time, to avoid emitting of rowInserted signal before that, a delay is inserted in
+        new thread(it avoid freezing of UI).
         """
-        filenames = get_open_filenames(
-            self, "Open FTML File", os.path.dirname(str(self.directory_location)), "FTML Files(*.ftml)")
-        if not filenames:
-            return
-        self.select_file(filenames)
+        # ToDo: Use QThread
+        self.flighttrack_added = True
+        t1 = threading.Timer(0.5, self.flighttrackAdded, [parent, start, end])
+        t1.start()
 
-    def select_file(self, filenames):
-        """
-        Initializes selected file.
-        """
-        for filename in filenames:
-            if filename is None:
-                return
-            text = filename
-            if text not in self.dict_files:
-                self.dict_files[text] = {}
-                self.dict_files[text]["track"] = None
-                self.create_list_item(filename)
-            else:
-                logging.info("%s file already added", text)
-        self.labelStatus.setText("Status: Files added successfully.")
-
-    def parse_ftml(self, filename):
-        """
-        Load a flight track from an XML file at <filename>.
-        """
-        _dirname, _name = os.path.split(filename)
-        _fs = open_fs(_dirname)
-        datasource = _fs.open(_name)
-        try:
-            doc = xml.dom.minidom.parse(datasource)
-        except xml.parsers.expat.ExpatError as ex:
-            raise SyntaxError(str(ex))
-
-        ft_el = doc.getElementsByTagName("FlightTrack")[0]
-
-        waypoints_list = []
-        for wp_el in ft_el.getElementsByTagName("Waypoint"):
-
-            location = wp_el.getAttribute("location")
-            lat = float(wp_el.getAttribute("lat"))
-            lon = float(wp_el.getAttribute("lon"))
-            flightlevel = float(wp_el.getAttribute("flightlevel"))
-            comments = wp_el.getElementsByTagName("Comments")[0]
-            # If num of comments is 0(null comment), then return ''
-            if len(comments.childNodes):
-                comments = comments.childNodes[0].data.strip()
-            else:
-                comments = ''
-            waypoints_list.append((lat, lon, flightlevel, location, comments))
-        return waypoints_list
-
-    def save_settings(self):
-        """
-        Save Flighttrack settings after closing of view.
-        """
-        for entry in self.dict_files.values():
-            entry["track"] = None
-        settings = {
-            "saved_files": self.dict_files
-        }
-        save_settings_qsettings(self.settings_tag, settings)
-
-    def load_flighttrack(self):
-        """
-        Load Multiple Flighttracks simultaneously and construct corresponding
-        flight patches on topview.
-        """
-        for entry in self.dict_files.values():  # removes all patches from map, but not from dict files
-            if entry["track"] is not None:  # since newly initialized files will have patch:None
-                entry["track"].remove()
-
-        for index in range(self.list_flighttrack.count()):
-            if hasattr(self.list_flighttrack.item(index), "checkState") and (
-                    self.list_flighttrack.item(index).checkState() == QtCore.Qt.Checked):
-                if self.list_flighttrack.item(index).text() in self.dict_files:
-                    # if self.dict_files[self.list_flighttrack.item(index).text()]["track"] is None
-                    # ToDO: Don't create new patch object if flighttrack patch object is Not None
-                    self.directory_location = str(self.list_flighttrack.item(index).text())
-                    self.waypoint_list = self.parse_ftml(self.directory_location)
-                    patch = MultipleFlightpath(self.view.map, self.waypoint_list)
-                    self.dict_files[self.list_flighttrack.item(index).text()]["track"] = patch
-
-    def get_active_flighttrack(self, item):
-        self.active_flight_track = item.flighttrack_model
-
-    def remove_item(self):
-        """
-        Remove FTML file from list widget.
-        """
-        flag = 0  # used to set label, if not file is selected
-        for index in range(self.list_flighttrack.count()):
-            if hasattr(self.list_flighttrack.item(index), "checkState") and \
-                    (self.list_flighttrack.item(index).checkState() == QtCore.Qt.Checked):  # If item is checked
-                if self.dict_files[self.list_flighttrack.item(index).text()]['track'] is not None:
-                    self.dict_files[self.list_flighttrack.item(index).text()]['track'].remove()
-                del self.dict_files[self.list_flighttrack.item(index).text()]
-                self.list_flighttrack.takeItem(index)
-                self.remove_item()
-                flag = 1
-                self.labelStatus.setText("Status: FTML File is Removed")
-        if not flag:
-            self.labelStatus.setText("Status: Select FTML File to Delete")
-
-    def create_list_item(self, filename):
-        """
-        Add flighttracks to list widget
-        """
-        wp_model = ft.WaypointsTableModel(filename=filename)
-        for count in range(self.listView.count()):
-            if str(self.listView.item(count).flighttrack_model) == str(wp_model):
-                break
+    def flagop(self):
+        if self.flighttrack_added:
+            self.flighttrack_added = False
+        elif self.flighttrack_activated:
+            self.flighttrack_activated = False
+        elif self.color_change:
+            self.color_change = False
         else:
-            listItem = msui.QFlightTrackListWidgetItem(wp_model, self.listView)
-            msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
+            self.drawInactiveFlighttracks(self.list_flighttrack)
 
-    def drawInactiveFlighttracks(self):
+    def flighttrackAdded(self, parent, start, end):
+        """
+        Slot to add flighttrack.
+        """
+        wp_model = self.listFlightTracks.item(start).flighttrack_model
+        listItem = self.create_list_item(wp_model)
+        if self.mscolab_server_url is not None:
+            self.operations.deactivate_all_operations()
+        self.activate_flighttrack()
+
+    @QtCore.Slot(tuple)
+    def ft_vertices_color(self, color):
+        self.color = color
+        self.colorPixmap.setPixmap(self.show_color_pixmap(color))
+
+        if self.flighttrack_list:
+            self.dict_flighttrack[self.active_flight_track]["color"] = color
+            for index in range(self.list_flighttrack.count()):
+                if self.list_flighttrack.item(index).flighttrack_model == self.active_flight_track:
+                    self.list_flighttrack.item(index).setIcon(
+                        self.show_color_icon(self.get_color(self.active_flight_track)))
+                    break
+        elif self.operation_list:
+            self.operations.ft_color_update(color)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.operations.operationsAdded(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.operations.operationRemoved(op_id)
+
+    @QtCore.Slot(int)
+    def update_op_id(self, op_id):
+        self.operations.get_op_id(op_id)
+
+    @QtCore.Slot(ft.WaypointsTableModel)
+    def get_active(self, active_flighttrack):
+        self.update_last_flighttrack()
+        self.active_flight_track = active_flighttrack
+        self.activate_flighttrack()
+
+    def save_waypoint_model_data(self, wp_model, listWidget):
+        wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
+        if self.dict_flighttrack[wp_model] is None:
+            self.create_list_item(wp_model)
+        self.dict_flighttrack[wp_model]["wp_data"] = wp_data
+
+    def create_list_item(self, wp_model):
+        """
+        PyQt5 method : Add items in list and add checkbox functionality
+        """
+        # Create new key in dict
+        self.dict_flighttrack[wp_model] = {}
+        self.dict_flighttrack[wp_model]["patch"] = None
+        self.dict_flighttrack[wp_model]["color"] = self.color
+        self.dict_flighttrack[wp_model]["linewidth"] = 2
+        self.dict_flighttrack[wp_model]["wp_data"] = []
+        self.dict_flighttrack[wp_model]["checkState"] = False
+
+        self.save_waypoint_model_data(wp_model, self.list_flighttrack)
+
+        listItem = msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
+        listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
+        if not self.flighttrack_added:
+            self.flighttrack_added = True
+        listItem.setCheckState(QtCore.Qt.Unchecked)
+        if not self.flighttrack_added:
+            self.flighttrack_added = True
+
+        # Show flighttrack color icon
+        listItem.setIcon(self.show_color_icon(self.get_color(wp_model)))
+
+        return listItem
+
+    def select_color(self):
+        """
+        Sets the color of selected flighttrack when Change Color is clicked.
+        """
+        # ToDO: Use color defined in options for initial color of active flight path.
+        #  afterwards deactivate the color change button in options and it needs also
+        #  the check mark for enabled, but can't be changed (disabled). At the moment
+        #  the dockingwidget is closed the button and checkmark has to become activated again.
+
+        if self.list_flighttrack.currentItem() is not None:
+            if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
+                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
+                wp_model = self.list_flighttrack.currentItem().flighttrack_model
+                if wp_model == self.active_flight_track:
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage('Use "options" to change color of an activated flighttrack.')
+                else:
+                    color = QtWidgets.QColorDialog.getColor()
+                    if color.isValid():
+                        self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
+                        self.color_change = True
+                        self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+                        self.dict_flighttrack[wp_model]["patch"].update(color=
+                                                                        self.dict_flighttrack[wp_model]["color"])
+            else:
+                self.labelStatus.setText("Check Mark the flighttrack to change its color.")
+        elif self.list_operation_track.currentItem() is not None:
+            self.operations.select_color()
+        else:
+            self.labelStatus.setText("Status: No flight track selected")
+
+    def get_color(self, wp_model):
+        """
+        Returns color of respective flighttrack.
+        """
+        return self.dict_flighttrack[wp_model]["color"]
+
+    def show_color_pixmap(self, clr):
+        pixmap = QtGui.QPixmap(20, 10)
+        pixmap.fill(QtGui.QColor(int(clr[0] * 255), int(clr[1] * 255), int(clr[2] * 255)))
+        return pixmap
+
+    def show_color_icon(self, clr):
+        """
+        Creating object of QPixmap for displaying icon inside the listWidget.
+        """
+        pixmap = self.show_color_pixmap(clr)
+        return QtGui.QIcon(pixmap)
+
+    def set_linewidth(self):
+        """
+        Change the line width of selected flighttrack.
+        """
+        if self.list_flighttrack.currentItem() is not None:
+            if (hasattr(self.list_flighttrack.currentItem(), "checkState")) and (
+                    self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
+                wp_model = self.list_flighttrack.currentItem().flighttrack_model
+                if wp_model != self.active_flight_track:
+                    if self.dict_flighttrack[wp_model]["linewidth"] != self.dsbx_linewidth.value():
+                        self.dict_flighttrack[wp_model]["linewidth"] = self.dsbx_linewidth.value()
+
+                        self.dict_flighttrack[wp_model]["patch"].remove()
+                        self.dict_flighttrack[wp_model]["patch"].update(
+                            self.dict_flighttrack[wp_model]["linewidth"], self.dict_flighttrack[wp_model]["color"]
+                        )
+                        self.change_linewidth = True
+                        self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
+            else:
+                self.labelStatus.setText("Status: No flight track selected")
+        elif self.list_operation_track.currentItem() is not None:
+            self.operations.set_linewidth()
+        else:
+            self.labelStatus.setText("Status: No flight track selected")
+
+    def flighttrackRemoved(self, parent, start, end):
+        """
+        Slot to remove flighttrack.
+        """
+        # ToDo: Add try..catch block
+        if self.dict_flighttrack[self.list_flighttrack.item(start).flighttrack_model]["patch"] is None:
+            del self.dict_flighttrack[self.list_flighttrack.item(start).flighttrack_model]
+        else:
+            self.dict_flighttrack[self.list_flighttrack.item(start).flighttrack_model]["patch"].remove()
+        self.list_flighttrack.takeItem(start)
+
+    def update_last_flighttrack(self):
+        """
+        Update waypoint model for most recently activated flighttrack in dict_flighttrack.
+        """
+        if self.active_flight_track is not None:
+            self.save_waypoint_model_data(
+                self.active_flight_track,
+                self.list_flighttrack)  # Before activating new flighttrack, update waypoints of previous flighttrack
+
+    def activate_flighttrack(self):
+        """
+        Activate flighttrack
+        """
+        font = QtGui.QFont()
+        for i in range(self.list_flighttrack.count()):
+            listItem = self.list_flighttrack.item(i)
+            if self.active_flight_track == listItem.flighttrack_model:  # active flighttrack
+                listItem.setIcon(self.show_color_icon(self.color))
+                font.setBold(True)
+                if self.dict_flighttrack[listItem.flighttrack_model]["patch"] is not None:
+                    self.dict_flighttrack[listItem.flighttrack_model]["patch"].remove()
+                if listItem.checkState() == QtCore.Qt.Unchecked:
+                    listItem.setCheckState(QtCore.Qt.Checked)
+                    self.set_activate_flag()
+                listItem.setFlags(listItem.flags() & ~QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
+            else:
+                listItem.setIcon(self.show_color_icon(self.get_color(listItem.flighttrack_model)))
+                font.setBold(False)
+                listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+            self.set_activate_flag()
+            listItem.setFont(font)
+
+    def drawInactiveFlighttracks(self, list_widget):
+        """
+        Draw inactive flighttracks
+        """
+        for entry in self.dict_flighttrack.values():
+            if entry["patch"] is not None:
+                entry["patch"].remove()
+
+        for index in range(list_widget.count()):
+            listItem = list_widget.item(index)
+            if hasattr(list_widget.item(index), "checkState") and (
+                    list_widget.item(index).checkState() == QtCore.Qt.Checked):
+                if listItem.flighttrack_model != self.active_flight_track:
+                    patch = MultipleFlightpath(self.view.map,
+                                               self.dict_flighttrack[listItem.flighttrack_model][
+                                                   "wp_data"],
+                                               color=self.dict_flighttrack[listItem.flighttrack_model]['color'])
+
+                    self.dict_flighttrack[listItem.flighttrack_model]["patch"] = patch
+                    self.dict_flighttrack[listItem.flighttrack_model]["checkState"] = True
+            else:
+                # pass
+                self.dict_flighttrack[listItem.flighttrack_model]["checkState"] = False
+
+    def set_activate_flag(self):
+        if not self.flighttrack_added:
+            self.flighttrack_activated = True
+
+    def deactivate_all_flighttracks(self):
+        """
+        Remove all flighttrack patches from topview canvas and make flighttracks userCheckable.
+        """
+        for index in range(self.list_flighttrack.count()):
+            listItem = self.list_flighttrack.item(index)
+
+            self.set_listControl(True, False)
+
+            self.set_activate_flag()
+            listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+
+            if listItem.flighttrack_model == self.active_flight_track:
+                font = QtGui.QFont()
+                font.setBold(False)
+                listItem.setFont(font)
+
+        self.active_flight_track = None
+
+    def set_listControl(self, operation, flighttrack):
+        self.operation_list = operation
+        self.flighttrack_list = flighttrack
+
+    def get_ft_vertices_color(self):
+        return self.color
+
+    def listFlighttrack_itemClicked(self):
+        if self.list_operation_track.currentItem() is not None:
+            self.list_operation_track.setCurrentItem(None)
+
+        if self.list_flighttrack.currentItem() is not None:
+            wp_model = self.list_flighttrack.currentItem().flighttrack_model
+            self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
+
+            if self.list_flighttrack.currentItem().flighttrack_model == self.active_flight_track:
+                self.frame.hide()
+            else:
+                self.frame.show()
+
+
+class MultipleFlightpathOperations:
+    """
+    This class provides the functions for plotting Multiple Flighttracks from mscolab server
+    on the TopView canvas.
+    """
+
+    def __init__(self, parent, mscolab_server_url, token, list_operation_track, listOperationsMSC, view):
+        # Variables related to Mscolab Operations
+        self.parent = parent
+        self.active_op_id = None
+        self.mscolab_server_url = mscolab_server_url
+        self.token = token
+        self.view = view
+        self.dict_operations = {}
+        self.list_operation_track = list_operation_track
+        self.listOperationsMSC = listOperationsMSC
+
+        self.operation_added = False
+        self.operation_removed = False
+        self.operation_activated = False
+        self.color_change = False
+
+        # Connect signals and slots
+        self.list_operation_track.itemChanged.connect(self.set_flag)
+
+        # Load operations from wps server
+        server_operations = self.get_wps_from_server()
+        sorted_server_operations = sorted(server_operations, key=lambda d: d["path"])
+
+        for operations in sorted_server_operations:
+            op_id = operations["op_id"]
+            xml_content = self.request_wps_from_server(op_id)
+            wp_model = ft.WaypointsTableModel(xml_content=xml_content)
+            wp_model.name = operations["path"]
+            self.create_operation(op_id, wp_model)
+
+    def set_flag(self):
+        if self.operation_added:
+            self.operation_added = False
+        elif self.operation_removed:
+            self.operation_removed = False
+        elif self.color_change:
+            self.color_change = False
+        else:
+            self.draw_inactive_operations()
+
+    def get_wps_from_server(self):
+        operations = {}
+        data = {
+            "token": self.token
+        }
+        r = requests.get(self.mscolab_server_url + "/operations", data=data)
+        if r.text != "False":
+            _json = json.loads(r.text)
+            operations = _json["operations"]
+        return operations
+
+    def request_wps_from_server(self, op_id):
+        if verify_user_token(self.mscolab_server_url, self.token):
+            data = {
+                "token": self.token,
+                "op_id": op_id
+            }
+            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data)
+            if r.text != "False":
+                xml_content = json.loads(r.text)["content"]
+                return xml_content
+
+    def load_wps_from_server(self, op_id):
+        xml_content = self.request_wps_from_server(op_id)
+        if xml_content is not None:
+            waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+            return waypoints_model
+
+    def save_operation_data(self, op_id, wp_model):
+        wp_data = [(wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_model.all_waypoint_data()]
+        if self.dict_operations[op_id] is None:
+            self.create_operation(op_id, wp_model)
+        self.dict_operations[op_id]["wp_data"] = wp_data
+
+    def create_operation(self, op_id, wp_model):
         """
         """
-        dict = {}  # Dictionary of waypointTableModel objects and their waypoints
+        self.dict_operations[op_id] = {}
+        self.dict_operations[op_id]["patch"] = None
+        self.dict_operations[op_id]["wp_data"] = None
+        self.dict_operations[op_id]["linewidth"] = 2
+        self.dict_operations[op_id]["color"] = self.parent.get_ft_vertices_color()
 
-        if len(self.inactiveTrackPatches) > 0:
-            self.removen()
+        self.save_operation_data(op_id, wp_model)
 
-        for index in range(self.listView.count()):  # Make list of all flighttrack models
-            item = self.listView.item(index).flighttrack_model
-            self.waypoints_modelList.append(item)
+        listItem = QMscolabOperationsListWidgetItem(wp_model, op_id, self.list_operation_track)
+        listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
 
-        for count in range(len(self.waypoints_modelList)):
-            waypoints_list = []
-            dict[str(self.waypoints_modelList[count])] = {}
-            for wp in self.waypoints_modelList[count].all_waypoint_data():
-                waypoints_list.append((wp.lat, wp.lon,
-                                       wp.flightlevel, wp.location, wp.comments))
-            dict[str(self.waypoints_modelList[count])]["waypoints_list"] = waypoints_list
+        if not self.operation_added:
+            self.operation_added = True
+        listItem.setCheckState(QtCore.Qt.Unchecked)
+        if not self.operation_added:
+            self.operation_added = True
 
-        for key in dict:   # Draw inactive flighttracks
-            if str(key) != str(self.active_flight_track):
-                patch = MultipleFlightpath(self.view.map, dict[key]["waypoints_list"])
-                self.inactiveTrackPatches.append(patch)
+        # Show operations color icon
+        listItem.setIcon(self.show_color_icon(self.get_color(op_id)))
 
-    def removen(self):
-        for pp in range(len(self.inactiveTrackPatches)):
-            if self.inactiveTrackPatches[pp] is not None:
-                self.inactiveTrackPatches[pp].remove()
-        self.inactiveTrackPatches = []
+        return listItem
+
+    def activate_operation(self):
+        """
+        Activate Mscolab Operation
+        """
+        font = QtGui.QFont()
+        for i in range(self.list_operation_track.count()):
+            listItem = self.list_operation_track.item(i)
+            if self.active_op_id == listItem.op_id:  # active operation
+                listItem.setIcon(self.show_color_icon(self.parent.color))
+                font.setBold(True)
+                if self.dict_operations[listItem.op_id]["patch"] is not None:
+                    self.dict_operations[listItem.op_id]["patch"].remove()
+                if listItem.checkState() == QtCore.Qt.Unchecked:
+                    listItem.setCheckState(QtCore.Qt.Checked)
+                    self.set_activate_flag()
+                listItem.setFlags(listItem.flags() & ~QtCore.Qt.ItemIsUserCheckable)  # make activated track uncheckable
+            else:
+                listItem.setIcon(self.show_color_icon(self.get_color(listItem.op_id)))
+                font.setBold(False)
+                listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+            self.set_activate_flag()
+            listItem.setFont(font)
+
+    def save_last_used_operation(self, op_id):
+        if self.active_op_id is not None:
+            self.save_operation_data(op_id, self.load_wps_from_server(self.active_op_id))
+
+    def draw_inactive_operations(self):
+        """
+        Draw flighttracks of inactive operations.
+        """
+        for entry in self.dict_operations.values():
+            if entry is not None:
+                if entry["patch"] is not None:
+                    entry["patch"].remove()
+
+        for index in range(self.list_operation_track.count()):
+            listItem = self.list_operation_track.item(index)
+            if hasattr(listItem, "checkState") and (
+                    listItem.checkState() == QtCore.Qt.Checked):
+                if listItem.op_id != self.active_op_id:
+                    patch = MultipleFlightpath(self.view.map,
+                                               self.dict_operations[listItem.op_id][
+                                                   "wp_data"],
+                                               color=self.dict_operations[listItem.op_id]["color"],
+                                               linewidth=self.dict_operations[listItem.op_id]["linewidth"])
+
+                    self.dict_operations[listItem.op_id]["patch"] = patch
+
+    def get_op_id(self, op_id):
+        if self.active_op_id is not None:
+            tmp = self.active_op_id
+            self.save_last_used_operation(tmp)
+        self.active_op_id = op_id
+        self.activate_operation()
+
+    def operationsAdded(self, op_id, path):
+        """
+        Slot to add operation.
+        """
+        wp_model = self.load_wps_from_server(op_id)
+        wp_model.name = path
+        listItem = self.create_operation(op_id, wp_model)
+
+    def operationRemoved(self, op_id):
+        """
+        Slot to remove operation.
+        """
+        self.operation_removed = True
+        for index in range(self.list_operation_track.count()):
+            if self.list_operation_track.item(index).op_id == op_id:
+                if self.dict_operations[self.list_operation_track.item(index).op_id]["patch"] is None:
+                    del self.dict_operations[self.list_operation_track.item(index).op_id]
+                else:
+                    self.dict_operations[self.list_operation_track.item(index).op_id]["patch"].remove()
+                self.list_operation_track.takeItem(index)
+                self.active_op_id = None
+                break
+
+    def set_activate_flag(self):
+        if not self.operation_activated:
+            self.operation_activated = True
+
+    def deactivate_all_operations(self):
+        """
+        Removes all operations patches from topview canvas and make flighttracks userCheckable
+        """
+        for index in range(self.listOperationsMSC.count()):
+            listItem = self.list_operation_track.item(index)
+
+            self.parent.set_listControl(False, True)
+
+            self.set_activate_flag()
+            listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+
+            # if listItem.op_id == self.active_op_id:
+            self.set_activate_flag()
+            font = QtGui.QFont()
+            font.setBold(False)
+            listItem.setFont(font)
+
+        self.active_op_id = None
+
+    def select_color(self):
+        """
+        Sets the color of selected operation when change Color is clicked.
+        """
+        if self.list_operation_track.currentItem() is not None:
+            if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
+                    self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
+                op_id = self.list_operation_track.currentItem().op_id
+                if self.list_operation_track.currentItem().op_id == self.active_op_id:
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage('Use "options" to change color of an activated operation.')
+                else:
+                    color = QtWidgets.QColorDialog.getColor()
+                    if color.isValid():
+                        self.dict_operations[op_id]["color"] = color.getRgbF()
+                        self.color_change = True
+                        self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(op_id)))
+                        self.dict_operations[op_id]["patch"].update(color=
+                                                                    self.dict_operations[op_id]["color"], linewidth=
+                                                                    self.dict_operations[op_id]["linewidth"])
+            else:
+                self.parent.labelStatus.setText("Check Mark the Operation to change color.")
+
+    def get_color(self, op_id):
+        """
+        Returns color of respective operation.
+        """
+        return self.dict_operations[op_id]["color"]
+
+    def show_color_icon(self, clr):
+        """
+        """
+        pixmap = self.parent.show_color_pixmap(clr)
+        return QtGui.QIcon(pixmap)
+
+    def ft_color_update(self, color):
+        self.color = color
+        self.dict_operations[self.active_op_id]["color"] = color
+
+        for index in range(self.list_operation_track.count()):
+            if self.list_operation_track.item(index).op_id == self.active_op_id:
+                self.list_operation_track.item(index).setIcon(
+                    self.show_color_icon(self.get_color(self.active_op_id)))
+                break
+
+    def logout_mscolab(self):
+        a = self.list_operation_track.count() - 1
+        while a >= 0:
+            if self.dict_operations[self.list_operation_track.item(0).op_id]['patch'] is None:
+                del self.dict_operations[self.list_operation_track.item(0).op_id]
+            else:
+                self.dict_operations[self.list_operation_track.item(0).op_id]['patch'].remove()
+            self.list_operation_track.takeItem(0)
+            a -= 1
+
+        self.list_operation_track.itemChanged.disconnect()
+        self.mscolab_server_url = None
+        self.token = None
+        self.dict_operations = {}
+
+    @QtCore.Slot(int)
+    def permission_revoked(self, op_id):
+        self.operationRemoved(op_id)
+
+    @QtCore.Slot(int, str)
+    def render_permission(self, op_id, path):
+        self.operationsAdded(op_id, path)
+
+    def set_linewidth(self):
+        if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
+                self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
+            op_id = self.list_operation_track.currentItem().op_id
+            if op_id != self.active_op_id:
+                self.parent.frame.show()
+                if self.dict_operations[op_id]["linewidth"] != self.parent.dsbx_linewidth.value():
+                    self.dict_operations[op_id]["linewidth"] = self.parent.dsbx_linewidth.value()
+
+                    self.dict_operations[op_id]["patch"].remove()
+                    self.dict_operations[op_id]["patch"].update(
+                        self.dict_operations[op_id]["linewidth"], self.dict_operations[op_id]["color"]
+                    )
+                    self.change_linewidth = True
+                    self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
+
+    def listOperations_itemClicked(self):
+        if self.parent.list_flighttrack.currentItem() is not None:
+            self.parent.list_flighttrack.setCurrentItem(None)
+
+        if self.list_operation_track.currentItem() is not None:
+            op_id = self.list_operation_track.currentItem().op_id
+            self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
+
+            if self.list_operation_track.currentItem().op_id == self.active_op_id:
+                self.parent.frame.hide()
+            else:
+                self.parent.frame.show()
