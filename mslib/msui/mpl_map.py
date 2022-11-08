@@ -694,14 +694,18 @@ class MapCanvas(basemap.Basemap):
         # use great circle formula for a perfect sphere.
         _, _, dist = self.gc.inv(lon0, lat0, lon1, lat1)
         npoints = int((dist + 0.5 * 1000. * del_s) / (1000. * del_s))
-        lonlats = self.gc.npts(lon0, lat0, lon1, lat1, npoints)
-        lons = [lon0]
-        lats = [lat0]
-        for lon, lat in lonlats:
-            lons.append(lon)
-            lats.append(lat)
-        lons.append(lon1)
-        lats.append(lat1)
+        if npoints == 0:
+            lons = [lon0, lon1]
+            lats = [lat0, lat1]
+        else:
+            lonlats = self.gc.npts(lon0, lat0, lon1, lat1, npoints)
+            lons = [lon0]
+            lats = [lat0]
+            for lon, lat in lonlats:
+                lons.append(lon)
+                lats.append(lat)
+            lons.append(lon1)
+            lats.append(lat1)
         if map_coords:
             x, y = self(lons, lats)
         else:
