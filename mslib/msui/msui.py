@@ -57,7 +57,7 @@ from mslib.msui.updater import UpdaterUI
 from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.utils.qt import get_open_filename, get_save_filename, Worker, Updater
+from mslib.utils.qt import get_open_filenames, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
@@ -591,17 +591,19 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.export_plugins = {}
 
     def handle_import_local(self, extension, function, pickertype):
-        filename = get_open_filename(
+        filenames = get_open_filenames(
             self, "Import Flight Track",
             self.last_save_directory,
             f"Flight Track (*.{extension});;All files (*.*)",
             pickertype=pickertype)
         if self.local_active:
-            if filename is not None:
-                self.last_save_directory = fs.path.dirname(filename)
-                self.create_new_flight_track(filename=filename, function=function)
+            if filenames is not None:
+                for name in filenames:
+                    self.create_new_flight_track(filename=name, function=function)
+                self.last_save_directory = fs.path.dirname(name)
         else:
-            self.mscolab.handle_import_msc(filename, extension, function, pickertype)
+            for name in filenames:
+                self.mscolab.handle_import_msc(name, extension, function, pickertype)
 
     def handle_export_local(self, extension, function, pickertype):
         if self.local_active:
