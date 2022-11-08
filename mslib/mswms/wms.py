@@ -220,7 +220,8 @@ class WMSServer(object):
                 self.register_lsec_layer(layer[1], layer_class=layer[0])
 
     def generate_gallery(self, create=False, clear=False, generate_code=False, sphinx=False, plot_list=None,
-                         all_plots=False, url_prefix="", levels="", itimes="", vtimes="", simple_naming=False):
+                         all_plots=False, url_prefix="", levels="", itimes="", vtimes="", simple_naming=False,
+                         plot_types=None):
         """
         Iterates through all registered layers, draws their plots and puts them in the gallery
         """
@@ -393,7 +394,8 @@ class WMSServer(object):
                                                       generate_code, sphinx, url_prefix=url_prefix,
                                                       dataset=dataset if multiple_datasets else "", level=f"{level}" +
                                                                                                 f"{vert_units}",
-                                                      itime=str(itime), vtime=str(vtime), simple_naming=simple_naming)
+                                                      itime=str(itime), vtime=str(vtime), simple_naming=simple_naming,
+                                                      plot_types=plot_types)
                                             if level:
                                                 add_levels([f"{level} {vert_units}"], vert_units)
                                             else:
@@ -407,14 +409,14 @@ class WMSServer(object):
                                         None if exists else plot_driver.plot(), plot_object, generate_code,
                                         sphinx, url_prefix=url_prefix,
                                         dataset=dataset if multiple_datasets else "", itime=str(itime),
-                                        vtime=str(vtime), simple_naming=simple_naming)
+                                        vtime=str(vtime), simple_naming=simple_naming, plot_types=plot_types)
                                     add_times(itime, [vtime])
 
                         except Exception as e:
                             traceback.print_exc()
                             logging.error("%s %s %s", plot_object.name, type(e), e)
 
-            write_html(tmp_path, sphinx)
+            write_html(tmp_path, sphinx, plot_types=plot_types)
             if generate_code:
                 write_code_pages(tmp_path, sphinx, url_prefix)
                 if sphinx:
