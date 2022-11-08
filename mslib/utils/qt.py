@@ -446,15 +446,20 @@ class Updater(QtCore.QObject):
         self.is_git_env = False
         self.new_version = None
         self.old_version = None
-        self.command = "conda"
-
-        # Check if mamba is installed
-        try:
-            subprocess.run(["mamba"], startupinfo=subprocess_startupinfo(),
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            self.command = "mamba"
-        except FileNotFoundError:
-            pass
+        # we are using the installer version of the env
+        self.conda_prefix = os.getenv("CONDA_PREFIX")
+        if self.conda_prefix is not None:
+            self.command = os.path.join(self.conda_prefix, 'bin', "conda")
+            mamba_cmd = os.path.join(self.conda_prefix, 'bin', 'mamba')
+            # Check if mamba is installed in the env
+            try:
+                subprocess.run([mamba_cmd], startupinfo=subprocess_startupinfo(),
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+                self.command = mamba_cmd
+            except FileNotFoundError:
+                pass
+        else:
+            self.command = "conda"
 
         # pyqtSignals don't work without an application eventloop running
         if QtCore.QCoreApplication.startingUp():
@@ -484,9 +489,9 @@ class Updater(QtCore.QObject):
         except FileNotFoundError:
             pass
 
-        # Return if conda is not installed
+        # Return if conda is not installed. conda is fallback of mamba
         try:
-            subprocess.run(["conda"], startupinfo=subprocess_startupinfo(),
+            subprocess.run([self.command], startupinfo=subprocess_startupinfo(),
                            stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         except FileNotFoundError:
             return

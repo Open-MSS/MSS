@@ -1,0 +1,8 @@
+# Do not modify if you plan to import this file again!
+Track name: new flight track (1)
+Index  Location  Lat (+-90)  Lon (+-180)  Flightlevel  Pressure (hPa)  Leg dist. (km)  Cum. dist. (km)  Comments
+    0  B             55.150      -23.740        0.000        1013.250             0.0              0.0  Takeoff 
+    1  A             42.990      -12.100      350.000         238.429          1592.8           1592.8          
+    2  Shannon       52.785       -8.925      380.000         206.461          1114.4           2707.2  Dive    
+    3  EDMO          48.080       11.280      400.000         187.539          1521.8           4229.0          
+    4  C             63.740        1.730        0.000        1013.250          1838.3           6067.3  Landing 

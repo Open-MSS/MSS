@@ -57,7 +57,7 @@ from mslib.msui.updater import UpdaterUI
 from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.utils.qt import get_open_filename, get_save_filename, Worker, Updater
+from mslib.utils.qt import get_open_filenames, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
@@ -175,12 +175,16 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         Iterates through all shortcuts and resets the stylesheet
         """
-        self.fill_list()
         if self.current_shortcuts:
             for shortcuts in self.current_shortcuts.values():
                 for shortcut in shortcuts.values():
-                    if shortcut[-1] and hasattr(shortcut[-1], "setStyleSheet"):
-                        shortcut[-1].setStyleSheet("")
+                    try:
+                        if shortcut[-1] and hasattr(shortcut[-1], "setStyleSheet"):
+                            shortcut[-1].setStyleSheet("")
+                    except RuntimeError:
+                        # when we have deleted a QAction we have to update the list
+                        # Because we cannot test if the underlying object exist we have to catch that
+                        self.fill_list()
 
     def clicked(self, item):
         """
@@ -426,6 +430,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
         self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
 
+        # disable category until connected/login into mscolab
+        self.filterCategoryCb.setEnabled(False)
+
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
@@ -584,17 +591,19 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.export_plugins = {}
 
     def handle_import_local(self, extension, function, pickertype):
-        filename = get_open_filename(
+        filenames = get_open_filenames(
             self, "Import Flight Track",
             self.last_save_directory,
             f"Flight Track (*.{extension});;All files (*.*)",
             pickertype=pickertype)
         if self.local_active:
-            if filename is not None:
-                self.last_save_directory = fs.path.dirname(filename)
-                self.create_new_flight_track(filename=filename, function=function)
+            if filenames is not None:
+                for name in filenames:
+                    self.create_new_flight_track(filename=name, function=function)
+                self.last_save_directory = fs.path.dirname(name)
         else:
-            self.mscolab.handle_import_msc(filename, extension, function, pickertype)
+            for name in filenames:
+                self.mscolab.handle_import_msc(name, extension, function, pickertype)
 
     def handle_export_local(self, extension, function, pickertype):
         if self.local_active:

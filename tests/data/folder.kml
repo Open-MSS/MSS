@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<kml xmlns='http://www.opengis.net/kml/2.2'>
+	<Document>
+		<name>mss demodata</name>
+		<description><![CDATA[]]></description>
+		<Folder>
+			<name>mss</name>
+			<Placemark>
+				<name>Region of interests</name>
+				<Polygon>
+					<outerBoundaryIs>
+						<LinearRing>
+							<tessellate>1</tessellate>
+							<coordinates>-6.8554687,45.0890356,0.0 10.6347656,37.3352244,0.0 31.8164063,47.9899217,0.0 27.9492188,59.0405546,0.0 -3.5595703,54.2652241,0.0 -6.8554687,45.0890356,0.0</coordinates>
+						</LinearRing>
+					</outerBoundaryIs>
+				</Polygon>
+			</Placemark>
+			<Placemark>
+				<name>Point 2</name>
+				<Point>
+					<coordinates>-0.5932617,50.0218584,0.0</coordinates>
+				</Point>
+			</Placemark>
+		</Folder>
+	</Document>
+</kml>
