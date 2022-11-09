@@ -1230,7 +1230,7 @@ class MplSideViewCanvas(MplCanvas):
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
                 wp_press = []
                 wp_press = thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude
-                self.ceiling_alt = self.myfig.plotter.plot_path(xs, wp_press)
+                self.ceiling_alt = self.ax.plot(xs, wp_press, color="blue", linestyle='-', linewidth=2, zorder=100)
                 self.update_ceiling(
                     self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
                     self.myfig.settings_dict["colour_ceiling"])
