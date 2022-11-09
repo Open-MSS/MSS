@@ -665,12 +665,14 @@ class MyLinearViewFigure(MyFigure):
         """
         self.fig.subplots_adjust(left=0.08, right=0.96, top=0.9, bottom=0.14)
         self.ax.set_title("Linear flight profile", horizontalalignment='left', x=0)
+        self.ax.set_xlabel("lat/lon")
         self.ax.figure.canvas.draw()
 
     def clear_figure(self):
         logging.debug("path of linear view has changed.. removing invalidated plots")
         self.ax.figure.clf()
         self.ax = self.fig.add_subplot(111, zorder=99)
+        self.ax.set_title("Linear flight profile", horizontalalignment="left", x=0)
 
     def redraw_xaxis(self, lats, lons):
         # Re-label x-axis.
@@ -680,9 +682,11 @@ class MyLinearViewFigure(MyFigure):
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
         self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
-                                        for d in zip(lats[::tick_index_step],
-                                                    lons[::tick_index_step])],
-                                        rotation=25, horizontalalignment="right")
+                                 for d in zip(lats[::tick_index_step],
+                                              lons[::tick_index_step])],
+                                 rotation=25, horizontalalignment="right")
+        self.ax.set_title("Linear flight profile", horizontalalignment="left", x=0)
+        self.ax.set_xlabel("lat/lon")
 
         # Remove all vertical lines
         for line in self.vertical_lines[:]:
