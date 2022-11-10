@@ -110,11 +110,8 @@ class Plotting():
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self, itime=None, vtime=None, no_of_plots=1):
+    def __init__(self):
         super(TopViewPlotting, self).__init__()
-        self.itime = itime
-        self.vtime = vtime
-        self.no_of_plots = no_of_plots
         self.myfig = qt.MyTopViewFigure()
         self.myfig.fig.canvas.draw()
         self.line = None
@@ -136,40 +133,39 @@ class TopViewPlotting(Plotting):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
-                width, height = self.myfig.get_plot_size_in_px()
-                self.bbox = self.params['basemap']
-                if self.itime is not None:
-                    init_time = self.itime
-                if self.vtime is not None:
-                    time = self.vtime
-                if not init_time:
-                    init_time = None
+                self.draw(self, flight, section, vertical, filename, url, layer, style, elevation, no_of_plots=1)
 
-                kwargs = {"layers": [layer],
-                          "styles": [style],
-                          "time": time,
-                          "init_time": init_time,
-                          "exceptions": 'application/vnd.ogc.se_xml',
-                          "level": elevation,
-                          "srs": self.config["predefined_map_sections"][section]["CRS"],
-                          "bbox": (self.bbox['llcrnrlon'], self.bbox['llcrnrlat'],
-                                   self.bbox['urcrnrlon'], self.bbox['urcrnrlat']
-                                  ),
-                          "format": "image/png",
-                          "size": (width, height)
-                        }
+    def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
+        width, height = self.myfig.get_plot_size_in_px()
+        self.bbox = self.params['basemap']
+        if not init_time:
+            init_time = None
 
-                wms = wms_control.MSUIWebMapService(url,
-                                                    username=self.config["WMS_login"][url][0],
-                                                    password=self.config["WMS_login"][url][1],
-                                                    version='1.3.0'
-                                                    )
+        kwargs = {"layers": [layer],
+                  "styles": [style],
+                  "time": time,
+                  "init_time": init_time,
+                  "exceptions": 'application/vnd.ogc.se_xml',
+                  "level": elevation,
+                  "srs": self.config["predefined_map_sections"][section]["CRS"],
+                  "bbox": (self.bbox['llcrnrlon'], self.bbox['llcrnrlat'],
+                           self.bbox['urcrnrlon'], self.bbox['urcrnrlat']
+                          ),
+                  "format": "image/png",
+                  "size": (width, height)
+                }
 
-                img = wms.getmap(**kwargs)
-                image_io = io.BytesIO(img.read())
-                img = PIL.Image.open(image_io)
-                self.myfig.draw_image(img)
-                self.myfig.fig.savefig(f"{flight}_{layer}_{self.no_of_plots}.png")
+        wms = wms_control.MSUIWebMapService(url,
+                                            username=self.config["WMS_login"][url][0],
+                                            password=self.config["WMS_login"][url][1],
+                                            version='1.3.0'
+                                            )
+
+        img = wms.getmap(**kwargs)
+        image_io = io.BytesIO(img.read())
+        img = PIL.Image.open(image_io)
+        self.myfig.draw_image(img)
+        self.myfig.fig.savefig(f"{flight}_{layer}_{no_of_plots}.png")
 
 
 class SideViewPlotting(Plotting):
