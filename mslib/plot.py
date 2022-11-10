@@ -133,7 +133,7 @@ class TopViewPlotting(Plotting):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
-                self.draw(self, flight, section, vertical, filename, url, layer, style, elevation, no_of_plots=1)
+                self.draw(flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots=1)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
         width, height = self.myfig.get_plot_size_in_px()
