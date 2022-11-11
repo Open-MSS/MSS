@@ -31,7 +31,7 @@ def autoplot(cpath, ftrack, itime, vtime, intv, stime, etime):
                 a.TopViewPath()
                 a.draw(flight, section, vertical, filename, init_time,
                        time, url, layer, style, elevation, no_of_plots=1)
-            else:
+            elif(intv > 0):
                 if(itime != ""):
                     inittime = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
                 else:
@@ -50,6 +50,8 @@ def autoplot(cpath, ftrack, itime, vtime, intv, stime, etime):
                            time, url, layer, style, elevation, no_of_plots=i)
                     time = time + timedelta(hours=intv)
                     i = i + 1
+            else:
+                raise Exception("Invalid interval")
 
 
 if __name__ == '__main__':

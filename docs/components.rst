@@ -9,5 +9,6 @@ Components
    mswms
    mscolab
    gentutorials
+   autoplot
 
 
