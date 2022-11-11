@@ -2,17 +2,19 @@ import click
 from mslib import plot
 from datetime import datetime, timedelta
 from mslib.utils import config as conf
+from mslib.msui import constants
 
 
 @click.command()
+@click.option('--cpath', default=constants.MSS_AUTOPLOT, help='Path of the configuration file.')
 @click.option('--ftrack', default="", help='Flight track.')
 @click.option('--itime', default="", help='Initial time.')
 @click.option('--vtime', default="", help='Valid time.')
 @click.option('--intv', default=0, help='Time interval.')
-@click.option('--stime', default="", help='Starting time for downloading multiple plots.')
-@click.option('--etime', default="", help='Initial time for downloading multiple plots.')
-def autoplot(ftrack, itime, vtime, intv, stime, etime):
-    conf.read_config_file()
+@click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
+@click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
+def autoplot(cpath, ftrack, itime, vtime, intv, stime, etime):
+    conf.read_config_file(path=cpath)
     config = conf.config_loader()
     a = plot.TopViewPlotting()
     for flight, section, vertical, filename, init_time, time in \
