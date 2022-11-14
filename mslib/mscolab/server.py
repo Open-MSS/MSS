@@ -514,6 +514,17 @@ def undo_ftml():
     return str(result)
 
 
+@APP.route("/creator_of_operation", methods=["GET"])
+@verify_user
+def get_creator_of_operation():
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    u_id = g.user.id
+    creator_name = fm.fetch_operation_creator(op_id, u_id)
+    if creator_name is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+    return jsonify({"success": True, "username": creator_name}), 200
+
+
 @APP.route("/users_without_permission", methods=["GET"])
 @verify_user
 def get_users_without_permission():

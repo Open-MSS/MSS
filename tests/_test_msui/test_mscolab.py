@@ -524,6 +524,7 @@ class Test_Mscolab(object):
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
+        QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'anton'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -537,6 +538,7 @@ class Test_Mscolab(object):
     def test_get_recent_operation(self):
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
+        QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0

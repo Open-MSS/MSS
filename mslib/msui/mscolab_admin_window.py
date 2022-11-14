@@ -171,7 +171,16 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.apply_filters(self.modifyUsersTable, text_filter, permission_filter)
 
     def set_label_text(self):
-        self.operationNameLabel.setText(f"Operation: {self.operation_name}")
+        data = {
+            "token": self.token,
+            "op_id": self.op_id
+        }
+        url = url_join(self.mscolab_server_url, "/creator_of_operation")
+        r = requests.get(url, data=data)
+        if r.text != "False":
+            _json = json.loads(r.text)
+            creator_name = _json["username"]
+        self.operationNameLabel.setText(f"Operation: {self.operation_name} by User: {creator_name}")
         self.usernameLabel.setText(f"Logged In: {self.user['username']}")
 
     def load_import_operations(self):

@@ -81,6 +81,12 @@ class Test_FileManager(TestCase):
     def tearDown(self):
         pass
 
+    def test_fetch_operation_creator(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="more_than_one")
+            assert operation.path == flight_path
+            assert self.fm.fetch_operation_creator(operation.id, self.user.id) == self.user.username
+
     def test_create_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="famous")

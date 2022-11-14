@@ -401,6 +401,12 @@ class FileManager(object):
         users = [[user.username, user.access_level, user.id] for user in user_list]
         return users
 
+    def fetch_operation_creator(self, op_id, u_id):
+        if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
+            return False
+        current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
+        return current_operation_creator.user.username
+
     def add_bulk_permission(self, op_id, user, new_u_ids, access_level):
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):
             return False
