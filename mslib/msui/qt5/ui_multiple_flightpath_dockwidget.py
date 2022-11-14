@@ -113,7 +113,7 @@ class Ui_MultipleViewWidget(object):
     def retranslateUi(self, MultipleViewWidget):
         _translate = QtCore.QCoreApplication.translate
         MultipleViewWidget.setWindowTitle(_translate("MultipleViewWidget", "Form"))
-        self.ft_color_label.setText(_translate("MultipleViewWidget", "𝐀𝐜𝐭𝐢𝐯𝐚𝐭𝐞𝐝 𝐓𝐫𝐚𝐜𝐤 𝐕𝐞𝐫𝐭𝐢𝐜𝐞𝐬 𝐂𝐨𝐥𝐨𝐫 : "))
+        self.ft_color_label.setText(_translate("MultipleViewWidget", "Activated Flighttrack/Operation Vertices Color: "))
         self.list_flighttrack.setToolTip(_translate("MultipleViewWidget", "List of Open Flighttracks.\n"
 "Check box to activate and display track on topview."))
         self.list_operation_track.setToolTip(_translate("MultipleViewWidget", "List of Mscolab Operations.\n"

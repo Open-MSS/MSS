@@ -44,7 +44,7 @@
          </sizepolicy>
         </property>
         <property name="text">
-         <string>𝐀𝐜𝐭𝐢𝐯𝐚𝐭𝐞𝐝 𝐓𝐫𝐚𝐜𝐤 𝐕𝐞𝐫𝐭𝐢𝐜𝐞𝐬 𝐂𝐨𝐥𝐨𝐫 : </string>
+         <string>Activated Flighttrack/Operation Vertices Color: </string>
         </property>
        </widget>
       </item>
