@@ -454,7 +454,7 @@ class VerticalSectionDriver(MSSPlotDriver):
         # Determine the westmost longitude in the cross-section path. Subtract
         # one gridbox size to obtain "left_longitude".
         dlon = self.lon_data[1] - self.lon_data[0]
-        left_longitude = self.lons.min() - dlon
+        left_longitude = np.unwrap(self.lons, period=360).min() - dlon
         logging.debug("shifting data grid to gridpoint west of westmost "
                       "longitude in path: %.2f (path %.2f).",
                       left_longitude, self.lons.min())
@@ -769,7 +769,7 @@ class LinearSectionDriver(VerticalSectionDriver):
         # Determine the westmost longitude in the cross-section path. Subtract
         # one gridbox size to obtain "left_longitude".
         dlon = self.lon_data[1] - self.lon_data[0]
-        left_longitude = self.lons.min() - dlon
+        left_longitude = np.unwrap(self.lons, period=360).min() - dlon
         logging.debug("shifting data grid to gridpoint west of westmost "
                       "longitude in path: %.2f (path %.2f).",
                       left_longitude, self.lons.min())

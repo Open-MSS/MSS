@@ -23,6 +23,8 @@
     limitations under the License.
 """
 
+# ToDo refactor to use Jinja2 templates
+
 import os
 from PIL import Image
 import io
@@ -73,12 +75,12 @@ begin = """
 <head>
 <style>
 
-.gtooltip {
+.gtooltip {{
   position: relative;
   display: inline-block;
-}
+}}
 
-.gallery .gtooltiptext {
+.gallery .gtooltiptext {{
   visibility: hidden;
   width: 400px;
   background-color: lavender;
@@ -91,9 +93,9 @@ begin = """
   top: 150%;
   left: 50%;
   margin-left: -200px;
-}
+}}
 
-.gallery .gtooltiptext::after {
+.gallery .gtooltiptext::after {{
   content: "";
   position: absolute;
   bottom: 100%;
@@ -102,21 +104,21 @@ begin = """
   border-width: 5px;
   border-style: solid;
   border-color: transparent transparent black transparent;
-}
+}}
 
-.gallery:hover .gtooltiptext {
+.gallery:hover .gtooltiptext {{
   visibility: visible;
-}
+}}
 
 /* Style the tab */
-.tab {
+.tab {{
   overflow: hidden;
   border: 1px solid #DDDDFF;
   background-color: #E6E6FA;
-}
+}}
 
 /* Style the buttons inside the tab */
-.tab button {
+.tab button {{
   background-color: inherit;
   float: left;
   border: none;
@@ -125,28 +127,28 @@ begin = """
   padding: 14px 16px;
   transition: 0.3s;
   font-size: 17px;
-}
+}}
 
 /* Change background color of buttons on hover */
-.tab button:hover {
+.tab button:hover {{
   background-color: #DDDDFF;
-}
+}}
 
 /* Create an active/current tablink class */
-.tab button.active {
+.tab button.active {{
   background-color: #CCCCFF;
-}
+}}
 
-.tab input[type=text]{
+.tab input[type=text]{{
   float: right;
   padding: 6px;
   border: 2px solid #DDDDFF;
   margin-top: 8px;
   margin-right: 16px;
   font-size: 17px;
-}
+}}
 
-.tab select{
+.tab select{{
   float: right;
   padding: 6px;
   border: 2px solid #DDDDFF;
@@ -154,25 +156,25 @@ begin = """
   margin-top: 8px;
   margin-right: 16px;
   font-size: 17px;
-}
+}}
 
 /* Style the tab content */
-.tabcontent {
+.tabcontent {{
   display: none;
   padding: 6px 12px;
   -webkit-animation: fadeEffect 1s;
   animation: fadeEffect 1s;
-}
+}}
 
-.tabcontent::after {
+.tabcontent::after {{
   content: "";
   clear: both;
   display: block;
   float: none;
-}
+}}
 
 /* Style the plots content */
-div.gallery {
+div.gallery {{
   text-align: center;
   margin: 0.5%;
   border: 1px solid #ccc;
@@ -180,27 +182,27 @@ div.gallery {
   width: 24%;
   box-shadow: 0 0 2px 1px rgba(0, 0, 0, 0.2);
   transition: box-shadow 0.3s ease-in-out;
-}
+}}
 
-div.gallery:hover {
+div.gallery:hover {{
   box-shadow: 0 0 5px 1px rgba(0, 0, 255, 0.5);
-}
+}}
 
-div.gallery img {
+div.gallery img {{
   width: 100%;
   height: auto;
-}
+}}
 
 /* Fade in tabs */
-@-webkit-keyframes fadeEffect {
-  from {opacity: 0;}
-  to {opacity: 1;}
-}
+@-webkit-keyframes fadeEffect {{
+  from {{opacity: 0;}}
+  to {{opacity: 1;}}
+}}
 
-@keyframes fadeEffect {
-  from {opacity: 0;}
-  to {opacity: 1;}
-}
+@keyframes fadeEffect {{
+  from {{opacity: 0;}}
+  to {{opacity: 1;}}
+}}
 </style>
 </head>
 <body onload="hideEmptySelects();
@@ -214,9 +216,7 @@ div.gallery img {
 <h3>Plot Gallery</h3>
 
 <div class="tab">
-  <button class="tablinks active" onclick="openTab(event, 'Top-View')">Top Views</button>
-  <button class="tablinks" onclick="openTab(event, 'Side-View')">Side Views</button>
-  <button class="tablinks" onclick="openTab(event, 'Linear-View')">Linear Views</button>
+  {section}
   <input type="text" placeholder="Search..." id="gallery-filter" oninput="filterContent()"></input>
   <select name="levels" id="level-select" onchange="changeImages()"></select>
   <select name="times" id="time-select" onchange="changeImages()"></select>
@@ -431,21 +431,29 @@ def write_code_pages(path, sphinx=False, url_prefix=None):
                 f.write(f""".. raw:: html\n\n{plot_htmls[layer]}""")
 
 
-def write_html(path, sphinx=False):
+def write_html(path, sphinx=False, plot_types=None):
+    if plot_types is None:
+        plot_types = plots.keys()
     """
     Writes the plots.html file containing the gallery
     """
-    html = begin
+    section = []
+    for name in plot_types:
+        section.append(f""""<button class="tablinks active" """
+                       f"""onclick="openTab(event, "{name}-View')">{name} Views</button>""")
+    section = ".\n".join(section)
+    html = begin.format(section=section)
     if sphinx:
         html = html.replace("<h3>Plot Gallery</h3>", "")
 
     for l_type in plots:
-        style = ""
-        if l_type == "Top":
-            style = "style=\"display: block;\""
-        html += f"<div id=\"{l_type}-View\" class=\"tabcontent\" {style}>"
-        html += "\n".join(plots[l_type])
-        html += "</div>"
+        if l_type in plot_types:
+            style = ""
+            if l_type == "Top":
+                style = "style=\"display: block;\""
+            html += f"<div id=\"{l_type}-View\" class=\"tabcontent\" {style}>"
+            html += "\n".join(plots[l_type])
+            html += "</div>"
 
     with open(os.path.join(path, "plots.html"), "w+") as file:
         file.write(html + end)
@@ -666,10 +674,13 @@ def create_linear_plot(xml, file_location):
 
 
 def add_image(path, plot, plot_object, generate_code=False, sphinx=False, url_prefix="",
-              dataset=None, level=None, itime=None, vtime=None, simple_naming=False):
+              dataset=None, level=None, itime=None, vtime=None, simple_naming=False, plot_types=None):
     """
     Adds the images to the plots folder and generates the html codes to display them
     """
+    if plot_types is None:
+        plot_types = plots.keys()
+
     global end
     # Import here due to some circular import issue if imported too soon
     from mslib.index import SCRIPT_NAME
@@ -679,45 +690,45 @@ def add_image(path, plot, plot_object, generate_code=False, sphinx=False, url_pr
 
     l_type = "Linear" if isinstance(plot_object, AbstractLinearSectionStyle) else \
         "Side" if isinstance(plot_object, AbstractVerticalSectionStyle) else "Top"
+    if l_type in plot_types:
+        filename = f"{l_type}_{dataset}{plot_object.name}-" + (
+            f"{level}it{itime}vt{vtime}".replace(" ", "_").replace(":", "_").replace("-", "_")
+            if not simple_naming else "")
 
-    filename = f"{l_type}_{dataset}{plot_object.name}-" + (
-        f"{level}it{itime}vt{vtime}".replace(" ", "_").replace(":", "_").replace("-", "_")
-        if not simple_naming else "")
+        if plot:
+            if not os.path.exists(os.path.join(path, "plots")):
+                os.mkdir(os.path.join(path, "plots"))
+            if l_type == "Linear":
+                create_linear_plot(etree.fromstring(plot), os.path.join(path, "plots", filename + ".png"))
+            else:
+                with Image.open(io.BytesIO(plot)) as image:
+                    image.save(os.path.join(path, "plots", filename + ".png"),
+                               format="PNG")
 
-    if plot:
-        if not os.path.exists(os.path.join(path, "plots")):
-            os.mkdir(os.path.join(path, "plots"))
-        if l_type == "Linear":
-            create_linear_plot(etree.fromstring(plot), os.path.join(path, "plots", filename + ".png"))
-        else:
-            with Image.open(io.BytesIO(plot)) as image:
-                image.save(os.path.join(path, "plots", filename + ".png"),
-                           format="PNG")
+        end = end.replace("files = [", f"files = [\"{filename}.png\",")\
+            .replace(",];", "];")
+        img_path = f"../_static/{filename}.png" if sphinx \
+            else f"{url_prefix}/static/plots/{filename}.png"
+        code_path = f"code/{l_type}_{dataset}{plot_object.name}.html" if sphinx \
+            else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{dataset}{plot_object.name}.md"
 
-    end = end.replace("files = [", f"files = [\"{filename}.png\",")\
-        .replace(",];", "];")
-    img_path = f"../_static/{filename}.png" if sphinx \
-        else f"{url_prefix}/static/plots/{filename}.png"
-    code_path = f"code/{l_type}_{dataset}{plot_object.name}.html" if sphinx \
-        else f"{url_prefix if url_prefix else ''}{SCRIPT_NAME}mss/code/{l_type}_{dataset}{plot_object.name}.md"
+        if generate_code:
+            if f"{l_type}_{dataset}{plot_object.name}" not in plot_htmls:
+                plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = \
+                    plot_html_begin + get_plot_details(path, plot_object, l_type, sphinx, img_path, code_path, dataset)
+            markdown = plot_htmls[f"{l_type}_{dataset}{plot_object.name}"]
+            if level:
+                markdown = add_levels([level], None, markdown)
+            if vtime:
+                markdown = add_times(itime, [vtime], markdown)
+            plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = markdown
 
-    if generate_code:
-        if f"{l_type}_{dataset}{plot_object.name}" not in plot_htmls:
-            plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = \
-                plot_html_begin + get_plot_details(path, plot_object, l_type, sphinx, img_path, code_path, dataset)
-        markdown = plot_htmls[f"{l_type}_{dataset}{plot_object.name}"]
-        if level:
-            markdown = add_levels([level], None, markdown)
-        if vtime:
-            markdown = add_times(itime, [vtime], markdown)
-        plot_htmls[f"{l_type}_{dataset}{plot_object.name}"] = markdown
-
-    id = img_path.split("-" + f"{level}".replace(" ", "_").replace(":", "_").replace("-", "_"))[0]
-    if not any([id in html for html in plots[l_type]]):
-        plots[l_type].append(image_md(
-            img_path, plot_object.name, code_path if generate_code else None,
-            f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
-                                      if plot_object.abstract else "")))
+        id = img_path.split("-" + f"{level}".replace(" ", "_").replace(":", "_").replace("-", "_"))[0]
+        if not any([id in html for html in plots[l_type]]):
+            plots[l_type].append(image_md(
+                img_path, plot_object.name, code_path if generate_code else None,
+                f"{plot_object.title}" + (f"<br>{plot_object.abstract}"
+                                          if plot_object.abstract else "")))
 
 
 def add_levels(levels, l_type=None, text=None):
