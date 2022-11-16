@@ -69,6 +69,28 @@ else:
         except IOError:
             logging.error(f'"{MSUI_SETTINGS}" can''t be created')
 
+# ToDo refactor to a function
+MSS_AUTOPLOT = os.getenv('MSS_AUTOPLOT', os.path.join(MSUI_CONFIG_PATH, "mssautoplot.json"))
+
+# We try to create an empty MSUI_SETTINGS file if not existing
+# but there can be a permission problem
+if '://' in MSS_AUTOPLOT:
+    dir_path, file_name = fs.path.split(MSS_AUTOPLOT)
+    try:
+        _fs = fs.open_fs(dir_path)
+        if not _fs.exists(file_name):
+            with _fs.open(file_name, 'w') as fid:
+                fid.write("{}")
+    except fs.errors.CreateFailed:
+        logging.error(f'"{MSS_AUTOPLOT}" can''t be created')
+else:
+    if not os.path.exists(MSS_AUTOPLOT):
+        try:
+            with open(MSS_AUTOPLOT, 'w') as fid:
+                fid.write("{}")
+        except IOError:
+            logging.error(f'"{MSS_AUTOPLOT}" can''t be created')
+
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}
 
