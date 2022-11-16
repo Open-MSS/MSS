@@ -26,6 +26,9 @@ import defusedxml.ElementTree as etree
 import hashlib
 from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
+from mslib.msui import mpl_pathinteractor as mpath
+from mslib.msui import flighttrack as ft
+import datetime
 
 
 TEXT_CONFIG = {
@@ -51,7 +54,8 @@ def load_from_xml_data(datasource):
 
     ft_el = doc.getElementsByTagName("FlightTrack")[0]
 
-    waypoints_list = []
+    waypoints_list1 = []
+    waypoints_list2 = []
     for wp_el in ft_el.getElementsByTagName("Waypoint"):
 
         location = wp_el.getAttribute("location")
@@ -65,8 +69,10 @@ def load_from_xml_data(datasource):
         else:
             comments = ''
 
-        waypoints_list.append((lat, lon, flightlevel, location, comments))
-    return waypoints_list
+        waypoints_list1.append((lat, lon, flightlevel, location, comments))
+        waypoints_list2.append(ft.Waypoint(lat, lon, flightlevel, location, comments))
+        waypoints_list2[-1].utc_time = datetime.datetime.now()
+    return waypoints_list1, waypoints_list2
 
 
 class Plotting():
@@ -87,12 +93,16 @@ class Plotting():
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
         print(self.params)
         self.bbox_units = self.params["bbox"]
-        self.wps = load_from_ftml(filename)
+        self.wpslist = []
+        self.wpslist = load_from_ftml(filename)
+        self.wps = self.wpslist[0]
+        self.wp_model_data = self.wpslist[1]
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
-        self.wp_presss = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
+        self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.fig.clear()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.path = [(wp[0], wp[1], datetime.datetime.now()) for wp in self.wps]
+        self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
         self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path], [_x[1] for _x in self.path],
                                                                   numpoints=self.num_interpolation_points + 1,
                                                                   connection="greatcircle"
@@ -105,94 +115,57 @@ class TopViewPlotting(Plotting):
         self.myfig = qt.MyTopViewFigure()
         self.myfig.fig.canvas.draw()
         self.line = None
-
-    def TopViewPath(self):
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
         self.myfig.init_map(**(self.params["basemap"]))
         self.myfig.set_map()
+        self.plotter = mpath.PathH_GCPlotter(self.myfig.map)
 
-        # plot path
+    def TopViewPath(self):
+        # plot path and label
         self.fig.canvas.draw()
-        self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
-        x, y = self.myfig.map.gcpoints_path([a[0] for a in self.vertices], [a[1] for a in self.vertices])
-        x, y = self.myfig.map(self.wp_lons, self.wp_lats)
-        self.vertices = list(zip(x, y))
-        if self.line is None:
-            line, = self.ax.plot(x, y, color="blue", linestyle='-', linewidth=2, zorder=100)
-        line.set_data(list(zip(*self.vertices)))
-        self.ax.draw_artist(line)
-        wp_scatter = self.ax.scatter(x, y, color="red", s=20, zorder=3, animated=True, visible=True)
-        self.ax.draw_artist(wp_scatter)
-
-    def TopViewLabel(self):
-        wp_labels = []
-        textlabel = []
-        x, y = list(zip(*self.vertices))
-        for i in range(len(self.wps)):
-            tl = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}   "
-            textlabel.append(tl)
-            x, y = self.myfig.map(self.wp_lons, self.wp_lats)
-        wp_labels = self.PlotLabel(x, y, textlabel, len(self.wps))
-        for t in wp_labels:
-            self.ax.draw_artist(t)
-
-    def PlotLabel(self, x, y, textlabel, len_wps):
-        wp_labels = []
-        for i in range(len_wps):
-            t = self.ax.text(x[i],
-                             y[i],
-                             textlabel[i],
-                             bbox=dict(boxstyle="round",
-                                       facecolor="white",
-                                       alpha=0.5,
-                                       edgecolor="none"),
-                             fontweight="bold",
-                             zorder=4,
-                             rotation=90,
-                             animated=True,
-                             clip_on=True,
-                             visible=True
-                            )
-            wp_labels.append(t)
-        return wp_labels
+        wp_lats, wp_lons, wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
+        self.plotter.update_from_waypoints(self.wp_model_data)
+        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def TopViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
-                width, height = self.myfig.get_plot_size_in_px()
-                self.bbox = self.params['basemap']
+                self.draw(flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots=1)
 
-                if not init_time:
-                    init_time = None
+    def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
+        width, height = self.myfig.get_plot_size_in_px()
+        self.bbox = self.params['basemap']
+        if not init_time:
+            init_time = None
 
-                kwargs = {"layers": [layer],
-                          "styles": [style],
-                          "time": time,
-                          "init_time": init_time,
-                          "exceptions": 'application/vnd.ogc.se_xml',
-                          "level": elevation,
-                          "srs": self.config["predefined_map_sections"][section]["CRS"],
-                          "bbox": (self.bbox['llcrnrlon'], self.bbox['llcrnrlat'],
-                                   self.bbox['urcrnrlon'], self.bbox['urcrnrlat']
-                                  ),
-                          "format": "image/png",
-                          "size": (width, height)
-                        }
+        kwargs = {"layers": [layer],
+                  "styles": [style],
+                  "time": time,
+                  "init_time": init_time,
+                  "exceptions": 'application/vnd.ogc.se_xml',
+                  "level": elevation,
+                  "srs": self.config["predefined_map_sections"][section]["CRS"],
+                  "bbox": (self.bbox['llcrnrlon'], self.bbox['llcrnrlat'],
+                           self.bbox['urcrnrlon'], self.bbox['urcrnrlat']
+                          ),
+                  "format": "image/png",
+                  "size": (width, height)
+                }
 
-                wms = wms_control.MSUIWebMapService(url,
-                                                    username=self.config["WMS_login"][url][0],
-                                                    password=self.config["WMS_login"][url][1],
-                                                    version='1.3.0'
-                                                    )
+        wms = wms_control.MSUIWebMapService(url,
+                                            username=self.config["WMS_login"][url][0],
+                                            password=self.config["WMS_login"][url][1],
+                                            version='1.3.0'
+                                            )
 
-                img = wms.getmap(**kwargs)
-                image_io = io.BytesIO(img.read())
-                img = PIL.Image.open(image_io)
-                self.myfig.draw_image(img)
-                self.myfig.fig.savefig(f"{flight}_{layer}.png")
+        img = wms.getmap(**kwargs)
+        image_io = io.BytesIO(img.read())
+        img = PIL.Image.open(image_io)
+        self.myfig.draw_image(img)
+        self.myfig.fig.savefig(f"{flight}_{layer}_{no_of_plots}.png")
 
 
 class SideViewPlotting(Plotting):
@@ -203,7 +176,6 @@ class SideViewPlotting(Plotting):
         self.fig = self.myfig.fig
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.fig.canvas.draw()
-        self.vertices = None
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
 
     def setup(self):
@@ -219,38 +191,16 @@ class SideViewPlotting(Plotting):
         times = None
         times_visible = False
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
-        highlight = [[wp[0], wp[1]] for wp in self.wps]
-        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def SideViewPath(self):
         self.fig.canvas.draw()
-        line, = self.ax.plot(self.intermediate_indexes, self.wp_presss,
-                                color="blue", linestyle='-', linewidth=2, zorder=100
-                            )
-        line.set_visible(True)
-
-    def SideViewLabel(self):
-        wp_labels = []
-        for i in range(len(self.wps)):
-            textlabel = f"{self.wp_locs[i] if self.wp_locs[i] else str(i)}"
-            t = self.ax.text(self.intermediate_indexes[i],
-                             self.wp_presss[i],
-                             textlabel,
-                             bbox=dict(boxstyle="round",
-                                       facecolor="white",
-                                       alpha=0.5,
-                                       edgecolor="none"),
-                             fontweight="bold",
-                             zorder=4,
-                             rotation=90,
-                             animated=True,
-                             clip_on=True,
-                             visible=True
-                            )
-            wp_labels.append(t)
-        self.fig.canvas.draw()
-        for t in wp_labels:
-            self.ax.draw_artist(t)
+        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
+        self.plotter.update_from_waypoints(self.wp_model_data)
+        indices = list(zip(self.intermediate_indexes, self.wp_press))
+        self.plotter.redraw_path(vertices=indices,
+                                 waypoints_model_data=self.wp_model_data)
+        highlight = [[wp[0], wp[1]] for wp in self.wps]
+        self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def SideViewDraw(self):
         for flight, section, vertical, filename, init_time, time in \
@@ -322,7 +272,7 @@ class LinearViewPlotting(Plotting):
 
                 path_string = ""
                 for i, wp in enumerate(self.wps):
-                    path_string += f"{wp[0]:.2f},{wp[1]:.2f},{self.wp_presss[i]},"
+                    path_string += f"{wp[0]:.2f},{wp[1]:.2f},{self.wp_press[i]},"
                 path_string = path_string[:-1]
 
                 # retrieve and draw image
@@ -359,18 +309,16 @@ class LinearViewPlotting(Plotting):
                 self.myfig.redraw_xaxis(self.lats, self.lons)
                 highlight = [[wp[0], wp[1]] for wp in self.wps]
                 self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
-                self.myfig.fig.savefig(f"{flight}_{layer}.png")
+                self.myfig.fig.savefig(f"{flight}_{layer}.png", bbox_inches='tight')
 
 
 def main():
     h = TopViewPlotting()
     h.TopViewPath()
-    h.TopViewLabel()
     h.TopViewDraw()
     v = SideViewPlotting()
     v.setup()
     v.SideViewPath()
-    v.SideViewLabel()
     v.SideViewDraw()
     ls = LinearViewPlotting()
     ls.setup()
