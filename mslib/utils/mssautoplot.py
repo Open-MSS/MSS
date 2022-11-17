@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2022 Sreelakshmi Jayarajan
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import click
+import logging
 from mslib import plot
 from datetime import datetime, timedelta
 from mslib.utils import config as conf
@@ -66,9 +67,8 @@ def main(cpath, ftrack, itime, vtime, intv, stime, etime):
                 endtime = datetime.strptime(etime, "%Y-%m-%dT" "%H:%M:%S")
                 i = 1
                 time = starttime
-                while(time <= endtime):
-                    print(time)
-                    print(endtime)
+                while time <= endtime:
+                    logging.debug(time)
                     if ftrack != "":
                         flight = ftrack
                     a.TopViewPath()

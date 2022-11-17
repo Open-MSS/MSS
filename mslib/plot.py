@@ -1,15 +1,16 @@
+# -*- coding: utf-8 -*-
 """
 
-    mslib.utils.autoplot
-    ~~~~~~~~~~~~~~~~~~~~
+    plot
+    ~~~~~~~~~~~~~~~~
 
-    a CLI tool to create for instance a number of the same plots
+    automation within msui to create for instance a number of the same plots
     for several flights or several forecast steps
 
     This file is part of MSS.
 
     :copyright: Copyright 2022 Joern Ungermann
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2022 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");

@@ -33,11 +33,11 @@ Examples
 
 Here are a few examples on how to use this tool,
 
-1. ``mss autoplot --cpath mss_autoplot.json``
+1. ``mssautoplot --cpath mssautoplot.json``
 
 The above command downloads the required number of plots with the default settings from mss_autoplot.json into the output folder.
 
-2. ``mss autoplot --cpath mss_autoplot.json --itime="" --vtime="2019-09-02T00:00:00"``
+2. ``mssautoplot --cpath mssautoplot.json --itime="" --vtime="2019-09-02T00:00:00"``
 
 The above command will download all the plots configured in mss_autoplot.json of initial time "" and valid time "2019-09-02T00:00:00". This can be used to create a daily "standard set" of plots with/without an actual flight track, e.g., for daily morning briefings
 
@@ -47,7 +47,7 @@ For downloading plots of multiple flight tracks, specify the flight track and it
            ["flight1", "section1", "vertical1", "filename1", "init_time1", "time1"]
            ["flight2", "section2, "vertical2", "filename2", "init_time2", "time2"]]
 
-3. ``mss autoplot --cpath mss_autoplot.json --stime="2019-09-01T00:00:00" --etime="2019-09-02T00:00:00" --intv=6``
+3. ``mssautoplot --cpath mssautoplot.json --stime="2019-09-01T00:00:00" --etime="2019-09-02T00:00:00" --intv=6``
 
 The above command will download plots of the with/without flight track from start time "2019-09-01T00:00:00" to end time "2019-09-02T00:00:00". The user would need to compulsorily specify the init_time and time in mss_autoplot.json inorder to use this functionality.
 
