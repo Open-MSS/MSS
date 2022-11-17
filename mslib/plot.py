@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    plot
-    ~~~~~~~~~~~~~~~~
+    mslib.plot
+    ~~~~
 
-    automation within msui to create for instance a number of the same plots
-    for several flights or several forecast steps
+    An automated plotting module used for plotting in top, side and linear views.
 
     This file is part of MSS.
 
