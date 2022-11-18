@@ -24,9 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from distutils.command.config import config
-import sys
-import argparse
 import datetime
 import io
 import os
@@ -44,17 +41,13 @@ import mslib.utils.thermolib
 from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui.wms_control import MSUIWebMapService
-from mslib.msui.wms_control import WMSMapFetcher
 import matplotlib.pyplot as plt
-import numpy as np
-from mslib.utils import thermolib
 import defusedxml.ElementTree as etree
 import hashlib
 from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
-import datetime
 
 
 TEXT_CONFIG = {
@@ -129,10 +122,10 @@ class Plotting():
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.path = [(wp[0], wp[1], datetime.datetime.now()) for wp in self.wps]
         self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
-        self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path], [_x[1] for _x in self.path],
+        self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path],
+                                                                  [_x[1] for _x in self.path],
                                                                   numpoints=self.num_interpolation_points + 1,
-                                                                  connection="greatcircle"
-                                                                  )
+                                                                  connection="greatcircle")
 
 
 class TopViewPlotting(Plotting):
@@ -159,7 +152,8 @@ class TopViewPlotting(Plotting):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
-                self.draw(flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots=1)
+                self.draw(flight, section, vertical, filename, init_time,
+                          time, url, layer, style, elevation, no_of_plots=1)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
         width, height = self.myfig.get_plot_size_in_px()
