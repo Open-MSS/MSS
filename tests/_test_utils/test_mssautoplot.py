@@ -2,7 +2,7 @@
 """
 
     tests._test_utils.test_mssautoplot
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to test mslib.utils.mssautoplot
 
@@ -29,12 +29,14 @@ import mock
 import fnmatch
 import logging
 from click.testing import CliRunner
-from mslib.utils import autoplot
+from mslib.utils import mssautoplot
 from datetime import datetime, timedelta
 from tests.utils import wait_until_signal
 import mslib.msui.wms_control as wc
+from tests.constants import ROOT_DIR
 
-PORTS = list(range(18000, 18500))
+
+PORTS = list(range(18600, 19000)) # ToDo
 
 
 class HSecViewMockup(mock.Mock):
@@ -49,8 +51,11 @@ class Test_mssautoplot(object):
         self.port = PORTS.pop()
         self.view = HSecViewMockup()
         # path
-        self.path = './data/plots'
+        parent_dir = ROOT_DIR
         # Create the directory
+        directory = "Plots"
+        # Path
+        self.path = os.path.join(parent_dir, directory)
         try:
             os.mkdir(self.path)
         except OSError as error:
@@ -63,7 +68,7 @@ class Test_mssautoplot(object):
         runner = CliRunner()
         kwargs = {"--itime": "", "--vtime": "2019-09-02T00:00:00"}
         runner = CliRunner()
-        result = runner.invoke(autoplot, args=kwargs)
+        result = runner.invoke(mssautoplot, args=kwargs)
         wait_until_signal(self.window.image_displayed)
 
         assert self.view.draw_image.call_count == 1
@@ -77,12 +82,12 @@ class Test_mssautoplot(object):
         self.view.reset_mock()
 
     def test_download_multiple_plots(self):
-        dir_path = ""
+        dir_path = self.path
         count1 = len(fnmatch.filter(os.listdir(dir_path), '*.*'))
         runner = CliRunner()
         kwargs = {"--stime": "2019-09-01T00:00:00", "--etime": "2019-09-02T00:00:00", "--intv": "6"}
         runner = CliRunner()
-        result = runner.invoke(autoplot, args=kwargs)
+        result = runner.invoke(mssautoplot, args=kwargs)
         wait_until_signal(self.window.image_displayed)
 
         start = kwargs["--stime"]
