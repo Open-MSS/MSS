@@ -2,7 +2,7 @@
 """
 
     mslib.plot
-    ~~~~
+    ~~~~~~~~~~
 
     An automated plotting module used for plotting in top, side and linear views.
 
@@ -44,6 +44,7 @@ from mslib.msui.wms_control import MSUIWebMapService
 import matplotlib.pyplot as plt
 import defusedxml.ElementTree as etree
 import hashlib
+from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
 from mslib.msui import mpl_pathinteractor as mpath
@@ -95,8 +96,8 @@ def load_from_xml_data(datasource):
 
 
 class Plotting():
-    def __init__(self):
-        read_config_file()
+    def __init__(self, cpath):
+        read_config_file(cpath)
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
@@ -129,8 +130,8 @@ class Plotting():
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self):
-        super(TopViewPlotting, self).__init__()
+    def __init__(self, cpath):
+        super(TopViewPlotting, self).__init__(cpath)
         self.myfig = qt.MyTopViewFigure()
         self.myfig.fig.canvas.draw()
         self.line = None
@@ -333,7 +334,8 @@ class LinearViewPlotting(Plotting):
 
 
 def main():
-    h = TopViewPlotting()
+    cpath = constants.MSUI_SETTINGS
+    h = TopViewPlotting(cpath)
     h.TopViewPath()
     h.TopViewDraw()
     v = SideViewPlotting()

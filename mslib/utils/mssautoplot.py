@@ -1,9 +1,9 @@
 """
 
-    mslib.utils.autoplot
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.utils.mssautoplot
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
-    a CLI tool to create for instance a number of the same plots
+    A CLI tool to create for instance a number of the same plots
     for several flights or several forecast steps
 
     This file is part of MSS.
@@ -43,11 +43,15 @@ from mslib.msui import constants
 def main(cpath, ftrack, itime, vtime, intv, stime, etime):
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
-    a = plot.TopViewPlotting()
+    a = plot.TopViewPlotting(cpath)
     for flight, section, vertical, filename, init_time, time in \
         config["automated_plotting_flights"]:
         for url, layer, style, elevation in config["automated_plotting_hsecs"]:
-            if intv == 0:
+            if vtime == "" and stime == "":
+                a.TopViewPath()
+                a.draw(flight, section, vertical, filename, init_time,
+                       time, url, layer, style, elevation, no_of_plots=1)
+            elif intv == 0:
                 if itime != "":
                     inittime = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
                 else:
