@@ -256,8 +256,8 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                  action.toolTip(), action.text().replace("&&", "%%").replace("&", "").replace("%%", "&"),
                  action.objectName(),
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
-                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
-                                                                         self.cbNoShortcut.checkState()])
+                for action in qobject.findChildren(
+                    QtWidgets.QAction) if len(action.shortcuts()) > 0 or self.cbNoShortcut.checkState()])
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
                              shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
@@ -447,9 +447,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
         self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
         self.mscolab.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
-        self.mscolab.signal_listFlighttrack_doubleClicked.connect(lambda: self.signal_listFlighttrack_doubleClicked.emit())
+        self.mscolab.signal_listFlighttrack_doubleClicked.connect(
+            lambda: self.signal_listFlighttrack_doubleClicked.emit())
         self.mscolab.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
-        self.mscolab.signal_render_new_permission.connect(lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
+        self.mscolab.signal_render_new_permission.connect(
+            lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
 
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:

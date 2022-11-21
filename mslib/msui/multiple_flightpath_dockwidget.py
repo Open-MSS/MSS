@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import logging
 
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
@@ -166,7 +165,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # Load flighttracks
         for index in range(self.listFlightTracks.count()):
             wp_model = self.listFlightTracks.item(index).flighttrack_model
-            listItem = self.create_list_item(wp_model)
+            self.create_list_item(wp_model)
 
         self.activate_flighttrack()
 
@@ -244,7 +243,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         Slot to add flighttrack.
         """
         wp_model = self.listFlightTracks.item(start).flighttrack_model
-        listItem = self.create_list_item(wp_model)
+        self.create_list_item(wp_model)
         if self.mscolab_server_url is not None:
             self.operations.deactivate_all_operations()
         self.activate_flighttrack()
@@ -337,8 +336,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                         self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
                         self.color_change = True
                         self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
-                        self.dict_flighttrack[wp_model]["patch"].update(color=
-                                                                        self.dict_flighttrack[wp_model]["color"])
+                        self.dict_flighttrack[wp_model]["patch"].update(color=self.dict_flighttrack[wp_model]["color"])
             else:
                 self.labelStatus.setText("Check Mark the flighttrack to change its color.")
         elif self.list_operation_track.currentItem() is not None:
@@ -667,7 +665,7 @@ class MultipleFlightpathOperations:
         """
         wp_model = self.load_wps_from_server(op_id)
         wp_model.name = path
-        listItem = self.create_operation(op_id, wp_model)
+        self.create_operation(op_id, wp_model)
 
     def operationRemoved(self, op_id):
         """
@@ -725,9 +723,9 @@ class MultipleFlightpathOperations:
                         self.dict_operations[op_id]["color"] = color.getRgbF()
                         self.color_change = True
                         self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(op_id)))
-                        self.dict_operations[op_id]["patch"].update(color=
-                                                                    self.dict_operations[op_id]["color"], linewidth=
-                                                                    self.dict_operations[op_id]["linewidth"])
+                        self.dict_operations[op_id]["patch"].update(
+                            color=self.dict_operations[op_id]["color"],
+                            linewidth=self.dict_operations[op_id]["linewidth"])
             else:
                 self.parent.labelStatus.setText("Check Mark the Operation to change color.")
 

@@ -200,8 +200,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_permission_revoked = QtCore.Signal(int)
     signal_render_new_permission = QtCore.Signal(int, str)
 
-    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None
-                 , token=None):
+    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None, token=None):
         """
         Set up user interface, connect signal/slots.
         """
@@ -365,9 +364,11 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             token=self.token)
 
                 self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
-                self.ui.signal_listFlighttrack_doubleClicked.connect(lambda: self.signal_listFlighttrack_doubleClicked.emit())
+                self.ui.signal_listFlighttrack_doubleClicked.connect(
+                    lambda: self.signal_listFlighttrack_doubleClicked.emit())
                 self.ui.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
-                self.ui.signal_render_new_permission.connect(lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
+                self.ui.signal_render_new_permission.connect(
+                    lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
                 widget.signal_parent_closes.connect(self.closed)

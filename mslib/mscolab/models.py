@@ -144,7 +144,8 @@ class Operation(db.Model):
             self.last_used = last_used
 
     def __repr__(self):
-        return f'<Operation path: {self.path}, desc: {self.description}, cat: {self.category}, active: {self.active}, ' \
+        return f'<Operation path: {self.path}, desc: {self.description},' \
+               f' cat: {self.category}, active: {self.active}, ' \
                f'last_used: {self.last_used}> '
 
 
