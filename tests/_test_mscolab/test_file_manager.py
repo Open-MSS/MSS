@@ -108,11 +108,13 @@ class Test_FileManager(TestCase):
             self.fm.create_operation("first", "info about first", self.user)
             self.fm.create_operation("second", "info about second", self.user)
             expected_result = [{'access_level': 'creator',
+                                "active": True,
                                 'category': 'default',
                                 'description': 'info about first',
                                 'op_id': 1,
                                 'path': 'first'},
                                {'access_level': 'creator',
+                                "active": True,
                                 'category': 'default',
                                 'description': 'info about second',
                                 'op_id': 2,

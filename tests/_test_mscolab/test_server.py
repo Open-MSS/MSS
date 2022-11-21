@@ -320,6 +320,25 @@ class Test_Server(TestCase):
             data = json.loads(response.data.decode('utf-8'))
             assert data["path"] == path
 
+    def test_set_last_used(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = test_client.post('/set_last_used', data={"token": token,
+                                                                "op_id": operation.id})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True
+
+    def test_update_last_used(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            response = test_client.post('/update_last_used', data={"token": token})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True
+
     def test_get_users_without_permission(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         unprevileged_user = 'UV20@uv20', 'UV20', 'uv20'
