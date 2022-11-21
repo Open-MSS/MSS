@@ -1163,6 +1163,7 @@ class MplTopViewCanvas(MplCanvas):
         self.waypoints_interactor = None
         self.satoverpasspatch = []
         self.kmloverlay = None
+        self.multiple_flightpath = None
         self.map = None
         self.basename = "topview"
 
@@ -1279,6 +1280,9 @@ class MplTopViewCanvas(MplCanvas):
 
         if self.kmloverlay:
             self.kmloverlay.update()
+
+        if self.multiple_flightpath:
+            self.multiple_flightpath.update()
 
         # self.draw_metadata() ; It is not needed here, since below here already plot title is being set.
 
@@ -1416,6 +1420,11 @@ class MplTopViewCanvas(MplCanvas):
         """Plots a satellite track on top of the map.
         """
         self.kmloverlay = kmloverlay
+
+    def plot_multiple_flightpath(self, multipleflightpath):
+        """Plots a multiple flightpaths on topview of the map
+        """
+        self.multiple_flightpath = multipleflightpath
 
     def set_map_appearance(self, settings_dict):
         """Apply settings from dictionary 'settings_dict' to the view.
