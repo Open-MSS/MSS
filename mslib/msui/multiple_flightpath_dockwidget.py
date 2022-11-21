@@ -55,7 +55,7 @@ class MultipleFlightpath(object):
     Represent a Multiple FLightpath
     """
 
-    def __init__(self, mapcanvas, wp, linewidth=2, color='blue'):
+    def __init__(self, mapcanvas, wp, linewidth=2.0, color='blue'):
         self.map = mapcanvas
         self.flightlevel = None
         self.comments = ''
@@ -135,6 +135,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.flighttrack_list = True
 
         # Set flags
+        # ToDo: Use invented constants for initialization.
         self.flighttrack_added = False
         self.flighttrack_activated = False
         self.color_change = False
@@ -295,7 +296,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.dict_flighttrack[wp_model] = {}
         self.dict_flighttrack[wp_model]["patch"] = None
         self.dict_flighttrack[wp_model]["color"] = self.color
-        self.dict_flighttrack[wp_model]["linewidth"] = 2
+        self.dict_flighttrack[wp_model]["linewidth"] = 2.0
         self.dict_flighttrack[wp_model]["wp_data"] = []
         self.dict_flighttrack[wp_model]["checkState"] = False
 
@@ -585,7 +586,7 @@ class MultipleFlightpathOperations:
         self.dict_operations[op_id] = {}
         self.dict_operations[op_id]["patch"] = None
         self.dict_operations[op_id]["wp_data"] = None
-        self.dict_operations[op_id]["linewidth"] = 2
+        self.dict_operations[op_id]["linewidth"] = 2.0
         self.dict_operations[op_id]["color"] = self.parent.get_ft_vertices_color()
 
         self.save_operation_data(op_id, wp_model)
