@@ -50,7 +50,7 @@ class Test_MscolabAdminWindow(object):
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_operation(self.operation_name, "test europe")
-        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
+        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0], access_level="creator")
         self.user = get_user(self.userdata[0])
         assert add_user("collaborator@example.de", "example", "example")
         assert add_user_to_operation(path=self.operation_name,
@@ -60,10 +60,10 @@ class Test_MscolabAdminWindow(object):
         assert add_user("name1@example.de", "name1", "name1")
         assert add_user("name2@example.de", "name2", "name2")
         assert add_operation("paris", "test paris")
-        assert add_user_to_operation(path="paris", emailid=self.userdata[0])
+        assert add_user_to_operation(path="paris", emailid=self.userdata[0], access_level="creator")
         assert add_user_to_operation(path="paris", emailid="name1@example.de")
         assert add_operation("tokyo", "test tokyo")
-        assert add_user_to_operation(path="tokyo", emailid=self.userdata[0])
+        assert add_user_to_operation(path="tokyo", emailid=self.userdata[0], access_level="creator")
 
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
@@ -197,7 +197,7 @@ class Test_MscolabAdminWindow(object):
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
-        assert self.admin_window.modifyUsersTable.rowCount() == 2
+        assert self.admin_window.modifyUsersTable.rowCount() == 1
 
     def _connect_to_mscolab(self):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
