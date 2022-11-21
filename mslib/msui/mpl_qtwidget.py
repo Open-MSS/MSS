@@ -195,10 +195,12 @@ class MyTopViewFigure(MyFigure):
             self.settings.update(settings_dict)
 
         # Stores the exact value of fontsize for topview plot title size(tov_pts)
-        self.tov_pts = (self.topview_size_settings["plot_title_size"] if self.settings["tov_plot_title_size"] == "default"
+        self.tov_pts = (self.topview_size_settings["plot_title_size"]
+                        if self.settings["tov_plot_title_size"] == "default"
                         else int(self.settings["tov_plot_title_size"]))
         # Stores the exact value of fontsize for topview axes label size(tov_als)
-        self.tov_als = (self.topview_size_settings["axes_label_size"] if self.settings["tov_axes_label_size"] == "default"
+        self.tov_als = (self.topview_size_settings["axes_label_size"]
+                        if self.settings["tov_axes_label_size"] == "default"
                         else int(self.settings["tov_axes_label_size"]))
 
         ax = self.ax
@@ -647,9 +649,9 @@ class MyLinearViewFigure(MyFigure):
         tick_index_step = len(lat_inds) // self.numlabels
         self.ax.set_xticks(lat_inds[::tick_index_step])
         self.ax.set_xticklabels([f'{d[0]:2.1f}, {d[1]:2.1f}'
-                                        for d in zip(lats[::tick_index_step],
-                                                    lons[::tick_index_step])],
-                                        rotation=25, horizontalalignment="right")
+                                 for d in zip(lats[::tick_index_step],
+                                              lons[::tick_index_step])],
+                                rotation=25, horizontalalignment="right")
 
         # Remove all vertical lines
         for line in self.vertical_lines[:]:
@@ -665,7 +667,7 @@ class MyLinearViewFigure(MyFigure):
         ipoint = 0
         for i, (lat, lon) in enumerate(zip(lats, lons)):
             if (ipoint < len(highlight) and np.hypot(lat - highlight[ipoint][0],
-                lon - highlight[ipoint][1]) < 2E-10):
+               lon - highlight[ipoint][1]) < 2E-10):
                 vertical_lines.append(self.ax.axvline(i, color='k', linewidth=2, linestyle='--', alpha=0.5))
                 ipoint += 1
         self.fig.tight_layout()

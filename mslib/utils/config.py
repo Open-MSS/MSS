@@ -225,10 +225,10 @@ class MSUIDefaultConfig(object):
     linearview = {"plot_title_size": 10,
                   "axes_label_size": 10}
 
-    automated_plotting_flights = []
-    automated_plotting_hsecs = []
-    automated_plotting_vsecs = []
-    automated_plotting_lsecs = []
+    automated_plotting_flights = [[]]
+    automated_plotting_hsecs = [[]]
+    automated_plotting_vsecs = [[]]
+    automated_plotting_lsecs = [[]]
 
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
