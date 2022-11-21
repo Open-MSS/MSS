@@ -41,6 +41,8 @@ from mslib.msui import satellite_dockwidget as sat
 from mslib.msui import remotesensing_dockwidget as rs
 from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import airdata_dockwidget as ad
+from mslib.msui import multiple_flightpath_dockwidget as mf
+from mslib.msui import flighttrack as ft
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -50,6 +52,7 @@ SATELLITE = 1
 REMOTESENSING = 2
 KMLOVERLAY = 3
 AIRDATA = 4
+MULTIPLEFLIGHTPATH = 5
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -57,6 +60,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
     Dialog to set map appearance parameters. User interface is
     defined in "ui_topview_mapappearance.py".
     """
+    signal_ft_vertices_color_change = QtCore.Signal(str, tuple)
 
     def __init__(self, parent=None, settings_dict=None, wms_connected=False):
         """
@@ -173,6 +177,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         colour = palette.color(QtGui.QPalette.Button)
         colour = QtWidgets.QColorDialog.getColor(colour)
         if colour.isValid():
+            self.signal_ft_vertices_color_change.emit(which, colour.getRgbF())
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
 
@@ -184,17 +189,29 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     """
     name = "Top View"
 
-    def __init__(self, parent=None, model=None, _id=None):
+    signal_activate_flighttrack1 = QtCore.Signal(ft.WaypointsTableModel)
+    signal_activate_operation = QtCore.Signal(int)
+    signal_ft_vertices_color_change = QtCore.Signal(tuple)
+    signal_operation_added = QtCore.Signal(int, str)
+    signal_operation_removed = QtCore.Signal(int)
+    signal_login_mscolab = QtCore.Signal(str, str)
+    signal_logout_mscolab = QtCore.Signal()
+    signal_listFlighttrack_doubleClicked = QtCore.Signal()
+    signal_permission_revoked = QtCore.Signal(int)
+    signal_render_new_permission = QtCore.Signal(int, str)
+
+    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None, token=None):
         """
         Set up user interface, connect signal/slots.
         """
         super(MSUITopViewWindow, self).__init__(parent, model, _id)
         logging.debug(_id)
+        self.ui = parent
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
-        # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay]:
-        self.docks = [None, None, None, None, None]
+        # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay, Multiple Flightpath]:
+        self.docks = [None, None, None, None, None, None]
 
         self.settings_tag = "topview"
         self.load_settings()
@@ -204,6 +221,16 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Boolean to store active wms connection
         self.wms_connected = False
+
+        # Store active flighttrack waypoint model
+        self.active_flighttrack = active_flighttrack
+
+        # Stores active mscolab operation id
+        self.active_op_id = None
+
+        # Mscolab Server Url and token
+        self.mscolab_server_url = mscolab_server_url
+        self.token = token
 
         # Connect slots and signals.
         # ==========================
@@ -221,8 +248,45 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
+        if parent is not None:
+            # Update flighttrack
+            self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
+            self.ui.signal_activate_operation.connect(self.update_active_operation)
+
+            self.ui.signal_operation_added.connect(self.add_operation_slot)
+            self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+
+            self.ui.signal_login_mscolab.connect(self.login)
+
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
+
+    @QtCore.Slot(ft.WaypointsTableModel)
+    def update_active_flighttrack(self, active_flighttrack):
+        """
+        Slot that handles update of active flighttrack variable.
+        """
+        self.active_flighttrack = active_flighttrack
+        self.signal_activate_flighttrack1.emit(active_flighttrack)
+
+    @QtCore.Slot(int)
+    def update_active_operation(self, active_op_id):
+        self.active_op_id = active_op_id
+        self.signal_activate_operation.emit(self.active_op_id)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.signal_operation_added.emit(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.signal_operation_removed.emit(op_id)
+
+    @QtCore.Slot(str, str)
+    def login(self, mscolab_server_url, token):
+        self.mscolab_server_url = mscolab_server_url
+        self.token = token
+        self.signal_login_mscolab.emit(mscolab_server_url, token)
 
     def setup_top_view(self):
         """
@@ -230,7 +294,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         are connected).
         """
         toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
-                     "Airports/Airspaces"]
+                     "Airports/Airspaces", "Multiple FLightpath"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
@@ -290,11 +354,37 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             elif index == AIRDATA:
                 title = "Airdata"
                 widget = ad.AirdataDockwidget(parent=self, view=self.mpl.canvas)
+            elif index == MULTIPLEFLIGHTPATH:
+                title = "Multiple Flightpath"
+                widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
+                                                            listFlightTracks=self.ui.listFlightTracks,
+                                                            listOperationsMSC=self.ui.listOperationsMSC,
+                                                            activeFlightTrack=self.active_flighttrack,
+                                                            mscolab_server_url=self.mscolab_server_url,
+                                                            token=self.token)
+
+                self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
+                self.ui.signal_listFlighttrack_doubleClicked.connect(
+                    lambda: self.signal_listFlighttrack_doubleClicked.emit())
+                self.ui.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
+                self.ui.signal_render_new_permission.connect(
+                    lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
+                if self.active_op_id is not None:
+                    self.signal_activate_operation.emit(self.active_op_id)
+                widget.signal_parent_closes.connect(self.closed)
             else:
                 raise IndexError("invalid control index")
 
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
+
+    def closed(self):
+        self.ui.signal_login_mscolab.disconnect()
+        self.ui.signal_logout_mscolab.disconnect()
+        self.ui.signal_listFlighttrack_doubleClicked.disconnect()
+        self.ui.signal_activate_operation.disconnect()
+        self.ui.signal_permission_revoked.disconnect()
+        self.ui.signal_render_new_permission.disconnect()
 
     @QtCore.Slot()
     def disable_cbs(self):
@@ -341,12 +431,18 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         settings = self.getView().get_map_appearance()
         dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
         dlg.setModal(False)
+        dlg.signal_ft_vertices_color_change.connect(self.set_ft_vertices_color)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_map_appearance(settings)
             self.save_settings()
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
+
+    @QtCore.Slot(str, tuple)
+    def set_ft_vertices_color(self, which, color):
+        if which == "ft_vertices":
+            self.signal_ft_vertices_color_change.emit(color)
 
     def save_settings(self):
         """
@@ -396,3 +492,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
+
+    def get_settings(self):
+        return load_settings_qsettings(self.settings_tag, {})

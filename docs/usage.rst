@@ -204,6 +204,27 @@ Close the software with ease of mind. Next time you open your software, all your
 you left it! KML Overlay supports **Saving Open files** so that you can jump back in, anytime!
 
 
+Multiple Flightpath Dockwidget
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+The topview has a dockwidget allowing to plot multiple flighttracks/operations on top of map.
+
+New flightpaths can be added or removed without crashing, and a clear visualization on map, with
+relevant geometries and styles.
+
+The multiple flightpath dockwidget interface supports display of multiple flighttracks on map simultaneously,
+with a check box to display/hide individual plots on map.
+
+Activated flighttrack/operation is shown in bold letters and can't be unchecked.
+
+"Change Linewidth" and "Change Color" button improves the User experience by allowing user to customize
+color & linewidth of each of flightpath displayed, realtime. This allows for better understanding of map and
+flightpath.
+
+For Activated Flightpath, use "options" menu on topview interface.
+
+
 Test Samples
 ------------
 
