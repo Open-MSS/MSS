@@ -481,7 +481,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 return
             text = filename
             if text not in self.dict_files:  # prevents same file being added twice
-                # initializing the nested dictionary dict_flighttrack
+                # initializing the nested dictionary dict_files
                 self.dict_files[text] = {}
                 self.dict_files[text]["patch"] = None
                 self.dict_files[text]["color"] = (0, 0, 0, 1)
