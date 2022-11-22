@@ -480,7 +480,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
             try:
-                request = requests.get(base_url)
+                request = requests.get(base_url, timeout=(2, 10))
                 if pdlg.wasCanceled():
                     break
 

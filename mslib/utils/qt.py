@@ -41,8 +41,14 @@ from mslib.utils.config import config_loader
 from mslib.utils import FatalUserError, subprocess_startupinfo
 
 
+OPTIONS = None
+if os.getenv("PYCHARM_HOSTED") is not None:
+    OPTIONS = QtWidgets.QFileDialog.DontUseNativeDialog
+
+
 def get_open_filename_qt(*args):
-    filename = QtWidgets.QFileDialog.getOpenFileName(*args)
+
+    filename = QtWidgets.QFileDialog.getOpenFileName(*args, options=OPTIONS)
     return filename[0] if isinstance(filename, tuple) else str(filename)
 
 
@@ -50,12 +56,12 @@ def get_open_filenames_qt(*args):
     """
     To select multiple files simultaneously
     """
-    filenames = QtWidgets.QFileDialog.getOpenFileNames(*args)
+    filenames = QtWidgets.QFileDialog.getOpenFileNames(*args, options=OPTIONS)
     return filenames[0] if isinstance(filenames, tuple) else str(filenames)
 
 
 def get_save_filename_qt(*args):
-    _filename = QtWidgets.QFileDialog.getSaveFileName(*args)
+    _filename = QtWidgets.QFileDialog.getSaveFileName(*args, options=OPTIONS)
     if isinstance(_filename, tuple):
         # ToDo when can this be only a str
         extension = re.sub(r'\w.*\(\*', '', _filename[1][:-1])
@@ -67,7 +73,7 @@ def get_save_filename_qt(*args):
 
 
 def get_existing_directory_qt(*args):
-    dirname = QtWidgets.QFileDialog.getExistingDirectory(*args)
+    dirname = QtWidgets.QFileDialog.getExistingDirectory(*args, options=OPTIONS)
     return dirname[0] if isinstance(dirname, tuple) else str(dirname)
 
 
