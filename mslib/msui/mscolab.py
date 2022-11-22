@@ -232,7 +232,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s = requests.Session()
             s.auth = (username, password)
             s.headers.update({'x-test': 'true'})
-            r = s.post(url, data=data)
+            r = s.post(url, data=data, timeout=(2, 10))
         return r
 
     def login_handler(self):
@@ -253,7 +253,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         s.headers.update({'x-test': 'true'})
         url = f'{self.mscolab_server_url}/token'
         try:
-            r = s.post(url, data=data)
+            r = s.post(url, data=data, timeout=(2, 10))
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
@@ -331,7 +331,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         s.headers.update({'x-test': 'true'})
         url = f'{self.mscolab_server_url}/register'
         try:
-            r = s.post(url, data=data)
+            r = s.post(url, data=data, timeout=(2, 10))
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
@@ -582,7 +582,7 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data)
+            r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data, timeout=(2, 10))
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_new_permission.connect(self.render_new_permission)
@@ -749,7 +749,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token
             }
 
-            res = requests.post(self.mscolab_server_url + '/delete_user', data=data)
+            res = requests.post(self.mscolab_server_url + '/delete_user', data=data, timeout=(2, 10))
             if res.status_code == 200 and json.loads(res.text)["success"] is True:
                 self.logout()
         else:
@@ -840,7 +840,7 @@ class MSUIMscolab(QtCore.QObject):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data)
+        r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data, timeout=(2, 10))
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your operation was created successfully')
@@ -1010,7 +1010,7 @@ class MSUIMscolab(QtCore.QObject):
                     }
                     url = url_join(self.mscolab_server_url, 'delete_operation')
                     try:
-                        res = requests.post(url, data=data)
+                        res = requests.post(url, data=data, timeout=(2, 10))
                         res.raise_for_status()
                         self.reload_operations()
                         self.signal_operation_removed.emit(self.active_op_id)
@@ -1037,7 +1037,7 @@ class MSUIMscolab(QtCore.QObject):
                     "selected_userids": json.dumps([self.user["id"]])
                 }
                 url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
-                res = requests.post(url, data=data)
+                res = requests.post(url, data=data, timeout=(2, 10))
                 if res.text != "False":
                     res = res.json()
                     if res["success"]:
@@ -1084,7 +1084,7 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_desc
                 }
                 url = url_join(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data)
+                r = requests.post(url, data=data, timeout=(2, 10))
                 if r.text == "True":
                     # Update active operation description label
                     self.set_operation_desc_label(entered_operation_desc)
@@ -1115,7 +1115,7 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_name
                 }
                 url = url_join(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data)
+                r = requests.post(url, data=data, timeout=(2, 10))
                 if r.text == "True":
                     # Update active operation name
                     self.active_operation_name = entered_operation_name
@@ -1260,7 +1260,7 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(self.mscolab_server_url + '/operations', data=data)
+            r = requests.get(self.mscolab_server_url + '/operations', data=data, timeout=(2, 10))
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1299,7 +1299,7 @@ class MSUIMscolab(QtCore.QObject):
         data = {
             'token': self.token
         }
-        r = requests.get(self.mscolab_server_url + '/user', data=data)
+        r = requests.get(self.mscolab_server_url + '/user', data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             if _json['user']['id'] == u_id:
@@ -1410,7 +1410,7 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data)
+            r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1431,7 +1431,7 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data)
+            r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
             if r.text != "False":
                 _json = json.loads(r.text)
                 self.operations = _json["operations"]
@@ -1502,7 +1502,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": self.inactive_op_id,
             }
-            res = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data)
+            res = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -1539,7 +1539,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": item.op_id,
             }
-            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data)
+            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data, timeout=(2, 10))
 
             # set active_op_id here
             self.active_op_id = item.op_id

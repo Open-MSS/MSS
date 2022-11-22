@@ -365,7 +365,7 @@ class WMSMapFetcher(QtCore.QObject):
             # Image.open(). See
             #    http://www.pythonware.com/library/pil/handbook/image.htm
             logging.debug("Retrieving legend from '%s'", urlstr)
-            urlobject = requests.get(urlstr)
+            urlobject = requests.get(urlstr, timeout=(2, 10))
             image_io = io.BytesIO(urlobject.content)
             try:
                 legend_img_raw = Image.open(image_io)
@@ -728,7 +728,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self.cpdlg.close()
 
         self.display_capabilities_dialog()
-        Worker.create(lambda: requests.get(base_url, params=params),
+        Worker.create(lambda: requests.get(base_url, params=params, timeout=(5, 60)),
                       on_success, on_failure)
 
     def activate_wms(self, wms, cache=False):

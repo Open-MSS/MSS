@@ -548,7 +548,7 @@ class MultipleFlightpathOperations:
         data = {
             "token": self.token
         }
-        r = requests.get(self.mscolab_server_url + "/operations", data=data)
+        r = requests.get(self.mscolab_server_url + "/operations", data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
@@ -560,7 +560,7 @@ class MultipleFlightpathOperations:
                 "token": self.token,
                 "op_id": op_id
             }
-            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data)
+            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data, timeout=(2, 10))
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
                 return xml_content
