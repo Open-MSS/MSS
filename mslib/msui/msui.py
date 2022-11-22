@@ -630,8 +630,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             pickertype=pickertype)
         if self.local_active:
             if filenames is not None:
+                activate = True
+                if len(filenames) > 1:
+                    activate = False
                 for name in filenames:
-                    self.create_new_flight_track(filename=name, function=function)
+                    self.create_new_flight_track(filename=name, function=function, activate=activate)
                 self.last_save_directory = fs.path.dirname(name)
         else:
             for name in filenames:
@@ -665,7 +668,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             self.mscolab.handle_export_msc(extension, function, pickertype)
 
-    def create_new_flight_track(self, template=None, filename=None, function=None):
+    def create_new_flight_track(self, template=None, filename=None, function=None, activate=True):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
            flight track' menu entries.
@@ -729,7 +732,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
             # Activate new item
-            self.activate_flight_track(listitem)
+            if activate:
+                self.activate_flight_track(listitem)
 
     def activate_flight_track(self, item):
         """Set the currently selected flight track to be the active one, i.e.
