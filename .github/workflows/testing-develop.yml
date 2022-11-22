@@ -4,11 +4,10 @@ on:
   push:
     branches:
     - develop
-    - GSOC2022-JatinJain
+
   pull_request:
     branches:
     - develop
-    - GSOC2022-JatinJain
 
 jobs:     
   test-develop:
