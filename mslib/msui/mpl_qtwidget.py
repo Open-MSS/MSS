@@ -57,7 +57,7 @@ LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
 matplotlib.rcParams['savefig.directory'] = LAST_SAVE_DIRECTORY
 
 
-class MyFigure(object):
+class ViewPlotter(object):
     def __init__(self, fig=None, ax=None):
         # setup Matplotlib Figure and Axis
         self.fig, self.ax = fig, ax
@@ -107,7 +107,7 @@ class MyFigure(object):
         return width, height
 
 
-class MyTopViewFigure(MyFigure):
+class TopViewPlotter(ViewPlotter):
     def __init__(self, fig=None, ax=None):
         super().__init__(fig, ax)
         self.map = None
@@ -212,11 +212,6 @@ class MyTopViewFigure(MyFigure):
                                                 lake_color=self.settings["colour_water"])
             self.map.set_mapboundary_visible(visible=self.settings["fill_waterbodies"],
                                              bg_color=self.settings["colour_water"])
-            # self.waypoints_interactor.set_path_color(line_color=self.settings["colour_ft_vertices"],
-            #                                          marker_facecolor=self.settings["colour_ft_waypoints"])
-            # self.waypoints_interactor.show_marker = self.settings["draw_marker"]
-            # self.waypoints_interactor.set_vertices_visible(self.settings["draw_flighttrack"])
-            # self.waypoints_interactor.set_labels_visible(self.settings["label_flighttrack"])
 
             # Updates plot title size as selected from combobox labelled plot title size.
             ax.set_autoscale_on(False)
@@ -244,7 +239,7 @@ class MyTopViewFigure(MyFigure):
             self.map.set_graticule_visible(False)
             self.map._draw_auto_graticule(self.tov_als)
         else:
-            self.myfig.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
+            self.plotter.map.set_graticule_visible(self.appearance_settings["draw_graticule"])
         self.ax.figure.canvas.draw()  # this one is required to trigger a
         # drawevent to update the background
 
@@ -313,7 +308,7 @@ class MyTopViewFigure(MyFigure):
         self.ax.figure.canvas.draw()
 
 
-class MySideViewFigure(MyFigure):
+class SideViewPlotter(ViewPlotter):
     _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
@@ -602,7 +597,7 @@ class MySideViewFigure(MyFigure):
                 self.redraw_yaxis()
 
 
-class MyLinearViewFigure(MyFigure):
+class LinearViewPlotter(ViewPlotter):
     """Specialised MplCanvas that draws a linear view of a
        flight track / list of waypoints.
     """
@@ -740,11 +735,11 @@ class MplCanvas(FigureCanvasQTAgg):
     axes are added).
     """
 
-    def __init__(self, myfig):
+    def __init__(self, plotter):
         self.default_filename = "_image"
-        self.myfig = myfig
+        self.plotter = plotter
         # initialization of the canvas
-        super(MplCanvas, self).__init__(self.myfig.fig)
+        super(MplCanvas, self).__init__(self.plotter.fig)
 
         # we define the widget as expandable
         super(MplCanvas, self).setSizePolicy(
@@ -774,7 +769,7 @@ class MplCanvas(FigureCanvasQTAgg):
         if level:
             self.default_filename += f"_{level.split()[0]}"
 
-        self.myfig.draw_metadata(title, init_time, valid_time, level, style)
+        self.plotter.draw_metadata(title, init_time, valid_time, level, style)
         self.draw()
         # without the repaint the title is not properly updated
         self.repaint()
@@ -783,7 +778,7 @@ class MplCanvas(FigureCanvasQTAgg):
         """Determines the size of the current figure in pixels.
         Returns the tuple width, height.
         """
-        return self.myfig.get_plot_size_in_px()
+        return self.plotter.get_plot_size_in_px()
 
 
 def _getSaveFileName(parent, title="Choose a filename to save to", filename="test.png",
@@ -1065,11 +1060,11 @@ class NavigationToolbar(NavigationToolbar2QT):
             else:
                 (lat, lon), _ = self.canvas.waypoints_interactor.get_lat_lon(event)
                 y_value = convert_pressure_to_vertical_axis_measure(
-                    self.canvas.myfig.settings_dict["vertical_axis"], event.ydata)
+                    self.canvas.plotter.settings_dict["vertical_axis"], event.ydata)
                 units = {
                     "pressure altitude": "km",
                     "flight level": "hft",
-                    "pressure": "hPa"}[self.canvas.myfig.settings_dict["vertical_axis"]]
+                    "pressure": "hPa"}[self.canvas.plotter.settings_dict["vertical_axis"]]
                 self.set_message(f"{self.mode} lat={lat:6.2f} lon={lon:7.2f} altitude={y_value:.2f}{units}")
 
     def _update_buttons_checked(self):
@@ -1120,23 +1115,23 @@ class MplSideViewCanvas(MplCanvas):
         """
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
-        self.myfig = MySideViewFigure()
-        super(MplSideViewCanvas, self).__init__(self.myfig)
+        self.plotter = SideViewPlotter()
+        super(MplSideViewCanvas, self).__init__(self.plotter)
 
         if settings is not None:
-            self.myfig.settings_dict.update(settings)
+            self.plotter.settings_dict.update(settings)
 
         # Setup the plot.
         self.update_vertical_extent_from_settings(init=True)
 
         self.numlabels = numlabels
-        self.myfig.ax.patch.set_facecolor("None")
+        self.plotter.ax.patch.set_facecolor("None")
         # Main axes instance of mplwidget has zorder 99.
         self.vertical_lines = []
 
         # Sets the default value of sideview fontsize settings from MSSDefaultConfig.
         self.sideview_size_settings = config_loader(dataset="sideview")
-        self.myfig.setup_side_view()
+        self.plotter.setup_side_view()
         # Draw a number of flight level lines.
         self.flightlevels = []
         self.fl_label_list = []
@@ -1150,7 +1145,7 @@ class MplSideViewCanvas(MplCanvas):
         if model:
             self.set_waypoints_model(model)
 
-        self.set_settings(self.myfig.settings_dict)
+        self.set_settings(self.plotter.settings_dict)
 
     def set_waypoints_model(self, model):
         """Set the WaypointsTableModel defining the vertical section.
@@ -1164,9 +1159,9 @@ class MplSideViewCanvas(MplCanvas):
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
             self.waypoints_interactor = mpl_pi.VPathInteractor(
-                self.myfig.ax, self.waypoints_model,
+                self.plotter.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points"),
-                redraw_xaxis=self.redraw_xaxis, clear_figure=self.myfig.clear_figure
+                redraw_xaxis=self.redraw_xaxis, clear_figure=self.plotter.clear_figure
             )
 
     def redraw_xaxis(self, lats, lons, times):
@@ -1177,7 +1172,7 @@ class MplSideViewCanvas(MplCanvas):
         times_visible = False
         if self.waypoints_model is not None:
             times_visible = self.waypoints_model.performance_settings["visible"]
-        self.myfig.redraw_xaxis(lats, lons, times, times_visible)
+        self.plotter.redraw_xaxis(lats, lons, times, times_visible)
 
         for _line in self.ceiling_alt:
             _line.remove()
@@ -1197,14 +1192,14 @@ class MplSideViewCanvas(MplCanvas):
                 xs.append(vx[-1])
                 ys.append(aircraft.get_ceiling_altitude(wpd[-1].weight))
 
-                self.ceiling_alt = self.myfig.ax.plot(
+                self.ceiling_alt = self.plotter.ax.plot(
                     xs, thermolib.flightlevel2pressure(np.asarray(ys) * units.hft).magnitude,
                     color="k", ls="--")
                 self.update_ceiling(
-                    self.myfig.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
-                    self.myfig.settings_dict["colour_ceiling"])
+                    self.plotter.settings_dict["draw_ceiling"] and self.waypoints_model.performance_settings["visible"],
+                    self.plotter.settings_dict["colour_ceiling"])
                 highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
-                self.myfig.draw_vertical_lines(highlight, lats, lons)
+                self.plotter.draw_vertical_lines(highlight, lats, lons)
 
     def get_vertical_extent(self):
         """Returns the bottom and top pressure (hPa) of the plot.
@@ -1219,7 +1214,7 @@ class MplSideViewCanvas(MplCanvas):
             artist.remove()
         self.fl_label_list = []
         # Plot lines indicating flight level altitude.
-        ax = self.myfig.ax
+        ax = self.plotter.ax
         for level in self.flightlevels:
             pressure = thermolib.flightlevel2pressure(level * units.hft).magnitude
             self.fl_label_list.append(ax.axhline(pressure, color='k'))
@@ -1256,15 +1251,15 @@ class MplSideViewCanvas(MplCanvas):
         """Returns a dictionary containing settings regarding the side view
            appearance.
         """
-        return self.myfig.settings_dict
+        return self.plotter.settings_dict
 
     def set_settings(self, settings):
         """Apply settings to view.
         """
-        vertical_lines = self.myfig.settings_dict["draw_verticals"]
+        vertical_lines = self.plotter.settings_dict["draw_verticals"]
         if settings is not None:
-            self.myfig.settings_dict.update(settings)
-        settings = self.myfig.settings_dict
+            self.plotter.settings_dict.update(settings)
+        settings = self.plotter.settings_dict
         self.set_flight_levels(settings["flightlevels"])
         self.set_flight_levels_visible(settings["draw_flightlevels"])
         self.update_ceiling(
@@ -1276,15 +1271,15 @@ class MplSideViewCanvas(MplCanvas):
 
         if self.waypoints_interactor is not None:
             self.waypoints_interactor.plotter.line.set_marker("o" if settings["draw_marker"] else None)
-            self.waypoints_interactor.set_vertices_visible(
+            self.waypoints_interactor.plotter.set_vertices_visible(
                 settings["draw_flighttrack"])
-            self.waypoints_interactor.set_path_color(
+            self.waypoints_interactor.plotter.set_path_color(
                 line_color=settings["colour_ft_vertices"],
                 marker_facecolor=settings["colour_ft_waypoints"],
                 patch_facecolor=settings["colour_ft_fill"])
-            self.waypoints_interactor.set_patch_visible(
+            self.waypoints_interactor.plotter.set_patch_visible(
                 settings["fill_flighttrack"])
-            self.waypoints_interactor.set_labels_visible(
+            self.waypoints_interactor.plotter.set_labels_visible(
                 settings["label_flighttrack"])
 
         if self.waypoints_model is not None and self.waypoints_interactor is not None \
@@ -1293,7 +1288,7 @@ class MplSideViewCanvas(MplCanvas):
                               self.waypoints_interactor.plotter.path.ilons,
                               self.waypoints_interactor.plotter.path.itimes)
 
-        self.myfig.settings_dict = settings
+        self.plotter.settings_dict = settings
 
     def getBBOX(self):
         """Get the bounding box of the view (returns a 4-tuple
@@ -1302,7 +1297,7 @@ class MplSideViewCanvas(MplCanvas):
         # Get the bounding box of the current view
         # (bbox = llcrnrlon, llcrnrlat, urcrnrlon, urcrnrlat; i.e. for the side
         #  view bbox = x1, y1(p_bot), x2, y2(p_top)).
-        axis = self.myfig.ax.axis()
+        axis = self.plotter.ax.axis()
 
         # Get the number of (great circle) interpolation points and the
         # number of labels along the x-axis.
@@ -1317,7 +1312,7 @@ class MplSideViewCanvas(MplCanvas):
                     num_labels, (axis[3] / 100))
             return bbox
         else:
-            self.myfig.getBBOX()
+            self.plotter.getBBOX()
 
     def draw_legend(self, img):
         if img is not None:
@@ -1331,13 +1326,13 @@ class MplSideViewCanvas(MplCanvas):
         below the axes that display the flight profile. This is necessary
         because imshow() does not work with logarithmic axes.
         """
-        self.myfig.draw_image(img)
+        self.plotter.draw_image(img)
 
     def update_vertical_extent_from_settings(self, init=False):
         """ Checks for current units of axis and convert the upper and lower limit
         to pa(pascals) for the internal computation by code """
 
-        self.myfig.update_vertical_extent_from_settings(init)
+        self.plotter.update_vertical_extent_from_settings(init)
 
 
 class MplSideViewWidget(MplNavBarWidget):
@@ -1370,15 +1365,15 @@ class MplLinearViewCanvas(MplCanvas):
         """
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
-        self.myfig = MyLinearViewFigure()
-        super(MplLinearViewCanvas, self).__init__(self.myfig)
+        self.plotter = LinearViewPlotter()
+        super(MplLinearViewCanvas, self).__init__(self.plotter)
 
         self.settings_dict = {"plot_title_size": "default",
                               "axes_label_size": "default"}
 
         # Setup the plot.
         self.numlabels = numlabels
-        self.myfig.setup_linear_view()
+        self.plotter.setup_linear_view()
         # If a waypoints model has been passed, create an interactor on it.
         self.waypoints_interactor = None
         self.waypoints_model = None
@@ -1404,9 +1399,9 @@ class MplLinearViewCanvas(MplCanvas):
             # Create a path interactor object. The interactor object connects
             # itself to the change() signals of the flight track data model.
             self.waypoints_interactor = mpl_pi.LPathInteractor(
-                self.myfig.ax, self.waypoints_model,
+                self.plotter.ax, self.waypoints_model,
                 numintpoints=config_loader(dataset="num_interpolation_points"),
-                clear_figure=self.myfig.clear_figure,
+                clear_figure=self.plotter.clear_figure,
                 redraw_xaxis=self.redraw_xaxis
             )
         self.redraw_xaxis()
@@ -1436,7 +1431,7 @@ class MplLinearViewCanvas(MplCanvas):
             raise NotImplementedError
 
     def draw_image(self, xmls, colors=None, scales=None):
-        self.myfig.draw_image(xmls, colors, scales)
+        self.plotter.draw_image(xmls, colors, scales)
         self.redraw_xaxis()
 
     def redraw_xaxis(self):
@@ -1447,16 +1442,16 @@ class MplLinearViewCanvas(MplCanvas):
             lons = self.waypoints_interactor.plotter.path.ilons
             logging.debug("redrawing x-axis")
 
-            self.myfig.redraw_xaxis(lats, lons)
+            self.plotter.redraw_xaxis(lats, lons)
 
             highlight = [[wp.lat, wp.lon] for wp in self.waypoints_model.waypoints]
-            self.myfig.draw_vertical_lines(highlight, lats, lons)
+            self.plotter.draw_vertical_lines(highlight, lats, lons)
 
     def set_settings(self, settings):
         """
         Apply settings from options ui to the linear view
         """
-        self.myfig.set_settings(settings)
+        self.plotter.set_settings(settings)
 
 
 class MplLinearViewWidget(MplNavBarWidget):
@@ -1487,17 +1482,13 @@ class MplTopViewCanvas(MplCanvas):
     def __init__(self, settings=None):
         """
         """
-        self.myfig = MyTopViewFigure()
-        super(MplTopViewCanvas, self).__init__(self.myfig)
+        self.plotter = TopViewPlotter()
+        super(MplTopViewCanvas, self).__init__(self.plotter)
         self.waypoints_interactor = None
         self.satoverpasspatch = []
         self.kmloverlay = None
         self.multiple_flightpath = None
         self.basename = "topview"
-
-        # Axes and image object to display the legend graphic, if available.
-        self.legax = None
-        self.legimg = None
 
         # Set map appearance from parameter or, if not specified, to default
         # values.
@@ -1509,12 +1500,12 @@ class MplTopViewCanvas(MplCanvas):
 
     @property
     def map(self):
-        return self.myfig.map
+        return self.plotter.map
 
     def init_map(self, model=None, **kwargs):
         """Set up the map view.
         """
-        self.myfig.init_map(**kwargs)
+        self.plotter.init_map(**kwargs)
 
         if model:
             self.set_waypoints_model(model)
@@ -1533,11 +1524,11 @@ class MplTopViewCanvas(MplCanvas):
             appearance = self.get_map_appearance()
             try:
                 self.waypoints_interactor = mpl_pi.HPathInteractor(
-                    self.myfig.map, self.waypoints_model,
+                    self.plotter.map, self.waypoints_model,
                     linecolor=appearance["colour_ft_vertices"],
                     markerfacecolor=appearance["colour_ft_waypoints"],
                     show_marker=appearance["draw_marker"])
-                self.waypoints_interactor.set_vertices_visible(appearance["draw_flighttrack"])
+                self.waypoints_interactor.plotter.set_vertices_visible(appearance["draw_flighttrack"])
             except IOError as err:
                 logging.error("%s" % err)
 
@@ -1565,7 +1556,7 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg.setValue(1)
         QtWidgets.QApplication.processEvents()
 
-        self.myfig.redraw_map(kwargs_update)
+        self.plotter.redraw_map(kwargs_update)
 
         self.pdlg.setValue(5)
         QtWidgets.QApplication.processEvents()
@@ -1601,27 +1592,27 @@ class MplTopViewCanvas(MplCanvas):
     def get_crs(self):
         """Get the coordinate reference system of the displayed map.
         """
-        return self.myfig.map.crs
+        return self.plotter.map.crs
 
     def getBBOX(self):
         """
         Get the bounding box of the map
         (returns a 4-tuple llx, lly, urx, ury) in degree or meters.
         """
-        return self.myfig.getBBOX()
+        return self.plotter.getBBOX()
 
     def clear_figure(self):
         logging.debug("Removing image")
-        self.myfig.clear_figure()
+        self.plotter.clear_figure()
 
     def draw_image(self, img):
-        self.myfig.draw_image(img)
+        self.plotter.draw_image(img)
 
     def draw_legend(self, img):
         """Draw the legend graphics img on the current plot.
         Adds new axes to the plot that accomodate the legend.
         """
-        self.myfig.draw_legend(img)
+        self.plotter.draw_legend(img)
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
 
@@ -1645,36 +1636,34 @@ class MplTopViewCanvas(MplCanvas):
         """
         self.kmloverlay = kmloverlay
 
-    def plot_multiple_flightpath(self, multipleflightpath):
+    def plot_multiple_flightpath(self, multiple_flightpath):
         """Plots a multiple flightpaths on topview of the map
         """
-        self.multiple_flightpath = multipleflightpath
+        self.multiple_flightpath = multiple_flightpath
 
     def get_map_appearance(self):
-        return self.myfig.get_map_appearance()
+        return self.plotter.get_map_appearance()
 
     def set_map_appearance(self, settings_dict):
         """Apply settings from dictionary 'settings_dict' to the view.
 
         If settings is None, apply default settings.
         """
-        self.myfig.set_map_appearance(settings_dict)
+        self.plotter.set_map_appearance(settings_dict)
         if self.waypoints_interactor is not None:
-            print(settings_dict)
-            import traceback
-            traceback.print_stack()
-            self.waypoints_interactor.set_path_color(line_color=self.myfig.settings["colour_ft_vertices"],
-                                                     marker_facecolor=self.myfig.settings["colour_ft_waypoints"])
-            self.waypoints_interactor.show_marker = self.myfig.settings["draw_marker"]
-            self.waypoints_interactor.set_vertices_visible(self.myfig.settings["draw_flighttrack"])
-            self.waypoints_interactor.set_labels_visible(self.myfig.settings["label_flighttrack"])
+            path_plotter = self.waypoints_interactor.plotter
+            path_plotter.set_path_color(line_color=self.plotter.settings["colour_ft_vertices"],
+                                        marker_facecolor=self.plotter.settings["colour_ft_waypoints"])
+            path_plotter.show_marker = self.plotter.settings["draw_marker"]
+            path_plotter.set_vertices_visible(self.plotter.settings["draw_flighttrack"])
+            path_plotter.set_labels_visible(self.plotter.settings["label_flighttrack"])
 
         self.draw()
 
     def set_remote_sensing_appearance(self, settings):
-        self.waypoints_interactor.set_remote_sensing(settings["reference"])
-        self.waypoints_interactor.set_tangent_visible(settings["draw_tangents"])
-        self.waypoints_interactor.set_solar_angle_visible(settings["show_solar_angle"])
+        self.waypoints_interactor.plotter.set_remote_sensing(settings["reference"])
+        self.waypoints_interactor.plotter.set_tangent_visible(settings["draw_tangents"])
+        self.waypoints_interactor.plotter.set_solar_angle_visible(settings["show_solar_angle"])
 
         self.waypoints_interactor.redraw_path()
 

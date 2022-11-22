@@ -242,14 +242,13 @@ class PathV(WaypointsPath):
         return (self.intermediate_indexes[index], wps_list[index].pressure)
 
 
-#
-# CLASS PathH, PathH_GC
-#
-
-
 class PathH(WaypointsPath):
     """Class to represent a horizontal flight track path, waypoints connected
-       by linear line segments.
+       by great circle segments.
+
+
+    Provides to kinds of vertex data: (1) Waypoint vertices (wp_vertices) and
+    (2) intermediate great circle vertices (vertices).
     """
 
     def __init__(self, *args, **kwargs):
@@ -258,27 +257,13 @@ class PathH(WaypointsPath):
         """
         self.map = kwargs.pop("map")
         super().__init__(*args, **kwargs)
+        self.wp_codes = np.array([], dtype=np.uint8)
+        self.wp_vertices = np.array([])
 
     def transform_waypoint(self, wps_list, index):
         """Transform lon/lat to projection coordinates.
         """
         return self.map(wps_list[index].lon, wps_list[index].lat)
-
-
-class PathH_GC(PathH):
-    """Class to represent a horizontal flight track path, waypoints connected
-       by great circle segments.
-
-    Derives from PathH.
-
-    Provides to kinds of vertex data: (1) Waypoint vertices (wp_vertices) and
-    (2) intermediate great circle vertices (vertices).
-    """
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.wp_codes = np.array([], dtype=np.uint8)
-        self.wp_vertices = np.array([])
 
     def update_from_waypoints(self, wps):
         """Get waypoint coordinates from flight track model, get
@@ -335,11 +320,6 @@ class PathH_GC(PathH):
                 wp_vertex = self.wp_vertices[j]
             i += 1
         return j
-
-
-#
-# CLASS PathInteractor
-#
 
 
 class PathPlotter(object):
@@ -522,11 +502,11 @@ class PathPlotter(object):
         self.pathpatch.get_path().update_from_waypoints(wps)
 
 
-class PathH_GCPlotter(PathPlotter):
+class PathH_Plotter(PathPlotter):
     def __init__(self, mplmap, mplpath=None, facecolor='none', edgecolor='none',
                  linecolor='blue', markerfacecolor='red', show_marker=True,
                  marker='', label_waypoints=True):
-        super().__init__(mplmap.ax, mplpath=PathH_GC([[0, 0]], map=mplmap),
+        super().__init__(mplmap.ax, mplpath=PathH([[0, 0]], map=mplmap),
                          facecolor='none', edgecolor='none', linecolor=linecolor,
                          markerfacecolor=markerfacecolor, marker='',
                          label_waypoints=label_waypoints)
@@ -956,24 +936,6 @@ class PathInteractor(QtCore.QObject):
             return
         self._ind = self.get_ind_under_point(event)
 
-    def set_vertices_visible(self, showverts=True):
-        """Set the visibility of path vertices (the line plot).
-        """
-        self.plotter.set_vertices_visible(showverts)
-
-    def set_patch_visible(self, showpatch=True):
-        """Set the visibility of path patch (the area).
-        """
-        self.plotter.set_patch_visible(showpatch)
-
-    def set_labels_visible(self, visible=True):
-        """Set the visibility of the waypoint labels.
-        """
-        self.plotter.set_labels_visible(visible)
-
-    def redraw_path(self, vertices=None):
-        self.plotter.redraw_path(vertices, self.waypoints_model.all_waypoint_data())
-
     def confirm_delete_waypoint(self, row):
         """Open a QMessageBox and ask the user if he really wants to
            delete the waypoint at index <row>.
@@ -996,14 +958,6 @@ class PathInteractor(QtCore.QObject):
                 None, "Remove waypoint",
                 f"Remove waypoint no.{row:d} at {wp.lat:.2f}/{wp.lon:.2f}, flightlevel {wp.flightlevel:.2f}?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
-
-    def set_path_color(self, line_color=None, marker_facecolor=None,
-                       patch_facecolor=None):
-        self.plotter.set_path_color(line_color, marker_facecolor, patch_facecolor)
-
-#
-# CLASS VPathInteractor
-#
 
 
 class VPathInteractor(PathInteractor):
@@ -1222,8 +1176,8 @@ class HPathInteractor(PathInteractor):
         mplmap -- mpl_map.MapCanvas instance into which the path should be drawn.
         waypoints -- flighttrack.WaypointsModel instance.
         """
-        plotter = PathH_GCPlotter(
-            mplmap, mplpath=PathH_GC([[0, 0]], map=mplmap),
+        plotter = PathH_Plotter(
+            mplmap, mplpath=PathH([[0, 0]], map=mplmap),
             facecolor='none', edgecolor='none', linecolor=linecolor,
             markerfacecolor=markerfacecolor, marker='', label_waypoints=label_waypoints)
         super().__init__(plotter=plotter, waypoints=waypoints)
@@ -1410,22 +1364,3 @@ class HPathInteractor(PathInteractor):
         if d[ind] >= self.epsilon:
             ind = None
         return ind
-
-    def set_path_color(self, line_color=None, marker_facecolor=None,
-                       patch_facecolor=None):
-        self.plotter.set_path_color(
-            line_color, marker_facecolor, patch_facecolor)
-
-    def set_vertices_visible(self, showverts=True):
-        """Set the visibility of path vertices (the line plot).
-        """
-        self.plotter.set_vertices_visible(showverts)
-
-    def set_tangent_visible(self, visible):
-        self.plotter.set_tangent_visible(visible)
-
-    def set_solar_angle_visible(self, visible):
-        self.plotter.set_solar_angle_visible(visible)
-
-    def set_remote_sensing(self, ref):
-        self.plotter.set_remote_sensing(ref)
