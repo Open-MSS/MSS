@@ -1011,12 +1011,13 @@ class MSUIMscolab(QtCore.QObject):
                     url = url_join(self.mscolab_server_url, 'delete_operation')
                     try:
                         res = requests.post(url, data=data, timeout=(2, 10))
-                        res.raise_for_status()
-                        self.reload_operations()
-                        self.signal_operation_removed.emit(self.active_op_id)
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
                         show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
+                    else:
+                        res.raise_for_status()
+                        self.reload_operations()
+                        self.signal_operation_removed.emit(self.active_op_id)
                 else:
                     show_popup(self.ui, "Error", "Entered operation name did not match!")
         else:
