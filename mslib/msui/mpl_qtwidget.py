@@ -1289,7 +1289,8 @@ class MplSideViewCanvas(MplCanvas):
 
         if self.waypoints_model is not None and self.waypoints_interactor is not None \
                 and settings["draw_verticals"] != vertical_lines:
-            self.redraw_xaxis(self.waypoints_interactor.plotter.path.ilats, self.waypoints_interactor.plotter.path.ilons,
+            self.redraw_xaxis(self.waypoints_interactor.plotter.path.ilats,
+                              self.waypoints_interactor.plotter.path.ilons,
                               self.waypoints_interactor.plotter.path.itimes)
 
         self.myfig.settings_dict = settings

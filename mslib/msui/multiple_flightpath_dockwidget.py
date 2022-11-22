@@ -34,6 +34,7 @@ from mslib.msui import msui
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
 
+
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
     """
     """
