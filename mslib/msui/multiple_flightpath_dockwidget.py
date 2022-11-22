@@ -25,14 +25,14 @@
     limitations under the License.
 """
 
+import threading
+import requests
+import json
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui import msui
 from mslib.utils.verify_user_token import verify_user_token
-import threading
-import requests
-import json
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
