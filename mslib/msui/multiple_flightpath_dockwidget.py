@@ -25,14 +25,14 @@
     limitations under the License.
 """
 
+import requests
+import json
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.msui import msui
 from mslib.utils.verify_user_token import verify_user_token
-import threading
-import requests
-import json
+from mslib.utils.qt import Worker
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -168,6 +168,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.create_list_item(wp_model)
 
         self.activate_flighttrack()
+        self.multipleflightrack_worker = Worker(None)
 
     @QtCore.Slot()
     def logout(self):
@@ -220,13 +221,11 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def wait(self, parent, start, end):
         """
-        Adding of flighttrack take time, to avoid emitting of rowInserted signal before that, a delay is inserted in
-        new thread(it avoid freezing of UI).
+        Adding of flighttrack takes time we use a worker new thread(it avoid freezing of UI).
         """
-        # ToDo: Use QThread
+        self.multipleflightrack_worker.function = lambda: self.flighttrackAdded(parent, start, end)
+        self.multipleflightrack_worker.start()
         self.flighttrack_added = True
-        t1 = threading.Timer(0.5, self.flighttrackAdded, [parent, start, end])
-        t1.start()
 
     def flagop(self):
         if self.flighttrack_added:

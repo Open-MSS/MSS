@@ -183,7 +183,7 @@ This feature supports all *essential* elements of KML relevant to MSS' usage nam
    - Geometry Collection (*combination of various types of MultiGeometries*)
 
 
-The KML Support has been enhanced to parse all legal KML Files without crashing, and a clear visualization
+The KML Support has been enhanced to parse all legal KML Files, and a clear visualization
 on the map, with the relevant geometries and styles.
 
 The KML Interface now supports display of multiple KML Files simultaneously, with easy to use Buttons such
@@ -203,28 +203,6 @@ single KML File 'output.kml', which will be present in the last working director
 Close the software with ease of mind. Next time you open your software, all your work will be present, right where
 you left it! KML Overlay supports **Saving Open files** so that you can jump back in, anytime!
 
-
-Multiple Flightpath Dockwidget
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-The topview has a dockwidget allowing to plot multiple flighttracks/operations on top of map.
-
-New flightpaths can be added or removed without crashing, and a clear visualization on map, with
-relevant geometries and styles.
-
-The multiple flightpath dockwidget interface supports display of multiple flighttracks on map simultaneously,
-with a check box to display/hide individual plots on map.
-
-Activated flighttrack/operation is shown in bold letters and can't be unchecked.
-
-"Change Linewidth" and "Change Color" button improves the User experience by allowing user to customize
-color & linewidth of each of flightpath displayed, realtime. This allows for better understanding of map and
-flightpath.
-
-For Activated Flightpath, use "options" menu on topview interface.
-
-
 Test Samples
 ------------
 
@@ -242,6 +220,27 @@ Example KML Files are located at :
 * Displays Fork like pattern in Ireland (*MultiLineStrings*) :download:`docs/samples/kml/Multilinestrings.kml <samples/kml/Multilinestrings.kml>`
 * Displays Geometry Collection in Adelaide, Australia  :download:`docs/samples/kml/geometry_collection.kml <samples/kml/geometry_collection.kml>`
 
+
+
+Multiple Flightpath Dockwidget
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+The topview has a dockwidget allowing to plot multiple flighttracks/operations on top of map.
+
+New flightpaths can be added or removed, and a clear visualization on map, with
+relevant geometries and styles.
+
+The multiple flightpath dockwidget interface supports display of multiple flighttracks on map simultaneously,
+with a check box to display/hide individual plots on map.
+
+Activated flighttrack/operation is shown in bold letters and can't be unchecked.
+
+"Change Linewidth" and "Change Color" button improves the User experience by allowing user to customize
+color & linewidth of each of flightpath displayed, realtime. This allows for better understanding of map and
+flightpath.
+
+For Activated Flightpath, use "options" menu on topview interface.
 
 Remote sensing Docking Widget
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1448,7 +1448,12 @@ class MSUIMscolab(QtCore.QObject):
                     widgetItem.access_level = operation["access_level"]
                     widgetItem.operation_path = operation["path"]
                     widgetItem.operation_category = operation["category"]
-                    widgetItem.active = operation["active"]
+                    try:
+                        # compatibility to 7.x
+                        # a newer server can distinguish older operations and move those into inactive state
+                        widgetItem.active = operation["active"]
+                    except KeyError:
+                        widgetItem.active = True
                     if widgetItem.op_id == self.active_op_id:
                         selectedOperation = widgetItem
                     if widgetItem.active:

@@ -110,7 +110,7 @@ def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=
     else:
         raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
-    if filename == "":
+    if filename == []:
         filename = None
     return filename
 
@@ -403,7 +403,10 @@ class Worker(QtCore.QThread):
         except Exception as e:
             self.failed.emit(e)
         finally:
-            Worker.workers.remove(self)
+            try:
+                Worker.workers.remove(self)
+            except KeyError:
+                pass
 
     @staticmethod
     def create(function, on_success=None, on_failure=None, start=True):
