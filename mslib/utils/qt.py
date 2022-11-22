@@ -45,6 +45,7 @@ OPTIONS = None
 if os.getenv("PYCHARM_HOSTED") is not None:
     OPTIONS = QtWidgets.QFileDialog.DontUseNativeDialog
 
+
 def get_open_filename_qt(*args):
 
     filename = QtWidgets.QFileDialog.getOpenFileName(*args, options=OPTIONS)
