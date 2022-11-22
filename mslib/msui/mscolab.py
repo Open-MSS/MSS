@@ -1277,7 +1277,8 @@ class MSUIMscolab(QtCore.QObject):
 
     @QtCore.Slot()
     def reload_operation_list(self):
-        self.reload_operations()
+        if self.mscolab_server_url is not None:
+            self.reload_operations()
 
     @QtCore.Slot(int)
     def reload_window(self, value):
