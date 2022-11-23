@@ -127,6 +127,6 @@ class Ui_AboutMSUIDialog(object):
         self.lblLicense.setText(_translate("AboutMSUIDialog", "License: Apache License Version 2.0"))
         self.lblCopyright.setText(_translate("AboutMSUIDialog", "Copyright 2008-2014: Deutsches Zentrum fuer Luft- und Raumfahrt e.V.\n"
 "Copyright 2011-2014: Marc Rautenhaus\n"
-"Copyright 2016-2021: by the MSS team, see AUTHORS"))
+"Copyright 2016-2022: by the MSS team, see AUTHORS"))
         self.lblLinks.setText(_translate("AboutMSUIDialog", "<html><head/><body><p>See <a href=\"http://mss.rtfd.io\"><span style=\" text-decoration: underline; color:#0000ff;\">http://mss.rtfd.io</span></a> for detailed information and documentation.<br>Report bugs or feature requests at <a href=\"https://github.com/Open-MSS/MSS\"><span style=\" text-decoration: underline; color:#0000ff;\">https://github.com/Open-MSS/MSS</span></a>.</p></body></html>"))
         self.btOK.setText(_translate("AboutMSUIDialog", "Ok"))
