@@ -49,7 +49,7 @@ PORTS = list(range(25000, 25500))
 
 
 class Test_Mscolab_connect_window():
-    def setup(self):
+    def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -69,7 +69,7 @@ class Test_Mscolab_connect_window():
         self.main_window.mscolab.connect_window = self.window
         self.window.show()
 
-    def teardown(self):
+    def teardown_method(self):
         self.main_window.mscolab.logout()
         self.window.hide()
         self.main_window.hide()
@@ -259,7 +259,7 @@ class Test_Mscolab(object):
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
     }
 
-    def setup(self):
+    def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -285,7 +285,7 @@ class Test_Mscolab(object):
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()

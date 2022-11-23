@@ -33,7 +33,7 @@ import mslib.msui.sideview as tv
 
 
 class Test_SuffixChange(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSUI_SV_OptionsDialog()
         self.window.show()
@@ -41,7 +41,7 @@ class Test_SuffixChange(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()

@@ -64,12 +64,12 @@ class TestConfigLoader(object):
     tests config file for client
     """
 
-    def setup(self):
+    def setup_method(self):
         self.sample_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '../data')
 
-    def teardown(self):
+    def teardown_method(self):
         if fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
             fs.open_fs(MSUI_CONFIG_PATH).remove("msui_settings.json")
         config_file = os.path.join(
@@ -257,7 +257,7 @@ class TestMergeDict:
     """
     merge_dict can only merge keys which are predefined in the mss_default. All other have to be skipped
     """
-    def setup(self):
+    def setup_method(self):
         self.default_dict = dict(mss_default.__dict__)
 
     def test_no_differences(self):

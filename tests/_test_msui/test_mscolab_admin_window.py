@@ -43,7 +43,7 @@ PORTS = list(range(24000, 24500))
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabAdminWindow(object):
-    def setup(self):
+    def setup_method(self):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -80,7 +80,7 @@ class Test_MscolabAdminWindow(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.mscolab.logout()
         if self.window.mscolab.admin_window:
             self.window.mscolab.admin_window.close()

@@ -42,7 +42,7 @@ PORTS = list(range(28000, 28500))
 
 
 class Test_MSS_TV_MapAppearanceDialog(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSUI_TV_MapAppearanceDialog()
         self.window.show()
@@ -50,7 +50,7 @@ class Test_MSS_TV_MapAppearanceDialog(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -68,7 +68,7 @@ class Test_MSS_TV_MapAppearanceDialog(object):
 
 
 class Test_MSSTopViewWindow(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -80,7 +80,7 @@ class Test_MSSTopViewWindow(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -294,7 +294,7 @@ class Test_MSSTopViewWindow(object):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_TopViewWMS(object):
-    def setup(self):
+    def setup_method(self):
         self.port = PORTS.pop()
         self.application = QtWidgets.QApplication(sys.argv)
 
@@ -322,7 +322,7 @@ class Test_TopViewWMS(object):
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -356,7 +356,7 @@ class Test_TopViewWMS(object):
 
 
 class Test_MSUITopViewWindow():
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
 
     def test_kwargs_update_does_not_harm(self):

@@ -33,7 +33,7 @@ import mslib.msui.satellite_dockwidget as sd
 
 
 class Test_SatelliteDockWidget(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.view = mock.Mock()
         self.window = sd.SatelliteControlWidget(view=self.view)
@@ -42,7 +42,7 @@ class Test_SatelliteDockWidget(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()

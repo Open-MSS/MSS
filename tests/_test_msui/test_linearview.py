@@ -42,7 +42,7 @@ PORTS = list(range(26000, 26500))
 
 
 class Test_MSS_LV_Options_Dialog(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSUI_LV_Options_Dialog()
         self.window.show()
@@ -50,7 +50,7 @@ class Test_MSS_LV_Options_Dialog(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -67,7 +67,7 @@ class Test_MSS_LV_Options_Dialog(object):
 
 
 class Test_MSSLinearViewWindow(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
@@ -81,7 +81,7 @@ class Test_MSSLinearViewWindow(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -116,7 +116,7 @@ class Test_MSSLinearViewWindow(object):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_LinearViewWMS(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.port = PORTS.pop()
         self.tempdir = tempfile.mkdtemp()
@@ -142,7 +142,7 @@ class Test_LinearViewWMS(object):
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()

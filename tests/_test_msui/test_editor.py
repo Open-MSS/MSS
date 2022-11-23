@@ -42,14 +42,14 @@ class Test_Editor(object):
     save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
-    def setup(self, mockmessage):
+    def setup_method(self, mockmessage):
         self.application = QtWidgets.QApplication(sys.argv)
 
         self.window = editor.EditorMainWindow()
         self.save_file_name = self.save_file_name
         self.window.show()
 
-    def teardown(self):
+    def teardown_method(self):
         if os.path.exists(self.save_file_name):
             os.remove(self.save_file_name)
         self.window.hide()

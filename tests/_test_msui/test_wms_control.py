@@ -94,7 +94,7 @@ class WMSControlWidgetSetup(object):
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -117,7 +117,7 @@ class WMSControlWidgetSetup(object):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
-    def setup(self):
+    def setup_method(self):
         self._setup("hsec")
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -479,7 +479,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
-    def setup(self):
+    def setup_method(self):
         self._setup("vsec")
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -571,7 +571,7 @@ class TestWMSControlWidgetSetupSimple(object):
         <Dimension name="ELEVATION" units="hPa"> </Dimension>
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
@@ -584,7 +584,7 @@ class TestWMSControlWidgetSetupSimple(object):
 
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()

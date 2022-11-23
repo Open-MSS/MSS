@@ -36,7 +36,7 @@ from tests.constants import DATA_DIR
 
 
 class Test_DefaultDataAccess(object):
-    def setup(self):
+    def setup_method(self):
         self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015")
         self.dut.setup()
 
@@ -96,7 +96,7 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
     Reuse default testcases and add some more
     """
 
-    def setup(self):
+    def setup_method(self):
         self.dut = CachedDataAccess(DATA_DIR, "EUR_LL015")
         self.dut.setup()
 
@@ -135,7 +135,7 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
 
 
 class Test_DefaultDataAccessNoInit(object):
-    def setup(self):
+    def setup_method(self):
         self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015", uses_init_time=False)
         self.dut.setup()
 

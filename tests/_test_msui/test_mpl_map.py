@@ -29,7 +29,7 @@ from mslib.msui.mpl_map import MapCanvas
 
 
 class Test_MapCanvas:
-    def setup(self):
+    def setup_method(self):
         kwargs = {'resolution': 'l', 'area_thresh': 1000.0, 'ax': plt.gca(), 'llcrnrlon': -15.0, 'llcrnrlat': 35.0,
                   'urcrnrlon': 30.0, 'urcrnrlat': 65.0, 'epsg': '4326'}
         self.map = MapCanvas(**kwargs)
