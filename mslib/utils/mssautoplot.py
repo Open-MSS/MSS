@@ -24,17 +24,20 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import logging
+
 from datetime import datetime, timedelta
 import hashlib
 import io
+import logging
 import os
 import xml
-from fs import open_fs
 
+import click
+import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
-import click
+import matplotlib.pyplot as plt
+from fs import open_fs
 
 import mslib
 import mslib.utils
@@ -45,8 +48,6 @@ import mslib.utils.thermolib
 from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui.wms_control import MSUIWebMapService
-import matplotlib.pyplot as plt
-import defusedxml.ElementTree as etree
 from mslib.msui import constants
 from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
@@ -99,7 +100,7 @@ def load_from_xml_data(datasource):
     return waypoints_list1, waypoints_list2
 
 
-class Plotting():
+class Plotting:
     def __init__(self, cpath):
         read_config_file(cpath)
         self.config = config_loader()
