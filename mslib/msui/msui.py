@@ -383,7 +383,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         # File menu.
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
         self.actionSaveActiveFlightTrack.triggered.connect(self.save_handler)
-        self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_as_handler)
+        self.actionRenameActiveFlightTrack.triggered.connect(self.rename_handler)
         self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
 
         # Views menu.
@@ -508,7 +508,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         # enable/disable flight track menus
         self.actionSaveActiveFlightTrack.setEnabled(self.local_active)
-        self.actionSaveActiveFlightTrackAs.setEnabled(self.local_active)
+        self.actionRenameActiveFlightTrack.setEnabled(self.local_active)
 
     def add_plugins(self):
         picker_default = config_loader(dataset="filepicker_default")
@@ -781,16 +781,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if filename:
             self.save_flight_track(filename)
         else:
-            self.save_as_handler()
+            self.rename_flight_track(title="Save Flight Track")
 
-    def save_as_handler(self):
+    def rename_flight_track(self, title="Rename Flight Track"):
         """
-        Slot for the 'Save Active Flight Track As' menu entry.
+         does the rename or on initial data save to file
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         file_type = ["Flight track (*.ftml)"]
         filename = get_save_filename(
-            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertag="filepicker_default"
+            self, title, default_filename, ";;".join(file_type), pickertag="filepicker_default"
         )
         logging.debug("filename : '%s'", filename)
         if filename:
@@ -798,6 +798,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.save_flight_track(filename)
             self.active_flight_track.filename = filename
             self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
+
+    def rename_handler(self):
+        """
+        Slot for the 'Save Active Flight Track As' menu entry.
+        """
+        self.rename_flight_track()
 
     def save_flight_track(self, file_name):
         ext = ".ftml"

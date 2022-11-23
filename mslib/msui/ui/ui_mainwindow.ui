@@ -289,7 +289,7 @@ Double click a operation to activate and view its description.</string>
      <x>0</x>
      <y>0</y>
      <width>738</width>
-     <height>26</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
@@ -320,11 +320,10 @@ Double click a operation to activate and view its description.</string>
     <addaction name="menuImportFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
-    <addaction name="actionSaveActiveFlightTrackAs"/>
+    <addaction name="actionRenameActiveFlightTrack"/>
+    <addaction name="menuExportActiveFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionCloseSelectedFlightTrack"/>
-    <addaction name="separator"/>
-    <addaction name="menuExportActiveFlightTrack"/>
     <addaction name="separator"/>
     <addaction name="actionConfiguration"/>
     <addaction name="separator"/>
@@ -385,9 +384,9 @@ Double click a operation to activate and view its description.</string>
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="actionSaveActiveFlightTrackAs">
+  <action name="actionRenameActiveFlightTrack">
    <property name="text">
-    <string>Save Active Flight Track As</string>
+    <string>Rename Active Flight Track</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+S</string>

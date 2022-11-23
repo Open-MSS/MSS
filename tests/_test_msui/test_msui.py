@@ -217,14 +217,14 @@ class Test_MSSSideViewWindow(object):
         assert mockbox.critical.call_count == 0
 
     @pytest.mark.parametrize("save_file", [[save_ftml]])
-    def test_plugin_saveas(self, save_file):
+    def test_plugin_rename(self, save_file):
         with mock.patch("mslib.msui.msui.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
         with mock.patch("mslib.msui.msui.get_save_filename", return_value=save_file[0]) as mocksave:
             assert self.window.listFlightTracks.count() == 1
             assert mocksave.call_count == 0
             self.window.last_save_directory = ROOT_DIR
-            self.window.actionSaveActiveFlightTrackAs.trigger()
+            self.window.actionRenameActiveFlightTrack.trigger()
             QtWidgets.QApplication.processEvents()
             assert mocksave.call_count == 1
             assert os.path.exists(save_file[0])
