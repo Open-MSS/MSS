@@ -34,7 +34,7 @@ import mslib.msui.wms_capabilities as wc
 
 class Test_WMSCapabilities(object):
 
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.capabilities = mock.Mock()
         self.capabilities.capabilities_document = u"Hölla die Waldfee".encode("utf-8")
@@ -56,7 +56,7 @@ class Test_WMSCapabilities(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
 
-    def teardown(self):
+    def teardown_method(self):
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()

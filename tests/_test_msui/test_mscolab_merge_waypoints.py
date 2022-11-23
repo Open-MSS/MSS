@@ -46,7 +46,7 @@ PORTS = list(range(23000, 23500))
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints(object):
-    def setup(self):
+    def setup_method(self):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
@@ -54,7 +54,7 @@ class Test_Mscolab_Merge_Waypoints(object):
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.emailid = 'merge@alpha.org'
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.mscolab.logout()
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')

@@ -57,7 +57,7 @@ def is_image_transparent(img):
 
 
 class Test_VSec(object):
-    def setup(self):
+    def setup_method(self):
         p1 = [45.00, 8.]
         p2 = [50.00, 12.]
         p3 = [51.00, 15.]
@@ -210,7 +210,7 @@ class Test_VSec(object):
 
 
 class Test_LSec(object):
-    def setup(self):
+    def setup_method(self):
         p1 = [45.00, 8., 25000]
         p2 = [50.00, 12., 25000]
         p3 = [51.00, 15., 25000]
@@ -279,7 +279,7 @@ class Test_LSec(object):
 
 
 class Test_HSec(object):
-    def setup(self):
+    def setup_method(self):
         data = mswms_settings.data["ecmwf_EUR_LL015"]
         data.setup()
 

@@ -43,7 +43,7 @@ AIRCRAFT_DUMMY2 = {
 
 
 class Test_SimpleAircraft(object):
-    def setup(self):
+    def setup_method(self):
         self.simple_aircraft = SimpleAircraft(AIRCRAFT_DUMMY)
 
     def test__get_weights(self):
@@ -79,7 +79,7 @@ class Test_SimpleAircraft(object):
 
 
 class Test_SimpleAircraft2(object):
-    def setup(self):
+    def setup_method(self):
         self.simple_aircraft = SimpleAircraft(AIRCRAFT_DUMMY2)
 
     def test_get_ceiling_alt(self):

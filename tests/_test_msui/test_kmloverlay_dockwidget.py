@@ -39,7 +39,7 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 
 class Test_KmlOverlayDockWidget(object):
 
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
@@ -55,7 +55,7 @@ class Test_KmlOverlayDockWidget(object):
         self.window.remove_file()
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()

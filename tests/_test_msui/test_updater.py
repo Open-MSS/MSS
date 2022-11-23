@@ -65,7 +65,7 @@ def create_mock(function, on_success=None, on_failure=None, start=True):
 
 
 class Test_MSS_ShortcutDialog:
-    def setup(self):
+    def setup_method(self):
         self.updater = Updater()
         self.status = ""
         self.update_available = False
@@ -85,7 +85,7 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_update_finished.connect(update_finished_signal)
         self.application = QtWidgets.QApplication(sys.argv)
 
-    def teardown(self):
+    def teardown_method(self):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 

@@ -33,7 +33,7 @@ from tests.constants import SERVER_CONFIG_FILE
 
 
 class TestMPLBasemapHorizontalSectionStyle(object):
-    def setup(self):
+    def setup_method(self):
         self.mswms_settings = importlib.import_module("mswms_settings", SERVER_CONFIG_FILE)
 
     def test_supported_epsg_codes(self):
