@@ -149,7 +149,8 @@ class MSUIDefaultConfig(object):
     WMS_login = {}
 
     # WMS image cache settings:
-    wms_cache = os.path.join(tempfile.gettempdir(), "msui_wms_cache")
+    # this changes on any start of msui, use ths msui_settings.json when you want a persistent path
+    wms_cache = os.path.join(tempfile.TemporaryDirectory().name, "msui_wms_cache")
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
