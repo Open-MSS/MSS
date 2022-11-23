@@ -173,11 +173,6 @@ class WaypointsPath(mpath.Path):
         self.vertices = np.array(vertices)
 
 
-#
-# CLASS PathV
-#
-
-
 class PathV(WaypointsPath):
     """Class to represent a vertical flight profile path.
     """
@@ -322,7 +317,7 @@ class PathH(WaypointsPath):
         return j
 
 
-class PathPlotter(object):
+class PathPlotter:
     """An interactive matplotlib path editor. Allows vertices of a path patch
        to be interactively picked and moved around.
 
@@ -433,56 +428,6 @@ class PathPlotter(object):
             t.set_visible(self.showverts and self.label_waypoints)
         self.canvas.draw()
 
-    def redraw_path(self, vertices=None, waypoints_model_data=None):
-        """Redraw the matplotlib artists that represent the flight track
-           (path patch and line).
-
-        If vertices are specified, they will be applied to the graphics
-        output. Otherwise the vertex array obtained from the path patch
-        will be used.
-        """
-        if waypoints_model_data is None:
-            waypoints_model_data = []
-        if vertices is None:
-            vertices = self.pathpatch.get_path().vertices
-        self.line.set_data(list(zip(*vertices)))
-        # Draw waypoint labels.
-        for wp in self.wp_labels:
-            wp.remove()
-        self.wp_labels = []  # remove doesn't seem to be necessary
-        x, y = list(zip(*vertices))
-        for i, wpd, in enumerate(waypoints_model_data):
-            textlabel = f"{str(i):}   "
-            if wpd.location != "":
-                textlabel = f"{wpd.location:}   "
-            text = self.ax.text(
-                x[i], y[i],
-                textlabel,
-                bbox=dict(boxstyle="round",
-                          facecolor="white",
-                          alpha=0.5,
-                          edgecolor="none"),
-                fontweight="bold",
-                zorder=4,
-                rotation=90,
-                animated=True,
-                clip_on=True,
-                visible=self.showverts and self.label_waypoints)
-            self.wp_labels.append(text)
-
-        if self.background:
-            self.canvas.restore_region(self.background)
-        try:
-            self.ax.draw_artist(self.pathpatch)
-        except ValueError as error:
-            logging.error("ValueError Exception %s", error)
-        self.ax.draw_artist(self.line)
-        for t in self.wp_labels:
-            self.ax.draw_artist(t)
-        self.canvas.blit(self.ax.bbox)
-
-    redraw_figure = redraw_path
-
     def set_path_color(self, line_color=None, marker_facecolor=None,
                        patch_facecolor=None):
         """Set the color of the path patch elements.
@@ -505,7 +450,7 @@ class PathPlotter(object):
 class PathH_Plotter(PathPlotter):
     def __init__(self, mplmap, mplpath=None, facecolor='none', edgecolor='none',
                  linecolor='blue', markerfacecolor='red', show_marker=True,
-                 marker='', label_waypoints=True):
+                 label_waypoints=True):
         super().__init__(mplmap.ax, mplpath=PathH([[0, 0]], map=mplmap),
                          facecolor='none', edgecolor='none', linecolor=linecolor,
                          markerfacecolor=markerfacecolor, marker='',
@@ -628,8 +573,8 @@ class PathH_Plotter(PathPlotter):
         if self.wp_scatter is not None:
             self.ax.draw_artist(self.wp_scatter)
 
-        for t in self.wp_labels:
-            self.ax.draw_artist(t)
+        for wp_label in self.wp_labels:
+            self.ax.draw_artist(wp_label)
         if self.show_tangent_points:
             self.ax.draw_artist(self.tangent_lines)
         if self.show_solar_angle is not None:
@@ -716,8 +661,8 @@ class PathV_Plotter(PathPlotter):
         self.line.set_data(list(zip(*vertices)))
         x, y = list(zip(*vertices))
         # Draw waypoint labels.
-        for wp in self.wp_labels:
-            wp.remove()
+        for wp_label in self.wp_labels:
+            wp_label.remove()
         self.wp_labels = []  # remove doesn't seem to be necessary
         for i, wpd, in enumerate(waypoints_model_data):
             textlabel = f"{str(i):}   "
@@ -745,8 +690,8 @@ class PathV_Plotter(PathPlotter):
         except ValueError as error:
             logging.error("ValueError Exception %s", error)
         self.ax.draw_artist(self.line)
-        for t in self.wp_labels:
-            self.ax.draw_artist(t)
+        for wp_label in self.wp_labels:
+            self.ax.draw_artist(wp_label)
         self.canvas.blit(self.ax.bbox)
 
     def get_lat_lon(self, event, wpm):
@@ -794,7 +739,7 @@ class PathL_Plotter(PathPlotter):
         redrawXAxis -- callback function to redraw the x-axis on path changes.
         """
         super().__init__(
-            ax=ax, mplpath=PathV([[0, 0]], numintpoints=numintpoints))
+            ax=ax, marker="", mplpath=PathV([[0, 0]], numintpoints=numintpoints))
         self.numintpoints = numintpoints
         self.redraw_xaxis = redraw_xaxis
         self.clear_figure = clear_figure
@@ -992,14 +937,12 @@ class VPathInteractor(PathInteractor):
         self.plotter.redraw_path(waypoints_model_data=self.waypoints_model.all_waypoint_data())
         # emit signal to redraw map
         self.signal_get_vsec.emit()
-        if self.clear_figure() is not None:
-            self.clear_figure()
-
         if self.redraw_xaxis is not None:
             try:
                 self.redraw_xaxis(self.plotter.path.ilats, self.plotter.path.ilons, self.plotter.path.itimes)
             except AttributeError as err:
                 logging.debug("%s" % err)
+
         self.plotter.ax.figure.canvas.draw()
 
     def button_release_delete_callback(self, event):
@@ -1040,8 +983,8 @@ class VPathInteractor(PathInteractor):
         else:
             location = ""
         new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
+        # insertRows() will trigger a signal that will redraw the path.
         wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
-        self.redraw_figure()
 
         self._ind = None
 
@@ -1156,10 +1099,6 @@ class LPathInteractor(PathInteractor):
         self.plotter.update_from_waypoints(self.waypoints_model.all_waypoint_data())
         self.redraw_figure()
 
-#
-# CLASS HPathInteractor
-#
-
 
 class HPathInteractor(PathInteractor):
     """Subclass of PathInteractor that implements an interactively editable
@@ -1178,8 +1117,8 @@ class HPathInteractor(PathInteractor):
         """
         plotter = PathH_Plotter(
             mplmap, mplpath=PathH([[0, 0]], map=mplmap),
-            facecolor='none', edgecolor='none', linecolor=linecolor,
-            markerfacecolor=markerfacecolor, marker='', label_waypoints=label_waypoints)
+            linecolor=linecolor, markerfacecolor=markerfacecolor,
+            label_waypoints=label_waypoints)
         super().__init__(plotter=plotter, waypoints=waypoints)
         self.redraw_path()
 
@@ -1256,8 +1195,8 @@ class HPathInteractor(PathInteractor):
                           best_index, len(wpm.all_waypoint_data()))
             flightlevel = 0
         new_wp = ft.Waypoint(lat, lon, flightlevel, location=location)
+        # insertRows() will trigger a signal that will redraw the path.
         wpm.insertRows(best_index, rows=1, waypoints=[new_wp])
-        self.plotter.redraw_path(waypoints_model_data=self.waypoints_model.all_waypoint_data())
 
         self._ind = None
 

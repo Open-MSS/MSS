@@ -1508,6 +1508,8 @@ class VSecWMSControlWidget(WMSControlWidget):
     def call_get_vsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
+        else:
+            self.view.plotter.clear_figure()
 
     def get_vsec(self, layers=None):
         """Slot that retrieves the vertical section and passes the image

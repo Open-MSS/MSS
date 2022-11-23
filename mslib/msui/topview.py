@@ -428,13 +428,13 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def settings_dialogue(self):
         """
         """
-        settings = self.getView().get_map_appearance()
+        settings = self.getView().get_settings()
         dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
         dlg.setModal(False)
         dlg.signal_ft_vertices_color_change.connect(self.set_ft_vertices_color)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
-            self.getView().set_map_appearance(settings)
+            self.getView().set_settings(settings)
             self.save_settings()
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
@@ -449,7 +449,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         Save the current settings (map appearance) to the file
         self.settingsfile.
         """
-        settings = self.getView().get_map_appearance()
+        settings = self.getView().get_settings()
         save_settings_qsettings(self.settings_tag, settings)
 
     def load_settings(self):
@@ -457,7 +457,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         Load settings from the file self.settingsfile.
         """
         settings = load_settings_qsettings(self.settings_tag, {})
-        self.getView().set_map_appearance(settings)
+        self.getView().set_settings(settings)
 
     def make_roundtrip(self):
         """
