@@ -48,6 +48,7 @@ def test_save_to_text():
                     '238.416             0.0              0.0  last    \n'
                     ]
 
+
 def test_load_from_csv():
     data = ['# Do not modify if you plan to import this file again!\n',
             'Track name: testdata\n',

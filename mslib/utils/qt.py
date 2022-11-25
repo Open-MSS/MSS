@@ -67,7 +67,7 @@ def get_save_filename_qt(*args):
 
 
 def get_existing_directory_qt(*args):
-    dirname = QtWidgets.QFileDialog.getExistingDirectory(*args, options=OPTIONS)
+    dirname = QtWidgets.QFileDialog.getExistingDirectory(*args)
     return dirname[0] if isinstance(dirname, tuple) else str(dirname)
 
 
