@@ -32,11 +32,11 @@ from mslib.plugins.io import csv
 
 
 def test_save_to_csv():
-    save_csv = os.path.join(ROOT_DIR, "testdata.csv")
+    filename = os.path.join(ROOT_DIR, "testdata.csv")
     wp = _example_waypoints()
     name = "testdata"
-    csv.save_to_csv(save_csv, name, wp)
-    with open(save_csv) as f:
+    csv.save_to_csv(filename, name, wp)
+    with open(filename) as f:
         data = f.readlines()
     assert data == ['testdata\n',
                     'Index;Location;Lat (+-90);Lon (+-180);Flightlevel;Pressure (hPa);Leg dist. '
@@ -53,10 +53,10 @@ def test_load_from_csv():
             '0;Anchorage;61.168;-149.960;350.000;238.416;0.000;0.000;start\n',
             '1;Adak;51.878;-176.646;350.000;238.416;0.000;0.000;last\n'
             ]
-    load_csv = os.path.join(ROOT_DIR, "testreaddata.csv")
-    with open(load_csv, 'w') as f:
+    filename = os.path.join(ROOT_DIR, "testreaddata.csv")
+    with open(filename, 'w') as f:
         f.writelines(data)
-    name, wp = csv.load_from_csv(load_csv)
+    name, wp = csv.load_from_csv(filename)
     assert name == "testreaddata"
     assert wp[0].location == "Anchorage"
     assert wp[0].comments == "start"
