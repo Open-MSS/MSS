@@ -61,7 +61,7 @@ def get_open_filenames_qt(*args):
 
 
 def get_save_filename_qt(*args):
-    _filename = QtWidgets.QFileDialog.getSaveFileName(*args, options=OPTIONS)
+    _filename = QtWidgets.QFileDialog.getSaveFileName(*args)
     if isinstance(_filename, tuple):
         # ToDo when can this be only a str
         extension = re.sub(r'\w.*\(\*', '', _filename[1][:-1])
