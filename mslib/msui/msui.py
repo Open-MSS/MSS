@@ -781,9 +781,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if filename:
             self.save_flight_track(filename)
         else:
-            self.save_as_handler()
+            self.save_as()
 
     def save_as_handler(self):
+        self.save_as()
+
+    def save_as(self):
         """
         Slot for the 'Save Active Flight Track As' menu entry.
         """
