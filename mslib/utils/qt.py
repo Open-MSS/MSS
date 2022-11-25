@@ -41,14 +41,8 @@ from mslib.utils.config import config_loader
 from mslib.utils import FatalUserError, subprocess_startupinfo
 
 
-OPTIONS = None
-if os.getenv("PYCHARM_HOSTED") is not None:
-    OPTIONS = QtWidgets.QFileDialog.DontUseNativeDialog
-
-
 def get_open_filename_qt(*args):
-
-    filename = QtWidgets.QFileDialog.getOpenFileName(*args, options=OPTIONS)
+    filename = QtWidgets.QFileDialog.getOpenFileName(*args)
     return filename[0] if isinstance(filename, tuple) else str(filename)
 
 
@@ -56,7 +50,7 @@ def get_open_filenames_qt(*args):
     """
     To select multiple files simultaneously
     """
-    filenames = QtWidgets.QFileDialog.getOpenFileNames(*args, options=OPTIONS)
+    filenames = QtWidgets.QFileDialog.getOpenFileNames(*args)
     return filenames[0] if isinstance(filenames, tuple) else str(filenames)
 
 
