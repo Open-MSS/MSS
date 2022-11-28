@@ -25,13 +25,41 @@
     limitations under the License.
 """
 import os
+import pytest
+import mock
+import argparse
 from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, Operation, User, Permission
-from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed
+from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed, confirm_action, main
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_operation
+
+
+def test_confirm_action():
+    with mock.patch("mslib.mscolab.mscolab.input", return_value="n"):
+        assert confirm_action("") is False
+    with mock.patch("mslib.mscolab.mscolab.input", return_value=""):
+        assert confirm_action("") is False
+    with mock.patch("mslib.mscolab.mscolab.input", return_value="y"):
+        assert confirm_action("") is True
+
+
+def test_main():
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with mock.patch("mslib.mscolab.mscolab.argparse.ArgumentParser.parse_args",
+                        return_value=argparse.Namespace(version=True)):
+            main()
+        assert pytest_wrapped_e.typename == "SystemExit"
+
+    with mock.patch("mslib.mscolab.mscolab.argparse.ArgumentParser.parse_args",
+                    return_value=argparse.Namespace(version=False, update=False, action="db",
+                                                    init=False, reset=False, seed=False, users_by_file=None,
+                                                    default_operation=False, add_all_to_all_operation=False,
+                                                    delete_users_by_file=False)):
+        main()
+        # currently only checking precedence of all args
 
 
 class Test_Mscolab(TestCase):
