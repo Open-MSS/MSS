@@ -59,4 +59,3 @@ def test_load_from_flitestar():
     assert wp[5].lat == 51.5
     assert wp[5].lon == -28
     assert wp[5].flightlevel == 470.0
-

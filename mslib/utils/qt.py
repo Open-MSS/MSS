@@ -71,18 +71,16 @@ def get_existing_directory_qt(*args):
     return dirname[0] if isinstance(dirname, tuple) else str(dirname)
 
 
-def get_pickertype(tag, typ):
-    default = config_loader(dataset="filepicker_default")
-    if typ is None:
-        if tag is None:
-            typ = default
-        else:
-            typ = config_loader(dataset=tag)
-    return typ
+def get_pickertype(pickertype=None):
+    if pickertype is None:
+        return config_loader(dataset="filepicker_default")
+    if pickertype not in ["qt", "default", "fs"]:
+        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
+    return pickertype
 
 
-def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=None):
-    pickertype = get_pickertype(pickertag, pickertype)
+def get_open_filename(parent, title, dirname, filt, pickertype=None):
+    pickertype = get_pickertype(pickertype)
     if pickertype == "fs":
         # fs filepicker takes file filters as a list
         if not isinstance(filt, list):
@@ -99,12 +97,12 @@ def get_open_filename(parent, title, dirname, filt, pickertag=None, pickertype=N
     return filename
 
 
-def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=None):
+def get_open_filenames(parent, title, dirname, filt, pickertype=None):
     """
     Opens multiple files simultaneously
     Currently implemented only in kmloverlay_dockwidget.py
     """
-    pickertype = get_pickertype(pickertag, pickertype)
+    pickertype = get_pickertype(pickertype)
     if pickertype in ["qt", "default"]:
         filename = get_open_filenames_qt(parent, title, os.path.expanduser(dirname), filt)
     else:
@@ -115,8 +113,8 @@ def get_open_filenames(parent, title, dirname, filt, pickertag=None, pickertype=
     return filename
 
 
-def get_save_filename(parent, title, filename, filt, pickertag=None, pickertype=None):
-    pickertype = get_pickertype(pickertag, pickertype)
+def get_save_filename(parent, title, filename, filt, pickertype=None):
+    pickertype = get_pickertype(pickertype)
     if pickertype == "fs":
         dirname, filename = os.path.split(filename)
         filename = getSaveFileName(
@@ -131,8 +129,8 @@ def get_save_filename(parent, title, filename, filt, pickertag=None, pickertype=
     return filename
 
 
-def get_existing_directory(parent, title, defaultdir, pickertag=None, pickertype=None):
-    pickertype = get_pickertype(pickertag, pickertype)
+def get_existing_directory(parent, title, defaultdir, pickertype=None):
+    pickertype = get_pickertype(pickertype)
     if pickertype == "fs":
         dirname = getExistingDirectory(parent, title=title, fs_url=defaultdir)[0]
     elif pickertype in ["qt", "default"]:
