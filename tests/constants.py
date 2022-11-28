@@ -62,3 +62,18 @@ DATA_DIR = DATA_FS.getsyspath("")
 MSCOLAB_URL = "http://localhost:8083"
 # mscolab test server's url
 MSCOLAB_URL_TEST = "http://localhost:8084"
+
+POSIX = {"application_destination": os.path.join(ROOT_DIR, ".local/share/applications/msui{}.desktop"),
+         "icon_destination": os.path.join(ROOT_DIR, ".local/share/icons/hicolor/{}/apps/mss-logo{}.png"),
+         "desktop": """[Desktop Entry]
+Name=msui {}
+Comment=A web service based tool to plan atmospheric research flights (mission support system).
+Keywords=documentation;information;
+Exec={}
+Icon={}
+Type=Application
+Categories=Science;Education;
+StartupNotify=true
+X-GNOME-SingleWindow=false
+X-Ubuntu-Gettext-Domain=msui
+"""}

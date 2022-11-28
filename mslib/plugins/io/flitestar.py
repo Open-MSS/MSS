@@ -73,5 +73,5 @@ def load_from_flitestar(filename):
                 wp.pressure = thermolib.flightlevel2pressure(float(wp.flightlevel) * units.hft).magnitude
                 waypoints.append(wp)
 
-    name = os.path.basename(filename).strip('.txt')
+    name, _ = os.path.splitext(os.path.basename(filename))
     return name, waypoints
