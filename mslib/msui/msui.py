@@ -457,6 +457,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
+        self.openOperationsGb.hide()
 
     @staticmethod
     def preload_wms(urls):
