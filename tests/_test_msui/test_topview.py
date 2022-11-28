@@ -348,7 +348,7 @@ class Test_TopViewWMS(object):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.image_displayed)
         assert self.window.getView().map.image is not None
-        self.window.getView().set_map_appearance({})
+        self.window.getView().set_settings({})
         self.window.getView().clear_figure()
         assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()

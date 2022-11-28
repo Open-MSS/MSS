@@ -26,17 +26,14 @@
 """
 
 from datetime import datetime, timedelta
-import hashlib
 import io
 import logging
 import os
-import xml
 
 import click
 import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
-import matplotlib.pyplot as plt
 from fs import open_fs
 
 import mslib
@@ -66,38 +63,14 @@ def load_from_ftml(filename):
     """
     _dirname, _name = os.path.split(filename)
     _fs = open_fs(_dirname)
-    datasource = _fs.open(_name)
-    wp_list = load_from_xml_data(datasource)
-    return wp_list
-
-
-def load_from_xml_data(datasource):
-    try:
-        doc = xml.dom.minidom.parse(datasource)
-    except xml.parsers.expat.ExpatError as ex:
-        raise SyntaxError(str(ex))
-
-    ft_el = doc.getElementsByTagName("FlightTrack")[0]
-
-    waypoints_list1 = []
-    waypoints_list2 = []
-    for wp_el in ft_el.getElementsByTagName("Waypoint"):
-
-        location = wp_el.getAttribute("location")
-        lat = float(wp_el.getAttribute("lat"))
-        lon = float(wp_el.getAttribute("lon"))
-        flightlevel = float(wp_el.getAttribute("flightlevel"))
-        comments = wp_el.getElementsByTagName("Comments")[0]
-        # If num of comments is 0(null comment), then return ''
-        if len(comments.childNodes):
-            comments = comments.childNodes[0].data.strip()
-        else:
-            comments = ''
-
-        waypoints_list1.append((lat, lon, flightlevel, location, comments))
-        waypoints_list2.append(ft.Waypoint(lat, lon, flightlevel, location, comments))
-        waypoints_list2[-1].utc_time = datetime.now()
-    return waypoints_list1, waypoints_list2
+    datasource = _fs.readtext(_name)
+    wp_list = ft.load_from_xml_data(datasource)
+    now = datetime.now()
+    for wp in wp_list:
+        wp.utc_time = now
+    data_list = [
+        (wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_list]
+    return data_list, wp_list
 
 
 class Plotting:
@@ -107,24 +80,19 @@ class Plotting:
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
         self.tick_index_step = self.num_interpolation_points // self.num_labels
-        self.wps = None
         self.bbox = None
-        self.wms_cache = config_loader(dataset="wms_cache")
-        self.fig = plt.figure()
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
         self.params = mslib.utils.coordinate.get_projection_params(
             self.config["predefined_map_sections"][section]["CRS"].lower())
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
         self.bbox_units = self.params["bbox"]
-        self.wpslist = []
-        self.wpslist = load_from_ftml(filename)
-        self.wps = self.wpslist[0]
-        self.wp_model_data = self.wpslist[1]
+        self.read_ftml(filename)
+
+    def read_ftml(self, filename):
+        self.wps, self.wp_model_data = load_from_ftml(filename)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
-        self.fig.clear()
-        self.ax = self.fig.add_subplot(111, zorder=99)
         self.path = [(wp[0], wp[1], datetime.now()) for wp in self.wps]
         self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
         self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path],
@@ -138,29 +106,22 @@ class TopViewPlotting(Plotting):
         super(TopViewPlotting, self).__init__(cpath)
         self.myfig = qt.TopViewPlotter()
         self.myfig.fig.canvas.draw()
-        self.line = None
-        matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
-        self.ax = self.myfig.ax
-        self.fig = self.myfig.fig
+        self.fig, self.ax = self.myfig.fig, self.myfig.ax
+        matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
         self.myfig.init_map(**(self.params["basemap"]))
-        self.myfig.set_map()
-        self.plotter = mpath.PathH_GCPlotter(self.myfig.map)
+        self.plotter = mpath.PathH_Plotter(self.myfig.map)
 
-    def TopViewPath(self):
+    def update_path(self, filename=None):
         # plot path and label
+        if filename is not None:
+            self.read_ftml(filename)
         self.fig.canvas.draw()
-        wp_lats, wp_lons, wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
-    def TopViewDraw(self):
-        for flight, section, vertical, filename, init_time, time in \
-            self.config["automated_plotting_flights"]:
-            for url, layer, style, elevation in self.config["automated_plotting_hsecs"]:
-                self.draw(flight, section, vertical, filename, init_time,
-                          time, url, layer, style, elevation, no_of_plots=1)
-
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
+        self.update_path(filename)
+
         width, height = self.myfig.get_plot_size_in_px()
         self.bbox = self.params['basemap']
         if not init_time:
@@ -202,6 +163,7 @@ class SideViewPlotting(Plotting):
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.fig.canvas.draw()
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
+        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
 
     def setup(self):
         self.intermediate_indexes = []
@@ -217,9 +179,10 @@ class SideViewPlotting(Plotting):
         times_visible = False
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
 
-    def SideViewPath(self):
+    def update_path(self, filename=None):
+        if filename is not None:
+            self._read_ftml(filename)
         self.fig.canvas.draw()
-        self.plotter = mpath.PathV_Plotter(self.myfig.ax)
         self.plotter.update_from_waypoints(self.wp_model_data)
         indices = list(zip(self.intermediate_indexes, self.wp_press))
         self.plotter.redraw_path(vertices=indices,
@@ -227,7 +190,7 @@ class SideViewPlotting(Plotting):
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
-    def SideViewDraw(self):
+    def draw(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style, vsec_type in self.config["automated_plotting_vsecs"]:
@@ -281,7 +244,7 @@ class LinearViewPlotting(Plotting):
         self.myfig.set_settings(settings_dict)
         self.myfig.setup_linear_view()
 
-    def LinearViewDraw(self):
+    def draw(self):
         for flight, section, vertical, filename, init_time, time in \
             self.config["automated_plotting_flights"]:
             for url, layer, style in self.config["automated_plotting_lsecs"]:
@@ -314,14 +277,7 @@ class LinearViewPlotting(Plotting):
                          }
 
                 xmls = wms.getmap(**kwargs)
-                urlstr = wms.getmap(return_only_url=True, **kwargs)
-                ending = ".xml"
 
-                if not os.path.exists(self.wms_cache):
-                    os.makedirs(self.wms_cache)
-                md5_filename = os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
-                with open(md5_filename, "w") as cache:
-                    cache.write(str(xmls.read(), encoding="utf8"))
                 if not type(xmls) == 'list':
                     xmls = [xmls]
 
@@ -348,14 +304,13 @@ class LinearViewPlotting(Plotting):
 def main(cpath, ftrack, itime, vtime, intv, stime, etime):
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
-    a = TopViewPlotting(cpath)
+    top_view = TopViewPlotting(cpath)
     for flight, section, vertical, filename, init_time, time in \
         config["automated_plotting_flights"]:
         for url, layer, style, elevation in config["automated_plotting_hsecs"]:
             if vtime == "" and stime == "":
-                a.TopViewPath()
-                a.draw(flight, section, vertical, filename, init_time,
-                       time, url, layer, style, elevation, no_of_plots=1)
+                top_view.draw(flight, section, vertical, filename, init_time,
+                              time, url, layer, style, elevation, no_of_plots=1)
                 click.echo("Plot downloaded!\n")
             elif intv == 0:
                 if itime != "":
@@ -365,9 +320,8 @@ def main(cpath, ftrack, itime, vtime, intv, stime, etime):
                 time = datetime.strptime(vtime, "%Y-%m-%dT" "%H:%M:%S")
                 if ftrack != "":
                     flight = ftrack
-                a.TopViewPath()
-                a.draw(flight, section, vertical, filename, init_time,
-                       time, url, layer, style, elevation, no_of_plots=1)
+                top_view.draw(flight, section, vertical, filename, init_time,
+                              time, url, layer, style, elevation, no_of_plots=1)
                 click.echo("Plot downloaded!\n")
             elif intv > 0:
                 if itime != "":
@@ -382,9 +336,8 @@ def main(cpath, ftrack, itime, vtime, intv, stime, etime):
                     logging.debug(time)
                     if ftrack != "":
                         flight = ftrack
-                    a.TopViewPath()
-                    a.draw(flight, section, vertical, filename, inittime,
-                           time, url, layer, style, elevation, no_of_plots=i)
+                    top_view.draw(flight, section, vertical, filename, inittime,
+                                  time, url, layer, style, elevation, no_of_plots=i)
                     time = time + timedelta(hours=intv)
                     i = i + 1
                 click.echo("Plots downloaded!\n")
