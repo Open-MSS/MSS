@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_linearview_window.ui'
+# Form implementation generated from reading ui file 'mslib/msui/ui/ui_linearview_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -46,8 +46,12 @@ class Ui_LinearWindow(object):
         self.horizontalLayout.addWidget(self.lvoptionbtn)
         self.verticalLayout.addLayout(self.horizontalLayout)
         LinearWindow.setCentralWidget(self.centralwidget)
+        self.actionCloseWindow = QtWidgets.QAction(LinearWindow)
+        self.actionCloseWindow.setObjectName("actionCloseWindow")
+        LinearWindow.addAction(self.actionCloseWindow)
 
         self.retranslateUi(LinearWindow)
+        self.actionCloseWindow.triggered.connect(LinearWindow.close)
         QtCore.QMetaObject.connectSlotsByName(LinearWindow)
 
     def retranslateUi(self, LinearWindow):
@@ -56,14 +60,6 @@ class Ui_LinearWindow(object):
         self.cbTools.setItemText(0, _translate("LinearWindow", "(select to open control)"))
         self.cbTools.setItemText(1, _translate("LinearWindow", "WMS"))
         self.lvoptionbtn.setText(_translate("LinearWindow", "options"))
+        self.actionCloseWindow.setText(_translate("LinearWindow", "CloseWindow"))
+        self.actionCloseWindow.setShortcut(_translate("LinearWindow", "Ctrl+W"))
 from mslib.msui.mpl_qtwidget import MplLinearViewWidget
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    LinearWindow = QtWidgets.QMainWindow()
-    ui = Ui_LinearWindow()
-    ui.setupUi(LinearWindow)
-    LinearWindow.show()
-    sys.exit(app.exec_())
