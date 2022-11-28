@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_plugins.test_io_text
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_plugins.test_io_flitestar
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to test mslib.plugins.io.text
+    This module provides pytest functions to test mslib.plugins.io.flitestar
 
     This file is part of MSS.
 
