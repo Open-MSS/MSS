@@ -40,6 +40,8 @@ from xml.dom import minidom
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
 
+OSDIR = fs.open_fs(MSUI_CONFIG_PATH).root_path
+
 _airspaces = []
 _airports = []
 _airports_mtime = 0
@@ -87,17 +89,15 @@ def get_airports(force_download=False, url=None):
     global _airports, _airports_mtime
     if url is None:
         url = "https://ourairports.com/data/airports.csv"
-    data = fs.open_fs(MSUI_CONFIG_PATH)
-    osdir = data.root_path
 
-    file_exists = os.path.exists(os.path.join(osdir, "airports.csv"))
+    file_exists = os.path.exists(os.path.join(OSDIR, "airports.csv"))
 
     if _airports and file_exists and \
-            os.path.getmtime(os.path.join(osdir, "airports.csv")) == _airports_mtime:
+            os.path.getmtime(os.path.join(OSDIR, "airports.csv")) == _airports_mtime:
         return _airports
 
     time_outdated = 60 * 60 * 24 * 30  # 30 days
-    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(osdir,
+    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(OSDIR,
                                                                                "airports.csv"))) > time_outdated
 
     if (force_download or is_outdated or not file_exists) \
@@ -107,16 +107,15 @@ def get_airports(force_download=False, url=None):
                                                 if not force_download else "") + "\nIs now a good time?",
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
             == QtWidgets.QMessageBox.Yes:
-        download_progress(os.path.join(osdir, "airports.csv"), url)
+        download_progress(os.path.join(OSDIR, "airports.csv"), url)
 
-    if os.path.exists(os.path.join(osdir, "airports.csv")):
-        with open(os.path.join(osdir, "airports.csv"), "r", encoding="utf8") as file:
-            _airports_mtime = os.path.getmtime(os.path.join(osdir, "airports.csv"))
+    if os.path.exists(os.path.join(OSDIR, "airports.csv")):
+        with open(os.path.join(OSDIR, "airports.csv"), "r", encoding="utf8") as file:
+            _airports_mtime = os.path.getmtime(os.path.join(OSDIR, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
 
     else:
         return []
-
 
 def get_available_airspaces():
     """
@@ -141,10 +140,9 @@ def update_airspace(force_download=False, countries=None):
     if countries is None:
         countries = ["de"]
     global _airspaces, _airspaces_mtime
-    data = fs.open_fs(MSUI_CONFIG_PATH)
-    osdir = data.root_path
+
     for country in countries:
-        location = os.path.join(osdir, f"{country}_asp.xml")
+        location = os.path.join(OSDIR, f"{country}_asp.xml")
         url = _airspace_download_url.format(country)
         available = get_available_airspaces()
         try:
@@ -173,17 +171,16 @@ def get_airspaces(countries=None):
     if countries is None:
         countries = []
     global _airspaces, _airspaces_mtime
-    data = fs.open_fs(MSUI_CONFIG_PATH)
-    osdir = data.root_path
+
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
-    files = [file for file in files if os.path.exists(os.path.join(osdir, file))]
+    files = [file for file in files if os.path.exists(os.path.join(OSDIR, file))]
 
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
             if file not in _airspaces_mtime or \
-                    os.path.getmtime(os.path.join(osdir, file)) != _airspaces_mtime[file]:
+                    os.path.getmtime(os.path.join(OSDIR, file)) != _airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:
@@ -192,7 +189,7 @@ def get_airspaces(countries=None):
     _airspaces_mtime = {}
     _airspaces = []
     for file in files:
-        fpath = os.path.join(osdir, file)
+        fpath = os.path.join(OSDIR, file)
         tree = minidom.parse(fpath)
 
         names = [dat.firstChild.data for dat in tree.getElementsByTagName('NAME')]
@@ -241,6 +238,6 @@ def get_airspaces(countries=None):
             airspace_data["polygon"] = [(float(data.split()[0]), float(data.split()[-1]))
                                         for data in airspace_data["polygon"].split(",")]
             _airspaces.append(airspace_data)
-            _airspaces_mtime[file] = os.path.getmtime(os.path.join(osdir, file))
+            _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, file))
 
     return _airspaces
