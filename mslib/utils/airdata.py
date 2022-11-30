@@ -27,15 +27,16 @@
 
 
 import csv
-import defusedxml.ElementTree as etree
 import humanfriendly
 import os
+import fs
 import requests
 import re as regex
 from PyQt5 import QtWidgets
 import logging
 import time
 
+from xml.dom import minidom
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
 
@@ -79,19 +80,24 @@ def download_progress(file_path, url, progress_callback=lambda f: logging.info(f
         QtWidgets.QMessageBox.information(None, "Download failed", f"{url} was unreachable, please try again later.")
 
 
-def get_airports(force_download=False):
+def get_airports(force_download=False, url=None):
     """
     Gets or downloads the airports.csv in ~/.config/msui and returns all airports within
     """
     global _airports, _airports_mtime
-    file_exists = os.path.exists(os.path.join(MSUI_CONFIG_PATH, "airports.csv"))
+    if url is None:
+        url = "https://ourairports.com/data/airports.csv"
+    data = fs.open_fs(MSUI_CONFIG_PATH)
+    osdir = data.root_path
+
+    file_exists = os.path.exists(os.path.join(osdir, "airports.csv"))
 
     if _airports and file_exists and \
-            os.path.getmtime(os.path.join(MSUI_CONFIG_PATH, "airports.csv")) == _airports_mtime:
+            os.path.getmtime(os.path.join(osdir, "airports.csv")) == _airports_mtime:
         return _airports
 
     time_outdated = 60 * 60 * 24 * 30  # 30 days
-    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(MSUI_CONFIG_PATH,
+    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(osdir,
                                                                                "airports.csv"))) > time_outdated
 
     if (force_download or is_outdated or not file_exists) \
@@ -101,11 +107,11 @@ def get_airports(force_download=False):
                                                 if not force_download else "") + "\nIs now a good time?",
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
             == QtWidgets.QMessageBox.Yes:
-        download_progress(os.path.join(MSUI_CONFIG_PATH, "airports.csv"), "https://ourairports.com/data/airports.csv")
+        download_progress(os.path.join(osdir, "airports.csv"), url)
 
-    if os.path.exists(os.path.join(MSUI_CONFIG_PATH, "airports.csv")):
-        with open(os.path.join(MSUI_CONFIG_PATH, "airports.csv"), "r", encoding="utf8") as file:
-            _airports_mtime = os.path.getmtime(os.path.join(MSUI_CONFIG_PATH, "airports.csv"))
+    if os.path.exists(os.path.join(osdir, "airports.csv")):
+        with open(os.path.join(osdir, "airports.csv"), "r", encoding="utf8") as file:
+            _airports_mtime = os.path.getmtime(os.path.join(osdir, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
 
     else:
@@ -128,15 +134,24 @@ def get_available_airspaces():
         return _airspace_cache
 
 
-def update_airspace(force_download=False, countries=["de"]):
+def update_airspace(force_download=False, countries=None):
     """
     Downloads the requested airspaces from their respective country code if it is over a month old
     """
+    if countries is None:
+        countries = ["de"]
     global _airspaces, _airspaces_mtime
+    data = fs.open_fs(MSUI_CONFIG_PATH)
+    osdir = data.root_path
     for country in countries:
-        location = os.path.join(MSUI_CONFIG_PATH, f"{country}_asp.xml")
+        location = os.path.join(osdir, f"{country}_asp.xml")
         url = _airspace_download_url.format(country)
-        data = [airspace for airspace in get_available_airspaces() if airspace[0].startswith(country)][0]
+        available = get_available_airspaces()
+        try:
+            data = [airspace for airspace in available if airspace[0].startswith(country)][0]
+        except IndexError:
+            logging.info("countries: %s not exists", ' '.join(countries))
+            continue
         file_exists = os.path.exists(location)
 
         is_outdated = file_exists and (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
@@ -151,20 +166,24 @@ def update_airspace(force_download=False, countries=["de"]):
             download_progress(location, url)
 
 
-def get_airspaces(countries=[]):
+def get_airspaces(countries=None):
     """
     Gets the .xml files in ~/.config/msui and returns all airspaces within
     """
+    if countries is None:
+        countries = []
     global _airspaces, _airspaces_mtime
+    data = fs.open_fs(MSUI_CONFIG_PATH)
+    osdir = data.root_path
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
-    files = [file for file in files if os.path.exists(os.path.join(MSUI_CONFIG_PATH, file))]
+    files = [file for file in files if os.path.exists(os.path.join(osdir, file))]
 
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
             if file not in _airspaces_mtime or \
-                    os.path.getmtime(os.path.join(MSUI_CONFIG_PATH, file)) != _airspaces_mtime[file]:
+                    os.path.getmtime(os.path.join(osdir, file)) != _airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:
@@ -173,24 +192,43 @@ def get_airspaces(countries=[]):
     _airspaces_mtime = {}
     _airspaces = []
     for file in files:
-        fpath = os.path.join(MSUI_CONFIG_PATH, file)
-        airspace = etree.parse(fpath)
-        airspace = airspace.find("AIRSPACES")
-        for elem in airspace:
-            try:
-                airspace_data = {
-                    "name": elem.find("NAME").text,
-                    "polygon": elem.find("GEOMETRY").find("POLYGON").text,
-                    "top": float(elem.find("ALTLIMIT_TOP").find("ALT").text),
-                    "top_unit": elem.find("ALTLIMIT_TOP").find("ALT").get("UNIT"),
-                    "bottom": float(elem.find("ALTLIMIT_BOTTOM").find("ALT").text),
-                    "bottom_unit": elem.find("ALTLIMIT_BOTTOM").find("ALT").get("UNIT"),
-                    "country": elem.find("COUNTRY").text
-                }
-            except TypeError as ex:
-                logging.debug("Problem %s in airspaces file %s", (ex, fpath))
-                logging.info("A few data of %s is ignored because of an incompatible format.", fpath)
-                continue
+        fpath = os.path.join(osdir, file)
+        tree = minidom.parse(fpath)
+
+        names = [dat.firstChild.data for dat in tree.getElementsByTagName('NAME')]
+        polygons = [dat.firstChild.data for dat in tree.getElementsByTagName('POLYGON')]
+        tops = []
+        top_units = []
+        for dat in tree.getElementsByTagName('ALTLIMIT_TOP'):
+            if dat.nodeType == dat.ELEMENT_NODE:
+                z = dat.firstChild
+                if z.nodeType == z.ELEMENT_NODE:
+                    top_units.append(z.getAttribute("UNIT"))
+                    z = dat.firstChild.firstChild
+                    tops.append(float(z.data))
+
+        bottoms = []
+        bottom_units = []
+        for dat in tree.getElementsByTagName('ALTLIMIT_BOTTOM'):
+            if dat.nodeType == dat.ELEMENT_NODE:
+                z = dat.firstChild
+                if z.nodeType == z.ELEMENT_NODE:
+                    bottom_units.append(z.getAttribute("UNIT"))
+                    z = dat.firstChild.firstChild
+                    bottoms.append(float(z.data))
+
+        countries = [dat.firstChild.data for dat in tree.getElementsByTagName('COUNTRY')]
+
+        for index, value in enumerate(names):
+            airspace_data = {
+                "name": names[index],
+                "polygon": polygons[index],
+                "top": tops[index],
+                "top_unit": top_units[index],
+                "bottom": bottoms[index],
+                "bottom_unit": bottom_units[index],
+                "country": countries[index]
+            }
 
             # Convert to kilometers
             airspace_data["top"] /= 3281 if airspace_data["top_unit"] == "F" else 32.81
@@ -200,8 +238,8 @@ def get_airspaces(countries=[]):
             airspace_data.pop("top_unit")
             airspace_data.pop("bottom_unit")
 
-            airspace_data["polygon"] = [(float(data.split(" ")[0]), float(data.split(" ")[-1]))
+            airspace_data["polygon"] = [(float(data.split()[0]), float(data.split()[-1]))
                                         for data in airspace_data["polygon"].split(",")]
             _airspaces.append(airspace_data)
-            _airspaces_mtime[file] = os.path.getmtime(os.path.join(MSUI_CONFIG_PATH, file))
+            _airspaces_mtime[file] = os.path.getmtime(os.path.join(osdir, file))
     return _airspaces
