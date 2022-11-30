@@ -242,4 +242,5 @@ def get_airspaces(countries=None):
                                         for data in airspace_data["polygon"].split(",")]
             _airspaces.append(airspace_data)
             _airspaces_mtime[file] = os.path.getmtime(os.path.join(osdir, file))
+
     return _airspaces
