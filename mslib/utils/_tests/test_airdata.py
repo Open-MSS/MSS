@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import pytest
 import os
 import mock
 from PyQt5 import QtWidgets
@@ -99,6 +98,17 @@ def _download_incomplete_airspace(path, url):
         f.write(text)
 
 
+def _cleanup_test_files():
+    file_path = os.path.join(ROOT_DIR, "bg_asp.xml")
+    if "tmp" in file_path:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    file_path = os.path.join(ROOT_DIR, "airports.csv")
+    if "tmp" in file_path:
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+
 def test_download_progress():
     file_path = os.path.join(ROOT_DIR, "airdata")
     download_progress(file_path, 'http://speedtest.ftp.otenet.gr/files/test100k.db')
@@ -107,6 +117,7 @@ def test_download_progress():
 
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
 def test_get_airports(mockbox):
+    _cleanup_test_files()
     airports = get_airports()
     assert airports == []
 
@@ -121,6 +132,7 @@ def test_get_downloaded_airports(mockbox):
 
 
 def test_get_available_airspaces():
+    _cleanup_test_files()
     airspaces = get_available_airspaces()
     assert len(airspaces) > 0
 
@@ -137,10 +149,13 @@ def test_update_airspace(mockbox):
         assert mockbox.critical.call_count == 0
 
 
-@mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+@mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
 def test_get_airspaces_no_data(mockbox):
-    """ In the test environment we start always in a fresh tmp dir, no data is available"""
-    pytest.skip("behaves different, maybe because of global")
+    """
+    In the test environment we start always in a fresh tmp dir, no data is available
+    once it is downloaded it is managed by airdata
+    """
+    _cleanup_test_files()
     airspaces = get_airspaces(countries=["bg"])
     assert airspaces == []
 
@@ -149,6 +164,8 @@ def test_get_airspaces_no_data(mockbox):
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_get_airspaces(mockbox):
     """ We use a test file without the need for downloading to check handling """
+    # update_airspace would only update after 30 days
+    _cleanup_test_files()
     airspaces = get_airspaces(countries=["bg"])
     assert airspaces == [
         {'top': 7.47,
@@ -190,5 +207,7 @@ def test_get_airspaces(mockbox):
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_get_airspaces_missing_data(mockbox):
     """ We use a test file without the need for downloading to check handling """
+    # update_airspace would only update after 30 days
+    _cleanup_test_files()
     airspaces = get_airspaces(countries=["bg"])
     assert airspaces == []
