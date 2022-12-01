@@ -36,7 +36,7 @@ from PyQt5 import QtWidgets
 import logging
 import time
 
-from xml.dom import minidom
+import defusedxml.ElementTree as etree
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
 
@@ -117,6 +117,7 @@ def get_airports(force_download=False, url=None):
     else:
         return []
 
+
 def get_available_airspaces():
     """
     Gets and returns all available airspaces and their sizes from openaip
@@ -190,54 +191,52 @@ def get_airspaces(countries=None):
     _airspaces = []
     for file in files:
         fpath = os.path.join(OSDIR, file)
-        tree = minidom.parse(fpath)
+        root = etree.parse(fpath).getroot()
+        valid_file = len(set([elem.tag for elem in root.iter()])) == 12
+        if valid_file:
+            airspaces = (root.find('{https://www.openaip.net}AIRSPACES'))
+            names = [dat.text for dat in airspaces.findall(".//{https://www.openaip.net}NAME")]
+            polygons = [dat.text for dat in airspaces.findall(".//{https://www.openaip.net}POLYGON")]
+            countries = [dat.text for dat in airspaces.findall(".//{https://www.openaip.net}COUNTRY")]
+            tops = []
+            top_units = []
+            for dat in airspaces.findall(".//{https://www.openaip.net}ALTLIMIT_TOP"):
+                unit = dat[0]
+                top_units.append(unit.get("UNIT"))
+                _, data = dat.iter()
+                tops.append(float(data.text))
+            bottoms = []
+            bottom_units = []
+            for dat in airspaces.findall(".//{https://www.openaip.net}ALTLIMIT_BOTTOM"):
+                unit = dat[0]
+                bottom_units.append(unit.get("UNIT"))
+                _, data = dat.iter()
+                bottoms.append(float(data.text))
 
-        names = [dat.firstChild.data for dat in tree.getElementsByTagName('NAME')]
-        polygons = [dat.firstChild.data for dat in tree.getElementsByTagName('POLYGON')]
-        tops = []
-        top_units = []
-        for dat in tree.getElementsByTagName('ALTLIMIT_TOP'):
-            if dat.nodeType == dat.ELEMENT_NODE:
-                z = dat.firstChild
-                if z.nodeType == z.ELEMENT_NODE:
-                    top_units.append(z.getAttribute("UNIT"))
-                    z = dat.firstChild.firstChild
-                    tops.append(float(z.data))
+            for index, value in enumerate(names):
+                airspace_data = {
+                    "name": names[index],
+                    "polygon": polygons[index],
+                    "top": tops[index],
+                    "top_unit": top_units[index],
+                    "bottom": bottoms[index],
+                    "bottom_unit": bottom_units[index],
+                    "country": countries[index]
+                }
 
-        bottoms = []
-        bottom_units = []
-        for dat in tree.getElementsByTagName('ALTLIMIT_BOTTOM'):
-            if dat.nodeType == dat.ELEMENT_NODE:
-                z = dat.firstChild
-                if z.nodeType == z.ELEMENT_NODE:
-                    bottom_units.append(z.getAttribute("UNIT"))
-                    z = dat.firstChild.firstChild
-                    bottoms.append(float(z.data))
+                # Convert to kilometers
+                airspace_data["top"] /= 3281 if airspace_data["top_unit"] == "F" else 32.81
+                airspace_data["bottom"] /= 3281 if airspace_data["bottom_unit"] == "F" else 32.81
+                airspace_data["top"] = round(airspace_data["top"], 2)
+                airspace_data["bottom"] = round(airspace_data["bottom"], 2)
+                airspace_data.pop("top_unit")
+                airspace_data.pop("bottom_unit")
 
-        countries = [dat.firstChild.data for dat in tree.getElementsByTagName('COUNTRY')]
-
-        for index, value in enumerate(names):
-            airspace_data = {
-                "name": names[index],
-                "polygon": polygons[index],
-                "top": tops[index],
-                "top_unit": top_units[index],
-                "bottom": bottoms[index],
-                "bottom_unit": bottom_units[index],
-                "country": countries[index]
-            }
-
-            # Convert to kilometers
-            airspace_data["top"] /= 3281 if airspace_data["top_unit"] == "F" else 32.81
-            airspace_data["bottom"] /= 3281 if airspace_data["bottom_unit"] == "F" else 32.81
-            airspace_data["top"] = round(airspace_data["top"], 2)
-            airspace_data["bottom"] = round(airspace_data["bottom"], 2)
-            airspace_data.pop("top_unit")
-            airspace_data.pop("bottom_unit")
-
-            airspace_data["polygon"] = [(float(data.split()[0]), float(data.split()[-1]))
-                                        for data in airspace_data["polygon"].split(",")]
-            _airspaces.append(airspace_data)
-            _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, file))
+                airspace_data["polygon"] = [(float(data.split()[0]), float(data.split()[-1]))
+                                            for data in airspace_data["polygon"].split(",")]
+                _airspaces.append(airspace_data)
+                _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, file))
+            else:
+                QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", f"{file}")
 
     return _airspaces

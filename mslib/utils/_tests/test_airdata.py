@@ -81,6 +81,24 @@ def _download_progress_airspace(path, url):
         f.write(text)
 
 
+def _download_incomplete_airspace(path, url):
+    """ mock expensive download from external site"""
+    assert path is not None
+    assert url is not None
+    text = '''<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+ <!-- For Testing ONLY -->
+<OPENAIP VERSION="1668386405436" DATAFORMAT="1.1" xmlns="https://www.openaip.net"\
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\
+  xsi:schemaLocation="https://www.openaip.net https://storage.googleapis.com/d644c13a-ed49-48ad-8493-d3e55d3281a5\
+  /assets/common/openaip-schema-v1.xsd">
+<AIRSPACES></AIRSPACES>
+</OPENAIP>
+'''
+    file_path = os.path.join(ROOT_DIR, "bg_asp.xml")
+    with open(file_path, "w") as f:
+        f.write(text)
+
+
 def test_download_progress():
     file_path = os.path.join(ROOT_DIR, "airdata")
     download_progress(file_path, 'http://speedtest.ftp.otenet.gr/files/test100k.db')
@@ -166,3 +184,11 @@ def test_get_airspaces(mockbox):
         }
     ]
     assert mockbox.critical.call_count == 0
+
+
+@mock.patch("mslib.utils.airdata.download_progress", _download_incomplete_airspace)
+@mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+def test_get_airspaces_missing_data(mockbox):
+    """ We use a test file without the need for downloading to check handling """
+    airspaces = get_airspaces(countries=["bg"])
+    assert airspaces == []
