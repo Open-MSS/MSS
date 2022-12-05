@@ -415,6 +415,14 @@ Google Summer of Code(TM)
 MSS takes part in Google Summer of Code
 as a sub-organization of Python Software Foundation(PSF).
 
+GSoC'22 Projects
+----------------
+
+- `Sreelakshmi Jayarajan: Automated Command Line Plotting Tool : GSoC 2022 <https://github.com/Open-MSS/MSS/wiki/Automated-Command-Line-Plotting-Tool-:-GSoC-2022>`_
+
+- `Jatin Jain: UI and server improvements GSOC 2022 <https://github.com/Open-MSS/MSS/wiki/UI-and-server-improvements-GSOC-2022>`_
+
+
 GSoC'21 Projects
 ----------------
 
