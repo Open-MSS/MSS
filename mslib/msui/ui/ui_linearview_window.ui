@@ -77,6 +77,15 @@
     </item>
    </layout>
   </widget>
+  <action name="actionCloseWindow">
+   <property name="text">
+    <string>CloseWindow</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+W</string>
+   </property>
+  </action>
+  <addaction name="actionCloseWindow"/>
  </widget>
  <customwidgets>
   <customwidget>
@@ -87,5 +96,22 @@
   </customwidget>
  </customwidgets>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>actionCloseWindow</sender>
+   <signal>triggered()</signal>
+   <receiver>LinearWindow</receiver>
+   <slot>close()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>399</x>
+     <y>299</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
