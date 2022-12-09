@@ -48,7 +48,7 @@ def handle_start(args):
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
-    logging.info("Launching user interface...")
+    logging.info("Launching MSColab Server")
 
     app, sockio, cm, fm = initialize_managers(APP)
     start_server(app, sockio, cm, fm)
