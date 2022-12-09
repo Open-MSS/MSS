@@ -591,8 +591,9 @@ class MSUIMscolab(QtCore.QObject):
             self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
 
             self.ui.connectBtn.hide()
+            self.ui.openOperationsGb.show()
             # display connection status
-            self.ui.mscStatusLabel.setText(self.ui.tr(f"Connected to MSColab Server at {self.mscolab_server_url}"))
+            self.ui.mscStatusLabel.setText(self.ui.tr(f"Status: connected to '{self.mscolab_server_url}'"))
             # display username beside useroptions toolbutton
             self.ui.usernameLabel.setText(f"{self.user['username']}")
             self.ui.usernameLabel.show()
@@ -1818,10 +1819,11 @@ class MSUIMscolab(QtCore.QObject):
         # clear mscolab url
         self.mscolab_server_url = None
         # clear operations list here
-        self.ui.mscStatusLabel.setText(self.ui.tr("status: Disconnected"))
+        self.ui.mscStatusLabel.setText(self.ui.tr("status: disconnected"))
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.connectBtn.show()
+        self.ui.openOperationsGb.hide()
         self.ui.actionAddOperation.setEnabled(False)
         # hide operation description
         self.ui.activeOperationDesc.setHidden(True)
