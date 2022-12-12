@@ -80,10 +80,6 @@ def main():
                               'Default is ["Top", "Side", "Linear"]')
 
     args = parser.parse_args()
-    if args.plot_types is None:
-        plot_types = ["Top", "Side", "Linear"]
-    else:
-        plot_types = [name.strip() for name in args.plot_types.split(',')]
     if args.version:
         print("***********************************************************************")
         print("\n            Mission Support System (MSS)\n")
@@ -105,6 +101,10 @@ def main():
     setup_logging(args)
 
     if args.action == "gallery":
+        if args.plot_types is None:
+            plot_types = ["Top", "Side", "Linear"]
+        else:
+            plot_types = [name.strip() for name in args.plot_types.split(',')]
         create = args.create or args.refresh
         clear = args.clear or args.refresh
         server.generate_gallery(create, clear, args.show_code, url_prefix=args.url_prefix, levels=args.levels,
