@@ -68,7 +68,7 @@ requirements:
     - PyMySQL >=0.9.3
     - validate_email
     - multidict
-    - pint <0.20
+    - pint
     - python-socketio >=5
     - python-engineio >=4
     - markdown

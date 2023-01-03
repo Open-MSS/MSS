@@ -34,19 +34,15 @@ import pint
 units.define("PVU = m^2 s^-1 uK kg^-1")
 units.define("degrees_south = -degrees = degrees_S = degreesS = degree_south = degree_S = degreeS")
 units.define("degrees_west = -degrees = degrees_W = degreesW = degree_west = degree_W = degreeW")
-
-# Follow metpy 1.0.1 style of defining dimensionless units
-for _name, _factor in (("level", 1),
-                       ("sigma", 1),
-                       ("permille", 1e-3),
-                       ("ppm", 1e-6),
-                       ("ppmv", 1e-6),
-                       ("ppb", 1e-9),
-                       ("ppbv", 1e-9),
-                       ("ppt", 1e-12),
-                       ("pptv", 1e-12)):
-    units.define(pint.unit.UnitDefinition(_name, '', (),
-                 pint.converters.ScaleConverter(_factor)))
+units.define("level = 1"),
+units.define("sigma = 1"),
+units.define("permille = 1e-3"),
+units.define("ppm = 1e-6"),
+units.define("ppb = 1e-9"),
+units.define("ppt = 1e-12"),
+units.define("ppmv = 1e-6"),
+units.define("ppbv = 1e-9"),
+units.define("pptv = 1e-12")
 
 
 def convert_to(value, from_unit, to_unit, default=1.):
