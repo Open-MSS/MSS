@@ -42,7 +42,7 @@ PORTS = list(range(19000, 19500))
 
 
 class Test_MSS_SV_OptionsDialog(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSUI_SV_OptionsDialog()
         self.window.show()
@@ -50,7 +50,7 @@ class Test_MSS_SV_OptionsDialog(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -93,7 +93,7 @@ class Test_MSS_SV_OptionsDialog(object):
 
 
 class Test_MSSSideViewWindow(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
@@ -107,7 +107,7 @@ class Test_MSSSideViewWindow(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -172,7 +172,7 @@ class Test_MSSSideViewWindow(object):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_SideViewWMS(object):
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.port = PORTS.pop()
         self.tempdir = tempfile.mkdtemp()
@@ -198,7 +198,7 @@ class Test_SideViewWMS(object):
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -223,7 +223,7 @@ class Test_SideViewWMS(object):
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.image_displayed)
-        assert self.window.getView().image is not None
-        self.window.getView().clear_figure()
-        assert self.window.getView().image is None
+        assert self.window.getView().plotter.image is not None
+        self.window.getView().plotter.clear_figure()
+        assert self.window.getView().plotter.image is None
         assert mockbox.critical.call_count == 0

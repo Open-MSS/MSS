@@ -75,9 +75,11 @@ def main():
                          help="Normally the plot images should appear at the relative url /static/plots/*.png.\n"
                               "In case they are prefixed by something, e.g. /demo/static/plots/*.png,"
                               " please provide the prefix /demo here.")
+    gallery.add_argument("--plot_types", default=None,
+                         help='A comma-separated list of all plot_types. \n'
+                              'Default is ["Top", "Side", "Linear"]')
 
     args = parser.parse_args()
-
     if args.version:
         print("***********************************************************************")
         print("\n            Mission Support System (MSS)\n")
@@ -99,16 +101,16 @@ def main():
     setup_logging(args)
 
     if args.action == "gallery":
+        if args.plot_types is None:
+            plot_types = ["Top", "Side", "Linear"]
+        else:
+            plot_types = [name.strip() for name in args.plot_types.split(',')]
         create = args.create or args.refresh
         clear = args.clear or args.refresh
         server.generate_gallery(create, clear, args.show_code, url_prefix=args.url_prefix, levels=args.levels,
-                                itimes=args.itimes, vtimes=args.vtimes)
+                                itimes=args.itimes, vtimes=args.vtimes, plot_types=plot_types)
         logging.info("Gallery generation done.")
         sys.exit()
-
-    updater.on_update_available.connect(lambda old, new: logging.info(f"MSS can be updated from {old} to {new}.\nRun"
-                                                                      " the --update argument to update the server."))
-    updater.run()
 
     logging.info("Configuration File: '%s'", mswms_settings.__file__)
 

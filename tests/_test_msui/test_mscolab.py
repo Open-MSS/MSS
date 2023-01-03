@@ -49,7 +49,7 @@ PORTS = list(range(25000, 25500))
 
 
 class Test_Mscolab_connect_window():
-    def setup(self):
+    def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -69,7 +69,7 @@ class Test_Mscolab_connect_window():
         self.main_window.mscolab.connect_window = self.window
         self.window.show()
 
-    def teardown(self):
+    def teardown_method(self):
         self.main_window.mscolab.logout()
         self.window.hide()
         self.main_window.hide()
@@ -259,7 +259,7 @@ class Test_Mscolab(object):
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
     }
 
-    def setup(self):
+    def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -285,7 +285,7 @@ class Test_Mscolab(object):
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.show()
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
@@ -521,9 +521,40 @@ class Test_Mscolab(object):
         assert self.window.listViews.count() == 0
         assert self.window.listOperationsMSC.model().rowCount() == 0
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_name", True))
+    def test_handle_rename_operation(self, mockbox, mockpatch):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionRenameOperation.trigger()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_name == "new_name"
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_desciption", True))
+    def test_update_description(self, mockbox, mockpatch):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionUpdateOperationDesc.trigger()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_desc == "new_desciption"
+
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
+        QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'anton'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -537,6 +568,7 @@ class Test_Mscolab(object):
     def test_get_recent_operation(self):
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
+        QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -545,6 +577,30 @@ class Test_Mscolab(object):
         operation = self.window.mscolab.get_recent_operation()
         assert operation["path"] == "flight1234"
         assert operation["access_level"] == "creator"
+
+    def test_open_chat_window(self):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionChat.trigger()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
+        assert self.window.mscolab.chat_window is not None
+
+    def test_close_chat_window(self):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionChat.trigger()
+        QtWidgets.QApplication.processEvents()
+        self.window.mscolab.close_chat_window()
+        assert self.window.mscolab.chat_window is None
 
     def test_delete_operation_from_list(self):
         self._connect_to_mscolab()

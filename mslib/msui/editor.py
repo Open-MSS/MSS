@@ -37,6 +37,7 @@ from mslib.msui.constants import MSUI_SETTINGS
 from mslib.msui.icons import icons
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, dict_raise_on_duplicates_empty, merge_dict
+from mslib.utils.coordinate import get_projection_params
 
 
 from mslib.support.qt_json_view import delegate
@@ -327,7 +328,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     empty = True
                     color = QtCore.Qt.red
                 # check if any duplicate values
-                if len(set(values_list)) != len(values_list):
+                if len(set([tuple(_x) if isinstance(_x, list) else _x for _x in values_list])) != len(values_list):
                     duplicate = True
                     color = QtCore.Qt.red
             elif key == 'filepicker_default':
@@ -595,7 +596,11 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             _fs.writetext(file_name, json.dumps(save_data, indent=4))
 
     def validate_data(self):
+        epsg_check, dummy = self.problem_in_map_sections()
+        if epsg_check:
+            return epsg_check, dummy
         invalid, dummy = False, False
+
         parent = QtCore.QModelIndex()
         for r in range(self.json_model.rowCount(parent)):
             index = self.json_model.index(r, 0, parent)
@@ -604,6 +609,41 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
             dummy |= item.data(DummyRole)
 
         return invalid, dummy
+
+    def problem_in_map_sections(self):
+        """
+        Checks for failures in the predefined_map_sections, e.g. not supported epsg codes
+        """
+        key = "predefined_map_sections"
+        source_model = self.json_model
+        # set default color
+        color = QtCore.Qt.black
+        self.set_key_color(source_model, key, color)
+
+        data = source_model.serialize()
+        predefined_map_sections = data.get(key, dict())
+        for name in predefined_map_sections:
+            try:
+                get_projection_params(predefined_map_sections[name]["CRS"])
+            except ValueError:
+                # visualize failure in section
+                color = QtCore.Qt.red
+                self.set_key_color(source_model, key, color)
+                return True, True
+
+        return False, False
+
+    def set_key_color(self, source_model, key, color):
+        """
+        sets the foreground color of an item
+        """
+        parent = QtCore.QModelIndex()
+        for r in range(source_model.rowCount(parent)):
+            root_index = source_model.index(r, 0, parent)
+            if key == root_index.data():
+                item = source_model.itemFromIndex(root_index)
+                item.setForeground(color)
+                break
 
     def check_modified(self):
         return not self.last_saved == self.json_model.serialize()

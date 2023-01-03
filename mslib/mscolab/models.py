@@ -129,8 +129,10 @@ class Operation(db.Model):
     path = db.Column(db.String(255), unique=True)
     category = db.Column(db.String(255))
     description = db.Column(db.String(255))
+    active = db.Column(db.Boolean)
+    last_used = db.Column(db.DateTime)
 
-    def __init__(self, path, description, category="default"):
+    def __init__(self, path, description, last_used=None, category="default", active=True):
         """
         path: path to the operation
         description: small description of operation
@@ -139,9 +141,16 @@ class Operation(db.Model):
         self.path = path
         self.description = description
         self.category = category
+        self.active = active
+        if self.last_used is None:
+            self.last_used = datetime.datetime.utcnow()
+        else:
+            self.last_used = last_used
 
     def __repr__(self):
-        return f'<Operation path: {self.path}, desc: {self.description}, cat: {self.category}>'
+        return f'<Operation path: {self.path}, desc: {self.description},' \
+               f' cat: {self.category}, active: {self.active}, ' \
+               f'last_used: {self.last_used}> '
 
 
 class MessageType(enum.IntEnum):

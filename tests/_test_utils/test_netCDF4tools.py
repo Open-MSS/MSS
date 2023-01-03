@@ -43,14 +43,14 @@ DATA_FILE_AL = os.path.join(DATA_DIR, "20121017_12_ecmwf_forecast.ALTITUDE_LEVEL
 
 
 class Test_netCDF4tools(object):
-    def setup(self):
+    def setup_method(self):
         self.ncfile_ml = Dataset(DATA_FILE_ML, 'r')
         self.ncfile_pl = Dataset(DATA_FILE_PL, 'r')
         self.ncfile_pv = Dataset(DATA_FILE_PV, 'r')
         self.ncfile_tl = Dataset(DATA_FILE_TL, 'r')
         self.ncfile_al = Dataset(DATA_FILE_AL, 'r')
 
-    def teardown(self):
+    def teardown_method(self):
         self.ncfile_ml.close()
         self.ncfile_pl.close()
         self.ncfile_pv.close()

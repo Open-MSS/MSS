@@ -277,7 +277,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             }
             url = url_join(self.mscolab_server_url, 'message_attachment')
             try:
-                requests.post(url, data=data, files=files)
+                requests.post(url, data=data, files=files, timeout=(2, 10))
             except requests.exceptions.ConnectionError:
                 show_popup(self, "Error", "File size too large")
         self.send_message_state()
@@ -333,7 +333,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, 'authorized_users')
-        r = requests.get(url, data=data)
+        r = requests.get(url, data=data, timeout=(2, 10))
         if r.text != "False":
             self.collaboratorsList.clear()
             users = r.json()["users"]
@@ -354,7 +354,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         # returns an array of messages
         url = url_join(self.mscolab_server_url, "messages")
 
-        res = requests.get(url, data=data)
+        res = requests.get(url, data=data, timeout=(2, 10))
         if res.text != "False":
             res = res.json()
             messages = res["messages"]
@@ -474,7 +474,7 @@ class MessageItem(QtWidgets.QWidget):
                                self.attachment_path.replace('\\', '/').split('colabdata')[1])
         else:
             img_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
-        data = requests.get(img_url).content
+        data = requests.get(img_url, timeout=(2, 10)).content
         image = QtGui.QImage()
         image.loadFromData(data)
         self.message_image = image
@@ -518,22 +518,36 @@ class MessageItem(QtWidgets.QWidget):
         self.messageBox.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.messageBox.customContextMenuRequested.connect(self.open_context_menu)
 
+    def set_time_label(self):
+        # ToDo: Translate time in user's timezone
+        time_label = QtWidgets.QLabel(f"{self.time}")
+        time_label.setContentsMargins(5, 5, 5, 0)
+        time_label.setAlignment(QtCore.Qt.AlignRight)
+        label_font = QtGui.QFont()
+        label_font.setItalic(True)
+        time_label.setFont(label_font)
+        return time_label
+
     def setup_message_box_layout(self):
         container_layout = QtWidgets.QHBoxLayout()
         text_area_layout = QtWidgets.QVBoxLayout()
         if self.chat_window.user["username"] == self.username:
             text_area_layout.addWidget(self.messageBox)
+            time_label = self.set_time_label()
+            text_area_layout.addWidget(time_label)
             self.textArea.setLayout(text_area_layout)
             container_layout.addStretch()
             container_layout.addWidget(self.textArea)
         else:
             username_label = QtWidgets.QLabel(f"{self.username}")
             username_label.setContentsMargins(5, 5, 5, 0)
+            time_label = self.set_time_label()
             label_font = QtGui.QFont()
             label_font.setBold(True)
             username_label.setFont(label_font)
             text_area_layout.addWidget(username_label)
             text_area_layout.addWidget(self.messageBox)
+            text_area_layout.addWidget(time_label)
             self.textArea.setLayout(text_area_layout)
             container_layout.addWidget(self.textArea)
             container_layout.addStretch()
@@ -577,6 +591,9 @@ class MessageItem(QtWidgets.QWidget):
         self.replyScroll.setWidget(self.replyArea)
         self.replyScroll.setContentsMargins(0, 0, 0, 0)
         self.textArea.layout().addWidget(self.replyScroll)
+        time_label = self.set_time_label()
+        self.textArea.layout().addWidget(time_label)
+
         if self.username == self.chat_window.user["username"]:
             color = "#c3f39e"
         else:
@@ -636,7 +653,8 @@ class MessageItem(QtWidgets.QWidget):
         if self.message_type == MessageType.DOCUMENT:
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
-                file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path)).content
+                file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path),
+                                            timeout=(2, 10)).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:

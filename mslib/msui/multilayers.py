@@ -180,7 +180,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         sr = self.synced_reference
         sr.levels, sr.itimes, sr.vtimes, sr.allowed_crs = self.get_multilayer_common_options()
 
-        if self.current_layer:
+        if self.current_layer is not None:
             if not sr.level:
                 sr.level = self.current_layer.level
             if not sr.itime:
@@ -387,7 +387,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                 widget.setDisabled(True)
                 return
 
-            if not self.current_layer or auto_select:
+            if self.current_layer is None or auto_select:
                 self.current_layer = widget
                 self.listLayers.setCurrentItem(widget)
 
@@ -416,8 +416,8 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
             item.set_itime(self.carry_parameters["itime"])
         if self.carry_parameters["vtime"] in item.get_vtimes():
             item.set_vtime(self.carry_parameters["vtime"])
-
-        if self.current_layer != item:
+        # check the first element of a fresh list can be clicked too
+        if self.current_layer != item or list(self.layers[item.wms_name]).index(item.text(0)) == 2:
             self.current_layer = item
             self.listLayers.setCurrentItem(item)
             index = self.cbWMS_URL.findText(item.get_wms().url)

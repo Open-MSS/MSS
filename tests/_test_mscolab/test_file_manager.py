@@ -81,6 +81,12 @@ class Test_FileManager(TestCase):
     def tearDown(self):
         pass
 
+    def test_fetch_operation_creator(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="more_than_one")
+            assert operation.path == flight_path
+            assert self.fm.fetch_operation_creator(operation.id, self.user.id) == self.user.username
+
     def test_create_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="famous")
@@ -102,11 +108,13 @@ class Test_FileManager(TestCase):
             self.fm.create_operation("first", "info about first", self.user)
             self.fm.create_operation("second", "info about second", self.user)
             expected_result = [{'access_level': 'creator',
+                                "active": True,
                                 'category': 'default',
                                 'description': 'info about first',
                                 'op_id': 1,
                                 'path': 'first'},
                                {'access_level': 'creator',
+                                "active": True,
                                 'category': 'default',
                                 'description': 'info about second',
                                 'op_id': 2,

@@ -48,7 +48,7 @@ def handle_start(args):
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
-    logging.info("Launching user interface...")
+    logging.info("Launching MSColab Server")
 
     app, sockio, cm, fm = initialize_managers(APP)
     start_server(app, sockio, cm, fm)
@@ -137,10 +137,6 @@ def main():
         while Worker.workers:
             list(Worker.workers)[0].wait()
         sys.exit()
-
-    updater.on_update_available.connect(lambda old, new: logging.info(f"MSS can be updated from {old} to {new}.\nRun"
-                                                                      " the --update argument to update the server."))
-    updater.run()
 
     if args.action == "start":
         handle_start(args)

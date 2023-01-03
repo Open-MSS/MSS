@@ -149,7 +149,8 @@ class MSUIDefaultConfig(object):
     WMS_login = {}
 
     # WMS image cache settings:
-    wms_cache = os.path.join(tempfile.gettempdir(), "msui_wms_cache")
+    # this changes on any start of msui, use ths msui_settings.json when you want a persistent path
+    wms_cache = os.path.join(tempfile.TemporaryDirectory().name, "msui_wms_cache")
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
@@ -225,6 +226,11 @@ class MSUIDefaultConfig(object):
     linearview = {"plot_title_size": 10,
                   "axes_label_size": 10}
 
+    automated_plotting_flights = [[]]
+    automated_plotting_hsecs = [[]]
+    automated_plotting_vsecs = [[]]
+    automated_plotting_lsecs = [[]]
+
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
 
@@ -289,6 +295,10 @@ class MSUIDefaultConfig(object):
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
+        "automated_plotting_flights": [["", "", "", "", "", ""]],
+        "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
+        "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
+        "automated_plotting_lsecs": [["http://www.your-wms-server.de", "", ""]]
     }
 
     config_descriptions = {

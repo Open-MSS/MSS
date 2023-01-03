@@ -29,18 +29,43 @@
 import sys
 import mock
 import os
+import platform
+import argparse
 import pytest
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
-from tests.constants import ROOT_DIR
+from tests.constants import ROOT_DIR, POSIX
 from mslib.msui import msui
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 
 
+@mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
+def test_main():
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
+                        return_value=argparse.Namespace(version=True)):
+            msui.main()
+        assert pytest_wrapped_e.typename == "SystemExit"
+
+    if platform.system() == "Linux":
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
+                            return_value=argparse.Namespace(version=False, update=False, menu=True,
+                                                            deinstall=False, debug=False, logfile="log.log")):
+                msui.main()
+            assert pytest_wrapped_e.typename == "SystemExit"
+        with pytest.raises(SystemExit) as pytest_wrapped_e:
+            with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
+                            return_value=argparse.Namespace(version=False, update=False, menu=False,
+                                                            deinstall=True, debug=False, logfile="log.log")):
+                msui.main()
+            assert pytest_wrapped_e.typename == "SystemExit"
+
+
 class Test_MSS_AboutDialog():
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUI_AboutDialog()
 
@@ -50,7 +75,7 @@ class Test_MSS_AboutDialog():
         pattern = f'value="is:closed milestone:{__version__[:-1]}"'
         assert pattern in text.decode('utf-8')
 
-    def teardown(self):
+    def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()
@@ -58,13 +83,13 @@ class Test_MSS_AboutDialog():
 
 
 class Test_MSS_ShortcutDialog():
-    def setup(self):
+    def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.main_window = msui.MSUIMainWindow()
         self.main_window.show()
         self.shortcuts = msui.MSUI_ShortcutsDialog()
 
-    def teardown(self):
+    def teardown_method(self):
         self.shortcuts.hide()
         self.main_window.hide()
         QtWidgets.QApplication.processEvents()
@@ -121,7 +146,7 @@ class Test_MSSSideViewWindow(object):
         # "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
     }
 
-    def setup(self):
+    def setup_method(self):
         self.sample_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '../',
@@ -135,7 +160,7 @@ class Test_MSSSideViewWindow(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
-    def teardown(self):
+    def teardown_method(self):
         config_file = os.path.join(
             self.sample_path,
             'empty_msui_settings.json',

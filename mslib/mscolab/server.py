@@ -44,7 +44,7 @@ from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, User, db
+from mslib.mscolab.models import Change, MessageType, User, Operation, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -53,7 +53,6 @@ from mslib.index import app_loader
 APP = app_loader(__name__)
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
-
 
 # set the operation root directory as the static folder
 # ToDo needs refactoring on a route without using of static folder
@@ -235,8 +234,8 @@ def get_auth_token():
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
-                                  'token': token.decode('ascii'),
-                                  'user': {'username': user.username, 'id': user.id}})
+                    'token': token.decode('ascii'),
+                    'user': {'username': user.username, 'id': user.id}})
             else:
                 return "False"
         else:
@@ -416,8 +415,9 @@ def create_operation():
     content = request.form.get('content', None)
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
+    last_used = datetime.datetime.utcnow()
     user = g.user
-    r = str(fm.create_operation(path, description, user, content=content, category=category))
+    r = str(fm.create_operation(path, description, user, last_used, content=content, category=category))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
@@ -522,6 +522,37 @@ def get_operation_details():
     return json.dumps(fm.get_operation_details(int(op_id), user))
 
 
+@APP.route('/set_last_used', methods=["POST"])
+@verify_user
+def set_last_used():
+    op_id = request.form.get('op_id', None)
+    operation = Operation.query.filter_by(id=int(op_id)).first()
+    operation.last_used = datetime.datetime.utcnow()
+    temp_operation_active = operation.active
+    operation.active = True
+    db.session.commit()
+    # Reload Operation List
+    if not temp_operation_active:
+        token = request.args.get('token', request.form.get('token', False))
+        json_config = {"token": token}
+        sockio.sm.update_operation_list(json_config)
+    return jsonify({"success": True}), 200
+
+
+@APP.route('/update_last_used', methods=["POST"])
+@verify_user
+def update_last_used():
+    operations = Operation.query.filter().all()
+    for operation in operations:
+        a = (datetime.datetime.utcnow() - operation.last_used).days
+        if a > 30:
+            operation.active = False
+        else:
+            operation.active = True
+    db.session.commit()
+    return jsonify({"success": True}), 200
+
+
 @APP.route('/undo', methods=["POST"])
 @verify_user
 def undo_ftml():
@@ -534,6 +565,17 @@ def undo_ftml():
     if result is True:
         sockio.sm.emit_file_change(ch.op_id)
     return str(result)
+
+
+@APP.route("/creator_of_operation", methods=["GET"])
+@verify_user
+def get_creator_of_operation():
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    u_id = g.user.id
+    creator_name = fm.fetch_operation_creator(op_id, u_id)
+    if creator_name is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+    return jsonify({"success": True, "username": creator_name}), 200
 
 
 @APP.route("/users_without_permission", methods=["GET"])

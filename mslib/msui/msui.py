@@ -140,6 +140,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
+
     def __init__(self):
         super(MSUI_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
@@ -255,8 +256,8 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                  action.toolTip(), action.text().replace("&&", "%%").replace("&", "").replace("%%", "&"),
                  action.objectName(),
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
-                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
-                self.cbNoShortcut.checkState()])
+                for action in qobject.findChildren(
+                    QtWidgets.QAction) if len(action.shortcuts()) > 0 or self.cbNoShortcut.checkState()])
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
                              shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
@@ -280,7 +281,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
             if not any(action for action in actions if action[3] == "actionShortcuts"):
                 actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
-                               "Show Current Shortcuts", "Alt+S", None))
+                                "Show Current Shortcuts", "Alt+S", None))
             if not any(action for action in actions if action[3] == "actionSearch"):
                 actions.append((qobject.window(), "Search for interactive text in the UI",
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
@@ -340,6 +341,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     """
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
+    signal_activate_flighttrack = QtCore.Signal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
+    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
+    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
+    signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
+    signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
+    signal_listFlighttrack_doubleClicked = QtCore.Signal()
+    signal_permission_revoked = QtCore.Signal(int)
+    signal_render_new_permission = QtCore.Signal(int, str)
 
     def __init__(self, mscolab_data_dir=None, *args):
         super(MSUIMainWindow, self).__init__(*args)
@@ -432,11 +442,22 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
+        self.mscolab.signal_activate_operation.connect(self.activate_operation_slot)
+        self.mscolab.signal_operation_added.connect(self.add_operation_slot)
+        self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
+        self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
+        self.mscolab.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
+        self.mscolab.signal_listFlighttrack_doubleClicked.connect(
+            lambda: self.signal_listFlighttrack_doubleClicked.emit())
+        self.mscolab.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
+        self.mscolab.signal_render_new_permission.connect(
+            lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
 
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
+        self.openOperationsGb.hide()
 
     @staticmethod
     def preload_wms(urls):
@@ -460,7 +481,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
 
             try:
-                request = requests.get(base_url)
+                request = requests.get(base_url, timeout=(2, 10))
                 if pdlg.wasCanceled():
                     break
 
@@ -496,6 +517,18 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.export_plugins = {}
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
+
+    @QtCore.Slot(int)
+    def activate_operation_slot(self, active_op_id):
+        self.signal_activate_operation.emit(active_op_id)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.signal_operation_added.emit(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.signal_operation_removed.emit(op_id)
 
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
         if plugin_type == "Import":
@@ -598,8 +631,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             pickertype=pickertype)
         if self.local_active:
             if filenames is not None:
+                activate = True
+                if len(filenames) > 1:
+                    activate = False
                 for name in filenames:
-                    self.create_new_flight_track(filename=name, function=function)
+                    self.create_new_flight_track(filename=name, function=function, activate=activate)
                 self.last_save_directory = fs.path.dirname(name)
         else:
             for name in filenames:
@@ -633,7 +669,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             self.mscolab.handle_export_msc(extension, function, pickertype)
 
-    def create_new_flight_track(self, template=None, filename=None, function=None):
+    def create_new_flight_track(self, template=None, filename=None, function=None, activate=True):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
            flight track' menu entries.
@@ -682,11 +718,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                         waypoints_model.name += " - imported from file"
                         break
         else:
-            # Create a new flight track from the waypoints template.
+            # Create a new flight track from the waypoints' template.
             self.new_flight_track_counter += 1
             waypoints_model = ft.WaypointsTableModel(
                 name=f"new flight track ({self.new_flight_track_counter:d})")
-            # Make a copy of the template. Otherwise all new flight tracks would
+            # Make a copy of the template. Otherwise, all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
             waypoints_model.insertRows(0, rows=len(template_copy), waypoints=template_copy)
@@ -697,7 +733,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
             # Activate new item
-            self.activate_flight_track(listitem)
+            if activate:
+                self.activate_flight_track(listitem)
 
     def activate_flight_track(self, item):
         """Set the currently selected flight track to be the active one, i.e.
@@ -714,6 +751,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         font.setBold(True)
         item.setFont(font)
         self.menu_handler()
+        self.signal_activate_flighttrack.emit(self.active_flight_track)
 
     def update_active_flight_track(self, old_flight_track_name=None):
         for i in range(self.listViews.count()):
@@ -723,7 +761,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_item.window.enable_navbar_action_buttons()
             if old_flight_track_name is not None:
                 view_item.window.setWindowTitle(view_item.window.windowTitle().replace(old_flight_track_name,
-                                                self.active_flight_track.name))
+                                                                                       self.active_flight_track.name))
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -744,10 +782,14 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if filename:
             self.save_flight_track(filename)
         else:
-            self.save_as_handler()
+            self.save_as()
 
     def save_as_handler(self):
-        """Slot for the 'Save Active Flight Track As' menu entry.
+        self.save_as()
+
+    def save_as(self):
+        """
+        Slot for the 'Save Active Flight Track As' menu entry.
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         file_type = ["Flight track (*.ftml)"]
@@ -818,7 +860,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(model=model)
+            view_window = topview.MSUITopViewWindow(parent=self, model=model,
+                                                    active_flighttrack=self.active_flight_track,
+                                                    mscolab_server_url=self.mscolab.mscolab_server_url,
+                                                    token=self.mscolab.token)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
