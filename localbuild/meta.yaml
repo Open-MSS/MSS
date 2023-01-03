@@ -79,6 +79,8 @@ requirements:
     - metpy
     - pycountry
     - websocket-client
+    - shapely <2.0.0
+    - pygeoif <1.0.0
 
 test:
   imports:
