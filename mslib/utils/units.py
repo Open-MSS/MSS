@@ -39,13 +39,13 @@ except pint.errors.RedefinitionError:
 units.define("PVU = m^2 s^-1 uK kg^-1")
 units.define("degrees_south = -degrees = degrees_S = degreesS = degree_south = degree_S = degreeS")
 units.define("degrees_west = -degrees = degrees_W = degreesW = degree_west = degree_W = degreeW")
-units.define("level = 1"),
-units.define("permille = 1e-3"),
-units.define("ppm = 1e-6"),
-units.define("ppb = 1e-9"),
-units.define("ppt = 1e-12"),
-units.define("ppmv = 1e-6"),
-units.define("ppbv = 1e-9"),
+units.define("level = 1")
+units.define("permille = 1e-3")
+units.define("ppm = 1e-6")
+units.define("ppb = 1e-9")
+units.define("ppt = 1e-12")
+units.define("ppmv = 1e-6")
+units.define("ppbv = 1e-9")
 units.define("pptv = 1e-12")
 
 
