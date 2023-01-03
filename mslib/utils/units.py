@@ -32,7 +32,7 @@ from metpy.units import units, check_units  # noqa
 import pint
 
 try:
-   units.define("sigma = 1")
+    units.define("sigma = 1")
 except pint.errors.RedefinitionError:
     pass
 
