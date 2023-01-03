@@ -31,6 +31,11 @@ import logging
 from metpy.units import units, check_units  # noqa
 import pint
 
+try:
+   units.define("sigma = 1")
+except pint.errors.RedefinitionError:
+    pass
+
 units.define("PVU = m^2 s^-1 uK kg^-1")
 units.define("degrees_south = -degrees = degrees_S = degreesS = degree_south = degree_S = degreeS")
 units.define("degrees_west = -degrees = degrees_W = degreesW = degree_west = degree_W = degreeW")
