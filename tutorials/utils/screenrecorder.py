@@ -63,7 +63,7 @@ class ScreenRecorder:
             self.height = sc_height
         self.fps = self.get_fps()
         self.codec = cv2.VideoWriter_fourcc(*"mp4v")
-        current_time = datetime.datetime.now().strftime('%d-%m-%Y %H-%M-%S')
+        current_time = datetime.datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
         self.file_name = f'REC_{current_time}.mp4'
         parent_dir = os.getcwd()
         dir = "recordings"
