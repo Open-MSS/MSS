@@ -174,7 +174,7 @@ def automate_waypoints():
         if platform == 'win32':
             pag.moveTo(x - 255, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.moveTo(x - 231, y, duration=2)
+            pag.moveTo(x - 100, y, duration=2)
         pag.click(interval=1)
         pag.sleep(1)
 
@@ -192,6 +192,17 @@ def automate_waypoints():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Starred filter\' button/option not found on the screen.")
         raise
+
+    # removind Filtering starred layers
+    try:
+        x, y = pag.locateCenterOnScreen(picture('wms', 'unstar_filter.png'))
+        pag.moveTo(x, y, duration=2)
+        pag.click(x, y, interval=1)
+
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException : \'Unstarred filter\' button/option not found on the screen.")
+        raise
+
 
     # Setting different levels and valid time
     if temp1 is not None and temp2 is not None:
@@ -346,9 +357,6 @@ def automate_waypoints():
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             pag.click(x - 70, y, interval=2)
         pag.sleep(1)
-        x1, y1 = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'))
-        pag.click(x1, y1, interval=2)
-        pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Deleting all layers bin\' button/option not found on the screen.")
         raise

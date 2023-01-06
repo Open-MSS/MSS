@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+# see https://mss.readthedocs.io/en/stable/gentutorials.html#in-linux-for-making-the-cursor-visible-as-a-highlighter-perform-the-following
+~/bin/highlight-pointer -r 10 --key-quit q &
+mkdir /tmp/msui_tutorials
+export MSUI_CONFIG_PATH=/tmp/msui_tutorials
+
+# wms tutorial
+$HOME/miniconda3/envs/mssdev/bin/python tutorial_wms.py
+
+# remove config files created for this tutorial
+rm -r /tmp/msui_tutorials/*
+
+# improve recording file using the copy last_recording.mp4
+cd recordings
+# slice (start and ending)
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:04:30 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
+# scale
+# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
+# set speed (very fast)
+# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
+# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
+ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_wms.gif
+
+# get back to tutorials dir
+cd ..
+# next tutorial
+# ~/bin/highlight-pointer -r 10 --key-quit q &
+
+
+# last tutorial is over, cleanup everything
+rmdir /tmp/msui_tutorials
