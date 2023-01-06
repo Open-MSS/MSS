@@ -847,4 +847,4 @@ def automate_views():
 
 
 if __name__ == '__main__':
-    start(target=automate_views, duration=600)
+    start(target=automate_views, duration=532)
