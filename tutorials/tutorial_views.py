@@ -32,6 +32,8 @@ from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
 
+# ToDo in sideview and topview waypoint movement needs adjustment
+
 def automate_views():
     """
     This is the main automating script of the MSS views tutorial which will cover all the views(topview, sideview,
@@ -845,4 +847,4 @@ def automate_views():
 
 
 if __name__ == '__main__':
-    start(target=automate_views, duration=300)
+    start(target=automate_views, duration=600)
