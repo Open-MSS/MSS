@@ -32,6 +32,8 @@ from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
 
+# ToDo fix waypoint movement
+
 def automate_mscolab():
     """
     This is the main automating script of the Mission Support System Collaboration or Mscolab tutorial which will be
@@ -161,7 +163,7 @@ def automate_mscolab():
         print("\nException :\'File\' menu button not found on the screen.")
         raise
     try:
-        open_operations_x, open_operations_y = pag.locateCenterOnScreen(picture('mscolab', 'openop.png'))
+        open_operations_x, open_operations_y = pag.locateCenterOnScreen(picture('mscolab', 'active_operations.png'))
         pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(1)
         pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
@@ -542,9 +544,9 @@ def automate_mscolab():
 
     # Activating a local flight track
     if open_operations_x is not None and open_operations_y is not None:
-        pag.moveTo(open_operations_x - 900, open_operations_y + 20, duration=2)
+        pag.moveTo(open_operations_x - 900, open_operations_y, duration=2)
         pag.sleep(1)
-        pag.doubleClick(open_operations_x - 900, open_operations_y + 20, duration=2)
+        pag.doubleClick(open_operations_x - 900, open_operations_y, duration=2)
         pag.sleep(2)
     else:
         print("Image Not Found : Open Operations label (for activating local flighttrack) not found, previously!")

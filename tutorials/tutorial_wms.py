@@ -203,7 +203,6 @@ def automate_waypoints():
         print("\nException : \'Unstarred filter\' button/option not found on the screen.")
         raise
 
-
     # Setting different levels and valid time
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2 + (gap * 4), interval=2)
