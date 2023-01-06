@@ -470,7 +470,7 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     """
     assert isinstance(tag, str)
     assert isinstance(settings, dict)
-    if not ignore_test and "pytest" in sys.modules:
+    if not ignore_test and ("pytest" in sys.modules or "pyautogui" in sys.modules):
         return settings
 
     q_settings = QtCore.QSettings("msui", "msui-core")
@@ -497,7 +497,7 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
-    if not ignore_test and "pytest" in sys.modules:
+    if not ignore_test and ("pytest" in sys.modules or "pyautogui" in sys.modules):
         return default_settings
 
     settings = {}
