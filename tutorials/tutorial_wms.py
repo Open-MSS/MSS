@@ -254,12 +254,12 @@ def automate_waypoints():
             pag.press('return')
 
         # Previous and Next of Initial(Initialization) values
-        pag.click(initx + 753, inity, clicks=2, interval=2)
-        pag.click(initx + 882, inity, clicks=2, interval=2)
+        pag.click(initx + 733, inity, clicks=2, interval=2)
+        pag.click(initx + 892, inity, clicks=2, interval=2)
 
         # Previous and Next of Valid values
-        pag.click(validx + 760, validy, clicks=4, interval=4)
-        pag.click(validx + 887, validy, clicks=4, interval=4)
+        pag.click(validx + 743, validy, clicks=4, interval=4)
+        pag.click(validx + 902, validy, clicks=4, interval=4)
 
     # Auto-update feature of wms
     try:
@@ -318,7 +318,7 @@ def automate_waypoints():
         print("\nException :\'Clear cache\' button/option not found on the screen.")
         raise
 
-    # qrent layer
+    # rent layer
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2, interval=2)
         pag.sleep(1)
