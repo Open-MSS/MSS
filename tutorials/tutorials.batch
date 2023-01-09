@@ -232,5 +232,4 @@ cd ..
 # last tutorial is over, cleanup everything
 rmdir /tmp/msui_tutorials
 
-# last tutorial is over, cleanup everything
-rmdir /tmp/msui_tutorials
+

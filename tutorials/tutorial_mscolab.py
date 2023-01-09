@@ -496,12 +496,16 @@ def automate_mscolab():
             if wp1_x is not None and wp2_x is not None:
                 x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'))
                 pag.click(x, y, interval=2)
+                try:
+                    wp2_x, wp2_y = pag.locateCenterOnScreen(picture('mscolab', 'topview_point2.png'))
+                except (ImageNotFoundException, OSError, Exception):
+                    print("\nException : Topview's \'Point 2\' not found on the screen.")
+                    raise
+                pag.click(wp2_x, wp2_y, interval=2)
                 pag.moveTo(wp2_x, wp2_y, duration=1)
+                pag.dragTo(wp1_x, wp1_y, duration=1, button='left')
                 pag.click(interval=2)
-                pag.dragRel(100, 150, duration=1)
-                pag.moveTo(wp1_x, wp1_y, duration=1)
-                pag.dragRel(35, -50, duration=1)
-                pag.sleep(3)
+
         except (ImageNotFoundException, OSError, Exception):
             print("\n Exception : Move Waypoint button could not be located on the screen")
             raise
