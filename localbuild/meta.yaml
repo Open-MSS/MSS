@@ -33,6 +33,8 @@ requirements:
     - chameleon
     - execnet
     - fastkml =0.11
+    - shapely <2.0.0
+    - pygeoif <1.0.0
     - isodate
     - lxml
     - netcdf4
@@ -68,7 +70,7 @@ requirements:
     - PyMySQL >=0.9.3
     - validate_email
     - multidict
-    - pint <0.20
+    - pint
     - python-socketio >=5
     - python-engineio >=4
     - markdown
@@ -79,6 +81,7 @@ requirements:
     - metpy
     - pycountry
     - websocket-client
+    - libtiff <4.5.0
 
 test:
   imports:
