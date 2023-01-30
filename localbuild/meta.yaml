@@ -23,6 +23,11 @@ requirements:
   build:
     - python
     - pip
+    - setuptools ==65.5.1
+  host:
+    - python
+    - setuptools ==65.5.1
+    - pip
     - future
     - menuinst  # [win]
   run:
