@@ -80,7 +80,7 @@ Cloning the Repo
 
 4. Click The big green button which says "Code". Copy the URL. `Like this <https://user-images.githubusercontent.com/71402528/122255281-9a855d80-ceeb-11eb-9f85-fed38db30562.png>`_
 
-5. Now Type the command ``git clone <your-fork-url>.git`` and hit enter.
+5. Now Type the command ``git clone <your-fork-url>.git`` and hit enter. Also, you could use ``gh repo clone <your-fork-url>.git``, If you don't have ``gh``, see this for installation `here <https://github.com/cli/cli/blob/trunk/docs/install_linux.md>`_.
 
 6. Wait for few seconds till the project gets copied
 
