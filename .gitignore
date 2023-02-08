@@ -21,3 +21,5 @@ docs/gallery/code
 docs/gallery/plots.html
 build/
 mss.egg-info/
+tutorials/recordings
+tutorials/cursor_image.png
