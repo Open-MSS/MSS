@@ -188,7 +188,7 @@ Instructions to use mscolab wsgi
 make a file called :code:`server.py`
 and install ::
 
-   mamba install eventlet>0.30.2 gunicorn
+   mamba install eventlet\>0.30.2 dnspython\<2.3.0 gunicorn
 
 **server.py**::
 
@@ -196,7 +196,7 @@ and install ::
 
 Then run the following commands. ::
 
-  $ mamba install gunicorn eventlet>0.30.2
+  $ mamba install gunicorn eventlet\>0.30.2 dnspython\<2.3.0
   $ gunicorn -b 0.0.0.0:8087 server:app
 
 For further options read `<https://flask.palletsoperations.com/en/1.1.x/deploying/wsgi-standalone/#gunicorn>`_
