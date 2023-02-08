@@ -144,4 +144,4 @@ def automate_rs():
 
 
 if __name__ == '__main__':
-    start(target=automate_rs, duration=300)
+    start(target=automate_rs, duration=148)
