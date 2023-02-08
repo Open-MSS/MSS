@@ -23,6 +23,11 @@ requirements:
   build:
     - python
     - pip
+    - setuptools ==65.5.1
+  host:
+    - python
+    - setuptools ==65.5.1
+    - pip
     - future
     - menuinst  # [win]
   run:
@@ -59,6 +64,7 @@ requirements:
     - flask-httpauth
     - flask-mail
     - flask-migrate
+    - sqlalchemy <2.0.0
     - werkzeug >2.0.0
     - flask-socketio =5.1.0
     - flask-sqlalchemy
