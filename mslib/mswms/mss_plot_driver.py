@@ -220,7 +220,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
     def set_plot_parameters(self, plot_object, init_time=None, valid_time=None,
                             style=None, bbox=None, figsize=(800, 600),
                             noframe=False, require_reload=False, transparent=False,
-                            return_format="image/png"):
+                            mime_type="image/png"):
         """
         Set parameters controlling the plot.
 
@@ -249,14 +249,14 @@ class MSSPlotDriver(metaclass=ABCMeta):
         self.style = style
         self.bbox = bbox
         self.transparent = transparent
-        self.return_format = return_format
+        self.mime_type = mime_type
 
         self._set_time(init_time, valid_time)
 
     @abstractmethod
     def update_plot_parameters(self, plot_object=None, figsize=None, style=None,
                                bbox=None, init_time=None, valid_time=None,
-                               noframe=None, transparent=None, return_format=None):
+                               noframe=None, transparent=None, mime_type=None):
         """
         Update parameters controlling the plot.
 
@@ -277,7 +277,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
         style = style if style is not None else self.style
         bbox = bbox if bbox is not None else self.bbox
         transparent = transparent if transparent is not None else self.transparent
-        return_format = return_format if return_format is not None else self.return_format
+        mime_type = mime_type if mime_type is not None else self.mime_type
         # Explicitly call MSSPlotDriver's set_plot_parameters(). A "self.--"
         # call would call the derived class's method and thus reset
         # parameters specific to the derived class.
@@ -289,7 +289,7 @@ class MSSPlotDriver(metaclass=ABCMeta):
                                           bbox=bbox,
                                           noframe=noframe,
                                           transparent=transparent,
-                                          return_format=return_format)
+                                          mime_type=mime_type)
 
     @abstractmethod
     def plot(self):
@@ -358,7 +358,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                             init_time=None, valid_time=None, style=None,
                             bbox=None, figsize=(800, 600), noframe=False, draw_verticals=False,
                             show=False, transparent=False,
-                            return_format="image/png"):
+                            mime_type="image/png"):
         """
         """
         MSSPlotDriver.set_plot_parameters(self, plot_object,
@@ -368,7 +368,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                           bbox=bbox,
                                           figsize=figsize, noframe=noframe,
                                           transparent=transparent,
-                                          return_format=return_format)
+                                          mime_type=mime_type)
         self._set_vertical_section_path(vsec_path, vsec_numpoints,
                                         vsec_path_connection)
         self.show = show
@@ -380,7 +380,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                vsec_numlabels=None,
                                init_time=None, valid_time=None, style=None,
                                bbox=None, figsize=None, noframe=None, draw_verticals=None, show=None,
-                               transparent=None, return_format=None):
+                               transparent=None, mime_type=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -398,7 +398,7 @@ class VerticalSectionDriver(MSSPlotDriver):
             vsec_path_connection = self.vsec_path_connection
         show = show if show else self.show
         transparent = transparent if transparent is not None else self.transparent
-        return_format = return_format if return_format is not None else self.return_format
+        mime_type = mime_type if mime_type is not None else self.mime_type
         self.set_plot_parameters(plot_object=plot_object,
                                  vsec_path=vsec_path,
                                  vsec_numpoints=vsec_numpoints,
@@ -413,7 +413,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                  draw_verticals=draw_verticals,
                                  show=show,
                                  transparent=transparent,
-                                 return_format=return_format)
+                                 mime_type=mime_type)
 
     def _set_vertical_section_path(self, vsec_path, vsec_numpoints=101,
                                    vsec_path_connection='linear'):
@@ -534,8 +534,8 @@ class VerticalSectionDriver(MSSPlotDriver):
         else:
             resolution = (-1, -1)
 
-        if self.return_format not in ("image/png", "text/xml"):
-            raise RuntimeError(f"Unexpected format for vertical sections '{self.return_format}'.")
+        if self.mime_type not in ("image/png", "text/xml"):
+            raise RuntimeError(f"Unexpected format for vertical sections '{self.mime_type}'.")
 
         # Call the plotting method of the vertical section style instance.
         image = self.plot_object.plot_vsection(data, self.lats, self.lons,
@@ -551,7 +551,7 @@ class VerticalSectionDriver(MSSPlotDriver):
                                                draw_verticals=self.draw_verticals,
                                                transparent=self.transparent,
                                                numlabels=self.vsec_numlabels,
-                                               return_format=self.return_format)
+                                               mime_type=self.mime_type)
         # Free memory.
         del data
 
@@ -571,7 +571,7 @@ class HorizontalSectionDriver(MSSPlotDriver):
 
     def set_plot_parameters(self, plot_object=None, bbox=None, level=None, crs=None, init_time=None, valid_time=None,
                             style=None, figsize=(800, 600), noframe=False, show=False, transparent=False,
-                            return_format="image/png"):
+                            mime_type="image/png"):
         """
         """
         MSSPlotDriver.set_plot_parameters(self, plot_object,
@@ -581,14 +581,14 @@ class HorizontalSectionDriver(MSSPlotDriver):
                                           bbox=bbox,
                                           figsize=figsize, noframe=noframe,
                                           transparent=transparent,
-                                          return_format=return_format)
+                                          mime_type=mime_type)
         self.level = level
         self.actual_level = None
         self.crs = crs
         self.show = show
 
     def update_plot_parameters(self, plot_object=None, bbox=None, level=None, crs=None, init_time=None, valid_time=None,
-                               style=None, figsize=None, noframe=None, show=None, transparent=None, return_format=None):
+                               style=None, figsize=None, noframe=None, show=None, transparent=None, mime_type=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -602,10 +602,10 @@ class HorizontalSectionDriver(MSSPlotDriver):
         crs = crs if crs is not None else self.crs
         show = show if show is not None else self.show
         transparent = transparent if transparent is not None else self.transparent
-        return_format = return_format if return_format is not None else self.return_format
+        mime_type = mime_type if mime_type is not None else self.mime_type
         self.set_plot_parameters(plot_object=plot_object, bbox=bbox, level=level, crs=crs, init_time=init_time,
                                  valid_time=valid_time, style=style, figsize=figsize, noframe=noframe, show=show,
-                                 transparent=transparent, return_format=return_format)
+                                 transparent=transparent, mime_type=mime_type)
 
     def _load_timestep(self):
         """
@@ -660,8 +660,8 @@ class HorizontalSectionDriver(MSSPlotDriver):
         else:
             resolution = 0
 
-        if self.return_format != "image/png":
-            raise RuntimeError(f"Unexpected format for horizontal sections '{self.return_format}'.")
+        if self.mime_type != "image/png":
+            raise RuntimeError(f"Unexpected format for horizontal sections '{self.mime_type}'.")
 
         # Call the plotting method of the horizontal section style instance.
         image = self.plot_object.plot_hsection(data,
@@ -697,18 +697,18 @@ class LinearSectionDriver(VerticalSectionDriver):
 
     def set_plot_parameters(self, plot_object=None, lsec_path=None,
                             lsec_numpoints=101, lsec_path_connection='linear',
-                            init_time=None, valid_time=None, bbox=None, return_format=None):
+                            init_time=None, valid_time=None, bbox=None, mime_type=None):
         """
         """
         MSSPlotDriver.set_plot_parameters(self, plot_object,
                                           init_time=init_time,
                                           valid_time=valid_time,
-                                          bbox=bbox, return_format=return_format)
+                                          bbox=bbox, mime_type=mime_type)
         self._set_linear_section_path(lsec_path, lsec_numpoints, lsec_path_connection)
 
     def update_plot_parameters(self, plot_object=None, lsec_path=None,
                                lsec_numpoints=None, lsec_path_connection=None,
-                               init_time=None, valid_time=None, bbox=None, return_format=None):
+                               init_time=None, valid_time=None, bbox=None, mime_type=None):
         """
         """
         plot_object = plot_object if plot_object is not None else self.plot_object
@@ -719,7 +719,7 @@ class LinearSectionDriver(VerticalSectionDriver):
         lsec_numpoints = lsec_numpoints if lsec_numpoints is not None else self.lsec_numpoints
         if lsec_path_connection is None:
             lsec_path_connection = self.lsec_path_connection
-        return_format = return_format if return_format is not None else self.return_format
+        mime_type = mime_type if mime_type is not None else self.mime_type
         self.set_plot_parameters(plot_object=plot_object,
                                  lsec_path=lsec_path,
                                  lsec_numpoints=lsec_numpoints,
@@ -727,7 +727,7 @@ class LinearSectionDriver(VerticalSectionDriver):
                                  init_time=init_time,
                                  valid_time=valid_time,
                                  bbox=bbox,
-                                 return_format=return_format)
+                                 mime_type=mime_type)
 
     def _set_linear_section_path(self, lsec_path, lsec_numpoints=101, lsec_path_connection='linear'):
         """
@@ -857,8 +857,8 @@ class LinearSectionDriver(VerticalSectionDriver):
         data = self._load_interpolate_timestep()
         d2 = datetime.now()
 
-        if self.return_format != "text/xml":
-            raise RuntimeError(f"Unexpected format for linear sections '{self.return_format}'.")
+        if self.mime_type != "text/xml":
+            raise RuntimeError(f"Unexpected format for linear sections '{self.mime_type}'.")
 
         # Call the plotting method of the linear section style instance.
         image = self.plot_object.plot_lsection(data, self.lats, self.lons,

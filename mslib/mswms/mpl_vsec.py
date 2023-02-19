@@ -146,7 +146,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                       show=False,
                       highlight=None, noframe=False, figsize=(960, 480), draw_verticals=False,
                       numlabels=10, orography_color='k', transparent=False,
-                      return_format="image/png"):
+                      mime_type="image/png"):
         """
         """
         # Check if required data is available.
@@ -203,7 +203,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Code for producing a png image with Matplotlib.
         # ===============================================
-        if return_format == "image/png":
+        if mime_type == "image/png":
 
             logging.debug("creating figure..")
             dpi = 80
@@ -281,7 +281,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Code for generating an XML document with the data values in ASCII format.
         # =========================================================================
-        elif return_format == "text/xml":
+        elif mime_type == "text/xml":
 
             impl = getDOMImplementation()
             xmldoc = impl.createDocument(None, "MSS_VerticalSection_Data", None)
