@@ -30,8 +30,6 @@ import logging
 import sys
 
 from mslib import __version__
-from mslib.mswms.wms import mswms_settings, server
-from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging
 from mslib.utils.qt import Updater, Worker
 
@@ -88,6 +86,9 @@ def main():
         print("Version:", __version__)
         sys.exit()
 
+    # keep the import after the version check. This creates all layers.
+    from mslib.mswms.wms import mswms_settings, server
+    from mslib.mswms.wms import app as application
     updater = Updater()
     if args.update:
         updater.on_update_available.connect(lambda old, new: updater.update_mss())
