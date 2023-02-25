@@ -331,7 +331,7 @@ class WMSServer(object):
                                                                         lsec_path=[[0, 0, 20000], [1, 1, 20000]],
                                                                         lsec_numpoints=201,
                                                                         lsec_path_connection="linear",
-                                                                        return_format="text/xml")
+                                                                        mime_type="text/xml")
                                         lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
                                         lpath = [[min(plot_driver.lat_data), min(lon_data), 20000],
                                                  [max(plot_driver.lat_data), max(lon_data), 20000]]
@@ -342,7 +342,7 @@ class WMSServer(object):
                                                                         vsec_numpoints=201, figsize=[800, 600],
                                                                         vsec_path_connection="linear", style=style,
                                                                         noframe=False, bbox=[101, 1050, 10, 180],
-                                                                        return_format="image/png")
+                                                                        mime_type="image/png")
                                         lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
                                         lpath = [[min(plot_driver.lat_data), min(lon_data)],
                                                  [max(plot_driver.lat_data), max(lon_data)]]
@@ -356,7 +356,7 @@ class WMSServer(object):
                                                                         crs="EPSG:4326", style=style,
                                                                         bbox=[-15, 35, 30, 65],
                                                                         level=elevation,
-                                                                        return_format="image/png")
+                                                                        mime_type="image/png")
                                         lon_data = np.rad2deg(np.unwrap(np.deg2rad(plot_driver.lon_data)))
                                         bbox = [min(lon_data), min(plot_driver.lat_data),
                                                 max(lon_data), max(plot_driver.lat_data)]
@@ -725,12 +725,12 @@ class WMSServer(object):
                 logging.debug("  requested transparent image")
 
             # Return format (image/png, text/xml, etc.).
-            return_format = query.get('FORMAT', 'image/png').lower()
-            logging.debug("  requested return format = '%s'", return_format)
-            if return_format not in ["image/png", "text/xml"]:
+            mime_type = query.get('FORMAT', 'image/png').lower()
+            logging.debug("  requested return format = '%s'", mime_type)
+            if mime_type not in ["image/png", "text/xml"]:
                 return self.create_service_exception(
                     code="InvalidFORMAT",
-                    text=f"unsupported FORMAT: '{return_format}'",
+                    text=f"unsupported FORMAT: '{mime_type}'",
                     version=version)
 
             # 3) Check GetMap/GetVSec-specific parameters and produce
@@ -794,7 +794,7 @@ class WMSServer(object):
                     plot_driver.set_plot_parameters(self.hsec_layer_registry[dataset][layer], bbox=bbox, level=level,
                                                     crs=crs, init_time=init_time, valid_time=valid_time, style=style,
                                                     figsize=figsize, noframe=noframe, transparent=transparent,
-                                                    return_format=return_format)
+                                                    mime_type=mime_type)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:
                     logging.error("ERROR: %s %s", type(ex), ex)
@@ -858,7 +858,7 @@ class WMSServer(object):
                                                     noframe=noframe,
                                                     draw_verticals=draw_verticals,
                                                     transparent=transparent,
-                                                    return_format=return_format)
+                                                    mime_type=mime_type)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:
                     logging.error("ERROR: %s %s", type(ex), ex)
@@ -869,10 +869,10 @@ class WMSServer(object):
                     return self.create_service_exception(text=msg, version=version)
 
             elif mode == "getlsec":
-                if return_format != "text/xml":
+                if mime_type != "text/xml":
                     return self.create_service_exception(
                         code="InvalidFORMAT",
-                        text=f"unsupported FORMAT: '{return_format}'",
+                        text=f"unsupported FORMAT: '{mime_type}'",
                         version=version)
 
                 # Linear section path.
@@ -920,7 +920,7 @@ class WMSServer(object):
                                                     init_time=init_time,
                                                     valid_time=valid_time,
                                                     bbox=bbox,
-                                                    return_format=return_format)
+                                                    mime_type=mime_type)
                     images.append(plot_driver.plot())
                 except (IOError, ValueError) as ex:
                     logging.error("ERROR: %s %s", type(ex), ex)
@@ -933,14 +933,14 @@ class WMSServer(object):
         # 4) Return the produced image.
         # =============================
         if len(layers) > 1:
-            if "image" in return_format:
-                return squash_multiple_images(images), return_format
-            elif "xml" in return_format:
-                return squash_multiple_xml(images), return_format
+            if "image" in mime_type:
+                return squash_multiple_images(images), mime_type
+            elif "xml" in mime_type:
+                return squash_multiple_xml(images), mime_type
             else:
-                raise RuntimeError(f"Unexpected format error: {return_format}")
+                raise RuntimeError(f"Unexpected format error: {mime_type}")
         else:
-            return images[0], return_format
+            return images[0], mime_type
 
 
 server = WMSServer()
@@ -967,15 +967,15 @@ def application():
 
         if (request_type in ('getcapabilities', 'capabilities') and
                 request_service == 'wms' and request_version in ('1.1.1', '1.3.0', '')):
-            return_data, return_format = server.get_capabilities(query, server_url)
+            return_data, mime_type = server.get_capabilities(query, server_url)
         elif request_type in ('getmap', 'getvsec', 'getlsec') and request_version in ('1.1.1', '1.3.0', ''):
-            return_data, return_format = server.produce_plot(query, request_type)
+            return_data, mime_type = server.produce_plot(query, request_type)
         else:
             logging.debug("Request type '%s' is not valid.", request)
             raise RuntimeError("Request type is not valid.")
 
         res = make_response(return_data, 200)
-        response_headers = [('Content-type', return_format), ('Content-Length', str(len(return_data)))]
+        response_headers = [('Content-type', mime_type), ('Content-Length', str(len(return_data)))]
         for response_header in response_headers:
             res.headers[response_header[0]] = response_header[1]
 
