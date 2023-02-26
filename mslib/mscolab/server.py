@@ -234,14 +234,14 @@ def get_auth_token():
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
-                    'token': token.decode('ascii'),
+                    'token': token,
                     'user': {'username': user.username, 'id': user.id}})
             else:
                 return "False"
         else:
             token = user.generate_auth_token()
             return json.dumps({
-                'token': token.decode('ascii'),
+                'token': token,
                 'user': {'username': user.username, 'id': user.id}})
     else:
         logging.debug("Unauthorized user: %s", emailid)

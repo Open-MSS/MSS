@@ -28,9 +28,9 @@
 import datetime
 import enum
 import logging
+import jwt
 
 from flask_sqlalchemy import SQLAlchemy
-from itsdangerous import (BadSignature, SignatureExpired, TimedJSONWebSignatureSerializer as Serializer)
 from passlib.apps import custom_app_context as pwd_context
 
 
@@ -67,14 +67,21 @@ class User(db.Model):
         return pwd_context.verify(password_, self.password)
 
     def generate_auth_token(self, expiration=None):
-        # ToDo cleanup API
         # Importing conf here to avoid loading settings on opening chat window
         from mslib.mscolab.conf import mscolab_settings
         expiration = mscolab_settings.__dict__.get('EXPIRATION', expiration)
         if expiration is None:
             expiration = 864000
-        s = Serializer(mscolab_settings.SECRET_KEY, expires_in=expiration)
-        return s.dumps({'id': self.id})
+            token = jwt.encode(
+                {
+                    "id": self.id,
+                    "exp": datetime.datetime.now(tz=datetime.timezone.utc)
+                           + datetime.timedelta(seconds=expiration)
+                },
+                mscolab_settings.SECRET_KEY,
+                algorithm="HS256"
+            )
+            return token
 
     @staticmethod
     def verify_auth_token(token):
@@ -83,16 +90,18 @@ class User(db.Model):
         """
         # Importing conf here to avoid loading settings on opening chat window
         from mslib.mscolab.conf import mscolab_settings
-        s = Serializer(mscolab_settings.SECRET_KEY)
         try:
-            data = s.loads(token)
-        except SignatureExpired:
-            logging.debug("Signature Expired")
-            return None  # valid token, but expired
-        except BadSignature:
-            logging.debug("Bad Signature")
-            return None  # invalid token
-        user = User.query.filter_by(id=data['id']).first()
+            data = jwt.decode(
+                token,
+                mscolab_settings.SECRET_KEY,
+                leeway=datetime.timedelta(seconds=30),
+                algorithms=["HS256"]
+            )
+        except Exception as e:
+            logging.debug("Bad Token %s", str(e))
+            return None
+
+        user = User.query.filter_by(id=data.get('id')).first()
         return user
 
 
