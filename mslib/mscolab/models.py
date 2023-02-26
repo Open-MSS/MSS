@@ -30,11 +30,11 @@ import enum
 import logging
 import jwt
 
-from flask_sqlalchemy import SQLAlchemy
 from passlib.apps import custom_app_context as pwd_context
+from flask_sqlalchemy import SQLAlchemy
+from mslib.mscolab.app import APP
 
-
-db = SQLAlchemy()
+db = SQLAlchemy(APP)
 
 
 class User(db.Model):
@@ -75,8 +75,7 @@ class User(db.Model):
             token = jwt.encode(
                 {
                     "id": self.id,
-                    "exp": datetime.datetime.now(tz=datetime.timezone.utc)
-                           + datetime.timedelta(seconds=expiration)
+                    "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
                 },
                 mscolab_settings.SECRET_KEY,
                 algorithm="HS256"

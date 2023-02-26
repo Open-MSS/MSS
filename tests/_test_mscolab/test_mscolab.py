@@ -31,7 +31,7 @@ import argparse
 from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, Operation, User, Permission
+from mslib.mscolab.models import Operation, User, Permission
 from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed, confirm_action, main
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_operation
@@ -75,7 +75,6 @@ class Test_Mscolab(TestCase):
         return app
 
     def setUp(self):
-        db.init_app(self.app)
         handle_db_reset()
         assert Operation.query.all() == []
         assert User.query.all() == []

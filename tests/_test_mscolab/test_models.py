@@ -28,9 +28,9 @@
 from flask_testing import TestCase
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.models import db
 from mslib.mscolab.server import register_user, APP
 from mslib.mscolab.models import User
+
 
 class Test_User(TestCase):
     render_templates = False
@@ -48,7 +48,6 @@ class Test_User(TestCase):
 
     def setUp(self):
         handle_db_reset()
-        db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert result["success"] is True

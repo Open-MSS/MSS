@@ -65,10 +65,9 @@ requirements:
     - flask-httpauth
     - flask-mail
     - flask-migrate
-    - sqlalchemy <2.0.0
     - werkzeug >2.0.0
     - flask-socketio =5.1.0
-    - flask-sqlalchemy
+    - flask-sqlalchemy >=3.0.0
     - flask-cors
     - passlib
     - gitpython
