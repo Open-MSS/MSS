@@ -29,7 +29,7 @@ paths can be constructed and modified on these views. Exchange through a waypoin
 MSS is a client/server application written in the language **Python**. This is used to create flight plans and
 discuss these with pilots of research aircraft. The flight path is designed by local and remote scientists based
 on meteorologic forecast data on the QT5 MSS gui application.
-A `publication by Rautenhaus et al. <http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf>`_
+A `publication by Rautenhaus et al. <https://gmd.copernicus.org/articles/15/8983/2022/gmd-15-8983-2022.pdf>`_
 summarizes the principle of this software. On the EuroPython conference a
 `overview talk <https://pyvideo.org/europython-2017/mss-software-for-planning-research-aircraft-missions.html>`_
 about MSS was held.

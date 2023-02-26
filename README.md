@@ -67,6 +67,7 @@ Please read the reference documentation
 and the paper's Supplement (which includes a tutorial) before using the
 application. The documents are available at:
 
+- https://gmd.copernicus.org/articles/15/8983/2022/gmd-15-8983-2022.pdf
 - http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
 - http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012-supplement.pdf
 

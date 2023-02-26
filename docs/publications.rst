@@ -10,9 +10,9 @@ tool to plan atmospheric research flights, Geosci. Model Dev., 5,
 and the paper's Supplement (which includes a tutorial) before using the
 application. The documents are available at:
 
+- https://gmd.copernicus.org/articles/15/8983/2022/gmd-15-8983-2022.pdf
 - http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
 - http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012-supplement.pdf
-- https://gmd.copernicus.org/articles/15/8983/2022/gmd-15-8983-2022.pdf
 
 For copyright information, please see the files NOTICE and LICENSE.
 
