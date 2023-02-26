@@ -28,6 +28,7 @@
 from mslib import index
 from mslib.mscolab.server import APP as app
 
+
 def test_xstatic():
     assert index._xstatic('jquery') is not None
     assert index._xstatic('bootstrap') is not None
