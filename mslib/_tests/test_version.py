@@ -1,4 +1,4 @@
-#  -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 
     mslib._tests.utils
@@ -30,7 +30,7 @@ import pytest
 from packaging.version import Version
 from mslib import __version__
 
-#testing import version string for validity
+# testing import version string for validity
 def test_version_string():
     Version(__version__)
 
