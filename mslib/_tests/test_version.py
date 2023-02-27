@@ -33,8 +33,5 @@ from mslib import __version__
 # testing import version string for validity
 def test_version_string():
     Version(__version__)
-
-
-    def do_test():
-        with pytest.raises():
-            test_version_string()
+    with pytest.raises():
+        test_version_string()
