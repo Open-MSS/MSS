@@ -82,8 +82,7 @@ def main():
     if args.version:
         print("***********************************************************************")
         print("\n            Mission Support System (MSS)\n")
-        print("***"
-              "********************************************************************")
+        print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
