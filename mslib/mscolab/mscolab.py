@@ -66,7 +66,8 @@ def confirm_action(confirmation_prompt):
 
 
 def handle_db_init():
-    from mslib.mscolab.server import APP, db
+    from mslib.mscolab.models import db
+    from mslib.mscolab.server import APP
     create_files()
     with APP.app_context():
         db.create_all()
@@ -74,7 +75,8 @@ def handle_db_init():
 
 
 def handle_db_reset(verbose=True):
-    from mslib.mscolab.server import APP, db
+    from mslib.mscolab.models import db
+    from mslib.mscolab.server import APP
     if os.path.exists(mscolab_settings.DATA_DIR):
         shutil.rmtree(mscolab_settings.DATA_DIR)
     create_files()

@@ -39,6 +39,7 @@ from flask import g, jsonify, request, render_template
 from flask import send_from_directory, abort, url_for
 from flask_mail import Mail, Message
 from flask_cors import CORS
+from flask_migrate import Migrate
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
@@ -48,30 +49,13 @@ from mslib.mscolab.models import Change, MessageType, User, Operation, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
-from mslib.index import app_loader
+from mslib.index import create_app
 
-APP = app_loader(__name__)
+
+APP = create_app(__name__)
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
-
-# set the operation root directory as the static folder
-# ToDo needs refactoring on a route without using of static folder
-
-APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
-APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-APP.config['SECURITY_PASSWORD_SALT'] = getattr(mscolab_settings, "SECURITY_PASSWORD_SALT", None)
-APP.config['MAIL_DEFAULT_SENDER'] = getattr(mscolab_settings, "MAIL_DEFAULT_SENDER", None)
-APP.config['MAIL_SERVER'] = getattr(mscolab_settings, "MAIL_SERVER", None)
-APP.config['MAIL_PORT'] = getattr(mscolab_settings, "MAIL_PORT", None)
-APP.config['MAIL_USERNAME'] = getattr(mscolab_settings, "MAIL_USERNAME", None)
-APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
-APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
-APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
-
+migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
 
 try:
@@ -144,7 +128,7 @@ def initialize_managers(app):
     # initializing socketio and db
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
-    db.init_app(app)
+    # db.init_app(app)
     return app, sockio, cm, fm
 
 
@@ -234,14 +218,14 @@ def get_auth_token():
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
-                    'token': token.decode('ascii'),
+                    'token': token,
                     'user': {'username': user.username, 'id': user.id}})
             else:
                 return "False"
         else:
             token = user.generate_auth_token()
             return json.dumps({
-                'token': token.decode('ascii'),
+                'token': token,
                 'user': {'username': user.username, 'id': user.id}})
     else:
         logging.debug("Unauthorized user: %s", emailid)

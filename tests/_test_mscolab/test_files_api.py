@@ -30,7 +30,7 @@ import fs
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation, db
+from mslib.mscolab.models import Operation
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -55,7 +55,6 @@ class Test_Files(TestCase):
 
     def setUp(self):
         handle_db_reset()
-        db.init_app(self.app)
 
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'

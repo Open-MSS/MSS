@@ -26,22 +26,18 @@
 """
 import logging
 import fs
-from flask import Flask
 import git
 from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, db, Permission, Operation
-
-
-app = Flask(__name__, static_url_path='')
+from mslib.mscolab.server import APP as app
 
 
 def add_all_users_to_all_operations(access_level='collaborator'):
     """ on db level we add all users as collaborator to all operations """
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         all_operations = Operation.query.all()
         all_path = [operation.path for operation in all_operations]
@@ -58,7 +54,6 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    db.init_app(app)
     with app.app_context():
         operation_available = Operation.query.filter_by(path=path).first()
         if not operation_available:
@@ -100,7 +95,6 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
 def delete_user(email):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         user = User.query.filter_by(emailid=str(email)).first()
         if user:
@@ -119,7 +113,6 @@ def add_user(email, username, password):
     """
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
 
     template = f"""
     "MSCOLAB_mailid": "{email}",
@@ -154,7 +147,6 @@ def get_operation(operation_name):
 def add_operation(operation_name, description):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         operation_available = Operation.query.filter_by(path=operation_name).first()
         if not operation_available:
@@ -178,7 +170,6 @@ def add_operation(operation_name, description):
 def delete_operation(operation_name):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         operation = Operation.query.filter_by(path=operation_name).first()
         if operation:
@@ -196,12 +187,9 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
         return False
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    db.init_app(app)
     with app.app_context():
         operation = Operation.query.filter_by(path=path).first()
         if operation:
-
             user = User.query.filter_by(emailid=emailid).first()
             if user:
                 new_permissions = [Permission(user.id, operation.id, access_level)]
@@ -219,8 +207,6 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
 def seed_data():
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
-
     with app.app_context():
         # create users
         users = [{

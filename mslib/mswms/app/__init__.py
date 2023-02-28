@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mscolab.app
-    ~~~~~~~~~~~~~~~~~
+    mslib.mswms.app
+    ~~~~~~~~~~~~~~~
 
-    app module of mscolab
+    app module of mswms
 
     This file is part of MSS.
 
@@ -28,7 +28,6 @@ import os
 import mslib
 
 from flask import Flask
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 from mslib.utils import prefix_route
 
@@ -43,18 +42,3 @@ APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', '
             static_folder=STATIC_LOCATION)
 APP.config.from_object(__name__)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
-
-APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
-APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-APP.config['SECURITY_PASSWORD_SALT'] = getattr(mscolab_settings, "SECURITY_PASSWORD_SALT", None)
-APP.config['MAIL_DEFAULT_SENDER'] = getattr(mscolab_settings, "MAIL_DEFAULT_SENDER", None)
-APP.config['MAIL_SERVER'] = getattr(mscolab_settings, "MAIL_SERVER", None)
-APP.config['MAIL_PORT'] = getattr(mscolab_settings, "MAIL_PORT", None)
-APP.config['MAIL_USERNAME'] = getattr(mscolab_settings, "MAIL_USERNAME", None)
-APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
-APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
-APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)

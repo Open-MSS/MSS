@@ -32,7 +32,7 @@ import json
 import io
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, User, Operation
+from mslib.mscolab.models import User, Operation
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import initialize_managers, check_login, register_user, APP
 from mslib.mscolab.file_manager import FileManager
@@ -57,7 +57,6 @@ class Test_Server(TestCase):
 
     def setUp(self):
         handle_db_reset()
-        db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
 
     def tearDown(self):

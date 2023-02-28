@@ -66,14 +66,14 @@ from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils.time import parse_iso_datetime
-from mslib.index import app_loader
+from mslib.index import create_app
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
     write_doc_index, write_code_pages, STATIC_LOCATION, DOCS_LOCATION
 
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
 
-app = app_loader(__name__)
+app = create_app(__name__)
 auth = HTTPBasicAuth()
 
 realm = 'Mission Support Web Map Service'
