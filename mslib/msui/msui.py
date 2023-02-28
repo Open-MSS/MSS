@@ -793,8 +793,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         file_type = ["Flight track (*.ftml)"]
+        filepicker_default = config_loader(dataset="filepicker_default")
         filename = get_save_filename(
-            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertype="default"
+            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertype=filepicker_default
         )
         logging.debug("filename : '%s'", filename)
         if filename:
