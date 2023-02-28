@@ -801,6 +801,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if filename:
             ext = "ftml"
             self.save_flight_track(filename)
+            self.last_save_directory = fs.path.dirname(filename)
             self.active_flight_track.filename = filename
             self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
 
