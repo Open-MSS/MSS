@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib._tests.utils
+    mslib._tests.test_version
     ~~~~~~~~~~~~~~~~~~
 
-    This module provides common functions for MSS testing
+    This module provides a test for the version string
 
     This file is part of MSS.
 
-    :copyright: Copyright 2017 Reimar Bauer, Joern Ungermann
-    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2023 rootxrishabh
+    :copyright: Copyright 2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,11 +25,12 @@
     limitations under the License.
 """
 import pytest
-from packaging.version import Version
+import packaging
+
 from mslib import __version__
 
-
 def test_version_string():
-    Version(__version__)
-    with pytest.raises():
-        test_version_string()
+    try:
+        packaging.version.Version(__version__)
+    except packaging.version.InvalidVersion:
+        pytest.fail("Version parsing fails")
