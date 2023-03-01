@@ -29,6 +29,7 @@ import packaging
 
 from mslib import __version__
 
+
 def test_version_string():
     try:
         packaging.version.Version(__version__)
