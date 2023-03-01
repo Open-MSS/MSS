@@ -24,13 +24,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-
 import pytest
 from packaging.version import Version
 from mslib import __version__
 
-# testing import version string for validity
+
 def test_version_string():
     Version(__version__)
     with pytest.raises():
