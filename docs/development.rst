@@ -154,7 +154,7 @@ Setup mswms server
 In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
 MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
 
-:ref:`demodata` is provided by executing::
+:ref:`demodata <demodata>` is provided by executing::
 
    $(mssdev) python mslib/mswms/demodata.py --seed
 
@@ -202,7 +202,7 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
 
 
 Setup msui_settings.json for special tests
-+++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++++
 
 On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
 If you want to overwrite this setup and try out a special configuration add an msui_settings.json
