@@ -2,9 +2,6 @@ Installation
 =================
 
 
-.. image:: https://anaconda.org/conda-forge/mss/badges/installer/conda.svg
-
-
 `Anaconda <https://www.anaconda.com/>`_ provides an enterprise-ready data analytics
 platform that empowers companies to adopt a modern open data science analytics architecture.
 
