@@ -108,7 +108,7 @@ master_doc = 'index'
 # General information about the project.
 project = 'MSS - Mission Support System'
 copyright = \
-    '2016-2022 see AUTHORS file, ' \
+    '2016-2023 by the MSS team, see AUTHORS, ' \
     '2011-2014 Marc Rautenhaus, ' \
     '2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V., '
 
@@ -141,7 +141,7 @@ if "/home/docs/checkouts" in " ".join(sys.argv):
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
