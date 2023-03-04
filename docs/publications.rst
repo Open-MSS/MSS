@@ -3,6 +3,10 @@ Publications
 
 Please read the reference documentation
 
+Bauer, R., Grooß, J.-U., Ungermann, J., Bär, M., Geldenhuys, M., and Hoffmann, L.: The Mission Support
+System (MSS v7.0.4) and its use in planning for the SouthTRAC aircraft campaign, Geosci.
+Model Dev., 15, 8983-8997, https://doi.org/10.5194/gmd-15-8983-2022, 2022.
+
 Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based
 tool to plan atmospheric research flights, Geosci. Model Dev., 5,
 55-71, doi:10.5194/gmd-5-55-2012, 2012.
@@ -10,7 +14,6 @@ tool to plan atmospheric research flights, Geosci. Model Dev., 5,
 and the paper's Supplement (which includes a tutorial) before using the
 application. The documents are available at:
 
-- https://gmd.copernicus.org/articles/15/8983/2022/gmd-15-8983-2022.pdf
 - http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
 - http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012-supplement.pdf
 
