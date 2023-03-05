@@ -47,7 +47,6 @@ requirements:
     - pillow
     - pytz
     - pyqt >=5, <5.13
-    - pygeoif
     - qt >=5.10, <5.13
     - requests
     - scipy
@@ -65,7 +64,7 @@ requirements:
     - flask-httpauth
     - flask-mail
     - flask-migrate
-    - werkzeug >2.0.0
+    - werkzeug >=2.2.3
     - flask-socketio =5.1.0
     - flask-sqlalchemy >=3.0.0
     - flask-cors
