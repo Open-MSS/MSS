@@ -18,11 +18,6 @@ Describe the bug and list the steps you used when the issue occurred.
 
 If applicable, add screenshots to help explain your problem.
 
-### Versions
-
-- Operating System :
-- Browser [e.g. chrome, safari]:
-
 ### Logs
 
 Any logs (if any) generated in
