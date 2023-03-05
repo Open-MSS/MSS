@@ -285,7 +285,8 @@ class WMSServer(object):
                                 if itime and plot_driver.get_init_times() and itime not in plot_driver.get_init_times():
                                     logging.warning("Requested itime %s not present for "
                                                     "%s %s! itimes present: "
-                                                    "%s",itime,dataset,plot_object.name,plot_driver.get_init_times())
+                                                    "%s", itime, dataset, plot_object.name, plot_driver.get_init_times()
+                                                    )
                                     continue
                                 elif not plot_driver.get_init_times():
                                     itime = None
@@ -310,7 +311,8 @@ class WMSServer(object):
                                 for vtime in sorted(valid_times):
                                     if vtime and i_vtimes and vtime not in i_vtimes:
                                         logging.warning("Requested vtime %s at %s not present for "
-                                                        "%s %s! vtimes present: %s",vtime,itime,dataset,plot_object.name,i_vtimes)
+                                                        "%s %s! vtimes present: %s", vtime, itime, dataset,
+                                                        plot_object.name, i_vtimes)
                                         continue
                                     elif not i_vtimes:
                                         vtime = None
@@ -374,7 +376,7 @@ class WMSServer(object):
                                                     not in [float(elev) for elev in elevations]:
                                                 logging.warning("Requested level %s not present for "
                                                                 "%s %s! Levels present: "
-                                                                "%s",level,dataset,plot_object.name,elevations)
+                                                                "%s", level, dataset, plot_object.name, elevations)
                                                 continue
                                             elif not elevations:
                                                 level = None
