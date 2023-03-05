@@ -40,7 +40,7 @@ if '://' in MSUI_CONFIG_PATH:
     except fs.errors.CreateFailed:
         _fs.makedirs(MSUI_CONFIG_PATH)
     except fs.opener.errors.UnsupportedProtocol:
-        logging.error(f'FS url "{MSUI_CONFIG_PATH}" not supported')
+        logging.error('FS url "%s" not supported',MSUI_CONFIG_PATH)
 else:
     _dir = os.path.expanduser(MSUI_CONFIG_PATH)
     if not os.path.exists(_dir):
@@ -60,14 +60,14 @@ if '://' in MSUI_SETTINGS:
             with _fs.open(file_name, 'w') as fid:
                 fid.write("{}")
     except fs.errors.CreateFailed:
-        logging.error(f'"{MSUI_SETTINGS}" can''t be created')
+        logging.error('"%s" can''t be created',MSUI_SETTINGS)
 else:
     if not os.path.exists(MSUI_SETTINGS):
         try:
             with open(MSUI_SETTINGS, 'w') as fid:
                 fid.write("{}")
         except IOError:
-            logging.error(f'"{MSUI_SETTINGS}" can''t be created')
+            logging.error('"%s" can''t be created',MSUI_SETTINGS)
 
 # ToDo refactor to a function
 MSS_AUTOPLOT = os.getenv('MSS_AUTOPLOT', os.path.join(MSUI_CONFIG_PATH, "mssautoplot.json"))
@@ -82,14 +82,14 @@ if '://' in MSS_AUTOPLOT:
             with _fs.open(file_name, 'w') as fid:
                 fid.write("{}")
     except fs.errors.CreateFailed:
-        logging.error(f'"{MSS_AUTOPLOT}" can''t be created')
+        logging.error('"%s" can''t be created',MSS_AUTOPLOT)
 else:
     if not os.path.exists(MSS_AUTOPLOT):
         try:
             with open(MSS_AUTOPLOT, 'w') as fid:
                 fid.write("{}")
         except IOError:
-            logging.error(f'"{MSS_AUTOPLOT}" can''t be created')
+            logging.error('"%s" can''t be created',MSS_AUTOPLOT)
 
 WMS_LOGIN_CACHE = {}
 MSC_LOGIN_CACHE = {}

@@ -506,7 +506,7 @@ class SideViewPlotter(ViewPlotter):
             try:
                 self.ax.lines.remove(line)
             except ValueError as e:
-                logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                logging.debug("Vertical line was somehow already removed:\n%s",e)
             self.vertical_lines.remove(line)
 
         # Add vertical lines
@@ -655,7 +655,7 @@ class LinearViewPlotter(ViewPlotter):
             try:
                 self.ax.lines.remove(line)
             except ValueError as e:
-                logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                logging.debug("Vertical line was somehow already removed:\n%s",e)
         self.vertical_lines = []
 
     def draw_vertical_lines(self, highlight, lats, lons):

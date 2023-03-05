@@ -400,7 +400,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 self.view.scrollTo(proxy_index)
                 self.view.selectionModel().select(
                     proxy_index, QtCore.QItemSelectionModel.ClearAndSelect | QtCore.QItemSelectionModel.Rows)
-                logging.debug(f"Added new value for {option}")
+                logging.debug("Added new value for %s",option)
                 self.update_view()
                 break
 
@@ -442,7 +442,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         # ToDo add confirmation dialog here
 
         options = "\n".join([index.data() for index in removable_indexes])
-        logging.debug(f"Attempting to remove the following options\n{options}")
+        logging.debug("Attempting to remove the following options\n%s",options)
 
         self.view.selectionModel().clearSelection()
         for index in removable_indexes:
@@ -499,7 +499,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
         # ToDo add confirmation dialog here
 
         options = "\n".join([index.data() for index in selected_indexes])
-        logging.debug(f"Attempting to restore defaults for the following options\n{options}")
+        logging.debug("Attempting to restore defaults for the following options\n%s",options)
 
         for index in selected_indexes:
             # check if root option and present in mss_default.key_value_options
@@ -557,11 +557,11 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
                 except json.JSONDecodeError as e:
                     show_popup(self, "Error while loading file", e)
-                    logging.error(f"Error while loading json file {e}")
+                    logging.error("Error while loading json file %s",e)
                     return
                 except ValueError as e:
                     show_popup(self, "Invalid keys detected", e)
-                    logging.error(f"Error while loading json file {e}")
+                    logging.error("Error while loading json file %s",e)
                     return
 
         if json_file_data:
@@ -679,7 +679,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                     QtWidgets.QMessageBox.No)
                 if ret == QtWidgets.QMessageBox.Yes:
-                    logging.debug(f"saving config file to: {self.path} and restarting MSS")
+                    logging.debug("saving config file to: %s and restarting MSS",self.path)
                     self._save_to_path(self.path)
                     self.restartApplication.emit()
                     self.restart_on_save = False
@@ -687,7 +687,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                 else:
                     return
             self.restart_on_save = True
-            logging.debug(f"saving config file to: {self.path}")
+            logging.debug("saving config file to: %s",self.path)
             self._save_to_path(self.path)
         else:
             self.statusbar.showMessage("No values changed")

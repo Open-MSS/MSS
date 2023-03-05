@@ -60,13 +60,13 @@ _airspace_cache = [('ad_asp.xml', '377'), ('ae_asp.xml', '110238'), ('af_asp.xml
                  ]
 
 
-def download_progress(file_path, url, progress_callback=lambda f: logging.info(f"{int(f)}KB Downloaded")):
+def download_progress(file_path, url, progress_callback=lambda f: logging.info("%sKB Downloaded",int(f))):
     """
     Downloads the file at the given url to file_path and keeps track of the progress
     """
     try:
         with open(file_path, "wb+") as file:
-            logging.info(f"Downloading to {file_path}. This might take a while.")
+            logging.info("Downloading to %s. This might take a while.",file_path)
             response = requests.get(url, stream=True, timeout=5)
             length = response.headers.get("content-length")
             if length is None:  # no content length header
