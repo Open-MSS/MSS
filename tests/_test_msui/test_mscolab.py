@@ -684,6 +684,9 @@ class Test_Mscolab(object):
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
+        # socketio multiprocessing can reach a timeout
+        # idea from discussion
+        # https://stackoverflow.com/questions/67913861/python-multiprocessing-weird-behavior-when-not-using-time-sleep
         time.sleep(0.5 * random.random())
 
     def _login(self, emailid, password):
