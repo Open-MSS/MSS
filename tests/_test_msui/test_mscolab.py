@@ -26,6 +26,9 @@
 """
 import sys
 import os
+import time
+import random
+
 import fs
 import fs.errors
 import fs.opener.errors
@@ -681,7 +684,7 @@ class Test_Mscolab(object):
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(500)
+        time.sleep(0.5 * random.random())
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)
