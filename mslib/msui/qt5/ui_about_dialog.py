@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_AboutMSUIDialog(object):
     def setupUi(self, AboutMSUIDialog):
         AboutMSUIDialog.setObjectName("AboutMSUIDialog")
-        AboutMSUIDialog.resize(1104, 600)
+        AboutMSUIDialog.resize(1052, 600)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -121,7 +121,22 @@ class Ui_AboutMSUIDialog(object):
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
 "</style></head><body style=\" font-family:\'Ubuntu\'; font-size:11pt; font-weight:400; font-style:normal;\">\n"
-"<p style=\" margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000; background-color:#ffffff;\">Please read the reference documentation:</span><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000;\"><br /><br />Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based tool to plan<br />atmospheric research flights, Geosci. Model Dev., 5,55-71, doi:10.5194/gmd-5-55-2012, 2012.<br /><br />and the paper\'s Supplement (which includes a tutorial) before using the application. The documents are available at:<br /><br /> * </span><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000; background-color:#ffffff;\">http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf</span><span style=\" font-family:\'DejaVu Sans Mono\'; color:#000000;\"><br /> * http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012-supplement.pdf<br /><br />When using this software, please be so kind and acknowledge its use by citing the above mentioned reference documentation in publications, presentations, reports, etc. that you create. Thank you very much.<br /><br /></span></p></body></html>"))
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">Please read the reference documentation:</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\';\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">Bauer, R., Grooß, J.-U., Ungermann, J., Bär, M., Geldenhuys, M., and Hoffmann, L.: The Mission Support</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">System (MSS v7.0.4) and its use in planning for the SouthTRAC aircraft campaign, Geosci.</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">Model Dev., 15, 8983–8997, https://doi.org/10.5194/gmd-15-8983-2022, 2022.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\';\"><br /></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\';\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based tool to plan</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">atmospheric research flights, Geosci. Model Dev., 5,55-71, https://doi.org/10.5194/gmd-5-55-2012, 2012.</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\';\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\">and the paper\'s Supplement (which includes a tutorial) before using the application. The documents are available at:</span></p>\n"
+"<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-family:\'Sans Serif\';\"><br /></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\"> * http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\"> * http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012-supplement.pdf</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\"> </span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:\'Sans Serif\';\"> When using this software, please be so kind and acknowledge its use by citing the above mentioned reference documentation in publications, presentations, reports, etc. that you create. Thank you very much.</span></p></body></html>"))
         self.lblVersion.setText(_translate("AboutMSUIDialog", "Version: --VERSION--"))
         self.lblChanges.setText(_translate("AboutMSUIDialog", "Changes:  --CHANGES--"))
         self.lblLicense.setText(_translate("AboutMSUIDialog", "License: Apache License Version 2.0"))
