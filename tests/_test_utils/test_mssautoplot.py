@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_msui.test_msui
+    tests._test_utils.test_mssautoplot
     ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests msui.msui
