@@ -13,8 +13,8 @@ We provide an automatic installation and a manual installation.
 
 We recommentd to use Mamba for an installation.
 
-Automatic Installation
-----------------------
+Automatic
+---------
 
 * For **Windows**, go `here <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
 
@@ -35,8 +35,8 @@ Automatic Installation
     * For fully automatic installation, run it with the -a parameter :code:`./LinuxMac.sh -a`
 
 
-Manual Installation
--------------------
+Manual
+------
 
 Mamba based installation
 ........................
@@ -57,6 +57,40 @@ versions for dependencies. ::
     $ mamba activate mssenv
     (mssenv) $ mamba install mss=$mss_version python
     (mssenv) $ msui
+
+
+
+Mamba Server based installation example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For a wms server setup or mscolab setup you may want to have a dedicated user for the apache2 wsgi script.
+We suggest to create a mss user.
+
+* create a mss user on your system
+* login as mss user
+* create a *src* directory in /home/mss
+* cd src
+* get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`_
+* set execute bit on install script
+* execute script, enable environment in .bashrc
+* login again
+* mamba create -n mssenv
+* mamba activate mssenv
+* mamba install mss=$mss_version python
+
+For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
+
+   $ mswms &
+   $ mscolab start
+
+Point a browser for the verification of both servers installed on
+
+  - `http://127.0.0.1:8083/status <http://127.0.0.1:8083/status>`_
+  - `http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1 <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
+
+Further details in the components section on `<http://mss.rtfd.io>`_
+
+
 
 
 Conda based installation
@@ -88,10 +122,10 @@ versions for dependencies. ::
 
 
 Update
-++++++
+------
 
 Builtin Update
---------------
+..............
 
 Since version 5.0 we provide a feature for updating MSS by the UI or the command line
 After you started the MSS UI it informs you after a while if there is a new update available.
@@ -102,7 +136,7 @@ From the command line you can trigger this update feature by ::
 
 
 Other Methods
--------------
+.............
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If your current version is not far behind the new version
@@ -141,40 +175,8 @@ The alternative is to use a new environment and install mss.
 For further details of configurating mss :ref:`msui-configuration`
 
 
-
-Server based installation
-+++++++++++++++++++++++++
-
-For a wms server setup or mscolab setup you may want to have a dedicated user for the apache2 wsgi script.
-We suggest to create a mss user.
-
-* create a mss user on your system
-* login as mss user
-* create a *src* directory in /home/mss
-* cd src
-* get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`_
-* set execute bit on install script
-* execute script, enable environment in .bashrc
-* login again
-* mamba create -n mssenv
-* mamba activate mssenv
-* mamba install mss=$mss_version python
-
-For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
-
-   $ mswms &
-   $ mscolab start
-
-Point a browser for the verification of both servers installed on
-
-  - `http://127.0.0.1:8083/status <http://127.0.0.1:8083/status>`_
-  - `http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1 <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
-
-Further details in the components section on `<http://mss.rtfd.io>`_
-
-
-Use Docker
-++++++++++
+Docker Instance
+---------------
 
 You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_
 
@@ -202,8 +204,8 @@ If you want only to start the msui do this by ::
  $  xhost +local:docker
  $  docker run -d -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --network host openmss/mss:latest msui
 
-Use Singularity
-+++++++++++++++
+Singularity
+-----------
 
 You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_ by converting them to singularity
 or build from our `singularity definition <https://github.com/Open-MSS/singularity>`_

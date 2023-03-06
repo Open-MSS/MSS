@@ -175,8 +175,8 @@ To start your server use the command :code:`python mslib/mscolab/mscolab.py star
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
 Now you can use the MSS desktop application to connect to it using the MSColab window of the application.
 
-Setup local testing
--------------------
+Install requirements for  local testing
+---------------------------------------
 
 With sending a Pull Request our defined CIs do run all tests on github.
 You can do run tests own system too.
@@ -203,13 +203,50 @@ If you want to overwrite this setup and try out a special configuration add an m
 file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
 
 
-Testing
--------
+Code Style
+----------
 
-After you installed the dependencies for testing you could invoke the tests by `pytest` with various options.
+We generally follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_, with 120 columns instead of 79.
+
+Output and Logging
+------------------
+
+When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
+warning for warnings, error for errors, critical for critical errors/states).
+
+Building the docs with Sphinx
+-----------------------------
+
+The documentation (in reStructuredText format, .rst) is in docs/.
+
+To build the html version of it, you need to have sphinx installed::
+
+   cd docs/
+   make html
+
+
+Then point a web browser at docs/_build/html/index.html.
+
+For heading hierarchy we use ::
+
+  H1
+  ==
+
+  H2
+  --
+
+  H3
+  ..
+
+  H4
+  ~~
+
+
 
 Run Tests
-~~~~~~~~~
+---------
+
+After you installed the dependencies for testing you could invoke the tests by `pytest` with various options.
 
 Our tests are using the pytest framework. You could run tests serial and parallel
 
@@ -303,32 +340,6 @@ Fill out the template completely by describing your change, cause of change, iss
 After filling the template completely click on Pull request
 
 
-Guides
-------
-
-Code Style
-..........
-
-We generally follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_, with 120 columns instead of 79.
-
-Output and Logging
-..................
-
-When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
-warning for warnings, error for errors, critical for critical errors/states).
-
-Building the docs with Sphinx
-.............................
-
-The documentation (in reStructuredText format, .rst) is in docs/.
-
-To build the html version of it, you need to have sphinx installed::
-
-   cd docs/
-   make html
-
-
-Then point a web browser at docs/_build/html/index.html.
 
 
 Merging stable into develop
