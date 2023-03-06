@@ -9,7 +9,7 @@ Model Dev., 15, 8983-8997, https://doi.org/10.5194/gmd-15-8983-2022, 2022.
 
 Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based
 tool to plan atmospheric research flights, Geosci. Model Dev., 5,
-55-71, doi:10.5194/gmd-5-55-2012, 2012.
+55-71, https://doi.org/10.5194/gmd-5-55-2012, 2012.
 
 and the paper's Supplement (which includes a tutorial) before using the
 application. The documents are available at:
