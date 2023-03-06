@@ -1,9 +1,8 @@
 Installation
 ============
 
-The Mission Support Web Map Service (mss) is available as conda-forge package on the channel.
-
-`conda-forge <https://anaconda.org/conda-forge/mss>`_
+The Mission Support System (MSS) including a Web Map Service and a Collaboration Server is available as
+`conda-forge <https://anaconda.org/conda-forge/mss>`_ package.
 
 This channel conda-forge has builds for osx-64, linux-64, win-64
 
