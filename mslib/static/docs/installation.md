@@ -1,9 +1,6 @@
 # Installation
 
 
-![image](https://anaconda.org/conda-forge/mss/badges/installer/conda.svg)
-
-
 ## Install distributed version by conda
 
 

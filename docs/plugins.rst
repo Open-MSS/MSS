@@ -5,7 +5,7 @@ MSUI plugins
 
 
 Flight track import/export
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 
 As the planned flight track has to be quickly communicated to different parties having different
 desired file formats, MSS supports a simple plugin system for exporting planned flights and
@@ -55,7 +55,7 @@ and will be overwritten after reading back the file.
     },
     
     
-User contributed Plugins:
--------------------------
+User contributed Plugins
+------------------------
 
 .. include:: samples/plugins/navaid.rst

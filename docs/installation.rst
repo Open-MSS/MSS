@@ -2,9 +2,6 @@ Installation
 =================
 
 
-.. image:: https://anaconda.org/conda-forge/mss/badges/installer/conda.svg
-
-
 `Anaconda <https://www.anaconda.com/>`_ provides an enterprise-ready data analytics
 platform that empowers companies to adopt a modern open data science analytics architecture.
 
@@ -180,7 +177,7 @@ Build settings are based on the stable branch. Our openmss/mss:latest has any up
 You can start server and client by loading the image ::
 
  $ xhost +local:docker
- $ docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix openmss/mss:latest  /bin/bash
+ $ docker run -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --network host openmss/mss:latest  /bin/bash
  $ /opt/conda/envs/mssenv/bin/msui &
  $ /opt/conda/envs/mssenv/bin/mswms --port 80 &
  $ /opt/conda/envs/mssenv/bin/mscolab start &
@@ -190,9 +187,13 @@ You can start server and client by loading the image ::
 The WMS server initialized by demodata, and the mscolab server and the userinterface can be started by ::
 
  $  xhost +local:docker
- $  docker run -d --net=host -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix openmss/mss:latest MSS
+ $  docker run -d -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --network host openmss/mss:latest MSS
 
 
+If you want only to start the msui do this by ::
+
+ $  xhost +local:docker
+ $  docker run -d -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --network host openmss/mss:latest msui
 
 Use Singularity
 +++++++++++++++

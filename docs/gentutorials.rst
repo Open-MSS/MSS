@@ -1,4 +1,3 @@
-==============================================================================
 A user guide for tool chain of automated tutorials for the MSUI user interface
 ==============================================================================
 
@@ -39,7 +38,7 @@ Other important files with their functions are as follows:
 * audio.py which translates and converts into speech the texts and saves them as .mp3 files.
 
 System Requirements
-===================
+-------------------
 Keep the following things in mind before running a script
 
 * You should have only an **US keyboard layout**. If you have a different keyboard layout, you just need to change it to
@@ -55,8 +54,8 @@ Keep the following things in mind before running a script
   to run successfully! It has a #ToDo to read.
 
 
-Getting Started..
-=================
+Getting Started
+---------------
 
 On the Anaconda terminal, type the following ::
 
@@ -112,7 +111,7 @@ When you have to stop just open that terminal again and type **CTRL + C**
 For more details in its customization, you can visit https://github.com/swillner/highlight-pointer
 
 The Running of the Scripts
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 Each python file inside MSS/tutorials can be run directly like ::
 
 (mssdev)~/..MSS/tutorials/ $ python screenrecorder.py
@@ -146,7 +145,8 @@ record a particular area of screen, just pass the below parameters.
 The top left corner is (0,0) and the width for eg is 1920 and the height for eg is 1080 of my screen.
 
 Knowing MouseInfo()
-~~~~~~~~~~~~~~~~~~~
+...................
+
 For deciding the pixels, or know how  much length or height i should go down or what is the relative distance of one
 point from the other, pyautogui's mouseInfo() comes to the rescue ::
 
@@ -162,7 +162,8 @@ This will open a window which will be very helpful in development and other pixe
   improvement. Kindly report that bug or discrepancies to https://github.com/Open-MSS/MSS/issues/new
 
 Videos post processing via ffmpeg
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.................................
+
 The post processing of the videos can be done using ffmpeg in Command Line Interface.
 
 The generated video size is too large, so if you want to reduce the size, you can ::
