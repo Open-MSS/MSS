@@ -4,12 +4,12 @@
     tests._test_utils.test_mssautoplot
     ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests msui.msui
+    This module provides pytest functions to tests mslib.utils.mssautoplot
 
     This file is part of MSS.
 
-    :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2023 Harsh Khilawala
+    :copyright: Copyright 2017-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
