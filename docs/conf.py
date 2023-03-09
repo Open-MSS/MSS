@@ -32,6 +32,9 @@ if not os.path.exists(TUTORIAL_ARCHIVE):
     open(TUTORIAL_ARCHIVE, "wb").write(response.content)
     with zipfile.ZipFile(TUTORIAL_ARCHIVE, 'r') as zip_ref:
        zip_ref.extractall(TUTORIAL_DIR)
+    # remove zip file
+    if os.path.exists(TUTORIAL_ARCHIVE):
+        os.remove(TUTORIAL_ARCHIVE)
 
 
 if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
