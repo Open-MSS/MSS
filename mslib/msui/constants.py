@@ -33,7 +33,7 @@ import logging
 
 # ToDo refactor to generic functions, keep only constants
 HOME = os.path.expanduser(f"~{os.path.sep}")
-MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui", "downloads", "aip"))
+MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui"))
 if '://' in MSUI_CONFIG_PATH:
     try:
         _fs = fs.open_fs(MSUI_CONFIG_PATH)
