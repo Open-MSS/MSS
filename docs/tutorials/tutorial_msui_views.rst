@@ -1,5 +1,7 @@
-Introduction to the different views of MSUI
--------------------------------------------
+Introduction to MSUI
+--------------------
+Using the different views of the MSUI with a fictitious flight path and demo data.
+
 
 .. raw:: html
 

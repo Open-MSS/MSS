@@ -24,7 +24,7 @@ from string import Template
 TUTORIAL_URL = "https://fz-juelich.sciebo.de/s/7DUjGMgP1HFvakG/download"
 TUTORIAL_DIR = '_build/html/tutorials'
 if not os.path.exists(TUTORIAL_DIR):
-    os.mkdir(TUTORIAL_DIR)
+    os.makedirs(TUTORIAL_DIR)
 TUTORIAL_ARCHIVE = '_build/html/tutorials/tutorials.zip'
 if not os.path.exists(TUTORIAL_ARCHIVE):
     print("Downloading tutorial archive")

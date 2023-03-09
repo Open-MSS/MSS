@@ -1,5 +1,8 @@
-Introduction to the Satellitetrack
-----------------------------------
+Topview and  satellite overflight
+---------------------------------
+
+To combine a flight path with a satellite overflight, the remotesensing widget is used.
+
 
 .. raw:: html
 

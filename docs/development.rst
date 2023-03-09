@@ -219,6 +219,12 @@ Building the docs with Sphinx
 
 The documentation (in reStructuredText format, .rst) is in docs/.
 
+Usually building the docs also includes creating the images and pages for the gallery feature.
+This can be ommitted by setting an environment variable ::
+
+   export GALLERY=False
+
+
 To build the html version of it, you need to have sphinx installed::
 
    cd docs/
