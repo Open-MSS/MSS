@@ -12,6 +12,7 @@ Some videos about the Mission Support System Collaboration Platform
    :maxdepth: 4
 
    tutorials/tutorial_msui_views
+   tutorials/tutorial_mscolab
    tutorials/tutorial_introduction_topview
    tutorials/tutorial_kml
    tutorials/tutorial_remotesensing
