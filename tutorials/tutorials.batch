@@ -116,7 +116,7 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:03:08 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:18 -to 00:03:12 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
 # crop
 ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
 # scale
@@ -164,7 +164,7 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:28 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:24 -to 00:02:31 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
 # crop
 ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
 # scale

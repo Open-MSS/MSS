@@ -115,7 +115,7 @@ def automate_waypoints():
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             print(pag.position())
-            x, y = pag.locateCenterOnScreen(picture('wms', 'europe_cyl.png'))
+            x, y = pag.locateCenterOnScreen(picture('waypoints', 'europe_cyl.png'))
             pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Map change dropdown could not be located on the screen")
