@@ -206,9 +206,9 @@ cd ..
 
 # start a mscolab server on standard port after you have it seeded
 # we should have a seed for tutorials
-python ../mslib/mscolab/mscolab.py db --seed
+$HOME/miniconda3/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py db --seed
 
-python ../mslib/mscolab/mscolab.py start &
+$HOME/miniconda3/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py start &
 
 ~/bin/highlight-pointer -r 10 --key-quit q &
 $HOME/miniconda3/envs/mssdev/bin/python tutorial_mscolab.py
