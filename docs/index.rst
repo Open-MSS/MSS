@@ -2,7 +2,7 @@
 
 
 Mission Support System's Documentation
-========================================================
+======================================
 |Conda Version| |GitHub Issues| |Coverage Status| |DOI| |Conda Platforms| |Conda Recipe| |Conda Downloads|
 
 .. |Conda Version| image:: https://img.shields.io/conda/vn/conda-forge/mss.svg
