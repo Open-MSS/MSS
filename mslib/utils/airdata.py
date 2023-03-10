@@ -40,7 +40,7 @@ import defusedxml.ElementTree as etree
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
 
-DOWNLOAD_DIR = fs.path.join(MSUI_CONFIG_PATH, "downloads", "aip")
+OSDIR = fs.path.join(MSUI_CONFIG_PATH, "downloads", "aip")
 
 _airspaces = []
 _airports = []
@@ -90,14 +90,14 @@ def get_airports(force_download=False, url=None):
     if url is None:
         url = "https://ourairports.com/data/airports.csv"
 
-    file_exists = os.path.exists(os.path.join(DOWNLOAD_DIR, "airports.csv"))
+    file_exists = os.path.exists(os.path.join(OSDIR, "airports.csv"))
 
     if _airports and file_exists and \
-            os.path.getmtime(os.path.join(DOWNLOAD_DIR, "airports.csv")) == _airports_mtime:
+            os.path.getmtime(os.path.join(OSDIR, "airports.csv")) == _airports_mtime:
         return _airports
 
     time_outdated = 60 * 60 * 24 * 30  # 30 days
-    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(DOWNLOAD_DIR,
+    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(OSDIR,
                                                                                "airports.csv"))) > time_outdated
 
     if (force_download or is_outdated or not file_exists) \
@@ -107,11 +107,11 @@ def get_airports(force_download=False, url=None):
                                                 if not force_download else "") + "\nIs now a good time?",
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
             == QtWidgets.QMessageBox.Yes:
-        download_progress(os.path.join(DOWNLOAD_DIR, "airports.csv"), url)
+        download_progress(os.path.join(OSDIR, "airports.csv"), url)
 
-    if os.path.exists(os.path.join(DOWNLOAD_DIR, "airports.csv")):
-        with open(os.path.join(DOWNLOAD_DIR, "airports.csv"), "r", encoding="utf8") as file:
-            _airports_mtime = os.path.getmtime(os.path.join(DOWNLOAD_DIR, "airports.csv"))
+    if os.path.exists(os.path.join(OSDIR, "airports.csv")):
+        with open(os.path.join(OSDIR, "airports.csv"), "r", encoding="utf8") as file:
+            _airports_mtime = os.path.getmtime(os.path.join(OSDIR, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
 
     else:
@@ -143,7 +143,7 @@ def update_airspace(force_download=False, countries=None):
     global _airspaces, _airspaces_mtime
 
     for country in countries:
-        location = os.path.join(DOWNLOAD_DIR, f"{country}_asp.xml")
+        location = os.path.join(OSDIR, f"{country}_asp.xml")
         url = _airspace_download_url.format(country)
         available = get_available_airspaces()
         try:
@@ -176,12 +176,12 @@ def get_airspaces(countries=None):
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
-    files = [file for file in files if os.path.exists(os.path.join(DOWNLOAD_DIR, file))]
+    files = [file for file in files if os.path.exists(os.path.join(OSDIR, file))]
 
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
             if file not in _airspaces_mtime or \
-                    os.path.getmtime(os.path.join(DOWNLOAD_DIR, file)) != _airspaces_mtime[file]:
+                    os.path.getmtime(os.path.join(OSDIR, file)) != _airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:
@@ -190,7 +190,7 @@ def get_airspaces(countries=None):
     _airspaces_mtime = {}
     _airspaces = []
     for file in files:
-        fpath = os.path.join(DOWNLOAD_DIR, file)
+        fpath = os.path.join(OSDIR, file)
         root = etree.parse(fpath).getroot()
         valid_file = len(set([elem.tag for elem in root.iter()])) == 12
         if valid_file:
@@ -235,7 +235,7 @@ def get_airspaces(countries=None):
                 airspace_data["polygon"] = [(float(data.split()[0]), float(data.split()[-1]))
                                             for data in airspace_data["polygon"].split(",")]
                 _airspaces.append(airspace_data)
-                _airspaces_mtime[file] = os.path.getmtime(os.path.join(DOWNLOAD_DIR, file))
+                _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, file))
             else:
                 QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", f"{file}")
 
