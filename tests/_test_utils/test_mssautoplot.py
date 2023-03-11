@@ -35,5 +35,9 @@ import pytest
 
 from mslib.utils.mssautoplot import load_from_ftml
 
-def test_load_from_ftml():
+def test_load_from_ftml(filename):
+    assert filename is not None
+    assert load_from_ftml(filename) is not None
+    assert load_from_ftml(filename) == []
+
     
