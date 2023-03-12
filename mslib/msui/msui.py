@@ -314,7 +314,6 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                 for child_index in range(window.childCount()):
                     widget = window.child(child_index)
                     if (not widget.isHidden()) and hasattr(widget.source_object, "setStyleSheet"):
-                        print(dir(widget.source_object))
                         widget.source_object.setStyleSheet("background-color: yellow;")
                         break
 
