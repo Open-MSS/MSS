@@ -298,6 +298,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         """
         Hides all shortcuts not containing the text
         """
+        self.reset_highlight()
         for window in self.treeWidget.findItems("", QtCore.Qt.MatchContains):
             wms_hits = 0
 
@@ -308,11 +309,19 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                     wms_hits += 1
                 else:
                     widget.setHidden(True)
+
+            if wms_hits == 1:
+                for child_index in range(window.childCount()):
+                    widget = window.child(child_index)
+                    if (not widget.isHidden()) and hasattr(widget.source_object, "setStyleSheet"):
+                        print(dir(widget.source_object))
+                        widget.source_object.setStyleSheet("background-color: yellow;")
+                        break
+
             if wms_hits == 0 and len(text) > 0:
                 window.setHidden(True)
             else:
                 window.setHidden(False)
-
         self.filterRemoveAction.setVisible(len(text) > 0)
 
 
