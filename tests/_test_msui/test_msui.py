@@ -100,7 +100,8 @@ class Test_MSS_ShortcutDialog():
         # Assert list gets filled properly
         self.shortcuts.fill_list()
         assert self.shortcuts.treeWidget.topLevelItemCount() == 1
-        self.shortcuts.filter_shortcuts("Nothing")
+        self.shortcuts.leShortcutFilter.setText("Nothing")
+        self.shortcuts.filter_shortcuts()
         assert self.shortcuts.treeWidget.topLevelItem(0).isHidden()
 
         # Assert changing display type works

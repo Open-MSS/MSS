@@ -317,7 +317,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                     wms_hits += 1
                 else:
                     widget.setHidden(True)
-                    
+
             if wms_hits == 1 and (self.cbHighlight.isChecked() or window_count == 1):
                 for child_index in range(window.childCount()):
                     widget = window.child(child_index)
