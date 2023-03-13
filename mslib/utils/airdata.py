@@ -37,9 +37,9 @@ import logging
 import time
 
 import defusedxml.ElementTree as etree
-from mslib.msui.constants import DOWNLOAD_PATH
+from mslib.msui.constants import HOME
 
-
+DOWNLOAD_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui", "downloads", "aip"))
 OSDIR = fs.open_fs(DOWNLOAD_PATH).root_path
 
 _airspaces = []
