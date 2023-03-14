@@ -110,9 +110,9 @@ def get_airports(force_download=False, url=None):
             == QtWidgets.QMessageBox.Yes:
         download_progress(os.path.join(OSDIR, "downloads", "aip", "airports.csv"), url)
 
-    if os.path.exists(os.path.join(OSDIR, "downloads", "aip", "airports.csv")):
-        with open(os.path.join(OSDIR, "downloads", "aip", "airports.csv"), "r", encoding="utf8") as file:
-            _airports_mtime = os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv"))
+    if os.path.exists(os.path.join(OSDIR, "airports.csv")):
+        with open(os.path.join(OSDIR, "airports.csv"), "r", encoding="utf8") as file:
+            _airports_mtime = os.path.getmtime(os.path.join(OSDIR, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
 
     else:
