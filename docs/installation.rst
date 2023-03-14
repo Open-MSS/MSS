@@ -1,13 +1,8 @@
 Installation
-=================
+============
 
-
-`Anaconda <https://www.anaconda.com/>`_ provides an enterprise-ready data analytics
-platform that empowers companies to adopt a modern open data science analytics architecture.
-
-The Mission Support Web Map Service (mss) is available as anaconda package on the channel.
-
-`conda-forge <https://anaconda.org/conda-forge/mss>`_
+The Mission Support System (MSS) including a Web Map Service and a Collaboration Server is available as
+`conda-forge <https://anaconda.org/conda-forge/mss>`_ package.
 
 This channel conda-forge has builds for osx-64, linux-64, win-64
 
@@ -16,9 +11,10 @@ build processes.
 
 We provide an automatic installation and a manual installation.
 
+We recommend to use Mamba for an installation.
 
-Automatic Installation
-++++++++++++++++++++++
+Automatic
+---------
 
 * For **Windows**, go `here <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
 
@@ -38,28 +34,73 @@ Automatic Installation
 
     * For fully automatic installation, run it with the -a parameter :code:`./LinuxMac.sh -a`
 
-Manual Installation
-+++++++++++++++++++
 
-To install MSS you need the conda installer or its drop-in replacement the mamba installer. We explain below how you
-get by the conda installer the mamba installer. Mamba is a fast cross platform installer.
+Manual
+------
+
+Mamba based installation
+........................
+
+We strongly recommend to start from `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_,
+a community project of the conda-forge community.
+
+As **Beginner** start with an installation of Mambaforge
+- `Get Mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`_ for your Operation System
+
+Install MSS
+~~~~~~~~~~~
+
+You must install mss into a new environment to ensure the most recent
+versions for dependencies. ::
+
+    $ mamba create -n mssenv
+    $ mamba activate mssenv
+    (mssenv) $ mamba install mss=$mss_version python
+    (mssenv) $ msui
 
 
-The fastest way to get the conda installer is to start with Miniconda or Miniforge.
-This is a small subset of the Anaconda package with only the conda installer and its dependencies.
-If you do prefer to use over 7K open-source packages install Anaconda.
 
-We recommend to install this for the local user. This does not require administrator permissions.
+Mamba Server based installation example
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-As **Beginner** start with an installation of Miniconda
-- `Get Miniconda <https://docs.conda.io/projects/conda/en/latest/user-guide/install/>`_
+For a wms server setup or mscolab setup you may want to have a dedicated user for the apache2 wsgi script.
+We suggest to create a mss user.
 
-If you are an Advanced User you know that `Anaconda <https://docs.continuum.io/anaconda/install/>`_
-or `Miniforge <https://github.com/conda-forge/miniforge/>`_ are compatible too.
+* create a mss user on your system
+* login as mss user
+* create a *src* directory in /home/mss
+* cd src
+* get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`_
+* set execute bit on install script
+* execute script, enable environment in .bashrc
+* login again
+* mamba create -n mssenv
+* mamba activate mssenv
+* mamba install mss=$mss_version python
+
+For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
+
+   $ mswms &
+   $ mscolab start
+
+Point a browser for the verification of both servers installed on
+
+  - `http://127.0.0.1:8083/status <http://127.0.0.1:8083/status>`_
+  - `http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1 <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
+
+Further details in the components section on `<http://mss.rtfd.io>`_
 
 
-Add the conda-forge channel
----------------------------
+
+
+Conda based installation
+........................
+
+`Anaconda <https://www.anaconda.com/>`_ provides an enterprise-ready data analytics
+platform that empowers companies to adopt a modern open data science analytics architecture.
+
+..  warning::
+    Installing Mamba in Anaconda setup is not recommended. We strongly recommend to use the Mambaforge method (see above).
 
 Please add the channel conda-forge to your defaults::
 
@@ -67,26 +108,26 @@ Please add the channel conda-forge to your defaults::
 
 The conda-forge channel must be on top of the list before the anaconda default channel.
 
-Install
--------
+Install MSS
+~~~~~~~~~~~
 
 You must install mss into a new environment to ensure the most recent
-versions for dependencies (On the Anaconda Prompt on Windows, you have to 
-leave out the 'source' here and below). ::
+versions for dependencies. ::
 
-    $ conda create -n mssenv mamba
+    $ conda install -n base conda-libmamba-solver
+    $ conda create -n mssenv
     $ conda activate mssenv
-    (mssenv) $ mamba install mss=$mss_version python
+    (mssenv) $ conda install mss=$mss_version python --solver=libmamba
     (mssenv) $ msui
 
 
 Update
-++++++
+------
 
 Builtin Update
---------------
+..............
 
-With 5.0 we provide a new feature for updating MSS by the UI or the command line
+Since version 5.0 we provide a feature for updating MSS by the UI or the command line
 After you started the MSS UI it informs you after a while if there is a new update available.
 From the command line you can trigger this update feature by ::
 
@@ -95,7 +136,7 @@ From the command line you can trigger this update feature by ::
 
 
 Other Methods
--------------
+.............
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If your current version is not far behind the new version
@@ -134,40 +175,8 @@ The alternative is to use a new environment and install mss.
 For further details of configurating mss :ref:`msui-configuration`
 
 
-
-Server based installation
-+++++++++++++++++++++++++
-
-For a wms server setup or mscolab setup you may want to have a dedicated user for the apache2 wsgi script.
-We suggest to create a mss user.
-
-* create a mss user on your system
-* login as mss user
-* create a *src* directory in /home/mss
-* cd src
-* get `miniconda <http://conda.pydata.org/miniconda.html>`_ for Python 3
-* set execute bit on install script
-* execute script, enable environment in .bashrc
-* login again or export PATH="/home/mss/miniconda3/bin:$PATH"
-* conda create -n mssenv mamba
-* conda activate mssenv
-* mamba install mss=$mss_version python
-
-For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
-
-   $ mswms &
-   $ mscolab start
-
-Point a browser for the verification of both servers installed on
-
-  - `http://127.0.0.1:8083/status <http://127.0.0.1:8083/status>`_
-  - `http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1 <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
-
-Further details in the components section on `<http://mss.rtfd.io>`_
-
-
-Use Docker
-++++++++++
+Docker Instance
+---------------
 
 You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_
 
@@ -195,8 +204,8 @@ If you want only to start the msui do this by ::
  $  xhost +local:docker
  $  docker run -d -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --network host openmss/mss:latest msui
 
-Use Singularity
-+++++++++++++++
+Singularity
+-----------
 
 You can use images `from the docker hub <https://hub.docker.com/r/openmss/mss>`_. based on our `repository <https://github.com/Open-MSS/dockerhub>`_ by converting them to singularity
 or build from our `singularity definition <https://github.com/Open-MSS/singularity>`_

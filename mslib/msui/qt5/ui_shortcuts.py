@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_shortcuts.ui'
+# Form implementation generated from reading ui file 'ui_shortcuts.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -58,6 +58,9 @@ class Ui_ShortcutsDialog(object):
         self.cbAdvanced = QtWidgets.QCheckBox(ShortcutsDialog)
         self.cbAdvanced.setObjectName("cbAdvanced")
         self.horizontalLayout_2.addWidget(self.cbAdvanced)
+        self.cbHighlight = QtWidgets.QCheckBox(ShortcutsDialog)
+        self.cbHighlight.setObjectName("cbHighlight")
+        self.horizontalLayout_2.addWidget(self.cbHighlight)
         self.buttonBox = QtWidgets.QDialogButtonBox(ShortcutsDialog)
         self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
         self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Close)
@@ -80,3 +83,4 @@ class Ui_ShortcutsDialog(object):
         self.cbDisplayType.setItemText(1, _translate("ShortcutsDialog", "Text"))
         self.cbDisplayType.setItemText(2, _translate("ShortcutsDialog", "ObjectName"))
         self.cbAdvanced.setText(_translate("ShortcutsDialog", "Advanced Settings"))
+        self.cbHighlight.setText(_translate("ShortcutsDialog", "Highlight on all Windows"))

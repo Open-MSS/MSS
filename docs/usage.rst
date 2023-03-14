@@ -23,7 +23,7 @@ Configuration of MSUI
 ---------------------
 
 The settings file msui_settings file includes configuration settings central to the entire
-Mission Support User Interface (msui). Among others, define
+Mission Support User Interface (command: **msui**). Among others, define
 
  - available map projections
  - vertical section interpolation options

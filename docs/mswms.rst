@@ -1,4 +1,4 @@
-mswms/wms - A OGC Web Map Server
+MSWMS/WMS - A OGC Web Map Server
 ================================
 
 The module implements a WSGI Flask based Web Map Service 1.1.1/1.3.0 interface
@@ -139,7 +139,7 @@ For linear plots:
 Standalone server setup
 -----------------------
 
-mswms
+MSWMS
 .....
 
 This module can be used to run the wms server for development using Werkzeug's development WSGI server.
