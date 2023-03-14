@@ -11,7 +11,7 @@ build processes.
 
 We provide an automatic installation and a manual installation.
 
-We recommentd to use Mamba for an installation.
+We recommend to use Mamba for an installation.
 
 Automatic
 ---------
