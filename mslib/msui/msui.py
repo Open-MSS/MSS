@@ -160,6 +160,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                                                         self.label.setVisible(i),
                                                         self.label_2.setVisible(i),
                                                         self.line.setVisible(i)))
+        self.cbHighlight.stateChanged.connect(self.filter_shortcuts)
         self.cbDisplayType.currentTextChanged.connect(self.fill_list)
         self.cbAdvanced.stateChanged.emit(self.cbAdvanced.checkState())
         self.oldReject = self.reject
@@ -294,10 +295,18 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
         return shortcuts
 
-    def filter_shortcuts(self, text):
+    def filter_shortcuts(self, text="Nothing", rerun=True):
         """
         Hides all shortcuts not containing the text
         """
+        text = self.leShortcutFilter.text()
+        self.reset_highlight()
+
+        window_count = 0
+        for window in self.treeWidget.findItems("", QtCore.Qt.MatchContains):
+            if not window.isHidden():
+                window_count += 1
+
         for window in self.treeWidget.findItems("", QtCore.Qt.MatchContains):
             wms_hits = 0
 
@@ -308,12 +317,22 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                     wms_hits += 1
                 else:
                     widget.setHidden(True)
+
+            if wms_hits == 1 and (self.cbHighlight.isChecked() or window_count == 1):
+                for child_index in range(window.childCount()):
+                    widget = window.child(child_index)
+                    if (not widget.isHidden()) and hasattr(widget.source_object, "setStyleSheet"):
+                        widget.source_object.setStyleSheet("background-color: yellow;")
+                        break
+
             if wms_hits == 0 and len(text) > 0:
                 window.setHidden(True)
             else:
                 window.setHidden(False)
 
         self.filterRemoveAction.setVisible(len(text) > 0)
+        if rerun:
+            self.filter_shortcuts(text, False)
 
 
 class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
