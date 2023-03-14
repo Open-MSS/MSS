@@ -295,7 +295,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
         return shortcuts
 
-    def filter_shortcuts(self, text="default", rerun=True):
+    def filter_shortcuts(self, text="Nothing", rerun=True):
         """
         Hides all shortcuts not containing the text
         """
