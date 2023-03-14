@@ -4,7 +4,7 @@ Mission Support System (MSS)
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2021 by the mss team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
 
@@ -14,9 +14,13 @@ Mission Support System (MSS)
    reference documentation in any publication, presentation, report,
    etc. you create:
 
+   Bauer, R., Grooß, J.-U., Ungermann, J., Bär, M., Geldenhuys, M., and Hoffmann, L.: The Mission Support
+   System (MSS v7.0.4) and its use in planning for the SouthTRAC aircraft campaign, Geosci.
+   Model Dev., 15, 8983–8997, https://doi.org/10.5194/gmd-15-8983-2022, 2022.
+
    Rautenhaus, M., Bauer, G., and Doernbrack, A.: A web service based
    tool to plan atmospheric research flights, Geosci. Model Dev., 5,
-   55-71, doi:10.5194/gmd-5-55-2012, 2012.
+   55-71, https://doi.org/10.5194/gmd-5-55-2012, 2012.
 
    Thank you.
 

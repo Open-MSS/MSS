@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -125,3 +125,16 @@ def conditional_decorator(dec, condition):
             return func
         return dec(func)
     return decorator
+
+
+def prefix_route(route_function, prefix='', mask='{0}{1}'):
+    '''
+    https://stackoverflow.com/questions/18967441/add-a-prefix-to-all-flask-routes/18969161#18969161
+    Defines a new route function with a prefix.
+    The mask argument is a `format string` formatted with, in that order:
+      prefix, route
+    '''
+    def newroute(route, *args, **kwargs):
+        ''' prefix route '''
+        return route_function(mask.format(prefix, route), *args, **kwargs)
+    return newroute

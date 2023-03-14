@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,22 +26,18 @@
 """
 import logging
 import fs
-from flask import Flask
 import git
 from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, db, Permission, Operation
-
-
-app = Flask(__name__, static_url_path='')
+from mslib.mscolab.server import APP as app
 
 
 def add_all_users_to_all_operations(access_level='collaborator'):
     """ on db level we add all users as collaborator to all operations """
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         all_operations = Operation.query.all()
         all_path = [operation.path for operation in all_operations]
@@ -58,7 +54,6 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    db.init_app(app)
     with app.app_context():
         operation_available = Operation.query.filter_by(path=path).first()
         if not operation_available:
@@ -93,18 +88,17 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
             return True
         except IntegrityError as err:
             db.session.rollback()
-            logging.debug(f"Error writing to db: {err}")
+            logging.debug("Error writing to db: %s", err)
         db.session.close()
 
 
 def delete_user(email):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         user = User.query.filter_by(emailid=str(email)).first()
         if user:
-            logging.info(f"User: {email} deleted from db")
+            logging.info("User: %s deleted from db", email)
             db.session.delete(user)
             db.session.commit()
             db.session.close()
@@ -119,7 +113,6 @@ def add_user(email, username, password):
     """
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
 
     template = f"""
     "MSCOLAB_mailid": "{email}",
@@ -133,11 +126,11 @@ def add_user(email, username, password):
             db.session.add(db_user)
             db.session.commit()
             db.session.close()
-            logging.info(f"Userdata: {email} {username} {password}")
+            logging.info("Userdata: %s %s %s", email, username, password)
             logging.info(template)
             return True
         else:
-            logging.info(f"{user_name_exists} already in db")
+            logging.info("%s already in db", user_name_exists)
     return False
 
 
@@ -154,7 +147,6 @@ def get_operation(operation_name):
 def add_operation(operation_name, description):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         operation_available = Operation.query.filter_by(path=operation_name).first()
         if not operation_available:
@@ -178,7 +170,6 @@ def add_operation(operation_name, description):
 def delete_operation(operation_name):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
     with app.app_context():
         operation = Operation.query.filter_by(path=operation_name).first()
         if operation:
@@ -196,12 +187,9 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
         return False
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    db.init_app(app)
     with app.app_context():
         operation = Operation.query.filter_by(path=path).first()
         if operation:
-
             user = User.query.filter_by(emailid=emailid).first()
             if user:
                 new_permissions = [Permission(user.id, operation.id, access_level)]
@@ -211,7 +199,7 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
                     return True
                 except IntegrityError as err:
                     db.session.rollback()
-                    logging.debug(f"Error writing to db: {err}")
+                    logging.debug("Error writing to db: %s", err)
                 db.session.close()
     return False
 
@@ -219,8 +207,6 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
 def seed_data():
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    db.init_app(app)
-
     with app.app_context():
         # create users
         users = [{

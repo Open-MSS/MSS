@@ -9,7 +9,7 @@
     python mswms.py.
 
     :copyright: Copyright 2016 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,10 +30,9 @@ import logging
 import sys
 
 from mslib import __version__
-from mslib.mswms.wms import mswms_settings, server
-from mslib.mswms.wms import app as application
 from mslib.utils import setup_logging
 from mslib.utils.qt import Updater, Worker
+from mslib.mswms.wms import app as application
 
 
 def main():
@@ -99,6 +98,9 @@ def main():
         sys.exit()
 
     setup_logging(args)
+
+    # keep the import after the version check. This creates all layers.
+    from mslib.mswms.wms import mswms_settings, server
 
     if args.action == "gallery":
         if args.plot_types is None:

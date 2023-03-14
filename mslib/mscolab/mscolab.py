@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -66,7 +66,8 @@ def confirm_action(confirmation_prompt):
 
 
 def handle_db_init():
-    from mslib.mscolab.server import APP, db
+    from mslib.mscolab.models import db
+    from mslib.mscolab.server import APP
     create_files()
     with APP.app_context():
         db.create_all()
@@ -74,7 +75,8 @@ def handle_db_init():
 
 
 def handle_db_reset(verbose=True):
-    from mslib.mscolab.server import APP, db
+    from mslib.mscolab.models import db
+    from mslib.mscolab.server import APP
     if os.path.exists(mscolab_settings.DATA_DIR):
         shutil.rmtree(mscolab_settings.DATA_DIR)
     create_files()

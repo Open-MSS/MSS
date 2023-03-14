@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ import os
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import User, Operation, Permission, Change, Message, db
+from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -56,7 +56,6 @@ class Test_Files(TestCase):
 
     def setUp(self):
         handle_db_reset()
-        db.init_app(self.app)
 
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
         self.userdata = 'UV11@uv11', 'UV11', 'uv11'

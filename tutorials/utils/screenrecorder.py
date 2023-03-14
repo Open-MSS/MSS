@@ -7,7 +7,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +30,7 @@ import sys
 import time
 import mss
 import pyautogui
+import shutil
 from PyQt5 import QtWidgets
 from tutorials.utils.cursor import Xcursor
 from sys import platform
@@ -62,10 +63,10 @@ class ScreenRecorder:
             self.height = sc_height
         self.fps = self.get_fps()
         self.codec = cv2.VideoWriter_fourcc(*"mp4v")
-        current_time = datetime.datetime.now().strftime('%d-%m-%Y %H-%M-%S')
+        current_time = datetime.datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
         self.file_name = f'REC_{current_time}.mp4'
         parent_dir = os.getcwd()
-        dir = "Screen Recordings"
+        dir = "recordings"
         try:
             path = os.path.join(parent_dir, dir)
             os.makedirs(path, exist_ok=True)
@@ -168,7 +169,9 @@ class ScreenRecorder:
         print(f".\n.\n.\n.\nFinished Recording in {self.end_rec_time - self.start_rec_time} seconds!")
         self.recorded_video.release()
         print(f"\n\nYour file \'{self.file_name}\' has been successfully saved in "
-              f"\'MSS\\tutorials\\Screen Recordings\' folder.")
+              f"\'MSS\\tutorials\\recordings\' folder.")
+        shutil.copyfile(os.path.join('recordings', self.file_name),
+                        os.path.join('recordings', 'last_recording.mp4'))
         cv2.destroyAllWindows()
         self.app.exit()
 

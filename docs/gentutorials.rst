@@ -1,4 +1,3 @@
-==============================================================================
 A user guide for tool chain of automated tutorials for the MSUI user interface
 ==============================================================================
 
@@ -39,7 +38,7 @@ Other important files with their functions are as follows:
 * audio.py which translates and converts into speech the texts and saves them as .mp3 files.
 
 System Requirements
-===================
+-------------------
 Keep the following things in mind before running a script
 
 * You should have only an **US keyboard layout**. If you have a different keyboard layout, you just need to change it to
@@ -55,8 +54,8 @@ Keep the following things in mind before running a script
   to run successfully! It has a #ToDo to read.
 
 
-Getting Started..
-=================
+Getting Started
+---------------
 
 On the Anaconda terminal, type the following ::
 
@@ -112,7 +111,7 @@ When you have to stop just open that terminal again and type **CTRL + C**
 For more details in its customization, you can visit https://github.com/swillner/highlight-pointer
 
 The Running of the Scripts
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+--------------------------
 Each python file inside MSS/tutorials can be run directly like ::
 
 (mssdev)~/..MSS/tutorials/ $ python screenrecorder.py
@@ -146,7 +145,8 @@ record a particular area of screen, just pass the below parameters.
 The top left corner is (0,0) and the width for eg is 1920 and the height for eg is 1080 of my screen.
 
 Knowing MouseInfo()
-~~~~~~~~~~~~~~~~~~~
+...................
+
 For deciding the pixels, or know how  much length or height i should go down or what is the relative distance of one
 point from the other, pyautogui's mouseInfo() comes to the rescue ::
 
@@ -162,29 +162,38 @@ This will open a window which will be very helpful in development and other pixe
   improvement. Kindly report that bug or discrepancies to https://github.com/Open-MSS/MSS/issues/new
 
 Videos post processing via ffmpeg
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.................................
+
 The post processing of the videos can be done using ffmpeg in Command Line Interface.
 
 The generated video size is too large, so if you want to reduce the size, you can ::
 
-    $ cd MSS/tutorials/Screen Recordings/
-    (mssdev)$ ffmpeg -i input.mp4 -vcodec h264 -acodec mp2 output.mp4
+    $ cd MSS/tutorials/recordings/
+    (mssdev)$ ffmpeg -i last_recording.mp4 -vcodec h264 -acodec mp2 output.mp4
 
 For trimming the videos from a start (00:14:00) and end time (05:19:00), you can ::
 
-    $ cd MSS/tutorials/Screen Recordings/
-    (mssdev)$ ffmpeg -i input.mp4 -ss 00:00:14 -to 05:19:00 -c:v libx264 -crf 30 output.mp4
+    $ cd MSS/tutorials/recordings/
+    (mssdev)$ ffmpeg -i last_recording.mp4 -ss 00:00:14 -to 05:19:00 -c:v libx264 -crf 30 output.mp4
 
 For cropping the video
 (you can also use Screen Recorder for selected screen area recording feature as described above) ::
 
-    $ cd MSS/tutorials/Screen Recordings/
-    (mssdev)$ fmpeg -i input.mp4 -filter_complex "[0:v]crop=1919:978:0:33[cropped]" -map "[cropped]" output.mp4
+    $ cd MSS/tutorials/recordings/
+    (mssdev)$ fmpeg -i last_recording.mp4 -filter_complex "[0:v]crop=1919:978:0:33[cropped]" -map "[cropped]" output.mp4
 
     # “crop=width:height:x:y” is the format
 
 For merging audios into the video ::
 
-    (mssdev)$ ffmpeg -i input.mp4 -i audio.mp3 -c:v copy -c:a aac output.mp4
+    (mssdev)$ ffmpeg -i last_recording.mp4 -i audio.mp3 -c:v copy -c:a aac output.mp4
 
 In this case, the video and audio must be in same directory and you should cd into that directory.
+
+
+batch scripts
+~~~~~~~~~~~~~
+
+Two batch scripts can be used to create tutorials.
+start_tutorial.sh is to create one tutorial and tutorials.batch
+is used to create all tutorials compressed to gifcycles.

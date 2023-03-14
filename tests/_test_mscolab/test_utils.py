@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import json
 
 from fs.tempfs import TempFS
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, Operation, MessageType
+from mslib.mscolab.models import Operation, MessageType
 from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_user, get_user
@@ -85,7 +85,6 @@ class Test_Utils(TestCase):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
         with self.app.test_client() as test_client:
-            db.init_app(self.app)
             user = get_user(self.userdata[0])
             anotheruser = get_user(self.anotheruserdata[0])
             operation, token = self._create_operation(test_client, self.userdata)

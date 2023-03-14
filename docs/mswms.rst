@@ -1,4 +1,4 @@
-mswms/wms - A OGC Web Map Server
+MSWMS/WMS - A OGC Web Map Server
 ================================
 
 The module implements a WSGI Flask based Web Map Service 1.1.1/1.3.0 interface
@@ -18,8 +18,186 @@ maps and (non-compliant) vertical sections.
 For more information on WMS, see http://www.opengeospatial.org/standards/wms
 
 
+
+.. _meteo_data:
+
+.. _demodata:
+
+Simulated Data and its configuration
+------------------------------------
+
+
+We provide demodata by executing the :code:`mswms_demodata --seed` program. This creates in your home directory
+data files and also the needed server configuration files. The program creates 70MB of examples.
+This script does not overwrite an existing mswms_settings.py.
+
+::
+
+  mss
+  ├── mswms_auth.py
+  ├── mswms_settings.py
+  └── testdata
+      ├── 20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.CIWC.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.CLWC.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.EMAC.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc
+      ├── 20121017_12_ecmwf_forecast.ProbWCB_LAGRANTO_derived.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.ProbWCB_LAGRANTO_derived.EUR_LL015.036.sfc.nc
+      ├── 20121017_12_ecmwf_forecast.PV_derived.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc
+      ├── 20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.SEA.EUR_LL015.036.sfc.nc
+      ├── 20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc
+      ├── 20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc
+      ├── 20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc
+      ├── 20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc
+      └── 20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc
+
+
+
+Before starting the standalone server you should add the path where the server config is to your python path.
+e.g.
+
+::
+
+    $ export PYTHONPATH=~/mss
+
+
+
+Detailed server configuration *mswms_settings.py* for this demodata
+
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.demodata
+
+For setting authentication see *mswms_auth.py*
+
+ .. literalinclude:: samples/config/mswms/mswms_auth.py.sample
+
+
+
+Configuration file of the wms server
+....................................
+
+Configuration for the Mission Support System Web Map Service (wms).
+
+In this module the data organisation structure of the available forecast
+data is described. The class NWPDataAccess is subclassed for each data type
+in the system and provides methods to determine which file needs to be accessed for a given variable and time.
+The classes also provide methods to query the available initialisation times for a given variable,
+and the available valid times for a variable and a given initialisation time. As the latter methods need
+to open the NetCDF data files to determine the contained time values, a caching system is used to avoid
+re-opening already searched files.
+
+Replace the name INSTANCE in the following examples by your service name.
+
+The configuration file have to become added to the /home/mss/INSTANCE/config directory
+
+**/home/mss/config/mswms_settings.py**
+
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.sample
+
+
+You have to adopt this file to your data.
+
+
+Adopt the mswms_settings.py for your needs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When you want to plot only one variable without any additional data available:
+
+For horizontal plots:
+
+::
+
+  mpl_hsec_styles.make_generic_class("HS_MyStyle_pl_air_temperature",'air_temperature','pl',[],[])
+  register_horizontal_layers = [
+    (mpl_hsec_styles.HS_MyStyle_pl_air_temperature, ["model"]),
+    ]
+
+For vertical plots:
+
+::
+
+  mpl_vsec_styles.make_generic_class("VS_MyStyle_pl_air_temperature",'air_temperature','pl',[],[])
+  register_vertical_layers = [
+    (mpl_vsec_styles.VS_MyStyle_pl_air_temperature, ["model"]),
+    ]
+
+For linear plots:
+
+::
+
+  register_linear_layers = [
+    (mpl_lsec_styles.LS_DefaultStyle, "air_temperature","pl", ["model"]),
+    ]
+
+
+
+Standalone server setup
+-----------------------
+
+MSWMS
+.....
+
+This module can be used to run the wms server for development using Werkzeug's development WSGI server.
+The development server is not intended for use in production. For production use a production-ready WSGI server
+such as Waitress, Gunicorn, Nginx, Apache2.
+See also https://flask.palletsprojects.com/en/latest/tutorial/deploy/?highlight=deploy#run-with-a-production-server
+
+.. _mswms-deployment:
+
+
+For the standalone server *mswms* you need the path of your mswms_settings.py and other configuration files
+added to the PYTHONPATH. E.g.::
+
+ export PYTHONPATH=/home/mss/INSTANCE/config
+
+
+For testing your server you can use the :ref:`demodata <demodata>`
+
+The plots contained in MSS are mainly defined for meteorological forecast data. The intent is for the
+user to define their own plotting classes based on the the MSS infrastructure for data access.
+Some less tested plots are given as examples in the *samples* part of the documentation as templates.
+The next configuration exemplarily shows how to include user defined plots:
+
+ .. literalinclude:: samples/config/mswms/mss_chem_plots.py
+
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.chem_plots
+
+
+Gallery extension
+~~~~~~~~~~~~~~~~~
+
+The gallery builder enables to generate static plots given from data and
+visualisation styles on server site.
+An example can be seen on the documentation based on our demodata https://mss.readthedocs.io/en/stable/gallery/index.html
+
+When you use this feature you get a menu entry below the "Mission Support System" Main menu
+on your server site.
+
+To create all layers of all plots use
+::
+
+  mswms gallery --create
+
+With an option `--levels` you can specify by a comma-separated list of all levels visible
+on the gallery. Further options are `--itimes`, `--vtimes`.
+If you want to publish on which code the images are based on you can do this by the option
+`--show-code` e.g.
+
+::
+
+  mswms gallery --create --show-code --itimes 2012-10-17T12:00:00 --vtimes 2012-10-19T12:00:00 --levels 200,300
+
+For the case you use an url-prefix on your site you have to add this by the `--url-prefix` parameter too.
+
+
+
 WMS Server Deployment
-=====================
+---------------------
 
 .. _deployment:
 
@@ -67,33 +245,9 @@ A few notes:
     same computer on which the input data files are hosted.
 
 
-Configuration file of the wms server
-------------------------------------
-
-Configuration for the Mission Support System Web Map Service (wms).
-
-In this module the data organisation structure of the available forecast data is
-described. The class NWPDataAccess is subclassed for each data type in the
-system and provides methods to determine which file needs to be accessed for a
-given variable and time. The classes also provide methods to query the available
-initialisation times for a given variable, and the available valid times for a
-variable and a given initialisation time. As the latter methods need to open the
-NetCDF data files to determine the contained time values, a caching system is
-used to avoid re-opening already searched files.
-
-Replace the name INSTANCE in the following examples by your service name.
-
-The configuration file have to become added to the /home/mss/INSTANCE/config directory
-
-**/home/mss/config/mswms_settings.py**
-
-  .. literalinclude:: samples/config/mswms/mswms_settings.py.sample
-
-You have to adopt this file to your data.
-
 
 Meteorological data
---------------------
+...................
 
 Data for the MSS server shall be provided in CF-compliant NetCDF format. Several
 specific data access methods are provided for ECMWF, Meteoc, and several other
@@ -276,10 +430,10 @@ component.
 
 
 Apache server setup
--------------------
+...................
 
 Install mod_wsgi
-................
+~~~~~~~~~~~~~~~~
 
 On some distributions an old mod_wsgi is shipped and have to become replaced by
 a version compatible to the conda environment. This procedure may need the
@@ -307,6 +461,20 @@ Setup a /etc/apache2/mods-available/wsgi_express.load::
   LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py37.cpython-37m-x86_64-linux-gnu.so"
 
 Enable the new module by a2enmod and reload the apache2 server
+
+Configuration of apache mod_wsgi.conf
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
+could add it also to wms.wsgi.
+
+  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniconda3/envs/instance/lib/python3.X/site-packages
+
+
+By this setting you override the PYTHONPATH environment variable. So you have also to add
+the site-packes directory of your miniconda or anaconda installation besides the config file path.
+
+If your server hosts different instances by different users you want to setup this path in mswms_setting.py.
 
 
 
@@ -342,25 +510,9 @@ INSTANCE is a placeholder for your service name::
  │   └── var
 
 
-Configuration of apache mod_wsgi.conf
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-One posibility to setup the PYTHONPATH environment variable is by adding it to
-your mod_wsgi.conf. Alternativly you could add it also to wms.wsgi::
-
-    WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniconda3/envs/instance/lib/python3.X/site-packages
-
-
-By this setting you override the PYTHONPATH environment variable. So you have
-also to add the site-packes directory of your miniconda or anaconda installation
-besides the config file path.
-
-If your server hosts different instances by different users you want to setup
-this path in mswms_setting.py.
-
 
 Configuration of wsgi for wms
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can setup a vhost for this service.
 
@@ -373,7 +525,7 @@ You can setup a vhost for this service.
 
 
 Configuration of wsgi auth
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As long as you have only one instance of the server running you can use this method to restrict access.
 
@@ -394,7 +546,7 @@ basic auth of your webserver configuration.
 
 
 Configuration of your site as vhost
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You have to setup a webserver server site configuration file
 
@@ -424,124 +576,3 @@ For further information on apache2 server setup read
 `<https://httpd.apache.org/docs/2.4/howto/>`_
 
 
-Standalone server setup
-=======================
-
-mswms
-~~~~~
-
-This module can be used to run the wms server for development using Werkzeug's
-development WSGI server. The development server is not intended for use in
-production. For production use a production-ready WSGI server such as Waitress,
-Gunicorn, Nginx, Apache2.
-
-See also https://flask.palletsprojects.com/en/latest/tutorial/deploy/?highlight=deploy#run-with-a-production-server
-
-.. _mswms-deployment:
-
-
-For the standalone server *mswms* you need the path of your mswms_settings.py
-and other configuration files added to the PYTHONPATH. E.g.::
-
- export PYTHONPATH=/home/mss/INSTANCE/config
-
-
-For testing your server you can use the :ref:`demodata`
-
-The plots contained in MSS are mainly defined for meteorological forecast data.
-The intent is for the user to define their own plotting classes based on the the
-MSS infrastructure for data access. Some less tested plots are given as examples
-in the *samples* part of the documentation as templates. The next configuration
-exemplarily shows how to include user defined plots:
-
- .. literalinclude:: samples/config/mswms/mss_chem_plots.py
-
- .. literalinclude:: samples/config/mswms/mswms_settings.py.chem_plots
-
-
-.. _meteo_data:
-
-Gallery extension
-+++++++++++++++++
-
-The gallery builder enables to generate static plots given from data and
-visualisation styles on server site.
-
-An example can be seen on the documentation based on our demodata
-https://mss.readthedocs.io/en/stable/gallery/index.html
-
-When you use this feature you get a menu entry below the "Mission Support System" Main menu
-on your server site.
-
-To create all layers of all plots use
-
-::
-
-    mswms gallery --create
-
-With an option `--levels` you can specify by a comma-separated list of all levels visible
-on the gallery. Further options are `--itimes`, `--vtimes`.
-If you want to publish on which code the images are based on you can do this by the option
-`--show-code` e.g.
-
-::
-
-    mswms gallery --create --show-code --itimes 2012-10-17T12:00:00 --vtimes 2012-10-19T12:00:00 --levels 200,300
-
-For the case you use an url-prefix on your site you have to add this by the `--url-prefix` parameter too.
-
-.. _demodata:
-
-
-Simulated Data and its configuration
-++++++++++++++++++++++++++++++++++++
-
-We provide demodata by executing the :code:`mswms_demodata --seed` program. This
-creates in your home directory data files and also the needed server
-configuration files. The program creates 70MB of examples. This script does not
-overwrite an existing mswms_settings.py.
-
-::
-
-  mss
-  ├── mswms_auth.py
-  ├── mswms_settings.py
-  └── testdata
-      ├── 20121017_12_ecmwf_forecast.ALTITUDE_LEVELS.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.CC.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.CIWC.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.CLWC.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.EMAC.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.P_derived.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.PRESSURE_LEVELS.EUR_LL015.036.pl.nc
-      ├── 20121017_12_ecmwf_forecast.ProbWCB_LAGRANTO_derived.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.ProbWCB_LAGRANTO_derived.EUR_LL015.036.sfc.nc
-      ├── 20121017_12_ecmwf_forecast.PV_derived.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.PVU.EUR_LL015.036.pv.nc
-      ├── 20121017_12_ecmwf_forecast.Q.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.SEA.EUR_LL015.036.sfc.nc
-      ├── 20121017_12_ecmwf_forecast.SFC.EUR_LL015.036.sfc.nc
-      ├── 20121017_12_ecmwf_forecast.T.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.THETA_LEVELS.EUR_LL015.036.tl.nc
-      ├── 20121017_12_ecmwf_forecast.U.EUR_LL015.036.ml.nc
-      ├── 20121017_12_ecmwf_forecast.V.EUR_LL015.036.ml.nc
-      └── 20121017_12_ecmwf_forecast.W.EUR_LL015.036.ml.nc
-
-
-
-Before starting the standalone server you should add the path where the server
-config is to your python path. e.g.
-
-::
-
-    $ export PYTHONPATH=~/mss
-
-
-
-Detailed server configuration *mswms_settings.py* for this demodata
-
- .. literalinclude:: samples/config/mswms/mswms_settings.py.demodata
-
-For setting authentication see *mswms_auth.py*
-
- .. literalinclude:: samples/config/mswms/mswms_auth.py.sample

@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,11 +34,12 @@ from werkzeug.urls import url_join
 from mslib.msui.icons import icons
 from mslib.mscolab.conf import mscolab_settings
 from tests.utils import mscolab_check_free_port, LiveSocketTestCase
-from mslib.mscolab.server import db, APP, initialize_managers
+from mslib.mscolab.server import APP, initialize_managers
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.sockets_manager import SocketsManager
 from mslib.mscolab.models import Permission, User, Message, MessageType
+
 
 PORTS = list(range(27000, 27500))
 
@@ -65,7 +66,6 @@ class Test_Socket_Manager(LiveSocketTestCase):
         self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
         self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
         self.app, _, self.cm, self.fm = initialize_managers(self.app)
-        db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.operation_name = "europe"

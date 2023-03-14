@@ -8,7 +8,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -174,7 +174,7 @@ def automate_waypoints():
         if platform == 'win32':
             pag.moveTo(x - 255, y, duration=2)
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.moveTo(x - 231, y, duration=2)
+            pag.moveTo(x - 100, y, duration=2)
         pag.click(interval=1)
         pag.sleep(1)
 
@@ -191,6 +191,16 @@ def automate_waypoints():
 
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : \'Starred filter\' button/option not found on the screen.")
+        raise
+
+    # removind Filtering starred layers
+    try:
+        x, y = pag.locateCenterOnScreen(picture('wms', 'unstar_filter.png'))
+        pag.moveTo(x, y, duration=2)
+        pag.click(x, y, interval=1)
+
+    except (ImageNotFoundException, OSError, Exception):
+        print("\nException : \'Unstarred filter\' button/option not found on the screen.")
         raise
 
     # Setting different levels and valid time
@@ -244,12 +254,12 @@ def automate_waypoints():
             pag.press('return')
 
         # Previous and Next of Initial(Initialization) values
-        pag.click(initx + 753, inity, clicks=2, interval=2)
-        pag.click(initx + 882, inity, clicks=2, interval=2)
+        pag.click(initx + 733, inity, clicks=2, interval=2)
+        pag.click(initx + 892, inity, clicks=2, interval=2)
 
         # Previous and Next of Valid values
-        pag.click(validx + 760, validy, clicks=4, interval=4)
-        pag.click(validx + 887, validy, clicks=4, interval=4)
+        pag.click(validx + 743, validy, clicks=4, interval=4)
+        pag.click(validx + 902, validy, clicks=4, interval=4)
 
     # Auto-update feature of wms
     try:
@@ -308,7 +318,7 @@ def automate_waypoints():
         print("\nException :\'Clear cache\' button/option not found on the screen.")
         raise
 
-    # qrent layer
+    # rent layer
     if temp1 is not None and temp2 is not None:
         pag.click(temp1, temp2, interval=2)
         pag.sleep(1)
@@ -346,9 +356,6 @@ def automate_waypoints():
         elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             pag.click(x - 70, y, interval=2)
         pag.sleep(1)
-        x1, y1 = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'))
-        pag.click(x1, y1, interval=2)
-        pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Deleting all layers bin\' button/option not found on the screen.")
         raise
@@ -358,4 +365,4 @@ def automate_waypoints():
 
 
 if __name__ == '__main__':
-    start(target=automate_waypoints, duration=600)
+    start(target=automate_waypoints, duration=280)

@@ -8,7 +8,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -279,4 +279,4 @@ def automate_hexagoncontrol():
 
 
 if __name__ == '__main__':
-    start(target=automate_hexagoncontrol, duration=300)
+    start(target=automate_hexagoncontrol, duration=170)

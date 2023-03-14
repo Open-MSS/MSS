@@ -8,7 +8,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,8 @@ from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
+
+# ToDo in sideview and topview waypoint movement needs adjustment
 
 def automate_views():
     """
@@ -230,22 +232,18 @@ def automate_views():
     try:
         x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'),
                                         region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
-        if platform == 'win32' or platform == 'darwin':
-            pag.click(x, y, interval=2)
-            pag.moveTo(x2 + 4, y2 - 96, duration=1)
-            pag.click(interval=2)
-            pag.dragRel(100, 150, duration=1)
-            pag.moveTo(x1 + 46, y1 - 67, duration=1)
-            pag.dragRel(35, -50, duration=1)
-            x3, y3 = pag.position()
-        elif platform == 'linux' or platform == 'linux2':
-            pag.click(x, y, interval=2)
-            pag.moveTo(x2 + 5, y2 - 82, duration=1)
-            pag.click(interval=2)
-            pag.dragRel(100, 150, duration=1)
-            pag.moveTo(x1 + 35, y1 - 60, duration=1)
-            pag.dragRel(35, -50, duration=1)
-            x3, y3 = pag.position()
+        pag.click(x, y, interval=2)
+        try:
+            px, py = pag.locateCenterOnScreen(picture('views', 'topview_point2.png'),
+                                              region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+        except (ImageNotFoundException, OSError, Exception):
+            print("\nException : Topview's \'Point 2\' not found on the screen.")
+            raise
+        pag.click(px, py, interval=2)
+        pag.moveTo(px, py, duration=1)
+        pag.dragTo(px + 46, py - 67, duration=1, button='left')
+        pag.click(interval=2)
+        x3, y3 = pag.position()
         pag.sleep(1)
     except ImageNotFoundException:
         print("\n Exception : Move Waypoint button could not be located on the screen")
@@ -261,6 +259,7 @@ def automate_views():
             pag.press('left')
         pag.sleep(2)
         if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+            pag.press('right')
             pag.press('enter', interval=1)
         elif platform == 'darwin':
             pag.press('return', interval=1)
@@ -384,32 +383,25 @@ def automate_views():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Sideview's \'Valid till\' button/option not found on the screen.")
         raise
+
     # Move waypoints in SideView
     try:
         x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'),
                                         region=(0, 0, int(sc_width / 2) - 100, sc_height))
         pag.click(x, y, interval=2)
         try:
-            x, y = pag.locateCenterOnScreen(picture('wms', 'options.png'),
-                                            region=(0, 0, int(sc_width / 2) - 100, sc_height))
-            if platform == 'win32' or platform == 'darwin':
-                pag.click(x + 76, y - 80, duration=1)
-                pag.dragRel(-1, -139, duration=2)
-                pag.click(x + 508, y - 80, duration=1)
-                pag.dragRel(None, -80, duration=2)
-                pag.click(x + 684, y - 80, duration=1)
-                pag.dragRel(None, -150, duration=2)
-            elif platform == 'linux' or platform == 'linux2':
-                pag.click(x + 90, y - 80, duration=1)
-                pag.dragRel(-1, -139, duration=2)
-                pag.click(x + 508, y - 80, duration=1)
-                pag.dragRel(None, -110, duration=2)
-                pag.click(x + 695, y - 80, duration=1)
-                pag.dragRel(None, -150, duration=2)
-            pag.sleep(2)
-        except (ImageNotFoundException, OSError, TypeError, Exception):
-            print("\nException : Sideview's waypoints location (Options button) not found on the screen.")
+            px, py = pag.locateCenterOnScreen(picture('views', 'sideview_point1.png'))
+            # point1: 127, 394
+        except (ImageNotFoundException, OSError, Exception):
+            print(f"\nException : Sideview's \'Point 1\' not found on the screen.")
             raise
+        offsets = [0, 114, 161, 200, ]
+        for offset in offsets:
+            pag.click(px + offset, py, interval=2)
+            pag.moveTo(px + offset, py, duration=1)
+            pag.dragTo(px + offset, py - offset, duration=5, button='left')
+            pag.click(interval=2)
+
     except ImageNotFoundException:
         print("\n Exception :Sideview's Move Waypoint button could not be located on the screen")
         raise
@@ -845,4 +837,4 @@ def automate_views():
 
 
 if __name__ == '__main__':
-    start(target=automate_views, duration=300)
+    start(target=automate_views, duration=567)

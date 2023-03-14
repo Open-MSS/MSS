@@ -29,6 +29,7 @@ from datetime import datetime, timedelta
 import io
 import logging
 import os
+import sys
 
 import click
 import defusedxml.ElementTree as etree
@@ -54,8 +55,8 @@ from mslib.utils import config as conf
 
 
 TEXT_CONFIG = {
-    "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"),
-    "fontweight": "bold", "zorder": 4, "fontsize": 6, "clip_on": True}
+    "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"), "fontweight": "bold",
+    "zorder": 4, "fontsize": 6, "clip_on": True}
 
 
 def load_from_ftml(filename):
@@ -83,13 +84,23 @@ class Plotting:
         self.bbox = None
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
-        self.params = mslib.utils.coordinate.get_projection_params(
-            self.config["predefined_map_sections"][section]["CRS"].lower())
+        try:
+            self.params = mslib.utils.coordinate.get_projection_params(
+                self.config["predefined_map_sections"][section]["CRS"].lower())
+        except KeyError as e:
+            print(e)
+            sys.exit("Invalid SECTION and/or CRS")
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
         self.bbox_units = self.params["bbox"]
         self.read_ftml(filename)
 
     def read_ftml(self, filename):
+        dirpath = "./"
+        file_path = os.path.join(dirpath, filename)
+        exists = os.path.exists(file_path)
+        if not exists:
+            print("Filename {} doesn't exist".format(filename))
+            sys.exit()
         self.wps, self.wp_model_data = load_from_ftml(filename)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
@@ -155,8 +166,8 @@ class TopViewPlotting(Plotting):
 
 
 class SideViewPlotting(Plotting):
-    def __init__(self):
-        super(SideViewPlotting, self).__init__()
+    def __init__(self, cpath):
+        super(SideViewPlotting, self).__init__(cpath)
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
@@ -180,8 +191,9 @@ class SideViewPlotting(Plotting):
         self.myfig.redraw_xaxis(self.lats, self.lons, times, times_visible)
 
     def update_path(self, filename=None):
+        self.setup()
         if filename is not None:
-            self._read_ftml(filename)
+            self.read_ftml(filename)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         indices = list(zip(self.intermediate_indexes, self.wp_press))
@@ -190,42 +202,40 @@ class SideViewPlotting(Plotting):
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
-    def draw(self):
-        for flight, section, vertical, filename, init_time, time in \
-            self.config["automated_plotting_flights"]:
-            for url, layer, style, vsec_type in self.config["automated_plotting_vsecs"]:
-                width, height = self.myfig.get_plot_size_in_px()
-                p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
-                self.bbox = tuple([x for x in (self.num_interpolation_points,
-                                  p_bot / 100, self.num_labels, p_top / 100)]
-                                 )
+    def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
+        self.update_path(filename)
+        width, height = self.myfig.get_plot_size_in_px()
+        p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
+        self.bbox = tuple([x for x in (self.num_interpolation_points,
+                          p_bot / 100, self.num_labels, p_top / 100)]
+                         )
 
-                if not init_time:
-                    init_time = None
+        if not init_time:
+            init_time = None
 
-                kwargs = {"layers": [layer],
-                          "styles": [style],
-                          "time": time,
-                          "init_time": init_time,
-                          "exceptions": 'application/vnd.ogc.se_xml',
-                          "srs": "VERT:LOGP",
-                          "path_str": ",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in self.wps),
-                          "bbox": self.bbox,
-                          "format": "image/png",
-                          "size": (width, height)
-                        }
-                wms = MSUIWebMapService(url,
-                                        username=self.config["WMS_login"][url][0],
-                                        password=self.config["WMS_login"][url][1],
-                                        version='1.3.0'
-                                        )
+        kwargs = {"layers": [layer],
+                  "styles": [style],
+                  "time": time,
+                  "init_time": init_time,
+                  "exceptions": 'application/vnd.ogc.se_xml',
+                  "srs": "VERT:LOGP",
+                  "path_str": ",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in self.wps),
+                  "bbox": self.bbox,
+                  "format": "image/png",
+                  "size": (width, height)
+                }
+        wms = MSUIWebMapService(url,
+                                username=self.config["WMS_login"][url][0],
+                                password=self.config["WMS_login"][url][1],
+                                version='1.3.0'
+                                )
 
-                img = wms.getmap(**kwargs)
+        img = wms.getmap(**kwargs)
 
-                image_io = io.BytesIO(img.read())
-                img = PIL.Image.open(image_io)
-                self.myfig.draw_image(img)
-                self.myfig.fig.savefig(f"{flight}_{layer}.png", bbox_inches='tight')
+        image_io = io.BytesIO(img.read())
+        img = PIL.Image.open(image_io)
+        self.myfig.draw_image(img)
+        self.myfig.fig.savefig(f"{flight}_{layer}_{no_of_plots}.png", bbox_inches='tight')
 
 
 class LinearViewPlotting(Plotting):
@@ -295,39 +305,60 @@ class LinearViewPlotting(Plotting):
 
 @click.command()
 @click.option('--cpath', default=constants.MSS_AUTOPLOT, help='Path of the configuration file.')
+@click.option('--view', default="top", help='View of the plot (top/side/linear).')
 @click.option('--ftrack', default="", help='Flight track.')
 @click.option('--itime', default="", help='Initial time.')
 @click.option('--vtime', default="", help='Valid time.')
 @click.option('--intv', default=0, help='Time interval.')
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
-def main(cpath, ftrack, itime, vtime, intv, stime, etime):
+def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
-    top_view = TopViewPlotting(cpath)
+    if view == "top":
+        top_view = TopViewPlotting(cpath)
+        sec = "automated_plotting_hsecs"
+    else:
+        side_view = SideViewPlotting(cpath)
+        sec = "automated_plotting_vsecs"
+
+    def draw(no_of_plots):
+        try:
+            if view == "top":
+                top_view.draw(flight, section, vertical, filename, init_time,
+                              time, url, layer, style, elevation, no_of_plots=no_of_plots)
+            elif view == "side":
+                side_view.draw(flight, section, vertical, filename, init_time,
+                               time, url, layer, style, elevation, no_of_plots=no_of_plots)
+        except Exception as e:
+            if "times" in str(e):
+                print("Invalid times and/or levels requested")
+            elif "LAYER" in str(e):
+                print("Invalid LAYER '{}' requested".format(layer))
+            elif "404 Client Error" or "NOT FOUND for url" in e:
+                print("Invalid STYLE and/or URL requested")
+            else:
+                print(str(e))
+        else:
+            print("Plot downloaded!")
+
     for flight, section, vertical, filename, init_time, time in \
         config["automated_plotting_flights"]:
-        for url, layer, style, elevation in config["automated_plotting_hsecs"]:
+        for url, layer, style, elevation in config[sec]:
             if vtime == "" and stime == "":
-                top_view.draw(flight, section, vertical, filename, init_time,
-                              time, url, layer, style, elevation, no_of_plots=1)
-                click.echo("Plot downloaded!\n")
+                no_of_plots = 1
+                draw(no_of_plots)
             elif intv == 0:
                 if itime != "":
-                    inittime = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                else:
-                    inittime = itime
+                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
                 time = datetime.strptime(vtime, "%Y-%m-%dT" "%H:%M:%S")
                 if ftrack != "":
                     flight = ftrack
-                top_view.draw(flight, section, vertical, filename, init_time,
-                              time, url, layer, style, elevation, no_of_plots=1)
-                click.echo("Plot downloaded!\n")
+                no_of_plots = 1
+                draw(no_of_plots)
             elif intv > 0:
                 if itime != "":
-                    inittime = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                else:
-                    inittime = itime
+                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
                 starttime = datetime.strptime(stime, "%Y-%m-%dT" "%H:%M:%S")
                 endtime = datetime.strptime(etime, "%Y-%m-%dT" "%H:%M:%S")
                 i = 1
@@ -336,11 +367,10 @@ def main(cpath, ftrack, itime, vtime, intv, stime, etime):
                     logging.debug(time)
                     if ftrack != "":
                         flight = ftrack
-                    top_view.draw(flight, section, vertical, filename, inittime,
-                                  time, url, layer, style, elevation, no_of_plots=i)
+                    no_of_plots = i
+                    draw(no_of_plots)
                     time = time + timedelta(hours=intv)
                     i = i + 1
-                click.echo("Plots downloaded!\n")
             else:
                 raise Exception("Invalid interval")
 

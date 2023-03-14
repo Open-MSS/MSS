@@ -8,7 +8,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -115,7 +115,7 @@ def automate_waypoints():
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             print(pag.position())
-            x, y = pag.locateCenterOnScreen(picture('wms', 'europe_cyl.png'))
+            x, y = pag.locateCenterOnScreen(picture('waypoints', 'europe_cyl.png'))
             pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Map change dropdown could not be located on the screen")
@@ -207,4 +207,4 @@ def automate_waypoints():
 
 
 if __name__ == '__main__':
-    start(target=automate_waypoints, duration=200)
+    start(target=automate_waypoints, duration=158)

@@ -7,7 +7,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 Hrithik Kumar Verma
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,6 +31,8 @@ from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish
 from tutorials.pictures import picture
 
+
+# ToDo fix waypoint movement
 
 def automate_mscolab():
     """
@@ -161,7 +163,7 @@ def automate_mscolab():
         print("\nException :\'File\' menu button not found on the screen.")
         raise
     try:
-        open_operations_x, open_operations_y = pag.locateCenterOnScreen(picture('mscolab', 'openop.png'))
+        open_operations_x, open_operations_y = pag.locateCenterOnScreen(picture('mscolab', 'active_operations.png'))
         pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(1)
         pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
@@ -494,12 +496,16 @@ def automate_mscolab():
             if wp1_x is not None and wp2_x is not None:
                 x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'))
                 pag.click(x, y, interval=2)
+                try:
+                    wp2_x, wp2_y = pag.locateCenterOnScreen(picture('mscolab', 'topview_point2.png'))
+                except (ImageNotFoundException, OSError, Exception):
+                    print("\nException : Topview's \'Point 2\' not found on the screen.")
+                    raise
+                pag.click(wp2_x, wp2_y, interval=2)
                 pag.moveTo(wp2_x, wp2_y, duration=1)
+                pag.dragTo(wp1_x, wp1_y, duration=1, button='left')
                 pag.click(interval=2)
-                pag.dragRel(100, 150, duration=1)
-                pag.moveTo(wp1_x, wp1_y, duration=1)
-                pag.dragRel(35, -50, duration=1)
-                pag.sleep(3)
+
         except (ImageNotFoundException, OSError, Exception):
             print("\n Exception : Move Waypoint button could not be located on the screen")
             raise
@@ -542,9 +548,9 @@ def automate_mscolab():
 
     # Activating a local flight track
     if open_operations_x is not None and open_operations_y is not None:
-        pag.moveTo(open_operations_x - 900, open_operations_y + 20, duration=2)
+        pag.moveTo(open_operations_x - 900, open_operations_y, duration=2)
         pag.sleep(1)
-        pag.doubleClick(open_operations_x - 900, open_operations_y + 20, duration=2)
+        pag.doubleClick(open_operations_x - 900, open_operations_y, duration=2)
         pag.sleep(2)
     else:
         print("Image Not Found : Open Operations label (for activating local flighttrack) not found, previously!")
@@ -647,4 +653,4 @@ def automate_mscolab():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab, duration=720)
+    start(target=automate_mscolab, duration=638)

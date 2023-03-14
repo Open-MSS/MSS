@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@
 from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, User, Operation
+from mslib.mscolab.models import User, Operation
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
@@ -51,7 +51,6 @@ class Test_Seed(TestCase):
 
     def setUp(self):
         handle_db_reset()
-        db.init_app(self.app)
         self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
         self.operation_name = "XYZ"
         self.description = "Template"

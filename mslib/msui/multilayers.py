@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2021 May Bär
-    :copyright: Copyright 2021-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2021-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -619,7 +619,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_init_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.itimes = [_time.isoformat() + "Z" for _time in self.allowed_init_times]
             if len(self.allowed_init_times) == 0:
-                logging.error(f"Cannot determine init time format of {self.header.text(0)} for {self.text(0)}")
+                logging.error("Cannot determine init time format of %s for %s", self.header.text(0), self.text(0))
                 self.is_invalid = True
             else:
                 self.itime = self.itimes[-1]
@@ -638,7 +638,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.allowed_valid_times = sorted(self.parent.dock_widget.parse_time_extent(values))
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
-                logging.error(f"Cannot determine valid time format of {self.header.text(0)} for {self.text(0)}")
+                logging.error("Cannot determine valid time format of %s for %s", self.header.text(0), self.text(0))
                 self.is_invalid = True
             else:
                 if self.itime:

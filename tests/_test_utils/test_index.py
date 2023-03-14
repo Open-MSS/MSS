@@ -9,7 +9,7 @@
     This file is part of mss.
 
     :copyright: Copyright 2020 Reimar Bauer
-    :copyright: Copyright 2020-2022 by the mss team, see AUTHORS.
+    :copyright: Copyright 2020-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,6 +26,7 @@
 """
 
 from mslib import index
+from mslib.mscolab.server import APP as app
 
 
 def test_xstatic():
@@ -36,8 +37,6 @@ def test_xstatic():
 
 def test_app_loader():
     assert index.DOCS_SERVER_PATH.endswith('mslib')
-    app = index.app_loader(__name__)
-    assert app is not None
     with app.test_client() as c:
         response = c.get('/xstatic/bootstrap/css/bootstrap.css')
         assert response.status_code == 200

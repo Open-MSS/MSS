@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2020 Reimar Bauer
-    :copyright: Copyright 2020-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2020-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,7 +32,7 @@ import json
 import io
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import db, User, Operation
+from mslib.mscolab.models import User, Operation
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import initialize_managers, check_login, register_user, APP
 from mslib.mscolab.file_manager import FileManager
@@ -57,7 +57,6 @@ class Test_Server(TestCase):
 
     def setUp(self):
         handle_db_reset()
-        db.init_app(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
 
     def tearDown(self):
