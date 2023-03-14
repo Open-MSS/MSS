@@ -1,5 +1,5 @@
-msui   (Mission Support User Interface)
-=======================================
+MSUI (Mission Support User Interface)
+=====================================
 
 The executable for the user interface application is "**msui**".
 A short description of how to start the program is given by the --help option.
@@ -19,8 +19,31 @@ interface (top view and side view).
 
 .. _msui-configuration:
 
-Configuration of mss
-++++++++++++++++++++
+Configuration of MSUI
+---------------------
+
+The settings file msui_settings file includes configuration settings central to the entire
+Mission Support User Interface (command: **msui**). Among others, define
+
+ - available map projections
+ - vertical section interpolation options
+ - the lists of predefined web service URLs
+ - predefined waypoints for the table view
+
+If you don't have a msui_settings.json then default configuration is in place.
+
+Store this msui_settings.json in a path, e.g. "$HOME/.config/mss"
+
+The file could be loaded by the File Configuration dialog or
+by the environment variable msui_settings pointing to your msui_settings.json.
+
+**/$HOME/.config/msui/msui_settings.json**
+
+
+.. literalinclude:: samples/config/msui/msui_settings.json.sample
+
+File I/O
+........
 
 For storage capabilities mss uses the `PyFilesystem2 <http://pyfilesystem2.readthedocs.io>`__ approach.
 The default data dir is predefined as a directory: `~/mssdata` which is the same as `osfs://~/mssdata`.
@@ -29,10 +52,6 @@ The default data dir is predefined as a directory: `~/mssdata` which is the same
 PyFilesystem can open a filesystem via an *FS URL*, which is similar to a URL you might enter in to a
 browser. FS URLs are useful if you want to specify a filesystem dynamically, such as in a conf file or
 from the command line.
-
-
-Syntax for PyFilesystem2 Urls
------------------------------
 
 We have internally implemented `PyFilesystem2 <http://pyfilesystem2.readthedocs.io>`__
 
@@ -59,32 +78,39 @@ Here are a few examples::
     ssh://[user[:password]@]host[:port]/[directory]
 
 
-Settings file
-.............
 
-This file includes configuration settings central to the entire
-Mission Support User Interface (mss). Among others, define
+File picker dialogue
+~~~~~~~~~~~~~~~~~~~~
 
- - available map projections
- - vertical section interpolation options
- - the lists of predefined web service URLs
- - predefined waypoints for the table view
+MSS supports the use of a general file picker to access locations on remote machines
+facilitating collaboration on campaigns. To enable this feature apply
 
-If you don't have a msui_settings.json then default configuration is in place.
+.. code:: text
 
-Store this msui_settings.json in a path, e.g. "$HOME/.config/mss"
+    "filepicker_default": "fs",
 
-The file could be loaded by the File Configuration dialog or
-by the environment variable msui_settings pointing to your msui_settings.json.
-
-**/$HOME/.config/mss/msui_settings.json**
+to your configuration file. The allowed values are "qt" for QT-based dialogues, "fs" for
+fs_file_picker-based dialogues supporting remote locations, or "default" for the default
+dialogues. The default is currently identical to "qt", but may change in upcoming releases.
 
 
-.. literalinclude:: samples/config/msui/msui_settings.json.sample
+With using the "filepicker_default": "fs" setting you can enable any implemented
+`PyFilesystem2 <http://pyfilesystem2.readthedocs.io/en/latest/openers.html>`_ fs url.
+Additional to the builtin fs urls we have added optional the `webdavfs <https://github.com/PyFilesystem/webdavfs>`_
+and `sshfs <https://github.com/libfuse/sshfs>`_ service.
+
+
+With setting the option "filepicker_default": "default" you can only access local storages.
+
+.. code:: text
+
+  "data_dir": "~/mssdata",
+
+
 
 
 MSUI Flight track import/export plugins
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.......................................
 
 
 MSS currently offers several import/export filters in the mslib.plugins.io module, which may serve
@@ -104,7 +130,7 @@ More details about Plugins on :ref:`msuiplugins`.
     
     
 Web Proxy
-~~~~~~~~~
+.........
 
 If you are in an area with a very low bandwidth you may consider to use a squid web proxy
 and add those lines in your msui_settings pointing to the proxy server.
@@ -113,7 +139,7 @@ and add those lines in your msui_settings pointing to the proxy server.
 
 
 Caching
-~~~~~~~
+.......
 
 For changing the default cache directory and behaviour to a named directory
 you can use these parameters. If you use shared directories you may have to solve access rights.
@@ -122,11 +148,11 @@ you can use these parameters. If you use shared directories you may have to solv
 
 
 Docking Widgets Configurations
-..............................
+------------------------------
 
 
 Performance
-~~~~~~~~~~~
+...........
 
 MSS may also roughly estimate the fuel consumption and thus range of the aircraft
 neglecting weather conditions given a proper configuration file specifying the
@@ -153,7 +179,7 @@ the calculation.
 
 
 Satellite Track Docking Widget
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..............................
 
 The TopView has a docking widget allowing the visualisation of satellite tracks.
 A `web site <https://cloudsgate2.larc.nasa.gov/cgi-bin/predict/predict.cgi>`_ to generate the data for
@@ -164,7 +190,7 @@ widget. An example file is located at
 
 
 KML Overlay Docking Widget
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+..........................
 
 
 The TopView has a docking widget that allows the visualization of KML files on top of the map.
@@ -203,8 +229,9 @@ single KML File 'output.kml', which will be present in the last working director
 Close the software with ease of mind. Next time you open your software, all your work will be present, right where
 you left it! KML Overlay supports **Saving Open files** so that you can jump back in, anytime!
 
-Test Samples
-------------
+
+KML Examples
+~~~~~~~~~~~~
 
 Curious to test out some KML Files? We have a vibrant sample collection ready just for this!
 
@@ -243,7 +270,7 @@ flightpath.
 For Activated Flightpath, use "options" menu on topview interface.
 
 Remote sensing Docking Widget
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.............................
 
 The TopView has a docking widget that allows the visualization of remote sensing related features.
 It may visualize the position of tangent points of limb sounders and can overlay the flight path with colours
@@ -254,41 +281,14 @@ This is automatically performed by the skyfield python package, retrieving the d
 and other US services. The data is stored in the MSS configuration directory and may need to update irregularly.
 
 
-File picker dialogue
-~~~~~~~~~~~~~~~~~~~~
-
-MSS supports the use of a general file picker to access locations on remote machines
-facilitating collaboration on campaigns. To enable this feature apply
-
-.. code:: text
-
-    "filepicker_default": "fs",
-
-to your configuration file. The allowed values are "qt" for QT-based dialogues, "fs" for
-fs_file_picker-based dialogues supporting remote locations, or "default" for the default
-dialogues. The default is currently identical to "qt", but may change in upcoming releases.
-
-data dir
-~~~~~~~~
-
-With using the "filepicker_default": "fs" setting you can enable any implemented
-`PyFilesystem2 <http://pyfilesystem2.readthedocs.io/en/latest/openers.html>`_ fs url.
-Additional to the builtin fs urls we have added optional the `webdavfs <https://github.com/PyFilesystem/webdavfs>`_
-and `sshfs <https://github.com/libfuse/sshfs>`_ service.
-
-
-With setting the option "filepicker_default": "default" you can only access local storages.
-
-.. code:: text
-
-  "data_dir": "~/mssdata",
 
 
 
-Example WMS Server
-++++++++++++++++++
 
-Some publicly accessible WMS Servers
+publicly accessible WMS Servers
+-------------------------------
+
+Some examples for publicly accessible WMS Servers
 
  * http://osmwms.itc-halle.de/maps/osmfree
  * http://ows.terrestris.de/osm/service

@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -506,7 +506,7 @@ class SideViewPlotter(ViewPlotter):
             try:
                 self.ax.lines.remove(line)
             except ValueError as e:
-                logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                logging.debug("Vertical line was somehow already removed:\n%s", e)
             self.vertical_lines.remove(line)
 
         # Add vertical lines
@@ -655,7 +655,7 @@ class LinearViewPlotter(ViewPlotter):
             try:
                 self.ax.lines.remove(line)
             except ValueError as e:
-                logging.debug(f"Vertical line was somehow already removed:\n{e}")
+                logging.debug("Vertical line was somehow already removed:\n%s", e)
         self.vertical_lines = []
 
     def draw_vertical_lines(self, highlight, lats, lons):

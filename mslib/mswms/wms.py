@@ -25,7 +25,7 @@
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Omar Qunsul (oq)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -283,9 +283,10 @@ class WMSServer(object):
 
                             for itime in sorted(init_times):
                                 if itime and plot_driver.get_init_times() and itime not in plot_driver.get_init_times():
-                                    logging.warning(f"Requested itime {itime} not present for "
-                                                    f"{dataset} {plot_object.name}! itimes present: "
-                                                    f"{plot_driver.get_init_times()}")
+                                    logging.warning("Requested itime %s not present for "
+                                                    "%s %s! itimes present: "
+                                                    "%s", itime, dataset, plot_object.name, plot_driver.get_init_times()
+                                                    )
                                     continue
                                 elif not plot_driver.get_init_times():
                                     itime = None
@@ -309,8 +310,9 @@ class WMSServer(object):
 
                                 for vtime in sorted(valid_times):
                                     if vtime and i_vtimes and vtime not in i_vtimes:
-                                        logging.warning(f"Requested vtime {vtime} at {itime} not present for "
-                                                        f"{dataset} {plot_object.name}! vtimes present: {i_vtimes}")
+                                        logging.warning("Requested vtime %s at %s not present for "
+                                                        "%s %s! vtimes present: %s", vtime, itime, dataset,
+                                                        plot_object.name, i_vtimes)
                                         continue
                                     elif not i_vtimes:
                                         vtime = None
@@ -372,9 +374,9 @@ class WMSServer(object):
                                         for level in sorted(rendered_levels):
                                             if level and elevations and level \
                                                     not in [float(elev) for elev in elevations]:
-                                                logging.warning(f"Requested level {level} not present for "
-                                                                f"{dataset} {plot_object.name}! Levels present: "
-                                                                f"{elevations}")
+                                                logging.warning("Requested level %s not present for "
+                                                                "%s %s! Levels present: "
+                                                                "%s", level, dataset, plot_object.name, elevations)
                                                 continue
                                             elif not elevations:
                                                 level = None

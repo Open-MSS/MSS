@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -64,9 +64,9 @@ def os_fs_create_dir(dir):
         try:
             _ = fs.open_fs(dir)
         except fs.errors.CreateFailed:
-            logging.error(f'Make sure that the FS url "{dir}" exists')
+            logging.error('Make sure that the FS url "%s" exists', dir)
         except fs.opener.errors.UnsupportedProtocol:
-            logging.error(f'FS url "{dir}" not supported')
+            logging.error('FS url "%s" not supported', dir)
     else:
         _dir = os.path.expanduser(dir)
         if not os.path.exists(_dir):

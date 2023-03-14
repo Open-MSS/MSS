@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,7 +100,8 @@ class Test_MSS_ShortcutDialog():
         # Assert list gets filled properly
         self.shortcuts.fill_list()
         assert self.shortcuts.treeWidget.topLevelItemCount() == 1
-        self.shortcuts.filter_shortcuts("Nothing")
+        self.shortcuts.leShortcutFilter.setText("Nothing")
+        self.shortcuts.filter_shortcuts()
         assert self.shortcuts.treeWidget.topLevelItem(0).isHidden()
 
         # Assert changing display type works

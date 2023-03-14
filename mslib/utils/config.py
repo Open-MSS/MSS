@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -376,11 +376,11 @@ def read_config_file(path=constants.MSUI_SETTINGS):
             try:
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
             except json.JSONDecodeError as e:
-                logging.error(f"Error while loading json file {e}")
+                logging.error("Error while loading json file %s", e)
                 error_message = f"Unexpected error while loading config\n{e}"
                 raise FatalUserError(error_message)
             except ValueError as e:
-                logging.error(f"Error while loading json file {e}")
+                logging.error("Error while loading json file %s", e)
                 error_message = f"Invalid keys detected in config\n{e}"
                 raise FatalUserError(error_message)
         else:
@@ -424,11 +424,11 @@ def modify_config_file(data, path=constants.MSUI_SETTINGS):
                 _fs.writetext(file_name, json.dumps(modified_data, indent=4))
                 read_config_file()
             except json.JSONDecodeError as e:
-                logging.error(f"Error while loading json file {e}")
+                logging.error("Error while loading json file %s", e)
                 error_message = f"Unexpected error while loading config\n{e}"
                 raise FatalUserError(error_message)
             except ValueError as e:
-                logging.error(f"Error while loading json file {e}")
+                logging.error("Error while loading json file %s", e)
                 error_message = f"Invalid keys detected in config\n{e}"
                 raise FatalUserError(error_message)
         else:

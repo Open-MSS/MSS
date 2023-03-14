@@ -2,7 +2,7 @@
 
 
 Mission Support System's Documentation
-========================================================
+======================================
 |Conda Version| |GitHub Issues| |Coverage Status| |DOI| |Conda Platforms| |Conda Recipe| |Conda Downloads|
 
 .. |Conda Version| image:: https://img.shields.io/conda/vn/conda-forge/mss.svg
@@ -21,15 +21,6 @@ Mission Support System's Documentation
    :target: https://anaconda.org/conda-forge/mss
 
 
-.. attention:: We refactored this software for consistent nameings.
-
-   - The UI **mss** was renamed to **msui**
-   - User configuration **msui_settings.json** former mss_settings.json is stored in  **~/.config/msui**
-   - the wms server configuration is renamed to **mswms_settings.py**
-
-    Further changes: `7.0.0 <https://github.com/Open-MSS/MSS/pull/1464/files>`_
-
-
 .. include:: publications.rst
 
 
@@ -40,11 +31,11 @@ Topics
    :maxdepth: 2
 
    about
-   authors
    components
-   dependencies
    installation
    development
+   dependencies
+   authors
    tutorial
    gallery/index
 
