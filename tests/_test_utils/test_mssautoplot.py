@@ -37,9 +37,9 @@ def test_load_from_ftml():
     assert load_from_ftml(example_file) is not None
     data_list, wp_list = load_from_ftml(example_file)
     assert data_list == [(55.15, -23.74, 0.0, 'B', 'Takeoff'),
-                        (42.99, -12.1, 350.0, 'A', ''),
-                        (52.785, -8.925, 380.0, 'Shannon', 'Dive'),
-                        (48.08, 11.28, 400.0, 'EDMO', ''),
-                        (63.74, 1.73, 0.0, 'C', 'Landing')]
+                         (42.99, -12.1, 350.0, 'A', ''),
+                         (52.785, -8.925, 380.0, 'Shannon', 'Dive'),
+                         (48.08, 11.28, 400.0, 'EDMO', ''),
+                         (63.74, 1.73, 0.0, 'C', 'Landing')]
     assert len(wp_list) == 5
     assert type(wp_list[0]).__name__ == 'Waypoint'
