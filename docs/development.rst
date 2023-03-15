@@ -23,7 +23,7 @@ Using our Issue Tracker on github
 How to Report Bugs
 ..................
 
-Please open a new issue in the appropriate GitHub repository `here <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
+Please open a new issue in the appropriate GitHub repository `https://github.com/Open-MSS/MSS/issues/new <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
 
 Be sure to include as much information including screenshots, text output, and both your expected and actual results.
 
