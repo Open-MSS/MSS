@@ -90,7 +90,8 @@ You cannot just do like this ::
 
 
 In Linux for making the cursor visible as a highlighter, perform the following
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..............................................................................
+
 If you are in Windows, there is no need of this highlighter. It is by default that it also records the mouse-pointer.
 
 * Clone the repository https://github.com/swillner/highlight-pointer.git into a directory eg. `highlighter` on your system
