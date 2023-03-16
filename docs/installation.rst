@@ -16,7 +16,7 @@ We recommend to use Mamba for an installation.
 Automatic
 ---------
 
-* For **Windows**, go `here <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
+* For **Windows**, use `Windows.bat <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
 
   #. Right click on the webpage and select "Save as..." to download the file
 
@@ -24,7 +24,7 @@ Automatic
 
     * For fully automatic installation, open cmd and execute it with :code:`/Path/To/Windows.bat -a`
 
-* For **Linux/Mac**, go `here <https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1>`_
+* For **Linux/Mac**, use `LinuxMac.sh <https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1>`_
 
   #. Right click on the webpage and select "Save as..." to download the file
 
@@ -45,7 +45,7 @@ We strongly recommend to start from `Mambaforge <https://mamba.readthedocs.io/en
 a community project of the conda-forge community.
 
 As **Beginner** start with an installation of Mambaforge
-- `Get Mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`_ for your Operation System
+- Get`mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__ for your Operation System
 
 Install MSS
 ~~~~~~~~~~~
@@ -70,7 +70,7 @@ We suggest to create a mss user.
 * login as mss user
 * create a *src* directory in /home/mss
 * cd src
-* get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`_
+* get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__
 * set execute bit on install script
 * execute script, enable environment in .bashrc
 * login again

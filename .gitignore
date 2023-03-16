@@ -19,7 +19,9 @@ docs/_build
 docs/gallery/plots
 docs/gallery/code
 docs/gallery/plots.html
+docs/videos/
 build/
 mss.egg-info/
 tutorials/recordings
 tutorials/cursor_image.png
+

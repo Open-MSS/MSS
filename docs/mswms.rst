@@ -463,7 +463,7 @@ Setup a /etc/apache2/mods-available/wsgi_express.load::
 Enable the new module by a2enmod and reload the apache2 server
 
 Configuration of apache mod_wsgi.conf
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
 could add it also to wms.wsgi.

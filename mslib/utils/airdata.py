@@ -39,8 +39,9 @@ import time
 import defusedxml.ElementTree as etree
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
-
 OSDIR = fs.open_fs(MSUI_CONFIG_PATH).root_path
+if not os.path.exists(os.path.join(OSDIR, "downloads", "aip")):
+    os.makedirs(os.path.join(OSDIR, "downloads", "aip"))
 
 _airspaces = []
 _airports = []
@@ -84,20 +85,20 @@ def download_progress(file_path, url, progress_callback=lambda f: logging.info("
 
 def get_airports(force_download=False, url=None):
     """
-    Gets or downloads the airports.csv in ~/.config/msui and returns all airports within
+    Gets or downloads the airports.csv in ~/.config/msui/downloads/aip and returns all airports within
     """
     global _airports, _airports_mtime
     if url is None:
         url = "https://ourairports.com/data/airports.csv"
 
-    file_exists = os.path.exists(os.path.join(OSDIR, "airports.csv"))
+    file_exists = os.path.exists(os.path.join(OSDIR, "downloads", "aip", "airports.csv"))
 
     if _airports and file_exists and \
-            os.path.getmtime(os.path.join(OSDIR, "airports.csv")) == _airports_mtime:
+            os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv")) == _airports_mtime:
         return _airports
 
     time_outdated = 60 * 60 * 24 * 30  # 30 days
-    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(OSDIR,
+    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(OSDIR, "downloads", "aip",
                                                                                "airports.csv"))) > time_outdated
 
     if (force_download or is_outdated or not file_exists) \
@@ -107,7 +108,7 @@ def get_airports(force_download=False, url=None):
                                                 if not force_download else "") + "\nIs now a good time?",
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
             == QtWidgets.QMessageBox.Yes:
-        download_progress(os.path.join(OSDIR, "airports.csv"), url)
+        download_progress(os.path.join(OSDIR, "downloads", "aip", "airports.csv"), url)
 
     if os.path.exists(os.path.join(OSDIR, "airports.csv")):
         with open(os.path.join(OSDIR, "airports.csv"), "r", encoding="utf8") as file:
@@ -143,7 +144,7 @@ def update_airspace(force_download=False, countries=None):
     global _airspaces, _airspaces_mtime
 
     for country in countries:
-        location = os.path.join(OSDIR, f"{country}_asp.xml")
+        location = os.path.join(OSDIR, "downloads", "aip", f"{country}_asp.xml")
         url = _airspace_download_url.format(country)
         available = get_available_airspaces()
         try:
@@ -167,7 +168,7 @@ def update_airspace(force_download=False, countries=None):
 
 def get_airspaces(countries=None):
     """
-    Gets the .xml files in ~/.config/msui and returns all airspaces within
+    Gets the .xml files in ~/.config/msui/downloads/aip and returns all airspaces within
     """
     if countries is None:
         countries = []

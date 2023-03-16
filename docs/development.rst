@@ -23,7 +23,7 @@ Using our Issue Tracker on github
 How to Report Bugs
 ..................
 
-Please open a new issue in the appropriate GitHub repository `here <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
+Please open a new issue in the appropriate GitHub repository `https://github.com/Open-MSS/MSS/issues/new <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
 
 Be sure to include as much information including screenshots, text output, and both your expected and actual results.
 
@@ -196,7 +196,7 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
 
 
 Setup msui_settings.json for special tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..........................................
 
 On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
 If you want to overwrite this setup and try out a special configuration add an msui_settings.json
@@ -269,14 +269,14 @@ or parallel
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
 Verify Code Style
-~~~~~~~~~~~~~~~~~
+.................
 
 A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
 
 Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
 
 Coverage
-~~~~~~~~
+........
 
 ::
 
@@ -295,7 +295,7 @@ This plugin produces a coverage report, example::
 
 
 Profiling
-~~~~~~~~~
+.........
 
 Profiling can be done by e.g.::
 

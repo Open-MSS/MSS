@@ -18,23 +18,33 @@ import setuptools
 import subprocess
 import requests
 import zipfile
+import shutil
 
 from string import Template
 
-TUTORIAL_URL = "https://fz-juelich.sciebo.de/s/7DUjGMgP1HFvakG/download"
-TUTORIAL_DIR = '_build/html/tutorials'
-if not os.path.exists(TUTORIAL_DIR):
-    os.makedirs(TUTORIAL_DIR)
-TUTORIAL_ARCHIVE = '_build/html/tutorials/tutorials.zip'
-if not os.path.exists(TUTORIAL_ARCHIVE):
-    print("Downloading tutorial archive")
-    response = requests.get(TUTORIAL_URL)
-    open(TUTORIAL_ARCHIVE, "wb").write(response.content)
-    with zipfile.ZipFile(TUTORIAL_ARCHIVE, 'r') as zip_ref:
-       zip_ref.extractall(TUTORIAL_DIR)
-    # remove zip file
-    if os.path.exists(TUTORIAL_ARCHIVE):
+def get_tutorial_images():
+    TUTORIAL_URL = "https://fz-juelich.sciebo.de/s/7DUjGMgP1HFvakG/download"
+    TUTORIAL_DIR = 'videos/gif'
+    if not os.path.exists(TUTORIAL_DIR):
+        os.makedirs(TUTORIAL_DIR)
+    TUTORIAL_ARCHIVE = 'videos/gif/tutorials.zip'
+    if not os.path.exists(TUTORIAL_ARCHIVE):
+        response = requests.get(TUTORIAL_URL)
+        open(TUTORIAL_ARCHIVE, "wb").write(response.content)
+        with zipfile.ZipFile(TUTORIAL_ARCHIVE) as zip_file:
+            for item in zip_file.namelist():
+                filename = os.path.basename(item)
+                if not filename:
+                    continue
+                source = zip_file.open(item)
+                target = open(os.path.join(TUTORIAL_DIR, filename), "wb")
+                with source, target:
+                    shutil.copyfileobj(source, target)
+        # remove zip archive
         os.remove(TUTORIAL_ARCHIVE)
+
+
+get_tutorial_images()
 
 
 if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
@@ -253,7 +263,7 @@ html_logo = "mss-logo.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['mss_theme', 'gallery/plots']
+html_static_path = ['mss_theme', 'gallery/plots', 'videos']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
