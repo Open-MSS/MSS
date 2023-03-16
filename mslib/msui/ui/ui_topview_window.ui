@@ -131,12 +131,32 @@
         </property>
         <item>
          <property name="text">
-          <string>(select to open tool)</string>
+          <string>Web Map Service</string>
          </property>
         </item>
         <item>
          <property name="text">
-          <string>WMS</string>
+          <string>Satellite Tracks</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Remote Sensing</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>KML Overlay</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Airports/Airspaces</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Multiple Flightpath</string>
          </property>
         </item>
        </widget>

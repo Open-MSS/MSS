@@ -293,10 +293,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         Initialise GUI elements. (This method is called before signals/slots
         are connected).
         """
-        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
-                     "Airports/Airspaces", "Multiple FLightpath"]
-        self.cbTools.clear()
-        self.cbTools.addItems(toolitems)
 
         # Fill combobox for predefined map sections.
         self.update_predefined_maps()
@@ -312,7 +308,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.update_roundtrip_enabled()
         self.mpl.navbar.push_current()
 
-        self.openTool(WMS + 1)
+        self.openTool(WMS)
 
     def update_predefined_maps(self, extra=None):
         current_map_key = self.cbChangeMapSection.currentText()
