@@ -30,12 +30,13 @@
 import sys
 from PyQt5 import QtWidgets, QtTest
 import mslib.msui.sideview as tv
+from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
 
 class Test_SuffixChange(object):
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSUI_SV_OptionsDialog()
+        self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
