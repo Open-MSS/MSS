@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-     tests._test_msui.test_multiple_flightpath_dockwidget
-    ~~~~~~~~~~~~~~~~
+    _tests._test_msui.test_multiple_flightpath_dockwidget
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Text line as description
+    Tesst for the MultipleFlightpathControlWidget
 
     This file is part of MSS.
 
