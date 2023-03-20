@@ -28,6 +28,7 @@
 
 import logging
 import os
+import fs
 from datetime import datetime, timedelta
 import numpy as np
 
@@ -153,7 +154,7 @@ class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
 
         try:
             overpass_segments = read_nasa_satellite_prediction(filename)
-        except (IOError, OSError, ValueError) as ex:
+        except (IOError, OSError, ValueError, fs.errors.FileExpected) as ex:
             logging.error("Problem accessing '%s' file", filename)
             QtWidgets.QMessageBox.critical(self, self.tr("Satellite Overpass Tool"),
                                            self.tr(f"ERROR:\n{type(ex)}\n{ex}"))
