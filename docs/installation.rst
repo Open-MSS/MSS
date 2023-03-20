@@ -45,7 +45,7 @@ We strongly recommend to start from `Mambaforge <https://mamba.readthedocs.io/en
 a community project of the conda-forge community.
 
 As **Beginner** start with an installation of Mambaforge
-- Get`mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__ for your Operation System
+- Get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__ for your Operation System
 
 Install MSS
 ~~~~~~~~~~~
