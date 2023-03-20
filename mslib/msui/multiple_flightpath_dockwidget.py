@@ -127,7 +127,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.mscolab_server_url = mscolab_server_url
         self.token = token
         self.ft_settings_dict = self.ui.get_settings()
-        self.color = self.ft_settings_dict["colour_ft_vertices"]
+        self.color = (0, 0, 1, 1)
         self.obb = []
 
         self.operation_list = False
