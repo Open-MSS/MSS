@@ -43,35 +43,42 @@ OSDIR = fs.open_fs(MSUI_CONFIG_PATH).root_path
 if not os.path.exists(os.path.join(OSDIR, "downloads", "aip")):
     os.makedirs(os.path.join(OSDIR, "downloads", "aip"))
 
-#
+
 class Airports:
     airports = []
+
 
 class Airports_mtime:
     airports_mtime = 0
 
+
 class Airspaces:
     airspaces = []
+
 
 class Airspaces_mtime:
     airspaces_mtime = {}
 
+
 class Airspace_url:
     airspace_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
 
+
 class Airspace_download_url:
     airspace_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
-                                     "{}_asp.xml?alt=media"
+                            "{}_asp.xml?alt=media"
+
 
 class Airspace_cache:
     airspace_cache = [('ad_asp.xml', '377'), ('ae_asp.xml', '110238'), ('af_asp.xml', '377'), ('ag_asp.xml', '377'),
-                   ('ai_asp.xml', '377'), ('al_asp.xml', '11360'), ('am_asp.xml', '377'), ('ao_asp.xml', '377'),
-                   ('aq_asp.xml', '377'), ('ar_asp.xml', '975402'), ('as_asp.xml', '377'), ('at_asp.xml', '1059077'),
-                   ('au_asp.xml', '9667669'), ('aw_asp.xml', '377'), ('ax_asp.xml', '377'), ('az_asp.xml', '377'),
-                   ('ba_asp.xml', '76717'), ('bb_asp.xml', '377'), ('bd_asp.xml', '377'), ('be_asp.xml', '462667'),
-                   ('bf_asp.xml', '377'), ('bg_asp.xml', '440690'), ('bh_asp.xml', '68519'), ('bi_asp.xml', '377'),
-                   ('bj_asp.xml', '377'), ('bl_asp.xml', '377')
-                 ]
+                      ('ai_asp.xml', '377'), ('al_asp.xml', '11360'), ('am_asp.xml', '377'), ('ao_asp.xml', '377'),
+                      ('aq_asp.xml', '377'), ('ar_asp.xml', '975402'), ('as_asp.xml', '377'),
+                      ('at_asp.xml', '1059077'),
+                      ('au_asp.xml', '9667669'), ('aw_asp.xml', '377'), ('ax_asp.xml', '377'), ('az_asp.xml', '377'),
+                      ('ba_asp.xml', '76717'), ('bb_asp.xml', '377'), ('bd_asp.xml', '377'), ('be_asp.xml', '462667'),
+                      ('bf_asp.xml', '377'), ('bg_asp.xml', '440690'), ('bh_asp.xml', '68519'), ('bi_asp.xml', '377'),
+                      ('bj_asp.xml', '377'), ('bl_asp.xml', '377')
+                     ]
 
 
 def download_progress(file_path, url, progress_callback=lambda f: logging.info("%sKB Downloaded", int(f))):
@@ -156,8 +163,6 @@ def update_airspace(force_download=False, countries=None):
     """
     if countries is None:
         countries = ["de"]
-    _airspaces = Airspaces()
-    _airspaces_mtime = Airspaces_mtime()
 
     for country in countries:
         location = os.path.join(OSDIR, "downloads", "aip", f"{country}_asp.xml")
