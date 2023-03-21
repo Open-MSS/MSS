@@ -43,15 +43,28 @@ OSDIR = fs.open_fs(MSUI_CONFIG_PATH).root_path
 if not os.path.exists(os.path.join(OSDIR, "downloads", "aip")):
     os.makedirs(os.path.join(OSDIR, "downloads", "aip"))
 
-_airspaces = []
-_airports = []
-_airports_mtime = 0
-_airspaces_mtime = {}
-_airspace_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
-_airspace_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
-                         "{}_asp.xml?alt=media"
-# Updated Dec 01 2022
-_airspace_cache = [('ad_asp.xml', '377'), ('ae_asp.xml', '110238'), ('af_asp.xml', '377'), ('ag_asp.xml', '377'),
+#
+class Airports:
+    airports = []
+
+class Airports_mtime:
+    airports_mtime = 0
+
+class Airspaces:
+    airspaces = []
+
+class Airspaces_mtime:
+    airspaces_mtime = {}
+
+class Airspace_url:
+    airspace_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
+
+class Airspace_download_url:
+    airspace_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
+                                     "{}_asp.xml?alt=media"
+
+class Airspace_cache:
+    airspace_cache = [('ad_asp.xml', '377'), ('ae_asp.xml', '110238'), ('af_asp.xml', '377'), ('ag_asp.xml', '377'),
                    ('ai_asp.xml', '377'), ('al_asp.xml', '11360'), ('am_asp.xml', '377'), ('ao_asp.xml', '377'),
                    ('aq_asp.xml', '377'), ('ar_asp.xml', '975402'), ('as_asp.xml', '377'), ('at_asp.xml', '1059077'),
                    ('au_asp.xml', '9667669'), ('aw_asp.xml', '377'), ('ax_asp.xml', '377'), ('az_asp.xml', '377'),
@@ -87,15 +100,17 @@ def get_airports(force_download=False, url=None):
     """
     Gets or downloads the airports.csv in ~/.config/msui/downloads/aip and returns all airports within
     """
-    global _airports, _airports_mtime
+    _airports = Airports()
+    _airports_mtime = Airports_mtime()
+
     if url is None:
         url = "https://ourairports.com/data/airports.csv"
 
     file_exists = os.path.exists(os.path.join(OSDIR, "downloads", "aip", "airports.csv"))
 
-    if _airports and file_exists and \
-            os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv")) == _airports_mtime:
-        return _airports
+    if _airports.airports and file_exists and \
+            os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv")) == _airports_mtime.airports_mtime:
+        return _airports.airports
 
     time_outdated = 60 * 60 * 24 * 30  # 30 days
     is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(OSDIR, "downloads", "aip",
@@ -112,7 +127,7 @@ def get_airports(force_download=False, url=None):
 
     if os.path.exists(os.path.join(OSDIR, "airports.csv")):
         with open(os.path.join(OSDIR, "airports.csv"), "r", encoding="utf8") as file:
-            _airports_mtime = os.path.getmtime(os.path.join(OSDIR, "airports.csv"))
+            _airports_mtime.airports_mtime = os.path.getmtime(os.path.join(OSDIR, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
 
     else:
@@ -124,15 +139,15 @@ def get_available_airspaces():
     Gets and returns all available airspaces and their sizes from openaip
     """
     try:
-        directory = requests.get(_airspace_url, timeout=5)
+        directory = requests.get(Airspace_url.airspace_url, timeout=5)
         if directory.status_code == 404:
-            return _airspace_cache
+            return Airspace_cache.airspace_cache
         airspaces = regex.findall(r">(.._asp\.xml)<", directory.text)
         sizes = regex.findall(r".._asp.xml.*?<Size>([0-9]+)<\/Size", directory.text)
         airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
         return airspaces
     except requests.exceptions.RequestException:
-        return _airspace_cache
+        return Airspace_cache.airspace_cache
 
 
 def update_airspace(force_download=False, countries=None):
@@ -141,11 +156,12 @@ def update_airspace(force_download=False, countries=None):
     """
     if countries is None:
         countries = ["de"]
-    global _airspaces, _airspaces_mtime
+    _airspaces = Airspaces()
+    _airspaces_mtime = Airspaces_mtime()
 
     for country in countries:
         location = os.path.join(OSDIR, "downloads", "aip", f"{country}_asp.xml")
-        url = _airspace_download_url.format(country)
+        url = Airspace_download_url.airspace_download_url.format(country)
         available = get_available_airspaces()
         try:
             data = [airspace for airspace in available if airspace[0].startswith(country)][0]
@@ -172,21 +188,22 @@ def get_airspaces(countries=None):
     """
     if countries is None:
         countries = []
-    global _airspaces, _airspaces_mtime
+    _airspaces = Airspaces()
+    _airspaces_mtime = Airspaces_mtime()
 
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
     files = [file for file in files if os.path.exists(os.path.join(OSDIR, file))]
 
-    if _airspaces and len(files) == len(_airspaces_mtime):
+    if _airspaces.airspaces and len(files) == len(_airspaces_mtime.airspaces_mtime):
         for file in files:
-            if file not in _airspaces_mtime or \
-                    os.path.getmtime(os.path.join(OSDIR, file)) != _airspaces_mtime[file]:
+            if file not in _airspaces_mtime.airspaces_mtime or \
+                    os.path.getmtime(os.path.join(OSDIR, file)) != _airspaces_mtime.airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:
-            return _airspaces
+            return _airspaces.airspaces
 
     _airspaces_mtime = {}
     _airspaces = []
