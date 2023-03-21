@@ -106,7 +106,7 @@ def get_airports(force_download=False, url=None):
                                                f"{'drawn' if not force_download else 'downloaded (~10 MB)'}." +
                                                ("\nThe airports file first needs to be downloaded or updated (~10 MB)."
                                                 if not force_download else "") + "\nIs now a good time?",
-                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
+                                               QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes) \
             == QtWidgets.QMessageBox.Yes:
         download_progress(os.path.join(OSDIR, "downloads", "aip", "airports.csv"), url)
 
@@ -161,7 +161,7 @@ def update_airspace(force_download=False, countries=None):
                     None, "Allow download",
                     f"The selected {country} airspace needs to be downloaded "
                     f"({humanfriendly.format_size(int(data[-1]))})\nIs now a good time?",
-                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) \
+                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes) \
                 == QtWidgets.QMessageBox.Yes:
             download_progress(location, url)
 

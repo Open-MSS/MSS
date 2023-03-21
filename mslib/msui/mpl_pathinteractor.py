@@ -902,7 +902,7 @@ class PathInteractor(QtCore.QObject):
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint",
                 f"Remove waypoint no.{row:d} at {wp.lat:.2f}/{wp.lon:.2f}, flightlevel {wp.flightlevel:.2f}?",
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
 
 
 class VPathInteractor(PathInteractor):
