@@ -1,50 +1,59 @@
 # Installation
 
 
-## Install distributed version by conda
+## Install distributed version by mamba
+
+The Mission Support System (MSS) including a Web Map Service a Collaboration Server and a Graphical User Interface is available as
+[conda-forge](https://anaconda.org/conda-forge/mss) package.
 
 
-[Anaconda](https://www.continuum.io/why-anaconda) provides an
-enterprise-ready data analytics platform that empowers companies to
-adopt a modern open data science analytics architecture.
+We strongly recommend to start from [Mambaforge](https://mamba.readthedocs.io/en/latest/installation.html)
+a community project of the conda-forge community.
 
-MSS is available as anaconda package on the channel.
+You can install it either automatically with the help of a script or manually.
 
-[conda-forge/mss](https://anaconda.org/conda-forge/mss)
+### Automatically
 
-The conda-forge packages are based on defaults and other conda-forge
-packages. This channel conda-forge has builds for osx-64, linux-64,
-win-64
 
-The conda-forge [github organization](https://conda-forge.github.io/)
-uses various automated continuos integration build processes.
+* For **Windows**, use [Windows.bat](https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1)
 
-### conda-forge channel
+ 1. Right click on the webpage and select "Save as..." to download the file
+ 1. Double click the downloaded file and follow further instructions
+    * For fully automatic installation, open cmd and execute it with `/Path/To/Windows.bat -a`
 
-Please add the channel conda-forge to your defaults:
+* For **Linux/Mac**, use [LinuxMac.sh](https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1)
 
-    $ conda config --add channels conda-forge
+ 1. Right click on the webpage and select "Save as..." to download the file
+ 1. Make it executable via `chmod +x LinuxMac.sh`
+ 1. Execute it and follow further instructions `./LinuxMac.sh`
+    * For fully automatic installation, run it with the -a parameter `./LinuxMac.sh -a`
 
-The last channel added gets on top of the list. This gives the order:
-First search in conda-forge.
+
+### Manually
+
+As **Beginner** start with an installation of Mambaforge 
+Get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) for your Operation System
+
 
 You must install mss into a new environment to ensure the most recent
 versions for dependencies (On the Anaconda Prompt on Windows, you have
-to leave out the 'source' here and below). :
+to leave out the 'source' here and below).
 
-    $ conda create -n mssenv mamba
-    $ conda activate mssenv
-    $ mamba install mss
-
+```
+  $ mamba create -n mssenv
+  $ conda activate mssenv
+  $ mamba install mss python
+```
 For updating an existing MSS installation to the current version, it is
 best to install it into a new environment. If an existing environment
 shall be updated, it is important to update all packages in this
-environment. :
+environment. 
 
-    $ conda activate mssenv
-    $ msui --update
+```
+  $ conda activate mssenv
+  $ msui --update
+```
 
-For further details mss-configuration
 
 ### Server based installation
 
@@ -56,20 +65,22 @@ user for the apache2 wsgi script. We suggest to create a mss user.
 -   login as mss user
 -   create a *src* directory in /home/mss
 -   cd src
--   get [miniconda](http://conda.pydata.org/miniconda.html) for Python 3
+-   get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge)
 -   set execute bit on install script
 -   execute script, enable environment in .bashrc
--   login again or export PATH="/home/mss/miniconda3/bin:\$PATH"
+-   login again or export PATH="/home/mss/mambaforge/bin:\$PATH"
 -   python --version should tell Python 3.X.X
--   conda create -n mssenv mamba
--   conda activate mssenv
--   mamba install mss
+-   mamba create -n mssenv
+-   mamba activate mssenv
+-   mamba install mss python
 
 For a simple test you could start the builtin standalone *mswms* and
 *mscolab* server:
 
-    $ mswms &
-    $ mscolab start
+```
+  $ mswms &
+  $ mscolab start
+```
 
 Point a browser for the verification of both servers installed on
 
