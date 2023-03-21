@@ -35,7 +35,7 @@ import os
 import socketio
 import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer
-from flask import g, jsonify, request, render_template
+from flask import g, jsonify, request, render_template, flash
 from flask import send_from_directory, abort, url_for
 from flask_mail import Mail, Message
 from flask_cors import CORS
@@ -50,6 +50,7 @@ from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 from mslib.index import create_app
+from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 
 
 APP = create_app(__name__)
@@ -642,8 +643,57 @@ def import_permissions():
                     "message": message})
 
 
+@APP.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = confirm_token(token)
+    except TypeError:
+        return jsonify({"success": False}), 401
+    if email is False:
+        return jsonify({"success": False}), 401
+    user = User.query.filter_by(emailid=email).first_or_404()
+    if user.confirmed:
+        form = ResetPasswordForm()
+        if form.validate_on_submit():
+            try:   
+                user.hash_password(form.confirm_password.data)
+                db.session.commit()
+                flash('Password reset Success. Please login by the user interface.', 'category_success')
+            except IOError:
+                flash('Password reset failed. Please try again later', 'category_danger')
+        return render_template('user/reset_password.html', form=form)
+    else:
+        return jsonify({"success": False}), 401
+
+
+@APP.route("/reset_request", methods=['GET', 'POST'])
+def reset_request():
+    form = ResetRequestForm()
+    if form.validate_on_submit():
+        # Check wheather user exists or not based on the db
+        user = User.query.filter_by(emailid=form.email.data).first()
+        if user:
+            try:
+                username = user.username
+                token = generate_confirmation_token(form.email.data)
+                reset_password_url = url_for('reset_password', token=token, _external=True)
+                html = render_template('user/reset_confirmation.html',
+                                       reset_password_url=reset_password_url, username=username)
+                subject = "Password reset request"
+                send_email(form.email.data, subject, html)
+                flash('''Your reset request has been sent successfully.
+                Please check your email for further instructions.''', 'category_success')
+            except IOError:
+                flash('''We apologize, but it seems that there was an issue sending 
+                your request email. Please try again later.''', 'category_info')
+        else:
+            flash('Sorry. We could not find your account', 'category_danger')
+    return render_template('user/reset_request.html', form=form)
+
+
 def start_server(app, sockio, cm, fm, port=8083):
     create_files()
+    app.debug = True
     sockio.run(app, port=port)
 
 
