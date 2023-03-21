@@ -44,32 +44,20 @@ if not os.path.exists(os.path.join(OSDIR, "downloads", "aip")):
     os.makedirs(os.path.join(OSDIR, "downloads", "aip"))
 
 
-class Airports:
+class Global_Constants:
     airports = []
 
-
-class Airports_mtime:
     airports_mtime = 0
 
-
-class Airspaces:
     airspaces = []
 
-
-class Airspaces_mtime:
     airspaces_mtime = {}
 
-
-class Airspace_url:
     airspace_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
 
-
-class Airspace_download_url:
     airspace_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
                             "{}_asp.xml?alt=media"
 
-
-class Airspace_cache:
     airspace_cache = [('ad_asp.xml', '377'), ('ae_asp.xml', '110238'), ('af_asp.xml', '377'), ('ag_asp.xml', '377'),
                       ('ai_asp.xml', '377'), ('al_asp.xml', '11360'), ('am_asp.xml', '377'), ('ao_asp.xml', '377'),
                       ('aq_asp.xml', '377'), ('ar_asp.xml', '975402'), ('as_asp.xml', '377'),
@@ -107,17 +95,17 @@ def get_airports(force_download=False, url=None):
     """
     Gets or downloads the airports.csv in ~/.config/msui/downloads/aip and returns all airports within
     """
-    _airports = Airports()
-    _airports_mtime = Airports_mtime()
+    _airports = Global_Constants().airports
+    _airports_mtime = Global_Constants().airports_mtime
 
     if url is None:
         url = "https://ourairports.com/data/airports.csv"
 
     file_exists = os.path.exists(os.path.join(OSDIR, "downloads", "aip", "airports.csv"))
 
-    if _airports.airports and file_exists and \
-            os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv")) == _airports_mtime.airports_mtime:
-        return _airports.airports
+    if _airports and file_exists and \
+            os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv")) == _airports_mtime:
+        return _airports
 
     time_outdated = 60 * 60 * 24 * 30  # 30 days
     is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(OSDIR, "downloads", "aip",
@@ -134,7 +122,7 @@ def get_airports(force_download=False, url=None):
 
     if os.path.exists(os.path.join(OSDIR, "airports.csv")):
         with open(os.path.join(OSDIR, "airports.csv"), "r", encoding="utf8") as file:
-            _airports_mtime.airports_mtime = os.path.getmtime(os.path.join(OSDIR, "airports.csv"))
+            _airports_mtime = os.path.getmtime(os.path.join(OSDIR, "airports.csv"))
             return list(csv.DictReader(file, delimiter=","))
 
     else:
@@ -146,15 +134,15 @@ def get_available_airspaces():
     Gets and returns all available airspaces and their sizes from openaip
     """
     try:
-        directory = requests.get(Airspace_url.airspace_url, timeout=5)
+        directory = requests.get(Global_Constants.airspace_url, timeout=5)
         if directory.status_code == 404:
-            return Airspace_cache.airspace_cache
+            return Global_Constants.airspace_cache
         airspaces = regex.findall(r">(.._asp\.xml)<", directory.text)
         sizes = regex.findall(r".._asp.xml.*?<Size>([0-9]+)<\/Size", directory.text)
         airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
         return airspaces
     except requests.exceptions.RequestException:
-        return Airspace_cache.airspace_cache
+        return Global_Constants.airspace_cache
 
 
 def update_airspace(force_download=False, countries=None):
@@ -166,7 +154,7 @@ def update_airspace(force_download=False, countries=None):
 
     for country in countries:
         location = os.path.join(OSDIR, "downloads", "aip", f"{country}_asp.xml")
-        url = Airspace_download_url.airspace_download_url.format(country)
+        url = Global_Constants.airspace_download_url.format(country)
         available = get_available_airspaces()
         try:
             data = [airspace for airspace in available if airspace[0].startswith(country)][0]
@@ -193,22 +181,22 @@ def get_airspaces(countries=None):
     """
     if countries is None:
         countries = []
-    _airspaces = Airspaces()
-    _airspaces_mtime = Airspaces_mtime()
+    _airspaces = Global_Constants().airspaces
+    _airspaces_mtime = Global_Constants().airspaces_mtime
 
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
     files = [file for file in files if os.path.exists(os.path.join(OSDIR, file))]
 
-    if _airspaces.airspaces and len(files) == len(_airspaces_mtime.airspaces_mtime):
+    if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
-            if file not in _airspaces_mtime.airspaces_mtime or \
-                    os.path.getmtime(os.path.join(OSDIR, file)) != _airspaces_mtime.airspaces_mtime[file]:
+            if file not in _airspaces_mtime or \
+                    os.path.getmtime(os.path.join(OSDIR, file)) != _airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:
-            return _airspaces.airspaces
+            return _airspaces
 
     _airspaces_mtime = {}
     _airspaces = []
