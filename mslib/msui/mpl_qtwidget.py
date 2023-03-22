@@ -1183,6 +1183,7 @@ class MplSideViewCanvas(MplCanvas):
                 numintpoints=config_loader(dataset="num_interpolation_points"),
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.plotter.clear_figure
             )
+            self.set_settings(None)
 
     def redraw_xaxis(self, lats, lons, times):
         """Redraw the x-axis of the side view on path changes. Also remove
@@ -1408,6 +1409,7 @@ class MplLinearViewCanvas(MplCanvas):
                 clear_figure=self.plotter.clear_figure,
                 redraw_xaxis=self.redraw_xaxis
             )
+            self.set_settings(None)
         self.redraw_xaxis()
 
     def setup_linear_view(self):
@@ -1525,8 +1527,7 @@ class MplTopViewCanvas(MplCanvas):
                     linecolor=settings["colour_ft_vertices"],
                     markerfacecolor=settings["colour_ft_waypoints"],
                     show_marker=settings["draw_marker"])
-                self.waypoints_interactor.plotter.set_vertices_visible(
-                    settings["draw_flighttrack"])
+                self.set_settings(None)
             except IOError as err:
                 logging.error("%s" % err)
 
