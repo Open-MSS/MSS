@@ -61,8 +61,53 @@ Requirements
   | Knowledge of git & github
   | Python
 
+Installing dependencies
+.......................
+
+MSS is based on the software of the conda-forge channel located. The channel is predefined in Mambaforge.
+
+Create an environment and install the dependencies needed for the mss package::
+
+  $ mamba create -n mssdev
+  $ mamba activate mssdev
+  $ mamba install mss=$mss_version --only-deps
+
+Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.::
+
+  $ git diff stable develop -- localbuild/meta.yaml
+
+
+Install requirements for  local testing
+---------------------------------------
+
+With sending a Pull Request our defined CIs do run all tests on github.
+You can do run tests own system too.
+
+For developers we provide additional packages for running tests, activate your env and run::
+
+  $ mamba install --file requirements.d/development.txt
+
+On linux install the `conda-forge package pyvirtualdisplay` and `xvfb` from your linux package manager.
+This is used to run tests on a virtual display.
+If you don't want tests redirected to the xvfb display just setup an environment variable::
+
+ $ export TESTS_VISIBLE=TRUE
+
+We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
+in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
+
+
+Setup msui_settings.json for special tests
+..........................................
+
+On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
+If you want to overwrite this setup and try out a special configuration add an msui_settings.json
+file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
+
+
+
 Forking the Repo
-................
+----------------
 
 1. Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window.
 
@@ -124,23 +169,6 @@ If you don't have a stable branch, create one first or change to that branch::
   git push
 
 
-
-Installing dependencies
-.......................
-
-MSS is based on the software of the conda-forge channel located. The channel is predefined in Mambaforge.
-
-Create an environment and install the dependencies needed for the mss package::
-
-  $ mamba create -n mssdev
-  $ mamba activate mssdev
-  $ mamba install mss=$mss_version --only-deps
-
-Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.::
-
-  $ git diff stable develop -- localbuild/meta.yaml
-
-
 Setup MSWMS server
 ------------------
 
@@ -175,32 +203,6 @@ To start your server use the command :code:`python mslib/mscolab/mscolab.py star
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
 Now you can use the MSS desktop application to connect to it using the MSColab window of the application.
 
-Install requirements for  local testing
----------------------------------------
-
-With sending a Pull Request our defined CIs do run all tests on github.
-You can do run tests own system too.
-
-For developers we provide additional packages for running tests, activate your env and run::
-
-  $ mamba install --file requirements.d/development.txt
-
-On linux install the `conda-forge package pyvirtualdisplay` and `xvfb` from your linux package manager.
-This is used to run tests on a virtual display.
-If you don't want tests redirected to the xvfb display just setup an environment variable::
-
- $ export TESTS_VISIBLE=TRUE
-
-We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
-in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
-
-
-Setup msui_settings.json for special tests
-..........................................
-
-On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
-If you want to overwrite this setup and try out a special configuration add an msui_settings.json
-file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
 
 
 Code Style
