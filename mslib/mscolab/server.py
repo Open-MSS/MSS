@@ -655,7 +655,7 @@ def reset_password(token):
     if user.confirmed:
         form = ResetPasswordForm()
         if form.validate_on_submit():
-            try:   
+            try:
                 user.hash_password(form.confirm_password.data)
                 db.session.commit()
                 flash('Password reset Success. Please login by the user interface.', 'category_success')
@@ -686,8 +686,8 @@ def reset_request():
                 Please check your email for further instructions.''', 'category_success')
                 return render_template('user/status.html')
             except IOError:
-                flash('''We apologize, but it seems that there was an issue sending 
-                your request email. Please try again later.''', 'category_info')
+                flash('''We apologize, but it seems that there was an issue sending
+                 your request email. Please try again later.''', 'category_info')
         else:
             flash('Sorry. We could not find your account', 'category_danger')
     return render_template('user/reset_request.html', form=form)
