@@ -695,7 +695,6 @@ def reset_request():
 
 def start_server(app, sockio, cm, fm, port=8083):
     create_files()
-    app.debug = True
     sockio.run(app, port=port)
 
 
