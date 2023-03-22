@@ -131,6 +131,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
             msg = "⚠ " + msg
+            self.statusLabel.setOpenExternalLinks(True)
             self.statusLabel.setStyleSheet("color: red;")
         elif _type == "Success":
             self.statusLabel.setStyleSheet("color: green;")
@@ -252,6 +253,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         s.auth = (auth[0], auth[1])
         s.headers.update({'x-test': 'true'})
         url = f'{self.mscolab_server_url}/token'
+        url_recover_password = f'{self.mscolab_server_url}/reset_request'
         try:
             r = s.post(url, data=data, timeout=(2, 10))
         except requests.exceptions.ConnectionError as ex:
@@ -265,7 +267,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         if r.text == "False":
             # show status indicating about wrong credentials
-            self.set_status("Error", 'Oh no, your credentials were incorrect.')
+            self.set_status("Error", 'Oh no, your credentials were incorrect. '
+                            f'<a href="{url_recover_password}">Recover Password</a>')
         elif r.text == "Unauthorized Access":
             # Server auth required for logging in
             self.login_data = [data, r, url]
