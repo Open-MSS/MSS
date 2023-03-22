@@ -37,7 +37,7 @@ from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.utils import thermolib
-from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
 
 # Dock window indices.
@@ -50,44 +50,23 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     in "ui_sideview_options.py".
     """
 
-    def __init__(self, parent=None, settings_dict=None):
+    def __init__(self, parent=None, settings=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
-        settings_dict -- dictionary containing sideview options.
+        settings -- dictionary containing sideview options.
         """
         super(MSUI_SV_OptionsDialog, self).__init__(parent)
         self.setupUi(self)
 
-        default_settings_dict = {
-            "vertical_extent": (1050, 180),
-            "vertical_axis": "pressure",
-            "secondary_axis": "no secondary axis",
-            "plot_title_size": "default",
-            "axes_label_size": "default",
-            "flightlevels": [300, 320, 340],
-            "draw_flightlevels": True,
-            "draw_flighttrack": True,
-            "draw_marker": True,
-            "fill_flighttrack": True,
-            "label_flighttrack": True,
-            "draw_verticals": True,
-            "colour_ft_vertices": (0, 0, 0, 0),
-            "colour_ft_waypoints": (0, 0, 0, 0),
-            "colour_ft_fill": (0, 0, 0, 0),
-            "draw_ceiling": True,
-            "colour_ceiling": (0.1, 0.5, 0.1, 0),
-        }
         self._suffixes = ['hPa', 'km', 'hft']
-        if settings_dict is not None:
-            default_settings_dict.update(settings_dict)
-        settings_dict = default_settings_dict
+        assert settings is not None
 
-        self.setBotTopLimits(settings_dict["vertical_axis"])
-        self.sbPbot.setValue(settings_dict["vertical_extent"][0])
-        self.sbPtop.setValue(settings_dict["vertical_extent"][1])
+        self.setBotTopLimits(settings["vertical_axis"])
+        self.sbPbot.setValue(settings["vertical_extent"][0])
+        self.sbPtop.setValue(settings["vertical_extent"][1])
 
-        flightlevels = settings_dict["flightlevels"]
+        flightlevels = settings["flightlevels"]
         self.tableWidget.setRowCount(len(flightlevels))
         flightlevels.sort()
         for i, level in enumerate(flightlevels):
@@ -95,29 +74,29 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             self.tableWidget.setItem(i, 0, tableitem)
 
         for i in range(self.cbVerticalAxis.count()):
-            if self.cbVerticalAxis.itemText(i) == settings_dict["vertical_axis"]:
+            if self.cbVerticalAxis.itemText(i) == settings["vertical_axis"]:
                 self.cbVerticalAxis.setCurrentIndex(i)
                 self.sbPbot.setSuffix(" " + self._suffixes[i])
                 self.sbPtop.setSuffix(" " + self._suffixes[i])
         for i in range(self.cbVerticalAxis2.count()):
-            if self.cbVerticalAxis2.itemText(i) == settings_dict["secondary_axis"]:
+            if self.cbVerticalAxis2.itemText(i) == settings["secondary_axis"]:
                 self.cbVerticalAxis2.setCurrentIndex(i)
 
         # Shows previously selected element in the fontsize comboboxes as the current index.
         for i in range(self.cbtitlesize.count()):
-            if self.cbtitlesize.itemText(i) == settings_dict["plot_title_size"]:
+            if self.cbtitlesize.itemText(i) == settings["plot_title_size"]:
                 self.cbtitlesize.setCurrentIndex(i)
         for i in range(self.cbaxessize.count()):
-            if self.cbaxessize.itemText(i) == settings_dict["axes_label_size"]:
+            if self.cbaxessize.itemText(i) == settings["axes_label_size"]:
                 self.cbaxessize.setCurrentIndex(i)
 
-        self.cbDrawFlightLevels.setChecked(settings_dict["draw_flightlevels"])
-        self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
-        self.cbFillFlightTrack.setChecked(settings_dict["fill_flighttrack"])
-        self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
-        self.cbDrawCeiling.setChecked(settings_dict["draw_ceiling"])
-        self.cbVerticalLines.setChecked(settings_dict["draw_verticals"])
-        self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
+        self.cbDrawFlightLevels.setChecked(settings["draw_flightlevels"])
+        self.cbDrawFlightTrack.setChecked(settings["draw_flighttrack"])
+        self.cbFillFlightTrack.setChecked(settings["fill_flighttrack"])
+        self.cbLabelFlightTrack.setChecked(settings["label_flighttrack"])
+        self.cbDrawCeiling.setChecked(settings["draw_ceiling"])
+        self.cbVerticalLines.setChecked(settings["draw_verticals"])
+        self.cbDrawMarker.setChecked(settings["draw_marker"])
 
         for button, ids in [(self.btFillColour, "colour_ft_fill"),
                             (self.btWaypointsColour, "colour_ft_waypoints"),
@@ -125,7 +104,7 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
                             (self.btCeilingColour, "colour_ceiling")]:
             palette = QtGui.QPalette(button.palette())
             colour = QtGui.QColor()
-            colour.setRgbF(*settings_dict[ids])
+            colour.setRgbF(*settings[ids])
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
 
@@ -222,7 +201,7 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         """
         Return settings dictionary with values from the GUI elements.
         """
-        settings_dict = {
+        settings = {
             "vertical_extent": (float(self.sbPbot.value()), float(self.sbPtop.value())),
             "vertical_axis": self.cbVerticalAxis.currentText(),
             "secondary_axis": self.cbVerticalAxis2.currentText(),
@@ -245,7 +224,7 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "colour_ceiling":
                 QtGui.QPalette(self.btCeilingColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
         }
-        return settings_dict
+        return settings
 
     def verticalunitsclicked(self, index):
         new_unit = self._suffixes[index]
@@ -288,14 +267,11 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
         self.setFlightTrackModel(model)
 
-        self.settings_tag = "sideview"
-        self.load_settings()
-
         # Connect slots and signals.
         # ==========================
 
         # Buttons to set sideview options.
-        self.btOptions.clicked.connect(self.set_options)
+        self.btOptions.clicked.connect(self.open_settings_dialog)
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
@@ -335,30 +311,14 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
-    def set_options(self):
+    def open_settings_dialog(self):
         """
         Slot to open a dialog that lets the user specifiy sideview options.
         """
         settings = self.getView().get_settings()
-        dlg = MSUI_SV_OptionsDialog(parent=self, settings_dict=settings)
+        dlg = MSUI_SV_OptionsDialog(parent=self, settings=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
-            self.getView().set_settings(settings)
-            self.save_settings()
+            self.getView().set_settings(settings, save=True)
         dlg.destroy()
-
-    def save_settings(self):
-        """
-        Save the current settings (vertical extent, displayed flightlevels
-        etc.) to the file self.settingsfile.
-        """
-        settings = self.getView().get_settings()
-        save_settings_qsettings(self.settings_tag, settings)
-
-    def load_settings(self):
-        """
-        Load settings from the file self.settingsfile.
-        """
-        settings = load_settings_qsettings(self.settings_tag)
-        self.getView().set_settings(settings)

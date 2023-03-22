@@ -45,7 +45,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
 from mslib.utils import thermolib, FatalUserError
-from mslib.utils.config import config_loader
+from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
@@ -56,12 +56,51 @@ LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
 
 matplotlib.rcParams['savefig.directory'] = LAST_SAVE_DIRECTORY
 
+_DEFAULT_SETTINGS_TOPVIEW = {
+    "draw_graticule": True,
+    "draw_coastlines": True,
+    "fill_waterbodies": True,
+    "fill_continents": True,
+    "draw_flighttrack": True,
+    "draw_marker": True,
+    "label_flighttrack": True,
+    "tov_plot_title_size": "default",
+    "tov_axes_label_size": "default",
+    "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
+    "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
+    "colour_ft_vertices": (0, 0, 1, 1),
+    "colour_ft_waypoints": (1, 0, 0, 1)}
+
+_DEFAULT_SETTINGS_SIDEVIEW = {
+    "vertical_extent": (1050, 180),
+    "vertical_axis": "pressure",
+    "secondary_axis": "no secondary axis",
+    "plot_title_size": "default",
+    "axes_label_size": "default",
+    "flightlevels": [300],
+    "draw_flightlevels": True,
+    "draw_flighttrack": True,
+    "fill_flighttrack": True,
+    "label_flighttrack": True,
+    "draw_verticals": True,
+    "draw_marker": True,
+    "draw_ceiling": True,
+    "colour_ft_vertices": (0, 0, 1, 1),
+    "colour_ft_waypoints": (1, 0, 0, 1),
+    "colour_ft_fill": (0, 0, 1, 0.15),
+    "colour_ceiling": (0, 0, 1, 0.15)}
+
+_DEFAULT_SETTINGS_LINEARVIEW = {
+    "plot_title_size": "default",
+    "axes_label_size": "default"}
+
 
 class ViewPlotter:
-    def __init__(self, fig=None, ax=None):
+    def __init__(self, fig=None, ax=None, settings_tag=None, settings=None):
         # setup Matplotlib Figure and Axis
         self.fig, self.ax = fig, ax
-        self.settings = {}
+        self.settings = settings
+        self.settings_tag = settings_tag
         if self.fig is None:
             assert ax is None
             self.fig = figure.Figure(facecolor="w")  # 0.75
@@ -115,7 +154,7 @@ class ViewPlotter:
         """
         return self.settings
 
-    def set_settings(self, settings):
+    def set_settings(self, settings, save=False):
         """Update local settings influencing the plotting
 
         Args:
@@ -123,11 +162,19 @@ class ViewPlotter:
         """
         if settings is not None:
             self.settings.update(settings)
+        if save:
+            self.save_settings()
+
+    def load_settings(self):
+        self.settings = load_settings_qsettings(self.settings_tag, self.settings)
+
+    def save_settings(self):
+        save_settings_qsettings(self.settings_tag, self.settings)
 
 
 class TopViewPlotter(ViewPlotter):
-    def __init__(self, fig=None, ax=None):
-        super().__init__(fig, ax)
+    def __init__(self, fig=None, ax=None, settings=None):
+        super().__init__(fig, ax, settings_tag="topview", settings=_DEFAULT_SETTINGS_TOPVIEW)
         self.map = None
         self.legimg = None
         self.legax = None
@@ -136,20 +183,8 @@ class TopViewPlotter(ViewPlotter):
         self.tov_als = None
         # Sets the default fontsize parameters' values for topview from MSSDefaultConfig.
         self.topview_size_settings = config_loader(dataset="topview")
-        # logging.debug("applying map appearance settings %s." % settings)
-        self.set_settings({"draw_graticule": True,
-                           "draw_coastlines": True,
-                           "fill_waterbodies": True,
-                           "fill_continents": True,
-                           "draw_flighttrack": True,
-                           "draw_marker": True,
-                           "label_flighttrack": True,
-                           "tov_plot_title_size": "default",
-                           "tov_axes_label_size": "default",
-                           "colour_water": ((153 / 255.), (255 / 255.), (255 / 255.), (255 / 255.)),
-                           "colour_land": ((204 / 255.), (153 / 255.), (102 / 255.), (255 / 255.)),
-                           "colour_ft_vertices": (0, 0, 1, 1),
-                           "colour_ft_waypoints": (1, 0, 0, 1)})
+        self.load_settings()
+        self.set_settings(settings)
         self.ax.figure.canvas.draw()
 
     def init_map(self, **kwargs):
@@ -196,11 +231,11 @@ class TopViewPlotter(ViewPlotter):
             self.ax.set_title("Top view", horizontalalignment="left", x=0)
             self.ax.figure.canvas.draw()
 
-    def set_settings(self, settings):
+    def set_settings(self, settings, save=False):
         """Apply settings from dictionary 'settings' to the view.
         If settings is None, apply default settings.
         """
-        super().set_settings(settings)
+        super().set_settings(settings, save)
 
         # Stores the exact value of fontsize for topview plot title size(tov_pts)
         self.tov_pts = (self.topview_size_settings["plot_title_size"]
@@ -327,26 +362,8 @@ class SideViewPlotter(ViewPlotter):
             numlabels = config_loader(dataset='num_labels')
         if num_interpolation_points is None:
             num_interpolation_points = config_loader(dataset='num_interpolation_points')
-        super().__init__(fig, ax)
-
-        # Default settings.
-        self.set_settings({"vertical_extent": (1050, 180),
-                           "vertical_axis": "pressure",
-                           "secondary_axis": "no secondary axis",
-                           "plot_title_size": "default",
-                           "axes_label_size": "default",
-                           "flightlevels": [],
-                           "draw_flightlevels": True,
-                           "draw_flighttrack": True,
-                           "fill_flighttrack": True,
-                           "label_flighttrack": True,
-                           "draw_verticals": True,
-                           "draw_marker": True,
-                           "draw_ceiling": True,
-                           "colour_ft_vertices": (0, 0, 1, 1),
-                           "colour_ft_waypoints": (1, 0, 0, 1),
-                           "colour_ft_fill": (0, 0, 1, 0.15),
-                           "colour_ceiling": (0, 0, 1, 0.15)})
+        super().__init__(fig, ax, settings_tag="sideview", settings=_DEFAULT_SETTINGS_SIDEVIEW)
+        self.load_settings()
         self.set_settings(settings)
 
         self.numlabels = numlabels
@@ -604,17 +621,19 @@ class LinearViewPlotter(ViewPlotter):
        flight track / list of waypoints.
     """
 
-    def __init__(self, model=None, numlabels=None):
+    def __init__(self, model=None, numlabels=None, settings=None):
         """
         Arguments:
         model -- WaypointsTableModel defining the linear section.
         """
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
-        super().__init__()
+        super().__init__(settings_tag="linearview", settings=_DEFAULT_SETTINGS_LINEARVIEW)
+        self.load_settings()
 
-        self.settings = {"plot_title_size": "default",
-                         "axes_label_size": "default"}
+        # Sets the default values of plot sizes from MissionSupportDefaultConfig.
+        self.linearview_size_settings = config_loader(dataset="linearview")
+        self.set_settings(settings)
 
         # Setup the plot.
         self.numlabels = numlabels
@@ -624,8 +643,6 @@ class LinearViewPlotter(ViewPlotter):
         self.waypoints_model = None
         self.vertical_lines = []
         self.basename = "linearview"
-        # Sets the default values of plot sizes from MissionSupportDefaultConfig.
-        self.linearview_size_settings = config_loader(dataset="linearview")
 
     def setup_linear_view(self):
         """Set up a linear section view.
@@ -708,12 +725,12 @@ class LinearViewPlotter(ViewPlotter):
 
             par.yaxis.label.set_color(color.replace("0x", "#"))
 
-    def set_settings(self, settings):
+    def set_settings(self, settings, save=False):
         """
         Apply settings from options ui to the linear view
         """
 
-        super().set_settings(settings)
+        super().set_settings(settings, save)
 
         pts = (self.linearview_size_settings["plot_title_size"] if self.settings["plot_title_size"] == "default"
                else int(self.settings["plot_title_size"]))
@@ -778,11 +795,11 @@ class MplCanvas(FigureCanvasQTAgg):
     def get_settings(self):
         return self.plotter.get_settings()
 
-    def set_settings(self, settings):
+    def set_settings(self, settings, save=False):
         """
         Apply settings from options ui to the linear view
         """
-        self.plotter.set_settings(settings)
+        self.plotter.set_settings(settings, save)
 
 
 def _getSaveFileName(parent, title="Choose a filename to save to", filename="test.png",
@@ -1166,6 +1183,7 @@ class MplSideViewCanvas(MplCanvas):
                 numintpoints=config_loader(dataset="num_interpolation_points"),
                 redraw_xaxis=self.redraw_xaxis, clear_figure=self.plotter.clear_figure
             )
+            self.set_settings(None)
 
     def redraw_xaxis(self, lats, lons, times):
         """Redraw the x-axis of the side view on path changes. Also remove
@@ -1251,12 +1269,12 @@ class MplSideViewCanvas(MplCanvas):
             line.set_visible(visible)
         self.draw()
 
-    def set_settings(self, settings):
+    def set_settings(self, settings, save=False):
         """Apply settings to view.
         """
         old_vertical_lines = self.plotter.settings["draw_verticals"]
         if settings is not None:
-            self.plotter.set_settings(settings)
+            self.plotter.set_settings(settings, save)
         settings = self.plotter.get_settings()
         self.set_flight_levels(settings["flightlevels"])
         self.set_flight_levels_visible(settings["draw_flightlevels"])
@@ -1362,9 +1380,6 @@ class MplLinearViewCanvas(MplCanvas):
         self.plotter = LinearViewPlotter()
         super(MplLinearViewCanvas, self).__init__(self.plotter)
 
-        settings = {"plot_title_size": "default",
-                    "axes_label_size": "default"}
-
         # Setup the plot.
         self.numlabels = numlabels
         self.plotter.setup_linear_view()
@@ -1376,10 +1391,6 @@ class MplLinearViewCanvas(MplCanvas):
         self.draw()
         if model:
             self.set_waypoints_model(model)
-
-        # Sets the default values of plot sizes from MissionSupportDefaultConfig.
-        self.linearview_size_settings = config_loader(dataset="linearview")
-        self.plotter.set_settings(settings)
 
     def set_waypoints_model(self, model):
         """Set the WaypointsTableModel defining the linear section.
@@ -1398,6 +1409,7 @@ class MplLinearViewCanvas(MplCanvas):
                 clear_figure=self.plotter.clear_figure,
                 redraw_xaxis=self.redraw_xaxis
             )
+            self.set_settings(None)
         self.redraw_xaxis()
 
     def setup_linear_view(self):
@@ -1515,8 +1527,7 @@ class MplTopViewCanvas(MplCanvas):
                     linecolor=settings["colour_ft_vertices"],
                     markerfacecolor=settings["colour_ft_waypoints"],
                     show_marker=settings["draw_marker"])
-                self.waypoints_interactor.plotter.set_vertices_visible(
-                    settings["draw_flighttrack"])
+                self.set_settings(None)
             except IOError as err:
                 logging.error("%s" % err)
 
@@ -1629,12 +1640,12 @@ class MplTopViewCanvas(MplCanvas):
         """
         self.multiple_flightpath = multiple_flightpath
 
-    def set_settings(self, settings):
+    def set_settings(self, settings, save=False):
         """Apply settings from dictionary 'settings_dict' to the view.
 
         If settings is None, apply default settings.
         """
-        self.plotter.set_settings(settings)
+        self.plotter.set_settings(settings, save)
         settings = self.get_settings()
         if self.waypoints_interactor is not None:
             wpi_plotter = self.waypoints_interactor.plotter
