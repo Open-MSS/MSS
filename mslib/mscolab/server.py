@@ -646,7 +646,7 @@ def import_permissions():
 @APP.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
     try:
-        email = confirm_token(token)
+        email = confirm_token(token, expiration=86400)
     except TypeError:
         return jsonify({"success": False}), 401
     if email is False:

@@ -2,7 +2,7 @@
 """
 
     mslib.mscolab.forms.py
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~
 
     Forms for mscolab server
 

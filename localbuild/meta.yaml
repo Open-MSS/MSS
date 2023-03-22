@@ -88,7 +88,6 @@ requirements:
     - websocket-client
     - libtiff <4.5.0
     - Flask-WTF
-    - wtforms[email]
     - email_validator
 
 test:
