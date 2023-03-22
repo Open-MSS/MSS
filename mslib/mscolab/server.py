@@ -659,6 +659,7 @@ def reset_password(token):
                 user.hash_password(form.confirm_password.data)
                 db.session.commit()
                 flash('Password reset Success. Please login by the user interface.', 'category_success')
+                return render_template('user/status.html')
             except IOError:
                 flash('Password reset failed. Please try again later', 'category_danger')
         return render_template('user/reset_password.html', form=form)
@@ -681,8 +682,9 @@ def reset_request():
                                        reset_password_url=reset_password_url, username=username)
                 subject = "Password reset request"
                 send_email(form.email.data, subject, html)
-                flash('''Your reset request has been sent successfully.
+                flash('''Your password reset request has been sent successfully.
                 Please check your email for further instructions.''', 'category_success')
+                return render_template('user/status.html')
             except IOError:
                 flash('''We apologize, but it seems that there was an issue sending 
                 your request email. Please try again later.''', 'category_info')
