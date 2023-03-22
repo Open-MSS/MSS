@@ -38,31 +38,10 @@ Be sure to include as much detail as possible including step-by-step description
 
 
 
-Setting Up a Local Environment
-------------------------------
 
-Requirements
-............
-
-1. System requirements
-
-  | Any system with basic configuration.
-  | Operating System : Any (Windows / Linux / Mac).
-
-2. Software requirement
-
-  | Python
-  | `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_
-  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
-
-
-3. Skill set
-
-  | Knowledge of git & github
-  | Python
 
 Forking the Repo
-................
+----------------
 
 1. Firstly you have to make your own copy of project. For that you have to fork the repository. You can find the fork button on the top-right side of the browser window.
 
@@ -123,6 +102,44 @@ If you don't have a stable branch, create one first or change to that branch::
   git pull git@github.com:Open-MSS/MSS.git stable
   git push
 
+
+Setting Up a Local Environment
+------------------------------
+
+In the description we added as example to setup access to the mslib an export of the PYTHONPATH in your environment ::
+
+    cd workspace/MSS
+    export PYTHONPATH=`pwd`
+
+When you don’t want to enter this you can add the PYTHONPATH to mslib to your .bashrc
+
+If you don’t want the PYTHONPATH by export changed you can start modules differently::
+
+    cd workspace/MSS
+    PYTHONPATH=. python mslib/msui/msui.py
+
+
+
+
+Requirements
+............
+
+1. System requirements
+
+  | Any system with basic configuration.
+  | Operating System : Any (Windows / Linux / Mac).
+
+2. Software requirement
+
+  | Python
+  | `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_
+  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
+
+
+3. Skill set
+
+  | Knowledge of git & github
+  | Python
 
 
 Using predefined docker images instead of installing all requirements
@@ -199,7 +216,7 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
 
 
 Setup msui_settings.json for special tests
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..........................................
 
 On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
 If you want to overwrite this setup and try out a special configuration add an msui_settings.json
