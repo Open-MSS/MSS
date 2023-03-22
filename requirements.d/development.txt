@@ -25,3 +25,4 @@ dnspython>=2.0.0, <2.3.0
 gsl==2.7.0
 Flask-WTF
 wtforms[email]
+email_validator
