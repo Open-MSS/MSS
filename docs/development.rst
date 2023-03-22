@@ -37,75 +37,6 @@ Then, please `create a new issue <https://github.com/Open-MSS/MSS/issues/new>`_ 
 Be sure to include as much detail as possible including step-by-step descriptions, specific examples, screenshots or mockups, and reasoning for why the enhancement might be worthwhile.
 
 
-
-Setting Up a Local Environment
-------------------------------
-
-Requirements
-............
-
-1. System requirements
-
-  | Any system with basic configuration.
-  | Operating System : Any (Windows / Linux / Mac).
-
-2. Software requirement
-
-  | Python
-  | `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_
-  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
-
-
-3. Skill set
-
-  | Knowledge of git & github
-  | Python
-
-Installing dependencies
-.......................
-
-MSS is based on the software of the conda-forge channel located. The channel is predefined in Mambaforge.
-
-Create an environment and install the dependencies needed for the mss package::
-
-  $ mamba create -n mssdev
-  $ mamba activate mssdev
-  $ mamba install mss=$mss_version --only-deps
-
-Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.::
-
-  $ git diff stable develop -- localbuild/meta.yaml
-
-
-Install requirements for  local testing
----------------------------------------
-
-With sending a Pull Request our defined CIs do run all tests on github.
-You can do run tests own system too.
-
-For developers we provide additional packages for running tests, activate your env and run::
-
-  $ mamba install --file requirements.d/development.txt
-
-On linux install the `conda-forge package pyvirtualdisplay` and `xvfb` from your linux package manager.
-This is used to run tests on a virtual display.
-If you don't want tests redirected to the xvfb display just setup an environment variable::
-
- $ export TESTS_VISIBLE=TRUE
-
-We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
-in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
-
-
-Setup msui_settings.json for special tests
-..........................................
-
-On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
-If you want to overwrite this setup and try out a special configuration add an msui_settings.json
-file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
-
-
-
 Forking the Repo
 ----------------
 
@@ -158,16 +89,124 @@ Setting up a git remote
      upstream	git@github.com:Open-MSS/MSS.git (fetch)
      upstream	git@github.com:Open-MSS/MSS.git (push)
 
-Update local stable branch
-..........................
-
-If you don't have a stable branch, create one first or change to that branch::
 
 
-  git checkout [-b] stable
-  git pull git@github.com:Open-MSS/MSS.git stable
-  git push
+Setting Up a Local Environment
+------------------------------
+In the description we added as example to setup access to the mslib an export of the PYTHONPATH in your environment ::
 
+
+    cd workspace/MSS
+    export PYTHONPATH=`pwd`
+
+When you don't want to enter this you can add this export to you .bashrc
+
+If you don't want the PYTHONPATH by export changed you can start modules differently ::
+
+    cd workspace/MSS
+    PYTHONPATH=. python mslib/msui/msui.py
+
+
+Requirements
+............
+
+1. System requirements
+
+  | Any system with basic configuration.
+  | Operating System : Any (Windows / Linux / Mac).
+
+2. Software requirement
+
+  | Python
+  | `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_
+  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
+
+
+3. Skill set
+
+  | Knowledge of git & github
+  | Python
+
+
+Using predefined docker images instead of installing all dependencies
+.....................................................................
+
+You can easily use our testing docker images which have all libraries pre installed. These are based on mambaforgen.
+In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these evironments.
+
+Initial configuration or on each updated docker image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have
+mss-develop-env defined. This example shows by using mss-stable-env how to set it up for testing and development
+of stable branch. The images gets updates when we have to add new dependencies or have do pinning of existing modules. ::
+
+    rm -rf $HOME/mambaforge/envs/mss-stable-env # cleanup the existing env
+    mkdir $HOME/mambaforge/envs/mss-stable-env  # create the dir to bind to
+    xhost +local:docker                         # may be needed
+    docker run -it --rm --mount type=volume,dst=/opt/conda/envs/mss-stable-env,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$HOME/mambaforge/envs/mss-stable-env --network host openmss/testing-stable # do the volume bind
+    exit                                        # we are in the container, escape :)
+    sudo ln -s $HOME/mambaforge/envs/mss-stable-env /opt/conda/envs/mss-stable-env # we need the origin location linked because hashbangs interpreters are with that path. (only once needed)
+    conda activate mss-stable-env               # activate env
+    cd workspace/MSS                            # go to your workspace MSS dir
+    export PYTHONPATH=`pwd`                     # add it to the PYTHONPATH
+    python mslib/msui/msui.py                   # test if the UI starts
+    pytest _tests                               # run pytest
+
+Using after configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After the image was configured you can use it as a self installed env::
+
+    xhost +local:docker                 # may be needed
+    conda activate mss-stable-env       # activate env
+    cd workspace/MSS                    # go to your workspace MSS dir
+    export PYTHONPATH=`pwd`             # add it to the PYTHONPATH
+    pytest _tests                       # run pytest
+
+
+Manual installing dependencies
+..............................
+
+MSS is based on the software of the conda-forge channel located. The channel is predefined in Mambaforge.
+
+Create an environment and install the dependencies needed for the mss package::
+
+  $ mamba create -n mssdev
+  $ mamba activate mssdev
+  $ mamba install mss=$mss_version --only-deps
+
+Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.::
+
+  $ git diff stable develop -- localbuild/meta.yaml
+
+
+Install requirements for  local testing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+With sending a Pull Request our defined CIs do run all tests on github.
+You can do run tests own system too.
+
+For developers we provide additional packages for running tests, activate your env and run::
+
+  $ mamba install --file requirements.d/development.txt
+
+On linux install the `conda-forge package pyvirtualdisplay` and `xvfb` from your linux package manager.
+This is used to run tests on a virtual display.
+If you don't want tests redirected to the xvfb display just setup an environment variable::
+
+ $ export TESTS_VISIBLE=TRUE
+
+We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
+in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
+
+
+Setup msui_settings.json for special tests
+..........................................
+
+On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
+If you want to overwrite this setup and try out a special configuration add an msui_settings.json
+file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
 
 Setup MSWMS server
 ------------------
@@ -202,6 +241,18 @@ The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
 To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the MSColab server on port 8083.
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
 Now you can use the MSS desktop application to connect to it using the MSColab window of the application.
+
+
+
+Update local stable branch
+..........................
+
+If you don't have a stable branch, create one first or change to that branch::
+
+
+  git checkout [-b] stable
+  git pull git@github.com:Open-MSS/MSS.git stable
+  git push
 
 
 
