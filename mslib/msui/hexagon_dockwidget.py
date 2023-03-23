@@ -153,7 +153,8 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                         sel = QtWidgets.QMessageBox.question(
                             None, "Remove hexagon",
                             f"This will remove waypoints {row_min:d}-{row_max:d}. Continue?",
-                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+                            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                            QtWidgets.QMessageBox.Yes)
                         if sel == QtWidgets.QMessageBox.Yes:
                             waypoints_model.removeRows(row_min, rows=7)
             else:

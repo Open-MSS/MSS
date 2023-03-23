@@ -36,6 +36,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
+from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
 from tests.utils import wait_until_signal
 
 PORTS = list(range(28000, 28500))
@@ -44,7 +45,7 @@ PORTS = list(range(28000, 28500))
 class Test_MSS_TV_MapAppearanceDialog(object):
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSUI_TV_MapAppearanceDialog()
+        self.window = tv.MSUI_TV_MapAppearanceDialog(settings=_DEFAULT_SETTINGS_TOPVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)

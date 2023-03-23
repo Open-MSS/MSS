@@ -30,7 +30,7 @@
 
 import functools
 import logging
-from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import config_loader
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils.qt import ui_topview_window as ui
@@ -62,32 +62,17 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
     """
     signal_ft_vertices_color_change = QtCore.Signal(str, tuple)
 
-    def __init__(self, parent=None, settings_dict=None, wms_connected=False):
+    def __init__(self, parent=None, settings=None, wms_connected=False):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
-        settings_dict -- dictionary containing topview options.
+        settings -- dictionary containing topview options.
         """
         super(MSUI_TV_MapAppearanceDialog, self).__init__(parent)
         self.setupUi(self)
 
-        if settings_dict is None:
-            settings_dict = {"draw_graticule": True,
-                             "draw_coastlines": True,
-                             "fill_waterbodies": True,
-                             "fill_continents": True,
-                             "draw_flighttrack": True,
-                             "draw_marker": True,
-                             "label_flighttrack": True,
-                             "tov_plot_title_size": "default",
-                             "tov_axes_label_size": "default",
-                             "colour_water": (0, 0, 0, 0),
-                             "colour_land": (0, 0, 0, 0),
-                             "colour_ft_vertices": (0, 0, 0, 0),
-                             "colour_ft_waypoints": (0, 0, 0, 0)
-                             }
-
-        settings_dict["fill_waterbodies"] = True  # removing water bodies does not work properly
+        assert settings is not None
+        settings["fill_waterbodies"] = True  # removing water bodies does not work properly
 
         self.wms_connected = wms_connected
         # check parent.wms_connected to disable cbFillWaterBodies and cbFillContinents
@@ -98,16 +83,16 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             self.cbFillContinents.setStyleSheet("color: black")
             self.cbFillWaterBodies.setStyleSheet("color: black")
         else:
-            self.cbFillWaterBodies.setChecked(settings_dict["fill_waterbodies"])
+            self.cbFillWaterBodies.setChecked(settings["fill_waterbodies"])
             self.cbFillWaterBodies.setEnabled(False)
-            self.cbFillContinents.setChecked(settings_dict["fill_continents"])
+            self.cbFillContinents.setChecked(settings["fill_continents"])
             self.cbFillContinents.setEnabled(True)
 
-        self.cbDrawGraticule.setChecked(settings_dict["draw_graticule"])
-        self.cbDrawCoastlines.setChecked(settings_dict["draw_coastlines"])
-        self.cbDrawFlightTrack.setChecked(settings_dict["draw_flighttrack"])
-        self.cbDrawMarker.setChecked(settings_dict["draw_marker"])
-        self.cbLabelFlightTrack.setChecked(settings_dict["label_flighttrack"])
+        self.cbDrawGraticule.setChecked(settings["draw_graticule"])
+        self.cbDrawCoastlines.setChecked(settings["draw_coastlines"])
+        self.cbDrawFlightTrack.setChecked(settings["draw_flighttrack"])
+        self.cbDrawMarker.setChecked(settings["draw_marker"])
+        self.cbLabelFlightTrack.setChecked(settings["label_flighttrack"])
 
         for button, ids in [(self.btWaterColour, "colour_water"),
                             (self.btLandColour, "colour_land"),
@@ -115,7 +100,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
                             (self.btVerticesColour, "colour_ft_vertices")]:
             palette = QtGui.QPalette(button.palette())
             colour = QtGui.QColor()
-            colour.setRgbF(*settings_dict[ids])
+            colour.setRgbF(*settings[ids])
             palette.setColor(QtGui.QPalette.Button, colour)
             button.setPalette(palette)
 
@@ -127,17 +112,17 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
 
         # Shows previously selected element in the fontsize comboboxes as the current index.
         for i in range(self.tov_cbtitlesize.count()):
-            if self.tov_cbtitlesize.itemText(i) == settings_dict["tov_plot_title_size"]:
+            if self.tov_cbtitlesize.itemText(i) == settings["tov_plot_title_size"]:
                 self.tov_cbtitlesize.setCurrentIndex(i)
 
         for i in range(self.tov_cbaxessize.count()):
-            if self.tov_cbaxessize.itemText(i) == settings_dict["tov_axes_label_size"]:
+            if self.tov_cbaxessize.itemText(i) == settings["tov_axes_label_size"]:
                 self.tov_cbaxessize.setCurrentIndex(i)
 
     def get_settings(self):
         """
         """
-        settings_dict = {
+        settings = {
             "draw_graticule": self.cbDrawGraticule.isChecked(),
             "draw_coastlines": self.cbDrawCoastlines.isChecked(),
             "fill_waterbodies": self.cbFillWaterBodies.isChecked(),
@@ -157,7 +142,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             "colour_ft_waypoints":
                 QtGui.QPalette(self.btWaypointsColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
         }
-        return settings_dict
+        return settings
 
     def setColour(self, which):
         """
@@ -213,9 +198,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay, Multiple Flightpath]:
         self.docks = [None, None, None, None, None, None]
 
-        self.settings_tag = "topview"
-        self.load_settings()
-
         # Initialise the GUI elements (map view, items of combo boxes etc.).
         self.setup_top_view()
 
@@ -240,7 +222,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.cbChangeMapSection.activated.connect(self.changeMapSection)
 
         # Settings
-        self.btSettings.clicked.connect(self.settings_dialogue)
+        self.btSettings.clicked.connect(self.open_settings_dialog)
 
         # Roundtrip
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
@@ -425,17 +407,16 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         super(MSUITopViewWindow, self).setIdentifier(identifier)
         self.mpl.canvas.map.set_identifier(identifier)
 
-    def settings_dialogue(self):
+    def open_settings_dialog(self):
         """
         """
         settings = self.getView().get_settings()
-        dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings_dict=settings, wms_connected=self.wms_connected)
+        dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings=settings, wms_connected=self.wms_connected)
         dlg.setModal(False)
         dlg.signal_ft_vertices_color_change.connect(self.set_ft_vertices_color)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
-            self.getView().set_settings(settings)
-            self.save_settings()
+            self.getView().set_settings(settings, save=True)
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
 
@@ -443,21 +424,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def set_ft_vertices_color(self, which, color):
         if which == "ft_vertices":
             self.signal_ft_vertices_color_change.emit(color)
-
-    def save_settings(self):
-        """
-        Save the current settings (map appearance) to the file
-        self.settingsfile.
-        """
-        settings = self.getView().get_settings()
-        save_settings_qsettings(self.settings_tag, settings)
-
-    def load_settings(self):
-        """
-        Load settings from the file self.settingsfile.
-        """
-        settings = load_settings_qsettings(self.settings_tag, {})
-        self.getView().set_settings(settings)
 
     def make_roundtrip(self):
         """
@@ -492,6 +458,3 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def update_roundtrip_enabled(self):
         self.btRoundtrip.setEnabled(self.is_roundtrip_possible())
-
-    def get_settings(self):
-        return load_settings_qsettings(self.settings_tag, {})
