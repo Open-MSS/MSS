@@ -44,29 +44,32 @@ if not os.path.exists(os.path.join(OSDIR, "downloads", "aip")):
     os.makedirs(os.path.join(OSDIR, "downloads", "aip"))
 
 
-class Global_Constants:
+class Airspace:
+    """
+    This class provides airspaces/airports URLs and variables
+    """
     airports = []
 
     airports_mtime = 0
 
-    airspaces = []
+    data = []
 
-    airspaces_mtime = {}
+    data_mtime = {}
 
-    airspace_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
+    data_url = "https://storage.googleapis.com/29f98e10-a489-4c82-ae5e-489dbcd4912f"
 
-    airspace_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
-                            "{}_asp.xml?alt=media"
+    data_download_url = "https://storage.googleapis.com/storage/v1/b/29f98e10-a489-4c82-ae5e-489dbcd4912f/o/" \
+                        "{}_asp.xml?alt=media"
 
-    airspace_cache = [('ad_asp.xml', '377'), ('ae_asp.xml', '110238'), ('af_asp.xml', '377'), ('ag_asp.xml', '377'),
-                      ('ai_asp.xml', '377'), ('al_asp.xml', '11360'), ('am_asp.xml', '377'), ('ao_asp.xml', '377'),
-                      ('aq_asp.xml', '377'), ('ar_asp.xml', '975402'), ('as_asp.xml', '377'),
-                      ('at_asp.xml', '1059077'),
-                      ('au_asp.xml', '9667669'), ('aw_asp.xml', '377'), ('ax_asp.xml', '377'), ('az_asp.xml', '377'),
-                      ('ba_asp.xml', '76717'), ('bb_asp.xml', '377'), ('bd_asp.xml', '377'), ('be_asp.xml', '462667'),
-                      ('bf_asp.xml', '377'), ('bg_asp.xml', '440690'), ('bh_asp.xml', '68519'), ('bi_asp.xml', '377'),
-                      ('bj_asp.xml', '377'), ('bl_asp.xml', '377')
-                     ]
+    data_cache = [('ad_asp.xml', '377'), ('ae_asp.xml', '110238'), ('af_asp.xml', '377'), ('ag_asp.xml', '377'),
+                  ('ai_asp.xml', '377'), ('al_asp.xml', '11360'), ('am_asp.xml', '377'), ('ao_asp.xml', '377'),
+                  ('aq_asp.xml', '377'), ('ar_asp.xml', '975402'), ('as_asp.xml', '377'),
+                  ('at_asp.xml', '1059077'),
+                  ('au_asp.xml', '9667669'), ('aw_asp.xml', '377'), ('ax_asp.xml', '377'), ('az_asp.xml', '377'),
+                  ('ba_asp.xml', '76717'), ('bb_asp.xml', '377'), ('bd_asp.xml', '377'), ('be_asp.xml', '462667'),
+                  ('bf_asp.xml', '377'), ('bg_asp.xml', '440690'), ('bh_asp.xml', '68519'), ('bi_asp.xml', '377'),
+                  ('bj_asp.xml', '377'), ('bl_asp.xml', '377')
+                ]
 
 
 def download_progress(file_path, url, progress_callback=lambda f: logging.info("%sKB Downloaded", int(f))):
@@ -95,8 +98,8 @@ def get_airports(force_download=False, url=None):
     """
     Gets or downloads the airports.csv in ~/.config/msui/downloads/aip and returns all airports within
     """
-    _airports = Global_Constants().airports
-    _airports_mtime = Global_Constants().airports_mtime
+    _airports = Airspace().airports
+    _airports_mtime = Airspace().airports_mtime
 
     if url is None:
         url = "https://ourairports.com/data/airports.csv"
@@ -134,15 +137,15 @@ def get_available_airspaces():
     Gets and returns all available airspaces and their sizes from openaip
     """
     try:
-        directory = requests.get(Global_Constants.airspace_url, timeout=5)
+        directory = requests.get(Airspace.data_url, timeout=5)
         if directory.status_code == 404:
-            return Global_Constants.airspace_cache
+            return Airspace.data_cache
         airspaces = regex.findall(r">(.._asp\.xml)<", directory.text)
         sizes = regex.findall(r".._asp.xml.*?<Size>([0-9]+)<\/Size", directory.text)
         airspaces = [airspace for airspace in zip(airspaces, sizes) if airspace[-1] != "0"]
         return airspaces
     except requests.exceptions.RequestException:
-        return Global_Constants.airspace_cache
+        return Airspace.data_cache
 
 
 def update_airspace(force_download=False, countries=None):
@@ -154,7 +157,7 @@ def update_airspace(force_download=False, countries=None):
 
     for country in countries:
         location = os.path.join(OSDIR, "downloads", "aip", f"{country}_asp.xml")
-        url = Global_Constants.airspace_download_url.format(country)
+        url = Airspace.data_download_url.format(country)
         available = get_available_airspaces()
         try:
             data = [airspace for airspace in available if airspace[0].startswith(country)][0]
@@ -181,8 +184,8 @@ def get_airspaces(countries=None):
     """
     if countries is None:
         countries = []
-    _airspaces = Global_Constants().airspaces
-    _airspaces_mtime = Global_Constants().airspaces_mtime
+    _airspaces = Airspace().data
+    _airspaces_mtime = Airspace().data_mtime
 
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
