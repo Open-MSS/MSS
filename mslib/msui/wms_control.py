@@ -1384,7 +1384,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self, "Clear Cache",
             "Do you really want to clear the cache? All stored image "
             "files will be deleted.",
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes)
+            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+            QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes)
         if clear:
             # Delete all files in cache.
             if self.wms_cache is not None:

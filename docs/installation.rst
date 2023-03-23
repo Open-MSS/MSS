@@ -1,7 +1,7 @@
 Installation
 ============
 
-The Mission Support System (MSS) including a Web Map Service and a Collaboration Server is available as
+The Mission Support System (MSS) including a Web Map Service, a Collaboration Server  and a Graphical User Interface is available as
 `conda-forge <https://anaconda.org/conda-forge/mss>`_ package.
 
 This channel conda-forge has builds for osx-64, linux-64, win-64

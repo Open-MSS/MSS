@@ -25,7 +25,7 @@
     limitations under the License.
 """
 
-from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
+from mslib.utils.config import config_loader
 from PyQt5 import QtGui, QtWidgets
 from mslib.utils.qt import ui_linearview_window as ui
 from mslib.utils.qt import ui_linearview_options as ui_opt
@@ -42,7 +42,7 @@ class MSUI_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialo
     Dialog class to specify Linear View Options.
     """
 
-    def __init__(self, parent=None, settings_dict=None):
+    def __init__(self, parent=None, settings=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
@@ -51,33 +51,26 @@ class MSUI_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialo
         super(MSUI_LV_Options_Dialog, self).__init__(parent)
         self.setupUi(self)
 
-        default_settings_dict = {
-            "plot_title_size": "default",
-            "axes_label_size": "default"
-        }
-
-        if settings_dict is not None:
-            default_settings_dict.update(settings_dict)
-        settings_dict = default_settings_dict
+        assert settings is not None
 
         for i in range(self.lv_cbtitlesize.count()):
-            if self.lv_cbtitlesize.itemText(i) == settings_dict["plot_title_size"]:
+            if self.lv_cbtitlesize.itemText(i) == settings["plot_title_size"]:
                 self.lv_cbtitlesize.setCurrentIndex(i)
 
         for i in range(self.lv_cbaxessize.count()):
-            if self.lv_cbaxessize.itemText(i) == settings_dict["axes_label_size"]:
+            if self.lv_cbaxessize.itemText(i) == settings["axes_label_size"]:
                 self.lv_cbaxessize.setCurrentIndex(i)
 
     def get_settings(self):
         """
         Returns the specified settings from the GUI elements.
         """
-        settings_dict = {
+        settings = {
             "plot_title_size": self.lv_cbtitlesize.currentText(),
             "axes_label_size": self.lv_cbaxessize.currentText()
         }
 
-        return settings_dict
+        return settings
 
 
 class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
@@ -101,15 +94,12 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         self.setFlightTrackModel(model)
 
-        self.settings_tag = "linearview"
-        self.load_settings()
-
         # Connect slots and signals.
         # ==========================
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
-        self.lvoptionbtn.clicked.connect(self.set_options)
+        self.lvoptionbtn.clicked.connect(self.open_settings_dialog)
 
         self.openTool(WMS + 1)
 
@@ -147,26 +137,11 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 
-    def set_options(self):
-        settings = self.getView().plotter.get_settings()
-        dlg = MSUI_LV_Options_Dialog(parent=self, settings_dict=settings)
+    def open_settings_dialog(self):
+        settings = self.getView().get_settings()
+        dlg = MSUI_LV_Options_Dialog(parent=self, settings=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
-            self.getView().plotter.set_settings(settings)
-            self.save_settings()
+            self.getView().plotter.set_settings(settings, save=True)
         dlg.destroy()
-
-    def save_settings(self):
-        """
-        Save the current settings of plot options to the file self.settingsfile.
-        """
-        settings = self.getView().plotter.get_settings()
-        save_settings_qsettings(self.settings_tag, settings)
-
-    def load_settings(self):
-        """
-        Load settings from the file self.settingsfile.
-        """
-        settings = load_settings_qsettings(self.settings_tag)
-        self.getView().plotter.set_settings(settings)
