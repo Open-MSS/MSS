@@ -34,7 +34,7 @@ import fs
 import os
 import socketio
 import sqlalchemy.exc
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask import g, jsonify, request, render_template, flash
 from flask import send_from_directory, abort, url_for
 from flask_mail import Mail, Message
@@ -119,7 +119,7 @@ def confirm_token(token, expiration=3600):
             salt=APP.config['SECURITY_PASSWORD_SALT'],
             max_age=expiration
         )
-    except IOError:
+    except (IOError, BadSignature):
         return False
     return email
 
@@ -650,7 +650,9 @@ def reset_password(token):
     except TypeError:
         return jsonify({"success": False}), 401
     if email is False:
-        return jsonify({"success": False}), 401
+        flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
+              'category_info')
+        return render_template('user/status.html', uri={"path": "reset_request", "name": "Resend authentication email"})
     user = User.query.filter_by(emailid=email).first_or_404()
     if user.confirmed:
         form = ResetPasswordForm()
@@ -680,16 +682,16 @@ def reset_request():
                 reset_password_url = url_for('reset_password', token=token, _external=True)
                 html = render_template('user/reset_confirmation.html',
                                        reset_password_url=reset_password_url, username=username)
-                subject = "Password reset request"
+                subject = "MSColab Password reset request"
                 send_email(form.email.data, subject, html)
-                flash('''Your password reset request has been sent successfully.
-                Please check your email for further instructions.''', 'category_success')
+                flash('An email was sent if this user account exists', 'category_success')
                 return render_template('user/status.html')
             except IOError:
                 flash('''We apologize, but it seems that there was an issue sending
                  your request email. Please try again later.''', 'category_info')
         else:
-            flash('Sorry. We could not find your account', 'category_danger')
+            flash('An email was sent if this user account exists', 'category_success')
+            return render_template('user/status.html')
     return render_template('user/reset_request.html', form=form)
 
 

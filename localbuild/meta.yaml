@@ -87,7 +87,7 @@ requirements:
     - pycountry
     - websocket-client
     - libtiff <4.5.0
-    - Flask-WTF
+    - flask-wtf
     - email_validator
 
 test:

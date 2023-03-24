@@ -30,6 +30,11 @@
               </div>
             {% endfor %}
           </div>
+          {% if uri is defined %}
+            <p>Click here to 
+              <a href=" {{ url_for(uri.path) }}">{{uri.name}}</a>
+            </p>
+          {% endif %}
       </div>     
     </div>
   </div>
