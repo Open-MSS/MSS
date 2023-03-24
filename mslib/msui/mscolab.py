@@ -267,7 +267,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         if r.text == "False":
             # show status indicating about wrong credentials
-            self.set_status("Error", 'Oh no, you need to add a user account or you need to '
+            self.set_status("Error", 'Oh no, you need to add a user account or '
                             f'<a href="{url_recover_password}">Recover Your Password</a>')
         elif r.text == "Unauthorized Access":
             # Server auth required for logging in
