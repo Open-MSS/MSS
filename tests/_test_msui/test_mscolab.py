@@ -165,7 +165,7 @@ class Test_Mscolab_connect_window():
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
         create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org" }')
-        mscolab.save_password_to_keyring(username="something@something.org", password="something" )
+        mscolab.save_password_to_keyring(username="something@something.org", password="something")
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
