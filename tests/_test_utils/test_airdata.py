@@ -43,7 +43,7 @@ def _download_progress_airports(path, url):
 "US-PA","Bensalem","no","00A",,"00A",,,\
 323361,"00AA","small_airport","Aero B Ranch Airport",38.704022,-101.473911,3435,"NA",\
 "US","US-KS","Leoti","no","00AA",,"00AA",,,'''
-    file_path = os.path.join(ROOT_DIR, "airports.csv")
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airports.csv")
     with open(file_path, "w") as f:
         f.write(text)
 
