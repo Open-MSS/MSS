@@ -192,12 +192,12 @@ def get_airspaces(countries=None):
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
-    files = [file for file in files if os.path.exists(os.path.join(OSDIR, file))]
+    files = [file for file in files if os.path.exists(os.path.join(OSDIR, "downloads", "aip", file))]
 
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
             if file not in _airspaces_mtime or \
-                    os.path.getmtime(os.path.join(OSDIR, file)) != _airspaces_mtime[file]:
+                    os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", file)) != _airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:
@@ -206,7 +206,7 @@ def get_airspaces(countries=None):
     _airspaces_mtime = {}
     _airspaces = []
     for file in files:
-        fpath = os.path.join(OSDIR, file)
+        fpath = os.path.join(OSDIR, "downloads", "aip", file)
         root = etree.parse(fpath).getroot()
         valid_file = len(set([elem.tag for elem in root.iter()])) == 12
         if valid_file:
@@ -251,7 +251,7 @@ def get_airspaces(countries=None):
                 airspace_data["polygon"] = [(float(data.split()[0]), float(data.split()[-1]))
                                             for data in airspace_data["polygon"].split(",")]
                 _airspaces.append(airspace_data)
-                _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, file))
+                _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", file))
             else:
                 QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", f"{file}")
 
