@@ -289,9 +289,9 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def save_user_credentials_to_config_file(self, emailid, password):
         data_to_save_in_config_file = {
-            "MSCOLAB_mailid": emailid,
-            "MSCOLAB_password": save_password_to_keyring(username=emailid, password=password)
+            "MSCOLAB_mailid": emailid
         }
+        save_password_to_keyring(username=emailid, password=password)
 
         if config_loader(dataset="MSCOLAB_mailid") != "" and get_password_from_keyring(username=emailid) != "":
             ret = QtWidgets.QMessageBox.question(
