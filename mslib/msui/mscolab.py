@@ -68,6 +68,8 @@ def del_password_from_keyring(username):
         keyring.delete_password(service_name=__name__, username=username)
     except keyring.errors.PasswordDeleteError:
         pass
+    except keyring.errors.NoKeyringError as e:
+        logging.error(e)
 
 
 def get_password_from_keyring(username=None):
