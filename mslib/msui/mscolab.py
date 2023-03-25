@@ -63,11 +63,25 @@ from mslib.msui import constants
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
 
 
-def get_password_from_keyring(username):
+def del_password_from_keyring(username):
+    try:
+        keyring.delete_password(service_name=__name__, username=username)
+    except keyring.errors.PasswordDeleteError:
+        pass
+
+
+def get_password_from_keyring(username=None):
+    """
+    When we request a username we use this function to fill in a form field with a password
+    In this case by none existing credentials in the keyring we have to return an empty string
+    """
     cred = keyring.get_credential(service_name=__name__, username=username)
-    if cred is None:
+    if username is not None and cred is None:
         return ""
-    return cred.password
+    elif cred is None:
+        return None
+    else:
+        return cred.password
 
 
 def save_password_to_keyring(username="", password=""):

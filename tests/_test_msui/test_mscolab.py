@@ -68,6 +68,10 @@ class Test_Mscolab_connect_window():
         self.window.urlCb.setEditText(self.url)
         self.main_window.mscolab.connect_window = self.window
         self.window.show()
+        for email in ["something@something.org", "anand@something.org",
+                      "berta@something.org", "anton@something.org",
+                      "other@something.org"]:
+            mscolab.del_password_from_keyring(email)
 
     def teardown_method(self):
         self.main_window.mscolab.logout()
@@ -77,6 +81,14 @@ class Test_Mscolab_connect_window():
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
+
+    def test_keyring(self):
+        username = "something@something.org"
+        password = "x-*\\M#.U<Ik<g}YYGZb}>6R(HPNW2}"
+        mscolab.save_password_to_keyring(username=username, password=password)
+        assert mscolab.get_password_from_keyring(username) == password
+        mscolab.del_password_from_keyring(username)
+        assert mscolab.get_password_from_keyring(username) == ''
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -150,7 +162,7 @@ class Test_Mscolab_connect_window():
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_add_users_without_updating_credentials_in_config_file(self, mockmessage):
-        create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org" }')
+        create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org"}')
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
