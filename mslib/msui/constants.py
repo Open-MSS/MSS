@@ -30,7 +30,6 @@
 import fs
 import os
 import logging
-import keyring.backend
 
 # ToDo refactor to generic functions, keep only constants
 HOME = os.path.expanduser(f"~{os.path.sep}")
