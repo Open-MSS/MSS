@@ -39,6 +39,8 @@ import fs
 import requests
 import re
 import urllib.request
+import keyring
+
 from fs import open_fs
 from PIL import Image
 from werkzeug.urls import url_join
@@ -59,6 +61,34 @@ from mslib.utils.qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.utils.qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
+
+
+def del_password_from_keyring(username):
+    try:
+        keyring.delete_password(service_name=__name__, username=username)
+    except keyring.errors.PasswordDeleteError:
+        pass
+    except keyring.errors.NoKeyringError as e:
+        logging.error(e)
+
+
+def get_password_from_keyring(username=None):
+    """
+    When we request a username we use this function to fill in a form field with a password
+    In this case by none existing credentials in the keyring we have to return an empty string
+    """
+    cred = keyring.get_credential(service_name=__name__, username=username)
+    if username is not None and cred is None:
+        return ""
+    elif cred is None:
+        return None
+    else:
+        return cred.password
+
+
+def save_password_to_keyring(username="", password=""):
+    if "" not in (username.strip(), password.strip()):
+        keyring.set_password(service_name=__name__, username=username, password=password)
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -176,7 +206,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
                 # Fill Email and Password fields from config
                 self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
-                self.loginPasswordLe.setText(config_loader(dataset="MSCOLAB_password"))
+                self.loginPasswordLe.setText(get_password_from_keyring(
+                    username=config_loader(dataset="MSCOLAB_mailid")))
                 self.enable_login_btn()
 
                 # Change connect button text and connect disconnect handler
@@ -279,11 +310,11 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def save_user_credentials_to_config_file(self, emailid, password):
         data_to_save_in_config_file = {
-            "MSCOLAB_mailid": emailid,
-            "MSCOLAB_password": password
+            "MSCOLAB_mailid": emailid
         }
+        save_password_to_keyring(username=emailid, password=password)
 
-        if config_loader(dataset="MSCOLAB_mailid") != "" and config_loader(dataset="MSCOLAB_password") != "":
+        if config_loader(dataset="MSCOLAB_mailid") != "" and get_password_from_keyring(username=emailid) != "":
             ret = QtWidgets.QMessageBox.question(
                 self, self.tr("Update Credentials"),
                 self.tr("You are using new credentials. "

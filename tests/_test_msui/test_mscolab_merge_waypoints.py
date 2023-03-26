@@ -56,6 +56,7 @@ class Test_Mscolab_Merge_Waypoints(object):
 
     def teardown_method(self):
         self.window.mscolab.logout()
+        mscolab.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
             mscolab_delete_user(self.app, self.url, self.emailid, 'abcdef')
