@@ -119,7 +119,7 @@ jobs:
       # if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
       uses: benc-uk/workflow-dispatch@v1.2.2
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         workflow: Update Image testing-${{ inputs.branch_name }}
         repo: Open-MSS/dockertesting
         ref: main
