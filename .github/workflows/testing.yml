@@ -103,8 +103,7 @@ jobs:
         ; done)
 
     - name: Collect coverage
-      if: ${{ success() && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
-      # if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
+      if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -116,7 +115,8 @@ jobs:
         && coveralls --service=github
 
     - name: Invoke dockertesting image creation
-      if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
+      if: ${{ always() && inputs.xdist == 'no'}}
+      # if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
       uses: benc-uk/workflow-dispatch@v1.2.2
       with:
         workflow: Update Image testing-${{ inputs.branch_name }}
