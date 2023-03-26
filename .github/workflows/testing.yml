@@ -115,8 +115,9 @@ jobs:
         && coveralls --service=github
 
     - name: Invoke dockertesting image creation
-      if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
-      uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
+      if: ${{ always() && inputs.xdist == 'no'}}
+      # if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
+      uses: benc-uk/workflow-dispatch@v1.2.2
       with:
         workflow: Update Image testing-${{ inputs.branch_name }}
         repo: Open-MSS/dockertesting
