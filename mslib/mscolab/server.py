@@ -654,19 +654,17 @@ def reset_password(token):
               'category_info')
         return render_template('user/status.html', uri={"path": "reset_request", "name": "Resend authentication email"})
     user = User.query.filter_by(emailid=email).first_or_404()
-    if user.confirmed:
-        form = ResetPasswordForm()
-        if form.validate_on_submit():
-            try:
-                user.hash_password(form.confirm_password.data)
-                db.session.commit()
-                flash('Password reset Success. Please login by the user interface.', 'category_success')
-                return render_template('user/status.html')
-            except IOError:
-                flash('Password reset failed. Please try again later', 'category_danger')
-        return render_template('user/reset_password.html', form=form)
-    else:
-        return jsonify({"success": False}), 401
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        try:
+            user.hash_password(form.confirm_password.data)
+            user.confirmed = True
+            db.session.commit()
+            flash('Password reset Success. Please login by the user interface.', 'category_success')
+            return render_template('user/status.html')
+        except IOError:
+            flash('Password reset failed. Please try again later', 'category_danger')
+    return render_template('user/reset_password.html', form=form)
 
 
 @APP.route("/reset_request", methods=['GET', 'POST'])
