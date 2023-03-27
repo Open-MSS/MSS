@@ -43,7 +43,7 @@ def _download_progress_airports(path, url):
 "US-PA","Bensalem","no","00A",,"00A",,,\
 323361,"00AA","small_airport","Aero B Ranch Airport",38.704022,-101.473911,3435,"NA",\
 "US","US-KS","Leoti","no","00AA",,"00AA",,,'''
-    file_path = os.path.join(ROOT_DIR, "airports.csv")
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airports.csv")
     with open(file_path, "w") as f:
         f.write(text)
 
@@ -75,7 +75,7 @@ def _download_progress_airspace(path, url):
 </POLYGON></GEOMETRY></ASP></AIRSPACES>
 </OPENAIP>
 '''
-    file_path = os.path.join(ROOT_DIR, "bg_asp.xml")
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
     with open(file_path, "w") as f:
         f.write(text)
 
@@ -93,24 +93,24 @@ def _download_incomplete_airspace(path, url):
 <AIRSPACES></AIRSPACES>
 </OPENAIP>
 '''
-    file_path = os.path.join(ROOT_DIR, "bg_asp.xml")
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
     with open(file_path, "w") as f:
         f.write(text)
 
 
 def _cleanup_test_files():
-    file_path = os.path.join(ROOT_DIR, "bg_asp.xml")
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
     if "tmp" in file_path:
         if os.path.exists(file_path):
             os.remove(file_path)
-    file_path = os.path.join(ROOT_DIR, "airports.csv")
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airports.csv")
     if "tmp" in file_path:
         if os.path.exists(file_path):
             os.remove(file_path)
 
 
 def test_download_progress():
-    file_path = os.path.join(ROOT_DIR, "airdata")
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airdata")
     download_progress(file_path, 'http://speedtest.ftp.otenet.gr/files/test100k.db')
     assert os.path.exists(file_path)
 
@@ -141,7 +141,7 @@ def test_get_available_airspaces():
 def test_update_airspace(mockbox):
     with mock.patch("mslib.utils.airdata.download_progress", _download_progress_airspace):
         update_airspace(force_download=True, countries=["bg"])
-        example_file = os.path.join(ROOT_DIR, "bg_asp.xml")
+        example_file = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
         os.path.exists(example_file)
         with open(example_file, 'r') as f:
             text = f.read()
