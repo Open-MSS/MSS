@@ -439,22 +439,25 @@ and outgoing WSGI responses to HTTP responses.
 
 For self hosting have a look on these `platforms <https://flask.palletsprojects.com/en/2.2.x/deploying/>`_.
 
-We describe two examples, Waitress for a pure Python Server and Apache2 using mod_wsgi.
+We describe two examples, Waitress for a pure Python Server and Apache2 using mod_wsgi. On long running systems you may
+want to use Apache2 and have a lot features included in the package. With a nginx proxy also a
+waitress server can use certificates and supervisord can be used to monitor and control the waitress process.
+
 
 Waitress
 ........
-waitress is a pure Python WSGI Server.
+Waitress is a production-quality pure-Python WSGI server.
 
 Installing
 ~~~~~~~~~~
-It is easy to configure and supports Windows directly ::
+It is easy to configure and runs on CPython on Unix and Windows. ::
 
    mamba install waitress
 
 wms.wsgi
 ~~~~~~~~
 A file
-**/home/mss/INSTANCE/wsgi/wms.wsgi**
+**/home/mss/INSTANCE/wsgi/wsgi_setup.py**
 with the content ::
 
     import sys
@@ -469,15 +472,16 @@ with the content ::
 
 Running the waitress server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This runs the wms server on port 5000 ::
+This runs the wms server on port 5000. If you use a certificate and proxy by e.g. nginx use--url-scheme=https ::
 
-    waitress-serve --host 127.0.0.1 --port 5000 wsgi:app
+    PYTHONPATH=~/INSTANCE/wsgi/ waitress-serve --host 127.0.0.1 --port 5000 --url-scheme=http wsgi_setup:app
 
 Further documentations:
 
+- `Waitress <https://docs.pylonsproject.org/projects/waitress/en/stable/index.html>`_
 - `Waitress as Flask server WSGI <https://www.youtube.com/watch?v=tovsUQu6kBU>`_
 - `How to run a Flask App Over HTTPS, using Waitress and NGINX. <https://dev.to/thetrebelcc/how-to-run-a-flask-app-over-https-using-waitress-and-nginx-2020-235c>`_
-
+- `Supervisor: A Process Control System <http://supervisord.org/>`_
 
 Apache server setup
 ...................
