@@ -472,7 +472,7 @@ with the content ::
 
 Running the waitress server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-This runs the wms server on port 5000. If you use a certificate and proxy by e.g. nginx use--url-scheme=https ::
+This runs the wms server on port 5000. If you use a certificate and proxy by e.g. nginx use --url-scheme=https ::
 
     PYTHONPATH=~/INSTANCE/wsgi/ waitress-serve --host 127.0.0.1 --port 5000 --url-scheme=http wsgi_setup:app
 
