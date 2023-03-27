@@ -429,6 +429,56 @@ using the style. More examples can be found within the source code of the mswms
 component.
 
 
+A taste of WSGI
+---------------
+
+(MS)WMS is a WSGI application based on Flask.
+You need a WSGI server to run the application, this converts incoming HTTP requests to the WSGI environ,
+and outgoing WSGI responses to HTTP responses.
+
+
+For self hosting have a look on these `platforms <https://flask.palletsprojects.com/en/2.2.x/deploying/>`_.
+
+We describe two examples, Waitress for a pure Python Server and Apache2 using mod_wsgi.
+
+Waitress
+........
+waitress is a pure Python WSGI Server.
+
+Installing
+~~~~~~~~~~
+It is easy to configure and supports Windows directly ::
+
+   mamba install waitress
+
+wms.wsgi
+~~~~~~~~
+A file
+**/home/mss/INSTANCE/wsgi/wms.wsgi**
+with the content ::
+
+    import sys
+
+
+    sys.path.insert(0, '/home/mss/INSTANCE/config/where_mswms_settings.py_is/')
+    import logging
+    logging.basicConfig(stream=sys.stderr)
+
+    from mslib.mswms.wms import app
+
+
+Running the waitress server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This runs the wms server on port 5000 ::
+
+    waitress-serve --host 127.0.0.1 --port 5000 wsgi:app
+
+Further documentations:
+
+- `Waitress as Flask server WSGI <https://www.youtube.com/watch?v=tovsUQu6kBU>`_
+- `How to run a Flask App Over HTTPS, using Waitress and NGINX. <https://dev.to/thetrebelcc/how-to-run-a-flask-app-over-https-using-waitress-and-nginx-2020-235c>`_
+
+
 Apache server setup
 ...................
 
