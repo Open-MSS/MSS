@@ -18,6 +18,7 @@ build:
     - mswms = mslib.mswms.mswms:main
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
+    - mssautoplot = mslib.utils.mssautoplot:main
 
 requirements:
   build:
@@ -89,6 +90,7 @@ requirements:
     - libtiff <4.5.0
     - flask-wtf
     - email_validator
+    - keyring
 
 test:
   imports:

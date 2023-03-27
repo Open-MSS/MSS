@@ -37,12 +37,34 @@ sys.dont_write_bytecode = True
 import pytest
 import fs
 import shutil
+import keyring
 from mslib.mswms.demodata import DataFiles
 import tests.constants as constants
 
 # make a copy for mscolab test, so that we read different pathes during parallel tests.
 sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
 shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
+
+
+class TestKeyring(keyring.backend.KeyringBackend):
+    """A test keyring which always outputs the same password
+    from Runtime Configuration
+    https://pypi.org/project/keyring/#third-party-backends
+    """
+    priority = 1
+
+    def set_password(self, servicename, username, password):
+        pass
+
+    def get_password(self, servicename, username):
+        return "password from TestKeyring"
+
+    def delete_password(self, servicename, username):
+        pass
+
+# set the keyring for keyring lib
+keyring.set_keyring(TestKeyring())
+
 
 def pytest_addoption(parser):
     parser.addoption("--msui_settings", action="store")

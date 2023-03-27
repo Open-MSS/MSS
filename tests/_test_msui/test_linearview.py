@@ -36,6 +36,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
+from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
 from tests.utils import wait_until_signal
 
 PORTS = list(range(26000, 26500))
@@ -44,7 +45,7 @@ PORTS = list(range(26000, 26500))
 class Test_MSS_LV_Options_Dialog(object):
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
-        self.window = tv.MSUI_LV_Options_Dialog()
+        self.window = tv.MSUI_LV_Options_Dialog(settings=_DEFAULT_SETTINGS_LINEARVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)

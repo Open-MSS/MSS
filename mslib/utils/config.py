@@ -131,9 +131,6 @@ class MSUIDefaultConfig(object):
     # mail address to sign in
     MSCOLAB_mailid = ""
 
-    # password to sign in
-    MSCOLAB_password = ""
-
     # category for MSC operations
     MSCOLAB_category = "default"
 
@@ -244,7 +241,6 @@ class MSUIDefaultConfig(object):
         'num_interpolation_points',
         'new_flighttrack_flightlevel',
         'MSCOLAB_mailid',
-        'MSCOLAB_password',
         'MSCOLAB_category',
         'mscolab_server_url',
         'wms_cache',
@@ -312,7 +308,6 @@ class MSUIDefaultConfig(object):
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
         "MSCOLAB_mailid": "Documentation Required",
-        "MSCOLAB_password": "Documentation Required",
         "MSC_login": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",

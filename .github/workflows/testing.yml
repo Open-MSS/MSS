@@ -54,7 +54,7 @@ jobs:
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mssenv \
+        && mamba activate mss-${{ inputs.branch_name }}-env \
         && mamba deactivate \
         && cat localbuild/meta.yaml \
         | sed -n '/^requirements:/,/^test:/p' \
@@ -64,14 +64,14 @@ jobs:
         && cat requirements.d/development.txt >> reqs.txt \
         && echo pyvirtualdisplay >> reqs.txt \
         && cat reqs.txt \
-        && mamba env remove -n mssenv \
-        && mamba create -y -n mssenv --file reqs.txt
+        && mamba env remove -n mss-${{ inputs.branch_name }}-env \
+        && mamba create -y -n mss-${{ inputs.branch_name }}-env --file reqs.txt
 
     - name: Print conda list
       run: |
         source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mssenv \
+        && mamba activate mss-${{ inputs.branch_name }}-env \
         && mamba list
 
     - name: Run tests
@@ -81,7 +81,7 @@ jobs:
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mssenv \
+        && mamba activate mss-${{ inputs.branch_name }}-env \
         && pytest -v --durations=20 --reverse --cov=mslib tests \
         || (for i in {1..5} \
           ; do pytest tests -v --durations=0 --reverse --last-failed --lfnf=none \
@@ -95,7 +95,7 @@ jobs:
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mssenv \
+        && mamba activate mss-${{ inputs.branch_name }}-env \
         && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests \
         || (for i in {1..5} \
           ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests --last-failed --lfnf=none \
@@ -110,13 +110,13 @@ jobs:
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mssenv \
+        && mamba activate mss-${{ inputs.branch_name }}-env \
         && mamba install coveralls \
         && coveralls --service=github
 
     - name: Invoke dockertesting image creation
       if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
-      uses: benc-uk/workflow-dispatch@827565b908f387ffd483c84312273ae185c06c8a
+      uses: benc-uk/workflow-dispatch@v1.2.2
       with:
         workflow: Update Image testing-${{ inputs.branch_name }}
         repo: Open-MSS/dockertesting
