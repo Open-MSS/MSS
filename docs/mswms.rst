@@ -429,6 +429,60 @@ using the style. More examples can be found within the source code of the mswms
 component.
 
 
+A taste of WSGI
+---------------
+
+(MS)WMS is a WSGI application based on Flask.
+You need a WSGI server to run the application, this converts incoming HTTP requests to the WSGI environ,
+and outgoing WSGI responses to HTTP responses.
+
+
+For self hosting have a look on these `platforms <https://flask.palletsprojects.com/en/2.2.x/deploying/>`_.
+
+We describe two examples, Waitress for a pure Python Server and Apache2 using mod_wsgi. On long running systems you may
+want to use Apache2 and have a lot features included in the package. With a nginx proxy also a
+waitress server can use certificates and supervisord can be used to monitor and control the waitress process.
+
+
+Waitress
+........
+Waitress is a production-quality pure-Python WSGI server.
+
+Installing
+~~~~~~~~~~
+It is easy to configure and runs on CPython on Unix and Windows. ::
+
+   mamba install waitress
+
+wms.wsgi
+~~~~~~~~
+A file
+**/home/mss/INSTANCE/wsgi/wsgi_setup.py**
+with the content ::
+
+    import sys
+
+
+    sys.path.insert(0, '/home/mss/INSTANCE/config/where_mswms_settings.py_is/')
+    import logging
+    logging.basicConfig(stream=sys.stderr)
+
+    from mslib.mswms.wms import app
+
+
+Running the waitress server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+This runs the wms server on port 5000. If you use a certificate and proxy by e.g. nginx use --url-scheme=https ::
+
+    PYTHONPATH=~/INSTANCE/wsgi/ waitress-serve --host 127.0.0.1 --port 5000 --url-scheme=http wsgi_setup:app
+
+Further documentations:
+
+- `Waitress <https://docs.pylonsproject.org/projects/waitress/en/stable/index.html>`_
+- `Waitress as Flask server WSGI <https://www.youtube.com/watch?v=tovsUQu6kBU>`_
+- `How to run a Flask App Over HTTPS, using Waitress and NGINX. <https://dev.to/thetrebelcc/how-to-run-a-flask-app-over-https-using-waitress-and-nginx-2020-235c>`_
+- `Supervisor: A Process Control System <http://supervisord.org/>`_
+
 Apache server setup
 ...................
 
@@ -453,7 +507,7 @@ At current state we have to use pip to install mod_wsgi into the INSTANCE enviro
 
 Setup a /etc/apache2/mods-available/wsgi_express.conf::
 
-  WSGIPythonHome "/home/mss-demo/miniconda3/envs/demo/"
+  WSGIPythonHome "/home/mss-demo/mambaforge/envs/demo/"
 
 
 Setup a /etc/apache2/mods-available/wsgi_express.load::
@@ -468,11 +522,11 @@ Configuration of apache mod_wsgi.conf
 One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
 could add it also to wms.wsgi.
 
-  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniconda3/envs/instance/lib/python3.X/site-packages
+  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/mambaforge/envs/instance/lib/python3.X/site-packages
 
 
 By this setting you override the PYTHONPATH environment variable. So you have also to add
-the site-packes directory of your miniconda or anaconda installation besides the config file path.
+the site-packes directory of your mambaforge installation besides the config file path.
 
 If your server hosts different instances by different users you want to setup this path in mswms_setting.py.
 
@@ -494,7 +548,7 @@ INSTANCE is a placeholder for your service name::
  |   └── wsgi
  |       ├── auth.wsgi
  |       └── wms.wsgi
- ├── miniconda3
+ ├── mambaforge
  │   ├── bin
  │   ├── conda-bld
  │   ├── conda-meta

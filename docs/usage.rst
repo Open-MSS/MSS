@@ -282,9 +282,6 @@ and other US services. The data is stored in the MSS configuration directory and
 
 
 
-
-
-
 publicly accessible WMS Servers
 -------------------------------
 
@@ -296,13 +293,3 @@ Some examples for publicly accessible WMS Servers
  * https://apps.ecmwf.int/wms/?token=public
  * https://maps.dwd.de/geoserver/wms
 
-
-Automation using the WMS API
-============================
-
-Besides using the MSS UI we can use the API of the WMS sercer by a script to create
-for instance a number of the same plots or several flights or several forecast steps.
-
-The retriever is an example which needs tweaked before using it
-
-.. literalinclude:: samples/automation/retriever.py
