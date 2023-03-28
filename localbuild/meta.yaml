@@ -88,6 +88,8 @@ requirements:
     - pycountry
     - websocket-client
     - libtiff <4.5.0
+    - flask-wtf
+    - email_validator
     - keyring
 
 test:
