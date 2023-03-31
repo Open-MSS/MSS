@@ -680,7 +680,7 @@ def reset_request():
                     token = generate_confirmation_token(form.email.data)
                     reset_password_url = url_for('reset_password', token=token, _external=True)
                     html = render_template('user/reset_confirmation.html',
-                                        reset_password_url=reset_password_url, username=username)
+                                           reset_password_url=reset_password_url, username=username)
                     subject = "MSColab Password reset request"
                     send_email(form.email.data, subject, html)
                     flash('An email was sent if this user account exists', 'category_success')
