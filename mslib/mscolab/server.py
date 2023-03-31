@@ -143,7 +143,7 @@ def check_login(emailid, password):
         logging.debug("Problem in the database (%ex), likly version client different", ex)
         return False
     if user is not None:
-        if mscolab_settings.USER_VERIFICATION:
+        if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
                 if user.verify_password(password):
                     return user
@@ -185,7 +185,7 @@ def verify_user(func):
             return "False"
         else:
             # saving user details in flask.g
-            if mscolab_settings.USER_VERIFICATION:
+            if mscolab_settings.MAIL_ENABLED:
                 if user.confirmed:
                     g.user = user
                     return func(*args, **kwargs)
@@ -215,7 +215,7 @@ def get_auth_token():
     password = request.form['password']
     user = check_login(emailid, password)
     if user:
-        if mscolab_settings.USER_VERIFICATION:
+        if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
@@ -238,7 +238,7 @@ def authorized():
     token = request.args.get('token', request.form.get('token'))
     user = User.verify_auth_token(token)
     if user is not None:
-        if mscolab_settings.USER_VERIFICATION:
+        if mscolab_settings.MAIL_ENABLED:
             if user.confirmed is False:
                 return "False"
             else:
@@ -259,7 +259,7 @@ def user_register_handler():
     try:
         if result["success"]:
             status_code = 201
-            if mscolab_settings.USER_VERIFICATION:
+            if mscolab_settings.MAIL_ENABLED:
                 status_code = 204
             token = generate_confirmation_token(email)
             confirm_url = url_for('confirm_email', token=token, _external=True)
@@ -273,7 +273,7 @@ def user_register_handler():
 
 @APP.route('/confirm/<token>')
 def confirm_email(token):
-    if mscolab_settings.USER_VERIFICATION:
+    if mscolab_settings.MAIL_ENABLED:
         try:
             email = confirm_token(token)
         except TypeError:
@@ -669,28 +669,32 @@ def reset_password(token):
 
 @APP.route("/reset_request", methods=['GET', 'POST'])
 def reset_request():
-    form = ResetRequestForm()
-    if form.validate_on_submit():
-        # Check wheather user exists or not based on the db
-        user = User.query.filter_by(emailid=form.email.data).first()
-        if user:
-            try:
-                username = user.username
-                token = generate_confirmation_token(form.email.data)
-                reset_password_url = url_for('reset_password', token=token, _external=True)
-                html = render_template('user/reset_confirmation.html',
-                                       reset_password_url=reset_password_url, username=username)
-                subject = "MSColab Password reset request"
-                send_email(form.email.data, subject, html)
+    if mscolab_settings.MAIL_ENABLED:
+        form = ResetRequestForm()
+        if form.validate_on_submit():
+            # Check wheather user exists or not based on the db
+            user = User.query.filter_by(emailid=form.email.data).first()
+            if user:
+                try:
+                    username = user.username
+                    token = generate_confirmation_token(form.email.data)
+                    reset_password_url = url_for('reset_password', token=token, _external=True)
+                    html = render_template('user/reset_confirmation.html',
+                                        reset_password_url=reset_password_url, username=username)
+                    subject = "MSColab Password reset request"
+                    send_email(form.email.data, subject, html)
+                    flash('An email was sent if this user account exists', 'category_success')
+                    return render_template('user/status.html')
+                except IOError:
+                    flash('''We apologize, but it seems that there was an issue sending
+                    your request email. Please try again later.''', 'category_info')
+            else:
                 flash('An email was sent if this user account exists', 'category_success')
                 return render_template('user/status.html')
-            except IOError:
-                flash('''We apologize, but it seems that there was an issue sending
-                 your request email. Please try again later.''', 'category_info')
-        else:
-            flash('An email was sent if this user account exists', 'category_success')
-            return render_template('user/status.html')
-    return render_template('user/reset_request.html', form=form)
+        return render_template('user/reset_request.html', form=form)
+    else:
+        logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
+        return render_template('errors/403.html'), 403
 
 
 def start_server(app, sockio, cm, fm, port=8083):
