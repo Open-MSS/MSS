@@ -53,6 +53,7 @@ from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
+from mslib.utils.config import modify_config_file
 
 
 WMS_SERVICE_CACHE = {}
@@ -618,6 +619,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     if dlg.exec_() == QtWidgets.QDialog.Accepted:
                         auth_username, auth_password = dlg.getAuthInfo()
                         save_password_to_keyring(service_name=base_url, username=auth_username, password=auth_password)
+                        http_auth[base_url] = auth_username
+                        data_to_save_in_config_file = {
+                            "MSS_auth": http_auth
+                        }
+                        modify_config_file(data_to_save_in_config_file)
                         # If user & pw have been entered, cache them.
                         constants.AUTH_LOGIN_CACHE[base_url] = (auth_username, auth_password)
                         self.capabilities_worker.function = lambda: MSUIWebMapService(
