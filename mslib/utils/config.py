@@ -134,8 +134,8 @@ class MSUIDefaultConfig(object):
     # category for MSC operations
     MSCOLAB_category = "default"
 
-    # list of MSC servers {"http://www.your-mscolab-server.de": "youruser",
-    # "http://www.your-wms-server.de": "youruser"}
+    # list of MSC servers {"http://www.your-mscolab-server.de": "authuser",
+    # "http://www.your-wms-server.de": "authuser"}
     MSS_auth = {}
 
     # timeout of Url request
@@ -249,7 +249,7 @@ class MSUIDefaultConfig(object):
 
     # Dictionary options with predefined structure
     dict_option_structure = {
-        "MSS_auth": {"http://www.your-wms-server.de": "yourusername"},
+        "MSS_auth": {"http://www.your-wms-server.de": "authusername"},
         "predefined_map_sections": {
             "new_map_section": {
                 "CRS": "crs_value",
