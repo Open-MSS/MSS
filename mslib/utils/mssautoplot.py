@@ -153,10 +153,10 @@ class TopViewPlotting(Plotting):
                   "size": (width, height)
                 }
 
-        username, password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
+        auth_username, auth_password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
         wms = MSUIWebMapService(url,
-                                username=username,
-                                password=password,
+                                username=auth_username,
+                                password=auth_password,
                                 version='1.3.0')
 
         img = wms.getmap(**kwargs)
@@ -225,10 +225,10 @@ class SideViewPlotting(Plotting):
                   "format": "image/png",
                   "size": (width, height)
                 }
-        username, password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
+        auth_username, auth_password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
         wms = MSUIWebMapService(url,
-                                username=username,
-                                password=password,
+                                username=auth_username,
+                                password=auth_password,
                                 version='1.3.0')
 
         img = wms.getmap(**kwargs)
@@ -264,10 +264,10 @@ class LinearViewPlotting(Plotting):
                 if not init_time:
                     init_time = None
 
-                username, password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
+                auth_username, auth_password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
                 wms = MSUIWebMapService(url,
-                                        username=username,
-                                        password=password,
+                                        username=auth_username,
+                                        password=auth_password,
                                         version='1.3.0')
 
                 path_string = ""

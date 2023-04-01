@@ -128,15 +128,15 @@ class MSUIDefaultConfig(object):
         "http://localhost:8083",
     ]
 
-    # list of MSC servers {"http://www.your-mscolab-server.de": "youruser",
-    # "http://www.your-wms-server.de": "youruser"}
-    http_auth = {}
-
     # mail address to sign in
     MSCOLAB_mailid = ""
 
     # category for MSC operations
     MSCOLAB_category = "default"
+
+    # list of MSC servers {"http://www.your-mscolab-server.de": "youruser",
+    # "http://www.your-wms-server.de": "youruser"}
+    MSS_auth = {}
 
     # timeout of Url request
     WMS_request_timeout = 30
