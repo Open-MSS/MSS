@@ -85,7 +85,7 @@ def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True
             password = get_password_from_keyring(service_name=url, username=auth_name)
             if overwrite_login_cache and password is not None and password.strip() != "":
                 constants.AUTH_LOGIN_CACHE[server_url] = (auth_name, password)
-                name = auth_name
+            name = auth_name
             break
     if name == "":
         name = None
