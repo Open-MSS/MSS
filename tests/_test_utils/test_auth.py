@@ -2,9 +2,9 @@
 """
 
     tests._test_utils.test_auth
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to test mslib.utils.airdata
+    This module provides pytest functions to test mslib.utils.auth
 
     This file is part of MSS.
 
