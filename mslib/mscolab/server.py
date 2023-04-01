@@ -261,12 +261,12 @@ def user_register_handler():
             status_code = 201
             if mscolab_settings.MAIL_ENABLED:
                 status_code = 204
-            token = generate_confirmation_token(email)
-            confirm_url = url_for('confirm_email', token=token, _external=True)
-            html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
-            subject = "Please confirm your email"
-            send_email(email, subject, html)
-        return jsonify(result), status_code
+                token = generate_confirmation_token(email)
+                confirm_url = url_for('confirm_email', token=token, _external=True)
+                html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
+                subject = "Please confirm your email"
+                send_email(email, subject, html)
+            return jsonify(result), status_code
     except TypeError:
         return jsonify({"success": False}), 401
 
