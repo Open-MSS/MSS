@@ -123,7 +123,7 @@ and the MSCOLAB_mailid is used to login by your credentials into the service.
 
 
 By entering first time the passwords they are stored by using keyring.
-You can also use the keyring app to set, change and alter passwords.
+You can also use the keyring app to set, change and delete passwords.
 The following examples shows how to setup your individual MSColab account and to add
 the common WWW-authentication to access the server.
 
