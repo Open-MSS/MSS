@@ -283,10 +283,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         data_to_save_in_config_file = {
             "MSCOLAB_mailid": emailid
         }
-        save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
 
-        if config_loader(dataset="MSCOLAB_mailid") != "" and get_password_from_keyring(service_name="MSCOLAB",
-                                                                                       username=emailid) != "":
+        save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
+        exiting_mscolab_mailid = config_loader(dataset="MSCOLAB_mailid")
+        if exiting_mscolab_mailid != emailid:
             ret = QtWidgets.QMessageBox.question(
                 self, self.tr("Update Credentials"),
                 self.tr("You are using new credentials. "
@@ -305,7 +305,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             r = self.authenticate(data, r, url)
             if r.status_code == 200 and r.text not in ["False", "Unauthorized Access"]:
                 self.save_auth_credentials_to_config_file()
-                save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
+                self.save_user_credentials_to_config_file(emailid, password)
                 self.mscolab.after_login(emailid, self.mscolab_server_url, r)
             else:
                 self.set_status("Error", 'Oh no, server authentication were incorrect.')
@@ -376,8 +376,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         http_auth_login_data[self.mscolab_server_url] = auth_username
 
         data_to_save_in_config_file = {
+            "default_MSCOLAB": [self.mscolab_server_url],
             "MSS_auth": http_auth_login_data
         }
+
         modify_config_file(data_to_save_in_config_file)
         save_password_to_keyring(self.mscolab_server_url, auth_username, auth_password)
 
