@@ -52,6 +52,7 @@ from mslib.msui import mpl_qtwidget as qt
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
 from mslib.utils import config as conf
+from mslib.utils.auth import get_auth_from_url_and_name
 
 
 TEXT_CONFIG = {
@@ -152,11 +153,11 @@ class TopViewPlotting(Plotting):
                   "size": (width, height)
                 }
 
-        wms = wms_control.MSUIWebMapService(url,
-                                            username=self.config["WMS_login"][url][0],
-                                            password=self.config["WMS_login"][url][1],
-                                            version='1.3.0'
-                                            )
+        username, password = get_auth_from_url_and_name(url, self.config["http_auth"])
+        wms = MSUIWebMapService(url,
+                                username=username,
+                                password=password,
+                                version='1.3.0')
 
         img = wms.getmap(**kwargs)
         image_io = io.BytesIO(img.read())
@@ -224,11 +225,11 @@ class SideViewPlotting(Plotting):
                   "format": "image/png",
                   "size": (width, height)
                 }
+        username, password = get_auth_from_url_and_name(url, self.config["http_auth"])
         wms = MSUIWebMapService(url,
-                                username=self.config["WMS_login"][url][0],
-                                password=self.config["WMS_login"][url][1],
-                                version='1.3.0'
-                                )
+                                username=username,
+                                password=password,
+                                version='1.3.0')
 
         img = wms.getmap(**kwargs)
 
@@ -263,9 +264,10 @@ class LinearViewPlotting(Plotting):
                 if not init_time:
                     init_time = None
 
+                username, password = get_auth_from_url_and_name(url, self.config["http_auth"])
                 wms = MSUIWebMapService(url,
-                                        username=self.config["WMS_login"][url][0],
-                                        password=self.config["WMS_login"][url][1],
+                                        username=username,
+                                        password=password,
                                         version='1.3.0')
 
                 path_string = ""

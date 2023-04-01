@@ -59,6 +59,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
+from mslib.utils.auth import get_auth_from_url_and_name
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -494,18 +495,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
             # initialize login cache from config file, but do not overwrite existing keys
-            for key, value in config_loader(dataset="WMS_login").items():
-                if key not in constants.WMS_LOGIN_CACHE:
-                    constants.WMS_LOGIN_CACHE[key] = value
-            username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
-
+            http_auth = config_loader(dataset="http_auth")
+            auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth, overwrite_login_cache=False)
             try:
                 request = requests.get(base_url, timeout=(2, 10))
                 if pdlg.wasCanceled():
                     break
 
                 wms = wms_control.MSUIWebMapService(request.url, version=None,
-                                                    username=username, password=password)
+                                                    username=auth_username, password=auth_password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)
             except Exception as ex:

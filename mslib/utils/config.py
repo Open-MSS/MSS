@@ -128,22 +128,20 @@ class MSUIDefaultConfig(object):
         "http://localhost:8083",
     ]
 
+    # list of MSC servers {"http://www.your-mscolab-server.de": "youruser",
+    # "http://www.your-wms-server.de": "youruser"}
+    http_auth = {}
+
     # mail address to sign in
     MSCOLAB_mailid = ""
 
     # category for MSC operations
     MSCOLAB_category = "default"
 
-    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")}
-    MSC_login = {}
-
     # timeout of Url request
     WMS_request_timeout = 30
 
     WMS_preload = []
-
-    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")}
-    WMS_login = {}
 
     # WMS image cache settings:
     # this changes on any start of msui, use ths msui_settings.json when you want a persistent path
@@ -251,6 +249,7 @@ class MSUIDefaultConfig(object):
 
     # Dictionary options with predefined structure
     dict_option_structure = {
+        "http_auth": {"http://www.your-wms-server.de": "yourusername"},
         "predefined_map_sections": {
             "new_map_section": {
                 "CRS": "crs_value",
@@ -261,12 +260,6 @@ class MSUIDefaultConfig(object):
                     "urcrnrlat": 0.0,
                 },
             }
-        },
-        "MSC_login": {
-            "http://www.your-mscolab-server.de": ["yourusername", "yourpassword"],
-        },
-        "WMS_login": {
-            "http://www.your-wms-server.de": ["yourusername", "yourpassword"],
         },
         "locations": {
             "new-location": [0.0, 0.0],
@@ -307,11 +300,10 @@ class MSUIDefaultConfig(object):
         "default_VSEC_WMS": "Documentation Required",
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
+        "http_auth": "Documentation Required",
         "MSCOLAB_mailid": "Documentation Required",
-        "MSC_login": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
-        "WMS_login": "Documentation Required",
         "wms_cache": "Documentation Required",
         "wms_cache_max_size_bytes": "Documentation Required",
         "wms_cache_max_age_seconds": "Documentation Required",
