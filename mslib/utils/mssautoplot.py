@@ -153,7 +153,7 @@ class TopViewPlotting(Plotting):
                   "size": (width, height)
                 }
 
-        username, password = get_auth_from_url_and_name(url, self.config["http_auth"])
+        username, password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
         wms = MSUIWebMapService(url,
                                 username=username,
                                 password=password,
@@ -225,7 +225,7 @@ class SideViewPlotting(Plotting):
                   "format": "image/png",
                   "size": (width, height)
                 }
-        username, password = get_auth_from_url_and_name(url, self.config["http_auth"])
+        username, password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
         wms = MSUIWebMapService(url,
                                 username=username,
                                 password=password,
@@ -264,7 +264,7 @@ class LinearViewPlotting(Plotting):
                 if not init_time:
                     init_time = None
 
-                username, password = get_auth_from_url_and_name(url, self.config["http_auth"])
+                username, password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
                 wms = MSUIWebMapService(url,
                                         username=username,
                                         password=password,

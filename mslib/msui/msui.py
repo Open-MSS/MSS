@@ -495,7 +495,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
             # initialize login cache from config file, but do not overwrite existing keys
-            http_auth = config_loader(dataset="http_auth")
+            http_auth = config_loader(dataset="MSS_auth")
             auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth, overwrite_login_cache=False)
             try:
                 request = requests.get(base_url, timeout=(2, 10))

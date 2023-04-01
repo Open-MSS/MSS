@@ -566,7 +566,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         (mr, 2011-02-25)
         """
         # initialize login cache fomr config file, but do not overwrite existing keys
-        http_auth = config_loader(dataset="http_auth")
+        http_auth = config_loader(dataset="MSS_auth")
         auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
 
         def on_success(wms):
@@ -609,7 +609,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     # the Apache 401 messages, we get an XML message here but
                     # no error code. Quick workaround: Scan the XML message for
                     # the string "Error 401"...
-                    http_auth = config_loader(dataset="http_auth")
+                    http_auth = config_loader(dataset="MSS_auth")
                     auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
                     dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers)
                     dlg.setModal(True)

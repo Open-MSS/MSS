@@ -249,7 +249,7 @@ class MSUIDefaultConfig(object):
 
     # Dictionary options with predefined structure
     dict_option_structure = {
-        "http_auth": {"http://www.your-wms-server.de": "yourusername"},
+        "MSS_auth": {"http://www.your-wms-server.de": "yourusername"},
         "predefined_map_sections": {
             "new_map_section": {
                 "CRS": "crs_value",
@@ -300,7 +300,7 @@ class MSUIDefaultConfig(object):
         "default_VSEC_WMS": "Documentation Required",
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
-        "http_auth": "Documentation Required",
+        "MSS_auth": "Documentation Required",
         "MSCOLAB_mailid": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",

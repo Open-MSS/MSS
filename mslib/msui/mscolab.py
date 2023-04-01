@@ -240,7 +240,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         return r
 
     def login_handler(self):
-        auth = get_auth_from_url_and_name(self.mscolab_server_url, config_loader(dataset="http_auth"))
+        auth = get_auth_from_url_and_name(self.mscolab_server_url, config_loader(dataset="MSS_auth"))
         emailid = self.loginEmailLe.text()
         password = self.loginPasswordLe.text()
         data = {
@@ -313,7 +313,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def new_user_handler(self):
         # get mscolab /token http auth credentials from cache
-        auth = get_auth_from_url_and_name(self.mscolab_server_url, config_loader(dataset="http_auth"))
+        auth = get_auth_from_url_and_name(self.mscolab_server_url, config_loader(dataset="MSS_auth"))
 
         emailid = self.newEmailLe.text()
         password = self.newPasswordLe.text()
@@ -370,13 +370,13 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", error_msg)
 
     def save_auth_credentials_to_config_file(self):
-        http_auth_login_data = config_loader(dataset="http_auth")
+        http_auth_login_data = config_loader(dataset="MSS_auth")
         auth_username = self.settings["auth"][self.mscolab_server_url][0]
         auth_password = self.settings["auth"][self.mscolab_server_url][1]
         http_auth_login_data[self.mscolab_server_url] = auth_username
 
         data_to_save_in_config_file = {
-            "http_auth": http_auth_login_data
+            "MSS_auth": http_auth_login_data
         }
         modify_config_file(data_to_save_in_config_file)
         save_password_to_keyring(self.mscolab_server_url, auth_username, auth_password)
