@@ -71,7 +71,7 @@
    "default_MSCOLAB": ["http://www.your-mscolab-server.de/"],
    "MSS_auth": {
                   "http://www.your-server.de/forecasts" : "authuser",
-                  "http://www.your-mscolab-server.de" :  "authuser"", "yourpassword"]"
+                  "http://www.your-mscolab-server.de" :  "authuser"
                 },
 
    "MSCOLAB_mailid": ""
