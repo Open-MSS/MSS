@@ -624,6 +624,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                             base_url, version=version,
                             username=auth_username, password=auth_password)
                         self.capabilities_worker.start()
+                        # On a new auth password we seems to need a manual close of the progress bar
+                        # and load getcapabilities
+                        self.cpdlg.close()
+                        self.get_capabilities()
                     else:
                         self.cpdlg.close()
                         return
