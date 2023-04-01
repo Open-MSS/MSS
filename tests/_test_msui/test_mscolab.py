@@ -144,7 +144,6 @@ class Test_Mscolab_connect_window():
         assert self.main_window.mscolab.conn is None
         assert self.main_window.local_active is True
 
-
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_user(self, mockmessage):
         self._connect_to_mscolab()
