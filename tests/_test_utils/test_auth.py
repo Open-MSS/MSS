@@ -66,4 +66,3 @@ def test_get_auth_from_url_and_name():
     read_config_file()
     data = auth.get_auth_from_url_and_name("http://example.com/something", http_auth, overwrite_login_cache=False)
     assert data == (None, None)
-
