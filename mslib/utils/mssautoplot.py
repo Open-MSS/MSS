@@ -47,7 +47,6 @@ from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui.wms_control import MSUIWebMapService
 from mslib.msui import constants
-from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft

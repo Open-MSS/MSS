@@ -654,7 +654,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
             self.cpdlg.close()
 
-        Worker.create(lambda: MSUIWebMapService(base_url, version=version, username=auth_username, password=auth_password),
+        Worker.create(lambda: MSUIWebMapService(base_url, version=version,
+                                                username=auth_username, password=auth_password),
                       on_success, on_failure)
 
     def wms_url_changed(self, text):

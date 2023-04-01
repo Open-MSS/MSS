@@ -181,7 +181,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 # Fill Email and Password fields from config
                 self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
                 self.loginPasswordLe.setText(get_password_from_keyring(service_name="MSCOLAB",
-                    username=config_loader(dataset="MSCOLAB_mailid")))
+                                             username=config_loader(dataset="MSCOLAB_mailid")))
                 self.enable_login_btn()
 
                 # Change connect button text and connect disconnect handler
