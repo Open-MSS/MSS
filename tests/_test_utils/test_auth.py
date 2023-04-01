@@ -62,3 +62,8 @@ def test_get_auth_from_url_and_name():
     data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True)
     assert data == (auth_username, 'password from TestKeyring')
     assert constants.AUTH_LOGIN_CACHE[server_url] == (auth_username, 'password from TestKeyring')
+    create_msui_settings_file(f'{{"MSS_auth": {{"http://example.com": "{auth_username}"}}}}')
+    read_config_file()
+    data = auth.get_auth_from_url_and_name("http://example.com/something", http_auth, overwrite_login_cache=False)
+    assert data == (None, None)
+

@@ -79,14 +79,15 @@ def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True
     """
     gets auth_username from http_auth and password from keyring for a given server_url
     """
-    username = ""
-    for url, username in http_auth.items():
+    name = ""
+    for url, auth_name in http_auth.items():
         if server_url == url:
-            password = get_password_from_keyring(service_name=url, username=username)
+            password = get_password_from_keyring(service_name=url, username=auth_name)
             if overwrite_login_cache and password is not None and password.strip() != "":
-                constants.AUTH_LOGIN_CACHE[server_url] = (username, password)
+                constants.AUTH_LOGIN_CACHE[server_url] = (auth_name, password)
+                name = auth_name
             break
-    if username == "":
-        username = None
-    auth = constants.AUTH_LOGIN_CACHE.get(server_url, (username, None))
+    if name == "":
+        name = None
+    auth = constants.AUTH_LOGIN_CACHE.get(server_url, (name, None))
     return auth
