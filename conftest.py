@@ -160,7 +160,7 @@ class mscolab_settings(object):
     MAIL_DEFAULT_SENDER = 'MSS@localhost'
 
     # enable verification by Mail
-    USER_VERIFICATION = False
+    MAIL_ENABLED = False
 
     SQLALCHEMY_DB_URI = 'sqlite:///' + url_join(DATA_DIR, 'mscolab.db')
 

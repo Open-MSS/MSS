@@ -77,11 +77,11 @@ Further options can be listed by `mscolab db -h`
 user verification by email
 ..........................
 
-With setting of `USER_VERIFICATION = True` you have to set further options in the mscolab_settings.py. These are
+With setting of `MAIL_ENABLED = True` you have to set further options in the mscolab_settings.py. These are
 parameters of `flask-mail` ::
 
         # enable verification by Mail
-        USER_VERIFICATION = True
+        MAIL_ENABLED = True
 
         # mail settings
         MAIL_SERVER = 'localhost'
