@@ -116,8 +116,8 @@ and the MSCOLAB_mailid is used to login by your credentials into the service.
 .. code:: text
 
    "MSS_auth": {
-                  "http://www.your-server.de/forecasts" : "authuser",
-                  "http://www.your-mscolab-server.de" : "authuser"
+                  "http://www.your-server.de/forecasts": "authuser",
+                  "http://www.your-mscolab-server.de": "authuser"
                 },
    "MSCOLAB_mailid": "your-email"
 
