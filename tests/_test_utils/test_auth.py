@@ -44,25 +44,38 @@ def test_keyring():
 
 
 def test_get_auth_from_url_and_name():
+    # empty http_auth definition
     server_url = "http://example.com"
     http_auth = config_loader(dataset="MSS_auth")
+    assert http_auth == {}
     data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=False)
     assert data == (None, None)
+    # auth username and url defined
     auth_username = 'mss'
     create_msui_settings_file(f'{{"MSS_auth": {{"http://example.com": "{auth_username}"}}}}')
     read_config_file()
     http_auth = config_loader(dataset="MSS_auth")
+    assert http_auth == {"http://example.com": "mss"}
     data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=False)
+    # no password yet
     assert data == (auth_username, None)
-    auth.save_password_to_keyring('MSCOLAB', auth_username, "password")
-    data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=False)
-    assert data == (auth_username, None)
-    auth.save_password_to_keyring('MSCOLAB', auth_username, "password")
-    # we get only access to the auth_password when we add it to constants.AUTH_LOGIN_CACHE
+    # store a password
+    auth.save_password_to_keyring(server_url, auth_username, "password")
+    # return the test password
+    assert auth.get_password_from_keyring(server_url, auth_username) == 'password from TestKeyring'
+    assert constants.AUTH_LOGIN_CACHE == {}
+    auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=False)
+    # password is set but doesn't go into the login cache
+    assert constants.AUTH_LOGIN_CACHE == {}
+    # now we overwrite_login_cache=True
     data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True)
     assert data == (auth_username, 'password from TestKeyring')
     assert constants.AUTH_LOGIN_CACHE[server_url] == (auth_username, 'password from TestKeyring')
+    # restart and use a different url
     create_msui_settings_file(f'{{"MSS_auth": {{"http://example.com": "{auth_username}"}}}}')
     read_config_file()
     data = auth.get_auth_from_url_and_name("http://example.com/something", http_auth, overwrite_login_cache=False)
     assert data == (None, None)
+    # check storage of MSCOLAB password
+    auth.save_password_to_keyring('MSCOLAB', auth_username, "password")
+    assert auth.get_password_from_keyring("MSCOLAB", auth_username) == 'password from TestKeyring'
