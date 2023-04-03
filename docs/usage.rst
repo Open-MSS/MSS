@@ -110,6 +110,12 @@ MSColab Login and WWW-authentication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 You can setup which accounts are used to login into MSColab and used for authenticate to the webservers.
 
+.. tip::
+  When you use an old configuration having WMS_login, MSC_login, MSCOLAB_password defined on start
+  of msui you get a hint that we can update your msui_settings.json file. We keep your old attributes.
+  You can delete them afterwards when you don't want the hint shown on each start.
+
+
 A dictionary by Server-Url and username provide the username for an http-auth request
 and the MSCOLAB_mailid is used to login by your credentials into the service.
 
@@ -131,7 +137,6 @@ the common WWW-authentication to access the server.
 
     (mssenv): keyring set MSCOLAB your-email your-password
     (mssenv): keyring set http://www.your-mscolab-server.de authuser authpassword
-
 
 
 
