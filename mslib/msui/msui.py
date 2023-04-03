@@ -1069,8 +1069,6 @@ def main():
     parser.add_argument("-m", "--menu", help="adds msui to menu", action="store_true", default=False)
     parser.add_argument("-d", "--deinstall", help="removes msui from menu", action="store_true", default=False)
     parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
-    parser.add_argument("--migrate_json", help="Updates MSUI json config to the newest version", action="store_true",
-                        default=False)
 
     args = parser.parse_args()
 
@@ -1090,12 +1088,6 @@ def main():
         updater.run()
         while Worker.workers:
             list(Worker.workers)[0].wait()
-        sys.exit()
-
-    if args.migrate_json:
-        from mslib.utils.migration.update_json_file_to_version_eight import JsonConversion
-        new_version = JsonConversion()
-        new_version.change_parameters()
         sys.exit()
 
     setup_logging(args)
