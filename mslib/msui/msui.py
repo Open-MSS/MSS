@@ -1167,7 +1167,7 @@ def main():
 
             text = """We can update your msui_settings.json file \n
 We add the new attributes for the webserver authentication, see
-https://mss.readthedocs.io/en/stable/usage.html#configuration-of-msui \n
+https://mss.readthedocs.io/en/stable/usage.html#mscolab-login-and-www-authentication \n
 When everything works remove the old attributes: \n
 WMS_login, MSC_login, MSCOLAB_password"""
 
