@@ -116,7 +116,6 @@ def add_user(email, username, password):
 
     template = f"""
     "MSCOLAB_mailid": "{email}",
-    "MSCOLAB_password": "{password}",
 """
     with app.app_context():
         user_email_exists = User.query.filter_by(emailid=str(email)).first()
