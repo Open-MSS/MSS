@@ -1001,7 +1001,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.shortcuts_dlg.reset_highlight()
         self.shortcuts_dlg.fill_list()
         self.shortcuts_dlg.show()
+
+        self.shortcuts_dlg.cbAdvanced.setHidden(True)
+        self.shortcuts_dlg.cbHighlight.setHidden(True)
+        self.shortcuts_dlg.cbAdvanced.setCheckState(0)
+        self.shortcuts_dlg.cbHighlight.setCheckState(0)
+        self.shortcuts_dlg.leShortcutFilter.setText("")
+
         if search_mode:
+            self.shortcuts_dlg.cbAdvanced.setHidden(False)
+            self.shortcuts_dlg.cbHighlight.setHidden(False)
             self.shortcuts_dlg.cbDisplayType.setCurrentIndex(1)
             self.shortcuts_dlg.leShortcutFilter.setText("")
             self.shortcuts_dlg.cbAdvanced.setCheckState(2)
