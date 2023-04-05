@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.config
-    ~~~~~~~~~~~~~~~~
+    mslib.utils.migration.config_before_eight
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Collection of functions all around config handling.
+    Collection of functions all around config handling before version 8.0.0
 
     This file is part of MSS.
 
@@ -131,21 +131,25 @@ class MSUIDefaultConfig(object):
     # mail address to sign in
     MSCOLAB_mailid = ""
 
+    # password to sign in
+    MSCOLAB_password = ""
+
     # category for MSC operations
     MSCOLAB_category = "default"
 
-    # list of MSC servers {"http://www.your-mscolab-server.de": "authuser",
-    # "http://www.your-wms-server.de": "authuser"}
-    MSS_auth = {}
+    # dictionary of MSC servers {"http://www.your-mscolab-server.de" : ("youruser", "yourpassword")}
+    MSC_login = {}
 
     # timeout of Url request
     WMS_request_timeout = 30
 
     WMS_preload = []
 
+    # dictionary of WMS servers {"http://www.your-wms-server.de" : ("youruser", "yourpassword")}
+    WMS_login = {}
+
     # WMS image cache settings:
-    # this changes on any start of msui, use ths msui_settings.json when you want a persistent path
-    wms_cache = os.path.join(tempfile.TemporaryDirectory().name, "msui_wms_cache")
+    wms_cache = os.path.join(tempfile.gettempdir(), "msui_wms_cache")
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
@@ -221,11 +225,6 @@ class MSUIDefaultConfig(object):
     linearview = {"plot_title_size": 10,
                   "axes_label_size": 10}
 
-    automated_plotting_flights = [[]]
-    automated_plotting_hsecs = [[]]
-    automated_plotting_vsecs = [[]]
-    automated_plotting_lsecs = [[]]
-
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
 
@@ -239,6 +238,7 @@ class MSUIDefaultConfig(object):
         'num_interpolation_points',
         'new_flighttrack_flightlevel',
         'MSCOLAB_mailid',
+        'MSCOLAB_password',
         'MSCOLAB_category',
         'mscolab_server_url',
         'wms_cache',
@@ -249,7 +249,6 @@ class MSUIDefaultConfig(object):
 
     # Dictionary options with predefined structure
     dict_option_structure = {
-        "MSS_auth": {"http://www.your-wms-server.de": "authusername"},
         "predefined_map_sections": {
             "new_map_section": {
                 "CRS": "crs_value",
@@ -260,6 +259,12 @@ class MSUIDefaultConfig(object):
                     "urcrnrlat": 0.0,
                 },
             }
+        },
+        "MSC_login": {
+            "http://www.your-mscolab-server.de": ["yourusername", "yourpassword"],
+        },
+        "WMS_login": {
+            "http://www.your-wms-server.de": ["yourusername", "yourpassword"],
         },
         "locations": {
             "new-location": [0.0, 0.0],
@@ -284,10 +289,6 @@ class MSUIDefaultConfig(object):
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
-        "automated_plotting_flights": [["", "", "", "", "", ""]],
-        "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
-        "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
-        "automated_plotting_lsecs": [["http://www.your-wms-server.de", "", ""]]
     }
 
     config_descriptions = {
@@ -300,10 +301,12 @@ class MSUIDefaultConfig(object):
         "default_VSEC_WMS": "Documentation Required",
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
-        "MSS_auth": "Documentation Required",
         "MSCOLAB_mailid": "Documentation Required",
+        "MSCOLAB_password": "Documentation Required",
+        "MSC_login": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
+        "WMS_login": "Documentation Required",
         "wms_cache": "Documentation Required",
         "wms_cache_max_size_bytes": "Documentation Required",
         "wms_cache_max_age_seconds": "Documentation Required",
@@ -363,11 +366,11 @@ def read_config_file(path=constants.MSUI_SETTINGS):
             try:
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
             except json.JSONDecodeError as e:
-                logging.error("Error while loading json file %s", e)
+                logging.error(f"Error while loading json file {e}")
                 error_message = f"Unexpected error while loading config\n{e}"
                 raise FatalUserError(error_message)
             except ValueError as e:
-                logging.error("Error while loading json file %s", e)
+                logging.error(f"Error while loading json file {e}")
                 error_message = f"Invalid keys detected in config\n{e}"
                 raise FatalUserError(error_message)
         else:
@@ -411,11 +414,11 @@ def modify_config_file(data, path=constants.MSUI_SETTINGS):
                 _fs.writetext(file_name, json.dumps(modified_data, indent=4))
                 read_config_file()
             except json.JSONDecodeError as e:
-                logging.error("Error while loading json file %s", e)
+                logging.error(f"Error while loading json file {e}")
                 error_message = f"Unexpected error while loading config\n{e}"
                 raise FatalUserError(error_message)
             except ValueError as e:
-                logging.error("Error while loading json file %s", e)
+                logging.error(f"Error while loading json file {e}")
                 error_message = f"Invalid keys detected in config\n{e}"
                 raise FatalUserError(error_message)
         else:

@@ -33,6 +33,7 @@ import requests.exceptions
 import mock
 import pytest
 
+import mslib.utils.auth
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
@@ -71,7 +72,7 @@ class Test_Mscolab_connect_window():
         for email in ["something@something.org", "anand@something.org",
                       "berta@something.org", "anton@something.org",
                       "other@something.org"]:
-            mscolab.del_password_from_keyring(email)
+            mslib.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
 
     def teardown_method(self):
         self.main_window.mscolab.logout()
@@ -81,15 +82,6 @@ class Test_Mscolab_connect_window():
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
-
-    def test_keyring(self):
-        username = "something@something.org"
-        password = "x-*\\M#.U<Ik<g}YYGZb}>6R(HPNW2}"
-        mscolab.save_password_to_keyring(username=username, password=password)
-        assert mscolab.get_password_from_keyring(username) == "password from TestKeyring"
-        mscolab.del_password_from_keyring(username)
-        # the testbackup returns the same string
-        assert mscolab.get_password_from_keyring(username) == "password from TestKeyring"
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -152,11 +144,13 @@ class Test_Mscolab_connect_window():
         assert self.main_window.mscolab.conn is None
         assert self.main_window.local_active is True
 
-    def test_add_user(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_add_user(self, mockmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
-        assert mscolab.get_password_from_keyring(username="something@something.org") == "password from TestKeyring"
+        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB",
+                                                          "something@something.org") == "password from TestKeyring"
         # assert self.window.stackedWidget.currentWidget() == self.window.newuserPage
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
@@ -178,17 +172,20 @@ class Test_Mscolab_connect_window():
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
         create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org" }')
-        mscolab.save_password_to_keyring(username="something@something.org", password="something")
+        mslib.utils.auth.save_password_to_keyring(service_name="MSCOLAB",
+                                                  username="something@something.org", password="something")
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
-        assert mscolab.get_password_from_keyring("something@something.org") == "password from TestKeyring"
+        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB",
+                                                          "something@something.org") == "password from TestKeyring"
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
         self._create_user("anand", "anand@something.org", "anand")
         # check changed settings
         assert config_loader(dataset="MSCOLAB_mailid") == "anand@something.org"
-        assert mscolab.get_password_from_keyring("anand@something.org") == "password from TestKeyring"
+        assert mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB",
+                                                          username="anand@something.org") == "password from TestKeyring"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
 

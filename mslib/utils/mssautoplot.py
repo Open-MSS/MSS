@@ -47,11 +47,11 @@ from mslib.utils.config import config_loader, read_config_file
 from mslib.utils.units import units
 from mslib.msui.wms_control import MSUIWebMapService
 from mslib.msui import constants
-from mslib.msui import wms_control
 from mslib.msui import mpl_qtwidget as qt
 from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
 from mslib.utils import config as conf
+from mslib.utils.auth import get_auth_from_url_and_name
 
 
 TEXT_CONFIG = {
@@ -152,11 +152,11 @@ class TopViewPlotting(Plotting):
                   "size": (width, height)
                 }
 
-        wms = wms_control.MSUIWebMapService(url,
-                                            username=self.config["WMS_login"][url][0],
-                                            password=self.config["WMS_login"][url][1],
-                                            version='1.3.0'
-                                            )
+        auth_username, auth_password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
+        wms = MSUIWebMapService(url,
+                                username=auth_username,
+                                password=auth_password,
+                                version='1.3.0')
 
         img = wms.getmap(**kwargs)
         image_io = io.BytesIO(img.read())
@@ -224,11 +224,11 @@ class SideViewPlotting(Plotting):
                   "format": "image/png",
                   "size": (width, height)
                 }
+        auth_username, auth_password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
         wms = MSUIWebMapService(url,
-                                username=self.config["WMS_login"][url][0],
-                                password=self.config["WMS_login"][url][1],
-                                version='1.3.0'
-                                )
+                                username=auth_username,
+                                password=auth_password,
+                                version='1.3.0')
 
         img = wms.getmap(**kwargs)
 
@@ -263,9 +263,10 @@ class LinearViewPlotting(Plotting):
                 if not init_time:
                     init_time = None
 
+                auth_username, auth_password = get_auth_from_url_and_name(url, self.config["MSS_auth"])
                 wms = MSUIWebMapService(url,
-                                        username=self.config["WMS_login"][url][0],
-                                        password=self.config["WMS_login"][url][1],
+                                        username=auth_username,
+                                        password=auth_password,
                                         version='1.3.0')
 
                 path_string = ""

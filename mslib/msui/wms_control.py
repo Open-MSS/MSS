@@ -52,6 +52,8 @@ from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
+from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
+from mslib.utils.config import modify_config_file
 
 
 WMS_SERVICE_CACHE = {}
@@ -565,10 +567,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         (mr, 2011-02-25)
         """
         # initialize login cache fomr config file, but do not overwrite existing keys
-        for key, value in config_loader(dataset="WMS_login").items():
-            if key not in constants.WMS_LOGIN_CACHE:
-                constants.WMS_LOGIN_CACHE[key] = value
-        username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
+        http_auth = config_loader(dataset="MSS_auth")
+        auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
 
         def on_success(wms):
             self.cpdlg.setValue(9)
@@ -610,16 +610,30 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     # the Apache 401 messages, we get an XML message here but
                     # no error code. Quick workaround: Scan the XML message for
                     # the string "Error 401"...
+                    http_auth = config_loader(dataset="MSS_auth")
+                    auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
                     dlg = MSS_WMS_AuthenticationDialog(parent=self.multilayers)
                     dlg.setModal(True)
+                    dlg.leUsername.setText(auth_username)
+                    dlg.lePassword.setText(auth_password)
                     if dlg.exec_() == QtWidgets.QDialog.Accepted:
-                        username, password = dlg.getAuthInfo()
+                        auth_username, auth_password = dlg.getAuthInfo()
+                        save_password_to_keyring(service_name=base_url, username=auth_username, password=auth_password)
+                        http_auth[base_url] = auth_username
+                        data_to_save_in_config_file = {
+                            "MSS_auth": http_auth
+                        }
+                        modify_config_file(data_to_save_in_config_file)
                         # If user & pw have been entered, cache them.
-                        constants.WMS_LOGIN_CACHE[base_url] = (username, password)
+                        constants.AUTH_LOGIN_CACHE[base_url] = (auth_username, auth_password)
                         self.capabilities_worker.function = lambda: MSUIWebMapService(
                             base_url, version=version,
-                            username=username, password=password)
+                            username=auth_username, password=auth_password)
                         self.capabilities_worker.start()
+                        # On a new auth password we seems to need a manual close of the progress bar
+                        # and load getcapabilities
+                        self.cpdlg.close()
+                        self.get_capabilities()
                     else:
                         self.cpdlg.close()
                         return
@@ -646,7 +660,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
             self.cpdlg.close()
 
-        Worker.create(lambda: MSUIWebMapService(base_url, version=version, username=username, password=password),
+        Worker.create(lambda: MSUIWebMapService(base_url, version=version,
+                                                username=auth_username, password=auth_password),
                       on_success, on_failure)
 
     def wms_url_changed(self, text):
