@@ -11,7 +11,7 @@ jobs:
         shell: bash
 
     container:
-      image: openmss/mss-test:latest
+      image: openmss/testing-${{ inputs.branch_name }}
 
     steps:
     - name: Trust My Directory
