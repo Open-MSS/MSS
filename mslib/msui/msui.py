@@ -1007,8 +1007,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.shortcuts_dlg.cbAdvanced.setCheckState(0)
         self.shortcuts_dlg.cbHighlight.setCheckState(0)
         self.shortcuts_dlg.leShortcutFilter.setText("")
+        self.shortcuts_dlg.setWindowTitle("Shortcuts")
 
         if search_mode:
+            self.shortcuts_dlg.setWindowTitle("Search")
             self.shortcuts_dlg.cbAdvanced.setHidden(False)
             self.shortcuts_dlg.cbHighlight.setHidden(False)
             self.shortcuts_dlg.cbDisplayType.setCurrentIndex(1)
