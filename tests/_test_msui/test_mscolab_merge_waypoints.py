@@ -30,6 +30,7 @@ import fs
 import mock
 import pytest
 
+import mslib.utils.auth
 from mslib.msui import flighttrack as ft
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
@@ -56,7 +57,7 @@ class Test_Mscolab_Merge_Waypoints(object):
 
     def teardown_method(self):
         self.window.mscolab.logout()
-        mscolab.del_password_from_keyring("merge@alpha.org")
+        mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
             mscolab_delete_user(self.app, self.url, self.emailid, 'abcdef')

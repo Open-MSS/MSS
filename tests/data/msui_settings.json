@@ -69,13 +69,10 @@
    "default_LSEC_WMS": ["http://www.your-server.de/forecasts"],
 
    "default_MSCOLAB": ["http://www.your-mscolab-server.de/"],
-   "WMS_login": {
-                  "http://www.your-server.de/forecasts" : ["youruser", "yourpassword"]
-                 },
-   "MSC_login": {
-                 "http://www.your-mscolab-server.de" : ["youruser", "yourpassword"]
+   "MSS_auth": {
+                  "http://www.your-server.de/forecasts" : "authuser",
+                  "http://www.your-mscolab-server.de" :  "authuser"
                 },
 
-   "MSCOLAB_mailid": "",
-   "MSCOLAB_password": ""
+   "MSCOLAB_mailid": ""
 }

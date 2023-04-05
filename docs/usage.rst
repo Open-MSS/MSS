@@ -35,7 +35,7 @@ If you don't have a msui_settings.json then default configuration is in place.
 Store this msui_settings.json in a path, e.g. "$HOME/.config/mss"
 
 The file could be loaded by the File Configuration dialog or
-by the environment variable msui_settings pointing to your msui_settings.json.
+by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
 
 **/$HOME/.config/msui/msui_settings.json**
 
@@ -106,6 +106,37 @@ With setting the option "filepicker_default": "default" you can only access loca
 
   "data_dir": "~/mssdata",
 
+MSColab Login and WWW-authentication
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You can setup which accounts are used to login into MSColab and used for authenticate to the webservers.
+
+.. tip::
+  When you use an old configuration having WMS_login, MSC_login, MSCOLAB_password defined on start
+  of msui you get a hint that we can update your msui_settings.json file. We keep your old attributes.
+  You can delete them afterwards when you don't want the hint shown on each start.
+
+
+A dictionary by Server-Url and username provide the username for an http-auth request
+and the MSCOLAB_mailid is used to login by your credentials into the service.
+
+.. code:: text
+
+   "MSS_auth": {
+                  "http://www.your-server.de/forecasts": "authuser",
+                  "http://www.your-mscolab-server.de": "authuser"
+                },
+   "MSCOLAB_mailid": "your-email"
+
+
+By entering first time the passwords they are stored by using keyring.
+You can also use the keyring app to set, change and delete passwords.
+The following examples shows how to setup your individual MSColab account and to add
+the common WWW-authentication to access the server.
+
+.. code:: text
+
+    (mssenv): keyring set MSCOLAB your-email your-password
+    (mssenv): keyring set http://www.your-mscolab-server.de authuser authpassword
 
 
 

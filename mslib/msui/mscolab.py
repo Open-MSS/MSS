@@ -39,7 +39,6 @@ import fs
 import requests
 import re
 import urllib.request
-import keyring
 
 from fs import open_fs
 from PIL import Image
@@ -52,6 +51,8 @@ from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+
+from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring, get_auth_from_url_and_name
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.utils.qt import ui_mscolab_help_dialog as msc_help_dialog
@@ -61,34 +62,6 @@ from mslib.utils.qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.utils.qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui import constants
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
-
-
-def del_password_from_keyring(username):
-    try:
-        keyring.delete_password(service_name=__name__, username=username)
-    except keyring.errors.PasswordDeleteError:
-        pass
-    except keyring.errors.NoKeyringError as e:
-        logging.error(e)
-
-
-def get_password_from_keyring(username=None):
-    """
-    When we request a username we use this function to fill in a form field with a password
-    In this case by none existing credentials in the keyring we have to return an empty string
-    """
-    cred = keyring.get_credential(service_name=__name__, username=username)
-    if username is not None and cred is None:
-        return ""
-    elif cred is None:
-        return None
-    else:
-        return cred.password
-
-
-def save_password_to_keyring(username="", password=""):
-    if "" not in (username.strip(), password.strip()):
-        keyring.set_password(service_name=__name__, username=username, password=password)
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -207,8 +180,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
                 # Fill Email and Password fields from config
                 self.loginEmailLe.setText(config_loader(dataset="MSCOLAB_mailid"))
-                self.loginPasswordLe.setText(get_password_from_keyring(
-                    username=config_loader(dataset="MSCOLAB_mailid")))
+                self.loginPasswordLe.setText(get_password_from_keyring(service_name="MSCOLAB",
+                                             username=config_loader(dataset="MSCOLAB_mailid")))
                 self.enable_login_btn()
 
                 # Change connect button text and connect disconnect handler
@@ -258,22 +231,16 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def authenticate(self, data, r, url):
         if r.status_code == 401:
-            username, password = self.httpUsernameLe.text(), self.httpPasswordLe.text()
-            self.settings["auth"][self.mscolab_server_url] = (username, password)
-            save_settings_qsettings('mscolab', self.settings)
+            auth_username, auth_password = self.httpUsernameLe.text(), self.httpPasswordLe.text()
+            self.settings["auth"][self.mscolab_server_url] = (auth_username, auth_password)
             s = requests.Session()
-            s.auth = (username, password)
+            s.auth = (auth_username, auth_password)
             s.headers.update({'x-test': 'true'})
             r = s.post(url, data=data, timeout=(2, 10))
         return r
 
     def login_handler(self):
-        # get mscolab /token http auth credentials from cache
-        for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE or constants.MSC_LOGIN_CACHE[key] != value:
-                constants.MSC_LOGIN_CACHE[key] = value
-        auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
-
+        auth = get_auth_from_url_and_name(self.mscolab_server_url, config_loader(dataset="MSS_auth"))
         emailid = self.loginEmailLe.text()
         password = self.loginPasswordLe.text()
         data = {
@@ -309,15 +276,17 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.httpBb.accepted.connect(self.login_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
         else:
+            save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
             self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
     def save_user_credentials_to_config_file(self, emailid, password):
         data_to_save_in_config_file = {
             "MSCOLAB_mailid": emailid
         }
-        save_password_to_keyring(username=emailid, password=password)
 
-        if config_loader(dataset="MSCOLAB_mailid") != "" and get_password_from_keyring(username=emailid) != "":
+        save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
+        exiting_mscolab_mailid = config_loader(dataset="MSCOLAB_mailid")
+        if exiting_mscolab_mailid != emailid:
             ret = QtWidgets.QMessageBox.question(
                 self, self.tr("Update Credentials"),
                 self.tr("You are using new credentials. "
@@ -331,10 +300,12 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
     def login_server_auth(self):
         data, r, url = self.login_data
         emailid = data['email']
+        password = data['password']
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
             if r.status_code == 200 and r.text not in ["False", "Unauthorized Access"]:
                 self.save_auth_credentials_to_config_file()
+                self.save_user_credentials_to_config_file(emailid, password)
                 self.mscolab.after_login(emailid, self.mscolab_server_url, r)
             else:
                 self.set_status("Error", 'Oh no, server authentication were incorrect.')
@@ -342,10 +313,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def new_user_handler(self):
         # get mscolab /token http auth credentials from cache
-        for key, value in config_loader(dataset="MSC_login").items():
-            if key not in constants.MSC_LOGIN_CACHE or constants.MSC_LOGIN_CACHE[key] != value:
-                constants.MSC_LOGIN_CACHE[key] = value
-        auth = constants.MSC_LOGIN_CACHE.get(self.mscolab_server_url, (None, None))
+        auth = get_auth_from_url_and_name(self.mscolab_server_url, config_loader(dataset="MSS_auth"))
 
         emailid = self.newEmailLe.text()
         password = self.newPasswordLe.text()
@@ -402,15 +370,18 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.set_status("Error", error_msg)
 
     def save_auth_credentials_to_config_file(self):
-        msc_login_data = config_loader(dataset="MSC_login")
-        msc_login_data[self.mscolab_server_url] = (
-            self.settings["auth"][self.mscolab_server_url][0],
-            self.settings["auth"][self.mscolab_server_url][1]
-        )
+        http_auth_login_data = config_loader(dataset="MSS_auth")
+        auth_username = self.settings["auth"][self.mscolab_server_url][0]
+        auth_password = self.settings["auth"][self.mscolab_server_url][1]
+        http_auth_login_data[self.mscolab_server_url] = auth_username
+
         data_to_save_in_config_file = {
-            "MSC_login": msc_login_data
+            "default_MSCOLAB": [self.mscolab_server_url],
+            "MSS_auth": http_auth_login_data
         }
+
         modify_config_file(data_to_save_in_config_file)
+        save_password_to_keyring(self.mscolab_server_url, auth_username, auth_password)
 
     def newuser_server_auth(self):
         data, r, url = self.newuser_data
