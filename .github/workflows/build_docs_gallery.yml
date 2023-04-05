@@ -12,7 +12,6 @@ on:
 
 env:
   PAT: ${{ secrets.PAT }}
-  EVENT: ${{ inputs.event_name }}
 
 jobs:
   Test-MSS-docs:
@@ -23,7 +22,7 @@ jobs:
         shell: bash
 
     container:
-      image: openmss/testing-${{ inputs.branch_name }}
+      image: openmss/testing-develop
 
     steps:
     - name: Trust My Directory
