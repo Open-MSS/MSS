@@ -2,6 +2,10 @@ name: Build Gallery
 
 on: pull_request
 
+env:
+  PAT: ${{ secrets.PAT }}
+  EVENT: ${{ inputs.event_name }}
+
 jobs:
   Test-MSS-docs:
     runs-on: ubuntu-latest
