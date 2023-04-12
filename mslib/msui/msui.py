@@ -43,6 +43,7 @@ import shutil
 import sys
 import fs
 
+from packaging import version
 from mslib import __version__
 from mslib.utils.qt import ui_mainwindow as ui
 from mslib.utils.qt import ui_about_dialog as ui_ab
@@ -59,6 +60,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
+from mslib.utils.auth import get_auth_from_url_and_name
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -494,18 +496,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
             # initialize login cache from config file, but do not overwrite existing keys
-            for key, value in config_loader(dataset="WMS_login").items():
-                if key not in constants.WMS_LOGIN_CACHE:
-                    constants.WMS_LOGIN_CACHE[key] = value
-            username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
-
+            http_auth = config_loader(dataset="MSS_auth")
+            auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth, overwrite_login_cache=False)
             try:
                 request = requests.get(base_url, timeout=(2, 10))
                 if pdlg.wasCanceled():
                     break
 
                 wms = wms_control.MSUIWebMapService(request.url, version=None,
-                                                    username=username, password=password)
+                                                    username=auth_username, password=auth_password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)
             except Exception as ex:
@@ -1170,6 +1169,30 @@ def main():
     application.setApplicationDisplayName("MSUI")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSUIMainWindow()
+    if version.parse(__version__) >= version.parse('8.0.0') and version.parse(__version__) < version.parse('9.0.0'):
+        from mslib.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
+        from mslib.utils.migration.config_before_eight import config_loader as config_loader_before_eight
+        read_config_file_before_eight()
+        if config_loader_before_eight(dataset="WMS_login") or config_loader_before_eight(
+                dataset="MSC_login") or config_loader_before_eight(dataset="MSCOLAB_password"):
+
+            text = """We can update your msui_settings.json file \n
+We add the new attributes for the webserver authentication, see
+https://mss.readthedocs.io/en/stable/usage.html#mscolab-login-and-www-authentication \n
+When everything works remove the old attributes: \n
+WMS_login, MSC_login, MSCOLAB_password"""
+
+            ret = QtWidgets.QMessageBox.question(mainwindow, 'Update of msui_settings.json file',
+                                                 text,
+                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                 QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Yes:
+                from mslib.utils.migration.update_json_file_to_version_eight import JsonConversion
+                if version.parse(__version__) >= version.parse('8.0.0'):
+                    new_version = JsonConversion()
+                    new_version.change_parameters()
+        read_config_file()
+
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()

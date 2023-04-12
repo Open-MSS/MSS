@@ -79,7 +79,7 @@ except ImportError as ex:
         enable_basic_http_authentication = False
 
         # enable verification by Mail
-        USER_VERIFICATION = False
+        MAIL_ENABLED = False
 
         # mail settings
         # MAIL_SERVER = 'localhost'
