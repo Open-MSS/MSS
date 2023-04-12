@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_profile_dialog.ui'
+# Form implementation generated from reading ui file 'ui_mscolab_profile_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -13,9 +13,26 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_ProfileWindow(object):
     def setupUi(self, ProfileWindow):
         ProfileWindow.setObjectName("ProfileWindow")
-        ProfileWindow.resize(242, 146)
+        ProfileWindow.resize(361, 168)
         self.gridLayout = QtWidgets.QGridLayout(ProfileWindow)
         self.gridLayout.setObjectName("gridLayout")
+        self.gravatarVl = QtWidgets.QVBoxLayout()
+        self.gravatarVl.setObjectName("gravatarVl")
+        self.gravatarLabel = QtWidgets.QLabel(ProfileWindow)
+        self.gravatarLabel.setText("")
+        self.gravatarLabel.setPixmap(QtGui.QPixmap(":/gravatars/default-gravatars/default.png"))
+        self.gravatarLabel.setScaledContents(True)
+        self.gravatarLabel.setObjectName("gravatarLabel")
+        self.gravatarVl.addWidget(self.gravatarLabel, 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
+        self.gridLayout.addLayout(self.gravatarVl, 0, 2, 2, 1)
+        self.buttonBox = QtWidgets.QDialogButtonBox(ProfileWindow)
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
+        self.buttonBox.setObjectName("buttonBox")
+        self.gridLayout.addWidget(self.buttonBox, 2, 2, 1, 1, QtCore.Qt.AlignRight)
+        self.deleteAccountBtn = QtWidgets.QPushButton(ProfileWindow)
+        self.deleteAccountBtn.setAutoDefault(False)
+        self.deleteAccountBtn.setObjectName("deleteAccountBtn")
+        self.gridLayout.addWidget(self.deleteAccountBtn, 2, 0, 1, 1, QtCore.Qt.AlignLeft)
         self.infoGl = QtWidgets.QGridLayout()
         self.infoGl.setObjectName("infoGl")
         self.usernameLabel_2 = QtWidgets.QLabel(ProfileWindow)
@@ -49,23 +66,9 @@ class Ui_ProfileWindow(object):
         self.label_3.setObjectName("label_3")
         self.infoGl.addWidget(self.label_3, 2, 1, 1, 1, QtCore.Qt.AlignLeft)
         self.gridLayout.addLayout(self.infoGl, 0, 0, 1, 1)
-        self.gravatarVl = QtWidgets.QVBoxLayout()
-        self.gravatarVl.setObjectName("gravatarVl")
-        self.gravatarLabel = QtWidgets.QLabel(ProfileWindow)
-        self.gravatarLabel.setText("")
-        self.gravatarLabel.setPixmap(QtGui.QPixmap(":/gravatars/default-gravatars/default.png"))
-        self.gravatarLabel.setScaledContents(True)
-        self.gravatarLabel.setObjectName("gravatarLabel")
-        self.gravatarVl.addWidget(self.gravatarLabel, 0, QtCore.Qt.AlignHCenter|QtCore.Qt.AlignVCenter)
-        self.gridLayout.addLayout(self.gravatarVl, 0, 1, 2, 1)
-        self.buttonBox = QtWidgets.QDialogButtonBox(ProfileWindow)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Ok)
-        self.buttonBox.setObjectName("buttonBox")
-        self.gridLayout.addWidget(self.buttonBox, 2, 1, 1, 1, QtCore.Qt.AlignRight)
-        self.deleteAccountBtn = QtWidgets.QPushButton(ProfileWindow)
-        self.deleteAccountBtn.setAutoDefault(False)
-        self.deleteAccountBtn.setObjectName("deleteAccountBtn")
-        self.gridLayout.addWidget(self.deleteAccountBtn, 2, 0, 1, 1, QtCore.Qt.AlignLeft)
+        self.pushButton = QtWidgets.QPushButton(ProfileWindow)
+        self.pushButton.setObjectName("pushButton")
+        self.gridLayout.addWidget(self.pushButton, 2, 1, 1, 1)
 
         self.retranslateUi(ProfileWindow)
         QtCore.QMetaObject.connectSlotsByName(ProfileWindow)
@@ -73,12 +76,21 @@ class Ui_ProfileWindow(object):
     def retranslateUi(self, ProfileWindow):
         _translate = QtCore.QCoreApplication.translate
         ProfileWindow.setWindowTitle(_translate("ProfileWindow", "MSColab Profile"))
+        self.deleteAccountBtn.setText(_translate("ProfileWindow", "Delete Account"))
         self.mscolabURLLabel.setText(_translate("ProfileWindow", "Mscolab"))
         self.emailLabel.setText(_translate("ProfileWindow", "Email"))
         self.usernameLabel.setText(_translate("ProfileWindow", "Name"))
         self.label.setText(_translate("ProfileWindow", ":"))
         self.label_2.setText(_translate("ProfileWindow", ":"))
         self.label_3.setText(_translate("ProfileWindow", ":"))
-        self.deleteAccountBtn.setText(_translate("ProfileWindow", "Delete Account"))
+        self.pushButton.setText(_translate("ProfileWindow", "Upload Image"))
 
 from . import resources_rc
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    ProfileWindow = QtWidgets.QDialog()
+    ui = Ui_ProfileWindow()
+    ui.setupUi(ProfileWindow)
+    ProfileWindow.show()
+    sys.exit(app.exec_())

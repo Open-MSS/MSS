@@ -726,6 +726,7 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
+        self.profile_dialog.pushButton.clicked.connect(self.browsefiles)
 
         # add context menu for right click on image
         self.gravatar_menu = QtWidgets.QMenu()
@@ -736,6 +737,18 @@ class MSUIMscolab(QtCore.QObject):
 
         self.prof_diag.show()
         self.fetch_gravatar()
+
+    def browsefiles(self):
+        # fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', '', 'All Files (*)')
+        fname = QtWidgets.QFileDialog.getOpenFileName(self.parent(), 'Open file', '', 'All Files (*);; PNG Files (*.png);; Jpg Files (*.jpg)')
+        self.pixmap = QtGui.QPixmap(fname[0])
+        self.profile_dialog.gravatarLabel.setPixmap(self.pixmap)
+        
+        # self.profile_uploaded = True
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(self.pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ui.userOptionsTb.setIcon(icon)
 
     def delete_account(self):
         if verify_user_token(self.mscolab_server_url, self.token):

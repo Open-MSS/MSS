@@ -6,14 +6,48 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>242</width>
-    <height>146</height>
+    <width>361</width>
+    <height>168</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MSColab Profile</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
+   <item row="0" column="2" rowspan="2">
+    <layout class="QVBoxLayout" name="gravatarVl">
+     <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+      <widget class="QLabel" name="gravatarLabel">
+       <property name="text">
+        <string/>
+       </property>
+       <property name="pixmap">
+        <pixmap resource="../resources/resources.qrc">:/gravatars/default-gravatars/default.png</pixmap>
+       </property>
+       <property name="scaledContents">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="2" alignment="Qt::AlignRight">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" alignment="Qt::AlignLeft">
+    <widget class="QPushButton" name="deleteAccountBtn">
+     <property name="text">
+      <string>Delete Account</string>
+     </property>
+     <property name="autoDefault">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
    <item row="0" column="0">
     <layout class="QGridLayout" name="infoGl">
      <item row="0" column="2">
@@ -81,37 +115,10 @@
      </item>
     </layout>
    </item>
-   <item row="0" column="1" rowspan="2">
-    <layout class="QVBoxLayout" name="gravatarVl">
-     <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
-      <widget class="QLabel" name="gravatarLabel">
-       <property name="text">
-        <string/>
-       </property>
-       <property name="pixmap">
-        <pixmap resource="../resources/resources.qrc">:/gravatars/default-gravatars/default.png</pixmap>
-       </property>
-       <property name="scaledContents">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
-   <item row="2" column="1" alignment="Qt::AlignRight">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Ok</set>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0" alignment="Qt::AlignLeft">
-    <widget class="QPushButton" name="deleteAccountBtn">
+   <item row="2" column="1">
+    <widget class="QPushButton" name="pushButton">
      <property name="text">
-      <string>Delete Account</string>
-     </property>
-     <property name="autoDefault">
-      <bool>false</bool>
+      <string>Upload Image</string>
      </property>
     </widget>
    </item>
