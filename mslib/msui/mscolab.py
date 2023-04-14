@@ -517,6 +517,8 @@ class MSUIMscolab(QtCore.QObject):
         # Gravatar image path
         self.gravatar = None
 
+        self.uploaded_profile = False
+
         # set data dir, uri
         if data_dir is None:
             self.data_dir = config_loader(dataset="mss_dir")
@@ -634,6 +636,7 @@ class MSUIMscolab(QtCore.QObject):
 
         # refresh is used to fetch new gravatar associated with the email
         if refresh or email_in_config:
+            self.uploaded_profile = False
             # create directory to store cached gravatar images
             if not config_fs.exists("gravatars"):
                 try:
@@ -667,14 +670,29 @@ class MSUIMscolab(QtCore.QObject):
                 return
 
         if refresh and not email_in_config:
-            show_popup(
-                self.prof_diag,
-                "Information",
-                "Please add your email to the gravatar_ids section in your "
-                "msui_settings.json to automatically fetch your gravatar",
-                icon=1, )
+            update_messagebox = QtWidgets.QMessageBox.question(
+                            None, "Information",
+                            "Please add your email to the gravatar_ids section in your "
+                            "msui_settings.json to automatically fetch your gravatar",
+                            QtWidgets.QMessageBox.Open | QtWidgets.QMessageBox.Ok)
+            if update_messagebox == QtWidgets.QMessageBox.Open:
+                config_location = constants.MSUI_CONFIG_PATH
+                path = os.path.join(config_location, "msui_settings.json")
+                if os.name == "nt":
+                    os.startfile(path)
+                elif os.name == "posix":
+                    os.system(f"xdg-open {path}")
 
-        self.set_gravatar(gravatar_img_path)
+        if not self.uploaded_profile:
+            self.uploaded_profile = False
+            self.set_gravatar(gravatar_img_path)
+        else:
+            if self.fname[0]:
+                self.uploaded_profile = True
+                self.pixmap = QtGui.QPixmap()
+                self.pixmap.loadFromData(self.fname[0].encode())
+                self.profile_dialog.gravatarLabel.setPixmap(self.pixmap)
+                self.profile_dialog.gravatarLabel.setFixedSize(100, 100)
 
     def set_gravatar(self, gravatar=None):
         self.gravatar = gravatar
@@ -697,7 +715,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.userOptionsTb.setIcon(icon)
 
         # set icon for profile window
-        if self.prof_diag is not None:
+        if (self.prof_diag is not None) and (not self.uploaded_profile):
             self.profile_dialog.gravatarLabel.setPixmap(pixmap)
 
     def remove_gravatar(self):
@@ -710,13 +728,20 @@ class MSUIMscolab(QtCore.QObject):
             if fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
                 fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
                 if self.email in config_loader(dataset="gravatar_ids"):
-                    show_popup(
-                        self.prof_diag,
-                        "Information",
-                        "Please remove your email from gravatar_ids section in your "
-                        "msui_settings.json to not fetch gravatar automatically",
-                        icon=1, )
+                    delete_messagebox = QtWidgets.QMessageBox.question(
+                            None, "Information",
+                            "Please remove your email from gravatar_ids section in your "
+                            "msui_settings.json to not fetch gravatar automatically",
+                            QtWidgets.QMessageBox.Open | QtWidgets.QMessageBox.Cancel)
+                    if delete_messagebox == QtWidgets.QMessageBox.Open:
+                        config_location = constants.MSUI_CONFIG_PATH
+                        path = os.path.join(config_location, "msui_settings.json")
+                        if os.name == "nt":
+                            os.startfile(path)
+                        elif os.name == "posix":
+                            os.system(f"xdg-open {path}")
 
+        self.uploaded_profile = False
         self.set_gravatar()
 
     def open_profile_window(self):
@@ -744,16 +769,16 @@ class MSUIMscolab(QtCore.QObject):
         self.fetch_gravatar()
 
     def browsefiles(self):
-        # fname = QtWidgets.QFileDialog.getOpenFileName(self, 'Open file', '', 'All Files (*)')
-        fname = QtWidgets.QFileDialog.getOpenFileName(self.parent(), 'Open file', '', 'All Files (*);; PNG Files (*.png);; Jpg Files (*.jpg)')
-        self.pixmap = QtGui.QPixmap(fname[0])
-        self.profile_dialog.gravatarLabel.setPixmap(self.pixmap)
-        
-        # self.profile_uploaded = True
+        self.fname = QtWidgets.QFileDialog.getOpenFileName(self.parent(), 'Open file', '', 'All Files (*);; PNG Files (*.png);; Jpg Files (*.jpg)')
+        if self.fname[0]:
+            self.uploaded_profile = True
+            self.pixmap = QtGui.QPixmap(self.fname[0])
+            self.profile_dialog.gravatarLabel.setPixmap(self.pixmap)
+            self.profile_dialog.gravatarLabel.setFixedSize(100, 100)
 
-        icon = QtGui.QIcon()
-        icon.addPixmap(self.pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.ui.userOptionsTb.setIcon(icon)
+            icon = QtGui.QIcon()
+            icon.addPixmap(self.pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.ui.userOptionsTb.setIcon(icon)
 
     def delete_account(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -1866,6 +1891,7 @@ class MSUIMscolab(QtCore.QObject):
                 fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
         # clear gravatar image path
         self.gravatar = None
+        self.uploaded_profile = False
         # clear user email
         self.email = None
 
