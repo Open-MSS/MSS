@@ -671,10 +671,10 @@ class MSUIMscolab(QtCore.QObject):
 
         if refresh and not email_in_config:
             update_messagebox = QtWidgets.QMessageBox.question(
-                            None, "Information",
-                            "Please add your email to the gravatar_ids section in your "
-                            "msui_settings.json to automatically fetch your gravatar",
-                            QtWidgets.QMessageBox.Open | QtWidgets.QMessageBox.Ok)
+                None, "Information",
+                "Please add your email to the gravatar_ids section in your "
+                "msui_settings.json to automatically fetch your gravatar",
+                QtWidgets.QMessageBox.Open | QtWidgets.QMessageBox.Ok)
             if update_messagebox == QtWidgets.QMessageBox.Open:
                 config_location = constants.MSUI_CONFIG_PATH
                 path = os.path.join(config_location, "msui_settings.json")
@@ -729,10 +729,10 @@ class MSUIMscolab(QtCore.QObject):
                 fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
                 if self.email in config_loader(dataset="gravatar_ids"):
                     delete_messagebox = QtWidgets.QMessageBox.question(
-                            None, "Information",
-                            "Please remove your email from gravatar_ids section in your "
-                            "msui_settings.json to not fetch gravatar automatically",
-                            QtWidgets.QMessageBox.Open | QtWidgets.QMessageBox.Cancel)
+                        None, "Information",
+                        "Please remove your email from gravatar_ids section in your "
+                        "msui_settings.json to not fetch gravatar automatically",
+                        QtWidgets.QMessageBox.Open | QtWidgets.QMessageBox.Cancel)
                     if delete_messagebox == QtWidgets.QMessageBox.Open:
                         config_location = constants.MSUI_CONFIG_PATH
                         path = os.path.join(config_location, "msui_settings.json")
@@ -769,7 +769,8 @@ class MSUIMscolab(QtCore.QObject):
         self.fetch_gravatar()
 
     def browsefiles(self):
-        self.fname = QtWidgets.QFileDialog.getOpenFileName(self.parent(), 'Open file', '', 'All Files (*);; PNG Files (*.png);; Jpg Files (*.jpg)')
+        self.fname = QtWidgets.QFileDialog.getOpenFileName(self.parent(), 'Open file', '',
+                                                           'All Files (*);; PNG Files (*.png);; Jpg Files (*.jpg)')
         if self.fname[0]:
             self.uploaded_profile = True
             self.pixmap = QtGui.QPixmap(self.fname[0])
