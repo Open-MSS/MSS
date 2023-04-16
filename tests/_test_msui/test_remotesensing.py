@@ -346,4 +346,3 @@ class Test_RemoteSensingControlWidget(object):
         view_rating = calc_view_rating(obs_azi=76.50369446610219, obs_ele=-1.0, sol_azi=236.15310358444265,
                                        sol_ele=66.92788781559761, height=height, difftype=difftype)
         assert view_rating == 173.49965929339362
-        
