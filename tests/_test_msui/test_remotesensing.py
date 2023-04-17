@@ -32,8 +32,8 @@ import sys
 from mock import Mock
 from matplotlib.collections import LineCollection
 from PyQt5 import QtWidgets
-from mslib.msui import mpl_qtwidget as qt
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
+from mslib.msui import mpl_qtwidget as qt
 import skyfield_data
 
 
