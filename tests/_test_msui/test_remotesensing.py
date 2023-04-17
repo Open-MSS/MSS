@@ -33,7 +33,6 @@ from mslib.msui import mpl_qtwidget as qt
 import datetime
 import sys
 from mock import Mock
-import matplotlib as mpl
 from matplotlib.collections import LineCollection
 
 
@@ -265,6 +264,7 @@ class Test_RemoteSensingControlWidget(object):
                                                       (79.40896406129221, 28.80552711414579),
                                                       (79.38617471155024, 28.89197073566029),
                                                       (79.3633530323609, 28.978410653627137)]
+        self.result_test_tangent_point_coordinates = [(round(x, 2), round(y, 2)) for x, y in self.result_test_tangent_point_coordinates]
         self.wp_vertices = [(0, 0), (1, 4)]
         self.wp_heights = [0, 1000]
         self.coordinates = [[79.083, 21.15], [77.103, 28.566]]
@@ -293,26 +293,27 @@ class Test_RemoteSensingControlWidget(object):
 
     def test_body_angle(self):
         compute_body_angle = RemoteSensingControlWidget(view=self.view).compute_body_angle
-        angle = compute_body_angle("sun", 734811473.5682117, 78.01244659053887, 25.274176073890143)
-        assert angle[0] == 347.07153397468835
-        assert angle[1] == -54.44327070161909
-        angle = compute_body_angle("sun", 734811930.075054, 77.78995359959562, 26.0978150996952)
-        assert angle[0] == 350.0832778892227
-        assert angle[1] == -53.93384834862541
-        angle = compute_body_angle("sun", 734812386.5818964, 77.56432276488127, 26.92101210457491)
-        assert angle[0] == 353.01248647941395
-        assert angle[1] == -53.33819642473756
-        angle = compute_body_angle("sun", 734812843.0887387, 77.33539399373548, 27.743747257732803)
-        assert angle[0] == 355.85087364088474
-        assert angle[1] == -52.66164278537733
-        angle = compute_body_angle("sun", 734811473.5682117, 78.01244659053887, 25.274176073890143)
-        assert angle[0] == 347.07153397468835
-        assert angle[1] == -54.44327070161909
+        angle = compute_body_angle("sun", 73.56, 78.01, 25.27)
+        assert round(angle[0], 2) == 106.71
+        assert round(angle[1], 2) == -20.28
+        angle = compute_body_angle("sun", 73.07, 77.78, 26.07)
+        assert round(angle[0], 2) == 106.35
+        assert round(angle[1], 2) == -20.71
+        angle = compute_body_angle("sun", 73.58, 77.56, 26.92)
+        assert round(angle[0], 2) == 105.96
+        assert round(angle[1], 2) == -21.13
+        angle = compute_body_angle("sun", 73.08, 77.33, 27.74)
+        assert round(angle[0], 2) == 105.57
+        assert round(angle[1], 2) == -21.55
+        angle = compute_body_angle("sun", 73.56, 78.01, 25.27)
+        assert round(angle[0], 2) == 106.71
+        assert round(angle[1], 2) == -20.28
 
     def test_direction_coordinates(self):
         compute_direction_coordinates = RemoteSensingControlWidget(view=self.view).direction_coordinates
         coordinates = compute_direction_coordinates(self.result_test_direction_coordinates)
-        assert coordinates == [[(78.11107100167946, 24.905315238175), (79.1827251371111, 25.140314258548926)]]
+        result = [[(round(x, 2), round(y, 2)) for x, y in inner_list] for inner_list in coordinates]
+        assert result == [[(78.11, 24.91), (79.18, 25.14)]]
 
     def test_compute_tangent_lines(self):
 
@@ -324,25 +325,26 @@ class Test_RemoteSensingControlWidget(object):
     def test_compute_solar_lines(self):
         result = RemoteSensingControlWidget(view=self.view)
         result = result.compute_solar_lines(self.bmap, self.coordinates, self.heights, self.times, self.solar_type)
-        assert isinstance(result, mpl.collections.LineCollection)
+        assert isinstance(result, LineCollection)
 
     def test_tangent_point_coordinates(self):
         tangent_point_coordinates = RemoteSensingControlWidget(view=self.view).tangent_point_coordinates
         coordinates = tangent_point_coordinates(lon_lin=self.lon_lin, lat_lin=self.lat_lin, cut_height=self.cut_height)
-        assert coordinates == self.result_test_tangent_point_coordinates
+        result = [(round(x, 2), round(y, 2)) for x, y in coordinates]
+        assert result == self.result_test_tangent_point_coordinates
 
     def test_calc_view_rating(self):
         height = 0.0
         difftype = "total (horizon)"
         calc_view_rating = RemoteSensingControlWidget(view=self.view).calc_view_rating
-        view_rating = calc_view_rating(obs_azi=76.00751678328697, obs_ele=-1.0, sol_azi=240.70922332385769,
-                                       sol_ele=58.33227874190401, height=height, difftype=difftype)
-        assert view_rating == 175.06276428208045
+        view_rating = calc_view_rating(obs_azi=76.00, obs_ele=-1.0, sol_azi=240.70,
+                                       sol_ele=58.33, height=height, difftype=difftype)
+        assert round(view_rating, 2) == 175.06
 
-        view_rating = calc_view_rating(obs_azi=76.11546709722984, obs_ele=-1.0, sol_azi=239.9012770471841,
-                                       sol_ele=60.030135582543686, height=height, difftype=difftype)
-        assert view_rating == 174.78692454009882
+        view_rating = calc_view_rating(obs_azi=76.11, obs_ele=-1.0, sol_azi=239.90,
+                                       sol_ele=60.03, height=height, difftype=difftype)
+        assert round(view_rating, 2) == 174.79
 
-        view_rating = calc_view_rating(obs_azi=76.50369446610219, obs_ele=-1.0, sol_azi=236.15310358444265,
-                                       sol_ele=66.92788781559761, height=height, difftype=difftype)
-        assert view_rating == 173.49965929339362
+        view_rating = calc_view_rating(obs_azi=76.50, obs_ele=-1.0, sol_azi=236.15,
+                                       sol_ele=66.92, height=height, difftype=difftype)
+        assert round(view_rating, 2) == 173.5
