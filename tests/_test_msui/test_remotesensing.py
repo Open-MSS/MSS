@@ -35,7 +35,6 @@ import sys
 from mock import Mock
 import matplotlib as mpl
 from matplotlib.collections import LineCollection
-app = QtWidgets.QApplication(sys.argv)
 
 
 def test_skyfield_data_expiration(recwarn):
@@ -48,6 +47,7 @@ class Test_RemoteSensingControlWidget(object):
     Tests about RemoteSensingControlWidget
     """
     def setup_method(self):
+        self.application = QtWidgets.QApplication(sys.argv)
         self.view = Mock()
         self.map = qt.TopViewPlotter()
         self.map.init_map()
