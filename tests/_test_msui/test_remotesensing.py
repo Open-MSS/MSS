@@ -32,7 +32,7 @@ from PyQt5 import QtWidgets
 from mslib.msui import mpl_qtwidget as qt
 import datetime
 import sys
-from unittest.mock import Mock
+from mock import Mock
 import matplotlib as mpl
 from matplotlib.collections import LineCollection
 app = QtWidgets.QApplication(sys.argv)
