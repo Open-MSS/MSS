@@ -9,7 +9,6 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Reimar Bauer, Joern Ungermann
-    :copyright: Copyright 2023 rootxrishabh
     :copyright: Copyright 2017-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
@@ -26,14 +25,16 @@
     limitations under the License.
 """
 
-from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
-import skyfield_data
-from PyQt5 import QtWidgets
-from mslib.msui import mpl_qtwidget as qt
+
 import datetime
 import sys
+
 from mock import Mock
 from matplotlib.collections import LineCollection
+from PyQt5 import QtWidgets
+from mslib.msui import mpl_qtwidget as qt
+from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
+import skyfield_data
 
 
 def test_skyfield_data_expiration(recwarn):
@@ -264,7 +265,8 @@ class Test_RemoteSensingControlWidget(object):
                                                       (79.40896406129221, 28.80552711414579),
                                                       (79.38617471155024, 28.89197073566029),
                                                       (79.3633530323609, 28.978410653627137)]
-        self.result_test_tangent_point_coordinates = [(round(x, 2), round(y, 2)) for x, y in self.result_test_tangent_point_coordinates]
+        self.result_test_tangent_point_coordinates = [(round(x, 2), round(y, 2)) for x, y in
+                                                      self.result_test_tangent_point_coordinates]
         self.wp_vertices = [(0, 0), (1, 4)]
         self.wp_heights = [0, 1000]
         self.coordinates = [[79.083, 21.15], [77.103, 28.566]]
