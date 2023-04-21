@@ -29,7 +29,6 @@ import skyfield_data
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
 
 
-
 def test_skyfield_data_expiration(recwarn):
     pytest.skip("Skip until Version 5.0 is published on conda-forge. Version 4.0 is known as expired.")
     skyfield_data.check_expirations()
