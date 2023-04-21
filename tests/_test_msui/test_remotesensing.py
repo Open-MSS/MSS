@@ -44,6 +44,8 @@ def test_skyfield_data_expiration(recwarn):
     assert len(recwarn) == 0, [_x.message for _x in recwarn]
 
 
+class Test_RemoteSensingControlWidget(object):
+    """
     Tests about RemoteSensingControlWidget
     """
     def setup_method(self):
@@ -52,8 +54,6 @@ def test_skyfield_data_expiration(recwarn):
         self.map = qt.TopViewPlotter()
         self.map.init_map()
         self.bmap = self.map.map
-class Test_RemoteSensingControlWidget(object):
-    """
         self.result_test_direction_coordinates = [([79.08, 79.06, 79.03, 79.01,
                                                     78.99, 78.97, 78.95,
                                                     78.93, 78.9, 78.88,
