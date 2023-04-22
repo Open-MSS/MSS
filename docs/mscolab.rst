@@ -75,13 +75,13 @@ Further options can be listed by `mscolab db -h`
 
 
 user verification by email
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..........................
 
-With setting of `USER_VERIFICATION = True` you have to set further options in the mscolab_settings.py. These are
+With setting of `MAIL_ENABLED = True` you have to set further options in the mscolab_settings.py. These are
 parameters of `flask-mail` ::
 
         # enable verification by Mail
-        USER_VERIFICATION = True
+        MAIL_ENABLED = True
 
         # mail settings
         MAIL_SERVER = 'localhost'
@@ -98,9 +98,11 @@ parameters of `flask-mail` ::
 
 A new user gets an email with an url including a token to become verified on the mscolab server. After the verification
 she can login.
+If an existing user does not remember the password, she can reset the password by sending an email to the user's email 
+address and using the token that the system sent along with the email.
 
 Instructions to use mscolab wsgi
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+................................
 
 make a file called :code:`server.py`
 and install ::
@@ -127,7 +129,7 @@ If you want to use nginx to proxy this gunicorn server have a look on the exampl
   https://github.com/benoitc/gunicorn/pull/2581#issuecomment-1154008037
 
 Data Base Migration
-~~~~~~~~~~~~~~~~~~~
+...................
 
 We did changed the database scheme for 6.0. This is described by the `flask-migrate` script ::
 

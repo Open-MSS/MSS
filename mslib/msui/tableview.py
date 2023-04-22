@@ -213,7 +213,8 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
             return QtWidgets.QMessageBox.question(
                 None, "Remove waypoint", text,
-                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No) == QtWidgets.QMessageBox.Yes
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
 
     def removeWayPoint(self):
         """

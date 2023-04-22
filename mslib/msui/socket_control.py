@@ -59,7 +59,7 @@ class ConnectionManager(QtCore.QObject):
         logging.debug("Transport Layer: %s", self.sio.transport())
 
         self.sio.on('file-changed', handler=self.handle_file_change)
-        # on chat message recive
+        # on chat message receive
         self.sio.on('chat-message-client', handler=self.handle_incoming_message)
         self.sio.on('chat-message-reply-client', handler=self.handle_incoming_message_reply)
         # on message edit

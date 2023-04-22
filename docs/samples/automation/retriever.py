@@ -165,7 +165,7 @@ def main():
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
             bbox = params['basemap']
             req = requests.get(
-                url, auth=tuple(config["WMS_login"][url]),
+                url, auth=tuple(config["MSS_auth"][url]),
                 params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
                         "exceptions": "XML",
                         "crs": config["predefined_map_sections"][section]["CRS"],
@@ -248,7 +248,7 @@ def main():
             ax_bounds = plt.gca().bbox.bounds
             width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
             req = requests.get(
-                url, auth=tuple(config["WMS_login"][url]),
+                url, auth=tuple(config["MSS_auth"][url]),
                 params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
                         "exceptions": "XML",
                         "crs": "VERT:LOGP", "layers": layer, "styles": style,

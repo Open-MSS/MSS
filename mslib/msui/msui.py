@@ -43,6 +43,7 @@ import shutil
 import sys
 import fs
 
+from packaging import version
 from mslib import __version__
 from mslib.utils.qt import ui_mainwindow as ui
 from mslib.utils.qt import ui_about_dialog as ui_ab
@@ -57,8 +58,9 @@ from mslib.msui.updater import UpdaterUI
 from mslib.utils import setup_logging
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.utils.qt import get_open_filename, get_save_filename, Worker, Updater
+from mslib.utils.qt import get_open_filenames, get_save_filename, Worker, Updater
 from mslib.utils.config import read_config_file, config_loader
+from mslib.utils.auth import get_auth_from_url_and_name
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -140,6 +142,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
     Dialog showing shortcuts for all currently open windows
     """
+
     def __init__(self):
         super(MSUI_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
@@ -159,6 +162,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                                                         self.label.setVisible(i),
                                                         self.label_2.setVisible(i),
                                                         self.line.setVisible(i)))
+        self.cbHighlight.stateChanged.connect(self.filter_shortcuts)
         self.cbDisplayType.currentTextChanged.connect(self.fill_list)
         self.cbAdvanced.stateChanged.emit(self.cbAdvanced.checkState())
         self.oldReject = self.reject
@@ -255,8 +259,8 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                  action.toolTip(), action.text().replace("&&", "%%").replace("&", "").replace("%%", "&"),
                  action.objectName(),
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
-                for action in qobject.findChildren(QtWidgets.QAction) if len(action.shortcuts()) > 0 or
-                self.cbNoShortcut.checkState()])
+                for action in qobject.findChildren(
+                    QtWidgets.QAction) if len(action.shortcuts()) > 0 or self.cbNoShortcut.checkState()])
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
                              shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
@@ -280,7 +284,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
             if not any(action for action in actions if action[3] == "actionShortcuts"):
                 actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
-                               "Show Current Shortcuts", "Alt+S", None))
+                                "Show Current Shortcuts", "Alt+S", None))
             if not any(action for action in actions if action[3] == "actionSearch"):
                 actions.append((qobject.window(), "Search for interactive text in the UI",
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
@@ -293,10 +297,18 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
 
         return shortcuts
 
-    def filter_shortcuts(self, text):
+    def filter_shortcuts(self, text="Nothing", rerun=True):
         """
         Hides all shortcuts not containing the text
         """
+        text = self.leShortcutFilter.text()
+        self.reset_highlight()
+
+        window_count = 0
+        for window in self.treeWidget.findItems("", QtCore.Qt.MatchContains):
+            if not window.isHidden():
+                window_count += 1
+
         for window in self.treeWidget.findItems("", QtCore.Qt.MatchContains):
             wms_hits = 0
 
@@ -307,12 +319,22 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                     wms_hits += 1
                 else:
                     widget.setHidden(True)
+
+            if wms_hits == 1 and (self.cbHighlight.isChecked() or window_count == 1):
+                for child_index in range(window.childCount()):
+                    widget = window.child(child_index)
+                    if (not widget.isHidden()) and hasattr(widget.source_object, "setStyleSheet"):
+                        widget.source_object.setStyleSheet("background-color: yellow;")
+                        break
+
             if wms_hits == 0 and len(text) > 0:
                 window.setHidden(True)
             else:
                 window.setHidden(False)
 
         self.filterRemoveAction.setVisible(len(text) > 0)
+        if rerun:
+            self.filter_shortcuts(text, False)
 
 
 class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
@@ -340,6 +362,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     """
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
+    signal_activate_flighttrack = QtCore.Signal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
+    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
+    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
+    signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
+    signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
+    signal_listFlighttrack_doubleClicked = QtCore.Signal()
+    signal_permission_revoked = QtCore.Signal(int)
+    signal_render_new_permission = QtCore.Signal(int, str)
 
     def __init__(self, mscolab_data_dir=None, *args):
         super(MSUIMainWindow, self).__init__(*args)
@@ -432,11 +463,22 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
+        self.mscolab.signal_activate_operation.connect(self.activate_operation_slot)
+        self.mscolab.signal_operation_added.connect(self.add_operation_slot)
+        self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
+        self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
+        self.mscolab.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
+        self.mscolab.signal_listFlighttrack_doubleClicked.connect(
+            lambda: self.signal_listFlighttrack_doubleClicked.emit())
+        self.mscolab.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
+        self.mscolab.signal_render_new_permission.connect(
+            lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
 
         # Don't start the updater during a test run of msui
         if "pytest" not in sys.modules:
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
+        self.openOperationsGb.hide()
 
     @staticmethod
     def preload_wms(urls):
@@ -454,18 +496,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             pdlg.setValue(i)
             QtWidgets.QApplication.processEvents()
             # initialize login cache from config file, but do not overwrite existing keys
-            for key, value in config_loader(dataset="WMS_login").items():
-                if key not in constants.WMS_LOGIN_CACHE:
-                    constants.WMS_LOGIN_CACHE[key] = value
-            username, password = constants.WMS_LOGIN_CACHE.get(base_url, (None, None))
-
+            http_auth = config_loader(dataset="MSS_auth")
+            auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth, overwrite_login_cache=False)
             try:
-                request = requests.get(base_url)
+                request = requests.get(base_url, timeout=(2, 10))
                 if pdlg.wasCanceled():
                     break
 
                 wms = wms_control.MSUIWebMapService(request.url, version=None,
-                                                    username=username, password=password)
+                                                    username=auth_username, password=auth_password)
                 wms_control.WMS_SERVICE_CACHE[wms.url] = wms
                 logging.info("Stored WMS info for '%s'", wms.url)
             except Exception as ex:
@@ -496,6 +535,18 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.export_plugins = {}
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
+
+    @QtCore.Slot(int)
+    def activate_operation_slot(self, active_op_id):
+        self.signal_activate_operation.emit(active_op_id)
+
+    @QtCore.Slot(int, str)
+    def add_operation_slot(self, op_id, path):
+        self.signal_operation_added.emit(op_id, path)
+
+    @QtCore.Slot(int)
+    def remove_operation_slot(self, op_id):
+        self.signal_operation_removed.emit(op_id)
 
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
         if plugin_type == "Import":
@@ -591,17 +642,22 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.export_plugins = {}
 
     def handle_import_local(self, extension, function, pickertype):
-        filename = get_open_filename(
+        filenames = get_open_filenames(
             self, "Import Flight Track",
             self.last_save_directory,
             f"Flight Track (*.{extension});;All files (*.*)",
             pickertype=pickertype)
         if self.local_active:
-            if filename is not None:
-                self.last_save_directory = fs.path.dirname(filename)
-                self.create_new_flight_track(filename=filename, function=function)
+            if filenames is not None:
+                activate = True
+                if len(filenames) > 1:
+                    activate = False
+                for name in filenames:
+                    self.create_new_flight_track(filename=name, function=function, activate=activate)
+                self.last_save_directory = fs.path.dirname(name)
         else:
-            self.mscolab.handle_import_msc(filename, extension, function, pickertype)
+            for name in filenames:
+                self.mscolab.handle_import_msc(name, extension, function, pickertype)
 
     def handle_export_local(self, extension, function, pickertype):
         if self.local_active:
@@ -631,7 +687,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             self.mscolab.handle_export_msc(extension, function, pickertype)
 
-    def create_new_flight_track(self, template=None, filename=None, function=None):
+    def create_new_flight_track(self, template=None, filename=None, function=None, activate=True):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
            flight track' menu entries.
@@ -680,11 +736,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                         waypoints_model.name += " - imported from file"
                         break
         else:
-            # Create a new flight track from the waypoints template.
+            # Create a new flight track from the waypoints' template.
             self.new_flight_track_counter += 1
             waypoints_model = ft.WaypointsTableModel(
                 name=f"new flight track ({self.new_flight_track_counter:d})")
-            # Make a copy of the template. Otherwise all new flight tracks would
+            # Make a copy of the template. Otherwise, all new flight tracks would
             # use the same data structure in memory.
             template_copy = copy.deepcopy(template)
             waypoints_model.insertRows(0, rows=len(template_copy), waypoints=template_copy)
@@ -695,7 +751,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
 
             # Activate new item
-            self.activate_flight_track(listitem)
+            if activate:
+                self.activate_flight_track(listitem)
 
     def activate_flight_track(self, item):
         """Set the currently selected flight track to be the active one, i.e.
@@ -712,6 +769,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         font.setBold(True)
         item.setFont(font)
         self.menu_handler()
+        self.signal_activate_flighttrack.emit(self.active_flight_track)
 
     def update_active_flight_track(self, old_flight_track_name=None):
         for i in range(self.listViews.count()):
@@ -721,7 +779,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_item.window.enable_navbar_action_buttons()
             if old_flight_track_name is not None:
                 view_item.window.setWindowTitle(view_item.window.windowTitle().replace(old_flight_track_name,
-                                                self.active_flight_track.name))
+                                                                                       self.active_flight_track.name))
 
     def activate_selected_flight_track(self):
         item = self.listFlightTracks.currentItem()
@@ -742,20 +800,26 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if filename:
             self.save_flight_track(filename)
         else:
-            self.save_as_handler()
+            self.save_as()
 
     def save_as_handler(self):
-        """Slot for the 'Save Active Flight Track As' menu entry.
+        self.save_as()
+
+    def save_as(self):
+        """
+        Slot for the 'Save Active Flight Track As' menu entry.
         """
         default_filename = os.path.join(self.last_save_directory, self.active_flight_track.name + ".ftml")
         file_type = ["Flight track (*.ftml)"]
+        filepicker_default = config_loader(dataset="filepicker_default")
         filename = get_save_filename(
-            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertag="filepicker_default"
+            self, "Save Flight Track", default_filename, ";;".join(file_type), pickertype=filepicker_default
         )
         logging.debug("filename : '%s'", filename)
         if filename:
             ext = "ftml"
             self.save_flight_track(filename)
+            self.last_save_directory = fs.path.dirname(filename)
             self.active_flight_track.filename = filename
             self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
 
@@ -816,7 +880,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(model=model)
+            view_window = topview.MSUITopViewWindow(parent=self, model=model,
+                                                    active_flighttrack=self.active_flight_track,
+                                                    mscolab_server_url=self.mscolab.mscolab_server_url,
+                                                    token=self.mscolab.token)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
@@ -933,7 +1000,18 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.shortcuts_dlg.reset_highlight()
         self.shortcuts_dlg.fill_list()
         self.shortcuts_dlg.show()
+
+        self.shortcuts_dlg.cbAdvanced.setHidden(True)
+        self.shortcuts_dlg.cbHighlight.setHidden(True)
+        self.shortcuts_dlg.cbAdvanced.setCheckState(0)
+        self.shortcuts_dlg.cbHighlight.setCheckState(0)
+        self.shortcuts_dlg.leShortcutFilter.setText("")
+        self.shortcuts_dlg.setWindowTitle("Shortcuts")
+
         if search_mode:
+            self.shortcuts_dlg.setWindowTitle("Search")
+            self.shortcuts_dlg.cbAdvanced.setHidden(False)
+            self.shortcuts_dlg.cbHighlight.setHidden(False)
             self.shortcuts_dlg.cbDisplayType.setCurrentIndex(1)
             self.shortcuts_dlg.leShortcutFilter.setText("")
             self.shortcuts_dlg.cbAdvanced.setCheckState(2)
@@ -1091,6 +1169,30 @@ def main():
     application.setApplicationDisplayName("MSUI")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSUIMainWindow()
+    if version.parse(__version__) >= version.parse('8.0.0') and version.parse(__version__) < version.parse('9.0.0'):
+        from mslib.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
+        from mslib.utils.migration.config_before_eight import config_loader as config_loader_before_eight
+        read_config_file_before_eight()
+        if config_loader_before_eight(dataset="WMS_login") or config_loader_before_eight(
+                dataset="MSC_login") or config_loader_before_eight(dataset="MSCOLAB_password"):
+
+            text = """We can update your msui_settings.json file \n
+We add the new attributes for the webserver authentication, see
+https://mss.readthedocs.io/en/stable/usage.html#mscolab-login-and-www-authentication \n
+When everything works remove the old attributes: \n
+WMS_login, MSC_login, MSCOLAB_password"""
+
+            ret = QtWidgets.QMessageBox.question(mainwindow, 'Update of msui_settings.json file',
+                                                 text,
+                                                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                                                 QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Yes:
+                from mslib.utils.migration.update_json_file_to_version_eight import JsonConversion
+                if version.parse(__version__) >= version.parse('8.0.0'):
+                    new_version = JsonConversion()
+                    new_version.change_parameters()
+        read_config_file()
+
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()

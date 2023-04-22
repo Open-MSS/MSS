@@ -39,7 +39,7 @@ def verify_user_token(mscolab_server_url, token):
         "token": token
     }
     try:
-        r = requests.get(f'{mscolab_server_url}/test_authorized', data=data)
+        r = requests.get(f'{mscolab_server_url}/test_authorized', data=data, timeout=(2, 10))
     except requests.exceptions.SSLError:
         logging.debug("Certificate Verification Failed")
         return False

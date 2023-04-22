@@ -3,21 +3,16 @@
 
 The Mission Support System (MSS) is a software that is written by
 scientists in the field of atmospheric science. The purpose is to have a
-tool that simplifies the process for planning a scientific flight.
+software that simplifies the process for planning a scientific flight.
+
+# Drawing waypoints in the MSUI Topview
+The example shows defining of waypoints for a flight path, moved and deleted.
+
+![Waypoint Tutorial](https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif)
 
 
-Some videos about the Mission Support System Collaboration Platform
-
-## MSCOLAB
-
-This video shows the new interface for collaboration we introduced with 2.0. 
-You can use it for simulataneously editing of flight pathes. 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/eDBnULXvo7M?rel=0" frameborder="0" allowfullscreen></iframe>
+Further tutorials about the Mission Support System Software on:
+https://mss.readthedocs.io/en/stable/tutorial.html
 
 
-## KML Docking Widget
-
-
-This video shows the kml docking widget and some of its options. 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/G4aPIRLBz9U?rel=0" frameborder="0" allowfullscreen></iframe>
 

@@ -18,6 +18,7 @@ build:
     - mswms = mslib.mswms.mswms:main
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
+    - mssautoplot = mslib.utils.mssautoplot:main
 
 requirements:
   build:
@@ -47,7 +48,6 @@ requirements:
     - pillow
     - pytz
     - pyqt >=5, <5.13
-    - pygeoif
     - qt >=5.10, <5.13
     - requests
     - scipy
@@ -59,15 +59,15 @@ requirements:
     - fs_filepicker
     - cftime >=1.0.1
     - matplotlib >=3.3.2,<3.6
-    - itsdangerous <2.1.0
-    - flask >=2.0.0,<2.2.0
+    - itsdangerous
+    - pyjwt
+    - flask >=2.2.0
     - flask-httpauth
     - flask-mail
     - flask-migrate
-    - sqlalchemy <2.0.0
-    - werkzeug >2.0.0
+    - werkzeug >=2.2.3
     - flask-socketio =5.1.0
-    - flask-sqlalchemy
+    - flask-sqlalchemy >=3.0.0
     - flask-cors
     - passlib
     - gitpython
@@ -88,6 +88,9 @@ requirements:
     - pycountry
     - websocket-client
     - libtiff <4.5.0
+    - flask-wtf
+    - email_validator
+    - keyring
 
 test:
   imports:

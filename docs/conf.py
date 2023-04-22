@@ -16,7 +16,36 @@ import sys
 import logging
 import setuptools
 import subprocess
+import requests
+import zipfile
+import shutil
+
 from string import Template
+
+def get_tutorial_images():
+    TUTORIAL_URL = "https://fz-juelich.sciebo.de/s/7DUjGMgP1HFvakG/download"
+    TUTORIAL_DIR = 'videos/gif'
+    if not os.path.exists(TUTORIAL_DIR):
+        os.makedirs(TUTORIAL_DIR)
+    TUTORIAL_ARCHIVE = 'videos/gif/tutorials.zip'
+    if not os.path.exists(TUTORIAL_ARCHIVE):
+        response = requests.get(TUTORIAL_URL)
+        open(TUTORIAL_ARCHIVE, "wb").write(response.content)
+        with zipfile.ZipFile(TUTORIAL_ARCHIVE) as zip_file:
+            for item in zip_file.namelist():
+                filename = os.path.basename(item)
+                if not filename:
+                    continue
+                source = zip_file.open(item)
+                target = open(os.path.join(TUTORIAL_DIR, filename), "wb")
+                with source, target:
+                    shutil.copyfileobj(source, target)
+        # remove zip archive
+        os.remove(TUTORIAL_ARCHIVE)
+
+
+get_tutorial_images()
+
 
 if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
     conda_file_dir = setuptools.__file__
@@ -32,40 +61,41 @@ if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
             with open(os.path.join(proj_lib, 'epsg'), 'w') as fid:
                 fid.write("# Placeholder for epsg data")
 
-# Generate plot gallery
-import fs
-sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-from mslib.mswms.demodata import DataFiles
+if os.environ.get("GALLERY", "True") != "False":
+    # Generate plot gallery
+    import fs
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+    from mslib.mswms.demodata import DataFiles
 
-root_fs = fs.open_fs("~/")
-if not root_fs.exists("mss/testdata"):
-    root_fs.makedirs("mss/testdata")
+    root_fs = fs.open_fs("~/")
+    if not root_fs.exists("mss/testdata"):
+        root_fs.makedirs("mss/testdata")
 
-examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
-                     server_config_fs=fs.open_fs("~/mss"))
-examples.create_server_config(detailed_information=True)
-examples.create_data()
+    examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
+                         server_config_fs=fs.open_fs("~/mss"))
+    examples.create_server_config(detailed_information=True)
+    examples.create_data()
 
-sys.path.insert(0, os.path.join(os.path.expanduser("~"), "mss"))
+    sys.path.insert(0, os.path.join(os.path.expanduser("~"), "mss"))
 
-import mslib.mswms.wms
-import mslib.mswms.gallery_builder
-import importlib
+    import mslib.mswms.wms
+    import mslib.mswms.gallery_builder
+    import importlib
 
-# Generate template plots
-from docs.gallery.plot_examples import HS_template, VS_template
-from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
-dataset = [next(iter(mslib.mswms.wms.mswms_settings.data))]
-mslib.mswms.wms.mswms_settings.register_horizontal_layers = [(HS_template.HS_Template, dataset)]
-mslib.mswms.wms.mswms_settings.register_vertical_layers = [(VS_template.VS_Template, dataset)]
-mslib.mswms.wms.mswms_settings.register_linear_layers = [(LS_DefaultStyle, dataset)]
-mslib.mswms.wms.server.__init__()
-mslib.mswms.wms.server.generate_gallery(sphinx=True, create=True, clear=True, simple_naming=True)
-importlib.reload(mslib.mswms.gallery_builder)
+    # Generate template plots
+    from docs.gallery.plot_examples import HS_template, VS_template
+    from mslib.mswms.mpl_lsec_styles import LS_DefaultStyle
+    dataset = [next(iter(mslib.mswms.wms.mswms_settings.data))]
+    mslib.mswms.wms.mswms_settings.register_horizontal_layers = [(HS_template.HS_Template, dataset)]
+    mslib.mswms.wms.mswms_settings.register_vertical_layers = [(VS_template.VS_Template, dataset)]
+    mslib.mswms.wms.mswms_settings.register_linear_layers = [(LS_DefaultStyle, dataset)]
+    mslib.mswms.wms.server.__init__()
+    mslib.mswms.wms.server.generate_gallery(sphinx=True, create=True, clear=True, simple_naming=True)
+    importlib.reload(mslib.mswms.gallery_builder)
 
-# Generate all other plots
-mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True, levels="3,4,200,300",
-                                        vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
+    # Generate all other plots
+    mslib.mswms.wms.server.generate_gallery(sphinx=True, generate_code=True, all_plots=True, levels="3,4,200,300",
+                                            vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
 
 # readthedocs has no past.builtins
 try:
@@ -233,7 +263,7 @@ html_logo = "mss-logo.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['mss_theme', 'gallery/plots']
+html_static_path = ['mss_theme', 'gallery/plots', 'videos']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied

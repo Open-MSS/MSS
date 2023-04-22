@@ -31,7 +31,6 @@ import codecs
 import mslib
 
 from flask import render_template
-from flask import Flask
 from flask import send_from_directory, send_file, url_for
 from flask import abort
 from flask import request
@@ -65,24 +64,11 @@ def _xstatic(name):
         return None
 
 
-def prefix_route(route_function, prefix='', mask='{0}{1}'):
-    '''
-    https://stackoverflow.com/questions/18967441/add-a-prefix-to-all-flask-routes/18969161#18969161
-    Defines a new route function with a prefix.
-    The mask argument is a `format string` formatted with, in that order:
-      prefix, route
-    '''
-    def newroute(route, *args, **kwargs):
-        ''' prefix route '''
-        return route_function(mask.format(prefix, route), *args, **kwargs)
-    return newroute
-
-
-def app_loader(name):
-    APP = Flask(name, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'), static_url_path="/static",
-                static_folder=STATIC_LOCATION)
-    APP.config.from_object(name)
-    APP.route = prefix_route(APP.route, SCRIPT_NAME)
+def create_app(name=""):
+    if "mscolab.server" in name:
+        from mslib.mscolab.app import APP
+    else:
+        from mslib.mswms.app import APP
 
     @APP.route('/xstatic/<name>/', defaults=dict(filename=''))
     @APP.route('/xstatic/<name>/<path:filename>')

@@ -18,17 +18,17 @@ When it is ready the developer version becomes the next stable.
 The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhub.net/p/mss>`_
 
 Using our Issue Tracker on github
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+---------------------------------
 
 How to Report Bugs
--------------------
+..................
 
-Please open a new issue in the appropriate GitHub repository `here <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
+Please open a new issue in the appropriate GitHub repository `https://github.com/Open-MSS/MSS/issues/new <https://github.com/Open-MSS/MSS/issues/new>`_ with steps to reproduce the problem you're experiencing.
 
 Be sure to include as much information including screenshots, text output, and both your expected and actual results.
 
 How to Request Enhancements
----------------------------
+...........................
 
 First, please refer to the applicable `GitHub repository <https://github.com/Open-MSS/MSS>`_ and search `the repository's GitHub issues <https://github.com/Open-MSS/MSS/issues>`_ to make sure your idea has not been (or is not still) considered.
 
@@ -38,27 +38,7 @@ Be sure to include as much detail as possible including step-by-step description
 
 
 
-Setting Up a Local Environment
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Requirements
-------------
-
-1. System requirements
-
-  | Any system with basic configuration.
-  | Operating System : Any (Windows / Linux / Mac).
-
-2. Software requirement
-
-  | Python
-  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
-
-
-3. Skill set
-
-  | Knowledge of git & github
-  | python
 
 Forking the Repo
 ----------------
@@ -70,7 +50,7 @@ Forking the Repo
 3. After that copy will look like *<your-user-name>/MSS* forked from *Open-MSS/MSS*.
 
 Cloning the Repo
-----------------
+................
 
 1. Now you have your own copy of project. Here you have to start your work.
 
@@ -80,7 +60,7 @@ Cloning the Repo
 
 4. Click The big green button which says "Code". Copy the URL. `Like this <https://user-images.githubusercontent.com/71402528/122255281-9a855d80-ceeb-11eb-9f85-fed38db30562.png>`_
 
-5. Now Type the command ``git clone <your-fork-url>.git`` and hit enter.
+5. Now Type the command ``git clone <your-fork-url>.git`` and hit enter. Also, you could use ``gh repo clone <repo-owner>/<repo-name>``, If you don't have ``gh``, see this for installation `here <https://github.com/cli/cli/blob/trunk/docs/install_linux.md>`_.
 
 6. Wait for few seconds till the project gets copied
 
@@ -89,7 +69,7 @@ Cloning the Repo
 7. Add the path of your local cloned mss directory to $PYTHONPATH.
 
 Setting up a git remote
------------------------
+.......................
 
 1. Now you have to set up remote repositories
 2. Type ``git remote -v`` in terminal to list remote connections to your repo.
@@ -113,7 +93,7 @@ Setting up a git remote
      upstream	git@github.com:Open-MSS/MSS.git (push)
 
 Update local stable branch
---------------------------
+..........................
 
 If you don't have a stable branch, create one first or change to that branch::
 
@@ -123,66 +103,100 @@ If you don't have a stable branch, create one first or change to that branch::
   git push
 
 
+Setting Up a Local Environment
+------------------------------
 
-Installing dependencies
------------------------
+In the description we added as example to setup access to the mslib an export of the PYTHONPATH in your environment ::
 
-MSS is based on the software of the conda-forge channel located, so we have to add this channel to the default::
+    cd workspace/MSS
+    export PYTHONPATH=`pwd`
+
+When you don’t want to enter this you can add the PYTHONPATH to mslib to your .bashrc
+
+If you don’t want the PYTHONPATH by export changed you can start modules differently::
+
+    cd workspace/MSS
+    PYTHONPATH=. python mslib/msui/msui.py
 
 
-  $ conda config --add channels conda-forge
 
-Your content of the .condarc config file should have conda-forge on top::
 
-  $ more $HOME/.condarc
-  channels:
-  - conda-forge
-  - defaults
+Requirements
+............
 
-Create an environment and install the whole mss package dependencies then remove the mss package::
+1. System requirements
 
-  $ conda create -n mssdev mamba
-  $ conda activate mssdev
-  $ mamba install mss=$mss_version python --only-deps
+  | Any system with basic configuration.
+  | Operating System : Any (Windows / Linux / Mac).
 
-You can also use conda to install mss, but mamba is a way faster.
-Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.
+2. Software requirement
 
-Setup mswms server
-++++++++++++++++++
+  | Python
+  | `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_
+  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
 
-In the mss package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
-MSS repository needs a different folder, e.g. workspace/mss. Avoid to mix data and source.
 
-:ref:`demodata <demodata>` is provided by executing::
+3. Skill set
 
-   $(mssdev) python mslib/mswms/demodata.py --seed
+  | Knowledge of git & github
+  | Python
 
-To use this data add the mswms_settings.py in your python path::
 
-   $(mssdev) cd $HOME/PycharmProjects/mss
-   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
-   $(mssdev) python mslib/mswms/mswms.py
+Using predefined docker images instead of installing all requirements
+.....................................................................
 
-Setup mscolab server
-++++++++++++++++++++
+You can easily use our testing docker images which have all libraries pre installed. These are based on mambaforgen.
+In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these evironments.
 
-The Mscolab server is built using the Flask rest framework which communicates with the PyQt5 frontend of MSS.
-You can view the default configuration of mscolab in the file `mslib/mscolab/conf.py`.
-If you want to change any values of the configuration, please take a look at the "Configuring Your Mscolab Server"
-section in :ref:`mscolab`
+Initial configuration or on each updated docker image
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have mss-develop-env defined.
+This example shows by using mss-stable-env how to set it up for testing and development of stable branch. The images gets updates
+when we have to add new dependencies or have do pinning of existing modules. ::
 
-When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab.py db --init`
-to initialise it. The default database is a sqlite3 database.
-You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
-The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
+    rm -rf $HOME/mambaforge/envs/mss-stable-env # cleanup the existing env
+    mkdir $HOME/mambaforge/envs/mss-stable-env  # create the dir to bind to
+    xhost +local:docker                         # may be needed
+    docker run -it --rm --mount type=volume,dst=/opt/conda/envs/mss-stable-env,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$HOME/mambaforge/envs/mss-stable-env --network host openmss/testing-stable # do the volume bind
+    exit                                        # we are in the container, escape :)
+    sudo ln -s $HOME/mambaforge/envs/mss-stable-env /opt/conda/envs/mss-stable-env # we need the origin location linked because hashbangs interpreters are with that path. (only once needed)
+    conda activate mss-stable-env               # activate env
+    cd workspace/MSS                            # go to your workspace MSS dir
+    export PYTHONPATH=`pwd`                     # add it to the PYTHONPATH
+    python mslib/msui/msui.py                   # test if the UI starts
+    pytest _tests                               # run pytest
 
-To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the mscolab server on port 8083.
-Going to http://localhost:8083/status should now show "Mscolab server". This means your server has started successfully.
-Now you can use the MSS desktop application to connect to it using the Mscolab window of the application.
+Using after configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Setup local testing
-+++++++++++++++++++
+After the image was configured you can use it like a self installed env ::
+
+    xhost +local:docker                 # may be needed
+    conda activate mss-stable-env       # activate env
+    cd workspace/MSS                    # go to your workspace MSS dir
+    export PYTHONPATH=`pwd`             # add it to the PYTHONPATH
+    pytest _tests                       # run pytest
+
+
+
+Manual Installing dependencies
+..............................
+
+MSS is based on the software of the conda-forge channel located. The channel is predefined in Mambaforge.
+
+Create an environment and install the dependencies needed for the mss package::
+
+  $ mamba create -n mssdev
+  $ mamba activate mssdev
+  $ mamba install mss=$mss_version --only-deps
+
+Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.::
+
+  $ git diff stable develop -- localbuild/meta.yaml
+
+
+Install requirements for  local testing
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 With sending a Pull Request our defined CIs do run all tests on github.
 You can do run tests own system too.
@@ -191,7 +205,7 @@ For developers we provide additional packages for running tests, activate your e
 
   $ mamba install --file requirements.d/development.txt
 
-On linux install the `conda package pyvirtualdisplay` and `xvfb` from your linux package manager.
+On linux install the `conda-forge package pyvirtualdisplay` and `xvfb` from your linux package manager.
 This is used to run tests on a virtual display.
 If you don't want tests redirected to the xvfb display just setup an environment variable::
 
@@ -202,48 +216,128 @@ in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision
 
 
 Setup msui_settings.json for special tests
-++++++++++++++++++++++++++++++++++++++++++
+..........................................
 
 On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
 If you want to overwrite this setup and try out a special configuration add an msui_settings.json
 file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
 
 
-Testing
--------
 
-After you installed the dependencies for testing you could invoke the tests by `pytest` with various options.
+Setup MSWMS server
+------------------
+
+In the MSS package is some demodata included. The default where this is stored is $HOME/mss. Your clone of the
+MSS repository needs a different folder, e.g. workspace/MSS. Avoid to mix data and source.
+
+:ref:`demodata <demodata>` is provided by executing::
+
+   $(mssdev) python mslib/mswms/demodata.py --seed
+
+To use this data add the mswms_settings.py in your python path::
+
+   $(mssdev) cd $HOME/workspace/MSS
+   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
+   $(mssdev) python mslib/mswms/mswms.py
+
+
+Setup MSColab server
+--------------------
+
+The MSColab server is built using the Flask rest framework which communicates with the PyQt5 frontend of MSS.
+You can view the default configuration of MSColab in the file `mslib/mscolab/conf.py`.
+If you want to change any values of the configuration, please take a look at the "Configuring Your MSColab Server"
+section in :ref:`mscolab`
+
+When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab.py db --init`
+to initialise it. The default database is a sqlite3 database.
+You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
+The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
+
+To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the MSColab server on port 8083.
+Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
+Now you can use the MSS desktop application to connect to it using the MSColab window of the application.
+
+
+
+Code Style
+----------
+
+We generally follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_, with 120 columns instead of 79.
+
+Output and Logging
+------------------
+
+When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
+warning for warnings, error for errors, critical for critical errors/states).
+
+Building the docs with Sphinx
+-----------------------------
+
+The documentation (in reStructuredText format, .rst) is in docs/.
+
+Usually building the docs also includes creating the images and pages for the gallery feature.
+This can be ommitted by setting an environment variable ::
+
+   export GALLERY=False
+
+
+To build the html version of it, you need to have sphinx installed::
+
+   cd docs/
+   make html
+
+
+Then point a web browser at docs/_build/html/index.html.
+
+For heading hierarchy we use ::
+
+  H1
+  ==
+
+  H2
+  --
+
+  H3
+  ..
+
+  H4
+  ~~
+
+
 
 Run Tests
-+++++++++
+---------
+
+After you installed the dependencies for testing you could invoke the tests by `pytest` with various options.
 
 Our tests are using the pytest framework. You could run tests serial and parallel
 
 ::
 
-   $ pytest mslib
+   $ pytest tests
 
 or parallel
 
 ::
 
-  $ pytest -n auto --dist loadscope --max-worker-restart 0 mslib
+  $ pytest -n auto --dist loadscope --max-worker-restart 0 tests
 
 Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
 Verify Code Style
-+++++++++++++++++
+.................
 
 A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
 
 Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
 
 Coverage
-++++++++
+........
 
 ::
 
-   $ pytest --cov mslib
+   $ pytest --cov mslib tests
 
 This plugin produces a coverage report, example::
 
@@ -258,7 +352,7 @@ This plugin produces a coverage report, example::
 
 
 Profiling
-+++++++++
+.........
 
 Profiling can be done by e.g.::
 
@@ -309,32 +403,6 @@ Fill out the template completely by describing your change, cause of change, iss
 After filling the template completely click on Pull request
 
 
-Guides
-~~~~~~
-
-Code Style
-----------
-
-We generally follow `PEP8 <https://www.python.org/dev/peps/pep-0008/>`_, with 120 columns instead of 79.
-
-Output and Logging
-------------------
-
-When writing logger calls, always use correct log level (debug only for debugging, info for informative messages,
-warning for warnings, error for errors, critical for critical errors/states).
-
-Building the docs with Sphinx
------------------------------
-
-The documentation (in reStructuredText format, .rst) is in docs/.
-
-To build the html version of it, you need to have sphinx installed::
-
-   cd docs/
-   make html
-
-
-Then point a web browser at docs/_build/html/index.html.
 
 
 Merging stable into develop
@@ -346,15 +414,15 @@ Bug fixes we have done in stable we need to merge regulary into develop too::
    git pull git@github.com:Open-MSS/MSS.git stable
    git checkout develop
    git pull git@github.com:Open-MSS/MSS.git develop
+   git checkout -b merge_stable_to_develop
    git merge stable
-   git checkout -b develop_stable
-   git push git@github.com:Open-MSS/MSS.git develop_stable
+   git push git@github.com:Open-MSS/MSS.git merge_stable_to_develop
 
 
 Then create the proposed merge request. The merge request must *not* be squashed or rebased.
 To allow the merging, the requirement for a linear-history must be disabled *temporarily*
 for the develop branch and one needs to ensure that the merge request is accepted with a
-regular merge with merge commit. Remove the develop_stable branch if still present.
+regular merge with merge commit. Remove the merge_stable_to_develop branch if still present.
 
 
 Testing local build
@@ -376,7 +444,7 @@ Take care on removing alpha builds, or increase the build number for a new versi
 
 
 Creating a new release
-~~~~~~~~~~~~~~~~~~~~~~
+----------------------
 
 * make sure all issues for this milestone are closed or moved to the next milestone
 * update CHANGES.rst, based on git log
@@ -411,12 +479,13 @@ Publish on Conda Forge
 
 
 Google Summer of Code(TM)
-~~~~~~~~~~~~~~~~~~~~~~~~~
+-------------------------
+
 MSS takes part in Google Summer of Code
 as a sub-organization of Python Software Foundation(PSF).
 
 GSoC'22 Projects
-----------------
+................
 
 - `Sreelakshmi Jayarajan: Automated Command Line Plotting Tool : GSoC 2022 <https://github.com/Open-MSS/MSS/wiki/Automated-Command-Line-Plotting-Tool-:-GSoC-2022>`_
 
@@ -424,7 +493,7 @@ GSoC'22 Projects
 
 
 GSoC'21 Projects
-----------------
+................
 
 - `Hrithik Kumar Verma: Generating a tool chain tutorial for the MSUI user interface by automation operations : GSoC 2021 <https://github.com/Open-MSS/MSS/wiki/Generating-a-tool-chain-tutorial-for-the-MSUI-user-interface-by-automation-operations-:-GSoC---2021>`_
 
@@ -432,14 +501,14 @@ GSoC'21 Projects
 
 
 GSoC'20 Projects
-----------------
+................
 
 - `Aryan Gupta: Mission Support System : Enhance KML Support <https://github.com/Open-MSS/MSS/wiki/KML:-Enhance-KML-Support---GSoC-2020>`_
 
 - `Tanish Grover: Mission Support System: Mission Support Collaboration Improvements <https://github.com/Open-MSS/MSS/wiki/Mscolab:-Mission-Support-Collaboration-Improvements---GSoC-2020>`_
 
 GSoC'19 Projects
-----------------
+................
 
 - `Anveshan Lal: Updating Geographical Plotting Routines <https://github.com/Open-MSS/MSS/wiki/Cartopy:-Updating-Geographical-Plotting-Routines----GSoC-2019>`_
 

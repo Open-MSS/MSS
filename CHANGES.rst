@@ -1,6 +1,36 @@
 Changelog
 =========
 
+Version 8.0.0
+~~~~~~~~~~~~~
+
+Sreelakshmi Jayarajan created a new CLI module for automated plotting by an user
+and refactored existing plotting and QT based classes modules.
+These classes can be used for plotting purposes without
+involving QT-based GUI and Interactive functionalities.
+Users can retrieve a set of plots for several flights or hundreds of time-steps
+during post-campaign analysis or when compiling an overview over flights of a campaign
+for a daily briefing.
+This allows users to retrieve similar plots of the same parameters
+such as map section, level etc., on a daily basis.
+The initial idea stems from Jörn Ungermann. GSoC mentors were Reimar Bauer, Jörn Ungermann, Christian Rolf, Sonja Gisinger
+
+
+Jatin Jain did UI and server improvements in his GSoC project.
+Users can now, compare and plot multiple flightpaths on topview.
+This feature can be used for flightpathes or MSColab operations.
+A fligthpath style width can be changed.
+Timestamps are dislayed below each message in MSColab.
+Mscolab Operations in use for more than 30 days, move to an inactive list.
+The initial idea for multiple flightpaths on topview stems from bkirbus.
+GSoC mentors were Reimar Bauer, Jörn Ungermann, Sonja Gisinger
+
+With MSS 8.0.0 we base our installation on mambaforge. This has
+mamba in the base environment.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/81?closed=1
+
 Version 7.0.8
 ~~~~~~~~~~~~~
 

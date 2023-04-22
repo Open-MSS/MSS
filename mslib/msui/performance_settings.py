@@ -104,7 +104,7 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         """
         filename = get_open_filename(
             self, "Open Aircraft Performance JSON File", constants.MSUI_CONFIG_PATH,
-            "Performance File (*.json)", pickertag="filepicker_default")
+            "Performance File (*.json)", pickertype="default")
         if filename is not None:
             try:
                 with open(filename) as tf:

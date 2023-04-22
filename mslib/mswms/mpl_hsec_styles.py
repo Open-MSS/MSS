@@ -74,9 +74,160 @@ import mpl_toolkits.basemap
 from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import Targets, get_style_parameters, get_cbar_label_format, make_cbar_labels_readable
+from mslib.mswms.utils import get_cbar_label_format, make_cbar_labels_readable
+import mslib.mswms.generics as generics
 from mslib.utils import thermolib
 from mslib.utils.units import convert_to
+
+
+class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
+    """
+    Horizontal section plotting layer for general quantities
+    """
+    name = "HS_GenericStyle"
+    styles = [
+        ("auto", "auto colour scale"),
+        ("autolog", "auto logcolour scale"), ]
+
+    def _plot_style(self):
+        bm = self.bm
+        ax = self.bm.ax
+
+        show_data = np.ma.masked_invalid(self.data[self.dataname])
+        # get cmin, cmax, cbar_log and cbar_format for level_key
+        cmin, cmax = generics.get_range(self.dataname, self.level, self.name[-2:])
+        cmin, cmax, clevs, cmap, norm, ticks = generics.get_style_parameters(
+            self.dataname, self.style, cmin, cmax, show_data)
+
+        tc = bm.contourf(self.lonmesh, self.latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
+
+        for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
+            cs_pv = ax.contour(self.lonmesh, self.latmesh, self.data[cont_data], cont_levels,
+                               colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
+            cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%.0f')
+            if pe:
+                plt.setp(cs_pv.collections, path_effects=[
+                    patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
+
+        # define position of the colorbar and the orientation of the ticks
+        if self.crs.lower() == "epsg:77774020":
+            cbar_location = 3
+            tick_pos = 'right'
+        else:
+            cbar_location = 4
+            tick_pos = 'left'
+
+        # Format for colorbar labels
+        cbar_label = self.title
+        cbar_format = get_cbar_label_format(self.style, np.median(np.abs(clevs)))
+
+        if not self.noframe:
+            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
+                                     label=cbar_label, format=cbar_format, ticks=ticks)
+            cbar.set_ticks(clevs)
+            cbar.set_ticklabels(clevs)
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                ax, width="3%", height="40%", loc=cbar_location)
+            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
+            axins1.yaxis.set_ticks_position(tick_pos)
+            make_cbar_labels_readable(self.fig, axins1)
+
+
+def make_generic_class(name, standard_name, vert, add_data=None, add_contours=None,
+                       fix_styles=None, add_styles=None, add_prepare=None):
+    """
+    This function instantiates a plotting class and adds it to the global name space
+    of this module.
+
+    Args:
+        name (str): name of the class, under which it will be added to the module
+            name space
+        standard_name (str): CF standard_name of the main plotting target.
+            This must be registered within the mslib.mswms.generics module.
+        vert (str): vertical level type, e.g. "pl"
+        add_data (list, optional): List of tuples adding data to be read in and
+            provide to the plotting class. E.g. [("pl", "ertel_potential_vorticity", "PVU")]
+            for ertel_potential_vorticity on pressure levels in PVU units. The vertical
+            level type must be the one specified by the vert variable or "sfc".
+            By default ertel_potential_vorticity in PVU is provide.
+        add_contours (list, optional): List of tuples specifying contour lines to be
+            plotted. E.g. [("ertel_potential_vorticity", [2, 4, 8, 16], "green", "red", "dashed", 2, True)]
+            cause PV to be plotted for 2, 4, 8, and 16 PVU with dashed green lines,
+            red labels, and line width 2. The last value defines wether a stroke effect
+            shall be applied.
+        fix_styles (list, optional): A list of plotting styles, which must be defined in the
+            mslib.mswms.generics.STYLES dictionary. Defaults to a list of standard styles
+            ("auto", "logauto", "default", "nonlinear") depending on which ranges and thresholds
+            are defined for the main variable in the generics module.
+        add_styles (list, optional): Similar to fix_styles, but *adds* the supplied styles to
+            the list of support styles instead of overwriting them. Defaults to None.
+        add_prepare (function, optional): a function to overwrite the _prepare_datafield method.
+            Defaults to None.
+    """
+    if add_data is None:
+        add_data = [(vert, "ertel_potential_vorticity", "PVU")]
+    if add_contours is None:
+        add_contours = [("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
+
+    class fnord(HS_GenericStyle):
+        """
+        Horizontal section plotting layer for quantity 'standard_name'
+        """
+        name = f"{standard_name}_{vert}"
+        dataname = standard_name
+        title = generics.get_title(standard_name)
+        long_name = standard_name
+        units = generics.get_unit(standard_name)
+        if units:
+            title += f" ({units})"
+
+        required_datafields = [(vert, standard_name, units)] + add_data
+        contours = add_contours
+
+    fnord.__name__ = name
+    fnord.styles = list(fnord.styles)
+    if generics.get_thresholds(standard_name) is not None:
+        fnord.styles += [("nonlinear", "nonlinear colour scale")]
+    if all(_x is not None for _x in generics.get_range(standard_name, None, vert)):
+        fnord.styles += [
+            ("default", "fixed colour scale"),
+            ("log", "fixed logarithmic colour scale")]
+
+    if add_styles is not None:
+        fnord.styles += add_styles
+    if fix_styles is not None:
+        fnord.styles = fix_styles
+    if add_prepare is not None:
+        fnord._prepare_datafields = add_prepare
+    globals()[name] = fnord
+
+
+# Generation of HS plotting layers for registered CF standard_names
+for vert in ["al", "ml", "pl", "tl"]:
+    for sn in generics.get_standard_names():
+        make_generic_class(f"HS_GenericStyle_{vert.upper()}_{sn}", sn, vert)
+    make_generic_class(
+        f"HS_GenericStyle_{vert.upper()}_{'equivalent_latitude'}",
+        "equivalent_latitude", vert, [], [],
+        fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
+                    ("equivalent_latitude_sh", "southern hemisphere")])
+    make_generic_class(
+        f"HS_GenericStyle_{vert.upper()}_{'ertel_potential_vorticity'}",
+        "ertel_potential_vorticity", vert, [], [],
+        fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
+                    ("ertel_potential_vorticity_sh", "southern hemisphere")])
+    make_generic_class(
+        f"HS_GenericStyle_{vert.upper()}_{'square_of_brunt_vaisala_frequency_in_air'}",
+        "square_of_brunt_vaisala_frequency_in_air", vert, [], [],
+        fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
+
+make_generic_class(
+    "HS_GenericStyle_SFC_tropopause_altitude",
+    "tropopause_altitude", "sfc", [],
+    [("tropopause_altitude", np.arange(5, 20.1, 0.500), "yellow", "red", "solid", 0.5, False)],
+    fix_styles=[("tropopause_altitude", "tropopause_altitude")])
 
 
 class HS_CloudsStyle_01(MPLBasemapHorizontalSectionStyle):
@@ -392,123 +543,6 @@ class HS_TemperatureStyle_ML_01(MPLBasemapHorizontalSectionStyle):
         else:
             ax.text(bm.llcrnrx, bm.llcrnry, titlestring,
                     fontsize=10, bbox=dict(facecolor='white', alpha=0.6))
-
-
-class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
-    """
-    Pressure level version for Chemical Mixing ratios.
-    """
-    name = "HS_GenericStyle"
-    styles = [
-        ("auto", "auto colour scale"),
-        ("autolog", "auto logcolour scale"), ]
-
-    def _plot_style(self):
-        bm = self.bm
-        ax = self.bm.ax
-
-        show_data = np.ma.masked_invalid(self.data[self.dataname])
-        # get cmin, cmax, cbar_log and cbar_format for level_key
-        cmin, cmax = Targets.get_range(self.dataname, self.level, self.name[-2:])
-        cmin, cmax, clevs, cmap, norm, ticks = get_style_parameters(
-            self.dataname, self.style, cmin, cmax, show_data)
-
-        tc = bm.contourf(self.lonmesh, self.latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
-
-        for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
-            cs_pv = ax.contour(self.lonmesh, self.latmesh, self.data[cont_data], cont_levels,
-                               colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
-            cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%.0f')
-            if pe:
-                plt.setp(cs_pv.collections, path_effects=[
-                    patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
-                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
-
-        # define position of the colorbar and the orientation of the ticks
-        if self.crs.lower() == "epsg:77774020":
-            cbar_location = 3
-            tick_pos = 'right'
-        else:
-            cbar_location = 4
-            tick_pos = 'left'
-
-        # Format for colorbar labels
-        cbar_label = self.title
-        cbar_format = get_cbar_label_format(self.style, np.median(np.abs(clevs)))
-
-        if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
-                                     label=cbar_label, format=cbar_format, ticks=ticks)
-            cbar.set_ticks(clevs)
-            cbar.set_ticklabels(clevs)
-        else:
-            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
-                ax, width="3%", height="40%", loc=cbar_location)
-            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
-            axins1.yaxis.set_ticks_position(tick_pos)
-            make_cbar_labels_readable(self.fig, axins1)
-
-
-def make_generic_class(name, entity, vert, add_data=None, add_contours=None,
-                       fix_styles=None, add_styles=None, add_prepare=None):
-    if add_data is None:
-        add_data = [(vert, "ertel_potential_vorticity", "PVU")]
-    if add_contours is None:
-        add_contours = [("ertel_potential_vorticity", [2, 4, 8, 16], "dimgrey", "dimgrey", "solid", 2, True)]
-
-    class fnord(HS_GenericStyle):
-        name = f"{entity}_{vert}"
-        dataname = entity
-        title = Targets.TITLES.get(entity, entity)
-        long_name = entity
-        units = Targets.get_unit(entity)
-        if units:
-            title += f" ({units})"
-
-        required_datafields = [(vert, entity, units)] + add_data
-        contours = add_contours
-
-    fnord.__name__ = name
-    fnord.styles = list(fnord.styles)
-    if Targets.get_thresholds(entity) is not None:
-        fnord.styles += [("nonlinear", "nonlinear colour scale")]
-    if all(_x is not None for _x in Targets.get_range(entity, None, vert)):
-        fnord.styles += [
-            ("default", "fixed colour scale"),
-            ("log", "fixed logarithmic colour scale")]
-
-    if add_styles is not None:
-        fnord.styles += add_styles
-    if fix_styles is not None:
-        fnord.styles = fix_styles
-    if add_prepare is not None:
-        fnord._prepare_datafields = add_prepare
-    globals()[name] = fnord
-
-
-for vert in ["al", "ml", "pl", "tl"]:
-    for ent in Targets.get_targets():
-        make_generic_class(f"HS_GenericStyle_{vert.upper()}_{ent}", ent, vert)
-    make_generic_class(
-        f"HS_GenericStyle_{vert.upper()}_{'equivalent_latitude'}",
-        "equivalent_latitude", vert, [], [],
-        fix_styles=[("equivalent_latitude_nh", "northern hemisphere"),
-                    ("equivalent_latitude_sh", "southern hemisphere")])
-    make_generic_class(
-        f"HS_GenericStyle_{vert.upper()}_{'ertel_potential_vorticity'}",
-        "ertel_potential_vorticity", vert, [], [],
-        fix_styles=[("ertel_potential_vorticity_nh", "northern hemisphere"),
-                    ("ertel_potential_vorticity_sh", "southern hemisphere")])
-    make_generic_class(
-        f"HS_GenericStyle_{vert.upper()}_{'square_of_brunt_vaisala_frequency_in_air'}",
-        "square_of_brunt_vaisala_frequency_in_air", vert, [], [],
-        fix_styles=[("square_of_brunt_vaisala_frequency_in_air", "")])
-
-make_generic_class(
-    "HS_GenericStyle_SFC_tropopause_altitude",
-    "tropopause_altitude", "sfc", [],
-    [("tropopause_altitude", np.arange(5, 20.1, 0.500), "yellow", "red", "solid", 0.5, False)],
-    fix_styles=[("tropopause_altitude", "tropopause_altitude")])
 
 
 class HS_TemperatureStyle_PL_01(MPLBasemapHorizontalSectionStyle):

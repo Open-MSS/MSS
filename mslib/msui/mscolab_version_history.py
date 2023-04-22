@@ -112,7 +112,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "op_id": self.op_id
             }
             url = url_join(self.mscolab_server_url, 'get_operation_by_id')
-            res = requests.get(url, data=data)
+            res = requests.get(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 xml_content = json.loads(res.text)["content"]
                 waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)
@@ -139,7 +139,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             query_string = url_encode({"named_version": named_version_only})
             url_path = f'get_all_changes?{query_string}'
             url = url_join(self.mscolab_server_url, url_path)
-            r = requests.get(url, data=data)
+            r = requests.get(url, data=data, timeout=(2, 10))
             if r.text != "False":
                 changes = json.loads(r.text)["changes"]
                 self.changes.clear()
@@ -181,7 +181,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "ch_id": current_item.id
             }
             url = url_join(self.mscolab_server_url, 'get_change_content')
-            res = requests.get(url, data=data)
+            res = requests.get(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 waypoint_model = WaypointsTableModel(xml_content=res["content"])
@@ -207,7 +207,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "op_id": self.op_id
             }
             url = url_join(self.mscolab_server_url, 'set_version_name')
-            res = requests.post(url, data=data)
+            res = requests.post(url, data=data, timeout=(2, 10))
             return res
         else:
             # this triggers disconnect
@@ -274,7 +274,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                     "ch_id": self.changes.currentItem().id
                 }
                 url = url_join(self.mscolab_server_url, 'undo')
-                r = requests.post(url, data=data)
+                r = requests.post(url, data=data, timeout=(2, 10))
                 if r.text != "False":
                     # reload windows
                     self.reloadWindows.emit()

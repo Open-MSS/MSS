@@ -46,7 +46,7 @@ setup(
     license="Apache-2.0",
     url="https://github.com/Open-MSS/MSS",
     platforms="any",
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests*', 'tutorials*']),
     namespace_packages=[],
     include_package_data=True,
     zip_safe=False,

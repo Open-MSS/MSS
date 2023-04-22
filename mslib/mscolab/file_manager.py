@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import datetime
 import fs
 import difflib
 import logging
@@ -39,7 +40,7 @@ class FileManager(object):
     def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_operation(self, path, description, user, content=None, category="default"):
+    def create_operation(self, path, description, user, last_used=None, content=None, category="default"):
         """
         path: path to the operation
         description: description of the operation
@@ -51,7 +52,9 @@ class FileManager(object):
         proj_available = Operation.query.filter_by(path=path).first()
         if proj_available is not None:
             return False
-        operation = Operation(path, description, category)
+        if last_used is None:
+            last_used = datetime.datetime.utcnow()
+        operation = Operation(path, description, last_used, category)
         db.session.add(operation)
         db.session.flush()
         operation_id = operation.id
@@ -100,7 +103,8 @@ class FileManager(object):
                 "access_level": permission.access_level,
                 "path": operation.path,
                 "description": operation.description,
-                "category": operation.category
+                "category": operation.category,
+                "active": operation.active
             })
         return operations
 
@@ -400,6 +404,12 @@ class FileManager(object):
 
         users = [[user.username, user.access_level, user.id] for user in user_list]
         return users
+
+    def fetch_operation_creator(self, op_id, u_id):
+        if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
+            return False
+        current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
+        return current_operation_creator.user.username
 
     def add_bulk_permission(self, op_id, user, new_u_ids, access_level):
         if not self.is_admin(user.id, op_id) and not self.is_creator(user.id, op_id):

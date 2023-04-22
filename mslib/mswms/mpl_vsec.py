@@ -42,6 +42,7 @@ from mslib.mswms import mss_2D_sections
 from mslib.utils.units import convert_to, units
 from mslib.mswms.utils import make_cbar_labels_readable
 
+
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
 
@@ -145,7 +146,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
                       show=False,
                       highlight=None, noframe=False, figsize=(960, 480), draw_verticals=False,
                       numlabels=10, orography_color='k', transparent=False,
-                      return_format="image/png"):
+                      mime_type="image/png"):
         """
         """
         # Check if required data is available.
@@ -202,7 +203,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Code for producing a png image with Matplotlib.
         # ===============================================
-        if return_format == "image/png":
+        if mime_type == "image/png":
 
             logging.debug("creating figure..")
             dpi = 80
@@ -248,7 +249,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
             # colour palette.
             output.seek(0)  # necessary for PIL.Image.open()
             palette_img = PIL.Image.open(output).convert(
-                mode="RGB").convert("P", palette=PIL.Image.ADAPTIVE)
+                mode="RGB").convert("P", palette=PIL.Image.Palette.ADAPTIVE)
             output = io.BytesIO()
             if not transparent:
                 logging.debug("saving figure as non-transparent PNG.")
@@ -280,7 +281,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
 
         # Code for generating an XML document with the data values in ASCII format.
         # =========================================================================
-        elif return_format == "text/xml":
+        elif mime_type == "text/xml":
 
             impl = getDOMImplementation()
             xmldoc = impl.createDocument(None, "MSS_VerticalSection_Data", None)

@@ -94,7 +94,35 @@ TABLE_FULL = [
 TABLE_SHORT = [TABLE_FULL[_i] for _i in range(7)] + [TABLE_FULL[-1]] + [("", lambda _: "", False)] * 8
 
 
-class Waypoint(object):
+def load_from_xml_data(xml_content, name="Flight track"):
+    try:
+        doc = xml.dom.minidom.parseString(xml_content)
+    except xml.parsers.expat.ExpatError as ex:
+        raise SyntaxError(str(ex))
+
+    ft_el = doc.getElementsByTagName("FlightTrack")[0]
+
+    waypoints_list = []
+    for wp_el in ft_el.getElementsByTagName("Waypoint"):
+
+        location = wp_el.getAttribute("location")
+        lat = float(wp_el.getAttribute("lat"))
+        lon = float(wp_el.getAttribute("lon"))
+        flightlevel = float(wp_el.getAttribute("flightlevel"))
+        comments = wp_el.getElementsByTagName("Comments")[0]
+        # If num of comments is 0(null comment), then return ''
+        if len(comments.childNodes):
+            comments = comments.childNodes[0].data.strip()
+        else:
+            comments = ""
+
+        waypoints_list.append(Waypoint(lat, lon, flightlevel,
+                                       location=location,
+                                       comments=comments))
+    return waypoints_list
+
+
+class Waypoint:
     """
     Represents a waypoint with position, altitude and further
     properties. Used internally by WaypointsTableModel.
@@ -616,33 +644,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.load_from_xml_data(xml_content, name)
 
     def load_from_xml_data(self, xml_content, name="Flight track"):
-        try:
-            doc = xml.dom.minidom.parseString(xml_content)
-        except xml.parsers.expat.ExpatError as ex:
-            raise SyntaxError(str(ex))
-
-        ft_el = doc.getElementsByTagName("FlightTrack")[0]
-
         self.name = name
-
-        waypoints_list = []
-        for wp_el in ft_el.getElementsByTagName("Waypoint"):
-
-            location = wp_el.getAttribute("location")
-            lat = float(wp_el.getAttribute("lat"))
-            lon = float(wp_el.getAttribute("lon"))
-            flightlevel = float(wp_el.getAttribute("flightlevel"))
-            comments = wp_el.getElementsByTagName("Comments")[0]
-            # If num of comments is 0(null comment), then return ''
-            if len(comments.childNodes):
-                comments = comments.childNodes[0].data.strip()
-            else:
-                comments = str('')
-
-            waypoints_list.append(Waypoint(lat, lon, flightlevel,
-                                           location=location,
-                                           comments=comments))
-        self.replace_waypoints(waypoints_list)
+        _waypoints_list = load_from_xml_data(xml_content, name)
+        self.replace_waypoints(_waypoints_list)
 
     def get_filename(self):
         return self.filename

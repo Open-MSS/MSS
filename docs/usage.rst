@@ -23,7 +23,7 @@ Configuration of MSUI
 ---------------------
 
 The settings file msui_settings file includes configuration settings central to the entire
-Mission Support User Interface (msui). Among others, define
+Mission Support User Interface (command: **msui**). Among others, define
 
  - available map projections
  - vertical section interpolation options
@@ -35,7 +35,7 @@ If you don't have a msui_settings.json then default configuration is in place.
 Store this msui_settings.json in a path, e.g. "$HOME/.config/mss"
 
 The file could be loaded by the File Configuration dialog or
-by the environment variable msui_settings pointing to your msui_settings.json.
+by the environment variable MSUI_SETTINGS pointing to your msui_settings.json.
 
 **/$HOME/.config/msui/msui_settings.json**
 
@@ -106,6 +106,37 @@ With setting the option "filepicker_default": "default" you can only access loca
 
   "data_dir": "~/mssdata",
 
+MSColab Login and WWW-authentication
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+You can setup which accounts are used to login into MSColab and used for authenticate to the webservers.
+
+.. tip::
+  When you use an old configuration having WMS_login, MSC_login, MSCOLAB_password defined on start
+  of msui you get a hint that we can update your msui_settings.json file. We keep your old attributes.
+  You can delete them afterwards when you don't want the hint shown on each start.
+
+
+A dictionary by Server-Url and username provide the username for an http-auth request
+and the MSCOLAB_mailid is used to login by your credentials into the service.
+
+.. code:: text
+
+   "MSS_auth": {
+                  "http://www.your-server.de/forecasts": "authuser",
+                  "http://www.your-mscolab-server.de": "authuser"
+                },
+   "MSCOLAB_mailid": "your-email"
+
+
+By entering first time the passwords they are stored by using keyring.
+You can also use the keyring app to set, change and delete passwords.
+The following examples shows how to setup your individual MSColab account and to add
+the common WWW-authentication to access the server.
+
+.. code:: text
+
+    (mssenv): keyring set MSCOLAB your-email your-password
+    (mssenv): keyring set http://www.your-mscolab-server.de authuser authpassword
 
 
 
@@ -209,7 +240,7 @@ This feature supports all *essential* elements of KML relevant to MSS' usage nam
    - Geometry Collection (*combination of various types of MultiGeometries*)
 
 
-The KML Support has been enhanced to parse all legal KML Files without crashing, and a clear visualization
+The KML Support has been enhanced to parse all legal KML Files, and a clear visualization
 on the map, with the relevant geometries and styles.
 
 The KML Interface now supports display of multiple KML Files simultaneously, with easy to use Buttons such
@@ -248,6 +279,27 @@ Example KML Files are located at :
 * Displays Geometry Collection in Adelaide, Australia  :download:`docs/samples/kml/geometry_collection.kml <samples/kml/geometry_collection.kml>`
 
 
+
+Multiple Flightpath Dockwidget
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+The topview has a dockwidget allowing to plot multiple flighttracks/operations on top of map.
+
+New flightpaths can be added or removed, and a clear visualization on map, with
+relevant geometries and styles.
+
+The multiple flightpath dockwidget interface supports display of multiple flighttracks on map simultaneously,
+with a check box to display/hide individual plots on map.
+
+Activated flighttrack/operation is shown in bold letters and can't be unchecked.
+
+"Change Linewidth" and "Change Color" button improves the User experience by allowing user to customize
+color & linewidth of each of flightpath displayed, realtime. This allows for better understanding of map and
+flightpath.
+
+For Activated Flightpath, use "options" menu on topview interface.
+
 Remote sensing Docking Widget
 .............................
 
@@ -258,9 +310,6 @@ Upon first starting the widget, it is thus necessary to download astronomic posi
 (`see here for more information <http://rhodesmill.org/skyfield/files.html>`_).
 This is automatically performed by the skyfield python package, retrieving the data from public sources of JPL
 and other US services. The data is stored in the MSS configuration directory and may need to update irregularly.
-
-
-
 
 
 
@@ -275,13 +324,3 @@ Some examples for publicly accessible WMS Servers
  * https://apps.ecmwf.int/wms/?token=public
  * https://maps.dwd.de/geoserver/wms
 
-
-Automation using the WMS API
-============================
-
-Besides using the MSS UI we can use the API of the WMS sercer by a script to create
-for instance a number of the same plots or several flights or several forecast steps.
-
-The retriever is an example which needs tweaked before using it
-
-.. literalinclude:: samples/automation/retriever.py

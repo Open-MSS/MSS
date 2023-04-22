@@ -539,7 +539,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         Loads multiple KML Files simultaneously and constructs the
         corresponding patches.
         """
-        for entry in self.dict_files.values():  # removes all patches from map, but not from dict_files
+        for entry in self.dict_files.values():  # removes all patches from map, but not from dict_flighttrack
             if entry["patch"] is not None:  # since newly initialized files will have patch:None
                 entry["patch"].remove()
 

@@ -34,45 +34,29 @@ import fs
 import os
 import socketio
 import sqlalchemy.exc
-from itsdangerous import URLSafeTimedSerializer
-from flask import g, jsonify, request, render_template
+from itsdangerous import URLSafeTimedSerializer, BadSignature
+from flask import g, jsonify, request, render_template, flash
 from flask import send_from_directory, abort, url_for
 from flask_mail import Mail, Message
 from flask_cors import CORS
+from flask_migrate import Migrate
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, User, db
+from mslib.mscolab.models import Change, MessageType, User, Operation, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
-from mslib.index import app_loader
+from mslib.index import create_app
+from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 
-APP = app_loader(__name__)
+
+APP = create_app(__name__)
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
-
-
-# set the operation root directory as the static folder
-# ToDo needs refactoring on a route without using of static folder
-
-APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
-APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-APP.config['SECURITY_PASSWORD_SALT'] = getattr(mscolab_settings, "SECURITY_PASSWORD_SALT", None)
-APP.config['MAIL_DEFAULT_SENDER'] = getattr(mscolab_settings, "MAIL_DEFAULT_SENDER", None)
-APP.config['MAIL_SERVER'] = getattr(mscolab_settings, "MAIL_SERVER", None)
-APP.config['MAIL_PORT'] = getattr(mscolab_settings, "MAIL_PORT", None)
-APP.config['MAIL_USERNAME'] = getattr(mscolab_settings, "MAIL_USERNAME", None)
-APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
-APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
-APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
-
+migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
 
 try:
@@ -135,7 +119,7 @@ def confirm_token(token, expiration=3600):
             salt=APP.config['SECURITY_PASSWORD_SALT'],
             max_age=expiration
         )
-    except IOError:
+    except (IOError, BadSignature):
         return False
     return email
 
@@ -145,7 +129,7 @@ def initialize_managers(app):
     # initializing socketio and db
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
-    db.init_app(app)
+    # db.init_app(app)
     return app, sockio, cm, fm
 
 
@@ -159,7 +143,7 @@ def check_login(emailid, password):
         logging.debug("Problem in the database (%ex), likly version client different", ex)
         return False
     if user is not None:
-        if mscolab_settings.USER_VERIFICATION:
+        if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
                 if user.verify_password(password):
                     return user
@@ -201,7 +185,7 @@ def verify_user(func):
             return "False"
         else:
             # saving user details in flask.g
-            if mscolab_settings.USER_VERIFICATION:
+            if mscolab_settings.MAIL_ENABLED:
                 if user.confirmed:
                     g.user = user
                     return func(*args, **kwargs)
@@ -231,18 +215,18 @@ def get_auth_token():
     password = request.form['password']
     user = check_login(emailid, password)
     if user:
-        if mscolab_settings.USER_VERIFICATION:
+        if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
                 token = user.generate_auth_token()
                 return json.dumps({
-                                  'token': token.decode('ascii'),
-                                  'user': {'username': user.username, 'id': user.id}})
+                    'token': token,
+                    'user': {'username': user.username, 'id': user.id}})
             else:
                 return "False"
         else:
             token = user.generate_auth_token()
             return json.dumps({
-                'token': token.decode('ascii'),
+                'token': token,
                 'user': {'username': user.username, 'id': user.id}})
     else:
         logging.debug("Unauthorized user: %s", emailid)
@@ -254,7 +238,7 @@ def authorized():
     token = request.args.get('token', request.form.get('token'))
     user = User.verify_auth_token(token)
     if user is not None:
-        if mscolab_settings.USER_VERIFICATION:
+        if mscolab_settings.MAIL_ENABLED:
             if user.confirmed is False:
                 return "False"
             else:
@@ -275,21 +259,21 @@ def user_register_handler():
     try:
         if result["success"]:
             status_code = 201
-            if mscolab_settings.USER_VERIFICATION:
+            if mscolab_settings.MAIL_ENABLED:
                 status_code = 204
-            token = generate_confirmation_token(email)
-            confirm_url = url_for('confirm_email', token=token, _external=True)
-            html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
-            subject = "Please confirm your email"
-            send_email(email, subject, html)
-        return jsonify(result), status_code
+                token = generate_confirmation_token(email)
+                confirm_url = url_for('confirm_email', token=token, _external=True)
+                html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
+                subject = "MSColab Please confirm your email"
+                send_email(email, subject, html)
+            return jsonify(result), status_code
     except TypeError:
         return jsonify({"success": False}), 401
 
 
 @APP.route('/confirm/<token>')
 def confirm_email(token):
-    if mscolab_settings.USER_VERIFICATION:
+    if mscolab_settings.MAIL_ENABLED:
         try:
             email = confirm_token(token)
         except TypeError:
@@ -394,8 +378,9 @@ def create_operation():
     content = request.form.get('content', None)
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
+    last_used = datetime.datetime.utcnow()
     user = g.user
-    r = str(fm.create_operation(path, description, user, content=content, category=category))
+    r = str(fm.create_operation(path, description, user, last_used, content=content, category=category))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
@@ -500,6 +485,37 @@ def get_operation_details():
     return json.dumps(fm.get_operation_details(int(op_id), user))
 
 
+@APP.route('/set_last_used', methods=["POST"])
+@verify_user
+def set_last_used():
+    op_id = request.form.get('op_id', None)
+    operation = Operation.query.filter_by(id=int(op_id)).first()
+    operation.last_used = datetime.datetime.utcnow()
+    temp_operation_active = operation.active
+    operation.active = True
+    db.session.commit()
+    # Reload Operation List
+    if not temp_operation_active:
+        token = request.args.get('token', request.form.get('token', False))
+        json_config = {"token": token}
+        sockio.sm.update_operation_list(json_config)
+    return jsonify({"success": True}), 200
+
+
+@APP.route('/update_last_used', methods=["POST"])
+@verify_user
+def update_last_used():
+    operations = Operation.query.filter().all()
+    for operation in operations:
+        a = (datetime.datetime.utcnow() - operation.last_used).days
+        if a > 30:
+            operation.active = False
+        else:
+            operation.active = True
+    db.session.commit()
+    return jsonify({"success": True}), 200
+
+
 @APP.route('/undo', methods=["POST"])
 @verify_user
 def undo_ftml():
@@ -512,6 +528,17 @@ def undo_ftml():
     if result is True:
         sockio.sm.emit_file_change(ch.op_id)
     return str(result)
+
+
+@APP.route("/creator_of_operation", methods=["GET"])
+@verify_user
+def get_creator_of_operation():
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    u_id = g.user.id
+    creator_name = fm.fetch_operation_creator(op_id, u_id)
+    if creator_name is False:
+        return jsonify({"success": False, "message": "You don't have access to this data"}), 403
+    return jsonify({"success": True, "username": creator_name}), 200
 
 
 @APP.route("/users_without_permission", methods=["GET"])
@@ -614,6 +641,60 @@ def import_permissions():
 
     return jsonify({"success": False,
                     "message": message})
+
+
+@APP.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    try:
+        email = confirm_token(token, expiration=86400)
+    except TypeError:
+        return jsonify({"success": False}), 401
+    if email is False:
+        flash("Sorry, your token has expired or is invalid! We will need to resend your authentication email",
+              'category_info')
+        return render_template('user/status.html', uri={"path": "reset_request", "name": "Resend authentication email"})
+    user = User.query.filter_by(emailid=email).first_or_404()
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        try:
+            user.hash_password(form.confirm_password.data)
+            user.confirmed = True
+            db.session.commit()
+            flash('Password reset Success. Please login by the user interface.', 'category_success')
+            return render_template('user/status.html')
+        except IOError:
+            flash('Password reset failed. Please try again later', 'category_danger')
+    return render_template('user/reset_password.html', form=form)
+
+
+@APP.route("/reset_request", methods=['GET', 'POST'])
+def reset_request():
+    if mscolab_settings.MAIL_ENABLED:
+        form = ResetRequestForm()
+        if form.validate_on_submit():
+            # Check wheather user exists or not based on the db
+            user = User.query.filter_by(emailid=form.email.data).first()
+            if user:
+                try:
+                    username = user.username
+                    token = generate_confirmation_token(form.email.data)
+                    reset_password_url = url_for('reset_password', token=token, _external=True)
+                    html = render_template('user/reset_confirmation.html',
+                                           reset_password_url=reset_password_url, username=username)
+                    subject = "MSColab Password reset request"
+                    send_email(form.email.data, subject, html)
+                    flash('An email was sent if this user account exists', 'category_success')
+                    return render_template('user/status.html')
+                except IOError:
+                    flash('''We apologize, but it seems that there was an issue sending
+                    your request email. Please try again later.''', 'category_info')
+            else:
+                flash('An email was sent if this user account exists', 'category_success')
+                return render_template('user/status.html')
+        return render_template('user/reset_request.html', form=form)
+    else:
+        logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
+        return render_template('errors/403.html'), 403
 
 
 def start_server(app, sockio, cm, fm, port=8083):

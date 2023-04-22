@@ -1,0 +1,47 @@
+import numpy as np
+import matplotlib
+import mslib.mswms.mpl_hsec_styles
+import mpl_toolkits.axes_grid1.inset_locator
+
+
+class HS_BrightnessTemperature(mslib.mswms.mpl_hsec_styles.MPLBasemapHorizontalSectionStyle):
+    name = "BT01"
+    entity = "brightness_temperature_residual"
+    dataname = entity
+    title = "brightness temperature residual (K)"
+    long_name = entity
+    abstract = "Brightness temperature residual. Altitude range: " \
+               "4µm 34-42km, 15µm-high 42-44km, 15µm-low 24-26km"
+
+    required_datafields = [
+        ("sfc", "brightness_temperature_residual_4mu", "K"),
+        ("sfc", "brightness_temperature_residual_15mu_high", "K"),
+        ("sfc", "brightness_temperature_residual_15mu_low", "K"),
+    ]
+
+    styles = [
+        ("4mu", "4µm"),
+        ("15mu_low", "15µm low"),
+        ("15mu_high", "15µm high"),
+    ]
+
+    def _plot_style(self):
+        lonmesh_, latmesh_ = np.meshgrid(self.lons, self.lats)
+        lonmesh, latmesh = self.bm(lonmesh_, latmesh_)
+
+        clev = np.asarray([-7, -4, -2, -1, -0.5, 0.5, 1.0, 2, 4.0, 7.0])
+        ticks = [-4, -2, -1, -0.5, 0.5, 1, 2, 4]
+        cmap = matplotlib.pyplot.cm.Spectral_r
+        norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
+        pv = self.bm.pcolormesh(
+            lonmesh, latmesh, self.data[f"brightness_temperature_residual_{self.style}"],
+            cmap=cmap, norm=norm)
+
+        if not self.noframe:
+            cbar = self.fig.colorbar(pv, fraction=0.05, pad=0.08, shrink=0.7)
+            cbar.set_label("BT")
+        else:
+            axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
+                self.ax, width="3%", height="40%", loc=4)
+            cbar = self.fig.colorbar(pv, cax=axins1, orientation="vertical", ticks=ticks, extend="both")
+            axins1.yaxis.set_ticks_position("left")

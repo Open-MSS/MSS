@@ -1,6 +1,17 @@
 name: Build Gallery
 
-on: pull_request
+on: 
+   pull_request:
+     inputs:
+        branch_name:
+          required: true
+          type: string
+        secrets:
+          PAT:
+            required: true
+
+env:
+  PAT: ${{ secrets.PAT }}
 
 jobs:
   Test-MSS-docs:
@@ -11,7 +22,7 @@ jobs:
         shell: bash
 
     container:
-      image: openmss/mss-test:latest
+      image: openmss/testing-develop
 
     steps:
     - name: Trust My Directory

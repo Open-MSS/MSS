@@ -90,7 +90,8 @@ You cannot just do like this ::
 
 
 In Linux for making the cursor visible as a highlighter, perform the following
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..............................................................................
+
 If you are in Windows, there is no need of this highlighter. It is by default that it also records the mouse-pointer.
 
 * Clone the repository https://github.com/swillner/highlight-pointer.git into a directory eg. `highlighter` on your system
@@ -168,24 +169,32 @@ The post processing of the videos can be done using ffmpeg in Command Line Inter
 
 The generated video size is too large, so if you want to reduce the size, you can ::
 
-    $ cd MSS/tutorials/Screen Recordings/
-    (mssdev)$ ffmpeg -i input.mp4 -vcodec h264 -acodec mp2 output.mp4
+    $ cd MSS/tutorials/recordings/
+    (mssdev)$ ffmpeg -i last_recording.mp4 -vcodec h264 -acodec mp2 output.mp4
 
 For trimming the videos from a start (00:14:00) and end time (05:19:00), you can ::
 
-    $ cd MSS/tutorials/Screen Recordings/
-    (mssdev)$ ffmpeg -i input.mp4 -ss 00:00:14 -to 05:19:00 -c:v libx264 -crf 30 output.mp4
+    $ cd MSS/tutorials/recordings/
+    (mssdev)$ ffmpeg -i last_recording.mp4 -ss 00:00:14 -to 05:19:00 -c:v libx264 -crf 30 output.mp4
 
 For cropping the video
 (you can also use Screen Recorder for selected screen area recording feature as described above) ::
 
-    $ cd MSS/tutorials/Screen Recordings/
-    (mssdev)$ fmpeg -i input.mp4 -filter_complex "[0:v]crop=1919:978:0:33[cropped]" -map "[cropped]" output.mp4
+    $ cd MSS/tutorials/recordings/
+    (mssdev)$ fmpeg -i last_recording.mp4 -filter_complex "[0:v]crop=1919:978:0:33[cropped]" -map "[cropped]" output.mp4
 
     # “crop=width:height:x:y” is the format
 
 For merging audios into the video ::
 
-    (mssdev)$ ffmpeg -i input.mp4 -i audio.mp3 -c:v copy -c:a aac output.mp4
+    (mssdev)$ ffmpeg -i last_recording.mp4 -i audio.mp3 -c:v copy -c:a aac output.mp4
 
 In this case, the video and audio must be in same directory and you should cd into that directory.
+
+
+batch scripts
+~~~~~~~~~~~~~
+
+Two batch scripts can be used to create tutorials.
+start_tutorial.sh is to create one tutorial and tutorials.batch
+is used to create all tutorials compressed to gifcycles.

@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - develop
+
   pull_request:
     branches:
     - develop
@@ -28,5 +29,4 @@ jobs:
       event_name: ${{ github.event_name }}
     secrets:
       PAT: ${{ secrets.PAT }}
-
 
