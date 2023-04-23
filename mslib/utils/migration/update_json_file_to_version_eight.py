@@ -26,6 +26,8 @@
     limitations under the License.
 """
 
+import logging
+from keyring.errors import NoKeyringError
 from packaging import version
 from mslib import __version__
 from mslib.utils.auth import save_password_to_keyring
@@ -48,22 +50,34 @@ class JsonConversion:
         """
         if version.parse(__version__) > version.parse('7.1.0') and version.parse(__version__) < version.parse('9.0.0'):
             http_auth_login_data = {}
+            saved_to_keyring = True
             for url in self.wms_login.keys():
                 auth_username, auth_password = self.wms_login[url]
                 http_auth_login_data[url] = auth_username
-                save_password_to_keyring(url, auth_username, auth_password)
+                try:
+                    save_password_to_keyring(url, auth_username, auth_password)
+                except NoKeyringError:
+                    saved_to_keyring = False
 
             for url in self.msc_login.keys():
                 auth_username, auth_password = self.msc_login[url]
                 http_auth_login_data[url] = auth_username
-                save_password_to_keyring(url, auth_username, auth_password)
+                try:
+                    save_password_to_keyring(url, auth_username, auth_password)
+                except NoKeyringError:
+                    saved_to_keyring = False
 
             data_to_save_in_config_file = {
                 "MSS_auth": http_auth_login_data
             }
-            save_password_to_keyring(service_name="MSCOLAB",
-                                     username=self.MSCOLAB_mailid, password=self.MSCOLAB_password)
+            try:
+                save_password_to_keyring(service_name="MSCOLAB",
+                                         username=self.MSCOLAB_mailid, password=self.MSCOLAB_password)
+            except NoKeyringError:
+                saved_to_keyring = False
             modify_config_file(data_to_save_in_config_file)
+            if saved_to_keyring is False:
+                logging.warning("Can't use Keyring on your system to store credentials.")
 
 
 if __name__ == "__main__":
