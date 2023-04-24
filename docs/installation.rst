@@ -204,6 +204,29 @@ If you want only to start the msui do this by ::
  $  xhost +local:docker
  $  docker run -d -ti --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --network host openmss/mss:latest msui
 
+
+We have not setup keyring in the docker container. When a login is needed you will get a message:
+
+INFO: Can't use Keyring on your system: No recommended backend was available.
+Install a recommended 3rd party backend package; or, install the keyrings.alt package
+if you want to use the non-recommended backends. See https://pypi.org/project/keyring
+for details.
+
+For using keyring in a the openmss/mss container you need to start the container with different options
+and after installing gnome-keyring you have to configure it. ::
+
+ $ xhost +local:docker
+ $ docker run -ti --ulimit nofile=65536:65536 --cap-add=IPC_LOCK --rm -e DISPLAY=$DISPLAY -v /tmp/.X11-unix/:/tmp/.X11-unix --network host openmss/mss:latest  /bin/bash
+ $ apt update
+ $ apt install gnome-keyring
+ $ conda activate mssenv
+ $ dbus-run-session -- sh # start a new D-bus shell, prompt changes to a hash
+ # echo 'credpass' | gnome-keyring-daemon --unlock # unlock the systems keyring
+ # msui # starts msui
+
+
+
+
 Singularity
 -----------
 
