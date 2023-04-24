@@ -46,8 +46,6 @@ def del_password_from_keyring(service_name=NAME, username=""):
     if username.strip() != "":
         try:
             keyring.delete_password(service_name=service_name, username=username)
-        except keyring.errors.PasswordDeleteError:
-            pass
         except (keyring.errors.NoKeyringError, keyring.errors.PasswordDeleteError) as ex:
             logging.warning("Can't use Keyring on your system: %s" % ex)
 
