@@ -91,6 +91,7 @@ requirements:
     - flask-wtf
     - email_validator
     - keyring
+    - dbus-python
 
 test:
   imports:
