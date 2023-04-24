@@ -43,6 +43,7 @@ import urllib.request
 from fs import open_fs
 from PIL import Image
 from werkzeug.urls import url_join
+from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
 from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_chat as mc
@@ -276,7 +277,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.httpBb.accepted.connect(self.login_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
         else:
-            save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
+            try:
+                save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
+            except (NoKeyringError, PasswordSetError, InitError) as ex:
+                logging.warning("Can't use Keyring on your system: %s" % ex)
             self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
     def save_user_credentials_to_config_file(self, emailid, password):
@@ -284,7 +288,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             "MSCOLAB_mailid": emailid
         }
 
-        save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
+        try:
+            save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
+        except (NoKeyringError, PasswordSetError, InitError) as ex:
+            logging.warning("Can't use Keyring on your system:  %s" % ex)
         exiting_mscolab_mailid = config_loader(dataset="MSCOLAB_mailid")
         if exiting_mscolab_mailid != emailid:
             ret = QtWidgets.QMessageBox.question(
@@ -381,7 +388,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         }
 
         modify_config_file(data_to_save_in_config_file)
-        save_password_to_keyring(self.mscolab_server_url, auth_username, auth_password)
+        try:
+            save_password_to_keyring(self.mscolab_server_url, auth_username, auth_password)
+        except (NoKeyringError, PasswordSetError, InitError) as ex:
+            logging.warning("Can't use Keyring on your system: %s" % ex)
 
     def newuser_server_auth(self):
         data, r, url = self.newuser_data
