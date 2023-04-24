@@ -48,8 +48,8 @@ def del_password_from_keyring(service_name=NAME, username=""):
             keyring.delete_password(service_name=service_name, username=username)
         except keyring.errors.PasswordDeleteError:
             pass
-        except keyring.errors.NoKeyringError as e:
-            logging.error(e)
+        except (keyring.errors.NoKeyringError, keyring.errors.PasswordDeleteError) as ex:
+            logging.warning("Can't use Keyring on your system: %s" % ex)
 
 
 def get_password_from_keyring(service_name=NAME, username=""):
@@ -58,13 +58,17 @@ def get_password_from_keyring(service_name=NAME, username=""):
     In this case by none existing credentials in the keyring we have to return an empty string
     """
     if username.strip() != "":
-        cred = keyring.get_credential(service_name=service_name, username=username)
-        if username is not None and cred is None:
-            return ""
-        elif cred is None:
+        try:
+            cred = keyring.get_credential(service_name=service_name, username=username)
+            if username is not None and cred is None:
+                return ""
+            elif cred is None:
+                return None
+            else:
+                return cred.password
+        except keyring.errors.KeyringLocked as ex:
+            logging.warn(ex)
             return None
-        else:
-            return cred.password
 
 
 def save_password_to_keyring(service_name=NAME, username="", password=""):

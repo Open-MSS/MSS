@@ -44,7 +44,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import owslib.util
 from owslib.crs import axisorder_yx
 from PIL import Image, ImageOps
-from keyring.errors import NoKeyringError
+from keyring.errors import NoKeyringError, PasswordSetError
 
 from mslib.msui import constants, wms_capabilities
 from mslib.utils.qt import ui_wms_dockwidget as ui
@@ -622,8 +622,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         try:
                             save_password_to_keyring(service_name=base_url,
                                                      username=auth_username, password=auth_password)
-                        except NoKeyringError:
-                            logging.debug("Can't use Keyring on your system")
+                        except (NoKeyringError, PasswordSetError) as ex:
+                            logging.warning("Can't use Keyring on your system: %s" % ex)
                         http_auth[base_url] = auth_username
                         data_to_save_in_config_file = {
                             "MSS_auth": http_auth
