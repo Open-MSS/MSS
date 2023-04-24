@@ -27,7 +27,7 @@
 """
 
 import logging
-from keyring.errors import NoKeyringError, PasswordSetError
+from keyring.errors import NoKeyringError, PasswordSetError, InitError
 from packaging import version
 from mslib import __version__
 from mslib.utils.auth import save_password_to_keyring
@@ -55,7 +55,7 @@ class JsonConversion:
                 http_auth_login_data[url] = auth_username
                 try:
                     save_password_to_keyring(url, auth_username, auth_password)
-                except (NoKeyringError, PasswordSetError) as ex:
+                except (NoKeyringError, PasswordSetError, InitError) as ex:
                     logging.warning("Can't use Keyring on your system to store credentials: %s" % ex)
 
             for url in self.msc_login.keys():
@@ -63,7 +63,7 @@ class JsonConversion:
                 http_auth_login_data[url] = auth_username
                 try:
                     save_password_to_keyring(url, auth_username, auth_password)
-                except (NoKeyringError, PasswordSetError) as ex:
+                except (NoKeyringError, PasswordSetError, InitError) as ex:
                     logging.warning("Can't use Keyring on your system to store credentials: %s" % ex)
 
             data_to_save_in_config_file = {
@@ -72,7 +72,7 @@ class JsonConversion:
             try:
                 save_password_to_keyring(service_name="MSCOLAB",
                                          username=self.MSCOLAB_mailid, password=self.MSCOLAB_password)
-            except (NoKeyringError, PasswordSetError) as ex:
+            except (NoKeyringError, PasswordSetError, InitError) as ex:
                 logging.warning("Can't use Keyring on your system to store credentials: %s" % ex)
             modify_config_file(data_to_save_in_config_file)
 

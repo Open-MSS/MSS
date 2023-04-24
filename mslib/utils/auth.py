@@ -78,8 +78,8 @@ def save_password_to_keyring(service_name=NAME, username="", password=""):
     if "" not in (username.strip(), password.strip()):
         try:
             keyring.set_password(service_name=service_name, username=username, password=password)
-        except keyring.errors.NoKeyringError:
-            logging.info("Can't use Keyring on your system")
+        except keyring.errors.NoKeyringError as ex:
+            logging.info("Can't use Keyring on your system: %s" % ex)
 
 
 def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True):
@@ -91,9 +91,9 @@ def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True
         if server_url == url:
             try:
                 password = get_password_from_keyring(service_name=url, username=auth_name)
-            except keyring.errors.NoKeyringError:
+            except keyring.errors.NoKeyringError as ex:
                 password = None
-                logging.info("Can't use Keyring on your system")
+                logging.info("Can't use Keyring on your system: %s" % ex)
             if overwrite_login_cache and password is not None and password.strip() != "":
                 constants.AUTH_LOGIN_CACHE[server_url] = (auth_name, password)
             name = auth_name

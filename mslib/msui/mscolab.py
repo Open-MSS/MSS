@@ -43,7 +43,7 @@ import urllib.request
 from fs import open_fs
 from PIL import Image
 from werkzeug.urls import url_join
-from keyring.errors import NoKeyringError, PasswordSetError
+from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
 from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_chat as mc
@@ -279,7 +279,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             try:
                 save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
-            except (NoKeyringError, PasswordSetError) as ex:
+            except (NoKeyringError, PasswordSetError, InitError) as ex:
                 logging.warning("Can't use Keyring on your system: %s" % ex)
             self.mscolab.after_login(emailid, self.mscolab_server_url, r)
 
@@ -290,7 +290,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         try:
             save_password_to_keyring(service_name="MSCOLAB", username=emailid, password=password)
-        except (NoKeyringError, PasswordSetError) as ex:
+        except (NoKeyringError, PasswordSetError, InitError) as ex:
             logging.warning("Can't use Keyring on your system:  %s" % ex)
         exiting_mscolab_mailid = config_loader(dataset="MSCOLAB_mailid")
         if exiting_mscolab_mailid != emailid:
@@ -390,7 +390,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         modify_config_file(data_to_save_in_config_file)
         try:
             save_password_to_keyring(self.mscolab_server_url, auth_username, auth_password)
-        except (NoKeyringError, PasswordSetError) as ex:
+        except (NoKeyringError, PasswordSetError, InitError) as ex:
             logging.warning("Can't use Keyring on your system: %s" % ex)
 
     def newuser_server_auth(self):
