@@ -1,6 +1,15 @@
 Changelog
 =========
 
+
+Version 8.0.1
+~~~~~~~~~~~~~
+
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/94?closed=1
+
 Version 8.0.0
 ~~~~~~~~~~~~~
 
