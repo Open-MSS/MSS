@@ -457,9 +457,20 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         self.shortcuts_dlg = None
 
-        # deactivate vice versa selection of Operation or Flight Track
-        self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
-        self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
+        # deactivate vice versa selection of Operation, inactive operation or Flight Track
+
+        def deselecter(list_a, list_b, disable):
+            list_a.setCurrentItem(None)
+            list_b.setCurrentItem(None)
+            if disable:
+                self.mscolab.ui.actionActivateOperation.setEnabled(False)
+
+        self.listFlightTracks.itemClicked.connect(
+            lambda: deselecter(self.listOperationsMSC, self.listInactiveOperationsMSC, True))
+        self.listOperationsMSC.itemClicked.connect(
+            lambda: deselecter(self.listFlightTracks, self.listInactiveOperationsMSC, True))
+        self.listInactiveOperationsMSC.itemClicked.connect(
+            lambda: deselecter(self.listFlightTracks, self.listOperationsMSC, False))
 
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
