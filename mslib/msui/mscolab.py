@@ -448,6 +448,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
+        self.ui.actionActivateOperation.setEnabled(False)
         self.hide_operation_options()
         self.ui.activeOperationDesc.setHidden(True)
 
@@ -1482,7 +1483,7 @@ class MSUIMscolab(QtCore.QObject):
                     self.ui.listOperationsMSC.setCurrentItem(selectedOperation)
                     self.ui.listOperationsMSC.itemActivated.emit(selectedOperation)
                 self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
-                self.ui.listInactiveOperationsMSC.itemActivated.connect(self.select_inactive_operation)
+                self.ui.listInactiveOperationsMSC.itemClicked.connect(self.select_inactive_operation)
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
                 self.logout()
@@ -1492,23 +1493,9 @@ class MSUIMscolab(QtCore.QObject):
 
     def select_inactive_operation(self, item):
         self.inactive_op_id = item.op_id
-        self.active_op_id = None
-        font = QtGui.QFont()
-        for i in range(self.ui.listInactiveOperationsMSC.count()):
-            self.ui.listInactiveOperationsMSC.item(i).setFont(font)
-        font.setBold(True)
-        item.setFont(font)
         self.show_operation_options_in_inactivated_state(item.access_level)
 
     def show_operation_options_in_inactivated_state(self, access_level):
-        self.ui.actionChat.setEnabled(False)
-        self.ui.actionVersionHistory.setEnabled(False)
-        self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProperties.setEnabled(False)
-        self.ui.actionRenameOperation.setEnabled(False)
-        self.ui.actionLeaveOperation.setEnabled(False)
-        self.ui.actionDeleteOperation.setEnabled(False)
-        self.ui.actionUpdateOperationDesc.setEnabled(False)
         self.ui.actionActivateOperation.setEnabled(False)
         if access_level == "creator":
             self.ui.actionActivateOperation.setEnabled(True)
