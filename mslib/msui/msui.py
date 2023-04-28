@@ -463,7 +463,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             list_a.setCurrentItem(None)
             list_b.setCurrentItem(None)
             if disable:
-                self.mscolab.ui.actionActivateOperation.setEnabled(False)
+                self.mscolab.ui.actionUnarchiveOperation.setEnabled(False)
 
         self.listFlightTracks.itemClicked.connect(
             lambda: deselecter(self.listOperationsMSC, self.listInactiveOperationsMSC, True))
