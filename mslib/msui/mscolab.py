@@ -1426,6 +1426,10 @@ class MSUIMscolab(QtCore.QObject):
                 show_popup(self.ui, "Permission Revoked", "Access to an operation was revoked")
                 self.signal_permission_revoked.emit(op_id)
 
+            if self.active_op_id == op_id:
+                self.ui.listFlightTracks.setCurrentRow(0)
+                self.ui.activate_selected_flight_track()
+
     @QtCore.Slot(int)
     def handle_operation_deleted(self, op_id):
         operation_name = self.delete_operation_from_list(op_id)
