@@ -146,13 +146,30 @@ Using predefined docker images instead of installing all requirements
 .....................................................................
 
 You can easily use our testing docker images which have all libraries pre installed. These are based on mambaforgen.
+We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have mss-develop-env defined.
 In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these evironments.
 
-Initial configuration or on each updated docker image
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have mss-develop-env defined.
+You can either mount your MSS workdir in the container or use the environment from the container as environment on your machine.
+
+
+Running pytest inside the docker container
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We mount the MSS workdir into the docker container and use an env var to access the directory for running pytest on that dir. ::
+
+    ~/workspace/MSS$ docker pull openmss/testing-stable  # get recent version
+    ~/workspace/MSS$ docker run -it --mount src=`pwd`,target=`pwd`,type=bind -e MSSDIR=`pwd` openmss/testing-stable  # mount dir into container, create env var MSSDIR with dir
+    (base) root@78f42ac9ded7:/# cd $MSSDIR  # change directory to the mounted dir
+    (base) root@78f42ac9ded7:/# conda activate mss-stable-env  # activate env
+    (mss-stable-env) root@78f42ac9ded7:/# pytest tests  # run pytest
+
+
+
+Use the docker env on your computer, initial setup
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 This example shows by using mss-stable-env how to set it up for testing and development of stable branch. The images gets updates
-when we have to add new dependencies or have do pinning of existing modules. ::
+when we have to add new dependencies or have do pinning of existing modules. On an updated image you need to redo these steps ::
 
     rm -rf $HOME/mambaforge/envs/mss-stable-env # cleanup the existing env
     mkdir $HOME/mambaforge/envs/mss-stable-env  # create the dir to bind to
@@ -164,10 +181,8 @@ when we have to add new dependencies or have do pinning of existing modules. ::
     cd workspace/MSS                            # go to your workspace MSS dir
     export PYTHONPATH=`pwd`                     # add it to the PYTHONPATH
     python mslib/msui/msui.py                   # test if the UI starts
-    pytest _tests                               # run pytest
+    pytest tests                                # run pytest
 
-Using after configuration
-~~~~~~~~~~~~~~~~~~~~~~~~~
 
 After the image was configured you can use it like a self installed env ::
 
@@ -175,7 +190,7 @@ After the image was configured you can use it like a self installed env ::
     conda activate mss-stable-env       # activate env
     cd workspace/MSS                    # go to your workspace MSS dir
     export PYTHONPATH=`pwd`             # add it to the PYTHONPATH
-    pytest _tests                       # run pytest
+    pytest tests                        # run pytest
 
 
 
