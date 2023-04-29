@@ -1190,10 +1190,12 @@ def main():
                 dataset="MSC_login") or config_loader_before_eight(dataset="MSCOLAB_password"):
 
             text = """We can update your msui_settings.json file \n
-We add the new attributes for the webserver authentication, see
+We add the new attributes for the webserver authentication, see \n
 https://mss.readthedocs.io/en/stable/usage.html#mscolab-login-and-www-authentication \n
-When everything works remove the old attributes: \n
-WMS_login, MSC_login, MSCOLAB_password"""
+The old attributes get removed: \n
+WMS_login, MSC_login, MSCOLAB_password \n\n
+A backup of the old file is stored.
+"""
 
             ret = QtWidgets.QMessageBox.question(mainwindow, 'Update of msui_settings.json file',
                                                  text,
