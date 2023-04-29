@@ -448,7 +448,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
-        self.ui.actionActivateOperation.setEnabled(False)
+        self.ui.actionUnarchiveOperation.setEnabled(False)
         self.hide_operation_options()
         self.ui.activeOperationDesc.setHidden(True)
 
@@ -466,7 +466,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionLeaveOperation.triggered.connect(self.operation_options_handler)
         self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
         self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
-        self.ui.actionActivateOperation.triggered.connect(self.activate_operation)
+        self.ui.actionUnarchiveOperation.triggered.connect(self.activate_operation)
         self.ui.actionDescription.triggered.connect(
             lambda: QtWidgets.QMessageBox.information(None,
                                                       "Operation Description",
@@ -635,7 +635,7 @@ class MSUIMscolab(QtCore.QObject):
             # disable category change selector
             self.ui.filterCategoryCb.setEnabled(True)
             # disable activate operation button
-            self.ui.actionActivateOperation.setEnabled(False)
+            self.ui.actionUnarchiveOperation.setEnabled(False)
 
             self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
@@ -1519,9 +1519,9 @@ class MSUIMscolab(QtCore.QObject):
         self.show_operation_options_in_inactivated_state(item.access_level)
 
     def show_operation_options_in_inactivated_state(self, access_level):
-        self.ui.actionActivateOperation.setEnabled(False)
+        self.ui.actionUnarchiveOperation.setEnabled(False)
         if access_level == "creator":
-            self.ui.actionActivateOperation.setEnabled(True)
+            self.ui.actionUnarchiveOperation.setEnabled(True)
 
     def activate_operation(self):
         logging.debug('activate_operation')
@@ -1565,7 +1565,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.workLocallyCheckbox.blockSignals(False)
 
             # Disable Activate Operation Button
-            self.ui.actionActivateOperation.setEnabled(False)
+            self.ui.actionUnarchiveOperation.setEnabled(False)
 
             # set last used date for operation
             data = {
@@ -1653,6 +1653,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionLeaveOperation.setEnabled(True)
         self.ui.actionDeleteOperation.setEnabled(False)
         self.ui.actionUpdateOperationDesc.setEnabled(False)
+
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
