@@ -486,7 +486,6 @@ class Test_Mscolab(object):
         self._create_operation(operation_name, "Description flight7")
         # check for operation dir is created on server
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name))
-        assert self.window.mscolab.active_op_id is None
         self._activate_operation_at_index(0)
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None

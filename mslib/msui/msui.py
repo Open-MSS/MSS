@@ -783,6 +783,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.signal_activate_flighttrack.emit(self.active_flight_track)
 
     def update_active_flight_track(self, old_flight_track_name=None):
+        logging.debug("update_active_flight_track")
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
@@ -801,6 +802,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
+
         # disable appropriate menu options
         self.menu_handler()
 
