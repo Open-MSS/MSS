@@ -1432,7 +1432,11 @@ class MSUIMscolab(QtCore.QObject):
 
     @QtCore.Slot(int)
     def handle_operation_deleted(self, op_id):
+        old_operation_name = self.active_operation_name
+        old_active_id = self.active_op_id
         operation_name = self.delete_operation_from_list(op_id)
+        if op_id == old_active_id and operation_name is None:
+            operation_name = old_operation_name
         show_popup(self.ui, "Success", f'Operation "{operation_name}" was deleted!', icon=1)
 
     def show_categories_to_ui(self):
