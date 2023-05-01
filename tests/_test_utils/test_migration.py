@@ -24,11 +24,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import pytest
+import fs
 from packaging import version
 from mslib.utils.migration.update_json_file_to_version_eight import JsonConversion
 from mslib.utils import auth
 from mslib.version import __version__
+from mslib.msui.constants import MSUI_SETTINGS
 from tests.utils import create_msui_settings_file
 
 
@@ -55,18 +57,29 @@ class TestMigration:
             "MSCOLAB_mailid": "something@something.org",
             "MSCOLAB_password": "{mail_password}"
             }}"""
+            # store old configuration
             create_msui_settings_file(data)
-            new_version = JsonConversion()
-            new_version.change_parameters()
-            # using old configuration
+
             from mslib.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
             from mslib.utils.migration.config_before_eight import config_loader as config_loader_before_eight
             read_config_file_before_eight()
+
             wms_login = {'http://www.your-server.de/forecasts': ['youruser', 'yourpassword']}
             assert config_loader_before_eight(dataset="WMS_login") == wms_login
             msc_login = {'http://www.your-mscolab-server.de': ['youruser', 'yourpassword']}
             assert config_loader_before_eight(dataset="MSC_login") == msc_login
             assert config_loader_before_eight(dataset="MSCOLAB_password") == mail_password
+
+            new_version = JsonConversion()
+            # converting and storing
+            new_version.change_parameters()
+            filename = MSUI_SETTINGS.replace('\\', '/')
+            dir_name, file_name = fs.path.split(filename)
+            # check that we have a backup file
+            bak_file = f"{file_name}.bak"
+            _fs = fs.open_fs(dir_name)
+            assert _fs.exists(bak_file)
+
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader
             read_config_file()
@@ -80,3 +93,11 @@ class TestMigration:
             data = auth.get_auth_from_url_and_name("http://www.your-server.de/forecasts", http_auth)
             assert data == ("youruser", 'password from TestKeyring')
             assert auth.get_password_from_keyring("MSCOLAB", "something@something.org") == 'password from TestKeyring'
+
+            # check removed old attributes
+            with pytest.raises(KeyError):
+                assert config_loader(dataset="WMS_login")
+            with pytest.raises(KeyError):
+                config_loader(dataset="MSC_login")
+            with pytest.raises(KeyError):
+                config_loader(dataset="MSCOLAB_password")

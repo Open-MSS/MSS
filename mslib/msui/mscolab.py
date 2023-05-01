@@ -946,12 +946,14 @@ class MSUIMscolab(QtCore.QObject):
                 self.admin_window.activateWindow()
                 return
 
+            operations = [operation for operation in self.operations if operation["active"] is True]
+
             self.admin_window = maw.MSColabAdminWindow(
                 self.token,
                 self.active_op_id,
                 self.user,
                 self.active_operation_name,
-                self.operations,
+                operations,
                 self.conn,
                 mscolab_server_url=self.mscolab_server_url,
             )
