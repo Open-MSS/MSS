@@ -197,6 +197,12 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
                 action_text = action.text()
                 if action_text in ("Ins WP", "Del WP", "Mv WP"):
                     action.setEnabled(False)
+                    if str(self.mpl.navbar.mode) == "insert waypoint" and action_text == "Ins WP":
+                        action.trigger()
+                    elif str(self.mpl.navbar.mode) == "delete waypoint" and action_text == "Del WP":
+                        action.trigger()
+                    elif str(self.mpl.navbar.mode) == "move waypoint" and action_text == "Mv WP":
+                        action.trigger()
         else:
             # Table View
             self.btAddWayPointToFlightTrack.setEnabled(False)

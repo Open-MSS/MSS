@@ -12,7 +12,7 @@ The example shows defining of waypoints for a flight path, moved and deleted.
 
 
 Further tutorials about the Mission Support System Software on:
-https://mss.readthedocs.io/en/stable/tutorial.html
+[https://mss.readthedocs.io/en/stable/tutorial.html](https://mss.readthedocs.io/en/stable/tutorial.html)
 
 
 
