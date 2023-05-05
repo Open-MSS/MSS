@@ -222,6 +222,7 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(500)
 
     def _select_users(self, table, users):
         for row_num in range(table.rowCount()):

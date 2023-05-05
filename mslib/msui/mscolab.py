@@ -448,6 +448,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
+        self.ui.actionUnarchiveOperation.setEnabled(False)
         self.hide_operation_options()
         self.ui.activeOperationDesc.setHidden(True)
 
@@ -465,7 +466,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionLeaveOperation.triggered.connect(self.operation_options_handler)
         self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
         self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
-        self.ui.actionActivateOperation.triggered.connect(self.activate_operation)
+        self.ui.actionUnarchiveOperation.triggered.connect(self.activate_operation)
         self.ui.actionDescription.triggered.connect(
             lambda: QtWidgets.QMessageBox.information(None,
                                                       "Operation Description",
@@ -488,6 +489,8 @@ class MSUIMscolab(QtCore.QObject):
 
         # if token is None, not authorized, else authorized
         self.token = None
+        # int to store new pid
+        self.new_op_id = None
         # int to store active pid
         self.active_op_id = None
         # int to store selected inactive op_id
@@ -632,7 +635,7 @@ class MSUIMscolab(QtCore.QObject):
             # disable category change selector
             self.ui.filterCategoryCb.setEnabled(True)
             # disable activate operation button
-            self.ui.actionActivateOperation.setEnabled(False)
+            self.ui.actionUnarchiveOperation.setEnabled(False)
 
             self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
@@ -826,6 +829,7 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
 
     def add_operation(self):
+        logging.debug("add_operation")
         path = self.add_proj_dialog.path.text()
         description = self.add_proj_dialog.description.toPlainText()
         category = self.add_proj_dialog.category.text()
@@ -861,6 +865,7 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your operation was created successfully')
             op_id = self.get_recent_op_id()
+            self.new_op_id = op_id
             self.conn.handle_new_operation(op_id)
             self.signal_operation_added.emit(op_id, path)
         else:
@@ -882,6 +887,7 @@ class MSUIMscolab(QtCore.QObject):
                 op_id = None
                 if operations:
                     op_id = operations[-1]["op_id"]
+                logging.debug("recent op_id %s", op_id)
                 return op_id
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
@@ -940,12 +946,14 @@ class MSUIMscolab(QtCore.QObject):
                 self.admin_window.activateWindow()
                 return
 
+            operations = [operation for operation in self.operations if operation["active"] is True]
+
             self.admin_window = maw.MSColabAdminWindow(
                 self.token,
                 self.active_op_id,
                 self.user,
                 self.active_operation_name,
-                self.operations,
+                operations,
                 self.conn,
                 mscolab_server_url=self.mscolab_server_url,
             )
@@ -1009,6 +1017,7 @@ class MSUIMscolab(QtCore.QObject):
             self.version_window = None
 
     def handle_delete_operation(self):
+        logging.debug("handle_delete_operation")
         if verify_user_token(self.mscolab_server_url, self.token):
             entered_operation_name, ok = QtWidgets.QInputDialog.getText(
                 self.ui,
@@ -1034,6 +1043,9 @@ class MSUIMscolab(QtCore.QObject):
                         res.raise_for_status()
                         self.reload_operations()
                         self.signal_operation_removed.emit(self.active_op_id)
+                        logging.debug("activate local")
+                        self.ui.listFlightTracks.setCurrentRow(0)
+                        self.ui.activate_selected_flight_track()
                 else:
                     show_popup(self.ui, "Error", "Entered operation name did not match!")
         else:
@@ -1041,6 +1053,7 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
 
     def handle_leave_operation(self):
+        logging.debug("handle_leave_operation")
         w = QtWidgets.QWidget()
         qm = QtWidgets.QMessageBox
         reply = qm.question(w, self.tr('Mission Support System'),
@@ -1415,9 +1428,17 @@ class MSUIMscolab(QtCore.QObject):
                 show_popup(self.ui, "Permission Revoked", "Access to an operation was revoked")
                 self.signal_permission_revoked.emit(op_id)
 
+            if self.active_op_id == op_id:
+                self.ui.listFlightTracks.setCurrentRow(0)
+                self.ui.activate_selected_flight_track()
+
     @QtCore.Slot(int)
     def handle_operation_deleted(self, op_id):
+        old_operation_name = self.active_operation_name
+        old_active_id = self.active_op_id
         operation_name = self.delete_operation_from_list(op_id)
+        if op_id == old_active_id and operation_name is None:
+            operation_name = old_operation_name
         show_popup(self.ui, "Success", f'Operation "{operation_name}" was deleted!', icon=1)
 
     def show_categories_to_ui(self):
@@ -1445,6 +1466,7 @@ class MSUIMscolab(QtCore.QObject):
                     self.ui.filterCategoryCb.setCurrentIndex(index)
 
     def add_operations_to_ui(self):
+        logging.debug('add_operations_to_ui')
         if verify_user_token(self.mscolab_server_url, self.token):
             data = {
                 "token": self.token
@@ -1457,7 +1479,8 @@ class MSUIMscolab(QtCore.QObject):
                 operations = sorted(self.operations, key=lambda k: k["path"].lower())
                 self.ui.listOperationsMSC.clear()
                 self.ui.listInactiveOperationsMSC.clear()
-                selectedOperation = None
+                new_operation = None
+                active_operation = None
                 for operation in operations:
                     operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                     widgetItem = QtWidgets.QListWidgetItem(operation_desc)
@@ -1472,17 +1495,23 @@ class MSUIMscolab(QtCore.QObject):
                         widgetItem.active = operation["active"]
                     except KeyError:
                         widgetItem.active = True
-                    if widgetItem.op_id == self.active_op_id:
-                        selectedOperation = widgetItem
                     if widgetItem.active:
                         self.ui.listOperationsMSC.addItem(widgetItem)
+                        if widgetItem.op_id == self.active_op_id:
+                            active_operation = widgetItem
+                        if widgetItem.op_id == self.new_op_id:
+                            new_operation = widgetItem
                     else:
                         self.ui.listInactiveOperationsMSC.addItem(widgetItem)
-                if selectedOperation is not None:
-                    self.ui.listOperationsMSC.setCurrentItem(selectedOperation)
-                    self.ui.listOperationsMSC.itemActivated.emit(selectedOperation)
+                if new_operation is not None:
+                    logging.debug("%s %s %s", new_operation, self.new_op_id, self.active_op_id)
+                    self.ui.listOperationsMSC.itemActivated.emit(new_operation)
+                elif active_operation is not None:
+                    logging.debug("%s %s %s", new_operation, self.new_op_id, self.active_op_id)
+                    self.ui.listOperationsMSC.itemActivated.emit(active_operation)
                 self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
-                self.ui.listInactiveOperationsMSC.itemActivated.connect(self.select_inactive_operation)
+                self.ui.listInactiveOperationsMSC.itemClicked.connect(self.select_inactive_operation)
+                self.new_op_id = None
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
                 self.logout()
@@ -1491,29 +1520,17 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
 
     def select_inactive_operation(self, item):
+        logging.debug('select_inactive_operation')
         self.inactive_op_id = item.op_id
-        self.active_op_id = None
-        font = QtGui.QFont()
-        for i in range(self.ui.listInactiveOperationsMSC.count()):
-            self.ui.listInactiveOperationsMSC.item(i).setFont(font)
-        font.setBold(True)
-        item.setFont(font)
         self.show_operation_options_in_inactivated_state(item.access_level)
 
     def show_operation_options_in_inactivated_state(self, access_level):
-        self.ui.actionChat.setEnabled(False)
-        self.ui.actionVersionHistory.setEnabled(False)
-        self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProperties.setEnabled(False)
-        self.ui.actionRenameOperation.setEnabled(False)
-        self.ui.actionLeaveOperation.setEnabled(False)
-        self.ui.actionDeleteOperation.setEnabled(False)
-        self.ui.actionUpdateOperationDesc.setEnabled(False)
-        self.ui.actionActivateOperation.setEnabled(False)
+        self.ui.actionUnarchiveOperation.setEnabled(False)
         if access_level == "creator":
-            self.ui.actionActivateOperation.setEnabled(True)
+            self.ui.actionUnarchiveOperation.setEnabled(True)
 
     def activate_operation(self):
+        logging.debug('activate_operation')
         if verify_user_token(self.mscolab_server_url, self.token):
             # set last used date for operation
             data = {
@@ -1535,9 +1552,13 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
 
     def set_active_op_id(self, item):
+        logging.debug('set_active_op_id %s %s %s', item, item.op_id, self.active_op_id)
         if verify_user_token(self.mscolab_server_url, self.token):
             if not self.ui.local_active:
                 if item.op_id == self.active_op_id:
+                    font = QtGui.QFont()
+                    font.setBold(True)
+                    item.setFont(font)
                     return
 
             # close all hanging window
@@ -1550,7 +1571,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.workLocallyCheckbox.blockSignals(False)
 
             # Disable Activate Operation Button
-            self.ui.actionActivateOperation.setEnabled(False)
+            self.ui.actionUnarchiveOperation.setEnabled(False)
 
             # set last used date for operation
             data = {
@@ -1596,6 +1617,7 @@ class MSUIMscolab(QtCore.QObject):
             item.setFont(font)
 
             # set new waypoints model to open views
+            logging.debug("mscolab set wpm")
             for window in self.ui.get_active_views():
                 window.setFlightTrackModel(self.waypoints_model)
                 if self.access_level == "viewer":
@@ -1610,6 +1632,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.logout()
 
     def switch_to_local(self):
+        logging.debug('switch_to_local')
         self.ui.local_active = True
         if self.active_op_id is not None:
             if verify_user_token(self.mscolab_server_url, self.token):
@@ -1636,6 +1659,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionLeaveOperation.setEnabled(True)
         self.ui.actionDeleteOperation.setEnabled(False)
         self.ui.actionUpdateOperationDesc.setEnabled(False)
+
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
             return
@@ -1731,6 +1755,10 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
 
     def reload_view_windows(self):
+        logging.debug("reload_view_windows")
+        if self.ui.local_active:
+            return
+
         for window in self.ui.get_active_views():
             window.setFlightTrackModel(self.waypoints_model)
             if hasattr(window, 'mpl'):
@@ -1806,6 +1834,7 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
 
     def listFlighttrack_itemDoubleClicked(self):
+        logging.debug("listFlighttrack_itemDoubleClicked")
         self.ui.activeOperationDesc.setText("Select Operation to View Description.")
         self.signal_listFlighttrack_doubleClicked.emit()
 
