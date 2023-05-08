@@ -112,8 +112,7 @@ You can setup which accounts are used to login into MSColab and used for authent
 
 .. tip::
   When you use an old configuration having WMS_login, MSC_login, MSCOLAB_password defined on start
-  of msui you get a hint that we can update your msui_settings.json file. We keep your old attributes.
-  You can delete them afterwards when you don't want the hint shown on each start.
+  of msui you get a hint that we can update your msui_settings.json file. We keep your old attributes in a bak file.
 
 
 A dictionary by Server-Url and username provide the username for an http-auth request

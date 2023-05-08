@@ -26,12 +26,20 @@
     limitations under the License.
 """
 
+import fs
+import json
+import logging
+import copy
+
+from keyring.errors import NoKeyringError, PasswordSetError, InitError
 from packaging import version
 from mslib import __version__
 from mslib.utils.auth import save_password_to_keyring
 from mslib.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
 from mslib.utils.migration.config_before_eight import config_loader as config_loader_before_eight
 from mslib.utils.config import modify_config_file
+from mslib.utils.config import read_config_file, config_loader
+from mslib.msui.constants import MSUI_SETTINGS
 
 
 class JsonConversion:
@@ -51,19 +59,52 @@ class JsonConversion:
             for url in self.wms_login.keys():
                 auth_username, auth_password = self.wms_login[url]
                 http_auth_login_data[url] = auth_username
-                save_password_to_keyring(url, auth_username, auth_password)
+                try:
+                    save_password_to_keyring(url, auth_username, auth_password)
+                except (NoKeyringError, PasswordSetError, InitError) as ex:
+                    logging.warning("Can't use Keyring on your system to store credentials: %s" % ex)
 
             for url in self.msc_login.keys():
                 auth_username, auth_password = self.msc_login[url]
                 http_auth_login_data[url] = auth_username
-                save_password_to_keyring(url, auth_username, auth_password)
+                try:
+                    save_password_to_keyring(url, auth_username, auth_password)
+                except (NoKeyringError, PasswordSetError, InitError) as ex:
+                    logging.warning("Can't use Keyring on your system to store credentials: %s" % ex)
 
             data_to_save_in_config_file = {
                 "MSS_auth": http_auth_login_data
             }
-            save_password_to_keyring(service_name="MSCOLAB",
-                                     username=self.MSCOLAB_mailid, password=self.MSCOLAB_password)
+            try:
+                save_password_to_keyring(service_name="MSCOLAB",
+                                         username=self.MSCOLAB_mailid, password=self.MSCOLAB_password)
+            except (NoKeyringError, PasswordSetError, InitError) as ex:
+                logging.warning("Can't use Keyring on your system to store credentials: %s" % ex)
+
+            filename = MSUI_SETTINGS.replace('\\', '/')
+            dir_name, file_name = fs.path.split(filename)
+            # create the backup file
+            with fs.open_fs(dir_name) as _fs:
+                fs.copy.copy_file(_fs, file_name, _fs, f"{file_name}.bak")
+            # add the modification
             modify_config_file(data_to_save_in_config_file)
+            # read new file
+            read_config_file()
+            # Todo move this to a seperate function to utils
+            # get all defaults
+            default_options = config_loader(default=True)
+            # get the data from the local file
+            json_data = config_loader()
+            save_data = copy.deepcopy(json_data)
+
+            # remove everything we have as defaults
+            for key in json_data:
+                if json_data[key] == default_options[key] or json_data[key] == {} or json_data[key] == []:
+                    del save_data[key]
+
+            # write new data
+            with fs.open_fs(dir_name) as _fs:
+                _fs.writetext(file_name, json.dumps(save_data, indent=4))
 
 
 if __name__ == "__main__":

@@ -264,7 +264,7 @@ Save a flight track to name it.</string>
            <item row="5" column="0">
             <widget class="QLabel" name="inactiveOperationsLabel">
              <property name="text">
-              <string>Inactive Operations</string>
+              <string>Archived Operations</string>
              </property>
             </widget>
            </item>
@@ -331,7 +331,7 @@ Double click a operation to activate and view its description.</string>
            <item row="2" column="0">
             <widget class="QLabel" name="activeOperationsLabel">
              <property name="text">
-              <string>Active Operations</string>
+              <string>Operations</string>
              </property>
             </widget>
            </item>
@@ -428,7 +428,7 @@ Double click a operation to activate and view its description.</string>
     <addaction name="actionChat"/>
     <addaction name="actionVersionHistory"/>
     <addaction name="actionManageUsers"/>
-    <addaction name="actionActivateOperation"/>
+    <addaction name="actionUnarchiveOperation"/>
     <addaction name="separator"/>
     <addaction name="menuProperties"/>
    </widget>
@@ -604,9 +604,9 @@ Double click a operation to activate and view its description.</string>
     <string>&amp;Leave Operation</string>
    </property>
   </action>
-  <action name="actionActivateOperation">
+  <action name="actionUnarchiveOperation">
    <property name="text">
-    <string>Activate Operation</string>
+    <string>Unarchive Operation</string>
    </property>
   </action>
  </widget>

@@ -52,7 +52,7 @@ requirements:
     - requests
     - scipy
     - skyfield >=1.12
-    - skyfield-data >=4
+    - skyfield-data >=5
     - tk
     - owslib >=0.24
     - unicodecsv
@@ -61,7 +61,7 @@ requirements:
     - matplotlib >=3.3.2,<3.6
     - itsdangerous
     - pyjwt
-    - flask >=2.2.0
+    - flask >=2.3.2
     - flask-httpauth
     - flask-mail
     - flask-migrate
@@ -91,6 +91,7 @@ requirements:
     - flask-wtf
     - email_validator
     - keyring
+    - dbus-python
 
 test:
   imports:

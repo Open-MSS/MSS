@@ -33,13 +33,13 @@ from mock import Mock
 from matplotlib.collections import LineCollection
 from PyQt5 import QtWidgets
 import pytest
+import skyfield_data
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
 from mslib.msui import mpl_qtwidget as qt
 import skyfield_data
 
 
 def test_skyfield_data_expiration(recwarn):
-    pytest.skip("Skip until Version 5.0 is published on conda-forge. Version 4.0 is known as expired.")
     skyfield_data.check_expirations()
     assert len(recwarn) == 0, [_x.message for _x in recwarn]
 

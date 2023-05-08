@@ -457,9 +457,20 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         self.shortcuts_dlg = None
 
-        # deactivate vice versa selection of Operation or Flight Track
-        self.listFlightTracks.itemClicked.connect(lambda: self.listOperationsMSC.setCurrentItem(None))
-        self.listOperationsMSC.itemClicked.connect(lambda: self.listFlightTracks.setCurrentItem(None))
+        # deactivate vice versa selection of Operation, inactive operation or Flight Track
+
+        def deselecter(list_a, list_b, disable):
+            list_a.setCurrentItem(None)
+            list_b.setCurrentItem(None)
+            if disable:
+                self.mscolab.ui.actionUnarchiveOperation.setEnabled(False)
+
+        self.listFlightTracks.itemClicked.connect(
+            lambda: deselecter(self.listOperationsMSC, self.listInactiveOperationsMSC, True))
+        self.listOperationsMSC.itemClicked.connect(
+            lambda: deselecter(self.listFlightTracks, self.listInactiveOperationsMSC, True))
+        self.listInactiveOperationsMSC.itemClicked.connect(
+            lambda: deselecter(self.listFlightTracks, self.listOperationsMSC, False))
 
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
@@ -772,6 +783,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.signal_activate_flighttrack.emit(self.active_flight_track)
 
     def update_active_flight_track(self, old_flight_track_name=None):
+        logging.debug("update_active_flight_track")
         for i in range(self.listViews.count()):
             view_item = self.listViews.item(i)
             view_item.window.setFlightTrackModel(self.active_flight_track)
@@ -790,6 +802,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         font = QtGui.QFont()
         for i in range(self.listFlightTracks.count()):
             self.listFlightTracks.item(i).setFont(font)
+
         # disable appropriate menu options
         self.menu_handler()
 
@@ -1177,10 +1190,12 @@ def main():
                 dataset="MSC_login") or config_loader_before_eight(dataset="MSCOLAB_password"):
 
             text = """We can update your msui_settings.json file \n
-We add the new attributes for the webserver authentication, see
+We add the new attributes for the webserver authentication, see \n
 https://mss.readthedocs.io/en/stable/usage.html#mscolab-login-and-www-authentication \n
-When everything works remove the old attributes: \n
-WMS_login, MSC_login, MSCOLAB_password"""
+The old attributes get removed: \n
+WMS_login, MSC_login, MSCOLAB_password \n\n
+A backup of the old file is stored.
+"""
 
             ret = QtWidgets.QMessageBox.question(mainwindow, 'Update of msui_settings.json file',
                                                  text,

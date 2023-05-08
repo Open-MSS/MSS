@@ -46,10 +46,8 @@ def del_password_from_keyring(service_name=NAME, username=""):
     if username.strip() != "":
         try:
             keyring.delete_password(service_name=service_name, username=username)
-        except keyring.errors.PasswordDeleteError:
-            pass
-        except keyring.errors.NoKeyringError as e:
-            logging.error(e)
+        except (keyring.errors.NoKeyringError, keyring.errors.PasswordDeleteError) as ex:
+            logging.warning("Can't use Keyring on your system: %s" % ex)
 
 
 def get_password_from_keyring(service_name=NAME, username=""):
@@ -58,13 +56,17 @@ def get_password_from_keyring(service_name=NAME, username=""):
     In this case by none existing credentials in the keyring we have to return an empty string
     """
     if username.strip() != "":
-        cred = keyring.get_credential(service_name=service_name, username=username)
-        if username is not None and cred is None:
-            return ""
-        elif cred is None:
+        try:
+            cred = keyring.get_credential(service_name=service_name, username=username)
+            if username is not None and cred is None:
+                return ""
+            elif cred is None:
+                return None
+            else:
+                return cred.password
+        except keyring.errors.KeyringLocked as ex:
+            logging.warn(ex)
             return None
-        else:
-            return cred.password
 
 
 def save_password_to_keyring(service_name=NAME, username="", password=""):
@@ -72,7 +74,10 @@ def save_password_to_keyring(service_name=NAME, username="", password=""):
     save a username and password for a given service_name
     """
     if "" not in (username.strip(), password.strip()):
-        keyring.set_password(service_name=service_name, username=username, password=password)
+        try:
+            keyring.set_password(service_name=service_name, username=username, password=password)
+        except keyring.errors.NoKeyringError as ex:
+            logging.info("Can't use Keyring on your system: %s" % ex)
 
 
 def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True):
@@ -82,7 +87,11 @@ def get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True
     name = ""
     for url, auth_name in http_auth.items():
         if server_url == url:
-            password = get_password_from_keyring(service_name=url, username=auth_name)
+            try:
+                password = get_password_from_keyring(service_name=url, username=auth_name)
+            except keyring.errors.NoKeyringError as ex:
+                password = None
+                logging.info("Can't use Keyring on your system: %s" % ex)
             if overwrite_login_cache and password is not None and password.strip() != "":
                 constants.AUTH_LOGIN_CACHE[server_url] = (auth_name, password)
             name = auth_name

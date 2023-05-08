@@ -1,6 +1,23 @@
 Changelog
 =========
 
+Version 8.1.0
+~~~~~~~~~~~~~
+
+We renamed in the UI for operations the misleading active/inactive to archive and unarchive.
+On start of MSUI an old user configuration can get backuped and saved updated to the new syntax.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/95?closed=1
+
+Version 8.0.1
+~~~~~~~~~~~~~
+
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/94?closed=1
+
 Version 8.0.0
 ~~~~~~~~~~~~~
 
