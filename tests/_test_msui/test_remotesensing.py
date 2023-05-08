@@ -36,7 +36,6 @@ import pytest
 import skyfield_data
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
 from mslib.msui import mpl_qtwidget as qt
-import skyfield_data
 
 
 def test_skyfield_data_expiration(recwarn):
