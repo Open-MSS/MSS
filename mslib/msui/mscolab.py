@@ -61,8 +61,59 @@ from mslib.utils.qt import ui_add_operation_dialog as add_operation_ui
 from mslib.utils.qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.utils.qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.utils.qt import ui_mscolab_profile_dialog as ui_profile
+from mslib.utils.qt import ui_operation_archive as ui_opar
 from mslib.msui import constants
 from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
+
+
+class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArchiveBrowser):
+    def __init__(self, parent=None, mscolab=None):
+        super().__init__(parent)
+        self.setupUi(self)
+        self.parent = parent
+        self.mscolab = mscolab
+        self.pbClose.clicked.connect(self.hide)
+        self.pbUnarchiveOperation.setEnabled(False)
+        self.pbUnarchiveOperation.clicked.connect(self.unarchive_operation)
+        self.listArchivedOperations.itemClicked.connect(self.select_archived_operation)
+        self.setModal(True)
+
+    def select_archived_operation(self, item):
+        logging.debug('select_inactive_operation')
+        if item.access_level == "creator":
+            self.archived_op_id = item.op_id
+            self.pbUnarchiveOperation.setEnabled(True)
+        else:
+            self.archived_op_id = None
+            self.pbUnarchiveOperation.setEnabled(False)
+
+    def unarchive_operation(self):
+        logging.debug('unarchive_operation')
+        if verify_user_token(self.mscolab.mscolab_server_url, self.mscolab.token):
+            # set last used date for operation
+            data = {
+                "token": self.mscolab.token,
+                "op_id": self.archived_op_id,
+            }
+            url = url_join(self.mscolab.mscolab_server_url, 'set_last_used')
+            try:
+                res = requests.post(url, data=data, timeout=(2, 10))
+            except requests.exceptions.RequestException as e:
+                logging.debug(e)
+                show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
+            else:
+                if res.text != "False":
+                    res = res.json()
+                    if res["success"]:
+                        self.mscolab.reload_operations()
+                    else:
+                        show_popup(self.parent, "Error", "Some error occurred! Could not activate operation")
+                else:
+                    show_popup(self.parent, "Error", "Session expired, new login required")
+                    self.mscolab.logout()
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.mscolab.logout()
 
 
 class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
@@ -75,7 +126,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         Arguments:
         parent -- Qt widget that is parent to this widget.
         """
-        super(MSColab_ConnectDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.parent = parent
         self.mscolab = mscolab
@@ -428,7 +479,7 @@ class MSUIMscolab(QtCore.QObject):
     """
     name = "Mscolab"
 
-    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
+    signal_unarchive_operation = QtCore.Signal(int, name="signal_unarchive_operation")
     signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
     signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
     signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
@@ -441,16 +492,20 @@ class MSUIMscolab(QtCore.QObject):
         super(MSUIMscolab, self).__init__(parent)
         self.ui = parent
 
+        self.operation_archive_browser = MSColab_OperationArchiveBrowser(self.ui, self)
+        self.operation_archive_browser.hide()
+        self.ui.listInactiveOperationsMSC = self.operation_archive_browser.listArchivedOperations
+
         # connect mscolab help action from help menu
         self.ui.actionMSColabHelp.triggered.connect(self.open_help_dialog)
+        self.ui.pbOpenOperationArchive.clicked.connect(self.open_operation_archive)
 
         # hide mscolab related widgets
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
-        self.ui.actionUnarchiveOperation.setEnabled(False)
-        self.hide_operation_options()
         self.ui.activeOperationDesc.setHidden(True)
+        self.hide_operation_options()
 
         # reset operation description label for flight tracks and open views
         self.ui.listFlightTracks.itemDoubleClicked.connect(self.listFlighttrack_itemDoubleClicked)
@@ -464,13 +519,15 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionManageUsers.triggered.connect(self.operation_options_handler)
         self.ui.actionDeleteOperation.triggered.connect(self.operation_options_handler)
         self.ui.actionLeaveOperation.triggered.connect(self.operation_options_handler)
-        self.ui.actionUpdateOperationDesc.triggered.connect(self.update_description_handler)
+        self.ui.actionChangeCategory.triggered.connect(self.change_category_handler)
+        self.ui.actionChangeDescription.triggered.connect(self.change_description_handler)
         self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
-        self.ui.actionUnarchiveOperation.triggered.connect(self.activate_operation)
-        self.ui.actionDescription.triggered.connect(
-            lambda: QtWidgets.QMessageBox.information(None,
-                                                      "Operation Description",
-                                                      f"{self.active_operation_desc}"))
+        self.ui.actionArchiveOperation.triggered.connect(self.archive_operation)
+        self.ui.actionViewDescription.triggered.connect(
+            lambda: QtWidgets.QMessageBox.information(
+                None, "Operation Description",
+                f"Category: {self.active_operation_category}\n"
+                f"{self.active_operation_description}"))
 
         self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
         # connect slot for handling operation options combobox
@@ -493,12 +550,12 @@ class MSUIMscolab(QtCore.QObject):
         self.new_op_id = None
         # int to store active pid
         self.active_op_id = None
-        # int to store selected inactive op_id
-        self.inactive_op_id = None
         # storing access_level to save network call
         self.access_level = None
         # storing operation_name to save network call
         self.active_operation_name = None
+        # storing operation category to save network call
+        self.active_operation_category = None
         # Storing operation list to pass to admin window
         self.operations = None
         # store active_flight_path here as object
@@ -506,7 +563,7 @@ class MSUIMscolab(QtCore.QObject):
         # Store active operation's file path
         self.local_ftml_file = None
         # Store active_operation_description
-        self.active_operation_desc = None
+        self.active_operation_description = None
         # connection object to interact with sockets
         self.conn = None
         # operation window
@@ -536,6 +593,9 @@ class MSUIMscolab(QtCore.QObject):
         else:
             self.data_dir = data_dir
         self.create_dir()
+
+    def open_operation_archive(self):
+        self.operation_archive_browser.show()
 
     def create_dir(self):
         # ToDo this needs to be done earlier
@@ -574,6 +634,7 @@ class MSUIMscolab(QtCore.QObject):
         self.connect_window.exec_()
 
     def after_login(self, emailid, url, r):
+        logging.debug("after login %s %s", emailid, url)
         # emailid by direct call
         self.email = emailid
         self.connect_window.close()
@@ -626,16 +687,12 @@ class MSUIMscolab(QtCore.QObject):
             # Show category list
             self.show_categories_to_ui()
 
-            # show operation_description
             self.ui.activeOperationDesc.setHidden(False)
-            # disable update operation description button
-            self.ui.actionUpdateOperationDesc.setEnabled(False)
-            # disable delete operation button
+            self.ui.actionChangeCategory.setEnabled(False)
+            self.ui.actionChangeDescription.setEnabled(False)
             self.ui.actionDeleteOperation.setEnabled(False)
-            # disable category change selector
             self.ui.filterCategoryCb.setEnabled(True)
-            # disable activate operation button
-            self.ui.actionUnarchiveOperation.setEnabled(False)
+            self.ui.actionViewDescription.setEnabled(False)
 
             self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
@@ -1084,27 +1141,57 @@ class MSUIMscolab(QtCore.QObject):
                 self.logout()
 
     def set_operation_desc_label(self, op_desc):
-        self.active_operation_desc = op_desc
-        desc_count = len(str(self.active_operation_desc))
+        self.active_operation_description = op_desc
+        desc_count = len(str(self.active_operation_description))
         if desc_count < 95:
             self.ui.activeOperationDesc.setText(
-                self.ui.tr(f"{self.active_operation_name}: {self.active_operation_desc}"))
+                self.ui.tr(f"{self.active_operation_name}: {self.active_operation_description}"))
         else:
             self.ui.activeOperationDesc.setText(
                 "Description is too long to show here, for long descriptions go "
                 "to operations menu.")
 
-    def update_description_handler(self):
+    def change_category_handler(self):
+        # only after login
+        if verify_user_token(self.mscolab_server_url, self.token):
+            entered_operation_category, ok = QtWidgets.QInputDialog.getText(
+                self.ui,
+                self.ui.tr(f"{self.active_operation_name} - Change Category"),
+                self.ui.tr(
+                    "You're about to change the operation category\n"
+                    "Enter new operation category: "
+                ),
+                text=self.active_operation_category
+            )
+            if ok:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "attribute": 'category',
+                    "value": entered_operation_category
+                }
+                url = url_join(self.mscolab_server_url, 'update_operation')
+                r = requests.post(url, data=data, timeout=(2, 10))
+                if r.text == "True":
+                    self.active_operation_category = entered_operation_category
+                    self.reload_operation_list()
+                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog.showMessage("Description is updated successfully.")
+        else:
+            show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+            self.logout()
+
+    def change_description_handler(self):
         # only after login
         if verify_user_token(self.mscolab_server_url, self.token):
             entered_operation_desc, ok = QtWidgets.QInputDialog.getText(
                 self.ui,
-                self.ui.tr(f"{self.active_operation_name} - Update Description"),
+                self.ui.tr(f"{self.active_operation_name} - Change Description"),
                 self.ui.tr(
-                    "You're about to update the operation description"
-                    "\nEnter new operation description: "
+                    "You're about to change the operation description\n"
+                    "Enter new operation description: "
                 ),
-                text=self.active_operation_desc
+                text=self.active_operation_description
             )
             if ok:
                 data = {
@@ -1151,7 +1238,7 @@ class MSUIMscolab(QtCore.QObject):
                     self.active_operation_name = entered_operation_name
 
                     # Update active operation description
-                    self.set_operation_desc_label(self.active_operation_desc)
+                    self.set_operation_desc_label(self.active_operation_description)
                     self.reload_operation_list()
                     self.reload_windows_slot()
                     # Update other user's operation list
@@ -1341,7 +1428,7 @@ class MSUIMscolab(QtCore.QObject):
                 widgetItem.catgegory = operation["category"]
                 widgetItem.operation_path = operation["path"]
                 widgetItem.access_level = operation["access_level"]
-                widgetItem.active_operation_desc = operation["description"]
+                widgetItem.active_operation_description = operation["description"]
                 self.ui.listOperationsMSC.addItem(widgetItem)
                 self.signal_render_new_permission.emit(operation["op_id"], operation["path"])
             if self.chat_window is not None:
@@ -1478,13 +1565,13 @@ class MSUIMscolab(QtCore.QObject):
                 logging.debug("adding operations to ui")
                 operations = sorted(self.operations, key=lambda k: k["path"].lower())
                 self.ui.listOperationsMSC.clear()
-                self.ui.listInactiveOperationsMSC.clear()
+                self.operation_archive_browser.listArchivedOperations.clear()
                 new_operation = None
                 active_operation = None
                 for operation in operations:
                     operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                     widgetItem = QtWidgets.QListWidgetItem(operation_desc)
-                    widgetItem.active_operation_desc = operation["description"]
+                    widgetItem.active_operation_description = operation["description"]
                     widgetItem.op_id = operation["op_id"]
                     widgetItem.access_level = operation["access_level"]
                     widgetItem.operation_path = operation["path"]
@@ -1502,7 +1589,7 @@ class MSUIMscolab(QtCore.QObject):
                         if widgetItem.op_id == self.new_op_id:
                             new_operation = widgetItem
                     else:
-                        self.ui.listInactiveOperationsMSC.addItem(widgetItem)
+                        self.operation_archive_browser.listArchivedOperations.addItem(widgetItem)
                 if new_operation is not None:
                     logging.debug("%s %s %s", new_operation, self.new_op_id, self.active_op_id)
                     self.ui.listOperationsMSC.itemActivated.emit(new_operation)
@@ -1510,7 +1597,6 @@ class MSUIMscolab(QtCore.QObject):
                     logging.debug("%s %s %s", new_operation, self.new_op_id, self.active_op_id)
                     self.ui.listOperationsMSC.itemActivated.emit(active_operation)
                 self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
-                self.ui.listInactiveOperationsMSC.itemClicked.connect(self.select_inactive_operation)
                 self.new_op_id = None
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
@@ -1519,34 +1605,36 @@ class MSUIMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    def select_inactive_operation(self, item):
-        logging.debug('select_inactive_operation')
-        self.inactive_op_id = item.op_id
-        self.show_operation_options_in_inactivated_state(item.access_level)
-
     def show_operation_options_in_inactivated_state(self, access_level):
-        self.ui.actionUnarchiveOperation.setEnabled(False)
-        if access_level == "creator":
-            self.ui.actionUnarchiveOperation.setEnabled(True)
+        pass
 
-    def activate_operation(self):
-        logging.debug('activate_operation')
+    def archive_operation(self):
+        logging.debug("handle_archive_operation")
         if verify_user_token(self.mscolab_server_url, self.token):
-            # set last used date for operation
-            data = {
-                "token": self.token,
-                "op_id": self.inactive_op_id,
-            }
-            res = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data, timeout=(2, 10))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.reload_operations()
+            ret = QtWidgets.QMessageBox.warning(
+                self.ui, self.tr("Mission Support System"),
+                self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?"),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
+                QtWidgets.QMessageBox.No)
+            if ret == QtWidgets.QMessageBox.Yes:
+                data = {
+                    "token": self.token,
+                    "op_id": self.active_op_id,
+                    "days": 31,
+                }
+                url = url_join(self.mscolab_server_url, 'set_last_used')
+                try:
+                    res = requests.post(url, data=data, timeout=(2, 10))
+                except requests.exceptions.RequestException as e:
+                    logging.debug(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Could not archive operation.")
                 else:
-                    show_popup(self.ui, "Error", "Some error occurred! Could not activate operation")
-            else:
-                show_popup(self.ui, "Error", "Session expired, new login required")
-                self.logout()
+                    res.raise_for_status()
+                    self.reload_operations()
+                    self.signal_operation_removed.emit(self.active_op_id)
+                    logging.debug("activate local")
+                    self.ui.listFlightTracks.setCurrentRow(0)
+                    self.ui.activate_selected_flight_track()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1571,7 +1659,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.workLocallyCheckbox.blockSignals(False)
 
             # Disable Activate Operation Button
-            self.ui.actionUnarchiveOperation.setEnabled(False)
+            # self.ui.actionUnarchiveOperation.setEnabled(False)
 
             # set last used date for operation
             data = {
@@ -1584,10 +1672,11 @@ class MSUIMscolab(QtCore.QObject):
             self.active_op_id = item.op_id
             self.access_level = item.access_level
             self.active_operation_name = item.operation_path
-            self.active_operation_desc = item.active_operation_desc
+            self.active_operation_description = item.active_operation_description
+            self.active_operation_category = item.operation_category
             self.waypoints_model = None
 
-            self.signal_activate_operation.emit(self.active_op_id)
+            self.signal_unarchive_operation.emit(self.active_op_id)
 
             self.inactive_op_id = None
             font = QtGui.QFont()
@@ -1596,7 +1685,7 @@ class MSUIMscolab(QtCore.QObject):
             font.setBold(False)
 
             # Set active operation description
-            self.set_operation_desc_label(self.active_operation_desc)
+            self.set_operation_desc_label(self.active_operation_description)
             # set active flightpath here
             self.load_wps_from_server()
             # display working status
@@ -1654,11 +1743,14 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProperties.setEnabled(True)
         self.ui.actionRenameOperation.setEnabled(False)
         self.ui.actionLeaveOperation.setEnabled(True)
         self.ui.actionDeleteOperation.setEnabled(False)
-        self.ui.actionUpdateOperationDesc.setEnabled(False)
+        self.ui.actionChangeCategory.setEnabled(False)
+        self.ui.actionChangeDescription.setEnabled(False)
+        self.ui.actionArchiveOperation.setEnabled(False)
+        self.ui.actionViewDescription.setEnabled(True)
+        self.ui.menuProperties.setEnabled(True)
 
         if self.access_level == "viewer":
             self.ui.menuImportFlightTrack.setEnabled(False)
@@ -1681,7 +1773,8 @@ class MSUIMscolab(QtCore.QObject):
 
         if self.access_level in ["creator", "admin"]:
             self.ui.actionManageUsers.setEnabled(True)
-            self.ui.actionUpdateOperationDesc.setEnabled(True)
+            self.ui.actionChangeCategory.setEnabled(True)
+            self.ui.actionChangeDescription.setEnabled(True)
             self.ui.filterCategoryCb.setEnabled(True)
         else:
             if self.admin_window is not None:
@@ -1691,6 +1784,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.actionDeleteOperation.setEnabled(True)
             self.ui.actionRenameOperation.setEnabled(True)
             self.ui.actionLeaveOperation.setEnabled(False)
+            self.ui.actionArchiveOperation.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 
@@ -1698,8 +1792,15 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionChat.setEnabled(False)
         self.ui.actionVersionHistory.setEnabled(False)
         self.ui.actionManageUsers.setEnabled(False)
-        self.ui.menuProperties.setEnabled(False)
+        self.ui.actionViewDescription.setEnabled(False)
+        self.ui.actionLeaveOperation.setEnabled(False)
+        self.ui.actionRenameOperation.setEnabled(False)
+        self.ui.actionArchiveOperation.setEnabled(False)
+        self.ui.actionChangeCategory.setEnabled(False)
+        self.ui.actionChangeDescription.setEnabled(False)
+        self.ui.actionDeleteOperation.setEnabled(False)
         self.ui.workLocallyCheckbox.setEnabled(False)
+        self.ui.menuProperties.setEnabled(False)
         self.ui.serverOptionsCb.hide()
         # change working status label
         self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Operation Selected"))
@@ -1859,7 +1960,7 @@ class MSUIMscolab(QtCore.QObject):
         # clear operation listing
         self.ui.listOperationsMSC.clear()
         # clear inactive operation listing
-        self.ui.listInactiveOperationsMSC.clear()
+        self.operation_archive_browser.listArchivedOperations.clear()
         # clear mscolab url
         self.mscolab_server_url = None
         # clear operations list here
@@ -1903,6 +2004,8 @@ class MSUIMscolab(QtCore.QObject):
         # disable category change selector
         self.ui.filterCategoryCb.setEnabled(False)
         self.signal_logout_mscolab.emit()
+
+        self.operation_archive_browser.hide()
 
         # Don't try to activate local flighttrack while testing
         if "pytest" not in sys.modules:

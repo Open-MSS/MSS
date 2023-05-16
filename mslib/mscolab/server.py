@@ -59,6 +59,8 @@ CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CO
 migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
 
+ARCHIVE_THRESHOLD = 30
+
 try:
     from mscolab_auth import mscolab_auth
 except ImportError as ex:
@@ -489,13 +491,17 @@ def get_operation_details():
 @verify_user
 def set_last_used():
     op_id = request.form.get('op_id', None)
+    days_ago = int(request.form.get('days', 0))
     operation = Operation.query.filter_by(id=int(op_id)).first()
-    operation.last_used = datetime.datetime.utcnow()
+    operation.last_used = datetime.datetime.utcnow() - datetime.timedelta(days=days_ago)
     temp_operation_active = operation.active
-    operation.active = True
+    if days_ago > ARCHIVE_THRESHOLD:
+        operation.active = False
+    else:
+        operation.active = True
     db.session.commit()
     # Reload Operation List
-    if not temp_operation_active:
+    if temp_operation_active != operation.active:
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
@@ -507,11 +513,12 @@ def set_last_used():
 def update_last_used():
     operations = Operation.query.filter().all()
     for operation in operations:
-        a = (datetime.datetime.utcnow() - operation.last_used).days
-        if a > 30:
-            operation.active = False
-        else:
-            operation.active = True
+        if operation.last_used is not None:
+            days_ago = (datetime.datetime.utcnow() - operation.last_used).days
+            if days_ago > ARCHIVE_THRESHOLD:
+                operation.active = False
+            else:
+                operation.active = True
     db.session.commit()
     return jsonify({"success": True}), 200
 

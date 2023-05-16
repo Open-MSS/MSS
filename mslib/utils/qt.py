@@ -633,6 +633,7 @@ for mod in [
         "ui_topview_window",
         "ui_linearview_options",
         "ui_linearview_window",
+        "ui_operation_archive",
         "ui_wms_password_dialog",
         "ui_wms_capabilities",
         "ui_wms_dockwidget",

@@ -132,7 +132,7 @@ class MSUIDefaultConfig(object):
     MSCOLAB_mailid = ""
 
     # category for MSC operations
-    MSCOLAB_category = "default"
+    MSCOLAB_category = "ANY"
 
     # list of MSC servers {"http://www.your-mscolab-server.de": "authuser",
     # "http://www.your-wms-server.de": "authuser"}
