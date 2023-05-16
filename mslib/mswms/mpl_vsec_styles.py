@@ -160,7 +160,7 @@ def make_generic_class(name, standard_name, vert, add_data=None, add_contours=No
 
         add_prepare (function, optional): a function to overwrite the
             _prepare_datafield method.
-        
+
             Defaults to None.
 
     Returns:
