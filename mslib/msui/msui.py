@@ -459,22 +459,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         # deactivate vice versa selection of Operation, inactive operation or Flight Track
 
-        def deselecter(list_a, list_b, disable):
-            list_a.setCurrentItem(None)
-            list_b.setCurrentItem(None)
-            if disable:
-                self.mscolab.ui.actionUnarchiveOperation.setEnabled(False)
-
         self.listFlightTracks.itemClicked.connect(
-            lambda: deselecter(self.listOperationsMSC, self.listInactiveOperationsMSC, True))
+            lambda: self.listOperationsMSC.setCurrentItem(None))
         self.listOperationsMSC.itemClicked.connect(
-            lambda: deselecter(self.listFlightTracks, self.listInactiveOperationsMSC, True))
-        self.listInactiveOperationsMSC.itemClicked.connect(
-            lambda: deselecter(self.listFlightTracks, self.listOperationsMSC, False))
-
+            lambda: self.listFlightTracks.setCurrentItem(None))
         # disable category until connected/login into mscolab
         self.filterCategoryCb.setEnabled(False)
-        self.mscolab.signal_activate_operation.connect(self.activate_operation_slot)
+        self.mscolab.signal_unarchive_operation.connect(self.activate_operation_slot)
         self.mscolab.signal_operation_added.connect(self.add_operation_slot)
         self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
         self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))

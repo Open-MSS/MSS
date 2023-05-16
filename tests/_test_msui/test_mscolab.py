@@ -553,11 +553,27 @@ class Test_Mscolab(object):
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
-        self.window.actionUpdateOperationDesc.trigger()
+        self.window.actionChangeDescription.trigger()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
-        assert self.window.mscolab.active_operation_desc == "new_desciption"
+        assert self.window.mscolab.active_operation_description == "new_desciption"
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_category", True))
+    def test_update_category(self, mockbox, mockpatch):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        assert self.window.mscolab.active_operation_category == "example"
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionChangeCategory.trigger()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_category == "new_category"
 
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()
