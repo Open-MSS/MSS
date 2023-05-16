@@ -193,7 +193,7 @@ def make_generic_class(name, standard_name, vert, add_data=None, add_contours=No
             Defaults to None.
 
         use_pcolormesh (bool, optional): determines whether to use pcolormesh
-            uor plotting instead of the default "contourf" method. Use
+            or plotting instead of the default "contourf" method. Use
             pcolormesh for data that contains a lot of fill values or NaNs,
             or to show the actual location of data.
 
