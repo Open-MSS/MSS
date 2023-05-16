@@ -273,7 +273,14 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.login_data = [data, r, url]
             self.connectBtn.setEnabled(False)
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
-            # ToDo disconnect functions already connected to httpBb buttonBox
+            try:
+                self.httpBb.accepted.disconnect()
+            except TypeError:
+                pass
+            try:
+                self.httpBb.rejected.disconnect()
+            except TypeError:
+                pass
             self.httpBb.accepted.connect(self.login_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.loginPage))
         else:
@@ -365,7 +372,14 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         elif r.status_code == 401:
             self.newuser_data = [data, r, url]
             self.stackedWidget.setCurrentWidget(self.httpAuthPage)
-            # ToDo disconnect functions already connected to httpBb buttonBox
+            try:
+                self.httpBb.accepted.disconnect()
+            except TypeError:
+                pass
+            try:
+                self.httpBb.rejected.disconnect()
+            except TypeError:
+                pass
             self.httpBb.accepted.connect(self.newuser_server_auth)
             self.httpBb.rejected.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
         else:
