@@ -115,33 +115,57 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 def make_generic_class(name, standard_name, vert, add_data=None, add_contours=None,
                        fix_styles=None, add_styles=None, add_prepare=None):
     """
-    This function instantiates a plotting class and adds it to the global name space
-    of this module.
+    This function instantiates a plotting class and adds it to the global name
+    space of this module.
 
     Args:
-        name (str): name of the class, under which it will be added to the module
-            name space
+        name (str): name of the class, under which it will be added to the
+            module name space
+
         standard_name (str): CF standard_name of the main plotting target.
             This must be registered within the mslib.mswms.generics module.
+
         vert (str): vertical level type, e.g. "pl"
+
         add_data (list, optional): List of tuples adding data to be read in and
-            provide to the plotting class. E.g. [("pl", "ertel_potential_vorticity", "PVU")]
-            for ertel_potential_vorticity on pressure levels in PVU units. The vertical
-            level type must be the one specified by the vert variable or "sfc".
+            provide to the plotting class.
+            E.g. [("pl", "ertel_potential_vorticity", "PVU")]
+            for ertel_potential_vorticity on pressure levels in PVU units.
+            The vertical level type must be the one specified by the vert
+            variable or "sfc".
+
             By default ertel_potential_vorticity in PVU is provide.
-        add_contours (list, optional): List of tuples specifying contour lines to be
-            plotted. E.g. [("ertel_potential_vorticity", [2, 4, 8, 16], "green", "red", "dashed", 2, True)]
-            cause PV to be plotted for 2, 4, 8, and 16 PVU with dashed green lines,
-            red labels, and line width 2. The last value defines wether a stroke effect
-            shall be applied.
-        fix_styles (list, optional): A list of plotting styles, which must be defined in the
-            mslib.mswms.generics.STYLES dictionary. Defaults to a list of standard styles
-            ("auto", "logauto", "default", "nonlinear") depending on which ranges and thresholds
-            are defined for the main variable in the generics module.
-        add_styles (list, optional): Similar to fix_styles, but *adds* the supplied styles to
-            the list of support styles instead of overwriting them. Defaults to None.
-        add_prepare (function, optional): a function to overwrite the _prepare_datafield method.
+
+        add_contours (list, optional): List of tuples specifying contour
+            lines to be plotted.
+            E.g. [("ertel_potential_vorticity", [2, 4, 8, 16], "green", "red", "dashed", 2, True)]
+            cause PV to be plotted for 2, 4, 8, and 16 PVU with dashed green
+            lines, red labels, and line width of 2. The last value defines
+            wether a stroke effect shall be applied.
+
+        fix_styles (list, optional): A list of plotting styles, which must be
+            defined in the mslib.mswms.generics.STYLES dictionary. Defaults
+            to a list of standard styles
+            ("auto", "logauto", "default", "nonlinear") depending on which
+            ranges and thresholds are defined for the main variable in the
+            generics module.
+
             Defaults to None.
+
+        add_styles (list, optional): Similar to fix_styles, but *adds* the
+            supplied styles to the list of support styles instead of
+            overwriting them.
+
+            Defaults to None.
+
+        add_prepare (function, optional): a function to overwrite the
+            _prepare_datafield method.
+        
+            Defaults to None.
+
+    Returns:
+        The generated class. (The class is also placed in this module under the
+        given name).
     """
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity", "PVU")]
@@ -180,6 +204,8 @@ def make_generic_class(name, standard_name, vert, add_data=None, add_contours=No
         fnord._prepare_datafields = add_prepare
 
     globals()[name] = fnord
+
+    return fnord
 
 
 _ADD_DATA = {
