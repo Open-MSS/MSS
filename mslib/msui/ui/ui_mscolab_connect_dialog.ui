@@ -73,7 +73,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="loginPage">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -272,28 +272,29 @@
        </property>
        <item>
         <widget class="QLabel" name="httpTopicLabel">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>HTTP Server Authentication</string>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="httpInfoLabel">
-         <property name="text">
-          <string>The server you are trying to connect requires a username and a password:</string>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
          </property>
         </widget>
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="httpUsernameLabel">
-           <property name="text">
-            <string>Username:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
+         <item row="0" column="1">
           <widget class="QLineEdit" name="httpPasswordLe">
            <property name="echoMode">
             <enum>QLineEdit::Password</enum>
@@ -303,28 +304,27 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="0" column="0">
           <widget class="QLabel" name="httpPasswordLabel">
            <property name="text">
             <string>Password:</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="httpUsernameLe">
-           <property name="placeholderText">
-            <string>Server Auth Username</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>
-        <widget class="QDialogButtonBox" name="httpBb">
-         <property name="standardButtons">
-          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
@@ -367,7 +367,6 @@
   <tabstop>newEmailLe</tabstop>
   <tabstop>newPasswordLe</tabstop>
   <tabstop>newConfirmPasswordLe</tabstop>
-  <tabstop>httpUsernameLe</tabstop>
   <tabstop>httpPasswordLe</tabstop>
  </tabstops>
  <resources/>
