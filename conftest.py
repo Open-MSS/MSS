@@ -188,49 +188,10 @@ class mscolab_settings(object):
         ROOT_FS.makedir('mscolab')
     with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
         # windows needs \\ or / but mixed is terrible. *nix needs /
-        mscolab_fs.writetext(constants.MSCOLAB_CONFIG_FILE, config_string.replace('\\', '/'))
-    path = fs.path.join(constants.ROOT_DIR, 'mscolab', constants.MSCOLAB_CONFIG_FILE)
+        mscolab_fs.writetext('mscolab_settings.py', config_string.replace('\\', '/'))
+    path = fs.path.join(constants.ROOT_DIR, 'mscolab', 'mscolab_settings.py')
     parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
 
-if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_AUTH_FILE):
-    config_string = f'''# -*- coding: utf-8 -*-
-"""
-
-    mslib.mscolab.auth.py.example
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    config for mscolab auth.
-
-    This file is part of MSS.
-
-    :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
-    :license: APACHE-2.0, see LICENSE for details.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-"""
-import hashlib
-
-class mscolab_auth(object):
-     password = "testvaluepassword"
-     allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
-    '''
-    ROOT_FS = fs.open_fs(constants.ROOT_DIR)
-    if not ROOT_FS.exists('mscolab'):
-        ROOT_FS.makedir('mscolab')
-    with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
-        # windows needs \\ or / but mixed is terrible. *nix needs /
-        mscolab_fs.writetext(constants.MSCOLAB_AUTH_FILE, config_string.replace('\\', '/'))
 
 importlib.machinery.SourceFileLoader('mswms_settings', constants.SERVER_CONFIG_FILE_PATH).load_module()
 sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
