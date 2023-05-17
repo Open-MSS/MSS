@@ -44,6 +44,7 @@ else:
 CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mswms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
+MSCOLAB_AUTH_FILE = "mscolab_auth.py"
 ROOT_FS = TempFS(identifier=f"msui{SHA}")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
 
