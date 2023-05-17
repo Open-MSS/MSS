@@ -317,10 +317,18 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         password = data['password']
         if r.status_code == 401:
             r = self.authenticate(data, r, url)
-            if r.status_code == 200 and r.text not in ["False", "Unauthorized Access"]:
+            if r.status_code == 200:
+                # http auth was successful
                 self.save_auth_credentials_to_config_file()
-                self.save_user_credentials_to_config_file(emailid, password)
-                self.mscolab.after_login(emailid, self.mscolab_server_url, r)
+                if r.text not in ["False", "Unauthorized Access"]:
+                    # user does not exist or password is wrong
+                    self.save_user_credentials_to_config_file(emailid, password)
+                    self.mscolab.after_login(emailid, self.mscolab_server_url, r)
+                else:
+                    self.stackedWidget.setCurrentWidget(self.loginPage)
+                    url_recover_password = f'{self.mscolab_server_url}/reset_request'
+                    self.set_status("Error", 'Oh no, you need to add a user account or '
+                                    f'<a href="{url_recover_password}">Recover Your Password</a>')
             else:
                 self.set_status("Error", 'Oh no, server authentication were incorrect.')
                 self.stackedWidget.setCurrentWidget(self.loginPage)
