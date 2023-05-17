@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_mscolab.test_server
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_mscolab.test_server_auth_required
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    tests for server functionalities
+    tests for server basics when auth is enabled
 
     This file is part of MSS.
 
