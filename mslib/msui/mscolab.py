@@ -328,7 +328,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                     self.stackedWidget.setCurrentWidget(self.loginPage)
                     url_recover_password = f'{self.mscolab_server_url}/reset_request'
                     self.set_status("Error", 'Oh no, you need to add a user account or '
-                            f'<a href="{url_recover_password}">Recover Your Password</a>')
+                                    f'<a href="{url_recover_password}">Recover Your Password</a>')
             else:
                 self.set_status("Error", 'Oh no, server authentication were incorrect.')
                 self.stackedWidget.setCurrentWidget(self.loginPage)
