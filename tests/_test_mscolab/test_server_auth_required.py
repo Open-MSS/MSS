@@ -34,8 +34,8 @@ mscolab_settings.enable_basic_http_authentication = True
 try:
     from mslib.mscolab.server import authfunc, verify_pw, initialize_managers, get_auth_token, register_user, APP
 except ImportError:
-    pytest.mark.skip("this test runs only by an explicit call "
-                     "e.g. pytest tests/_test_mscolab/test_server_auth_required.py")
+    pytest.skip("this test runs only by an explicit call "
+                "e.g. pytest tests/_test_mscolab/test_server_auth_required.py", allow_module_level=True)
 
 from mslib.mscolab.mscolab import handle_db_reset
 
