@@ -91,20 +91,32 @@ class Test_Mscolab_connect_window():
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
+ 
+    @pytest.mark.parametrize(
+        "exc",
+        [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
+         requests.exceptions.InvalidURL, requests.exceptions.SSLError,
+         Exception])
+    @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
+    def test_connect_except(self, mockset, exc):
+        with mock.patch("requests.Session.get", new=ExceptionMock(exc).raise_exc):
+            self.window.connect_handler()
+        assert mockset.call_args_list == [mock.call("color: red;")]
+
+    @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
+    def test_connect_denied(self, mockset):
+        with mock.patch("requests.Session.get", return_value=mock.Mock(status_code=401)):
+            self.window.connect_handler()
+        assert mockset.call_args_list == [mock.call("color: red;")]
 
     @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
-    def test_connect(self, mockbox, mockset):
-        for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
-                    requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
-            with mock.patch("requests.Session.get", new=ExceptionMock(exc).raise_exc):
-                self.window.connect_handler()
-
+    def test_connect_success(self, mockbox, mockset):
+        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") != "fnord"
         self._connect_to_mscolab(password="fnord")
 
-        ref = [mock.call("color: red;")] * 5 + [mock.call("color: green;")]
         assert mslib.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") == "fnord"
-        assert mockset.call_args_list == ref
+        assert mockset.call_args_list == [mock.call("color: green;")]
 
     def test_disconnect(self):
         self._connect_to_mscolab()
