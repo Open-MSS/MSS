@@ -53,8 +53,6 @@ PORTS = list(range(25000, 25500))
 class Test_Mscolab_connect_window():
     def setup_method(self):
         keyring.get_keyring().reset()
-        import mslib.mscolab.conf
-        mslib.mscolab.conf.mscolab_settings.enable_basic_http_authentication = True
 
         handle_db_reset()
         self._reset_config_file()
