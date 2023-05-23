@@ -25,6 +25,7 @@
     limitations under the License.
 """
 
+import keyring
 import os
 import sys
 import mock
@@ -58,6 +59,7 @@ class VSecViewMockup(mock.Mock):
 
 class WMSControlWidgetSetup(object):
     def _setup(self, widget_type):
+        keyring.get_keyring().reset()
         wc.WMS_SERVICE_CACHE = {}
         self.port = PORTS.pop()
         self.application = QtWidgets.QApplication(sys.argv)
@@ -95,6 +97,7 @@ class WMSControlWidgetSetup(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
+        keyring.get_keyring().reset()
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         self.application.quit()

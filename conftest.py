@@ -55,6 +55,9 @@ class TestKeyring(keyring.backend.KeyringBackend):
 
     passwords = {}
 
+    def reset(self):
+        self.passwords = {}
+
     def set_password(self, servicename, username, password):
         self.passwords[servicename + username] = password
 
