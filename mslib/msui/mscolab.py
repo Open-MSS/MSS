@@ -334,16 +334,16 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             save_password_to_keyring(service_name=self.mscolab_server_url, username=emailid, password=password)
         except (NoKeyringError, PasswordSetError, InitError) as ex:
             logging.warning("Can't use Keyring on your system:  %s" % ex)
-        http_auth = config_loader(dataset="MSS_auth")
-        if http_auth.get(self.mscolab_server_url) != emailid:
+        mss_auth = config_loader(dataset="MSS_auth")
+        if mss_auth.get(self.mscolab_server_url) != emailid:
             ret = QtWidgets.QMessageBox.question(
                 self, self.tr("Update Credentials"),
                 self.tr("You are using new credentials. "
                         "Should your settings file be updated with the new credentials?"),
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:
-                http_auth[self.mscolab_server_url] = emailid
-                modify_config_file({"MSS_auth": http_auth})
+                mss_auth[self.mscolab_server_url] = emailid
+                modify_config_file({"MSS_auth": mss_auth})
 
     def new_user_handler(self):
         # get mscolab /token http auth credentials from cache
