@@ -91,7 +91,7 @@ class Test_Mscolab_connect_window():
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
- 
+
     @pytest.mark.parametrize(
         "exc",
         [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
