@@ -91,8 +91,8 @@ class TestMigration:
             }
             # verify keyring
             data = auth.get_auth_from_url_and_name("http://www.your-server.de/forecasts", http_auth)
-            assert data == ("youruser", 'password from TestKeyring')
-            assert auth.get_password_from_keyring("MSCOLAB", "something@something.org") == 'password from TestKeyring'
+            assert data == ("youruser", 'yourpassword')
+            assert auth.get_password_from_keyring("MSCOLAB", "something@something.org") == mail_password
 
             # check removed old attributes
             with pytest.raises(KeyError):
