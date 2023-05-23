@@ -51,9 +51,10 @@ from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
 
+import PyQt5
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring, get_auth_from_url_and_name
+from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.utils.qt import ui_mscolab_help_dialog as msc_help_dialog
@@ -63,7 +64,7 @@ from mslib.utils.qt import ui_mscolab_connect_dialog as ui_conn
 from mslib.utils.qt import ui_mscolab_profile_dialog as ui_profile
 from mslib.utils.qt import ui_operation_archive as ui_opar
 from mslib.msui import constants
-from mslib.utils.config import config_loader, load_settings_qsettings, save_settings_qsettings, modify_config_file
+from mslib.utils.config import config_loader, modify_config_file
 
 
 class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArchiveBrowser):
@@ -198,6 +199,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.statusLabel.setStyleSheet("")
             msg = "ⓘ  " + msg
         self.statusLabel.setText(msg)
+        logging.debug("set_status: %s", msg)
         QtWidgets.QApplication.processEvents()
 
     def add_mscolab_urls(self):
@@ -237,7 +239,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
                 url_list = config_loader(dataset="default_MSCOLAB")
                 if self.mscolab_server_url not in url_list:
-                    ret = QtWidgets.QMessageBox.question(
+                    ret = PyQt5.QtWidgets.QMessageBox.question(
                         self, self.tr("Update Server List"),
                         self.tr("You are using a new MSCOLAB server. "
                                 "Should your settings file be updated by adding the new server?"),
@@ -253,7 +255,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
                 # Change connect button text and connect disconnect handler
                 self.connectBtn.setText('Disconnect')
-                self.connectBtn.clicked.disconnect(self.connect_handler)
+                try:
+                    self.connectBtn.clicked.disconnect(self.connect_handler)
+                except TypeError:
+                    pass
                 self.connectBtn.clicked.connect(self.disconnect_handler)
             else:
                 self.set_status("Error", "Some unexpected error occurred. Please try again.")
@@ -270,7 +275,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             logging.debug("MSColab server isn't active")
             self.set_status("Error", "MSColab server isn't active")
         except Exception as e:
-            logging.debug("Error %s", str(e))
+            logging.error("Error %s %s", type(e), str(e))
             self.set_status("Error", "Some unexpected error occurred. Please try again.")
 
     def disconnect_handler(self):

@@ -78,13 +78,9 @@ if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
     import hashlib
 
     def authfunc(username, password):
-        print("offered", username, password, hashlib.md5(password.encode('utf-8')).hexdigest())
         for u, p in mscolab_auth.allowed_users:
-            print("testing", u, p)
             if (u == username) and (p == hashlib.md5(password.encode('utf-8')).hexdigest()):
-                print("TRUE")
                 return True
-        print("FALSE")
         return False
 
     @auth.verify_password
@@ -143,13 +139,11 @@ _app, sockio, cm, fm = initialize_managers(APP)
 
 
 def check_login(emailid, password):
-    print("cl")
     try:
         user = User.query.filter_by(emailid=str(emailid)).first()
     except sqlalchemy.exc.OperationalError as ex:
         logging.debug("Problem in the database (%ex), likly version client different", ex)
         return False
-    print("cl", user, emailid, password)
     if user is not None:
         if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
@@ -158,7 +152,6 @@ def check_login(emailid, password):
         else:
             if user.verify_password(password):
                 return user
-    print("cl FALSE")
     return False
 
 
@@ -225,11 +218,9 @@ def hello2():
 @APP.route('/token', methods=["POST"])
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def get_auth_token():
-    print("gat")
     emailid = request.form['email']
     password = request.form['password']
     user = check_login(emailid, password)
-    print("gat", user, emailid, password)
     if user:
         if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
@@ -246,7 +237,6 @@ def get_auth_token():
                 'user': {'username': user.username, 'id': user.id}})
     else:
         logging.debug("Unauthorized user: %s", emailid)
-        print("unaith")
         return "False"
 
 
@@ -274,7 +264,6 @@ def user_register_handler():
     username = request.form['username']
     result = register_user(email, password, username)
     status_code = 200
-    print(result)
     try:
         if result["success"]:
             status_code = 201
