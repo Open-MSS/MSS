@@ -218,10 +218,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s = requests.Session()
             s.auth = auth
             s.headers.update({'x-test': 'true'})
-            r = s.get(url_join(url, 'status_auth'), timeout=(2, 10))
+            r = s.get(url_join(url, 'status'), timeout=(2, 10))
             if r.status_code == 401:
                 self.set_status("Error", 'Server authentication were incorrect.')
-            elif r.text == "Mscolab server":
+            elif r.status_code == 200:
                 self.stackedWidget.setCurrentWidget(self.loginPage)
                 self.set_status("Success", "Successfully connected to MSColab Server")
                 # disable url input

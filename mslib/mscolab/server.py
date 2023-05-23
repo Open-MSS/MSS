@@ -203,15 +203,9 @@ def home():
     return render_template("/index.html")
 
 
-# ToDo setup codes in return statements
 @APP.route("/status")
-def hello():
-    return "Mscolab server"
-
-
-@APP.route("/status_auth")
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
-def hello2():
+def hello():
     return "Mscolab server"
 
 
