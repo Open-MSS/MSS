@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-import keyring
 import os
 import sys
 import mock

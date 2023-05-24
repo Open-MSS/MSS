@@ -32,7 +32,6 @@ import fs.opener.errors
 import requests.exceptions
 import mock
 import pytest
-import keyring
 
 import mslib.utils.auth
 from mslib.mscolab.conf import mscolab_settings
