@@ -33,8 +33,6 @@ from mslib.msui import constants
 
 
 def test_keyring():
-    keyring.get_keyring().reset()
-
     username = "something@something.org"
     password = "abcdef"
     auth.save_password_to_keyring(service_name="MSCOLAB", username=username, password=password)
@@ -49,11 +47,8 @@ def test_keyring():
     assert auth.get_password_from_keyring(
         service_name="MSCOLAB", username=username) == "password from TestKeyring"
 
-    keyring.get_keyring().reset()
-
 
 def test_get_auth_from_url_and_name():
-    keyring.get_keyring().reset()
     # empty http_auth definition
     server_url = "http://example.com"
     http_auth = config_loader(dataset="MSS_auth")
@@ -89,4 +84,3 @@ def test_get_auth_from_url_and_name():
     # check storage of MSCOLAB password
     auth.save_password_to_keyring('MSCOLAB', auth_username, "password")
     assert auth.get_password_from_keyring("MSCOLAB", auth_username) == 'password'
-    keyring.get_keyring().reset()

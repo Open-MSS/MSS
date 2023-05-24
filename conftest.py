@@ -73,6 +73,11 @@ class TestKeyring(keyring.backend.KeyringBackend):
 keyring.set_keyring(TestKeyring())
 
 
+@pytest.fixture(autouse=True)
+def keyring_reset():
+    keyring.get_keyring().reset()
+
+
 def pytest_addoption(parser):
     parser.addoption("--msui_settings", action="store")
 

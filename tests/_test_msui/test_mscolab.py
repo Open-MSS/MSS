@@ -52,8 +52,6 @@ PORTS = list(range(25000, 25500))
 
 class Test_Mscolab_connect_window():
     def setup_method(self):
-        keyring.get_keyring().reset()
-
         handle_db_reset()
         self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -78,7 +76,6 @@ class Test_Mscolab_connect_window():
             mslib.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
 
     def teardown_method(self):
-        keyring.get_keyring().reset()
         self.main_window.mscolab.logout()
         self.window.hide()
         self.main_window.hide()
@@ -259,7 +256,6 @@ class Test_Mscolab(object):
     }
 
     def setup_method(self):
-        keyring.get_keyring().reset()
         handle_db_reset()
         self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
@@ -286,7 +282,6 @@ class Test_Mscolab(object):
         self.window.show()
 
     def teardown_method(self):
-        keyring.get_keyring().reset()
         self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
