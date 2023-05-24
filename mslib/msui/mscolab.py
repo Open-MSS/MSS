@@ -220,10 +220,10 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s.headers.update({'x-test': 'true'})
             r = s.get(url_join(url, 'status'), timeout=(2, 10))
             if r.status_code == 401:
-                self.set_status("Error", 'Server authentication were incorrect.')
+                self.set_status("Error", 'Server authentication data were incorrect.')
             elif r.status_code == 200:
                 self.stackedWidget.setCurrentWidget(self.loginPage)
-                self.set_status("Success", "Successfully connected to MSColab Server")
+                self.set_status("Success", "Successfully connected to MSColab server.")
                 # disable url input
                 self.urlCb.setEnabled(False)
 
@@ -241,7 +241,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 if self.mscolab_server_url not in url_list:
                     ret = PyQt5.QtWidgets.QMessageBox.question(
                         self, self.tr("Update Server List"),
-                        self.tr("You are using a new MSCOLAB server. "
+                        self.tr("You are using a new MSColab server. "
                                 "Should your settings file be updated by adding the new server?"),
                         QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
                     if ret == QtWidgets.QMessageBox.Yes:
@@ -261,19 +261,20 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                     pass
                 self.connectBtn.clicked.connect(self.disconnect_handler)
             else:
+                logging.error("Error %s", r)
                 self.set_status("Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.SSLError:
             logging.debug("Certificate Verification Failed")
-            self.set_status("Error", "Certificate Verification Failed")
+            self.set_status("Error", "Certificate Verification Failed.")
         except requests.exceptions.InvalidSchema:
             logging.debug("invalid schema of url")
-            self.set_status("Error", "Invalid Url Scheme!")
+            self.set_status("Error", "Invalid Url Scheme.")
         except requests.exceptions.InvalidURL:
             logging.debug("invalid url")
-            self.set_status("Error", "Invalid URL")
+            self.set_status("Error", "Invalid URL.")
         except requests.exceptions.ConnectionError:
             logging.debug("MSColab server isn't active")
-            self.set_status("Error", "MSColab server isn't active")
+            self.set_status("Error", "MSColab server isn't active.")
         except Exception as e:
             logging.error("Error %s %s", type(e), str(e))
             self.set_status("Error", "Some unexpected error occurred. Please try again.")
@@ -296,7 +297,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.connectBtn.setText('Connect')
         self.connectBtn.clicked.disconnect(self.disconnect_handler)
         self.connectBtn.clicked.connect(self.connect_handler)
-        self.set_status("Info", 'Disconnected from server')
+        self.set_status("Info", 'Disconnected from server.')
 
     def login_handler(self):
         data = {
@@ -316,15 +317,15 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
                 "Error",
-                "Failed to establish a new connection" f' to "{self.mscolab_server_url}". Try in a moment again.',
+                f'Failed to establish a new connection to "{self.mscolab_server_url}". Try again in a moment.',
             )
             self.disconnect_handler()
             return
 
         if r.text == "False":
             # show status indicating about wrong credentials
-            self.set_status("Error", 'Wrong username or password. '
-                            f'<a href="{url_recover_password}">Recover Your Password</a>')
+            self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
+                            f'<a href="{url_recover_password}">recover your password</a>.')
         else:
             self.save_user_credentials_to_config_file(data["email"], data["password"])
             self.mscolab.after_login(data["email"], self.mscolab_server_url, r)
@@ -352,7 +353,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         re_password = self.newConfirmPasswordLe.text()
         username = self.newUsernameLe.text()
         if password != re_password:
-            self.set_status("Error", 'Oh no, your passwords don\'t match')
+            self.set_status("Error", 'Your passwords don\'t match.')
             return
 
         data = {
@@ -370,13 +371,13 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
                 "Error",
-                "Failed to establish a new connection" f' to "{self.mscolab_server_url}". Try in a moment again.',
+                f'Failed to establish a new connection to "{self.mscolab_server_url}". Try again in a moment.',
             )
             self.disconnect_handler()
             return
 
         if r.status_code == 204:
-            self.set_status("Success", 'You are registered, confirm your email to log in.')
+            self.set_status("Success", 'You are registered, confirm your email before logging in.')
             self.save_user_credentials_to_config_file(emailid, password)
             self.stackedWidget.setCurrentWidget(self.loginPage)
             self.loginEmailLe.setText(emailid)
@@ -575,7 +576,7 @@ class MSUIMscolab(QtCore.QObject):
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
         except Exception as ex:
             logging.debug("Couldn't create a socket connection: %s", ex)
-            show_popup(self.ui, "Error", "Couldn't create a socket connection. Maybe the mscolab server is too old."
+            show_popup(self.ui, "Error", "Couldn't create a socket connection. Maybe the MSColab server is too old. "
                                          "New Login required!")
             self.logout()
         else:
@@ -1628,7 +1629,6 @@ class MSUIMscolab(QtCore.QObject):
             item.setFont(font)
 
             # set new waypoints model to open views
-            logging.debug("mscolab set wpm")
             for window in self.ui.get_active_views():
                 window.setFlightTrackModel(self.waypoints_model)
                 if self.access_level == "viewer":
