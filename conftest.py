@@ -95,94 +95,67 @@ if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
     examples.create_data()
 
 if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
-    config_string = f'''# -*- coding: utf-8 -*-
+    config_string = f'''
+# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+import os
+import logging
+import fs
+import secrets
+from werkzeug.urls import url_join
+
+ROOT_DIR = '{constants.ROOT_DIR}'
+# directory where mss output files are stored
+root_fs = fs.open_fs(ROOT_DIR)
+if not root_fs.exists('colabTestData'):
+    root_fs.makedir('colabTestData')
+BASE_DIR = ROOT_DIR
+DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
+# mscolab data directory
+MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
+
+# used to generate and parse tokens
+SECRET_KEY = secrets.token_urlsafe(16)
+
+# used to generate the password token
+SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
+
+# mail settings
+MAIL_SERVER = 'localhost'
+MAIL_PORT = 25
+MAIL_USE_TLS = False
+MAIL_USE_SSL = True
+
+# mail authentication
+MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
+MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
+
+# mail accounts
+MAIL_DEFAULT_SENDER = 'MSS@localhost'
+
+# enable verification by Mail
+MAIL_ENABLED = False
+
+SQLALCHEMY_DB_URI = 'sqlite:///' + url_join(DATA_DIR, 'mscolab.db')
+
+# mscolab file upload settings
+UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+
+# text to be written in new mscolab based ftml files.
+STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
+<FlightTrack version="1.7.6">
+  <ListOfWaypoints>
+    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
+      <Comments></Comments>
+    </Waypoint>
+    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
+      <Comments></Comments>
+    </Waypoint>
+  </ListOfWaypoints>
+</FlightTrack>
 """
-
-    mslib.mscolab.conf.py.example
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    config for mscolab.
-
-    This file is part of MSS.
-
-    :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
-    :license: APACHE-2.0, see LICENSE for details.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-"""
-class mscolab_settings(object):
-
-    # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
-    import os
-    import logging
-    import fs
-    import secrets
-    from werkzeug.urls import url_join
-
-    ROOT_DIR = '{constants.ROOT_DIR}'
-    # directory where mss output files are stored
-    root_fs = fs.open_fs(ROOT_DIR)
-    if not root_fs.exists('colabTestData'):
-        root_fs.makedir('colabTestData')
-    BASE_DIR = ROOT_DIR
-    DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
-    # mscolab data directory
-    MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
-
-    # used to generate and parse tokens
-    SECRET_KEY = secrets.token_urlsafe(16)
-
-    # used to generate the password token
-    SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
-
-    # mail settings
-    MAIL_SERVER = 'localhost'
-    MAIL_PORT = 25
-    MAIL_USE_TLS = False
-    MAIL_USE_SSL = True
-
-    # mail authentication
-    MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
-
-    # mail accounts
-    MAIL_DEFAULT_SENDER = 'MSS@localhost'
-
-    # enable verification by Mail
-    MAIL_ENABLED = False
-
-    SQLALCHEMY_DB_URI = 'sqlite:///' + url_join(DATA_DIR, 'mscolab.db')
-
-    # mscolab file upload settings
-    UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
-    MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
-
-    # text to be written in new mscolab based ftml files.
-    STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-    <FlightTrack version="1.7.6">
-      <ListOfWaypoints>
-        <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-          <Comments></Comments>
-        </Waypoint>
-      </ListOfWaypoints>
-    </FlightTrack>
-    """
-    enable_basic_http_authentication = False
-    '''
+enable_basic_http_authentication = False
+'''
     ROOT_FS = fs.open_fs(constants.ROOT_DIR)
     if not ROOT_FS.exists('mscolab'):
         ROOT_FS.makedir('mscolab')
@@ -193,38 +166,13 @@ class mscolab_settings(object):
     parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
 
 if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_AUTH_FILE):
-    config_string = f'''# -*- coding: utf-8 -*-
-"""
-
-    mslib.mscolab.auth.py.example
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    config for mscolab auth.
-
-    This file is part of MSS.
-
-    :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
-    :license: APACHE-2.0, see LICENSE for details.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-"""
+    config_string = '''
 import hashlib
 
 class mscolab_auth(object):
      password = "testvaluepassword"
      allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
-    '''
+'''
     ROOT_FS = fs.open_fs(constants.ROOT_DIR)
     if not ROOT_FS.exists('mscolab'):
         ROOT_FS.makedir('mscolab')
