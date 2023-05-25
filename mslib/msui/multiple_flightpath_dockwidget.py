@@ -30,7 +30,7 @@ import json
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
-from mslib.msui import msui
+import mslib.msui.msui_mainwindow as msui_mainwindow
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
 
@@ -303,7 +303,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         self.save_waypoint_model_data(wp_model, self.list_flighttrack)
 
-        listItem = msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
+        listItem = msui_mainwindow.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
         listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
         if not self.flighttrack_added:
             self.flighttrack_added = True

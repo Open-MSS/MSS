@@ -26,13 +26,13 @@
 """
 
 import datetime
-import enum
 import logging
 import jwt
 
 from passlib.apps import custom_app_context as pwd_context
 from flask_sqlalchemy import SQLAlchemy
 from mslib.mscolab.app import APP
+from mslib.mscolab.message_type import MessageType
 
 db = SQLAlchemy(APP)
 
@@ -155,13 +155,6 @@ class Operation(db.Model):
         return f'<Operation path: {self.path}, desc: {self.description},' \
                f' cat: {self.category}, active: {self.active}, ' \
                f'last_used: {self.last_used}> '
-
-
-class MessageType(enum.IntEnum):
-    TEXT = 0
-    SYSTEM_MESSAGE = 1
-    IMAGE = 2
-    DOCUMENT = 3
 
 
 class Message(db.Model):

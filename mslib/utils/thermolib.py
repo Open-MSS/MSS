@@ -33,7 +33,6 @@ from mslib.utils.units import units, check_units
 from metpy.package_tools import Exporter
 from metpy.constants import Rd, g
 from metpy.xarray import preprocess_and_wrap
-import metpy.calc as mpcalc
 
 exporter = Exporter(globals())
 
@@ -85,6 +84,7 @@ def pot_temp(p, t):
 
     Returns: potential temperature in [K].
     """
+    import metpy.calc as mpcalc
     return mpcalc.potential_temperature(
         units.Pa * p, units.K * t).to("K").m
 
@@ -104,6 +104,7 @@ def eqpt_approx(p, t, q):
     Returns: equivalent potential temperature in [K].
     """
 
+    import metpy.calc as mpcalc
     return mpcalc.equivalent_potential_temperature(
         units.Pa * p, units.K * t,
         mpcalc.dewpoint_from_specific_humidity(units.Pa * p, units.K * t, q)).to("K").m
@@ -122,6 +123,7 @@ def omega_to_w(omega, p, t):
 
     Returns the vertical velocity in geometric coordinates, [m/s].
     """
+    import metpy.calc as mpcalc
     return mpcalc.vertical_velocity(
         units("Pa/s") * omega, units.Pa * p, units.K * t).to("m/s").m
 

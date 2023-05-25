@@ -33,7 +33,7 @@ from markdown import Markdown
 from markdown.extensions import Extension
 from werkzeug.urls import url_join
 
-from mslib.mscolab.models import MessageType
+from mslib.mscolab.message_type import MessageType
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
