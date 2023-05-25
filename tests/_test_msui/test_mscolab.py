@@ -354,9 +354,9 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
         self.window.remove_plugins()
-        with mock.patch("mslib.msui.msui.config_loader", return_value=self.import_plugins):
+        with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.msui.config_loader", return_value=self.export_plugins):
+        with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
         file_path = fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}')
         with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(file_path, None)):
