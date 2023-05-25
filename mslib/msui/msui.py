@@ -1197,7 +1197,6 @@ A backup of the old file is stored.
                     new_version.change_parameters()
         read_config_file()
 
-
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
     mainwindow.show()

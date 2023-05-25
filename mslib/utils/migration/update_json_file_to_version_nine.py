@@ -28,13 +28,10 @@
 
 import fs
 import json
-import logging
 import copy
 
-from keyring.errors import NoKeyringError, PasswordSetError, InitError
 from packaging import version
 from mslib import __version__
-from mslib.utils.auth import save_password_to_keyring
 from mslib.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
 from mslib.utils.migration.config_before_nine import config_loader as config_loader_before_nine
 from mslib.utils.config import modify_config_file
@@ -48,7 +45,6 @@ class JsonConversion:
         self.MSCOLAB_mailid = config_loader_before_nine(dataset="MSCOLAB_mailid")
         self.MSS_auth = config_loader_before_nine(dataset="MSS_auth")
         self.default_MSCOLAB = config_loader_before_nine(dataset="default_MSCOLAB")
-
 
     def change_parameters(self):
         """
