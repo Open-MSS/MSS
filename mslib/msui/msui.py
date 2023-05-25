@@ -1173,18 +1173,16 @@ def main():
     application.setApplicationDisplayName("MSUI")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSUIMainWindow()
-    if version.parse(__version__) >= version.parse('8.0.0') and version.parse(__version__) < version.parse('9.0.0'):
-        from mslib.utils.migration.config_before_eight import read_config_file as read_config_file_before_eight
-        from mslib.utils.migration.config_before_eight import config_loader as config_loader_before_eight
-        read_config_file_before_eight()
-        if config_loader_before_eight(dataset="WMS_login") or config_loader_before_eight(
-                dataset="MSC_login") or config_loader_before_eight(dataset="MSCOLAB_password"):
+    if version.parse(__version__) >= version.parse('9.0.0') and version.parse(__version__) < version.parse('10.0.0'):
+        from mslib.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
+        from mslib.utils.migration.config_before_nine import config_loader as config_loader_before_nine
+        read_config_file_before_nine()
+        if config_loader_before_nine(dataset="MSCOLAB_mailid"):
 
             text = """We can update your msui_settings.json file \n
-We add the new attributes for the webserver authentication, see \n
+We add the new attributes for the MSColab login, see \n
 https://mss.readthedocs.io/en/stable/usage.html#mscolab-login-and-www-authentication \n
-The old attributes get removed: \n
-WMS_login, MSC_login, MSCOLAB_password \n\n
+
 A backup of the old file is stored.
 """
 
@@ -1193,11 +1191,12 @@ A backup of the old file is stored.
                                                  QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                  QtWidgets.QMessageBox.No)
             if ret == QtWidgets.QMessageBox.Yes:
-                from mslib.utils.migration.update_json_file_to_version_eight import JsonConversion
-                if version.parse(__version__) >= version.parse('8.0.0'):
+                from mslib.utils.migration.update_json_file_to_version_nine import JsonConversion
+                if version.parse(__version__) >= version.parse('9.0.0'):
                     new_version = JsonConversion()
                     new_version.change_parameters()
         read_config_file()
+
 
     mainwindow.setStyleSheet("QListWidget { border: 1px solid grey; }")
     mainwindow.create_new_flight_track()
