@@ -114,29 +114,20 @@ You can setup which accounts are used to login into MSColab and used for authent
   When you use an old configuration having WMS_login, MSC_login, MSCOLAB_password defined on start
   of msui you get a hint that we can update your msui_settings.json file. We keep your old attributes in a bak file.
 
-
-A dictionary by Server-Url and username provide the username for an http-auth request
-and the MSCOLAB_mailid is used to login by your credentials into the service.
+A dictionary by Server-Url and username provide the username for logging into our services
+(by http-auth request for WMS).
 
 .. code:: text
 
    "MSS_auth": {
                   "http://www.your-server.de/forecasts": "authuser",
-                  "http://www.your-mscolab-server.de": "authuser"
+                  "http://www.your-mscolab-server.de": "your-email"
                 },
-   "MSCOLAB_mailid": "your-email"
 
 
-By entering first time the passwords they are stored by using keyring.
-You can also use the keyring app to set, change and delete passwords.
-The following examples shows how to setup your individual MSColab account and to add
-the common WWW-authentication to access the server.
-
-.. code:: text
-
-    (mssenv): keyring set MSCOLAB your-email your-password
-    (mssenv): keyring set http://www.your-mscolab-server.de authuser authpassword
-
+All passwords are stored by using an OS-provided keyring after entering them
+the first time. Also the token required for accessing the MSColab server will
+be stored there. You can also use an OS-provided keyring app to set, change and delete passwords.
 
 
 MSUI Flight track import/export plugins

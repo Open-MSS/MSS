@@ -53,17 +53,29 @@ class TestKeyring(keyring.backend.KeyringBackend):
     """
     priority = 1
 
+    passwords = {}
+
+    def reset(self):
+        self.passwords = {}
+
     def set_password(self, servicename, username, password):
-        pass
+        self.passwords[servicename + username] = password
 
     def get_password(self, servicename, username):
-        return "password from TestKeyring"
+        return self.passwords.get(servicename + username, "password from TestKeyring")
 
     def delete_password(self, servicename, username):
-        pass
+        if servicename + username in self.passwords:
+            del self.passwords[servicename + username]
+
 
 # set the keyring for keyring lib
 keyring.set_keyring(TestKeyring())
+
+
+@pytest.fixture(autouse=True)
+def keyring_reset():
+    keyring.get_keyring().reset()
 
 
 def pytest_addoption(parser):

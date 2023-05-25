@@ -155,7 +155,6 @@ def check_login(emailid, password):
     return False
 
 
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def register_user(email, password, username):
     user = User(email, username, password)
     is_valid_username = True if username.find("@") == -1 else False
@@ -204,8 +203,8 @@ def home():
     return render_template("/index.html")
 
 
-# ToDo setup codes in return statements
 @APP.route("/status")
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
     return "Mscolab server"
 
@@ -252,6 +251,7 @@ def authorized():
 
 
 @APP.route("/register", methods=["POST"])
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def user_register_handler():
     email = request.form['email']
     password = request.form['password']
