@@ -116,9 +116,6 @@ def add_user(email, username, password):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    template = f"""
-    "MSCOLAB_mailid": "{email}",
-"""
     with app.app_context():
         user_email_exists = User.query.filter_by(emailid=str(email)).first()
         user_name_exists = User.query.filter_by(username=str(username)).first()
@@ -128,7 +125,6 @@ def add_user(email, username, password):
             db.session.commit()
             db.session.close()
             logging.info("Userdata: %s %s %s", email, username, password)
-            logging.info(template)
             return True
         else:
             logging.info("%s already in db", user_name_exists)

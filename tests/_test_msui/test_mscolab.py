@@ -189,7 +189,6 @@ class Test_Mscolab_connect_window():
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
-        create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org" }')
         create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
         mslib.utils.auth.save_password_to_keyring(service_name=self.url,
                                                   username="something@something.org", password="something")
