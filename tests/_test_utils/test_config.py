@@ -214,13 +214,13 @@ class TestConfigLoader(object):
         if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
             pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
-            "num_labels": "20"
+            "num_labels": 20
         }
         modify_config_file(data_to_save_in_config_file)
         config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
-        assert data["num_labels"] == "20"
+        assert data["num_labels"] == 20
 
     def test_modify_config_file_with_existing_parameters(self):
         """
@@ -230,13 +230,13 @@ class TestConfigLoader(object):
         if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
             pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
-            "num_labels": "20"
+            "num_labels": 20
         }
         modify_config_file(data_to_save_in_config_file)
         config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
-        assert data["num_labels"] == "20"
+        assert data["num_labels"] == 20
 
     def test_modify_config_file_with_invalid_parameters(self):
         """
