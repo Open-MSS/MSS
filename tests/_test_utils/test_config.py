@@ -226,7 +226,7 @@ class TestConfigLoader(object):
         """
         Test to check if modify_config_file properly modifies a key-value pair in the config file
         """
-        create_msui_settings_file('{"num_labels": "20"}')
+        create_msui_settings_file('{"num_labels": 14}')
         if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
             pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
