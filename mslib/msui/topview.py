@@ -33,8 +33,8 @@ import logging
 from mslib.utils.config import config_loader
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
-from mslib.utils.qt import ui_topview_window as ui
-from mslib.utils.qt import ui_topview_mapappearance as ui_ma
+from mslib.msui.qt5 import ui_topview_window as ui
+from mslib.msui.qt5 import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat

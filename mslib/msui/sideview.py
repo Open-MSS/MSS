@@ -31,8 +31,8 @@ import functools
 
 from PyQt5 import QtGui, QtWidgets
 
-from mslib.utils.qt import ui_sideview_window as ui
-from mslib.utils.qt import ui_sideview_options as ui_opt
+from mslib.msui.qt5 import ui_sideview_window as ui
+from mslib.msui.qt5 import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons

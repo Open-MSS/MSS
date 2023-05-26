@@ -57,12 +57,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
-from mslib.utils.qt import ui_mscolab_help_dialog as msc_help_dialog
-from mslib.utils.qt import ui_add_operation_dialog as add_operation_ui
-from mslib.utils.qt import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
-from mslib.utils.qt import ui_mscolab_connect_dialog as ui_conn
-from mslib.utils.qt import ui_mscolab_profile_dialog as ui_profile
-from mslib.utils.qt import ui_operation_archive as ui_opar
+from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
+from mslib.msui.qt5 import ui_add_operation_dialog as add_operation_ui
+from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
+from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
+from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
+from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
 

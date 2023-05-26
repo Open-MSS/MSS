@@ -605,40 +605,4 @@ class NonQtCallback:
             except Exception:
                 pass
 
-
-# Import all Dialogues from the proper module directory.
-for mod in [
-        "ui_about_dialog",
-        "ui_shortcuts",
-        "ui_updater_dialog",
-        "ui_hexagon_dockwidget",
-        "ui_kmloverlay_dockwidget",
-        "ui_customize_kml",
-        "ui_mainwindow",
-        "ui_configuration_editor_window",
-        "ui_mscolab_connect_dialog",
-        "ui_mscolab_help_dialog",
-        "ui_add_operation_dialog",
-        "ui_mscolab_merge_waypoints_dialog",
-        "ui_mscolab_profile_dialog",
-        "ui_mss_rename_message",
-        "ui_performance_dockwidget",
-        "ui_remotesensing_dockwidget",
-        "ui_satellite_dockwidget",
-        "ui_airdata_dockwidget",
-        "ui_sideview_options",
-        "ui_sideview_window",
-        "ui_tableview_window",
-        "ui_topview_mapappearance",
-        "ui_topview_window",
-        "ui_linearview_options",
-        "ui_linearview_window",
-        "ui_operation_archive",
-        "ui_wms_password_dialog",
-        "ui_wms_capabilities",
-        "ui_wms_dockwidget",
-        "ui_wms_multilayers"]:
-    globals()[mod] = importlib.import_module("mslib.msui.qt5." + mod)
-
-
 sys.excepthook = excepthook

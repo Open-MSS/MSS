@@ -28,7 +28,7 @@ import numpy as np
 import logging
 
 from PyQt5 import QtWidgets
-from mslib.utils.qt import ui_hexagon_dockwidget as ui
+from mslib.msui.qt5 import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.utils.coordinate import rotate_point
 from mslib.utils.config import config_loader

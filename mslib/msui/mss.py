@@ -30,7 +30,7 @@
 
 import sys
 
-from mslib.utils.qt import ui_mss_rename_message as ui
+from mslib.msui.qt5 import ui_mss_rename_message as ui
 from PyQt5 import QtWidgets
 
 
