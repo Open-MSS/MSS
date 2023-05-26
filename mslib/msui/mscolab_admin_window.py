@@ -47,7 +47,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         op_id: operation id
         conn: connection to send/receive socket messages
         """
-        super(MSColabAdminWindow, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.mscolab_server_url = mscolab_server_url

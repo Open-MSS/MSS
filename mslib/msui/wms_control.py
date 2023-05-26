@@ -238,7 +238,7 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
         Arguments:
         parent -- Qt widget that is parent to this widget.
         """
-        super(MSS_WMS_AuthenticationDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
     def getAuthInfo(self):
@@ -266,7 +266,7 @@ class WMSMapFetcher(QtCore.QObject):
     started_request = QtCore.pyqtSignal()
 
     def __init__(self, wms_cache, parent=None):
-        super(WMSMapFetcher, self).__init__(parent)
+        super().__init__(parent)
         self.wms_cache = wms_cache
         self.maps = []
         self.map_imgs = []
@@ -411,7 +411,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         default_WMS -- list of strings that specify WMS URLs that will be
                        displayed in the URL combobox as default values.
         """
-        super(WMSControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.view = view
@@ -1508,7 +1508,7 @@ class VSecWMSControlWidget(WMSControlWidget):
 
     def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
-        super(VSecWMSControlWidget, self).__init__(
+        super().__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
@@ -1590,7 +1590,7 @@ class HSecWMSControlWidget(WMSControlWidget):
     """
 
     def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
-        super(HSecWMSControlWidget, self).__init__(
+        super().__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_all_maps)
 
@@ -1652,7 +1652,7 @@ class LSecWMSControlWidget(WMSControlWidget):
 
     def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
-        super(LSecWMSControlWidget, self).__init__(
+        super().__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)

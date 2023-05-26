@@ -751,14 +751,14 @@ class MplCanvas(FigureCanvasQTAgg):
         self.default_filename = "_image"
         self.plotter = plotter
         # initialization of the canvas
-        super(MplCanvas, self).__init__(self.plotter.fig)
+        super().__init__(self.plotter.fig)
 
         # we define the widget as expandable
-        super(MplCanvas, self).setSizePolicy(
+        super().setSizePolicy(
             QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
 
         # notify the system of updated policy
-        super(MplCanvas, self).updateGeometry()
+        super().updateGeometry()
 
     def get_default_filename(self):
         """
@@ -914,7 +914,7 @@ class NavigationToolbar(NavigationToolbar2QT):
             ('Ins WP', 'Insert waypoints', "wp_insert", 'insert_wp'),
             ('Del WP', 'Delete waypoints', "wp_delete", 'delete_wp'),
         ])
-        super(NavigationToolbar, self).__init__(canvas, parent, coordinates)
+        super().__init__(canvas, parent, coordinates)
         self._actions["move_wp"].setCheckable(True)
         self._actions["insert_wp"].setCheckable(True)
         self._actions["delete_wp"].setCheckable(True)
@@ -932,13 +932,13 @@ class NavigationToolbar(NavigationToolbar2QT):
         if os.path.exists(myname):
             return QtGui.QIcon(myname)
         else:
-            return super(NavigationToolbar, self)._icon(name, *args)
+            return super()._icon(name, *args)
 
     def _zoom_pan_handler(self, event):
         """
         extend zoom_pan_handler of base class with our own tools
         """
-        super(NavigationToolbar, self)._zoom_pan_handler(event)
+        super()._zoom_pan_handler(event)
         if event.name == "button_press_event":
             if self.mode in (_Mode.INSERT_WP, _Mode.MOVE_WP, _Mode.DELETE_WP):
                 self.canvas.waypoints_interactor.button_press_callback(event)
@@ -958,7 +958,7 @@ class NavigationToolbar(NavigationToolbar2QT):
     def push_current(self):
         """Push the current view limits and position onto the stack."""
         if self.sideview:
-            super(NavigationToolbar, self).push_current()
+            super().push_current()
         elif self.no_push_history:
             pass
         else:
@@ -971,7 +971,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         each axes.
         """
         if self.sideview:
-            super(NavigationToolbar, self)._update_view()
+            super()._update_view()
         else:
             nav_info = self._nav_stack()
             if nav_info is None:
@@ -1025,14 +1025,14 @@ class NavigationToolbar(NavigationToolbar2QT):
 
     def release_zoom(self, event):
         self.no_push_history = True
-        super(NavigationToolbar, self).release_zoom(event)
+        super().release_zoom(event)
         self.no_push_history = False
         self.canvas.redraw_map()
         self.push_current()
 
     def release_pan(self, event):
         self.no_push_history = True
-        super(NavigationToolbar, self).release_pan(event)
+        super().release_pan(event)
         self.no_push_history = False
         self.canvas.redraw_map()
         self.push_current()
@@ -1089,7 +1089,7 @@ class NavigationToolbar(NavigationToolbar2QT):
                 self.set_message(f"{self.mode} lat={lat:6.2f} lon={lon:7.2f} altitude={y_value:.2f}{units}")
 
     def _update_buttons_checked(self):
-        super(NavigationToolbar, self)._update_buttons_checked()
+        super()._update_buttons_checked()
         if "insert_wp" in self._actions:
             self._actions['insert_wp'].setChecked(self.mode.name == 'INSERT_WP')
         if "delete_wp" in self._actions:
@@ -1103,7 +1103,7 @@ class MplNavBarWidget(QtWidgets.QWidget):
 
     def __init__(self, sideview=False, parent=None, canvas=None):
         # initialization of Qt MainWindow widget
-        super(MplNavBarWidget, self).__init__(parent)
+        super().__init__(parent)
 
         # set the canvas to the Matplotlib widget
         if canvas:
@@ -1138,7 +1138,7 @@ class MplSideViewCanvas(MplCanvas):
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
         self.plotter = SideViewPlotter()
-        super(MplSideViewCanvas, self).__init__(self.plotter)
+        super().__init__(self.plotter)
 
         if settings is not None:
             self.plotter.set_settings(settings)
@@ -1353,7 +1353,7 @@ class MplSideViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplSideViewWidget, self).__init__(
+        super().__init__(
             sideview=True, parent=parent, canvas=MplSideViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
@@ -1378,7 +1378,7 @@ class MplLinearViewCanvas(MplCanvas):
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
         self.plotter = LinearViewPlotter()
-        super(MplLinearViewCanvas, self).__init__(self.plotter)
+        super().__init__(self.plotter)
 
         # Setup the plot.
         self.numlabels = numlabels
@@ -1459,7 +1459,7 @@ class MplLinearViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplLinearViewWidget, self).__init__(
+        super().__init__(
             sideview=False, parent=parent, canvas=MplLinearViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,
@@ -1482,7 +1482,7 @@ class MplTopViewCanvas(MplCanvas):
         """
         """
         self.plotter = TopViewPlotter()
-        super(MplTopViewCanvas, self).__init__(self.plotter)
+        super().__init__(self.plotter)
         self.waypoints_interactor = None
         self.satoverpasspatch = []
         self.kmloverlay = None
@@ -1672,7 +1672,7 @@ class MplTopViewWidget(MplNavBarWidget):
     """
 
     def __init__(self, parent=None):
-        super(MplTopViewWidget, self).__init__(
+        super().__init__(
             sideview=False, parent=parent, canvas=MplTopViewCanvas())
         # Disable some elements of the Matplotlib navigation toolbar.
         # Available actions: Home, Back, Forward, Pan, Zoom, Subplots,

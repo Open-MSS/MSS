@@ -42,7 +42,7 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
         parent -- Qt widget that is parent to this widget.
         capabilities_xml -- .
         """
-        super(WMSCapabilitiesBrowser, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         if url is None:

@@ -87,7 +87,7 @@ class QActiveViewsListWidgetItem(QtWidgets.QListWidgetItem):
         """
         QActiveViewsListWidgetItem.opened_views += 1
         view_name = f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.name}"
-        super(QActiveViewsListWidgetItem, self).__init__(view_name, parent, _type)
+        super().__init__(view_name, parent, _type)
 
         view_window.setWindowTitle(f"({QActiveViewsListWidgetItem.opened_views:d}) {view_window.windowTitle()} - "
                                    f"{view_window.waypoints_model.name}")
@@ -131,7 +131,7 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
                   to name changes of the item.
         """
         view_name = flighttrack_model.name
-        super(QFlightTrackListWidgetItem, self).__init__(
+        super().__init__(
             view_name, parent, type)
 
         self.parent = parent
@@ -144,7 +144,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     """
 
     def __init__(self):
-        super(MSUI_ShortcutsDialog, self).__init__(QtWidgets.QApplication.activeWindow())
+        super().__init__(QtWidgets.QApplication.activeWindow())
         self.setupUi(self)
         self.current_shortcuts = None
         self.treeWidget.itemDoubleClicked.connect(self.double_clicked)
@@ -347,7 +347,7 @@ class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         Arguments:
         parent -- Qt widget that is parent to this widget.
         """
-        super(MSUI_AboutDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText(f"Version: {__version__}")
         self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
@@ -373,7 +373,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_render_new_permission = QtCore.Signal(int, str)
 
     def __init__(self, mscolab_data_dir=None, *args):
-        super(MSUIMainWindow, self).__init__(*args)
+        super().__init__(*args)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar

@@ -80,7 +80,7 @@ realm = 'Mission Support Web Map Service'
 app.config['realm'] = realm
 
 
-class default_mswms_settings(object):
+class default_mswms_settings:
     base_dir = os.path.abspath(os.path.dirname(__file__))
     xml_template_location = os.path.join(base_dir, "xml_templates")
     service_name = "OGC:WMS"
@@ -119,7 +119,7 @@ try:
 except ImportError as ex:
     logging.warning("Couldn't import mswms_auth (ImportError:'{%s), creating dummy config.", ex)
 
-    class mswms_auth(object):
+    class mswms_auth:
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
@@ -176,7 +176,7 @@ def squash_multiple_xml(xml_strings):
     return ElementTree.tostring(base)
 
 
-class WMSServer(object):
+class WMSServer:
 
     def __init__(self):
         """

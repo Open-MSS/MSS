@@ -29,7 +29,7 @@ import logging
 import secrets
 
 
-class default_mscolab_settings(object):
+class default_mscolab_settings:
     # expire token in seconds
     # EXPIRATION = 86400
 

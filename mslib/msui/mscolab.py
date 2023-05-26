@@ -413,7 +413,7 @@ class MSUIMscolab(QtCore.QObject):
     signal_render_new_permission = QtCore.Signal(int, str)
 
     def __init__(self, parent=None, data_dir=None):
-        super(MSUIMscolab, self).__init__(parent)
+        super().__init__(parent)
         self.ui = parent
 
         self.operation_archive_browser = MSColab_OperationArchiveBrowser(self.ui, self)
@@ -1933,7 +1933,7 @@ class MSUIMscolab(QtCore.QObject):
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, merge_wp_ui.Ui_MergeWaypointsDialog):
     def __init__(self, local_waypoints_model, server_waypoints_model, fetch=False, parent=None):
-        super(MscolabMergeWaypointsDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.local_waypoints_model = local_waypoints_model
@@ -2006,6 +2006,6 @@ class MscolabMergeWaypointsDialog(QtWidgets.QDialog, merge_wp_ui.Ui_MergeWaypoin
 class MscolabHelpDialog(QtWidgets.QDialog, msc_help_dialog.Ui_mscolabHelpDialog):
 
     def __init__(self, parent=None):
-        super(MscolabHelpDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.okayBtn.clicked.connect(lambda: self.close())

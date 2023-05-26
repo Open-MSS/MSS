@@ -66,7 +66,7 @@ try:
 except ImportError as ex:
     logging.warning("Couldn't import mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
 
-    class mscolab_auth(object):
+    class mscolab_auth:
         allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None

@@ -114,7 +114,7 @@ def read_nasa_satellite_prediction(fname):
 
 class SatelliteControlWidget(QtWidgets.QWidget, ui.Ui_SatelliteDockWidget):
     def __init__(self, parent=None, view=None):
-        super(SatelliteControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.view = view
 

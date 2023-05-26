@@ -41,7 +41,7 @@ class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
 
     def __init__(self, flighttrack_model, op_id: int, parent=None, type=QtWidgets.QListWidgetItem.UserType):
         view_name = flighttrack_model.name
-        super(QMscolabOperationsListWidgetItem, self).__init__(
+        super().__init__(
             view_name, parent, type
         )
         self.parent = parent
@@ -49,7 +49,7 @@ class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
         self.op_id = op_id
 
 
-class MultipleFlightpath(object):
+class MultipleFlightpath:
     """
     Represent a Multiple FLightpath
     """
@@ -114,7 +114,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
-        super(MultipleFlightpathControlWidget, self).__init__(parent)
+        super().__init__(parent)
         # ToDO: Remove all patches, on closing dockwidget.
         self.ui = parent
         self.setupUi(self)

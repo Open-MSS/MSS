@@ -34,7 +34,7 @@ from mslib.mscolab.models import db, Operation, Permission, User, Change, Messag
 from mslib.mscolab.conf import mscolab_settings
 
 
-class FileManager(object):
+class FileManager:
     """Class with handler functions for file related functionalities"""
 
     def __init__(self, data_dir):

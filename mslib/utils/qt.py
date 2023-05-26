@@ -378,7 +378,7 @@ class Worker(QtCore.QThread):
 
     def __init__(self, function):
         Worker.workers.add(self)
-        super(Worker, self).__init__()
+        super().__init__()
         self.function = function
         # pyqtSignals don't work without an application eventloop running
         if QtCore.QCoreApplication.startingUp():
@@ -442,7 +442,7 @@ class Updater(QtCore.QObject):
     on_status_update = QtCore.pyqtSignal([str])
 
     def __init__(self, parent=None):
-        super(Updater, self).__init__(parent)
+        super().__init__(parent)
         self.is_git_env = False
         self.new_version = None
         self.old_version = None

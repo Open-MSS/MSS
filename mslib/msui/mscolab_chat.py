@@ -83,7 +83,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         parent: widget parent
         mscolab_server_url: server url for mscolab
         """
-        super(MSColabChatWindow, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.mscolab_server_url = mscolab_server_url
@@ -442,7 +442,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
 
 class MessageItem(QtWidgets.QWidget):
     def __init__(self, message, chat_window):
-        super(MessageItem, self).__init__()
+        super().__init__()
         self.id = message["id"]
         self.u_id = message["u_id"]
         self.username = message["username"]

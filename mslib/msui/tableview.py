@@ -60,7 +60,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
     def __init__(self, parent=None, model=None, _id=None):
         """
         """
-        super(MSUITableViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -271,7 +271,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         Set the QAbstractItemModel instance that the table displays.
         """
-        super(MSUITableViewWindow, self).setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes
