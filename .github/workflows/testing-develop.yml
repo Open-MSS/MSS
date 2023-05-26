@@ -4,12 +4,10 @@ on:
   push:
     branches:
     - develop
-    - 'GSOC**'
 
   pull_request:
     branches:
     - develop
-    - 'GSOC**'
 
 
 jobs:     
