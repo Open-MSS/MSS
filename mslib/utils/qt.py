@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-import importlib
 import logging
 import os
 import re
@@ -604,5 +603,6 @@ class NonQtCallback:
                 cb(*args)
             except Exception:
                 pass
+
 
 sys.excepthook = excepthook
