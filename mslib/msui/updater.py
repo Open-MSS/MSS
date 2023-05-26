@@ -39,7 +39,7 @@ class UpdaterUI(QtWidgets.QDialog, ui_updater_dialog.Ui_Updater):
     on_update_available = QtCore.pyqtSignal([str, str])
 
     def __init__(self, parent=None):
-        super(UpdaterUI, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.hide()
         self.labelVersion.setText(f"Newest Version: {__version__}")

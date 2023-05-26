@@ -39,7 +39,7 @@ from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.coordinate import normalize_longitude
 
 
-class KMLPatch(object):
+class KMLPatch:
     """
     Represents a KML overlay.
     """
@@ -279,7 +279,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     """
 
     def __init__(self, parent=None, view=None):
-        super(KMLOverlayControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.view = view  # canvas
         self.kml = None

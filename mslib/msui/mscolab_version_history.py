@@ -60,7 +60,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
         parent: parent of widget
         mscolab_server_url: server url of mscolab
         """
-        super(MSColabVersionHistory, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         # Initialise Variables
         self.token = token

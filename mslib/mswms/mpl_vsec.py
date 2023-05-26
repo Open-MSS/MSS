@@ -60,7 +60,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         Constructor.
         """
-        super(AbstractVerticalSectionStyle, self).__init__(driver=driver)
+        super().__init__(driver=driver)
 
     def add_colorbar(self, contour, label=None, tick_levels=None, width="3%", height="30%", cb_format=None, left=0.08,
                      right=0.95, top=0.9, bottom=0.14, fraction=0.05, pad=0.01, loc=1, tick_position="left"):

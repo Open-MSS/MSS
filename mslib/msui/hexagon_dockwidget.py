@@ -62,7 +62,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         parent -- Qt widget that is parent to this widget.
         view -- reference to mpl canvas class
         """
-        super(HexagonControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.view = view
         if self.view:

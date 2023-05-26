@@ -33,7 +33,7 @@ from mslib.mscolab.models import db, Message, MessageType
 from mslib.mscolab.utils import get_message_dict
 
 
-class ChatManager(object):
+class ChatManager:
     """Class with handler functions for chat related functionalities"""
 
     def __init__(self):

@@ -40,7 +40,7 @@ socketio = SocketIO(cors_allowed_origins=("*" if not hasattr(mscolab_settings, "
                                           "*" in mscolab_settings.CORS_ORIGINS else mscolab_settings.CORS_ORIGINS))
 
 
-class SocketsManager(object):
+class SocketsManager:
     """Class with handler functions for socket related"""
 
     def __init__(self, chat_manager, file_manager):
