@@ -101,6 +101,6 @@ jobs:
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mss-${{ inputs.branch_name }}-env \
+        && mamba activate mss-develop-env \
         && mamba install coveralls \
         && coveralls --service=github
