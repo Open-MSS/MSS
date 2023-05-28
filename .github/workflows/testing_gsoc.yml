@@ -16,8 +16,6 @@ env:
 jobs:
   Test-MSS-GSOC:
     runs-on: ubuntu-latest
-    secrets:
-       PAT: ${{ secrets.PAT }}
 
     defaults:
       run:
