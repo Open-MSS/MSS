@@ -71,7 +71,7 @@ jobs:
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mss-${{ inputs.branch_name }}-env \
+        && mamba activate mss-develop-env \
         && pytest -v --durations=20 --reverse --cov=mslib tests \
         || (for i in {1..5} \
           ; do pytest tests -v --durations=0 --reverse --last-failed --lfnf=none \
