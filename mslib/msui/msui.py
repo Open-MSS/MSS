@@ -45,9 +45,9 @@ import fs
 
 from packaging import version
 from mslib import __version__
-from mslib.utils.qt import ui_mainwindow as ui
-from mslib.utils.qt import ui_about_dialog as ui_ab
-from mslib.utils.qt import ui_shortcuts as ui_sh
+from mslib.msui.qt5 import ui_mainwindow as ui
+from mslib.msui.qt5 import ui_about_dialog as ui_ab
+from mslib.msui.qt5 import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview, topview, sideview, linearview
 from mslib.msui import editor

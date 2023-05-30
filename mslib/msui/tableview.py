@@ -37,7 +37,7 @@ import types
 from mslib.msui import hexagon_dockwidget as hex
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtWidgets, QtGui
-from mslib.utils.qt import ui_tableview_window as ui
+from mslib.msui.qt5 import ui_tableview_window as ui
 from mslib.utils.qt import dropEvent, dragEnterEvent
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow

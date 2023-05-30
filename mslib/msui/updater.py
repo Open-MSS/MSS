@@ -26,7 +26,8 @@ import logging
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from mslib.utils.qt import ui_updater_dialog, Updater
+from mslib.utils.qt import Updater
+from mslib.msui.qt5 import ui_updater_dialog
 from mslib import __version__
 
 

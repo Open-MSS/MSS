@@ -31,7 +31,7 @@ import logging
 import json
 
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
-from mslib.utils.qt import ui_configuration_editor_window as ui_conf
+from mslib.msui.qt5 import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
 from mslib.msui.constants import MSUI_SETTINGS
 from mslib.msui.icons import icons
