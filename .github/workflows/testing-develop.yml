@@ -9,7 +9,7 @@ on:
     branches:
     - develop
 
-jobs:     
+jobs:
   test-develop:
     uses: 
       ./.github/workflows/testing.yml
