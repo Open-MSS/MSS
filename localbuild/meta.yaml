@@ -92,6 +92,12 @@ requirements:
     - email_validator
     - keyring
     - dbus-python
+    - flask_login
+    - pysaml2
+    - cherrypy
+    - mako
+    - flask_sqlalchemy
+    - flask_migrate
 
 test:
   imports:

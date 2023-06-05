@@ -24,4 +24,8 @@ build/
 mss.egg-info/
 tutorials/recordings
 tutorials/cursor_image.png
-
+__pycache__/
+instance/
+conf_sp_idp/idp/idp.subject.dat
+conf_sp_idp/idp/idp.subject.dir
+conf_sp_idp/idp/modules
