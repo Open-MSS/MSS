@@ -26,11 +26,9 @@
 """
 import random
 import string
-from models import User
-
 
 from flask_login.utils import login_required, logout_user
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, UserMixin, login_user
 
 from saml2.config import SPConfig
 from saml2.client import Saml2Client
@@ -58,6 +56,21 @@ migrate = Migrate(app, db)
 login_manager = LoginManager()
 login_manager.login_view = "login"
 login_manager.init_app(app)
+
+
+class User(UserMixin, db.Model):
+    """Class representing a user"""
+
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(250), index=True, unique=True)
+
+    def __repr__(self):
+        return f'<User {format(self.email)}>'
+
+    def get_id(self):
+        """Get the user's ID"""
+        return self.id
+
 
 
 with app.app_context():
