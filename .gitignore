@@ -2,6 +2,8 @@
 .idea/
 .vscode/
 .DS_Store
+*.key
+*.crt
 *.pyc
 *.swp
 *.patch
@@ -29,3 +31,4 @@ instance/
 conf_sp_idp/idp/idp.subject.dat
 conf_sp_idp/idp/idp.subject.dir
 conf_sp_idp/idp/modules
+conf_sp_idp/idp/sp.xml
