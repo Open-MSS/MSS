@@ -11,8 +11,8 @@ config:
   sp_config:
     name: "Demo SP written in Python"
     description: "Our Testing SP"
-    key_file: ../backend.key
-    cert_file: ../backend.crt
+    key_file: ../key_sp.key
+    cert_file: ../crt_sp.crt
     organization: {display_name: Example Identities, name: Example Identities Org., url: 'http://www.example.com'}
     contact_person:
     - {contact_type: technical, email_address: technical@example.com, given_name: Technical}

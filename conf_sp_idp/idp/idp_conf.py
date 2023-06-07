@@ -46,8 +46,8 @@ else:
     BASE = f"http://{HOST}:{PORT}"
 
 # HTTPS cert information
-SERVER_CERT = "backend.crt"
-SERVER_KEY = "backend.key"
+SERVER_CERT = "crt_idp.crt"
+SERVER_KEY = "key_idp.key"
 CERT_CHAIN = ""
 SIGN_ALG = None
 DIGEST_ALG = None
@@ -122,8 +122,8 @@ CONFIG = {
         },
     },
     "debug": 1,
-    "key_file": full_path("./backend.key"),
-    "cert_file": full_path("./backend.crt"),
+    "key_file": full_path("./key_idp.key"),
+    "cert_file": full_path("./crt_idp.crt"),
     "metadata": {
         "local": [full_path("./sp.xml")],
     },

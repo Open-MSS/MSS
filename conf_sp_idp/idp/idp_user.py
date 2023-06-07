@@ -36,6 +36,7 @@ USERS = {
     "roland": {
         "sn": "Hedberg",
         "givenName": "Roland",
+        "email": "roland@example.com",
         "eduPersonScopedAffiliation": "staff@example.com",
         "eduPersonPrincipalName": "rohe@example.com",
         "uid": "rohe",
@@ -49,8 +50,18 @@ USERS = {
         "labeledURL": "http://www.example.com/rohe My homepage",
         "norEduPersonNIN": "SE197001012222",
     },
-    "babs": {"surname": "Babs", "givenName": "Ozzie", "eduPersonAffiliation": "affiliate"},
-    "upper": {"surname": "Jeter", "givenName": "Derek", "eduPersonAffiliation": "affiliate"},
+    "babs": {
+        "surname": "Babs",
+        "givenName": "Ozzie",
+        "email": "babs@example.com",
+        "eduPersonAffiliation": "affiliate"
+    },
+    "upper": {
+        "surname": "Jeter",
+        "givenName": "Derek",
+        "email": "upper@example.com",
+        "eduPersonAffiliation": "affiliate"
+    },
 }
 
 EXTRA = {
