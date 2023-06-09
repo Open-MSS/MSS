@@ -63,7 +63,7 @@ jobs:
         && mamba list
 
     - name: Run tests
-      if: ${{ success() && inputs.xdist == 'no' }}
+      if: ${{ success() }}
       timeout-minutes: 25
       run: |
         cd $GITHUB_WORKSPACE \
@@ -78,7 +78,7 @@ jobs:
 
 
     - name: Run tests in parallel
-      if: ${{ success() && inputs.xdist == 'yes' }}
+      if: ${{ success() }}
       timeout-minutes: 25
       run: |
         cd $GITHUB_WORKSPACE \
@@ -92,7 +92,7 @@ jobs:
         ; done)
 
     - name: Collect coverage
-      if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
+      if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' }}
       env: 
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
