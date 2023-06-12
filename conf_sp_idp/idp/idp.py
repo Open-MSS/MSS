@@ -79,14 +79,8 @@ from saml2.sigver import encrypt_cert_from_item
 from saml2.sigver import verify_redirect_signature
 import saml2.xmldsig as ds
 
-
-try:
-    from cheroot.ssl.builtin import BuiltinSSLAdapter
-    from cheroot.wsgi import Server as WSGIServer
-except ImportError:
-    from cherrypy.wsgiserver import CherryPyWSGIServer as WSGIServer
-    from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
-
+from cheroot.ssl.builtin import BuiltinSSLAdapter
+from cheroot.wsgi import Server as WSGIServer
 
 logger = logging.getLogger("saml2.idp")
 logger.setLevel(logging.WARNING)
