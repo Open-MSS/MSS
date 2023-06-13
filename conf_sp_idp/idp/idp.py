@@ -25,68 +25,62 @@
     limitations under the License.
 """
 # Additional Info:
-"""
-    This file is imported from https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp.py
-    and customized as MSS requirements. Pylint has been disabled for this imported file.
-"""
+    # This file is imported from
+    # https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp.py
+    # and customized as MSS requirements. Pylint has been disabled for this imported file.
+
 # Parts of the code
 
 import argparse
 import base64
-from hashlib import sha1
-from http.cookies import SimpleCookie
+import ssl
 import importlib
 import logging
 import os
 import re
 import time
+
+from http.cookies import SimpleCookie
+from hashlib import sha1
 from urllib.parse import parse_qs
+import saml2.xmldsig as ds
+
+from saml2 import (
+    BINDING_HTTP_ARTIFACT,
+    BINDING_HTTP_POST,
+    BINDING_HTTP_REDIRECT,
+    BINDING_PAOS, BINDING_SOAP,
+    BINDING_URI,
+    server,
+    time_util
+)
+from saml2.authn import is_equal
+from saml2.authn_context import (
+    PASSWORD,
+    UNSPECIFIED,
+    AuthnBroker,
+    authn_context_class_ref
+)
+from saml2.httputil import (
+    BadRequest,
+    NotFound,
+    Redirect,
+    Response,
+    ServiceError,
+    Unauthorized,
+    get_post,
+    geturl
+)
+from saml2.ident import Unknown
+from saml2.metadata import create_metadata_string
+from saml2.profile import ecp
+from saml2.s_utils import PolicyError, UnknownPrincipal, UnsupportedBinding, exception_trace, rndstr
+from saml2.sigver import encrypt_cert_from_item, verify_redirect_signature
+from werkzeug.serving import run_simple as WSGIServer
 
 from idp_user import EXTRA
 from idp_user import USERS
 from mako.lookup import TemplateLookup
-
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_PAOS
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_URI
-from saml2 import server
-from saml2 import time_util
-from saml2.authn import is_equal
-from saml2.authn_context import PASSWORD
-from saml2.authn_context import UNSPECIFIED
-from saml2.authn_context import AuthnBroker
-from saml2.authn_context import authn_context_class_ref
-from saml2.httputil import BadRequest
-from saml2.httputil import NotFound
-from saml2.httputil import Redirect
-from saml2.httputil import Response
-from saml2.httputil import ServiceError
-from saml2.httputil import Unauthorized
-from saml2.httputil import get_post
-from saml2.httputil import geturl
-from saml2.ident import Unknown
-from saml2.metadata import create_metadata_string
-from saml2.profile import ecp
-from saml2.s_utils import PolicyError
-from saml2.s_utils import UnknownPrincipal
-from saml2.s_utils import UnsupportedBinding
-from saml2.s_utils import exception_trace
-from saml2.s_utils import rndstr
-from saml2.sigver import encrypt_cert_from_item
-from saml2.sigver import verify_redirect_signature
-import saml2.xmldsig as ds
-
-
-try:
-    from cheroot.ssl.builtin import BuiltinSSLAdapter
-    from cheroot.wsgi import Server as WSGIServer
-except ImportError:
-    from cherrypy.wsgiserver import CherryPyWSGIServer as WSGIServer
-    from cherrypy.wsgiserver.ssl_builtin import BuiltinSSLAdapter
-
 
 logger = logging.getLogger("saml2.idp")
 logger.setLevel(logging.WARNING)
@@ -384,7 +378,8 @@ class SSO(Service):
 
         logger.info("AuthNResponse: %s", _resp)
         if self.op_type == "ecp":
-            kwargs = {"soap_headers": [ecp.Response(assertion_consumer_service_url=self.destination)]}
+            kwargs = {"soap_headers": [ecp.Response(
+                assertion_consumer_service_url=self.destination)]}
         else:
             kwargs = {}
 
@@ -416,7 +411,8 @@ class SSO(Service):
             del IDP.ticket[_key]
         except KeyError:
             try:
-                self.req_info = IDP.parse_authn_request(saml_msg["SAMLRequest"], BINDING_HTTP_REDIRECT)
+                self.req_info = IDP.parse_authn_request(saml_msg["SAMLRequest"],
+                                                        BINDING_HTTP_REDIRECT)
             except KeyError:
                 resp = BadRequest("Message signature verification failure")
                 return resp(self.environ, self.start_response)
@@ -677,11 +673,13 @@ class SLO(Service):
             destination = ""
             response = False
         else:
-            binding, destination = IDP.pick_binding("single_logout_service", [binding], "spsso", req_info)
+            binding, destination = IDP.pick_binding("single_logout_service",
+                                                    [binding], "spsso", req_info)
             response = True
 
         try:
-            hinfo = IDP.apply_binding(binding, f"{resp}", destination, relay_state, response=response)
+            hinfo = IDP.apply_binding(binding, f"{resp}",
+                                      destination, relay_state, response=response)
         except Exception as exc:
             logger.error("ServiceError: %s", exc)
             resp = ServiceError(f"{exc}")
@@ -793,7 +791,8 @@ class AQS(Service):
         _req = IDP.parse_authn_query(request, binding)
         _query = _req.message
 
-        msg = IDP.create_authn_query_response(_query.subject, _query.requested_authn_context, _query.session_index)
+        msg = IDP.create_authn_query_response(_query.subject,
+                                              _query.requested_authn_context, _query.session_index)
 
         logger.debug("response: %s", msg)
         hinfo = IDP.apply_binding(BINDING_SOAP, f"{msg}", "", "", response=True)
@@ -846,7 +845,8 @@ class NIM(Service):
         request = req.message
         # Do the necessary stuff
         try:
-            name_id = IDP.ident.handle_name_id_mapping_request(request.name_id, request.name_id_policy)
+            name_id = IDP.ident.handle_name_id_mapping_request(
+                request.name_id, request.name_id_policy)
         except Unknown:
             resp = BadRequest("Unknown entity")
             return resp(self.environ, self.start_response)
@@ -1079,7 +1079,8 @@ def application(environ, start_response):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-p", dest="path", help="Path to configuration file.", default="./idp_conf.py")
+    parser.add_argument("-p", dest="path", help="Path to configuration file.",
+                        default="./idp_conf.py")
     parser.add_argument(
         "-v",
         dest="valid",
@@ -1126,12 +1127,15 @@ if __name__ == "__main__":
         pass
     ds.DefaultSignature(sign_alg, digest_alg)
 
-    SRV = WSGIServer((HOST, PORT), application)
-
+    ssl_context = None
     _https = ""
-    if CONFIG.HTTPS:
+    if CONFIG.HTTPS:        
         https = "using HTTPS"
-        SRV.ssl_adapter = BuiltinSSLAdapter(CONFIG.SERVER_CERT, CONFIG.SERVER_KEY, CONFIG.CERT_CHAIN)
+        # Creating an SSL context
+        ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        ssl_context.load_cert_chain(CONFIG.SERVER_CERT,
+                                            CONFIG.SERVER_KEY)
+    SRV = WSGIServer(HOST, PORT, application, ssl_context= ssl_context)
 
     logger.info("Server starting")
     print(f"IDP listening on {HOST}:{PORT}{_https}")
