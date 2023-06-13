@@ -48,7 +48,7 @@ By following the provided instructions, you will be able to set up and configure
 ## Testing SSO
 
 * Once you have successfully launched the server and identity provider, you can begin testing the Single Sign-On (SSO) process. 
-* Load in a browser `http://127.0.0.1:5000/`.
+* Load in a browser <http://127.0.0.1:5000/>.
 * To log in to the service provider through the identity provider, you can use the credentials specified in the `PASSWD` section of the `MSS/conf_sp_idp/idp/idp.py` file. Look for the relevant section in the file to find the necessary login credentials.
 
 ## References
