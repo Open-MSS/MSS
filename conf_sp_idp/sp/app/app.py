@@ -42,11 +42,11 @@ from saml2.client import Saml2Client
 from saml2.metadata import create_metadata_string
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 
+from conf import sp_settings
+
 app = Flask(__name__)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
-app.config[
-    "SECRET_KEY"
-] = "192b9bdd22ab9ed4d12e236c78afcb9a393ec15f71bbf5dc987d54727823bcbf"
+app.config["SQLALCHEMY_DATABASE_URI"] = sp_settings.SQLALCHEMY_DB_URI
+app.config["SECRET_KEY"] = sp_settings.SECRET_KEY
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
