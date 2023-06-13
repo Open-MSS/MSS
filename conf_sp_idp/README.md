@@ -17,9 +17,13 @@ To set up the certificates for local development, follow these steps:
 
 Here's how you can generate self-signed certificates and private keys using OpenSSL:
 * Generate a self-signed certificate and private key for the Service Provider (SP)
-    `openssl req -newkey rsa:4096 -keyout key_sp.key -nodes -x509 -days 365 -out crt_sp.crt`
+    ```
+    openssl req -newkey rsa:4096 -keyout key_sp.key -nodes -x509 -days 365 -out crt_sp.crt
+    ```
 * Generate a self-signed certificate and private key for the Identity Provider (IdP)
-    `openssl req -newkey rsa:4096 -keyout key_idp.key -nodes -x509 -days 365 -out crt_idp.crt`
+    ```
+    openssl req -newkey rsa:4096 -keyout key_idp.key -nodes -x509 -days 365 -out crt_idp.crt
+    ```
 
 2. Copy and paste the certificate and private key into the following file directories:
     * Key and certificate of Service Provider: `MSS/conf_sp_idp/sp/`
