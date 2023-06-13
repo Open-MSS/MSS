@@ -14,6 +14,13 @@ The Identity Provider was set up following the official documentation of [PySAML
 To set up the certificates for local development, follow these steps:
 
 1. Generate a primary key `(.key)` and a certificate `(.crt)` files using any certificate authority tool. You will need one for the service provider and another one for the identity provider. Make sure to name certificate of identity provider as `crt_idp.crt` and key as `key_idp.key`. Also name the certificate of service provider as `crt_sp.crt` and key as the `key_sp.key`.
+
+Here's how you can generate self-signed certificates and private keys using OpenSSL:
+* Generate a self-signed certificate and private key for the Service Provider (SP)
+    `openssl req -newkey rsa:4096 -keyout key_sp.key -nodes -x509 -days 365 -out crt_sp.crt`
+* Generate a self-signed certificate and private key for the Identity Provider (IdP)
+    `openssl req -newkey rsa:4096 -keyout key_idp.key -nodes -x509 -days 365 -out crt_idp.crt`
+
 2. Copy and paste the certificate and private key into the following file directories:
     * Key and certificate of Service Provider: `MSS/conf_sp_idp/sp/`
     * key and certificate of Identity Provider: `MSS/conf_sp_idp/idp/`
