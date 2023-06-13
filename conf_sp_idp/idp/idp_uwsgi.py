@@ -25,10 +25,10 @@
     limitations under the License.
 """
 # Additional Info:
-"""
-    This file is imported from https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp_uwsgi.py
-    and customized as MSS requirements. Pylint has been disabled for this imported file.
-"""
+    # This file is imported from
+    # https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp_uwsgi.py
+    # and customized as MSS requirements. Pylint has been disabled for this imported file.
+
 # Parts of the code
 
 import argparse
@@ -43,38 +43,33 @@ import socket
 
 from Cookie import SimpleCookie
 from urlparse import parse_qs
-
-from saml2 import BINDING_HTTP_ARTIFACT
-from saml2 import BINDING_HTTP_POST
-from saml2 import BINDING_HTTP_REDIRECT
-from saml2 import BINDING_PAOS
-from saml2 import BINDING_SOAP
-from saml2 import BINDING_URI
-from saml2 import server
-from saml2 import time_util
+from saml2 import (
+    BINDING_HTTP_ARTIFACT,
+    BINDING_HTTP_POST,
+    BINDING_HTTP_REDIRECT,
+    BINDING_PAOS,
+    BINDING_SOAP,
+    BINDING_URI,
+    server,
+    time_util
+)
 from saml2.authn import is_equal
-from saml2.authn_context import PASSWORD
-from saml2.authn_context import UNSPECIFIED
-from saml2.authn_context import AuthnBroker
-from saml2.authn_context import authn_context_class_ref
-from saml2.httputil import BadRequest
-from saml2.httputil import NotFound
-from saml2.httputil import Redirect
-from saml2.httputil import Response
-from saml2.httputil import ServiceError
-from saml2.httputil import Unauthorized
-from saml2.httputil import get_post
-from saml2.httputil import geturl
+from saml2.authn_context import PASSWORD, UNSPECIFIED, AuthnBroker, authn_context_class_ref
+from saml2.httputil import (
+    BadRequest,
+    NotFound,
+    Redirect,
+    Response,
+    ServiceError,
+    Unauthorized,
+    get_post,
+    geturl
+)
 from saml2.ident import Unknown
 from saml2.metadata import create_metadata_string
 from saml2.profile import ecp
-from saml2.s_utils import PolicyError
-from saml2.s_utils import UnknownPrincipal
-from saml2.s_utils import UnsupportedBinding
-from saml2.s_utils import exception_trace
-from saml2.s_utils import rndstr
-from saml2.sigver import encrypt_cert_from_item
-from saml2.sigver import verify_redirect_signature
+from saml2.s_utils import PolicyError, UnknownPrincipal, exception_trace, UnsupportedBinding, rndstr
+from saml2.sigver import encrypt_cert_from_item, verify_redirect_signature
 
 from idp_user import EXTRA
 from idp_user import USERS
