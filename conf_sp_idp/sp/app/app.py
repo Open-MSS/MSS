@@ -29,23 +29,18 @@
 
 import random
 import string
+import yaml
 
+from flask import Flask, redirect, request, render_template, url_for
+from flask.wrappers import Response
 from flask_login.utils import login_required, logout_user
 from flask_login import LoginManager, UserMixin, login_user
-
+from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 from saml2.config import SPConfig
 from saml2.client import Saml2Client
 from saml2.metadata import create_metadata_string
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
-from flask import Flask, redirect, request, render_template, url_for
-from flask.wrappers import Response
-import yaml
-from yaml.loader import SafeLoader
-
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-
-
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///db.sqlite"
@@ -87,7 +82,7 @@ def load_user(user_id):
 
 
 with open("../saml2_backend.yaml", encoding="utf-8") as fobj:
-    sp_config = SPConfig().load(yaml.load(fobj, SafeLoader)["config"]["sp_config"])
+    sp_config = SPConfig().load(yaml.load(fobj, yaml.loader.SafeLoader)["config"]["sp_config"])
 
 sp = Saml2Client(sp_config)
 
