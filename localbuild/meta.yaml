@@ -92,6 +92,8 @@ requirements:
     - email_validator
     - keyring
     - dbus-python
+    - flask-login
+    - pysaml2
 
 test:
   imports:
