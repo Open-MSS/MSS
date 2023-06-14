@@ -42,12 +42,8 @@ First, generate the [metadata](https://pysaml2.readthedocs.io/en/latest/howto/co
 After that, regenerate the idp.xml file, copy it over to the Service Provider (SP), and restart the SP Flask application:
 
 5. Go to the directory `MSS/conf_sp_idp/idp/`.
-6. Run the command 
-    ```
-    python generate_metadata.py
-    ```
-    in the terminal to generate the `idp.xml` file. This function executes the make_metadata tool from pysaml2,
-    captures the output, and extracts the XML content. The XML content is then saved to the specified output file
+6. Run the command `make_metadata idp_conf.py > ../sp/idp.xml` This executes the make_metadata tool from pysaml2,
+    then saved XML content to the specified output file
     in the service provider dir: `MSS/conf_sp_idp/sp/idp.xml`.
 
 ### Running the Application After Configuration
