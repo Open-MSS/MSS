@@ -33,7 +33,7 @@ class DefaultSPSettings:
     This class provides default configuration settings for the SP application.
     Modify these settings as needed for your specific application requirements.
     """
-    # MYSQL CONNECTION STRING:
+    # SQLite CONNECTION STRING:
     SQLALCHEMY_DB_URI = "sqlite:///db.sqlite"
 
     # used to generate and parse tokens
