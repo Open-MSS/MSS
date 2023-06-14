@@ -29,6 +29,8 @@
 
 import random
 import string
+import os
+import warnings
 import yaml
 
 from flask import Flask, redirect, request, render_template, url_for
@@ -80,12 +82,18 @@ def load_user(user_id):
     use it in the query for the user """
     return User.query.get(int(user_id))
 
-
 with open("../saml2_backend.yaml", encoding="utf-8") as fobj:
-    sp_config = SPConfig().load(yaml.load(fobj, yaml.loader.SafeLoader)["config"]["sp_config"])
+    yaml_data = yaml.safe_load(fobj)
+
+if os.path.exists("../idp.xml"):
+    yaml_data["config"]["sp_config"]["metadata"]["local"] = ["../idp.xml"]
+else:
+    yaml_data["config"]["sp_config"]["metadata"]["local"] = []
+    warnings.warn("idp.xml file does not exists !")
+
+sp_config = SPConfig().load(yaml_data["config"]["sp_config"])
 
 sp = Saml2Client(sp_config)
-
 
 def rndstr(size=16, alphabet=""):
     """
