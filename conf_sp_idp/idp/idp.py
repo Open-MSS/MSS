@@ -1129,7 +1129,7 @@ if __name__ == "__main__":
 
     ssl_context = None
     _https = ""
-    if CONFIG.HTTPS:        
+    if CONFIG.HTTPS:
         https = "using HTTPS"
         # Creating an SSL context
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
