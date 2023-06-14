@@ -37,17 +37,9 @@ from saml2 import BINDING_URI
 from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.sigver import get_xmlsec_binary
 
-
-try:
-    from saml2.sigver import get_xmlsec_binary
-except ImportError:
-    get_xmlsec_binary = None
-
-if get_xmlsec_binary:
-    XMLSEC_PATH = get_xmlsec_binary(["/opt/local/bin"])
-else:
-    XMLSEC_PATH = '/usr/bin/xmlsec1'
+XMLSEC_PATH = get_xmlsec_binary(["/opt/local/bin"])
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
