@@ -9,7 +9,6 @@
     This file is part of MSS.
 
     :copyright: Copyright 2023 Nilupul Manodya
-    :copyright: Copyright 2023- by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
