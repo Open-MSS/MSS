@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Flask Service Provider</title>
+  <style>
+    .navbar {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .navitems {
+      display: flex;
+    }
+
+    .navitems li {
+      list-style-type: none;
+      padding: 3px 5px 3px 3px;
+
+    }
+
+    .content {
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <ul class="navitems">
+      <li><a href="{{ url_for('index') }}">Home</a></li>
+      {% if not current_user.is_authenticated %}
+      <li><a href="{{ url_for('login') }}">Login</a></li>
+      {% else %}
+      <li><a href="{{ url_for('logout') }}">Logout</a></li>
+      <li><a href="{{ url_for('profile') }}">Profile</a></li>
+      {% endif %}
+    </ul>
+
+  </nav>
+  <main>
+    <div class="content">
+      {% block content %}
+      {% endblock %}
+    </div>
+  </main>
+</body>
+
+</html>
