@@ -39,7 +39,7 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.sigver import get_xmlsec_binary
 
-XMLSEC_PATH = get_xmlsec_binary(["/opt/local/bin"])
+XMLSEC_PATH = get_xmlsec_binary()
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
