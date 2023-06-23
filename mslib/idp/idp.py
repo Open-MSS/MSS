@@ -559,14 +559,9 @@ def username_password_authn(environ, start_response, reference, key, redirect_ur
     """
     logger.info("The login page")
 
-    
-
     kwargs = dict(mako_template="login.mako", template_lookup=LOOKUP)
     if headers:
         kwargs["headers"] = headers
-
-    print('kwargs>>>>>>>>>>>>>',kwargs)
-    print('kwargs>>>>>>>>>>>>>',kwargs['template_lookup'].directories)
 
     resp = Response(**kwargs)
 
