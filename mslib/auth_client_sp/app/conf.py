@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    conf_sp_idp.sp.app.conf.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.auth_client_sp.app.conf.py
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     config for sp.
 

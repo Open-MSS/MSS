@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    conf_sp_idp.idp.idp_conf.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.idp.idp_conf.py
+    ~~~~~~~~~~~~~~~~~~~~~
 
     SAML2 IDP configuration with bindings, endpoints, and authentication contexts.
 
@@ -59,8 +59,8 @@ else:
     BASE = f"http://{HOST}:{PORT}"
 
 # HTTPS cert information
-SERVER_CERT = "crt_idp.crt"
-SERVER_KEY = "key_idp.key"
+SERVER_CERT = "mslib/idp/crt_idp.crt"
+SERVER_KEY = "mslib/idp/key_idp.key"
 CERT_CHAIN = ""
 SIGN_ALG = None
 DIGEST_ALG = None
