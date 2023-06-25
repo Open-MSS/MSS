@@ -94,6 +94,7 @@ requirements:
     - dbus-python
     - flask-login
     - pysaml2
+    - beautifulsoup4
 
 test:
   imports:

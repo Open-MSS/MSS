@@ -24,6 +24,25 @@
     limitations under the License.
 """
 import secrets
+import os
+
+def get_crt_key():
+    """
+    Retrieves the certificate key and XML file path based on the environment 
+    variable TEST_CASES_ENABLED.
+    """
+
+    # Retrieve the variable from the environment
+    TEST_CASES_ENABLED = os.environ.get('TEST_CASES_ENABLED')
+
+    if TEST_CASES_ENABLED is not None:
+        return ("mslib/auth_client_sp/test_key_sp.key",
+                "mslib/auth_client_sp/test_crt_sp.crt",
+                "mslib/auth_client_sp/test_idp.xml")
+    else:
+        return ("mslib/auth_client_sp/key_sp.key",
+                "mslib/auth_client_sp/crt_sp.crt",
+                "mslib/auth_client_sp/idp.xml")
 
 class DefaultSPSettings:
     """
@@ -37,5 +56,7 @@ class DefaultSPSettings:
 
     # used to generate and parse tokens
     SECRET_KEY = secrets.token_urlsafe(16)
+
+    SP_KEY_FILE, SP_CRT_FILE, IDP_XML = get_crt_key()
 
 sp_settings = DefaultSPSettings()

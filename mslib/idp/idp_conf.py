@@ -58,6 +58,10 @@ if HTTPS:
 else:
     BASE = f"http://{HOST}:{PORT}"
 
+
+# Retrieve the TEST_CASES_ENABLED from the environment
+TEST_CASES_ENABLED = os.environ.get('TEST_CASES_ENABLED')
+
 # HTTPS cert information
 SERVER_CERT = "mslib/idp/crt_idp.crt"
 SERVER_KEY = "mslib/idp/key_idp.key"
@@ -66,7 +70,17 @@ SIGN_ALG = None
 DIGEST_ALG = None
 #SIGN_ALG = ds.SIG_RSA_SHA512
 #DIGEST_ALG = ds.DIGEST_SHA512
+PATH_SP_XML = "./sp.xml"
+KEY_FILE = "./key_idp.key"
+CRT_FILE = "./crt_idp.crt"
 
+
+if TEST_CASES_ENABLED is not None:
+    SERVER_CERT = "mslib/idp/test_crt_idp.crt"
+    SERVER_KEY = "mslib/idp/test_key_idp.key"
+    PATH_SP_XML = "./test_sp.xml"
+    KEY_FILE = "./test_key_idp.key"
+    CRT_FILE = "./test_crt_idp.crt"
 
 CONFIG = {
     "entityid": f"{BASE}/idp.xml",
@@ -135,10 +149,10 @@ CONFIG = {
         },
     },
     "debug": 1,
-    "key_file": full_path("./key_idp.key"),
-    "cert_file": full_path("./crt_idp.crt"),
+    "key_file": full_path(KEY_FILE),
+    "cert_file": full_path(CRT_FILE),
     "metadata": {
-        "local": [full_path("./sp.xml")],
+        "local": [full_path(PATH_SP_XML)],
     },
     "organization": {
         "display_name": "Organization Display Name",

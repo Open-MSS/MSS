@@ -83,9 +83,11 @@ def load_user(user_id):
 
 with open("mslib/auth_client_sp/saml2_backend.yaml", encoding="utf-8") as fobj:
     yaml_data = yaml.safe_load(fobj)
+    yaml_data["config"]["sp_config"]["key_file"] = sp_settings.SP_KEY_FILE
+    yaml_data["config"]["sp_config"]["cert_file"] = sp_settings.SP_CRT_FILE
 
-if os.path.exists("mslib/auth_client_sp/idp.xml"):
-    yaml_data["config"]["sp_config"]["metadata"]["local"] = ["mslib/auth_client_sp/idp.xml"]
+if os.path.exists(sp_settings.IDP_XML):
+    yaml_data["config"]["sp_config"]["metadata"]["local"] = [sp_settings.IDP_XML]
 else:
     yaml_data["config"]["sp_config"]["metadata"]["local"] = []
     warnings.warn("idp.xml file does not exists !")

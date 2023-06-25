@@ -11,15 +11,15 @@ config:
   sp_config:
     name: "Demo SP written in Python"
     description: "Our Testing SP"
-    key_file: mslib/auth_client_sp/key_sp.key
-    cert_file: mslib/auth_client_sp/crt_sp.crt
+    # key_file: mslib/auth_client_sp/key_sp.key
+    # cert_file: mslib/auth_client_sp/crt_sp.crt
     organization: {display_name: Example Identities, name: Example Identities Org., url: 'http://www.example.com'}
     contact_person:
     - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
     - {contact_type: support, email_address: support@example.com, given_name: Support}
 
     metadata:
-      local: [mslib/auth_client_sp/idp.xml]
+      local: [path_idp_xml.xml]
 
     entityid: http://localhost:5000/proxy_saml2_backend.xml
     accepted_time_diff: 60
