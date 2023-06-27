@@ -1,10 +1,12 @@
-import pytest
-import requests
 import os
 import subprocess
+import time
 
-from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from bs4 import BeautifulSoup
+
+import requests
+import pytest
 
 os.environ['TEST_CASES_ENABLED'] = 'true'
 
@@ -54,6 +56,9 @@ def client():
     cmd_start_sp = ['python', 'mslib/auth_client_sp/app/app.py']
     process_sp = subprocess.Popen(cmd_start_sp)
 
+    # Wait for the service provider (SP) to start
+    time.sleep(5)
+
     # Download the metadata file from SP using curl
     cmd_curl_metadata_sp = ['curl', 'http://localhost:5000/metadata/', '-o',
                             'mslib/idp/test_sp.xml']
@@ -72,6 +77,9 @@ def client():
 
     # Start the identity provider (IDP)
     process_start_idp = subprocess.Popen(['python', 'mslib/idp/idp.py', 'idp_conf'])
+
+    # Wait for the identity provider (IDP) to start
+    time.sleep(5)
 
     # Start the SP
 
