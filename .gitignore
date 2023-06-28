@@ -7,6 +7,7 @@
 *.pyc
 *.swp
 *.patch
+idp.subject.*
 *~
 mslib/mss_config.py
 mslib/performance/data/
@@ -28,8 +29,6 @@ tutorials/recordings
 tutorials/cursor_image.png
 __pycache__/
 instance/
-conf_sp_idp/idp/idp.subject.dat
-conf_sp_idp/idp/idp.subject.dir
-conf_sp_idp/idp/modules
-conf_sp_idp/idp/sp.xml
-conf_sp_idp/sp/idp.xml
+mslib/idp/modules
+mslib/idp/sp.xml
+mslib/auth_client_sp/idp.xml

@@ -1,8 +1,8 @@
 # pylint: skip-file
 # -*- coding: utf-8 -*-
 """
-    conf_sp_idp.idp.idp.py
-    ~~~~~~~~~~~~~~~~~~~~~~
+    mslib.idp.idp.py
+    ~~~~~~~~~~~~~~~~
 
     Identity provider implementation.
 
@@ -1102,11 +1102,12 @@ if __name__ == "__main__":
 
     IDP = server.Server(args.config, cache=Cache())
     IDP.ticket = {}
+    
+    current_directory = os.getcwd()
 
-    _rot = args.mako_root
     LOOKUP = TemplateLookup(
-        directories=[f"{_rot}templates", f"{_rot}htdocs"],
-        module_directory=f"{_rot}modules",
+        directories=[current_directory+"/mslib/idp/templates", current_directory+"/mslib/idp/htdocs"],
+        module_directory= current_directory+"/mslib/idp/modules",
         input_encoding="utf-8",
         output_encoding="utf-8",
     )

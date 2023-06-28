@@ -1,8 +1,8 @@
 # pylint: skip-file
 # -*- coding: utf-8 -*-
 """
-    conf_sp_idp.idp.idp_uwsgi.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.idp.idp_uwsgi.py
+    ~~~~~~~~~~~~~~~~~~~~~~
 
     WSGI application for IDP
 

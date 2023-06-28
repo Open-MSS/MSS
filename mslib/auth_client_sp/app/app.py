@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    conf_sp_idp.sp.app.app.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.auth_client_sp.app.app.py
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Service provider for ensure SSO process with pysaml2
 
@@ -43,7 +43,7 @@ from saml2.client import Saml2Client
 from saml2.metadata import create_metadata_string
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 
-from conf import sp_settings
+from mslib.auth_client_sp.app.conf import sp_settings
 
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = sp_settings.SQLALCHEMY_DB_URI
@@ -81,11 +81,11 @@ def load_user(user_id):
     use it in the query for the user """
     return User.query.get(int(user_id))
 
-with open("../saml2_backend.yaml", encoding="utf-8") as fobj:
+with open("mslib/auth_client_sp/saml2_backend.yaml", encoding="utf-8") as fobj:
     yaml_data = yaml.safe_load(fobj)
 
-if os.path.exists("../idp.xml"):
-    yaml_data["config"]["sp_config"]["metadata"]["local"] = ["../idp.xml"]
+if os.path.exists("mslib/auth_client_sp/idp.xml"):
+    yaml_data["config"]["sp_config"]["metadata"]["local"] = ["mslib/auth_client_sp/idp.xml"]
 else:
     yaml_data["config"]["sp_config"]["metadata"]["local"] = []
     warnings.warn("idp.xml file does not exists !")
@@ -192,7 +192,7 @@ def acs_post():
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=True)
-    return redirect(url_for("profile"))
+    return redirect(url_for("profile", data={"email":email}))
 
 
 @app.route("/acs/redirect", methods=["GET"])
@@ -204,3 +204,6 @@ def acs_redirect():
         request.form["SAMLResponse"], binding, outstanding=outstanding_queries
     )
     return str(authn_response.ava)
+
+if __name__ == "__main__":
+    app.run()
