@@ -56,8 +56,17 @@ def client():
     cmd_start_sp = ['python', 'mslib/auth_client_sp/app/app.py']
     process_sp = subprocess.Popen(cmd_start_sp)
 
-    # Wait for the service provider (SP) to start
-    time.sleep(5)
+    # Poll for the SP to start by checking if a specific URL is accessible
+    sp_started = False
+    while not sp_started:
+        try:
+            response = subprocess.run(['curl', '-s', '-o', '/dev/null', '-w', '%{http_code}', 'http://localhost:5000/'], capture_output=True)
+            if response.returncode == 0 and response.stdout.decode().strip() == '200':
+                sp_started = True
+        except subprocess.CalledProcessError:
+            pass
+
+        time.sleep(1)
 
     # Download the metadata file from SP using curl
     cmd_curl_metadata_sp = ['curl', 'http://localhost:5000/metadata/', '-o',
@@ -78,8 +87,6 @@ def client():
     # Start the identity provider (IDP)
     process_start_idp = subprocess.Popen(['python', 'mslib/idp/idp.py', 'idp_conf'])
 
-    # Wait for the identity provider (IDP) to start
-    time.sleep(5)
 
     # Start the SP
 
