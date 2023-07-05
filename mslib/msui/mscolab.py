@@ -229,7 +229,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
                 # enable/disable appropriate widgets in login frame
                 self.loginBtn.setEnabled(False)
-                self.addUserBtn.setEnabled(True)
+                self.addUserBtn.setEnabled(False) # Make the 'Add user' button inactive since we have login with IDP
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
 

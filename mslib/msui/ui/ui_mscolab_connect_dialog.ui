@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>255</height>
+    <height>341</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -73,7 +73,7 @@
    <item>
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>2</number>
+      <number>0</number>
      </property>
      <widget class="QWidget" name="loginPage">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -89,6 +89,26 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLineEdit" name="loginPasswordLe">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+         <property name="placeholderText">
+          <string>Password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="0" colspan="2">
+        <widget class="QLabel" name="loginByIDPLe">
+         <property name="text">
+          <string>Login With</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
        <item row="4" column="1">
         <widget class="QPushButton" name="addUserBtn">
          <property name="toolTip">
@@ -99,6 +119,32 @@
          </property>
          <property name="autoDefault">
           <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0" colspan="2" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="loginTopicLabel">
+         <property name="font">
+          <font>
+           <pointsize>16</pointsize>
+          </font>
+         </property>
+         <property name="text">
+          <string>Login Details:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="5" column="0" colspan="2">
+        <widget class="Line" name="line_3">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QLineEdit" name="loginEmailLe">
+         <property name="placeholderText">
+          <string>Email ID</string>
          </property>
         </widget>
        </item>
@@ -115,23 +161,6 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLineEdit" name="loginPasswordLe">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
-         <property name="placeholderText">
-          <string>Password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QLineEdit" name="loginEmailLe">
-         <property name="placeholderText">
-          <string>Email ID</string>
-         </property>
-        </widget>
-       </item>
        <item row="4" column="0">
         <widget class="QLabel" name="clickNewUserLabel">
          <property name="text">
@@ -139,15 +168,10 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="2" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="loginTopicLabel">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
+       <item row="7" column="0" colspan="2">
+        <widget class="QPushButton" name="loginWithIDPBtn">
          <property name="text">
-          <string>Login Details:</string>
+          <string>Identity Provider</string>
          </property>
         </widget>
        </item>
