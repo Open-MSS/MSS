@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>341</height>
+    <height>268</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -89,23 +89,16 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLineEdit" name="loginPasswordLe">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
+       <item row="3" column="0" colspan="2">
+        <widget class="QPushButton" name="loginBtn">
+         <property name="toolTip">
+          <string>Login using entered credentials</string>
          </property>
-         <property name="placeholderText">
-          <string>Password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="6" column="0" colspan="2">
-        <widget class="QLabel" name="loginByIDPLe">
          <property name="text">
-          <string>Login With</string>
+          <string>Login</string>
          </property>
-         <property name="alignment">
-          <set>Qt::AlignCenter</set>
+         <property name="autoDefault">
+          <bool>false</bool>
          </property>
         </widget>
        </item>
@@ -134,10 +127,17 @@
          </property>
         </widget>
        </item>
+       <item row="4" column="0">
+        <widget class="QLabel" name="clickNewUserLabel">
+         <property name="text">
+          <string>Click here if new user</string>
+         </property>
+        </widget>
+       </item>
        <item row="5" column="0" colspan="2">
-        <widget class="Line" name="line_3">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+        <widget class="QPushButton" name="loginWithIDPBtn">
+         <property name="text">
+          <string>Login by Identity Provider</string>
          </property>
         </widget>
        </item>
@@ -148,30 +148,13 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QPushButton" name="loginBtn">
-         <property name="toolTip">
-          <string>Login using entered credentials</string>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLineEdit" name="loginPasswordLe">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
          </property>
-         <property name="text">
-          <string>Login</string>
-         </property>
-         <property name="autoDefault">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0">
-        <widget class="QLabel" name="clickNewUserLabel">
-         <property name="text">
-          <string>Click here if new user</string>
-         </property>
-        </widget>
-       </item>
-       <item row="7" column="0" colspan="2">
-        <widget class="QPushButton" name="loginWithIDPBtn">
-         <property name="text">
-          <string>Identity Provider</string>
+         <property name="placeholderText">
+          <string>Password</string>
          </property>
         </widget>
        </item>

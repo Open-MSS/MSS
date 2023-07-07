@@ -65,6 +65,7 @@ from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
+from mslib.mscolab.conf import mscolab_settings
 
 
 class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArchiveBrowser):
@@ -229,9 +230,18 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
                 # enable/disable appropriate widgets in login frame
                 self.loginBtn.setEnabled(False)
-                self.addUserBtn.setEnabled(False) # Make the 'Add user' button inactive since we have login with IDP
+                self.addUserBtn.setEnabled(True)
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
+
+                if mscolab_settings.IDP_ENABLED:
+                    # Hide user creatiion seccion if IDP login enabled
+                    self.addUserBtn.setHidden(True)
+                    self.clickNewUserLabel.setHidden(True)
+
+                else:
+                    # Hide login by identity provider if IDP login disabled
+                    self.loginWithIDPBtn.setHidden(True)
 
                 self.mscolab_server_url = url
                 self.auth = auth
