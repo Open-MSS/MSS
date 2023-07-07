@@ -65,7 +65,6 @@ from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
-from mslib.mscolab.conf import mscolab_settings
 
 
 class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArchiveBrowser):
@@ -220,6 +219,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s.auth = auth
             s.headers.update({'x-test': 'true'})
             r = s.get(url_join(url, 'status'), timeout=(2, 10))
+            idp_enabled  = json.loads(r.text)["IDP_ENABLED"]
             if r.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif r.status_code == 200:
@@ -234,7 +234,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
 
-                if mscolab_settings.IDP_ENABLED:
+                if idp_enabled :
                     # Hide user creatiion seccion if IDP login enabled
                     self.addUserBtn.setHidden(True)
                     self.clickNewUserLabel.setHidden(True)
