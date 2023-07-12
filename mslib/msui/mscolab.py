@@ -222,7 +222,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             try:
                 idp_enabled = json.loads(r.text)["IDP_ENABLED"]
             except (json.decoder.JSONDecodeError, KeyError):
-                idp_enabled = false
+                idp_enabled = False
             if r.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif r.status_code == 200:
