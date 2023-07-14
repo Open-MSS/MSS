@@ -219,10 +219,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s.auth = auth
             s.headers.update({'x-test': 'true'})
             r = s.get(url_join(url, 'status'), timeout=(2, 10))
-            try:
-                idp_enabled = json.loads(r.text)["IDP_ENABLED"]
-            except (json.decoder.JSONDecodeError, KeyError):
-                idp_enabled = False
             if r.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif r.status_code == 200:
@@ -236,6 +232,11 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.addUserBtn.setEnabled(True)
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
+
+                try:
+                    idp_enabled = json.loads(r.text)["IDP_ENABLED"]
+                except (json.decoder.JSONDecodeError, KeyError):
+                    idp_enabled = False
 
                 if idp_enabled :
                     # Hide user creatiion seccion if IDP login enabled
