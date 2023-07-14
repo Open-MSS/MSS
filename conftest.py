@@ -113,7 +113,7 @@ import os
 import logging
 import fs
 import secrets
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 
 ROOT_DIR = '{constants.ROOT_DIR}'
 # directory where mss output files are stored
@@ -147,7 +147,7 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 # enable verification by Mail
 MAIL_ENABLED = False
 
-SQLALCHEMY_DB_URI = 'sqlite:///' + url_join(DATA_DIR, 'mscolab.db')
+SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
 
 # mscolab file upload settings
 UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
