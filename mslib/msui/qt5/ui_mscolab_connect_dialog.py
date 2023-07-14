@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MSColabConnectDialog(object):
     def setupUi(self, MSColabConnectDialog):
         MSColabConnectDialog.setObjectName("MSColabConnectDialog")
-        MSColabConnectDialog.resize(478, 268)
+        MSColabConnectDialog.resize(478, 270)
         self.verticalLayout = QtWidgets.QVBoxLayout(MSColabConnectDialog)
         self.verticalLayout.setContentsMargins(12, 10, 10, 10)
         self.verticalLayout.setSpacing(5)
