@@ -18,7 +18,7 @@ config:
     - {contact_type: support, email_address: support@example.com, given_name: Support}
 
     metadata:
-      local: [mslib/auth_client_sp/idp.xml]
+      local: [mslib/mscolab/app/idp.xml]
 
     entityid: http://localhost:5000/proxy_saml2_backend.xml
     accepted_time_diff: 60
@@ -53,8 +53,8 @@ config:
         allow_unsolicited: true
         endpoints:
           assertion_consumer_service:
-            - [<base_url>/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
-            - [<base_url>/acs/redirect, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
+            - [http://localhost:8083/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
+            - [http://localhost:8083/acs/redirect, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
           discovery_response:
           - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
         name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'

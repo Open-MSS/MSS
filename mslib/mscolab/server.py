@@ -246,12 +246,6 @@ def get_idp_entity_id():
 
     return entity_id
 
-def set_yaml_endpoints():
-    """Sets the endpoints for the YAML configuration file."""
-    yaml_data["config"]["sp_config"]["service"]["sp"]["endpoints"]\
-        ["assertion_consumer_service"][0][0] = f'{request.host_url}acs/post'
-    yaml_data["config"]["sp_config"]["service"]["sp"]["endpoints"]\
-        ["assertion_consumer_service"][1][0] = f'{request.host_url}acs/redirect'
 
 
 @APP.route('/')
@@ -263,7 +257,6 @@ def home():
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
     if mscolab_settings.IDP_ENABLED:
-        set_yaml_endpoints()
         return json.dumps({
                 'message': "Mscolab server",
                 'IDP_ENABLED': mscolab_settings.IDP_ENABLED})
