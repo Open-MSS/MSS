@@ -1,0 +1,61 @@
+name: Saml2
+config:
+  entityid_endpoint: true
+  mirror_force_authn: no
+  memorize_idp: no
+  use_memorized_idp_when_force_authn: no
+  send_requester_id: no
+  enable_metadata_reload: no
+
+  sp_config:
+    name: "MSS Colab Server"
+    description: "MSS Collaboration Server"
+    key_file: mslib/mscolab/app/key_sp.key
+    cert_file: mslib/mscolab/app/crt_sp.crt
+    organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
+    contact_person:
+    - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
+    - {contact_type: support, email_address: support@example.com, given_name: Support}
+
+    metadata:
+      local: [mslib/auth_client_sp/idp.xml]
+
+    entityid: http://localhost:5000/proxy_saml2_backend.xml
+    accepted_time_diff: 60
+    service:
+      sp:
+        ui_info:
+          display_name:
+            - lang: en
+              text: "Open MSS"
+          description:
+            - lang: en
+              text: "Mission Support System"
+          information_url:
+            - lang: en
+              text: "https://open-mss.github.io/about/"
+          privacy_statement_url:
+            - lang: en
+              text: "https://open-mss.github.io/about/"
+          keywords:
+            - lang: se
+              text: ["MSS"]
+            - lang: en
+              text: ["OpenMSS"]
+          logo:
+            text: "https://open-mss.github.io/assets/logo.png"
+            width: "100"
+            height: "100"
+        authn_requests_signed: true
+        want_response_signed: true
+        want_assertion_signed: true
+        allow_unknown_attributes: true
+        allow_unsolicited: true
+        endpoints:
+          assertion_consumer_service:
+            - [<base_url>/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
+            - [<base_url>/acs/redirect, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
+          discovery_response:
+          - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
+        name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
+        name_id_format_allow_create: true
