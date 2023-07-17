@@ -550,6 +550,8 @@ PASSWD = {
     "roland": "dianakra",
     "babs": "howes",
     "upper": "crust",
+    "testuser2": "abcd1234",
+    "testuser3": "ABCD1234",
 }
 
 
