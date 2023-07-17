@@ -87,6 +87,8 @@ class default_mscolab_settings:
     # mail accounts
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
 
+    # enable login by identity provider
+    IDP_ENABLED = True
 
 mscolab_settings = default_mscolab_settings()
 
