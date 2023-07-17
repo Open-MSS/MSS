@@ -190,7 +190,7 @@ def mscolab_ping_server(port):
             return True
     except requests.exceptions.ConnectionError:
         return False
-
+    return False
 
 def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=10):
     handle_db_init()
