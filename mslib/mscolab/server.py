@@ -256,10 +256,9 @@ def home():
 @APP.route("/status")
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
-    if mscolab_settings.IDP_ENABLED:
-        return json.dumps({
-                'message': "Mscolab server",
-                'IDP_ENABLED': mscolab_settings.IDP_ENABLED})
+    return json.dumps({
+            'message': "Mscolab server",
+            'IDP_ENABLED': mscolab_settings.IDP_ENABLED})
 
 @APP.route('/token', methods=["POST"])
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))

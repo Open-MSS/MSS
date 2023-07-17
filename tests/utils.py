@@ -187,7 +187,7 @@ def mscolab_ping_server(port):
         r = requests.get(url, timeout=(2, 10))
         data = json.loads(r.text)
         if data['message'] == "Mscolab server" and isinstance(data['IDP_ENABLED'], bool):
-            return False
+            return True
     except requests.exceptions.ConnectionError:
         return False
 
