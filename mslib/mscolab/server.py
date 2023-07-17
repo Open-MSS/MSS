@@ -30,19 +30,28 @@ import logging
 import time
 import datetime
 import secrets
+import random
+import string
+import warnings
 import fs
 import os
+import yaml
+import fs
 import socketio
 import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask import g, jsonify, request, render_template, flash
-from flask import send_from_directory, abort, url_for
+from flask import send_from_directory, abort, url_for, redirect
 from flask_mail import Mail, Message
 from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
+from saml2.config import SPConfig
+from saml2.client import Saml2Client
+from saml2.metadata import create_metadata_string
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Change, MessageType, User, Operation, db
@@ -51,7 +60,7 @@ from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
-
+from flask.wrappers import Response
 
 APP = create_app(__name__)
 mail = Mail(APP)
@@ -70,6 +79,19 @@ except ImportError as ex:
         allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
+
+#setup idp login config
+if mscolab_settings.IDP_ENABLED :
+    with open("mslib/mscolab/app/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
+        yaml_data = yaml.safe_load(fobj)
+    if os.path.exists("mslib/mscolab/app/idp.xml"):
+        yaml_data["config"]["sp_config"]["metadata"]["local"] = ["mslib/mscolab/app/idp.xml"]
+    else:
+        yaml_data["config"]["sp_config"]["metadata"]["local"] = []
+        warnings.warn("idp.xml file does not exists !")
+
+    sp_config = SPConfig().load(yaml_data["config"]["sp_config"])
+    sp = Saml2Client(sp_config)
 
 # setup http auth
 if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
@@ -197,6 +219,40 @@ def verify_user(func):
                 return func(*args, **kwargs)
     return wrapper
 
+def rndstr(size=16, alphabet=""):
+    """
+    Returns a string of random ascii characters or digits
+    :type size: int
+    :type alphabet: str
+    :param size: The length of the string
+    :param alphabet: A string with characters.
+    :return: string
+    """
+    rng = random.SystemRandom()
+    if not alphabet:
+        alphabet = string.ascii_letters[0:52] + string.digits
+    return type(alphabet)().join(rng.choice(alphabet) for _ in range(size))
+
+
+def get_idp_entity_id():
+    """
+    Finds the entity_id for the IDP
+    :return: the entity_id of the idp or None
+    """
+
+    idps = sp.metadata.identity_providers()
+    only_idp = idps[0]
+    entity_id = only_idp
+
+    return entity_id
+
+def set_yaml_endpoints():
+    """Sets the endpoints for the YAML configuration file."""
+    yaml_data["config"]["sp_config"]["service"]["sp"]["endpoints"]\
+        ["assertion_consumer_service"][0][0] = f'{request.host_url}acs/post'
+    yaml_data["config"]["sp_config"]["service"]["sp"]["endpoints"]\
+        ["assertion_consumer_service"][1][0] = f'{request.host_url}acs/redirect'
+
 
 @APP.route('/')
 def home():
@@ -206,8 +262,11 @@ def home():
 @APP.route("/status")
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
-    return "Mscolab server"
-
+    if mscolab_settings.IDP_ENABLED:
+        set_yaml_endpoints()
+        return json.dumps({
+                'message': "Mscolab server",
+                'IDP_ENABLED': mscolab_settings.IDP_ENABLED})
 
 @APP.route('/token', methods=["POST"])
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
@@ -702,6 +761,107 @@ def reset_request():
     else:
         logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
         return render_template('errors/403.html'), 403
+
+@APP.route("/metadata/", methods=['GET'])
+def metadata():
+    """Return the SAML metadata XML."""
+    metadata_string = create_metadata_string(
+        None, sp.config, 4, None, None, None, None, None
+    ).decode("utf-8")
+    return Response(metadata_string, mimetype="text/xml")
+
+
+@APP.route("/idp_login/", methods=['GET'])
+def idp_login():
+    """Handle the login process for the user by IDP"""
+    try:
+        # pylint: disable=unused-variable
+        acs_endp, response_binding = sp.config.getattr("endpoints", "sp")[
+            "assertion_consumer_service"
+        ][0]
+        relay_state = rndstr()
+        # pylint: disable=unused-variable
+        entity_id = get_idp_entity_id()
+        req_id, binding, http_args = sp.prepare_for_negotiated_authenticate(
+            entityid=entity_id,
+            response_binding=response_binding,
+            relay_state=relay_state,
+        )
+        if binding == BINDING_HTTP_REDIRECT:
+            headers = dict(http_args["headers"])
+            return redirect(str(headers["Location"]), code=303)
+        return Response(http_args["data"], headers=http_args["headers"])
+    except (NameError, AttributeError) as error:
+        return render_template('errors/403.html'), 403
+
+@APP.route("/acs/post", methods=['POST'])
+def acs_post():
+    """Handle the SAML authentication response received via POST request."""
+    try:
+        outstanding_queries = {}
+        binding = BINDING_HTTP_POST
+        authn_response = sp.parse_authn_request_response(
+            request.form["SAMLResponse"], binding, outstanding=outstanding_queries
+        )
+        email = authn_response.ava["email"][0]
+        username = authn_response.ava["givenName"][0]
+
+        user = User.query.filter_by(emailid=email).first()
+        token = generate_confirmation_token(email)
+
+        if not user:
+            user = User(email, username, password=token, confirmed=False, confirmed_on=None, logged_by_idp=True)
+            db.session.add(user)
+            db.session.commit()
+
+        elif user.logged_by_idp is False:
+            user.logged_by_idp = True
+            user.hash_password(token)
+            db.session.add(user)
+            db.session.commit()
+        else:
+            user.hash_password(token)
+            db.session.commit()
+
+        return render_template('user/idp_login_success.html', token=token), 200
+
+    except (NameError, AttributeError, KeyError) :
+        return render_template('errors/500.html'), 500
+
+
+@APP.route('/idp_login_auth/', methods=['POST'])
+def idp_login_auth():
+    """Handle the SAML authentication validation of client application."""
+    try:
+        data = request.get_json()
+        token = data.get('token')
+        email = confirm_token(token, expiration=1200)
+
+        if email:
+            user = User.query.filter_by(emailid=email).first()
+
+            if user is not None:
+                return json.dumps({
+                "success": True,
+                'token': token,
+                'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}})
+            else:
+                return jsonify({"success": False}), 401
+        else:
+            return jsonify({"success": False}), 401
+    except TypeError:
+        return jsonify({"success": False}), 401
+
+
+@APP.route("/acs/redirect", methods=["GET"])
+def acs_redirect():
+    """Handle the SAML authentication response received via redirect."""
+    outstanding_queries = {}
+    binding = BINDING_HTTP_REDIRECT
+    authn_response = sp.parse_authn_request_response(
+        request.form["SAMLResponse"], binding, outstanding=outstanding_queries
+    )
+    return str(authn_response.ava)
 
 
 def start_server(app, sockio, cm, fm, port=8083):
