@@ -185,11 +185,11 @@ def mscolab_ping_server(port):
     url = f"http://127.0.0.1:{port}/status"
     try:
         r = requests.get(url, timeout=(2, 10))
-        if r.text == "Mscolab server":
-            return True
+        data = json.loads(r.text)
+        if data['message'] == "Mscolab server" and isinstance(data['IDP_ENABLED'], bool):
+            return False
     except requests.exceptions.ConnectionError:
         return False
-    return False
 
 
 def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=10):
