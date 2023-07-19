@@ -238,8 +238,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 except (json.decoder.JSONDecodeError, KeyError):
                     idp_enabled = False
 
-                if idp_enabled :
-                    # Hide user creatiion seccion if IDP login enabled
+                if idp_enabled:
+                    # Hide user creation section if IDP login enabled
                     self.addUserBtn.setHidden(True)
                     self.clickNewUserLabel.setHidden(True)
 
