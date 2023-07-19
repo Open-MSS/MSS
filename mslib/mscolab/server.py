@@ -767,14 +767,12 @@ def metadata():
 def idp_login():
     """Handle the login process for the user by IDP"""
     try:
-        # pylint: disable=unused-variable
-        acs_endp, response_binding = sp.config.getattr("endpoints", "sp")[
+        _, response_binding = sp.config.getattr("endpoints", "sp")[
             "assertion_consumer_service"
         ][0]
         relay_state = rndstr()
-        # pylint: disable=unused-variable
         entity_id = get_idp_entity_id()
-        req_id, binding, http_args = sp.prepare_for_negotiated_authenticate(
+        _, binding, http_args = sp.prepare_for_negotiated_authenticate(
             entityid=entity_id,
             response_binding=response_binding,
             relay_state=relay_state,
@@ -783,7 +781,7 @@ def idp_login():
             headers = dict(http_args["headers"])
             return redirect(str(headers["Location"]), code=303)
         return Response(http_args["data"], headers=http_args["headers"])
-    except (NameError, AttributeError) as error:
+    except (NameError, AttributeError):
         return render_template('errors/403.html'), 403
 
 @APP.route("/acs/post", methods=['POST'])
