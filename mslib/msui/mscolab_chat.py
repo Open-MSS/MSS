@@ -31,7 +31,7 @@ import fs
 import requests
 from markdown import Markdown
 from markdown.extensions import Extension
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 
 from mslib.mscolab.message_type import MessageType
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -275,7 +275,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 "op_id": self.op_id,
                 "message_type": int(self.attachment_type)
             }
-            url = url_join(self.mscolab_server_url, 'message_attachment')
+            url = urljoin(self.mscolab_server_url, 'message_attachment')
             try:
                 requests.post(url, data=data, files=files, timeout=(2, 10))
             except requests.exceptions.ConnectionError:
@@ -332,7 +332,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "token": self.token,
             "op_id": self.op_id
         }
-        url = url_join(self.mscolab_server_url, 'authorized_users')
+        url = urljoin(self.mscolab_server_url, 'authorized_users')
         r = requests.get(url, data=data, timeout=(2, 10))
         if r.text != "False":
             self.collaboratorsList.clear()
@@ -352,7 +352,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
-        url = url_join(self.mscolab_server_url, "messages")
+        url = urljoin(self.mscolab_server_url, "messages")
 
         res = requests.get(url, data=data, timeout=(2, 10))
         if res.text != "False":
@@ -470,10 +470,10 @@ class MessageItem(QtWidgets.QWidget):
         MAX_WIDTH = MAX_HEIGHT = 300
         self.messageBox = QtWidgets.QLabel()
         if '\\' in self.attachment_path:
-            img_url = url_join(self.chat_window.mscolab_server_url,
-                               self.attachment_path.replace('\\', '/').split('colabdata')[1])
+            img_url = urljoin(self.chat_window.mscolab_server_url,
+                              self.attachment_path.replace('\\', '/').split('colabdata')[1])
         else:
-            img_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
+            img_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
         data = requests.get(img_url, timeout=(2, 10)).content
         image = QtGui.QImage()
         image.loadFromData(data)
@@ -505,7 +505,7 @@ class MessageItem(QtWidgets.QWidget):
 
     def setup_text_message_box(self):
         if self.message_type == MessageType.DOCUMENT:
-            doc_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
+            doc_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
             file_name = fs.path.basename(self.attachment_path)
             self.message_text = f"Document: [{file_name}]({doc_url})"
         self.messageBox = self.get_text_browser(self.message_text)
@@ -653,7 +653,7 @@ class MessageItem(QtWidgets.QWidget):
         if self.message_type == MessageType.DOCUMENT:
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
-                file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path),
+                file_content = requests.get(urljoin(self.chat_window.mscolab_server_url, self.attachment_path),
                                             timeout=(2, 10)).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)

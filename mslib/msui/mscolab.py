@@ -39,10 +39,10 @@ import fs
 import requests
 import re
 import urllib.request
+from urllib.parse import urljoin
 
 from fs import open_fs
 from PIL import Image
-from werkzeug.urls import url_join
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
 from mslib.msui import flighttrack as ft
@@ -96,7 +96,7 @@ class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArc
                 "token": self.mscolab.token,
                 "op_id": self.archived_op_id,
             }
-            url = url_join(self.mscolab.mscolab_server_url, 'set_last_used')
+            url = urljoin(self.mscolab.mscolab_server_url, 'set_last_used')
             try:
                 res = requests.post(url, data=data, timeout=(2, 10))
             except requests.exceptions.RequestException as e:
@@ -218,7 +218,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s = requests.Session()
             s.auth = auth
             s.headers.update({'x-test': 'true'})
-            r = s.get(url_join(url, 'status'), timeout=(2, 10))
+            r = s.get(urljoin(url, 'status'), timeout=(2, 10))
             if r.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif r.status_code == 200:
@@ -1013,7 +1013,7 @@ class MSUIMscolab(QtCore.QObject):
                         "token": self.token,
                         "op_id": self.active_op_id
                     }
-                    url = url_join(self.mscolab_server_url, 'delete_operation')
+                    url = urljoin(self.mscolab_server_url, 'delete_operation')
                     try:
                         res = requests.post(url, data=data, timeout=(2, 10))
                     except requests.exceptions.RequestException as e:
@@ -1046,7 +1046,7 @@ class MSUIMscolab(QtCore.QObject):
                     "op_id": self.active_op_id,
                     "selected_userids": json.dumps([self.user["id"]])
                 }
-                url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
+                url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
                 res = requests.post(url, data=data, timeout=(2, 10))
                 if res.text != "False":
                     res = res.json()
@@ -1093,7 +1093,7 @@ class MSUIMscolab(QtCore.QObject):
                     "attribute": 'category',
                     "value": entered_operation_category
                 }
-                url = url_join(self.mscolab_server_url, 'update_operation')
+                url = urljoin(self.mscolab_server_url, 'update_operation')
                 r = requests.post(url, data=data, timeout=(2, 10))
                 if r.text == "True":
                     self.active_operation_category = entered_operation_category
@@ -1123,7 +1123,7 @@ class MSUIMscolab(QtCore.QObject):
                     "attribute": 'description',
                     "value": entered_operation_desc
                 }
-                url = url_join(self.mscolab_server_url, 'update_operation')
+                url = urljoin(self.mscolab_server_url, 'update_operation')
                 r = requests.post(url, data=data, timeout=(2, 10))
                 if r.text == "True":
                     # Update active operation description label
@@ -1154,7 +1154,7 @@ class MSUIMscolab(QtCore.QObject):
                     "attribute": 'path',
                     "value": entered_operation_name
                 }
-                url = url_join(self.mscolab_server_url, 'update_operation')
+                url = urljoin(self.mscolab_server_url, 'update_operation')
                 r = requests.post(url, data=data, timeout=(2, 10))
                 if r.text == "True":
                     # Update active operation name
@@ -1545,7 +1545,7 @@ class MSUIMscolab(QtCore.QObject):
                     "op_id": self.active_op_id,
                     "days": 31,
                 }
-                url = url_join(self.mscolab_server_url, 'set_last_used')
+                url = urljoin(self.mscolab_server_url, 'set_last_used')
                 try:
                     res = requests.post(url, data=data, timeout=(2, 10))
                 except requests.exceptions.RequestException as e:

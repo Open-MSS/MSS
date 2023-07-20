@@ -27,7 +27,7 @@
 import json
 
 import requests
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 
 from PyQt5 import QtCore, QtWidgets
 from mslib.utils.verify_user_token import verify_user_token
@@ -175,7 +175,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "token": self.token,
             "op_id": self.op_id
         }
-        url = url_join(self.mscolab_server_url, "/creator_of_operation")
+        url = urljoin(self.mscolab_server_url, "/creator_of_operation")
         r = requests.get(url, data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
@@ -188,7 +188,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "token": self.token,
             "op_id": self.op_id
         }
-        url = url_join(self.mscolab_server_url, "operations")
+        url = urljoin(self.mscolab_server_url, "operations")
         r = requests.get(url, data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
@@ -202,7 +202,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "token": self.token,
                 "op_id": self.op_id
             }
-            url = url_join(self.mscolab_server_url, "users_without_permission")
+            url = urljoin(self.mscolab_server_url, "users_without_permission")
             res = requests.get(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
@@ -227,7 +227,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "token": self.token,
                 "op_id": self.op_id
             }
-            url = url_join(self.mscolab_server_url, "users_with_permission")
+            url = urljoin(self.mscolab_server_url, "users_with_permission")
             res = requests.get(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
@@ -259,7 +259,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "selected_userids": json.dumps(selected_userids),
                 "selected_access_level": selected_access_level
             }
-            url = url_join(self.mscolab_server_url, "add_bulk_permissions")
+            url = urljoin(self.mscolab_server_url, "add_bulk_permissions")
             res = requests.post(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
@@ -290,7 +290,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "selected_userids": json.dumps(selected_userids),
                 "selected_access_level": selected_access_level
             }
-            url = url_join(self.mscolab_server_url, "modify_bulk_permissions")
+            url = urljoin(self.mscolab_server_url, "modify_bulk_permissions")
             res = requests.post(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
@@ -318,7 +318,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "op_id": self.op_id,
                 "selected_userids": json.dumps(selected_userids)
             }
-            url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
+            url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
             res = requests.post(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
@@ -343,7 +343,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "current_op_id": self.op_id,
                 "import_op_id": import_op_id
             }
-            url = url_join(self.mscolab_server_url, 'import_permissions')
+            url = urljoin(self.mscolab_server_url, 'import_permissions')
             res = requests.post(url, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
