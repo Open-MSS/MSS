@@ -80,7 +80,9 @@ class Test_Server(TestCase):
         with self.app.test_client() as test_client:
             response = test_client.get('/status')
             assert response.status_code == 200
-            assert b"Mscolab server" in response.data
+            data = json.loads(response.text)
+            assert "Mscolab server" in data['message']
+            assert True or False in data['IDP_ENABLED']
 
     def test_register_user(self):
         with self.app.test_client():
