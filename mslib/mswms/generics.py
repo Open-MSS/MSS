@@ -35,6 +35,7 @@ Number of levels in discrete colourmaps
 """
 N_LEVELS = 16
 
+DEFAULT_CMAP = matplotlib.pyplot.cm.turbo
 
 """
 List of supported targets using the CF standard_name as unique identifier.
@@ -558,7 +559,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
             cmin, cmax = 0., 1.
         if 0 < cmin < 0.05 * cmax:
             cmin = 0.
-    cmap = matplotlib.pyplot.cm.rainbow
+    cmap = DEFAULT_CMAP
     ticks = None
 
     if any(isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)):
