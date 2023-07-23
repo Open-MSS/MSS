@@ -69,3 +69,6 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
   </ListOfWaypoints>
 </FlightTrack>
 """
+
+# enable login by identity provider
+IDP_ENABLED = False
