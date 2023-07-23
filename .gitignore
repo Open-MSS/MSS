@@ -1,7 +1,6 @@
 .cache/
 .idea/
 .vscode/
-.cookies/
 .DS_Store
 *.key
 *.crt
