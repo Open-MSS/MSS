@@ -24,12 +24,11 @@ from PyQt5.QtCore import QUrl, QTimer
 from PyQt5.QtWidgets import QMainWindow, QPushButton, QToolBar, QApplication
 from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile
 
+from mslib.msui.constants import MSUI_CONFIG_PATH
 
-class QTWebBrowser(QMainWindow):
+class MSUIWebBrowser(QMainWindow):
     def __init__(self, url: str):
         super().__init__()
-
-        scriptdir = os.path.dirname(os.path.realpath(__file__))
 
         self.web_view = QWebEngineView(self)
         self.setCentralWidget(self.web_view)
@@ -37,7 +36,7 @@ class QTWebBrowser(QMainWindow):
         self._url = url
         self.profile = QWebEngineProfile().defaultProfile()
         self.profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
-        self.browser_storage_folder = scriptdir + os.path.sep + '/.cookies'
+        self.browser_storage_folder =  os.path.join(MSUI_CONFIG_PATH, '.cookies')
         self.profile.setPersistentStoragePath(self.browser_storage_folder)
 
         self.back_button = QPushButton("← Back", self)
@@ -67,7 +66,7 @@ class QTWebBrowser(QMainWindow):
 
 if __name__ == "__main__":
     '''
-        This function will be moved to qt client...
+        This function will be moved to handle accordingly the test cases. 
         The 'connection' variable determines when the web browser should be 
         closed, typically after the user logged in and establishes a connection
     '''
@@ -90,7 +89,7 @@ if __name__ == "__main__":
     # app = QApplication(sys.argv)
     app = QApplication(['', '--no-sandbox'])
     WEB_URL = "https://www.google.com/"
-    main = QTWebBrowser(WEB_URL)
+    main = MSUIWebBrowser(WEB_URL)
 
     QTimer.singleShot(0, check_connection)
 
