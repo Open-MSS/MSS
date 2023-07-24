@@ -303,7 +303,6 @@ def get_log_levels(cmin, cmax, levels=None):
     return clev
 
 
-
 CBAR_LABEL_FORMATS = {
     "log": "%.3g",
     "log_ice_cloud": "%.0E",
