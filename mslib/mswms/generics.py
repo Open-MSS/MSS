@@ -303,6 +303,31 @@ def get_log_levels(cmin, cmax, levels=None):
     return clev
 
 
+
+CBAR_LABEL_FORMATS = {
+    "log": "%.3g",
+    "log_ice_cloud": "%.0E",
+}
+
+
+def get_cbar_label_format(style, maxvalue):
+    if style in CBAR_LABEL_FORMATS:
+        return CBAR_LABEL_FORMATS[style]
+    if 100 <= maxvalue < 10000.:
+        label_format = "%4i"
+    elif 10 <= maxvalue < 100.:
+        label_format = "%.1f"
+    elif 1 <= maxvalue < 10.:
+        label_format = "%.2f"
+    elif 0.1 <= maxvalue < 1.:
+        label_format = "%.3f"
+    elif 0.01 <= maxvalue < 0.1:
+        label_format = "%.4f"
+    else:
+        label_format = "%.3g"
+    return label_format
+
+
 def _style_default(_dataname, _style, cmin, cmax, cmap, _data):
     clev = np.linspace(cmin, cmax, 16)
     norm = matplotlib.colors.BoundaryNorm(clev, cmap.N)
