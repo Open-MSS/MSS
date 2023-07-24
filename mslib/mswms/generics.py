@@ -44,11 +44,13 @@ for vertical and horizontal cross-sections.
 """
 _TARGETS = [
     "air_temperature",
+    "air_potential_temperature",
     "eastward_wind",
     "equivalent_latitude",
     "ertel_potential_vorticity",
     "mean_age_of_air",
     "mole_fraction_of_active_chlorine_in_air",
+    "mole_fraction_of_ammonia_in_air",
     "mole_fraction_of_bromine_nitrate_in_air",
     "mole_fraction_of_bromo_methane_in_air",
     "mole_fraction_of_bromochlorodifluoromethane_in_air",
@@ -62,11 +64,15 @@ _TARGETS = [
     "mole_fraction_of_cfc113_in_air",
     "mole_fraction_of_cfc12_in_air",
     "mole_fraction_of_ethane_in_air",
+    "mole_fraction_of_ethene_in_air",
     "mole_fraction_of_formaldehyde_in_air",
+    "mole_fraction_of_formic_acid_in_air",
     "mole_fraction_of_hcfc22_in_air",
     "mole_fraction_of_hydrogen_chloride_in_air",
+    "mole_fraction_of_hydrogen_peroxide_in_air",
     "mole_fraction_of_hypobromite_in_air",
     "mole_fraction_of_methane_in_air",
+    "mole_fraction_of_methanol_in_air",
     "mole_fraction_of_nitric_acid_in_air",
     "mole_fraction_of_nitrous_oxide_in_air",
     "mole_fraction_of_nitrogen_dioxide_in_air",
@@ -97,6 +103,7 @@ Units for each standard_name. If not given, dimensionless is assumed.
 """
 _UNITS = {
     "air_temperature": "K",
+    "air_potential_temperature": "K",
     "eastward_wind": "m/s",
     "equivalent_latitude": "degree N",
     "ertel_potential_vorticity": "PVU",
@@ -162,6 +169,7 @@ for standard_name in [
     _UNITS[standard_name] = "nmol/mol"
 
 for standard_name in [
+        "mole_fraction_of_ammonia_in_air",
         "mole_fraction_of_bromine_nitrate_in_air",
         "mole_fraction_of_bromo_methane_in_air",
         "mole_fraction_of_bromochlorodifluoromethane_in_air",
@@ -172,9 +180,13 @@ for standard_name in [
         "mole_fraction_of_cfc12_in_air",
         "mole_fraction_of_cfc113_in_air",
         "mole_fraction_of_hcfc22_in_air",
+        "mole_fraction_of_hydrogen_peroxide_in_air",
         "mole_fraction_of_ethane_in_air",
+        "mole_fraction_of_ethene_in_air",
         "mole_fraction_of_formaldehyde_in_air",
+        "mole_fraction_of_formic_acid_in_air",
         "mole_fraction_of_hypobromite_in_air",
+        "mole_fraction_of_methanol_in_air",
         "mole_fraction_of_nitrogen_dioxide_in_air",
         "mole_fraction_of_nitrogen_monoxide_in_air",
         "mole_fraction_of_peroxyacetyl_nitrate_in_air",
