@@ -233,6 +233,20 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
 
+                try:
+                    idp_enabled = json.loads(r.text)["IDP_ENABLED"]
+                except (json.decoder.JSONDecodeError, KeyError):
+                    idp_enabled = False
+
+                if idp_enabled:
+                    # Hide user creation section if IDP login enabled
+                    self.addUserBtn.setHidden(True)
+                    self.clickNewUserLabel.setHidden(True)
+
+                else:
+                    # Hide login by identity provider if IDP login disabled
+                    self.loginWithIDPBtn.setHidden(True)
+
                 self.mscolab_server_url = url
                 self.auth = auth
                 save_password_to_keyring("MSCOLAB_AUTH_" + url, auth[0], auth[1])

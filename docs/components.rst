@@ -10,5 +10,4 @@ Components
    mscolab
    gentutorials
    mssautoplot
-
-
+   conf_auth_client_sp_idp
