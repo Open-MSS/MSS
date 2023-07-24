@@ -28,7 +28,6 @@
 import matplotlib
 
 
-
 def make_cbar_labels_readable(fig, axs):
     """
     Adjust font size of the colorbar labels and put a white background behind them
