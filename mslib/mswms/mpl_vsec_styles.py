@@ -99,7 +99,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
 
         # Format for colorbar labels
         if self.cbar_format is None:
-            cbar_format = generics.get_cbar_label_format(self.style, np.abs(clevs).max())
+            cbar_format = generics.get_cbar_label_format(self.style, np.median(np.abs(clevs)))
         else:
             cbar_format = self.cbar_format
 
