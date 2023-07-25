@@ -507,8 +507,8 @@ def set_last_used():
 def update_last_used():
     operations = Operation.query.filter().all()
     for operation in operations:
-        a = (datetime.datetime.utcnow() - operation.last_used).days
-        if a > 30:
+        if operation.last_used is not None and \
+                (datetime.datetime.utcnow() - operation.last_used).days > 30:
             operation.active = False
         else:
             operation.active = True
