@@ -266,9 +266,9 @@ def user_register_handler():
                 html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
                 send_email(email, subject, html)
-            return jsonify(result), status_code
     except TypeError:
-        return jsonify({"success": False}), 401
+        result, status_code = {"success": False}, 401
+    return jsonify(result), status_code
 
 
 @APP.route('/confirm/<token>')
