@@ -351,7 +351,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def idp_login_handler(self):
         """Handle IDP login Button"""
-        url_idp_login = f'{self.mscolab_server_url}/idp_login'
+        url_idp_login = f'{self.mscolab_server_url}/available_idps'
         webbrowser.open(url_idp_login, new = 2)
         self.stackedWidget.setCurrentWidget(self.idpAuthPage)
 
