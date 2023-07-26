@@ -48,16 +48,16 @@ class User(db.Model):
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(db.DateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
-    logged_by_idp = db.Column(db.Boolean, nullable=True, default=False)
+    authentication_backend = db.Column(db.String(255), nullable=True, default=False)
 
-    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None, logged_by_idp=False):
+    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None, authentication_backend='local'):
         self.username = username
         self.emailid = emailid
         self.hash_password(password)
         self.registered_on = datetime.datetime.now()
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on
-        self.logged_by_idp = logged_by_idp
+        self.authentication_backend = authentication_backend
 
     def __repr__(self):
         return f'<User {self.username}>'
