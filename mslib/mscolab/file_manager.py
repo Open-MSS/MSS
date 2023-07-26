@@ -62,7 +62,7 @@ class FileManager:
         perm = Permission(user.id, operation_id, "creator")
         db.session.add(perm)
         db.session.commit()
-        # magic
+        # here we can import the permissions from Group file
         if not path.endswith(mscolab_settings.GROUP_POSTFIX):
             import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
             if import_op is not None:
