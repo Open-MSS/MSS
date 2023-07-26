@@ -1,0 +1,74 @@
+{% extends "theme.html" %} {% block body %}
+  <div class="container">
+    <style>
+        @media (min-width: 1px) {
+          .container {
+            max-width: 90%;
+          }
+        }
+
+        #title {
+            text-align: center;
+        }
+
+        #ulButtons {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        li {
+            margin: 5px;
+        }
+
+        #idpButton {
+            width: 600px; /* Fixed width for the buttons */
+            padding: 15px;
+            font-size: 18px;
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        #idpButton:hover {
+            background-color: #45aaf2;
+        }
+
+        #identityForm {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        
+        }
+    </style>
+    <div class="col">
+      <h1 id="title">Choose Identity Provider</h1>
+      <form id="identityForm" method="post" action="/idp_login">
+          <ul id="ulButtons">
+              
+            {% for idp in configured_idps %}
+              <li>
+                <button id="idpButton" type="button" onclick="selectIdentityProvider('{{ idp['idp_identity_name']|safe }}')">{{ idp['idp_name'] }}</button>
+              </li>
+            {% endfor %}
+
+          </ul>
+          <input type="hidden" id="selectedIdentityProvider" name="selectedIdentityProvider" value="">
+      </form>
+      <script>
+          function selectIdentityProvider(value) {
+            console.log(value)
+              document.getElementById('selectedIdentityProvider').value = value;
+              document.getElementById('identityForm').submit();
+          }
+      </script>
+    </div>
+      
+  </div>
+  {% endblock %}
