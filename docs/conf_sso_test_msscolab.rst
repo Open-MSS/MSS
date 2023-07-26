@@ -13,6 +13,9 @@ Enable IDP login
 
 To enable identity provider-based login, set `IDP_ENABLED = True` in the `mslib/mscolab/conf.py` file of the MSS Colab server.
 
+After enabling the IDP, the next step is to add the `CONFIGURED_IDPS` dictionary. This dictionary should include keys for each enabled Identity Provider, represented by `idp_identity_name`, and their corresponding `idp_name`. Once this dictionary is set up, it should be used to update various functionalities of the mscolab server, such as the SAML2Client config .yml file, ensuring proper integration with the enabled IDPs.
+
+
 TLS Setup
 ---------
 
