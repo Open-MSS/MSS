@@ -84,12 +84,13 @@ except ImportError as ex:
 if mscolab_settings.IDP_ENABLED :
     with open("mslib/mscolab/app/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
         yaml_data = yaml.safe_load(fobj)
-    if not os.path.exists(yaml_data["config"]["sp_config"]["metadata"]["local"][0]):
-        yaml_data["config"]["sp_config"]["metadata"]["local"] = []
+    if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
+        yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
         warnings.warn("idp.xml file does not exists !")
 
-    sp_config = SPConfig().load(yaml_data["config"]["sp_config"])
-    sp = Saml2Client(sp_config)
+    # configuration localhost_test_idp Saml2Client
+    localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
+    sp_localhost_test_idp = Saml2Client(localhost_test_idp)
 
 # setup http auth
 if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
@@ -232,13 +233,21 @@ def rndstr(size=16, alphabet=""):
     return type(alphabet)().join(rng.choice(alphabet) for _ in range(size))
 
 
-def get_idp_entity_id():
+def get_idp_entity_id(selected_idp):
     """
     Finds the entity_id for the IDP
     :return: the entity_id of the idp or None
     """
 
-    idps = sp.metadata.identity_providers()
+    # The value of 'condition' should be the same as the 'idp_identity_name'\
+    # set in the 'CONFIGURED_IDPS' of conf.py.
+
+    if selected_idp == 'localhost_test_idp':
+        idps = sp_localhost_test_idp.metadata.identity_providers()
+
+    # elif selected_idp == 'idp2':
+    #     idps = sp_idp2.metadata.identity_providers()
+
     only_idp = idps[0]
     entity_id = only_idp
 
@@ -754,23 +763,45 @@ def reset_request():
 
 @APP.route("/metadata/", methods=['GET'])
 def metadata():
-    """Return the SAML metadata XML."""
+    """Return the SAML metadata XML for congiguring local host testing IDP"""
     metadata_string = create_metadata_string(
-        None, sp.config, 4, None, None, None, None, None
+        None, sp_localhost_test_idp.config, 4, None, None, None, None, None
     ).decode("utf-8")
     return Response(metadata_string, mimetype="text/xml")
 
+@APP.route('/available_idps/', methods=['GET'])
+def available_idps():
+    """
+    This function checks if IDP (Identity Provider) is enabled in the mscolab_settings module.
+    If IDP is enabled, it retrieves the configured IDPs from mscolab_settings.CONFIGURED_IDPS
+    and renders the 'idp/available_idps.html' template with the list of configured IDPs.
+    """
+    if mscolab_settings.IDP_ENABLED:
+        configured_idps = mscolab_settings.CONFIGURED_IDPS
+        return render_template('idp/available_idps.html', configured_idps=configured_idps), 200   
+    return render_template('errors/403.html'), 403
 
-@APP.route("/idp_login/", methods=['GET'])
+
+@APP.route("/idp_login/", methods=['POST'])
 def idp_login():
-    """Handle the login process for the user by IDP"""
+    """Handle the login process for the user by selected IDP"""
+    selected_idp = request.form.get('selectedIdentityProvider')
+
+    # The value of 'condition' should be the same as the 'idp_identity_name'\
+    # set in the 'CONFIGURED_IDPS' of conf.py.
+    if selected_idp == 'localhost_test_idp':
+        sp_config = sp_localhost_test_idp
+
+    # elif selected_idp == 'idp2':
+    #     sp_config = SAMLCLiENT for idp2
+
     try:
-        _, response_binding = sp.config.getattr("endpoints", "sp")[
+        _, response_binding = sp_config.config.getattr("endpoints", "sp")[
             "assertion_consumer_service"
         ][0]
         relay_state = rndstr()
-        entity_id = get_idp_entity_id()
-        _, binding, http_args = sp.prepare_for_negotiated_authenticate(
+        entity_id = get_idp_entity_id(selected_idp)
+        _, binding, http_args = sp_config.prepare_for_negotiated_authenticate(
             entityid=entity_id,
             response_binding=response_binding,
             relay_state=relay_state,
@@ -782,13 +813,14 @@ def idp_login():
     except (NameError, AttributeError):
         return render_template('errors/403.html'), 403
 
-@APP.route("/acs/post", methods=['POST'])
-def acs_post():
-    """Handle the SAML authentication response received via POST request."""
+
+@APP.route("localhost_test_idp/acs/post/", methods=['POST'])
+def localhost_test_idp_acs_post():
+    """Handle the SAML authentication response received via POST request from localhost_test_idp."""
     try:
         outstanding_queries = {}
         binding = BINDING_HTTP_POST
-        authn_response = sp.parse_authn_request_response(
+        authn_response = sp_localhost_test_idp.parse_authn_request_response(
             request.form["SAMLResponse"], binding, outstanding=outstanding_queries
         )
         email = authn_response.ava["email"][0]
@@ -798,20 +830,18 @@ def acs_post():
         token = generate_confirmation_token(email)
 
         if not user:
-            user = User(email, username, password=token, confirmed=False, confirmed_on=None, logged_by_idp=True)
+            user = User(email, username, password=token, confirmed=False, confirmed_on=None,
+                        authentication_backend='localhost_test_idp')
             db.session.add(user)
             db.session.commit()
 
-        elif user.logged_by_idp is False:
-            user.logged_by_idp = True
+        else :
+            user.authentication_backend = 'localhost_test_idp'
             user.hash_password(token)
             db.session.add(user)
             db.session.commit()
-        else:
-            user.hash_password(token)
-            db.session.commit()
 
-        return render_template('user/idp_login_success.html', token=token), 200
+        return render_template('idp/idp_login_success.html', token=token), 200
 
     except (NameError, AttributeError, KeyError) :
         return render_template('errors/500.html'), 500
@@ -832,21 +862,19 @@ def idp_login_auth():
                 return json.dumps({
                 "success": True,
                 'token': token,
-                'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}})
-            else:
-                return jsonify({"success": False}), 401
-        else:
+                'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}})            
             return jsonify({"success": False}), 401
+        return jsonify({"success": False}), 401
     except TypeError:
         return jsonify({"success": False}), 401
 
 
-@APP.route("/acs/redirect", methods=["GET"])
-def acs_redirect():
-    """Handle the SAML authentication response received via redirect."""
+@APP.route("localhost_test_idp/acs/redirect", methods=["GET"])
+def localhost_test_idp_acs_redirect():
+    """Handle the SAML authentication response received via redirect from localhost_test_idp."""
     outstanding_queries = {}
     binding = BINDING_HTTP_REDIRECT
-    authn_response = sp.parse_authn_request_response(
+    authn_response = sp_localhost_test_idp.parse_authn_request_response(
         request.form["SAMLResponse"], binding, outstanding=outstanding_queries
     )
     return str(authn_response.ava)
