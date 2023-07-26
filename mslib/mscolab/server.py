@@ -84,11 +84,8 @@ except ImportError as ex:
 if mscolab_settings.IDP_ENABLED :
     with open("mslib/mscolab/app/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
         yaml_data = yaml.safe_load(fobj)
-    if os.path.exists("mslib/mscolab/app/idp.xml"):
-        yaml_data["config"]["sp_config"]["metadata"]["local"] = ["mslib/mscolab/app/idp.xml"]
-    else:
-        yaml_data["config"]["sp_config"]["metadata"]["local"] = []
-        warnings.warn("idp.xml file does not exists !")
+    if not os.path.exists(yaml_data["config"]["sp_config"]["metadata"]["local"][0]):
+        sys.exit("idp.xml file does not exists !")
 
     sp_config = SPConfig().load(yaml_data["config"]["sp_config"])
     sp = Saml2Client(sp_config)
