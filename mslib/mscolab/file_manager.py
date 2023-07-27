@@ -62,6 +62,11 @@ class FileManager:
         perm = Permission(user.id, operation_id, "creator")
         db.session.add(perm)
         db.session.commit()
+        # here we can import the permissions from Group file
+        if not path.endswith(mscolab_settings.GROUP_POSTFIX):
+            import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
+            if import_op is not None:
+                self.import_permissions(import_op.id, operation_id, user.id)
         data = fs.open_fs(self.data_dir)
         data.makedir(operation.path)
         operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
@@ -420,6 +425,17 @@ class FileManager:
             if Permission.query.filter_by(u_id=u_id, op_id=op_id).first() is None:
                 new_permissions.append(Permission(u_id, op_id, access_level))
         db.session.add_all(new_permissions)
+        operation = Operation.query.filter_by(id=op_id).first()
+        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+            # the members of this gets added to all others of same category
+            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            # all operation with that category
+            ops_category = Operation.query.filter_by(category=category)
+            new_permissions = []
+            for ops in ops_category:
+                if not ops.path.endswith(mscolab_settings.GROUP_POSTFIX):
+                    new_permissions.append(Permission(u_id, ops.id, access_level))
+                db.session.add_all(new_permissions)
         try:
             db.session.commit()
             return True
@@ -437,6 +453,17 @@ class FileManager:
             .filter(Permission.u_id.in_(u_ids))\
             .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
 
+        operation = Operation.query.filter_by(id=op_id).first()
+        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+            # the members of this gets added to all others of same category
+            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            # all operation with that category
+            ops_category = Operation.query.filter_by(category=category)
+            for ops in ops_category:
+                Permission.query \
+                    .filter(Permission.op_id == ops.id) \
+                    .filter(Permission.u_id.in_(u_ids)) \
+                    .update({Permission.access_level: new_access_level}, synchronize_session='fetch')
         try:
             db.session.commit()
             return True
@@ -466,6 +493,18 @@ class FileManager:
             .filter(Permission.op_id == op_id) \
             .filter(Permission.u_id.in_(u_ids)) \
             .delete(synchronize_session='fetch')
+
+        operation = Operation.query.filter_by(id=op_id).first()
+        if operation.path.endswith(mscolab_settings.GROUP_POSTFIX):
+            # the members of this gets added to all others of same category
+            category = operation.path.split(mscolab_settings.GROUP_POSTFIX)[0]
+            # all operation with that category
+            ops_category = Operation.query.filter_by(category=category)
+            for ops in ops_category:
+                Permission.query \
+                    .filter(Permission.op_id == ops.id) \
+                    .filter(Permission.u_id.in_(u_ids)) \
+                    .delete(synchronize_session='fetch')
 
         db.session.commit()
         return True

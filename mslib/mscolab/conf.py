@@ -69,6 +69,13 @@ class default_mscolab_settings:
       </ListOfWaypoints>
     </FlightTrack>
     """
+
+    # looks for a given category forn a operation ending with GROUP_POSTFIX
+    # e.g. category = Tex will look for TexGroup
+    # all users in that Group are set to the operations of that category
+    # having the roles in the TexGroup
+    GROUP_POSTFIX = "Group"
+
     enable_basic_http_authentication = False
 
     # enable verification by Mail
