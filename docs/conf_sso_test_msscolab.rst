@@ -29,7 +29,7 @@ Generate Keys and Certificates
 
 This involves generating both .key files and .crt files for both the Identity provider and mscolab server. You can create these simply by running
 
-`python mslib/mscolab/mscolab.py sso_conf --init_sso_crts`
+`$ python mslib/mscolab/mscolab.py sso_conf --init_sso_crts`
 
 In some cases, if you set `IDP_ENABLED = True` without certificates, this will not execute. So, make sure to set `IDP_ENABLED = False` before executing this
 
@@ -49,7 +49,7 @@ This involves generating necessary metadata files for both the identity provider
 
 Before executing this, you should enable IDP login as described in the third step(Enable IDP login).
 
-`python mslib/mscolab/mscolab.py sso_conf --init_sso_metadata`
+`$ python mslib/mscolab/mscolab.py sso_conf --init_sso_metadata`
 
 
 Start Identity provider
@@ -57,7 +57,15 @@ Start Identity provider
 
 Once you setted certificates and metada files you can start mscolab server and local identity provider. To start local identity provider, simpy execute
 
-``$ python mslib/idp/idp.py idp_conf``
+`$ python mslib/idp/idp.py idp_conf`
+
+
+Restart the mscolab Server
+--------------------------
+
+Start mscolab server
+
+`$ python mslib/mscolab/mscolab.py start`
 
 
 Testing Single Sign-On (SSO) process
