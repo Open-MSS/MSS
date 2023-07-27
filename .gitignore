@@ -32,4 +32,3 @@ instance/
 mslib/idp/modules
 mslib/idp/sp.xml
 mslib/auth_client_sp/idp.xml
-mslib/mscolab/app/idp.xml
