@@ -7,6 +7,32 @@ Here is documentation that explains the configuration of the MSS Colab Server wi
 Getting started
 ---------------
 
+To set up a local identity provider with the mscolab server, you'll first need to generate the required keys and certificates for both the Identity Provider and the mscolab server. Follow these steps to configure the system:
+
+    1. Initial Steps
+    2. Generate Keys and Certificates
+    3. Enable IDP Login
+    4. Generate Metadata Files
+    5. Start the Identity Provider
+    6. Restart the mscolab Server
+    7. Test the Single Sign-On (SSO) Process
+
+
+Initial Steps
+-------------
+Before getting started, you should correctly activate the environments, set the correct Python path, and be in the correct directory (`$ cd MSS`), as explained in the mss instructions : https://open-mss.github.io/develop/Setup-Instructions
+
+
+
+Generate Keys and Certificates
+------------------------------
+
+This involves generating both .key files and .crt files for both the Identity provider and mscolab server. You can create these simply by running
+
+`python mslib/mscolab/mscolab.py sso_conf --init_sso_crts`
+
+In some cases, if you set `IDP_ENABLED = True` without certificates, this will not execute. So, make sure to set `IDP_ENABLED = False` before executing this
+
 
 Enable IDP login
 ----------------
@@ -16,73 +42,23 @@ To enable identity provider-based login, set `IDP_ENABLED = True` in the `mslib/
 After enabling the IDP, the next step is to add the `CONFIGURED_IDPS` dictionary. This dictionary should include keys for each enabled Identity Provider, represented by `idp_identity_name`, and their corresponding `idp_name`. Once this dictionary is set up, it should be used to update various functionalities of the mscolab server, such as the SAML2Client config .yml file, ensuring proper integration with the enabled IDPs.
 
 
-TLS Setup
----------
+Generate metadata files
+-----------------------
 
-**Setting Up Certificates for Local Development**
+This involves generating necessary metadata files for both the identity provider and the service provider. You can generate them by simply running the appropriate command.
 
+Before executing this, you should enable IDP login as described in the third step(Enable IDP login).
 
-To set up the certificates for local development, follow these steps:
-
-1. Generate a primary key `(.key)` and a certificate `(.crt)` files using any certificate authority tool. You will need one for the MSS Colab server and another one for the identity provider. Make sure to name certificate of identity provider as `crt_idp.crt` and key as `key_idp.key`. Also name the certificate of msss colab server as `crt_sp.crt` and key as the `key_sp.key`.
-
-    Here's how you can generate self-signed certificates and private keys using OpenSSL:
-    
-    * Generate a self-signed certificate and private key for the MSS Colab server
-    
-        ``openssl req -newkey rsa:4096 -keyout key_sp.key -nodes -x509 -days 365 -out crt_sp.crt``
-    
-    * Generate a self-signed certificate and private key for the Identity Provider (IdP)
-    
-        ``openssl req -newkey rsa:4096 -keyout key_idp.key -nodes -x509 -days 365 -out crt_idp.crt``
-
-2. Copy and paste the certificate and private key into the following file directories:
-
-    - Key and certificate of MSS Colab Server: ``MSS/mslib/mscolab/app/``
-
-    - key and certificate of Identity Provider: ``MSS/mslib/idp/``
-
-    Make sure to insert the key along with its corresponding certificate.
-
-Configuring the MSS Colab server and Identity Provider
-------------------------------------------------------
-
-First, generate the metadata file (https://pysaml2.readthedocs.io/en/latest/howto/config.html#metadata) for the MSS Colab server. To do that, start the Flask application and download the metadata file by following these steps:
-
-1. Navigate to the home directory, ``/MSS/``.
-2. Start the MSS Colab Server by running ``$ python mslib/mscolab/mscolab.py start`` The application will listen on port : 8083.
-3. Download the metadata file by executing the command: ``curl http://localhost:8083/metadata/ -o sp.xml``.
-4. Move generated ``sp.xml`` to dir ``MSS/mslib/idp/``.
-
-After that, generate the idp.xml file, copy it over to the Service Provider (SP), and restart MSS Coalb Server:
-
-5. Go to the directory ``MSS/``.
-6. Run the command
-    ``$ make_metadata mslib/idp/idp_conf.py > mslib/mscolab/app/idp.xml``
-
-    This executes the make_metadata tool from pysaml2, then saved XML content to the specified output file in the service provider dir: ``mslib/mscolab/app/idp.xml``.
+`python mslib/mscolab/mscolab.py sso_conf --init_sso_metadata`
 
 
-Running the Application After Configuration
--------------------------------------------
+Start Identity provider
+-----------------------
 
-Once you have successfully configured the MSS Colab Server and the Identity Provider, you don't need to follow the above instructions again. To start the application after the initial configuration, follow these steps:
+Once you setted certificates and metada files you can start mscolab server and local identity provider. To start local identity provider, simpy execute
 
-1. Since here we changing Database modeling you need to make necessary Database migrations before running the mscolab server.
+``$ python mslib/idp/idp.py idp_conf``
 
-2. Start the MSS Colab server:
-
- * Navigate to the directory ``MSS/`` and run
-
-    ``$ python mslib/mscolab/mscolab.py start``
-
-3. Start the Identity Provider:
-
- * Navigate to the directory ``MSS/`` and run
-
-    ``$ python mslib/idp/idp.py idp_conf``
-
-By following the provided instructions, you will be able to set up and configure both the Identity Provider and MSS colab server for testing the SSO process.
 
 Testing Single Sign-On (SSO) process
 ------------------------------------

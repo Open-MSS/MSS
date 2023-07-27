@@ -84,6 +84,15 @@ except ImportError as ex:
 if mscolab_settings.IDP_ENABLED :
     with open("mslib/mscolab/app/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
         yaml_data = yaml.safe_load(fobj)
+
+    # go through configured IDPs and set conf file paths for particular files
+    for configured_idp in mscolab_settings.CONFIGURED_IDPS:
+        # set CRTs and metadata paths for the localhost_test_idp
+        if 'localhost_test_idp' in configured_idp['idp_identity_name']:
+            yaml_data["config"]["localhost_test_idp"]["key_file"] = f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'
+            yaml_data["config"]["localhost_test_idp"]["cert_file"] = f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'
+            yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'
+
     if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
         yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
         warnings.warn("idp.xml file does not exists !")

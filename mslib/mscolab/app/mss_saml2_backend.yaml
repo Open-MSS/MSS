@@ -11,15 +11,15 @@ config:
   localhost_test_idp:
     name: "MSS Colab Server - Testing IDP(localhost)"
     description: "MSS Collaboration Server with Testing IDP(localhost)"
-    key_file: mslib/mscolab/app/key_sp.key
-    cert_file: mslib/mscolab/app/crt_sp.crt
+    key_file: path/to/key_sp.key # Will be set from the mscolab server
+    cert_file: path/to/crt_sp.crt # Will be set from the mscolab server
     organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
     contact_person:
     - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
     - {contact_type: support, email_address: support@example.com, given_name: Support}
 
     metadata:
-      local: [mslib/mscolab/app/idp.xml]
+      local: [path/to/idp.xml] # Will be set from the mscolab server
 
     entityid: http://localhost:5000/proxy_saml2_backend.xml
     accepted_time_diff: 60
@@ -115,4 +115,3 @@ config:
   #         - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
   #       name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
   #       name_id_format_allow_create: true
-  

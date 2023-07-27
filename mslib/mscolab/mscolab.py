@@ -32,6 +32,8 @@ import os
 import shutil
 import sys
 import secrets
+import subprocess
+import time
 
 from mslib import __version__
 from mslib.mscolab.conf import mscolab_settings
@@ -92,6 +94,72 @@ def handle_db_seed():
     seed_data()
     print("Database seeded successfully!")
 
+def handle_mscolab_certificate_init():
+    print('generating CRTs for the mscolab server......')
+    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key -nodes -x509 -days 365 -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"
+    os.system(cmd)
+    print('CRTs generated successfully for the mscolab server......')
+
+def handle_local_idp_certificate_init():
+    print('generating CRTs for the local identity provider......')
+    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key -nodes -x509 -days 365 -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"
+    os.system(cmd)
+    print('crts generated successfully for the mscolab local identity provider......')
+
+def handle_mscolab_metadata_init():
+    '''
+        This will generate necessary metada data file for sso in mscolab through localhost idp
+
+        Before running this function:
+        - Ensure that IDP_ENABLED is set to True.
+        - Generate the necessary keys and certificates and configure them in the .yaml 
+        file for the local IDP.
+    '''
+    print('generating metadata file for the mscolab server')
+
+    cmd ="python mslib/mscolab/mscolab.py start"
+    subprocess.Popen(cmd, shell=True)
+
+    # Add a small delay to allow the server to start up
+    time.sleep(10)
+
+    cmd_curl = f"curl http://localhost:8083/metadata/ -o {mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"
+    os.system(cmd_curl)
+
+    print('mscolab metadata file generated succesfully')
+
+
+def handle_local_idp_metadata_init():
+    print('generating metadata for localhost identity provider')
+
+    cmd = f"make_metadata mslib/idp/idp_conf.py > {mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"
+    os.system(cmd)
+
+    print('idp metadata file generated succesfully')
+
+def handle_sso_crts_init():
+    """
+        This will generate necessary CRTs files for sso in mscolab through localhost idp
+    """
+    print("mscolab sso conf initiating......")
+    create_files()
+    handle_mscolab_certificate_init()
+    handle_local_idp_certificate_init()
+    print('CRTs generated successfully')
+
+
+def handle_sso_metadata_init():
+    print('generating metadata files.......')
+    handle_mscolab_metadata_init()
+    handle_local_idp_metadata_init()
+    print("ALl necessary metadata file generated successfully")
+
+    # Get the process group ID of the current process
+    pgid = os.getpgid(0)
+
+    # Kill the whole terminal by sending a SIGKILL signal to the process group
+    os.killpg(pgid, 9)
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -118,6 +186,12 @@ def main():
     database_parser.add_argument("--default_operation", help="adds all users into a default TEMPLATE operation",
                                  action="store_true")
     database_parser.add_argument("--add_all_to_all_operation", help="adds all users into all other operations",
+                                 action="store_true")
+    sso_conf_parser = subparsers.add_parser("sso_conf", help="single sign on process configurations")
+    sso_conf_parser = sso_conf_parser.add_mutually_exclusive_group(required=True)
+    sso_conf_parser.add_argument("--init_sso_crts",help="Generate all the essential CRTs required for the Single Sign-On process using the local Identity Provider",
+                                 action="store_true")
+    sso_conf_parser.add_argument("--init_sso_metadata",help="Generate all the essential metadata files required for the Single Sign-On process using the local Identity Provider",
                                  action="store_true")
 
     args = parser.parse_args()
@@ -186,6 +260,25 @@ def main():
                 for email in args.delete_users_by_file.readlines():
                     delete_user(email.strip())
 
+    elif args.action == "sso_conf":
+        if args.init_sso_crts:
+            handle_sso_crts_init()
+        if args.init_sso_metadata:
+            confirmation = confirm_action(
+                "Are you sure you executed --init_sso_crts before running this? (y/[n]):")
+            if confirmation is True:
+                confirmation = confirm_action(
+                """
+                This will generate necessary metada data file for sso in mscolab through localhost idp
+
+                Before running this function:
+                - Ensure that IDP_ENABLED is set to True.
+                - Generate the necessary keys and certificates and configure them in the .yaml 
+                file for the local IDP.
+                
+                Are you sure you set all correctly as per the documentation? (y/[n]):""")
+                if confirmation is True:
+                    handle_sso_metadata_init()
 
 if __name__ == '__main__':
     main()
