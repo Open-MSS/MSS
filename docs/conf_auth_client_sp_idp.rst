@@ -46,7 +46,6 @@ First, generate the metadata file (https://pysaml2.readthedocs.io/en/latest/howt
 2. Start the Flask application by running ``$ python mslib/auth_client_sp/app/app.py`` The application will listen on port : 5000.
 3. Download the metadata file by executing the command: ``curl http://localhost:5000/metadata/ -o sp.xml``.
 4. Move generated ``sp.xml`` to dir ``MSS/mslib/idp/`` and update path of `["metadata"]["local"]` accordingly.
-    },
 
 After that, generate the idp.xml file, copy it over to the Service Provider (SP), and restart the SP Flask application:
 
