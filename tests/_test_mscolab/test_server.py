@@ -78,7 +78,7 @@ class Test_Server(TestCase):
 
     def test_hello(self):
         with self.app.test_client() as test_client:
-            response = test_client.get('/status')
+            response = test_client.get('/status_auth')
             assert response.status_code == 200
             assert b"Mscolab server" in response.data
 
