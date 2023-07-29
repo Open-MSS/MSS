@@ -868,9 +868,13 @@ def idp_login_auth():
             user = User.query.filter_by(emailid=email).first()
 
             if user is not None:
+                random_token = rndstr()           
+                user.hash_password(random_token)
+                db.session.add(user)
+                db.session.commit()
                 return json.dumps({
                 "success": True,
-                'token': token,
+                'token': random_token,
                 'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}})            
             return jsonify({"success": False}), 401
         return jsonify({"success": False}), 401
