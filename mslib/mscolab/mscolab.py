@@ -96,13 +96,13 @@ def handle_db_seed():
 
 def handle_mscolab_certificate_init():
     print('generating CRTs for the mscolab server......')
-    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key -nodes -x509 -days 365 -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"
+    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"
     os.system(cmd)
     print('CRTs generated successfully for the mscolab server......')
 
 def handle_local_idp_certificate_init():
     print('generating CRTs for the local identity provider......')
-    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key -nodes -x509 -days 365 -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"
+    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"
     os.system(cmd)
     print('crts generated successfully for the mscolab local identity provider......')
 
