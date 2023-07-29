@@ -144,8 +144,8 @@ CONFIG = {
         },
     },
     "debug": 1,
-    "key_file": full_path("./key_idp.key"),
-    "cert_file": full_path("./crt_idp.crt"),
+    "key_file": sso_dir_path("./key_local_idp.key"),
+    "cert_file": sso_dir_path("./crt_local_idp.crt"),
     "metadata": {
         "local": [sso_dir_path("./metadata_sp.xml")],
     },
