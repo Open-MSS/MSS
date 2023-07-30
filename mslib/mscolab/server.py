@@ -893,7 +893,7 @@ def localhost_test_idp_acs_redirect():
 
 def start_server(app, sockio, cm, fm, port=8083):
     create_files()
-    sockio.run(app, port=port, debug=True)
+    sockio.run(app, port=port)
 
 
 def main():
