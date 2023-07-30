@@ -40,8 +40,6 @@ import requests
 import re
 import webbrowser
 import urllib.request
-import requests
-import fs
 
 from fs import open_fs
 from PIL import Image
