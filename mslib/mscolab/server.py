@@ -863,19 +863,17 @@ def idp_login_auth():
         data = request.get_json()
         token = data.get('token')
         email = confirm_token(token, expiration=1200)
-
         if email:
-            user = User.query.filter_by(emailid=email).first()
-
-            if user is not None:
-                random_token = rndstr()           
+            user = check_login(email, token)
+            if user:
+                random_token = rndstr()
                 user.hash_password(random_token)
                 db.session.add(user)
                 db.session.commit()
                 return json.dumps({
                 "success": True,
                 'token': random_token,
-                'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}})            
+                'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}})
             return jsonify({"success": False}), 401
         return jsonify({"success": False}), 401
     except TypeError:
@@ -895,7 +893,7 @@ def localhost_test_idp_acs_redirect():
 
 def start_server(app, sockio, cm, fm, port=8083):
     create_files()
-    sockio.run(app, port=port)
+    sockio.run(app, port=port, debug=True)
 
 
 def main():
