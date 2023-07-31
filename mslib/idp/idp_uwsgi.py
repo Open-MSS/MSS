@@ -74,6 +74,8 @@ from idp_user import EXTRA
 from idp_user import USERS
 from mako.lookup import TemplateLookup
 
+# TODO: avoid global paths as much as possible
+
 logger = logging.getLogger("saml2.idp")
 
 
