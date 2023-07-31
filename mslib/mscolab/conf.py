@@ -88,7 +88,7 @@ class default_mscolab_settings:
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
 
     # enable login by identity provider
-    IDP_ENABLED = False
+    USE_SAML2 = False
 
     # dir where mscolab single sign process files are stored
     MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')

@@ -31,13 +31,13 @@ This involves generating both .key files and .crt files for both the Identity pr
 
 `$ python mslib/mscolab/mscolab.py sso_conf --init_sso_crts`
 
-In some cases, if you set `IDP_ENABLED = True` without certificates, this will not execute. So, make sure to set `IDP_ENABLED = False` before executing this
+In some cases, if you set `USE_SAML2 = True` without certificates, this will not execute. So, make sure to set `USE_SAML2 = False` before executing this
 
 
 Enable IDP login
 ----------------
 
-To enable identity provider-based login, set `IDP_ENABLED = True` in the `mslib/mscolab/conf.py` file of the MSS Colab server.
+To enable identity provider-based login, set `USE_SAML2 = True` in the `mslib/mscolab/conf.py` file of the MSS Colab server.
 
 After enabling the IDP, the next step is to add the `CONFIGURED_IDPS` dictionary. This dictionary should include keys for each enabled Identity Provider, represented by `idp_identity_name`, and their corresponding `idp_name`. Once this dictionary is set up, it should be used to update various functionalities of the mscolab server, such as the SAML2Client config .yml file, ensuring proper integration with the enabled IDPs.
 

@@ -81,7 +81,7 @@ except ImportError as ex:
         __file__ = None
 
 #setup idp login config
-if mscolab_settings.IDP_ENABLED :
+if mscolab_settings.USE_SAML2 :
     with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
         yaml_data = yaml.safe_load(fobj)
 
@@ -278,7 +278,7 @@ def home():
 def hello():
     return json.dumps({
             'message': "Mscolab server",
-            'IDP_ENABLED': mscolab_settings.IDP_ENABLED})
+            'USE_SAML2': mscolab_settings.USE_SAML2})
 
 @APP.route('/token', methods=["POST"])
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
@@ -789,7 +789,7 @@ def available_idps():
     If IDP is enabled, it retrieves the configured IDPs from mscolab_settings.CONFIGURED_IDPS
     and renders the 'idp/available_idps.html' template with the list of configured IDPs.
     """
-    if mscolab_settings.IDP_ENABLED:
+    if mscolab_settings.USE_SAML2:
         configured_idps = mscolab_settings.CONFIGURED_IDPS
         return render_template('idp/available_idps.html', configured_idps=configured_idps), 200   
     return render_template('errors/403.html'), 403
