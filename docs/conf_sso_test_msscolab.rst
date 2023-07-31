@@ -11,7 +11,7 @@ To set up a local identity provider with the mscolab server, you'll first need t
 
     1. Initial Steps
     2. Generate Keys and Certificates
-    3. Enable IDP Login
+    3. Enable USE_SAML2
     4. Generate Metadata Files
     5. Start the Identity Provider
     6. Restart the mscolab Server
@@ -24,22 +24,27 @@ Before getting started, you should correctly activate the environments, set the 
 
 
 
-Generate Keys and Certificates
-------------------------------
+Generate Keys, Certificates, and backend_saml files
+---------------------------------------------------
 
-This involves generating both .key files and .crt files for both the Identity provider and mscolab server. You can create these simply by running
+This involves generating both .key files and .crt files for both the Identity provider and mscolab server and backend_saml.yaml file. 
+
+Before running the command make sure to set
+`USE_SAML2 = False` 
+In some cases, if you set `USE_SAML2 = True` without certificates, this will not execute. So, make sure to set `USE_SAML2 = False` before executing the command.
+
+Then you can generate files, simply by running,
 
 `$ python mslib/mscolab/mscolab.py sso_conf --init_sso_crts`
 
-In some cases, if you set `USE_SAML2 = True` without certificates, this will not execute. So, make sure to set `USE_SAML2 = False` before executing this
 
 
-Enable IDP login
+Enable USE_SAML2
 ----------------
 
-To enable identity provider-based login, set `USE_SAML2 = True` in the `mslib/mscolab/conf.py` file of the MSS Colab server.
+To enable saml2 based login (identity provider-based login), set `USE_SAML2 = True` in the `mslib/mscolab/conf.py` file of the MSS Colab server.
 
-After enabling the IDP, the next step is to add the `CONFIGURED_IDPS` dictionary. This dictionary should include keys for each enabled Identity Provider, represented by `idp_identity_name`, and their corresponding `idp_name`. Once this dictionary is set up, it should be used to update various functionalities of the mscolab server, such as the SAML2Client config .yml file, ensuring proper integration with the enabled IDPs.
+After setting the `USE_SAML2`, the next step is to add the `CONFIGURED_IDPS` dictionary. This dictionary should include keys for each enabled Identity Provider, represented by `idp_identity_name`, and their corresponding `idp_name`. Once this dictionary is set up, it should be used to update various functionalities of the mscolab server, such as the SAML2Client config .yml file, ensuring proper integration with the enabled IDPs.
 
 
 Generate metadata files
@@ -47,7 +52,7 @@ Generate metadata files
 
 This involves generating necessary metadata files for both the identity provider and the service provider. You can generate them by simply running the appropriate command.
 
-Before executing this, you should enable IDP login as described in the third step(Enable IDP login).
+Before executing this, you should set `USE_SAML2=True` as described in the third step(USE_SAML2).
 
 `$ python mslib/mscolab/mscolab.py sso_conf --init_sso_metadata`
 
@@ -60,11 +65,21 @@ Once you setted certificates and metada files you can start mscolab server and l
 `$ python mslib/idp/idp.py idp_conf`
 
 
-Restart the mscolab Server
---------------------------
+Start the mscolab Server
+------------------------
 
-Start mscolab server
+Before Starting the mscolab server, make sure to do necessary database migrations.
 
+When this is the first time you setup a mscolab server, you have to initialize the database by
+
+`$ python mslib/mscolab/mscolab.py db --init`
+
+.. note::
+An existing database maybe needs a migration, have a look for this on our documentation.
+for syntax see https://docutils.sourceforge.io/docs/ref/rst/directives.html#hint
+
+
+When migrations done, you can tart mscolab server by.
 `$ python mslib/mscolab/mscolab.py start`
 
 
