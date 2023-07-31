@@ -96,15 +96,155 @@ def handle_db_seed():
 
 def handle_mscolab_certificate_init():
     print('generating CRTs for the mscolab server......')
-    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"
-    os.system(cmd)
-    print('CRTs generated successfully for the mscolab server......')
+
+    try:
+        cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"
+        subprocess.run(cmd, shell=True, check=True)
+        print("generated CRTs for the mscolab server.")
+        return True
+    except subprocess.CalledProcessError as error:
+        print(f"Error while generating CRTs for the mscolab server: {error}")
+        return False
 
 def handle_local_idp_certificate_init():
     print('generating CRTs for the local identity provider......')
-    cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"
-    os.system(cmd)
-    print('crts generated successfully for the mscolab local identity provider......')
+
+    try:
+        cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"
+        subprocess.run(cmd, shell=True, check=True)
+        print("generated CRTs for the local identity provider")
+        return True
+    except subprocess.CalledProcessError as error:
+        print(f"Error while generated CRTs for the local identity provider: {error}")
+        return False
+
+def handle_mscolab_backend_yaml_init():
+    saml_2_backend_yaml_content ="""name: Saml2
+config:
+  entityid_endpoint: true
+  mirror_force_authn: no
+  memorize_idp: no
+  use_memorized_idp_when_force_authn: no
+  send_requester_id: no
+  enable_metadata_reload: no
+
+  # SP Configuration for localhost_test_idp
+  localhost_test_idp:
+    name: "MSS Colab Server - Testing IDP(localhost)"
+    description: "MSS Collaboration Server with Testing IDP(localhost)"
+    key_file: path/to/key_sp.key # Will be set from the mscolab server
+    cert_file: path/to/crt_sp.crt # Will be set from the mscolab server
+    organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
+    contact_person:
+    - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
+    - {contact_type: support, email_address: support@example.com, given_name: Support}
+
+    metadata:
+      local: [path/to/idp.xml] # Will be set from the mscolab server
+
+    entityid: http://localhost:5000/proxy_saml2_backend.xml
+    accepted_time_diff: 60
+    service:
+      sp:
+        ui_info:
+          display_name:
+            - lang: en
+              text: "Open MSS"
+          description:
+            - lang: en
+              text: "Mission Support System"
+          information_url:
+            - lang: en
+              text: "https://open-mss.github.io/about/"
+          privacy_statement_url:
+            - lang: en
+              text: "https://open-mss.github.io/about/"
+          keywords:
+            - lang: se
+              text: ["MSS"]
+            - lang: en
+              text: ["OpenMSS"]
+          logo:
+            text: "https://open-mss.github.io/assets/logo.png"
+            width: "100"
+            height: "100"
+        authn_requests_signed: true
+        want_response_signed: true
+        want_assertion_signed: true
+        allow_unknown_attributes: true
+        allow_unsolicited: true
+        endpoints:
+          assertion_consumer_service:
+            - [http://localhost:8083/localhost_test_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
+            - [http://localhost:8083/localhost_test_idp/acs/redirect, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
+          discovery_response:
+          - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
+        name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
+        name_id_format_allow_create: true
+
+
+  # # SP Configuration for IDP 2
+  # sp_config_idp_2:
+  #   name: "MSS Colab Server - Testing IDP(localhost)"
+  #   description: "MSS Collaboration Server with Testing IDP(localhost)"
+  #   key_file: mslib/mscolab/app/key_sp.key
+  #   cert_file: mslib/mscolab/app/crt_sp.crt
+  #   organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
+  #   contact_person:
+  #   - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
+  #   - {contact_type: support, email_address: support@example.com, given_name: Support}
+
+  #   metadata:
+  #     local: [mslib/mscolab/app/idp.xml]
+
+  #   entityid: http://localhost:5000/proxy_saml2_backend.xml
+  #   accepted_time_diff: 60
+  #   service:
+  #     sp:
+  #       ui_info:
+  #         display_name:
+  #           - lang: en
+  #             text: "Open MSS"
+  #         description:
+  #           - lang: en
+  #             text: "Mission Support System"
+  #         information_url:
+  #           - lang: en
+  #             text: "https://open-mss.github.io/about/"
+  #         privacy_statement_url:
+  #           - lang: en
+  #             text: "https://open-mss.github.io/about/"
+  #         keywords:
+  #           - lang: se
+  #             text: ["MSS"]
+  #           - lang: en
+  #             text: ["OpenMSS"]
+  #         logo:
+  #           text: "https://open-mss.github.io/assets/logo.png"
+  #           width: "100"
+  #           height: "100"
+  #       authn_requests_signed: true
+  #       want_response_signed: true
+  #       want_assertion_signed: true
+  #       allow_unknown_attributes: true
+  #       allow_unsolicited: true
+  #       endpoints:
+  #         assertion_consumer_service:
+  #           - [http://localhost:8083/idp2/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
+  #           - [http://localhost:8083/idp2/acs/redirect, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
+  #         discovery_response:
+  #         - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
+  #       name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
+  #       name_id_format_allow_create: true
+"""
+    try:
+        file_path=f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"
+        with open(file_path, "w", encoding="utf-8") as file:
+            file.write(saml_2_backend_yaml_content)
+        return True
+    except (FileNotFoundError,PermissionError) as error:
+        print(f"Error while generated backend .yaml for the local mscolabserver: {error}")
+        return False
 
 def handle_mscolab_metadata_init():
     '''
@@ -117,48 +257,75 @@ def handle_mscolab_metadata_init():
     '''
     print('generating metadata file for the mscolab server')
 
-    cmd ="python mslib/mscolab/mscolab.py start"
-    subprocess.Popen(cmd, shell=True)
+    try:
+        process = subprocess.Popen(["python", "mslib/mscolab/mscolab.py", "start"])
 
-    # Add a small delay to allow the server to start up
-    time.sleep(10)
+        # Add a small delay to allow the server to start up
+        time.sleep(10)
 
-    cmd_curl = f"curl http://localhost:8083/metadata/ -o {mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"
-    os.system(cmd_curl)
+        cmd_curl = f"curl http://localhost:8083/metadata/ -o {mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"
+        subprocess.run(cmd_curl, shell=True, check=True)
+        process.kill()
+        print('mscolab metadata file generated succesfully')
+        return True
 
-    print('mscolab metadata file generated succesfully')
+    except subprocess.CalledProcessError as error:
+        print(f"Error while generating metadata file for the mscolab server: {error}")
+        return False
 
 
 def handle_local_idp_metadata_init():
     print('generating metadata for localhost identity provider')
 
-    cmd = f"make_metadata mslib/idp/idp_conf.py > {mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"
-    os.system(cmd)
-
-    print('idp metadata file generated succesfully')
+    try:
+        if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
+            os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
+        cmd = f"make_metadata mslib/idp/idp_conf.py > {mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"
+        subprocess.run(cmd, shell=True, check=True)
+        print("idp metadata file generated succesfully")
+        return True
+    except subprocess.CalledProcessError as error:
+        # Delete the idp.xml file when the subprocess fails
+        if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
+            os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
+        print(f"Error while generating metadata for localhost identity provider: {error}")
+        return False
 
 def handle_sso_crts_init():
     """
         This will generate necessary CRTs files for sso in mscolab through localhost idp
     """
-    print("mscolab sso conf initiating......")
+    print("\n\nmscolab sso conf initiating......")
+    if os.path.exists(mscolab_settings.MSCOLAB_SSO_DIR):
+        shutil.rmtree(mscolab_settings.MSCOLAB_SSO_DIR)
     create_files()
-    handle_mscolab_certificate_init()
-    handle_local_idp_certificate_init()
-    print('CRTs generated successfully')
+    if not handle_mscolab_certificate_init():
+        print('Error while handling mscolab certificate.')
+        return
+
+    if not handle_local_idp_certificate_init():
+        print('Error while handling local idp certificate.')
+        return
+
+    if not handle_mscolab_backend_yaml_init():
+        print('Error while handling mscolab backend YAML.')
+        return
+
+    print('\n\nAll CRTs and mscolab backend saml files generated successfully !')
 
 
 def handle_sso_metadata_init():
-    print('generating metadata files.......')
-    handle_mscolab_metadata_init()
-    handle_local_idp_metadata_init()
-    print("ALl necessary metadata file generated successfully")
+    print('\n\ngenerating metadata files.......')
+    if not handle_mscolab_metadata_init():
+        print('Error while handling mscolab metadata.')
+        return
 
-    # Get the process group ID of the current process
-    pgid = os.getpgid(0)
-
-    # Kill the whole terminal by sending a SIGKILL signal to the process group
-    os.killpg(pgid, 9)
+    if not handle_local_idp_metadata_init():
+        print('Error while handling idp metadata.')
+        return
+    
+    print("\n\nALl necessary metadata files generated successfully")
+    
 
 
 def main():
@@ -262,7 +429,10 @@ def main():
 
     elif args.action == "sso_conf":
         if args.init_sso_crts:
-            handle_sso_crts_init()
+            confirmation = confirm_action(
+                "This will reset and initiation all CRTs and SAML yaml file as default. Are you sure to continue? (y/[n]):")
+            if confirmation is True:
+                handle_sso_crts_init()
         if args.init_sso_metadata:
             confirmation = confirm_action(
                 "Are you sure you executed --init_sso_crts before running this? (y/[n]):")

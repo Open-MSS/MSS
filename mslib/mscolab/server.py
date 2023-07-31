@@ -33,10 +33,10 @@ import secrets
 import random
 import string
 import warnings
+import sys
 import fs
 import os
 import yaml
-import fs
 import socketio
 import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer, BadSignature
@@ -51,7 +51,7 @@ from werkzeug.utils import secure_filename
 from saml2.config import SPConfig
 from saml2.client import Saml2Client
 from saml2.metadata import create_metadata_string
-from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, SAMLError
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Change, MessageType, User, Operation, db
@@ -82,7 +82,7 @@ except ImportError as ex:
 
 #setup idp login config
 if mscolab_settings.IDP_ENABLED :
-    with open("mslib/mscolab/app/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
+    with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
         yaml_data = yaml.safe_load(fobj)
 
     # go through configured IDPs and set conf file paths for particular files
@@ -95,11 +95,15 @@ if mscolab_settings.IDP_ENABLED :
 
     if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
         yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
-        warnings.warn("idp.xml file does not exists !")
+        warnings.warn("idp.xml file does not exists ! Ignore this warning when you initializeing metadata.")
 
     # configuration localhost_test_idp Saml2Client
-    localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
-    sp_localhost_test_idp = Saml2Client(localhost_test_idp)
+    try:
+        localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
+        sp_localhost_test_idp = Saml2Client(localhost_test_idp)
+    except SAMLError:
+        warnings.warn("Invalid Saml2Client Config ! Please configure with valid CRTs/metadata and try again.")
+        sys.exit()
 
 # setup http auth
 if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
