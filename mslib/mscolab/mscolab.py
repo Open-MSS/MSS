@@ -118,7 +118,7 @@ def handle_mscolab_metadata_init():
     print('generating metadata file for the mscolab server')
 
     cmd ="python mslib/mscolab/mscolab.py start"
-    subprocess.Popen(cmd, shell=True)
+    subprocess.Popen(["python", "mslib/mscolab/mscolab.py", "start"])
 
     # Add a small delay to allow the server to start up
     time.sleep(10)
