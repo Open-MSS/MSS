@@ -35,7 +35,7 @@ import secrets
 
 from mslib import __version__
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation,\
+from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
