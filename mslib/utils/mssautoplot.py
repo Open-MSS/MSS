@@ -289,7 +289,7 @@ class LinearViewPlotting(Plotting):
 
                 xmls = wms.getmap(**kwargs)
 
-                if not type(xmls) == 'list':
+                if not isinstance(xmls, list):
                     xmls = [xmls]
 
                 xml_objects = []
