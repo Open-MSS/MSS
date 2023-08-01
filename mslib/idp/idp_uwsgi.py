@@ -74,8 +74,9 @@ from idp_user import EXTRA
 from idp_user import USERS
 from mako.lookup import TemplateLookup
 
-# TODO: avoid global paths as much as possible
 
+#  ToDo refactor, Try to avoid global as much as possible, 
+# See discussion in https://github.com/Open-MSS/MSS/pull/1818#issuecomment-1658068466
 logger = logging.getLogger("saml2.idp")
 
 

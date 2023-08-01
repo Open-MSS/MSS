@@ -231,6 +231,8 @@ def verify_user(func):
                 return func(*args, **kwargs)
     return wrapper
 
+# ToDo refactor, have also a look on secrets? see discussion 
+# in https://github.com/Open-MSS/MSS/pull/1818#discussion_r1270701658
 def rndstr(size=16, alphabet=""):
     """
     Returns a string of random ascii characters or digits
