@@ -268,9 +268,9 @@ def user_register_handler():
                 html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
                 send_email(email, subject, html)
-            return jsonify(result), status_code
     except TypeError:
-        return jsonify({"success": False}), 401
+        result, status_code = {"success": False}, 401
+    return jsonify(result), status_code
 
 
 @APP.route('/confirm/<token>')
@@ -513,12 +513,11 @@ def set_last_used():
 def update_last_used():
     operations = Operation.query.filter().all()
     for operation in operations:
-        if operation.last_used is not None:
-            days_ago = (datetime.datetime.utcnow() - operation.last_used).days
-            if days_ago > ARCHIVE_THRESHOLD:
-                operation.active = False
-            else:
-                operation.active = True
+        if operation.last_used is not None and \
+                (datetime.datetime.utcnow() - operation.last_used).days > 30:
+            operation.active = False
+        else:
+            operation.active = True
     db.session.commit()
     return jsonify({"success": True}), 200
 

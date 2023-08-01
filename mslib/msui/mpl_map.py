@@ -811,13 +811,13 @@ class SatelliteOverpassPatch:
         # Draw text labels.
         self.texts.append(self.map.ax.text(sat[0, 0], sat[0, 1],
                                            self.utc[0].strftime("%H:%M:%S"),
-                                           zorder=10,
+                                           zorder=10, clip_on=True,
                                            bbox=dict(facecolor='white',
                                                      alpha=0.5,
                                                      edgecolor='none')))
         self.texts.append(self.map.ax.text(sat[-1, 0], sat[-1, 1],
                                            self.utc[-1].strftime("%H:%M:%S"),
-                                           zorder=10,
+                                           zorder=10, clip_on=True,
                                            bbox=dict(facecolor='white',
                                                      alpha=0.5,
                                                      edgecolor='none')))
