@@ -75,11 +75,11 @@ When this is the first time you setup a mscolab server, you have to initialize t
 `$ python mslib/mscolab/mscolab.py db --init`
 
 .. note::
-An existing database maybe needs a migration, have a look for this on our documentation.
-for syntax see https://docutils.sourceforge.io/docs/ref/rst/directives.html#hint
+   An existing database maybe needs a migration, have a look for this on our documentation.
 
+   https://mss.readthedocs.io/en/stable/mscolab.html#data-base-migration
 
-When migrations done, you can tart mscolab server by.
+When migrations done, you can start mscolab server by.
 `$ python mslib/mscolab/mscolab.py start`
 
 
