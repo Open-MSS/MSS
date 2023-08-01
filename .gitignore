@@ -2,8 +2,6 @@
 .idea/
 .vscode/
 .DS_Store
-*.key
-*.crt
 *.pyc
 *.swp
 *.patch
@@ -30,5 +28,3 @@ tutorials/cursor_image.png
 __pycache__/
 instance/
 mslib/idp/modules
-mslib/idp/sp.xml
-mslib/auth_client_sp/idp.xml

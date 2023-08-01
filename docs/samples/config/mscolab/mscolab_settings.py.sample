@@ -71,4 +71,4 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 # enable login by identity provider
-IDP_ENABLED = False
+USE_SAML2 = False

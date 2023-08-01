@@ -40,6 +40,11 @@ from saml2.sigver import get_xmlsec_binary
 
 XMLSEC_PATH = get_xmlsec_binary()
 
+# CRTs and metadata files can be generated through the mscolab server. if configured that way CRTs DIRs should be same in both IDP and mscolab server.
+BASE_DIR = os.path.expanduser("~")
+DATA_DIR = os.path.join(BASE_DIR, "colabdata")
+MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
+
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -47,6 +52,10 @@ def full_path(local_file):
     """Return the full path by joining the BASEDIR and local_file."""
 
     return os.path.join(BASEDIR, local_file)
+
+def sso_dir_path(local_file):
+    """Return the full path by joining the MSCOLAB_SSO_DIR and local_file."""
+    return os.path.join(MSCOLAB_SSO_DIR, local_file)
 
 HOST = 'localhost'
 PORT = 8088
@@ -59,8 +68,8 @@ else:
     BASE = f"http://{HOST}:{PORT}"
 
 # HTTPS cert information
-SERVER_CERT = "mslib/idp/crt_idp.crt"
-SERVER_KEY = "mslib/idp/key_idp.key"
+SERVER_CERT = f"{MSCOLAB_SSO_DIR}/crt_local_idp.crt"
+SERVER_KEY = f"{MSCOLAB_SSO_DIR}/key_local_idp.key"
 CERT_CHAIN = ""
 SIGN_ALG = None
 DIGEST_ALG = None
@@ -129,16 +138,22 @@ CONFIG = {
                     #"entity_categories": ["swamid", "edugain"]
                 },
             },
+            # ToDo refactor, Could we also move the idp/modules to the colabdata? For what are they needed?
+            # see discussion in https://github.com/Open-MSS/MSS/pull/1818#pullrequestreview-1554358384
+
+            # ToDo refactor,  Is this token needed ? see discussion
+            # in https://github.com/Open-MSS/MSS/pull/1818#issuecomment-1658030366
+
             "subject_data": "./idp.subject",
             "name_id_format": [NAMEID_FORMAT_TRANSIENT,
                                NAMEID_FORMAT_PERSISTENT]
         },
     },
     "debug": 1,
-    "key_file": full_path("./key_idp.key"),
-    "cert_file": full_path("./crt_idp.crt"),
+    "key_file": sso_dir_path("./key_local_idp.key"),
+    "cert_file": sso_dir_path("./crt_local_idp.crt"),
     "metadata": {
-        "local": [full_path("./sp.xml")],
+        "local": [sso_dir_path("./metadata_sp.xml")],
     },
     "organization": {
         "display_name": "Organization Display Name",

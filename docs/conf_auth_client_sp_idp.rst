@@ -1,5 +1,5 @@
-Identity Provider and Service Provider for testing the SSO process
-==================================================================
+Identity Provider and Testing Service Provider for testing the SSO process
+==========================================================================
 Both ``auth_client_sp`` and ``idp`` are designed specifically for testing the Single Sign-On (SSO) process using PySAML2. These folders encompass both the Identity Provider (IdP) and Service Provider (SP) implementations, which are utilized on a local server.
 
 The Identity Provider was set up following the official documentation of https://pysaml2.readthedocs.io/en/latest/, along with examples provided in the repository. Metadata YAML files will generate using the built-in tools of PySAML2. Actual key and certificate files can be used in when actual implementation. Please note that this both identity provider(IDP) and service provider(SP) is intended for testing purposes only.
@@ -31,7 +31,9 @@ To set up the certificates for local development, follow these steps:
 
     - Key and certificate of Service Provider: ``MSS/mslib/auth_client_sp/``
 
-    - key and certificate of Identity Provider: ``MSS/mslib/idp/``
+    - key and certificate of Identity Provider:
+        Since mscolab server's path was set as the default path for the key and certificate, you should manually update the path of `SERVER_CERT` with the path of the generated `.crt` file for IDP, and `SERVER_KEY` with the path of the generated `.key` file for the IDP in the file `MSS/mslib/idp/idp_conf.py`
+
 
     Make sure to insert the key along with its corresponding certificate.
 
@@ -43,7 +45,7 @@ First, generate the metadata file (https://pysaml2.readthedocs.io/en/latest/howt
 1. Navigate to the home directory, ``/MSS/``.
 2. Start the Flask application by running ``$ python mslib/auth_client_sp/app/app.py`` The application will listen on port : 5000.
 3. Download the metadata file by executing the command: ``curl http://localhost:5000/metadata/ -o sp.xml``.
-4. Move generated ``sp.xml`` to dir ``MSS/mslib/idp/``.
+4. Move generated ``sp.xml`` to dir ``MSS/mslib/idp/`` and update path of `["metadata"]["local"]` accordingly.
 
 After that, generate the idp.xml file, copy it over to the Service Provider (SP), and restart the SP Flask application:
 

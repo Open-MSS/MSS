@@ -186,12 +186,11 @@ def mscolab_ping_server(port):
     try:
         r = requests.get(url, timeout=(2, 10))
         data = json.loads(r.text)
-        if data['message'] == "Mscolab server" and isinstance(data['IDP_ENABLED'], bool):
+        if data['message'] == "Mscolab server" and isinstance(data['USE_SAML2'], bool):
             return True
     except requests.exceptions.ConnectionError:
         return False
     return False
-
 
 def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=10):
     handle_db_init()
