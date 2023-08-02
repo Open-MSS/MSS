@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.config
-    ~~~~~~~~~~~~~~~~
+    mslib.utils.migration.config_before_nine
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Collection of functions all around config handling.
+    Collection of functions all around config handling before version 9.0.0
 
     This file is part of MSS.
 
@@ -41,7 +41,7 @@ from mslib.msui import constants
 from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 
-class MSUIDefaultConfig:
+class MSUIDefaultConfig(object):
     """Central configuration for the Mission Support System User Interface
        Application (msui).
 
@@ -127,6 +127,9 @@ class MSUIDefaultConfig:
     default_MSCOLAB = [
         "http://localhost:8083",
     ]
+
+    # mail address to sign in
+    MSCOLAB_mailid = ""
 
     # category for MSC operations
     MSCOLAB_category = "default"
@@ -235,6 +238,7 @@ class MSUIDefaultConfig:
         'num_labels',
         'num_interpolation_points',
         'new_flighttrack_flightlevel',
+        'MSCOLAB_mailid',
         'MSCOLAB_category',
         'mscolab_server_url',
         'wms_cache',
@@ -297,6 +301,7 @@ class MSUIDefaultConfig:
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
         "MSS_auth": "Documentation Required",
+        "MSCOLAB_mailid": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
         "wms_cache": "Documentation Required",

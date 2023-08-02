@@ -230,7 +230,41 @@ Save a flight track to name it.</string>
            <property name="bottomMargin">
             <number>8</number>
            </property>
-           <item row="10" column="1">
+           <item row="6" column="0" colspan="2">
+            <widget class="QLabel" name="workingStatusLabel">
+             <property name="text">
+              <string>No operations selected</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0" colspan="2">
+            <widget class="QLabel" name="activeOperationDesc">
+             <property name="text">
+              <string>Select Operation to View Description</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="activeOperationsLabel">
+             <property name="text">
+              <string>Operations</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="0">
+            <widget class="QCheckBox" name="workLocallyCheckbox">
+             <property name="toolTip">
+              <string>Check to work asynchronously from the server</string>
+             </property>
+             <property name="text">
+              <string>Work Asynchronously</string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="1">
             <widget class="QComboBox" name="filterCategoryCb">
              <property name="whatsThis">
               <string>filter by operation category</string>
@@ -254,34 +288,7 @@ Save a flight track to name it.</string>
              </item>
             </widget>
            </item>
-           <item row="10" column="0">
-            <widget class="QLabel" name="categoryLabel">
-             <property name="text">
-              <string>Category:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="inactiveOperationsLabel">
-             <property name="text">
-              <string>Archived Operations</string>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="0" colspan="2">
-            <widget class="QListWidget" name="listInactiveOperationsMSC"/>
-           </item>
-           <item row="7" column="0" colspan="2">
-            <widget class="QLabel" name="workingStatusLabel">
-             <property name="text">
-              <string>No operations selected</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="1">
+           <item row="10" column="1">
             <widget class="QComboBox" name="serverOptionsCb">
              <property name="toolTip">
               <string>Fetch/Save Server options</string>
@@ -303,13 +310,10 @@ Save a flight track to name it.</string>
              </item>
             </widget>
            </item>
-           <item row="11" column="0">
-            <widget class="QCheckBox" name="workLocallyCheckbox">
-             <property name="toolTip">
-              <string>Check to work asynchronously from the server</string>
-             </property>
+           <item row="9" column="0">
+            <widget class="QLabel" name="categoryLabel">
              <property name="text">
-              <string>Work Asynchronously</string>
+              <string>Category:</string>
              </property>
             </widget>
            </item>
@@ -321,17 +325,16 @@ Double click a operation to activate and view its description.</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="QLabel" name="activeOperationDesc">
-             <property name="text">
-              <string>Select Operation to View Description</string>
+           <item row="11" column="0" colspan="2">
+            <widget class="QPushButton" name="pbOpenOperationArchive">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="activeOperationsLabel">
              <property name="text">
-              <string>Operations</string>
+              <string>Operation Archive</string>
              </property>
             </widget>
            </item>
@@ -417,19 +420,20 @@ Double click a operation to activate and view its description.</string>
     </property>
     <widget class="QMenu" name="menuProperties">
      <property name="title">
-      <string>Properties</string>
+      <string>Maintenance</string>
      </property>
-     <addaction name="actionDeleteOperation"/>
-     <addaction name="actionDescription"/>
-     <addaction name="actionUpdateOperationDesc"/>
+     <addaction name="actionChangeCategory"/>
+     <addaction name="actionChangeDescription"/>
+     <addaction name="actionManageUsers"/>
      <addaction name="actionRenameOperation"/>
-     <addaction name="actionLeaveOperation"/>
+     <addaction name="actionDeleteOperation"/>
+     <addaction name="actionArchiveOperation"/>
     </widget>
     <addaction name="actionChat"/>
     <addaction name="actionVersionHistory"/>
-    <addaction name="actionManageUsers"/>
-    <addaction name="actionUnarchiveOperation"/>
+    <addaction name="actionViewDescription"/>
     <addaction name="separator"/>
+    <addaction name="actionLeaveOperation"/>
     <addaction name="menuProperties"/>
    </widget>
    <addaction name="menuFile"/>
@@ -584,14 +588,14 @@ Double click a operation to activate and view its description.</string>
     <string>Ctrl+F</string>
    </property>
   </action>
-  <action name="actionDescription">
+  <action name="actionViewDescription">
    <property name="text">
     <string>View Description</string>
    </property>
   </action>
-  <action name="actionUpdateOperationDesc">
+  <action name="actionChangeDescription">
    <property name="text">
-    <string>Update Description</string>
+    <string>Change Description</string>
    </property>
   </action>
   <action name="actionRenameOperation">
@@ -604,9 +608,14 @@ Double click a operation to activate and view its description.</string>
     <string>&amp;Leave Operation</string>
    </property>
   </action>
-  <action name="actionUnarchiveOperation">
+  <action name="actionArchiveOperation">
    <property name="text">
-    <string>Unarchive Operation</string>
+    <string>Archive Operation</string>
+   </property>
+  </action>
+  <action name="actionChangeCategory">
+   <property name="text">
+    <string>Change Category</string>
    </property>
   </action>
  </widget>

@@ -29,18 +29,14 @@
 import logging
 import netCDF4 as nc
 import numpy as np
+from pyproj import Geod
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
-
-try:
-    import mpl_toolkits.basemap.pyproj as pyproj
-except ImportError:
-    import pyproj
 
 from mslib.utils.config import config_loader
 
 
-__PR = pyproj.Geod(ellps='WGS84')
+__PR = Geod(ellps='WGS84')
 
 
 def get_distance(lat0, lon0, lat1, lon1):

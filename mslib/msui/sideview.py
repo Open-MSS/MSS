@@ -31,8 +31,8 @@ import functools
 
 from PyQt5 import QtGui, QtWidgets
 
-from mslib.utils.qt import ui_sideview_window as ui
-from mslib.utils.qt import ui_sideview_options as ui_opt
+from mslib.msui.qt5 import ui_sideview_window as ui
+from mslib.msui.qt5 import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
@@ -56,7 +56,7 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         parent -- Qt widget that is parent to this widget.
         settings -- dictionary containing sideview options.
         """
-        super(MSUI_SV_OptionsDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self._suffixes = ['hPa', 'km', 'hft']
@@ -256,7 +256,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSUISideViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -307,7 +307,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super(MSUISideViewWindow, self).setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 

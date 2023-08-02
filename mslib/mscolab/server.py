@@ -59,12 +59,14 @@ CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CO
 migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
 
+ARCHIVE_THRESHOLD = 30
+
 try:
     from mscolab_auth import mscolab_auth
 except ImportError as ex:
     logging.warning("Couldn't import mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
 
-    class mscolab_auth(object):
+    class mscolab_auth:
         allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
@@ -153,7 +155,6 @@ def check_login(emailid, password):
     return False
 
 
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def register_user(email, password, username):
     user = User(email, username, password)
     is_valid_username = True if username.find("@") == -1 else False
@@ -202,8 +203,8 @@ def home():
     return render_template("/index.html")
 
 
-# ToDo setup codes in return statements
-@APP.route("/status")
+@APP.route("/status_auth")
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
     return "Mscolab server"
 
@@ -250,6 +251,7 @@ def authorized():
 
 
 @APP.route("/register", methods=["POST"])
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def user_register_handler():
     email = request.form['email']
     password = request.form['password']
@@ -489,13 +491,17 @@ def get_operation_details():
 @verify_user
 def set_last_used():
     op_id = request.form.get('op_id', None)
+    days_ago = int(request.form.get('days', 0))
     operation = Operation.query.filter_by(id=int(op_id)).first()
-    operation.last_used = datetime.datetime.utcnow()
+    operation.last_used = datetime.datetime.utcnow() - datetime.timedelta(days=days_ago)
     temp_operation_active = operation.active
-    operation.active = True
+    if days_ago > ARCHIVE_THRESHOLD:
+        operation.active = False
+    else:
+        operation.active = True
     db.session.commit()
     # Reload Operation List
-    if not temp_operation_active:
+    if temp_operation_active != operation.active:
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)

@@ -48,7 +48,7 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         Constructor.
         """
-        super(AbstractLinearSectionStyle, self).__init__(driver=driver)
+        super().__init__(driver=driver)
         self.variable = ""
         self.unit = ""
         self.y_values = []

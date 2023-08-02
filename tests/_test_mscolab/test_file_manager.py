@@ -343,6 +343,31 @@ class Test_FileManager(TestCase):
             assert self.fm.delete_bulk_permission(operation.id, self.user, [self.user.id]) is False
             assert self.fm.delete_bulk_permission(operation.id, self.adminuser, [self.adminuser.id]) is True
 
+    def test_group_permissions(self):
+        with self.app.test_client():
+            flight_path_odlo, operation_oslo = self._create_operation(flight_path="flightoslo", category="oslo")
+
+            flight_path_no1, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
+            assert self.fm.is_member(self.collaboratoruser.id, operation_no_1.id) is False
+            flight_path_group, operation_group = self._create_operation(flight_path="bergenGroup", category="bergen")
+            self.fm.add_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_member(self.collaboratoruser.id, operation_no_1.id) is True
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_no_1.id)
+            # check that not other catergories get changed
+            assert self.fm.is_member(self.collaboratoruser.id, operation_oslo.id) is False
+            self.fm.modify_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "viewer")
+            assert self.fm.is_viewer(self.collaboratoruser.id, operation_no_1.id)
+            # now create a new OP with the category bergen and see if our collaborator user has viewer role
+            flight_path_no2, operation_no_2 = self._create_operation(flight_path="flightno2", category="bergen")
+            assert self.fm.is_viewer(self.collaboratoruser.id, operation_no_2.id)
+            # give the user admin role
+            self.fm.modify_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "admin")
+            assert self.fm.is_admin(self.collaboratoruser.id, operation_no_2.id)
+            assert self.fm.is_admin(self.collaboratoruser.id, operation_no_1.id)
+            # remove the user
+            self.fm.delete_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id])
+            assert self.fm.is_member(self.collaboratoruser.id, operation_group.id) is False
+
     def test_import_permission(self):
         with self.app.test_client():
             flight_path10, operation10 = self._create_operation(flight_path="operation10")
@@ -413,10 +438,10 @@ class Test_FileManager(TestCase):
       </ListOfWaypoints>
   </FlightTrack>"""
 
-    def _create_operation(self, flight_path="firstflight", user=None, content=None):
+    def _create_operation(self, flight_path="firstflight", user=None, content=None, category="default"):
         if user is None:
             user = self.user
-        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content, category=category)
         operation = Operation.query.filter_by(path=flight_path).first()
         return flight_path, operation
 
