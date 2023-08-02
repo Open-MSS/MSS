@@ -344,11 +344,11 @@ def autoplot(cpath, view, ftrack, itime, vtime, stime, etime, intv):
                 itime = init_time
             if vtime == "":
                 vtime = time
+            if itime != "":
+                init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
             if vtime == "" and stime == "":
                 no_of_plots = 1
                 draw(no_of_plots)
-            if itime != "":
-                    init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
             elif intv == 0:
                 time = datetime.strptime(vtime, "%Y-%m-%dT%H:%M:%S")
                 if ftrack != "":

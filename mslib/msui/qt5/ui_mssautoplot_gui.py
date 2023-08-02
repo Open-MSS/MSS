@@ -415,7 +415,7 @@ class FileBrowserDialog(QWidget):
 		options |= QFileDialog.DontUseNativeDialog
 		self.path, _ = QFileDialog.getOpenFileName(self,"mssautoplotGUI- File browser", "","All Files (*);;Python Files (*.py)", options=options)
 		if self.path:
-            self.file = os.path.split(self.path)[1]
+			self.file = os.path.split(self.path)[1]
 
 
 if __name__ == "__main__":
