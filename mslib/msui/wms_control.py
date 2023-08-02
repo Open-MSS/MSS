@@ -1484,7 +1484,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 # Add border around seperate legends
                 if len(images) > 1:
                     images = [ImageOps.expand(x, border=1, fill="black") for x in images]
-                max_height = int((self.view.fig.get_size_inches() * self.view.fig.get_dpi())[1] * 0.99)
+                max_height = int((self.view.fig.get_size_inches() * self.view.plotter.fig.get_dpi())[1] * 0.99)
                 width = max([image.width for image in images])
                 height = sum([image.height for image in images])
                 result = Image.new("RGBA", (width, height))

@@ -304,16 +304,7 @@ class LinearViewPlotting(Plotting):
                 self.myfig.fig.savefig(f"{flight}_{layer}.png", bbox_inches='tight')
 
 
-@click.command()
-@click.option('--cpath', default=constants.MSS_AUTOPLOT, help='Path of the configuration file.')
-@click.option('--view', default="top", help='View of the plot (top/side/linear).')
-@click.option('--ftrack', default="", help='Flight track.')
-@click.option('--itime', default="", help='Initial time.')
-@click.option('--vtime', default="", help='Valid time.')
-@click.option('--intv', default=0, help='Time interval.')
-@click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
-@click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
-def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
+def autoplot(cpath, view, ftrack, itime, vtime, stime, etime, intv):
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
     if view == "top":
@@ -322,6 +313,9 @@ def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
     else:
         side_view = SideViewPlotting(cpath)
         sec = "automated_plotting_vsecs"
+    if ftrack == "":
+        ftrack = config["automated_plotting_flights"][0][3]
+    filename = ftrack
 
     def draw(no_of_plots):
         try:
@@ -346,22 +340,24 @@ def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
     for flight, section, vertical, filename, init_time, time in \
         config["automated_plotting_flights"]:
         for url, layer, style, elevation in config[sec]:
+            if itime == "":
+                itime = init_time
+            if vtime == "":
+                vtime = time
             if vtime == "" and stime == "":
                 no_of_plots = 1
                 draw(no_of_plots)
+            if itime != "":
+                    init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
             elif intv == 0:
-                if itime != "":
-                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                time = datetime.strptime(vtime, "%Y-%m-%dT" "%H:%M:%S")
+                time = datetime.strptime(vtime, "%Y-%m-%dT%H:%M:%S")
                 if ftrack != "":
                     flight = ftrack
                 no_of_plots = 1
                 draw(no_of_plots)
             elif intv > 0:
-                if itime != "":
-                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                starttime = datetime.strptime(stime, "%Y-%m-%dT" "%H:%M:%S")
-                endtime = datetime.strptime(etime, "%Y-%m-%dT" "%H:%M:%S")
+                starttime = datetime.strptime(stime, "%Y-%m-%dT%H:%M:%S")
+                endtime = datetime.strptime(etime, "%Y-%m-%dT%H:%M:%S")
                 i = 1
                 time = starttime
                 while time <= endtime:
@@ -374,6 +370,19 @@ def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
                     i = i + 1
             else:
                 raise Exception("Invalid interval")
+
+
+@click.command()
+@click.option('--cpath', default=constants.MSS_AUTOPLOT, help='Path of the configuration file.')
+@click.option('--view', default="top", help='View of the plot (top/side/linear).')
+@click.option('--ftrack', default="", help='Flight track.')
+@click.option('--itime', default="", help='Initial time.')
+@click.option('--vtime', default="", help='Valid time.')
+@click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
+@click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
+@click.option('--intv', default=0, help='Time interval.')
+def main(cpath, view, ftrack, itime, vtime, stime, etime, intv):
+    autoplot(cpath, view, ftrack, itime, vtime, stime, etime, intv)
 
 
 if __name__ == '__main__':
