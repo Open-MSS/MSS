@@ -276,7 +276,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         are connected).
         """
         toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
-                     "Airports/Airspaces", "Multiple FLightpath"]
+                     "Airports/Airspaces", "Multiple Flightpath"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
