@@ -391,10 +391,6 @@ class Test_FileManager(TestCase):
             assert self.fm.is_member(self.collaboratoruser.id, operation_b2.id) is False
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b2.id) is False
 
-
-
-
-
     def test_import_permission(self):
         with self.app.test_client():
             flight_path10, operation10 = self._create_operation(flight_path="operation10")
