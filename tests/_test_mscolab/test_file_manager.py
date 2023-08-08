@@ -345,7 +345,7 @@ class Test_FileManager(TestCase):
 
     def test_group_permissions(self):
         with self.app.test_client():
-            flight_path_odlo, operation_oslo = self._create_operation(flight_path="flightoslo", category="oslo")
+            flight_path_oslo, operation_oslo = self._create_operation(flight_path="flightoslo", category="oslo")
 
             flight_path_no1, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
             assert self.fm.is_member(self.collaboratoruser.id, operation_no_1.id) is False
@@ -367,6 +367,29 @@ class Test_FileManager(TestCase):
             # remove the user
             self.fm.delete_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id])
             assert self.fm.is_member(self.collaboratoruser.id, operation_group.id) is False
+
+    def test_existing_operation_renaming_to_a_group(self):
+        with self.app.test_client():
+            _, operation_b1 = self._create_operation(flight_path="flightb1", category="morning")
+            self.fm.add_bulk_permission(operation_b1.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b1.id)
+
+            # an operation where nothing can be changed on a rename
+            _, operation_b2 = self._create_operation(flight_path="flightb2", category="morning", user=self.vieweruser)
+
+            _, operation_b3 = self._create_operation(flight_path="flightb3", category="morning")
+            self.fm.add_bulk_permission(operation_b3.id, self.user, [self.collaboratoruser.id], "collaborator")
+            self.fm.add_bulk_permission(operation_b3.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.is_viewer(self.vieweruser.id, operation_b3.id)
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b3.id)
+            self.fm.update_operation(operation_b3.id, 'path', 'morningGroup', self.user)
+
+            assert self.fm.is_member(self.vieweruser.id, operation_b1.id)
+            assert self.fm.is_viewer(self.vieweruser.id, operation_b1.id)
+
+            # the current user has no role (admin or collobarator role) in the operation_b2 to change users
+            assert self.fm.is_member(self.collaboratoruser.id, operation_b2.id) is False
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b2.id) is False
 
     def test_import_permission(self):
         with self.app.test_client():
