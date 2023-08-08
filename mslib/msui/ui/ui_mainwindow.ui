@@ -230,13 +230,26 @@ Save a flight track to name it.</string>
            <property name="bottomMargin">
             <number>8</number>
            </property>
-           <item row="6" column="0" colspan="2">
-            <widget class="QLabel" name="workingStatusLabel">
-             <property name="text">
-              <string>No operations selected</string>
+           <item row="11" column="0">
+            <widget class="QCheckBox" name="workLocallyCheckbox">
+             <property name="toolTip">
+              <string>Check to work asynchronously from the server</string>
              </property>
-             <property name="wordWrap">
-              <bool>true</bool>
+             <property name="text">
+              <string>Work Asynchronously</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="0" colspan="2">
+            <widget class="QPushButton" name="pbOpenOperationArchive">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Operation Archive</string>
              </property>
             </widget>
            </item>
@@ -254,13 +267,11 @@ Save a flight track to name it.</string>
              </property>
             </widget>
            </item>
-           <item row="10" column="0">
-            <widget class="QCheckBox" name="workLocallyCheckbox">
+           <item row="4" column="0" colspan="2">
+            <widget class="QListWidget" name="listOperationsMSC">
              <property name="toolTip">
-              <string>Check to work asynchronously from the server</string>
-             </property>
-             <property name="text">
-              <string>Work Asynchronously</string>
+              <string>List of mscolab operations.
+Double click a operation to activate and view its description.</string>
              </property>
             </widget>
            </item>
@@ -288,7 +299,7 @@ Save a flight track to name it.</string>
              </item>
             </widget>
            </item>
-           <item row="10" column="1">
+           <item row="11" column="1">
             <widget class="QComboBox" name="serverOptionsCb">
              <property name="toolTip">
               <string>Fetch/Save Server options</string>
@@ -317,24 +328,20 @@ Save a flight track to name it.</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QListWidget" name="listOperationsMSC">
-             <property name="toolTip">
-              <string>List of mscolab operations.
-Double click a operation to activate and view its description.</string>
+           <item row="6" column="0" colspan="2">
+            <widget class="QLabel" name="workingStatusLabel">
+             <property name="text">
+              <string>No operations selected</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
              </property>
             </widget>
            </item>
-           <item row="11" column="0" colspan="2">
-            <widget class="QPushButton" name="pbOpenOperationArchive">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
+           <item row="10" column="1">
+            <widget class="QPushButton" name="StoreLayout">
              <property name="text">
-              <string>Operation Archive</string>
+              <string>Store Layout</string>
              </property>
             </widget>
            </item>
@@ -353,7 +360,7 @@ Double click a operation to activate and view its description.</string>
      <x>0</x>
      <y>0</y>
      <width>738</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="nativeMenuBar">

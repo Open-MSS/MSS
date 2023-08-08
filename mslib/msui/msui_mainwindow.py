@@ -37,6 +37,7 @@ import os
 import re
 import sys
 import fs
+import json
 
 from mslib import __version__
 from mslib.msui.qt5 import ui_mainwindow as ui
@@ -51,6 +52,7 @@ from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
+from mslib.msui.constants import MSUI_CONFIG_PATH
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSUI_CONFIG_PATH)
@@ -467,6 +469,45 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
         self.openOperationsGb.hide()
+
+        self.StoreLayout.clicked.connect(self.store_operation_data)
+
+    def store_operation_data(self):
+        self.file_name = self.listOperationsMSC.currentItem()
+        if self.listOperationsMSC.currentItem() == None:
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Select Operation")
+            message_box.setText("Select a operation to save layout")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+            return
+        self.widget_info = {}
+        top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
+
+        allowed_widget_names = ["TopViewWindow", "SideViewWindow", "TableViewWindow", "LinearViewWindow"]
+        for widget in top_level_widgets:
+            if widget.objectName() in allowed_widget_names:
+                child_info = {}
+                for child in widget.findChildren(QtWidgets.QWidget):
+                    if isinstance(child, QtWidgets.QComboBox):
+                        child_info[child.objectName()] = {"items": [child.itemText(i) for i in range(child.count())],
+                                                        "current_index": child.currentIndex()}
+                    elif isinstance(child, QtWidgets.QCheckBox):
+                        child_info[child.objectName()] = {"checked": child.isChecked()}
+
+                self.widget_info[widget.objectName()] = child_info
+
+        folder_path = MSUI_CONFIG_PATH
+        file_path = os.path.join(folder_path, self.file_name.text() + ".txt")
+        json_data = json.dumps(self.widget_info, indent=4)
+
+        with open(file_path, 'w') as file:
+            file.write(json_data)
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Select Operation")
+            message_box.setText(f"Dictionary has been successfully stored in {file_path}")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
 
     def bring_main_window_to_front(self):
         self.show()
