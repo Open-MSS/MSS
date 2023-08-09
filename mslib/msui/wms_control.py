@@ -1498,13 +1498,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 return result
 
 
-            ################################################################################
-
-#
-# CLASS VSecWMSControlWidget
-#
-
-
 class VSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
        handle (non-standard) vertical sections.
@@ -1582,10 +1575,6 @@ class VSecWMSControlWidget(WMSControlWidget):
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
         return crss is not None and any(crs.startswith("VERT") for crs in crss)
-
-#
-# CLASS HSecWMSControlWidget
-#
 
 
 class HSecWMSControlWidget(WMSControlWidget):
