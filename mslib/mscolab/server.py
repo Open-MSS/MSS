@@ -498,7 +498,7 @@ def get_operation_details():
     result = str(fm.get_operation_details(int(op_id), user))
     if result is False:
         return "False"
-    return json.dumps(fm.get_operation_details(int(op_id), user))
+    return result
 
 
 @APP.route('/set_last_used', methods=["POST"])
