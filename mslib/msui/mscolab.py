@@ -778,6 +778,7 @@ class MSUIMscolab(QtCore.QObject):
         self.fetch_gravatar()
 
     def delete_account(self):
+        # ToDo rename to delete_own_account
         if verify_user_token(self.mscolab_server_url, self.token):
             w = QtWidgets.QWidget()
             qm = QtWidgets.QMessageBox
