@@ -30,7 +30,7 @@ import json
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
-from mslib.msui import msui
+import mslib.msui.msui_mainwindow as msui_mainwindow
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
 
@@ -41,7 +41,7 @@ class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
 
     def __init__(self, flighttrack_model, op_id: int, parent=None, type=QtWidgets.QListWidgetItem.UserType):
         view_name = flighttrack_model.name
-        super(QMscolabOperationsListWidgetItem, self).__init__(
+        super().__init__(
             view_name, parent, type
         )
         self.parent = parent
@@ -49,7 +49,7 @@ class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
         self.op_id = op_id
 
 
-class MultipleFlightpath(object):
+class MultipleFlightpath:
     """
     Represent a Multiple FLightpath
     """
@@ -114,7 +114,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
-        super(MultipleFlightpathControlWidget, self).__init__(parent)
+        super().__init__(parent)
         # ToDO: Remove all patches, on closing dockwidget.
         self.ui = parent
         self.setupUi(self)
@@ -303,7 +303,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         self.save_waypoint_model_data(wp_model, self.list_flighttrack)
 
-        listItem = msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
+        listItem = msui_mainwindow.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
         listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
         if not self.flighttrack_added:
             self.flighttrack_added = True

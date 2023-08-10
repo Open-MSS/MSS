@@ -86,15 +86,31 @@ class Test_Mscolab_connect_window():
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
 
+    @pytest.mark.parametrize(
+        "exc",
+        [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
+         requests.exceptions.InvalidURL, requests.exceptions.SSLError,
+         Exception])
     @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
-    def test_connect(self, mockset):
-        for exc in [requests.exceptions.ConnectionError, requests.exceptions.InvalidSchema,
-                    requests.exceptions.InvalidURL, requests.exceptions.SSLError, Exception("")]:
-            with mock.patch("requests.get", new=ExceptionMock(exc).raise_exc):
-                self.window.connect_handler()
+    def test_connect_except(self, mockset, exc):
+        with mock.patch("requests.Session.get", new=ExceptionMock(exc).raise_exc):
+            self.window.connect_handler()
+        assert mockset.call_args_list == [mock.call("color: red;")]
 
-        self._connect_to_mscolab()
-        assert mockset.call_args_list == [mock.call("color: red;") for _ in range(5)] + [mock.call("color: green;")]
+    @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
+    def test_connect_denied(self, mockset):
+        with mock.patch("requests.Session.get", return_value=mock.Mock(status_code=401)):
+            self.window.connect_handler()
+        assert mockset.call_args_list == [mock.call("color: red;")]
+
+    @mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_connect_success(self, mockbox, mockset):
+        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") != "fnord"
+        self._connect_to_mscolab(password="fnord")
+
+        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") == "fnord"
+        assert mockset.call_args_list == [mock.call("color: green;")]
 
     def test_disconnect(self):
         self._connect_to_mscolab()
@@ -148,7 +164,7 @@ class Test_Mscolab_connect_window():
     def test_add_user(self, mockmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
-        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
+        assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         assert mslib.utils.auth.get_password_from_keyring("MSCOLAB",
                                                           "something@something.org") == "password from TestKeyring"
         # assert self.window.stackedWidget.currentWidget() == self.window.newuserPage
@@ -157,72 +173,41 @@ class Test_Mscolab_connect_window():
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_add_users_without_updating_credentials_in_config_file(self, mockmessage):
-        create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org"}')
+        create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
         read_config_file()
         # check current settings
-        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
+        assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
-        self._create_user("anand", "anand@something.org", "anand")
+        self._create_user("anand", "anand@something.org", "anand_pass")
         # check changed settings
-        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
+        assert mslib.utils.auth.get_password_from_keyring(service_name=self.url,
+                                                          username="anand@something.org") == "anand_pass"
+        assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
-        create_msui_settings_file('{"MSCOLAB_mailid": "something@something.org" }')
-        mslib.utils.auth.save_password_to_keyring(service_name="MSCOLAB",
+        create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
+        mslib.utils.auth.save_password_to_keyring(service_name=self.url,
                                                   username="something@something.org", password="something")
         read_config_file()
         # check current settings
-        assert config_loader(dataset="MSCOLAB_mailid") == "something@something.org"
-        assert mslib.utils.auth.get_password_from_keyring("MSCOLAB",
-                                                          "something@something.org") == "password from TestKeyring"
+        assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
-        self._create_user("anand", "anand@something.org", "anand")
+        self._create_user("anand", "anand@something.org", "anand_pass")
         # check changed settings
-        assert config_loader(dataset="MSCOLAB_mailid") == "anand@something.org"
-        assert mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB",
-                                                          username="anand@something.org") == "password from TestKeyring"
+        assert config_loader(dataset="MSS_auth").get(self.url) == "anand@something.org"
+        assert mslib.utils.auth.get_password_from_keyring(service_name=self.url,
+                                                          username="anand@something.org") == "anand_pass"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
 
-    def test_failed_authorize(self):
-        class response:
-            def __init__(self, code, text):
-                self.status_code = code
-                self.text = text
-
-        # case: connection error when trying to login after connecting to server
-        self._connect_to_mscolab()
-        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
-            with mock.patch("requests.Session.post", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
-                self._login()
-                mockset.assert_has_calls([mock.call("color: red;"), mock.call("")])
-
-        # case: when the credentials are incorrect for login
-        self._connect_to_mscolab()
-        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
-            with mock.patch("requests.Session.post", return_value=response(201, "False")):
-                self._login()
-                mockset.assert_has_calls([mock.call("color: red;")])
-
-        # case: when http auth fails
-        with mock.patch("PyQt5.QtWidgets.QWidget.setStyleSheet") as mockset:
-            with mock.patch("requests.Session.post", return_value=response(401, "Unauthorized Access")):
-                self._login()
-                # check if switched to HTTP Auth Page
-                assert self.window.stackedWidget.currentIndex() == 2
-                # press ok without entering server auth details
-                okWidget = self.window.httpBb.button(self.window.httpBb.Ok)
-                QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-                QtWidgets.QApplication.processEvents()
-                mockset.assert_has_calls([mock.call("color: red;")])
-
-    def _connect_to_mscolab(self):
+    def _connect_to_mscolab(self, password=""):
         self.window.urlCb.setEditText(self.url)
+        self.window.httpPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
@@ -369,9 +354,9 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
         self.window.remove_plugins()
-        with mock.patch("mslib.msui.msui.config_loader", return_value=self.import_plugins):
+        with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.msui.config_loader", return_value=self.export_plugins):
+        with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.export_plugins):
             self.window.add_export_plugins("qt")
         file_path = fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}')
         with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(file_path, None)):
@@ -553,11 +538,27 @@ class Test_Mscolab(object):
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
-        self.window.actionUpdateOperationDesc.trigger()
+        self.window.actionChangeDescription.trigger()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
-        assert self.window.mscolab.active_operation_desc == "new_desciption"
+        assert self.window.mscolab.active_operation_description == "new_desciption"
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_category", True))
+    def test_update_category(self, mockbox, mockpatch):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        assert self.window.mscolab.active_operation_category == "example"
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        self.window.actionChangeCategory.trigger()
+        QtWidgets.QApplication.processEvents()
+        QtTest.QTest.qWait(0)
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_category == "new_category"
 
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()

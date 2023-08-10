@@ -27,8 +27,8 @@
 
 from mslib.utils.config import config_loader
 from PyQt5 import QtGui, QtWidgets
-from mslib.utils.qt import ui_linearview_window as ui
-from mslib.utils.qt import ui_linearview_options as ui_opt
+from mslib.msui.qt5 import ui_linearview_window as ui
+from mslib.msui.qt5 import ui_linearview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
@@ -48,7 +48,7 @@ class MSUI_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialo
         parent -- Qt widget that is parent to this widget.
         settings_dict -- dictionary containing sideview options.
         """
-        super(MSUI_LV_Options_Dialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         assert settings is not None
@@ -83,7 +83,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSUILinearViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -133,7 +133,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         """
         Set the QAbstractItemModel instance that the view displays.
         """
-        super(MSUILinearViewWindow, self).setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
         if self.docks[WMS] is not None:
             self.docks[WMS].widget().setFlightTrackModel(model)
 

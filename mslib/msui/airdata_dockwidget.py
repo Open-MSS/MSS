@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pycountry
-from mslib.utils.qt import ui_airdata_dockwidget as ui
+from mslib.msui.qt5 import ui_airdata_dockwidget as ui
 from PyQt5 import QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.airdata import get_available_airspaces, update_airspace, get_airports
@@ -33,7 +33,7 @@ from mslib.utils.airdata import get_available_airspaces, update_airspace, get_ai
 
 class AirdataDockwidget(QtWidgets.QWidget, ui.Ui_AirdataDockwidget):
     def __init__(self, parent=None, view=None):
-        super(AirdataDockwidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.view = view
         self.view.redrawn.connect(self.redraw_map)

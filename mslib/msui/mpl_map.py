@@ -193,7 +193,7 @@ class MapCanvas(basemap.Basemap):
         """
         intact = matplotlib.is_interactive()
         matplotlib.interactive(False)
-        super(MapCanvas, self).set_axes_limits(ax=ax)
+        super().set_axes_limits(ax=ax)
         matplotlib.interactive(intact)
 
     def _draw_auto_graticule(self, font_size=None):
@@ -682,7 +682,7 @@ class MapCanvas(basemap.Basemap):
         """
         if self.image is not None:
             self.image.remove()
-        self.image = super(MapCanvas, self).imshow(X, zorder=2, **kwargs)
+        self.image = super().imshow(X, zorder=2, **kwargs)
         self.ax.figure.canvas.draw()
         return self.image
 
@@ -753,7 +753,7 @@ class MapCanvas(basemap.Basemap):
         return self.plot(x, y, **kwargs)
 
 
-class SatelliteOverpassPatch(object):
+class SatelliteOverpassPatch:
     """
     Represents a satellite overpass on the top view map (satellite
     track and, if available, swath).

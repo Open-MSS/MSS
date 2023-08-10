@@ -38,7 +38,7 @@ class LS_DefaultStyle(AbstractLinearSectionStyle):
     """
 
     def __init__(self, driver, variable="air_temperature", filetype="ml"):
-        super(AbstractLinearSectionStyle, self).__init__(driver=driver)
+        super().__init__(driver=driver)
         self.variable = variable
         self.required_datafields = [(filetype, self.variable, None)]
         if filetype != "pl":

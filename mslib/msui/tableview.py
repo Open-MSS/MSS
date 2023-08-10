@@ -37,7 +37,7 @@ import types
 from mslib.msui import hexagon_dockwidget as hex
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtWidgets, QtGui
-from mslib.utils.qt import ui_tableview_window as ui
+from mslib.msui.qt5 import ui_tableview_window as ui
 from mslib.utils.qt import dropEvent, dragEnterEvent
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow
@@ -60,7 +60,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
     def __init__(self, parent=None, model=None, _id=None):
         """
         """
-        super(MSUITableViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -271,7 +271,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         Set the QAbstractItemModel instance that the table displays.
         """
-        super(MSUITableViewWindow, self).setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes

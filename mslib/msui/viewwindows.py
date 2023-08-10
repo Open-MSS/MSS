@@ -46,7 +46,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
     # viewClosesId = QtCore.Signal(int, name="viewClosesId")
 
     def __init__(self, parent=None, model=None, _id=None):
-        super(MSUIViewWindow, self).__init__(parent)
+        super().__init__(parent)
 
         # Object variables:
         self.waypoints_model = model  # pointer to the current flight track.
@@ -219,7 +219,7 @@ class MSUIMplViewWindow(MSUIViewWindow):
     """
 
     def __init__(self, parent=None, model=None, _id=None):
-        super(MSUIMplViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
         logging.debug(_id)
         self.mpl = None
 

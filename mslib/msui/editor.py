@@ -31,7 +31,7 @@ import logging
 import json
 
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
-from mslib.utils.qt import ui_configuration_editor_window as ui_conf
+from mslib.msui.qt5 import ui_configuration_editor_window as ui_conf
 from PyQt5 import QtWidgets, QtCore, QtGui
 from mslib.msui.constants import MSUI_SETTINGS
 from mslib.msui.icons import icons
@@ -93,23 +93,23 @@ class JsonDelegate(delegate.JsonDelegate):
                 if model_data != default_data:
                     option.font.setWeight(QtGui.QFont.Bold)
 
-            return super(JsonDelegate, self).paint(painter, option, index)
+            return super().paint(painter, option, index)
 
         type_ = index.data(TypeRole)
         if isinstance(type_, DataType):
             try:
-                super(JsonDelegate, self).paint(painter, option, index)
+                super().paint(painter, option, index)
                 return type_.paint(painter, option, index)
             except NotImplementedError:
                 pass
-        return super(JsonDelegate, self).paint(painter, option, index)
+        return super().paint(painter, option, index)
 
 
 class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):
 
     def filterAcceptsRow(self, source_row, source_parent):
         # check if an item is currently accepted
-        accepted = super(JsonSortFilterProxyModel, self).filterAcceptsRow(source_row, source_parent)
+        accepted = super().filterAcceptsRow(source_row, source_parent)
         if accepted:
             return True
 
@@ -119,7 +119,7 @@ class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):
         has_parent = src_model.itemFromIndex(index).parent()
         if has_parent:
             parent_index = self.mapFromSource(has_parent.index())
-            return super(JsonSortFilterProxyModel, self).filterAcceptsRow(has_parent.row(), parent_index)
+            return super().filterAcceptsRow(has_parent.row(), parent_index)
 
         return accepted
 
@@ -131,7 +131,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
     restartApplication = QtCore.pyqtSignal(name="restartApplication")
 
     def __init__(self, parent=None):
-        super(ConfigurationEditorWindow, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         options = config_loader()

@@ -28,7 +28,7 @@ import numpy as np
 import logging
 
 from PyQt5 import QtWidgets
-from mslib.utils.qt import ui_hexagon_dockwidget as ui
+from mslib.msui.qt5 import ui_hexagon_dockwidget as ui
 from mslib.msui import flighttrack as ft
 from mslib.utils.coordinate import rotate_point
 from mslib.utils.config import config_loader
@@ -62,7 +62,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
         parent -- Qt widget that is parent to this widget.
         view -- reference to mpl canvas class
         """
-        super(HexagonControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.view = view
         if self.view:

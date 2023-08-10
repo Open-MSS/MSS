@@ -33,8 +33,8 @@ import logging
 from mslib.utils.config import config_loader
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
-from mslib.utils.qt import ui_topview_window as ui
-from mslib.utils.qt import ui_topview_mapappearance as ui_ma
+from mslib.msui.qt5 import ui_topview_window as ui
+from mslib.msui.qt5 import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
@@ -68,7 +68,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         parent -- Qt widget that is parent to this widget.
         settings -- dictionary containing topview options.
         """
-        super(MSUI_TV_MapAppearanceDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         assert settings is not None
@@ -189,7 +189,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSUITopViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
         logging.debug(_id)
         self.ui = parent
         self.setupUi(self)
@@ -404,7 +404,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
-        super(MSUITopViewWindow, self).setIdentifier(identifier)
+        super().setIdentifier(identifier)
         self.mpl.canvas.map.set_identifier(identifier)
 
     def open_settings_dialog(self):

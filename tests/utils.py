@@ -34,7 +34,7 @@ import multiprocessing
 from flask_testing import LiveServerTestCase
 
 from PyQt5 import QtTest
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
@@ -75,7 +75,7 @@ def mscolab_register_user(app, msc_url, email, password, username):
         'password': password,
         'username': username
     }
-    url = url_join(msc_url, 'register')
+    url = urljoin(msc_url, 'register')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -86,7 +86,7 @@ def mscolab_register_and_login(app, msc_url, email, password, username):
         'email': email,
         'password': password
     }
-    url = url_join(msc_url, 'token')
+    url = urljoin(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -96,7 +96,7 @@ def mscolab_login(app, msc_url, email='a', password='a'):
         'email': email,
         'password': password
     }
-    url = url_join(msc_url, 'token')
+    url = urljoin(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -106,7 +106,7 @@ def mscolab_delete_user(app, msc_url, email, password):
         response = mscolab_login(app, msc_url, email, password)
         if response.status == '200 OK':
             data = json.loads(response.get_data(as_text=True))
-            url = url_join(msc_url, 'delete_user')
+            url = urljoin(msc_url, 'delete_user')
             response = app.test_client().post(url, data=data)
             if response.status == '200 OK':
                 data = json.loads(response.get_data(as_text=True))
@@ -132,7 +132,7 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
     data["path"] = path_name
     data['description'] = path_name
     data['content'] = content
-    url = url_join(msc_url, 'create_operation')
+    url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -140,12 +140,12 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
 def mscolab_delete_all_operations(app, msc_url, email, password, username):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'operations')
+    url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
     for p in response['operations']:
         data['op_id'] = p['op_id']
-        url = url_join(msc_url, 'delete_operation')
+        url = urljoin(msc_url, 'delete_operation')
         response = app.test_client().post(url, data=data)
 
 
@@ -153,7 +153,7 @@ def mscolab_create_operation(app, msc_url, response, path='f', description='desc
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
-    url = url_join(msc_url, 'create_operation')
+    url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return data, response
 
@@ -161,7 +161,7 @@ def mscolab_create_operation(app, msc_url, response, path='f', description='desc
 def mscolab_get_operation_id(app, msc_url, email, password, username, path):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'operations')
+    url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
     for p in response['operations']:
@@ -182,7 +182,7 @@ def mscolab_check_free_port(all_ports, port):
 
 
 def mscolab_ping_server(port):
-    url = f"http://127.0.0.1:{port}/status"
+    url = f"http://127.0.0.1:{port}/status_auth"
     try:
         r = requests.get(url, timeout=(2, 10))
         if r.text == "Mscolab server":

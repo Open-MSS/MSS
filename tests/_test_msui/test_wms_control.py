@@ -37,7 +37,6 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
-from mslib.msui.msui import MSUIMainWindow
 from tests.utils import wait_until_signal
 
 
@@ -468,12 +467,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
-
-    def test_preload(self):
-        assert len(wc.WMS_SERVICE_CACHE) == 0
-        assert f"http://127.0.0.1:{self.port}/" not in wc.WMS_SERVICE_CACHE
-        MSUIMainWindow.preload_wms([f"http://127.0.0.1:{self.port}/"])
-        assert f"http://127.0.0.1:{self.port}/" in wc.WMS_SERVICE_CACHE
 
 
 @pytest.mark.skipif(os.name == "nt",

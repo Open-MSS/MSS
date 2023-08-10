@@ -79,45 +79,52 @@ auth = HTTPBasicAuth()
 realm = 'Mission Support Web Map Service'
 app.config['realm'] = realm
 
-try:
-    import mswms_settings
-except ImportError as ex:
-    logging.warning("Couldn't import mswms_settings (ImportError:'%s'), creating dummy config.", ex)
 
-    class mswms_settings(object):
-        base_dir = os.path.abspath(os.path.dirname(__file__))
-        xml_template_location = os.path.join(base_dir, "xml_templates")
-        service_name = "OGC:WMS"
-        service_title = "Mission Support System Web Map Service"
-        service_abstract = ""
-        service_contact_person = ""
-        service_contact_organisation = ""
-        service_address_type = ""
-        service_address = ""
-        service_city = ""
-        service_state_or_province = ""
-        service_post_code = ""
-        service_country = ""
-        service_fees = ""
-        service_access_constraints = "This service is intended for research purposes only."
-        register_horizontal_layers = []
-        register_vertical_layers = []
-        register_linear_layers = []
-        data = {}
-        enable_basic_http_authentication = False
-        __file__ = None
+class default_mswms_settings:
+    base_dir = os.path.abspath(os.path.dirname(__file__))
+    xml_template_location = os.path.join(base_dir, "xml_templates")
+    service_name = "OGC:WMS"
+    service_title = "Mission Support System Web Map Service"
+    service_abstract = ""
+    service_contact_person = ""
+    service_contact_organisation = ""
+    service_contact_position = ""
+    service_address_type = ""
+    service_address = ""
+    service_city = ""
+    service_state_or_province = ""
+    service_post_code = ""
+    service_country = ""
+    service_fees = ""
+    service_email = ""
+    service_access_constraints = "This service is intended for research purposes only."
+    register_horizontal_layers = []
+    register_vertical_layers = []
+    register_linear_layers = []
+    data = {}
+    enable_basic_http_authentication = False
+    __file__ = None
+
+
+mswms_settings = default_mswms_settings()
+
+try:
+    import mswms_settings as user_settings
+    mswms_settings.__dict__.update(user_settings.__dict__)
+except ImportError as ex:
+    logging.warning("Couldn't import mswms_settings (ImportError:'%s'), Using dummy config.", ex)
 
 try:
     import mswms_auth
 except ImportError as ex:
     logging.warning("Couldn't import mswms_auth (ImportError:'{%s), creating dummy config.", ex)
 
-    class mswms_auth(object):
+    class mswms_auth:
         allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-if mswms_settings.__dict__.get('enable_basic_http_authentication', False):
+if mswms_settings.enable_basic_http_authentication:
     logging.debug("Enabling basic HTTP authentication. Username and "
                   "password required to access the service.")
     import hashlib
@@ -145,9 +152,7 @@ logging.basicConfig(level=logging.DEBUG,
                     datefmt="%Y-%m-%d %H:%M:%S")
 
 # Chameleon XMl template
-base_dir = os.path.abspath(os.path.dirname(__file__))
-xml_template_location = os.path.join(base_dir, "xml_templates")
-templates = PageTemplateLoader(mswms_settings.__dict__.get("xml_template_location", xml_template_location))
+templates = PageTemplateLoader(mswms_settings.xml_template_location)
 
 
 def squash_multiple_images(imgs):
@@ -171,7 +176,7 @@ def squash_multiple_xml(xml_strings):
     return ElementTree.tostring(base)
 
 
-class WMSServer(object):
+class WMSServer:
 
     def __init__(self):
         """
@@ -617,26 +622,23 @@ class WMSServer(object):
                     continue
                 lsec_layers.append((dataset, layer))
 
-        settings = mswms_settings.__dict__
         return_data = template(hsec_layers=hsec_layers, vsec_layers=vsec_layers, lsec_layers=lsec_layers,
                                server_url=server_url,
-                               service_name=settings.get("service_name", "OGC:WMS"),
-                               service_title=settings.get("service_title", "Mission Support System Web Map Service"),
-                               service_abstract=settings.get("service_abstract", ""),
-                               service_contact_person=settings.get("service_contact_person", ""),
-                               service_contact_organisation=settings.get("service_contact_organisation", ""),
-                               service_contact_position=settings.get("service_contact_position", ""),
-                               service_email=settings.get("service_email", ""),
-                               service_address_type=settings.get("service_address_type", ""),
-                               service_address=settings.get("service_address", ""),
-                               service_city=settings.get("service_city", ""),
-                               service_state_or_province=settings.get("service_state_or_province", ""),
-                               service_post_code=settings.get("service_post_code", ""),
-                               service_country=settings.get("service_country", ""),
-                               service_fees=settings.get("service_fees", ""),
-                               service_access_constraints=settings.get(
-                                   "service_access_constraints",
-                                   "This service is intended for research purposes only."))
+                               service_name=mswms_settings.service_name,
+                               service_title=mswms_settings.service_title,
+                               service_abstract=mswms_settings.service_abstract,
+                               service_contact_person=mswms_settings.service_contact_person,
+                               service_contact_organisation=mswms_settings.service_contact_organisation,
+                               service_contact_position=mswms_settings.service_contact_position,
+                               service_email=mswms_settings.service_email,
+                               service_address_type=mswms_settings.service_address_type,
+                               service_address=mswms_settings.service_address,
+                               service_city=mswms_settings.service_city,
+                               service_state_or_province=mswms_settings.service_state_or_province,
+                               service_post_code=mswms_settings.service_post_code,
+                               service_country=mswms_settings.service_country,
+                               service_fees=mswms_settings.service_fees,
+                               service_access_constraints=mswms_settings.service_access_constraints)
         return return_data.encode("utf-8"), "text/xml"
 
     def produce_plot(self, query, mode):
@@ -949,7 +951,7 @@ server = WMSServer()
 
 
 @app.route('/')
-@conditional_decorator(auth.login_required, mswms_settings.__dict__.get('enable_basic_http_authentication', False))
+@conditional_decorator(auth.login_required, mswms_settings.enable_basic_http_authentication)
 def application():
     try:
         # Request info
