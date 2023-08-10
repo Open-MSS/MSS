@@ -495,10 +495,10 @@ def update_operation():
 def get_operation_details():
     op_id = request.args.get('op_id', request.form.get('op_id', None))
     user = g.user
-    result = str(fm.get_operation_details(int(op_id), user))
+    result = fm.get_operation_details(int(op_id), user)
     if result is False:
         return "False"
-    return result
+    return json.dumps(result)
 
 
 @APP.route('/set_last_used', methods=["POST"])
