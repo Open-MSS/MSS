@@ -207,7 +207,8 @@ def home():
 def hello():
     try:
         if request.authorization.parameters["username"] == "mscolab":
-            @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
+            @conditional_decorator(auth.login_required,
+                                   mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
             def hello2():
                 return "Mscolab server"
     except AttributeError:
