@@ -9,12 +9,13 @@ Fixes #
 **Additional information for reviewer?** :
 _Mention if this PR is part of any design or a continuation of previous PRs_
 
+**Does this PR results in some Documentation changes?**
+_If yes, include the list of Documentation changes_
 
 **Checklist:**
 - [ ] Bug fix. Fixes #<issue number>
 - [ ] New feature (non-breaking change which adds functionality)
 - [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
 - [ ] PR Title follows the convention of  `<type>: <subject>`
 - [ ] Commit has unit tests
 
