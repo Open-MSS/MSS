@@ -337,10 +337,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = variant_to_float(value)
+                    if not (-90 <= value <= 90):
+                        raise ValueError
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("%s", ex)
+                    logging.error("%s %s '%s'", type(ex), ex, value)
                 else:
                     waypoint.lat = value
                     waypoint.location = ""
@@ -362,10 +364,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = variant_to_float(value)
+                    if not (-720 <= value <= 720):
+                        raise ValueError
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("%s", ex)
+                    logging.error("%s %s '%s'", type(ex), ex, value)
                 else:
                     waypoint.lon = value
                     waypoint.location = ""
@@ -385,7 +389,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("%s", ex)
+                    logging.error("%s %s '%s'", type(ex), ex, value)
                 else:
                     waypoint.flightlevel = flightlevel
                     waypoint.pressure = pressure

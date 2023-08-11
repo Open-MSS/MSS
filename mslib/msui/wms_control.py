@@ -706,7 +706,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def clear_map(self):
         logging.debug("clear figure")
-        self.view.clear_figure()
+        self.view.plotter.clear_figure()
         logging.debug("enabling checkboxes in map-options if any")
         self.signal_enable_cbs.emit()
 
