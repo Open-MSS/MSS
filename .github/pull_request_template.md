@@ -14,8 +14,7 @@ _If yes, include the list of Documentation changes_
 
 **Checklist:**
 - [ ] Bug fix. Fixes #<issue number>
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] New feature (Non-API breaking changes that adds functionality)
 - [ ] PR Title follows the convention of  `<type>: <subject>`
 - [ ] Commit has unit tests
 
