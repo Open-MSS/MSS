@@ -337,7 +337,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
 
     def update(self):
         for entry in self.dict_files.values():
-            entry["patch"].update()
+            if entry["patch"] is not None:
+                entry["patch"].update()
 
     def save_settings(self):
         for entry in self.dict_files.values():
@@ -375,11 +376,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.dict_files[filename]["color"] = self.colour.getRgbF()
                 self.flag2 = 1  # sets flag of 0 to 1 when the color changes
                 self.listWidget.currentItem().setIcon(self.show_color_icon(filename, self.set_color(filename)))
-                self.dict_files[filename]["patch"].update(
-                    self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
-                if self.listWidget.currentItem().checkState() == QtCore.Qt.Unchecked:
-                    self.flag2 = 1  # again sets to 1 because itemChanged signal due to set icon had changed it to 0
-                    self.checklistitem(filename)
+                if self.dict_files[filename]["patch"] is not None:
+                    self.dict_files[filename]["patch"].update(
+                        self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
 
     def set_color(self, filename):
         """
@@ -399,12 +398,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 self.flag = 1  # sets flag of 0 to 1 when the linewidth changes
                 self.listWidget.currentItem().setIcon(self.show_color_icon(filename, self.set_color(filename)))
                 # removes and updates patches in the map according to new linewidth
-                self.dict_files[filename]["patch"].remove()
-                self.dict_files[filename]["patch"].update(
-                    self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
-                if self.listWidget.currentItem().checkState() == QtCore.Qt.Unchecked:
-                    self.flag = 1   # again sets to 1 because itemChanged signal due to set icon had changed it to 0
-                    self.checklistitem(filename)
+                if self.dict_files[filename]["patch"] is not None:
+                    self.dict_files[filename]["patch"].remove()
+                    self.dict_files[filename]["patch"].update(
+                        self.dict_files[filename]["color"], self.dict_files[filename]["linewidth"])
 
     def set_linewidth(self, filename):
         """
@@ -525,6 +522,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     self.listWidget.item(index).checkState() == QtCore.Qt.Checked):  # if file is checked
                 if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:
                     self.dict_files[self.listWidget.item(index).text()]["patch"].remove()  # remove patch object
+                    self.dict_files[self.listWidget.item(index).text()]["patch"] = None  # remove patch object
                 del self.dict_files[self.listWidget.item(index).text()]  # del the checked files from dictionary
                 self.listWidget.takeItem(index)  # remove file item from ListWidget
                 self.remove_file()  # recursively since count of for loop changes every iteration due to del of items))
@@ -542,6 +540,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         for entry in self.dict_files.values():  # removes all patches from map, but not from dict_flighttrack
             if entry["patch"] is not None:  # since newly initialized files will have patch:None
                 entry["patch"].remove()
+                entry["patch"] = None
 
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
@@ -563,7 +562,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                                  self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
-                except (IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
+                except (AttributeError, IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
                         et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
