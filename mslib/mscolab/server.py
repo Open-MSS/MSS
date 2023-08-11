@@ -205,6 +205,14 @@ def home():
 # ToDo setup codes in return statements
 @APP.route("/status")
 def hello():
+    try:
+        if request.authorization.parameters["username"] == "mscolab":
+            @conditional_decorator(auth.login_required,
+                                   mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
+            def hello2():
+                return "Mscolab server"
+    except AttributeError:
+        return "Mscolab server"
     return "Mscolab server"
 
 
