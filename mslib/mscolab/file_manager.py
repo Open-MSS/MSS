@@ -209,13 +209,13 @@ class FileManager(object):
             data.movedir(operation.path, value)
             # when renamed to a Group operation
             if value.endswith(mscolab_settings.GROUP_POSTFIX):
-                 # getting the category
-                 category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
-                 # all operation with that category
-                 ops_category = Operation.query.filter_by(category=category)
-                 for ops in ops_category:
-                     # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
-                     # then members of this op gets added to all others of same category
+                # getting the category
+                category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
+                # all operation with that category
+                ops_category = Operation.query.filter_by(category=category)
+                for ops in ops_category:
+                    # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
+                    # then members of this op gets added to all others of same category
                     self.import_permissions(op_id, ops.id, user.id)
         setattr(operation, attribute, value)
         db.session.commit()
