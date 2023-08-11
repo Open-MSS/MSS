@@ -651,9 +651,10 @@ class LinearViewPlotter(ViewPlotter):
 
     def clear_figure(self):
         logging.debug("path of linear view has changed.. removing invalidated plots")
-        self.ax.figure.clf()
+        self.fig.clf()
         self.ax = self.fig.add_subplot(111, zorder=99)
         self.ax.figure.patch.set_visible(False)
+        self.fig.canvas.draw()
 
     def redraw_xaxis(self, lats, lons):
         # Re-label x-axis.

@@ -86,14 +86,15 @@ class FileManager:
         op_id: operation id
         user: authenticated user
         """
-        # ToDo check need for user
-        operation = Operation.query.filter_by(id=op_id).first()
-        operation = {
-            "id": operation.id,
-            "path": operation.path,
-            "description": operation.description
-        }
-        return operation
+        if self.is_member(user.id, op_id):
+            operation = Operation.query.filter_by(id=op_id).first()
+            op = {
+                "id": operation.id,
+                "path": operation.path,
+                "description": operation.description
+            }
+            return op
+        return False
 
     def list_operations(self, user):
         """
@@ -225,6 +226,7 @@ class FileManager:
         op_id: operation id
         user: logged in user
         """
+        # ToDo rename to delete_operation
         if self.auth_type(user.id, op_id) != "creator":
             return False
         Permission.query.filter_by(op_id=op_id).delete()
@@ -341,6 +343,7 @@ class FileManager:
 
         Get change related to id
         """
+        # ToDo refactor check user in op
         change = Change.query.filter_by(id=ch_id).first()
         if not change:
             return False
@@ -366,7 +369,8 @@ class FileManager:
         user: user of this request
 
         Undo a change
-        # ToDo a revert option, which removes only that commit's change
+        # ToDo rename to undo_changes
+        # ToDo add a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
         if (not self.is_admin(user.id, ch.op_id) and not self.is_creator(user.id, ch.op_id) and not

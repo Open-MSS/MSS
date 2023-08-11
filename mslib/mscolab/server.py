@@ -206,6 +206,14 @@ def home():
 @APP.route("/status_auth")
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
+    try:
+        if request.authorization.parameters["username"] == "mscolab":
+            @conditional_decorator(auth.login_required,
+                                   mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
+            def hello2():
+                return "Mscolab server"
+    except AttributeError:
+        return "Mscolab server"
     return "Mscolab server"
 
 
@@ -302,6 +310,10 @@ def get_user():
 @APP.route("/delete_user", methods=["POST"])
 @verify_user
 def delete_user():
+    """
+    delete own account
+    """
+    # ToDo rename to delete_own_account
     user = g.user
     db.session.delete(user)
     db.session.commit()
@@ -312,47 +324,55 @@ def delete_user():
 @APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00"))
+    # ToDo maybe move is_member part to file_manager
+    user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
-    chat_messages = cm.get_messages(op_id, timestamp)
-    return jsonify({"messages": chat_messages})
+    if fm.is_member(user.id, op_id):
+        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00"))
+        chat_messages = cm.get_messages(op_id, timestamp)
+        return jsonify({"messages": chat_messages})
+    return "False"
 
 
 @APP.route("/message_attachment", methods=["POST"])
 @verify_user
 def message_attachment():
-    file_token = secrets.token_urlsafe(16)
-    file = request.files['file']
-    op_id = request.form.get("op_id", None)
-    message_type = MessageType(int(request.form.get("message_type")))
     user = g.user
-    # ToDo review
-    users = fm.fetch_users_without_permission(int(op_id), user.id)
-    if users is False:
+    op_id = request.form.get("op_id", None)
+    if fm.is_member(user.id, op_id):
+        file_token = secrets.token_urlsafe(16)
+        file = request.files['file']
+        message_type = MessageType(int(request.form.get("message_type")))
+        user = g.user
+        # ToDo review
+        users = fm.fetch_users_without_permission(int(op_id), user.id)
+        if users is False:
+            return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+        if file is not None:
+            with fs.open_fs('/') as home_fs:
+                file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], op_id)
+                if '\\' not in file_dir:
+                    if not home_fs.exists(file_dir):
+                        home_fs.makedirs(file_dir)
+                else:
+                    file_dir = file_dir.replace('\\', '/')
+                    if not os.path.exists(file_dir):
+                        os.makedirs(file_dir)
+                file_name, file_ext = file.filename.rsplit('.', 1)
+                file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
+                file_name = secure_filename(file_name)
+                file_path = fs.path.join(file_dir, file_name)
+                file.save(file_path)
+                static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
+                static_dir = static_dir.replace('\\', '/')
+                static_file_path = os.path.join(static_dir, op_id, file_name)
+            new_message = cm.add_message(user, static_file_path, op_id, message_type)
+            new_message_dict = get_message_dict(new_message)
+            sockio.emit('chat-message-client', json.dumps(new_message_dict))
+            return jsonify({"success": True, "path": static_file_path})
         return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
-    if file is not None:
-        with fs.open_fs('/') as home_fs:
-            file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], op_id)
-            if '\\' not in file_dir:
-                if not home_fs.exists(file_dir):
-                    home_fs.makedirs(file_dir)
-            else:
-                file_dir = file_dir.replace('\\', '/')
-                if not os.path.exists(file_dir):
-                    os.makedirs(file_dir)
-            file_name, file_ext = file.filename.rsplit('.', 1)
-            file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
-            file_name = secure_filename(file_name)
-            file_path = fs.path.join(file_dir, file_name)
-            file.save(file_path)
-            static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
-            static_dir = static_dir.replace('\\', '/')
-            static_file_path = os.path.join(static_dir, op_id, file_name)
-        new_message = cm.add_message(user, static_file_path, op_id, message_type)
-        new_message_dict = get_message_dict(new_message)
-        sockio.emit('chat-message-client', json.dumps(new_message_dict))
-        return jsonify({"success": True, "path": static_file_path})
-    return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+    # normal use case never gets to this
+    return "False"
 
 
 @APP.route('/uploads/<name>/<path:filename>', methods=["GET"])
@@ -416,6 +436,7 @@ def get_all_changes():
 @APP.route('/get_change_content', methods=['GET'])
 @verify_user
 def get_change_content():
+    # ToDo refactor see fm.get_change_content(
     ch_id = int(request.args.get('ch_id', request.form.get('ch_id', 0)))
     result = fm.get_change_content(ch_id)
     if result is False:
@@ -484,12 +505,16 @@ def update_operation():
 def get_operation_details():
     op_id = request.args.get('op_id', request.form.get('op_id', None))
     user = g.user
-    return json.dumps(fm.get_operation_details(int(op_id), user))
+    result = fm.get_operation_details(int(op_id), user)
+    if result is False:
+        return "False"
+    return json.dumps(result)
 
 
 @APP.route('/set_last_used', methods=["POST"])
 @verify_user
 def set_last_used():
+    # ToDo refactor move to file_manager
     op_id = request.form.get('op_id', None)
     days_ago = int(request.form.get('days', 0))
     operation = Operation.query.filter_by(id=int(op_id)).first()
@@ -511,6 +536,7 @@ def set_last_used():
 @APP.route('/update_last_used', methods=["POST"])
 @verify_user
 def update_last_used():
+    # ToDo refactor move to file_manager
     operations = Operation.query.filter().all()
     for operation in operations:
         if operation.last_used is not None and \
@@ -525,6 +551,7 @@ def update_last_used():
 @APP.route('/undo', methods=["POST"])
 @verify_user
 def undo_ftml():
+    # ToDo rename to undo_changes
     ch_id = request.form.get('ch_id', -1)
     ch_id = int(ch_id)
     user = g.user

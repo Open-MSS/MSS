@@ -47,6 +47,12 @@ MAX_UPLOAD_SIZE = 2 * 1024 * 1024
 # Set your secret key for token generation
 SECRET_KEY = 'MySecretKey'
 
+# looks for a given category for an operation ending with GROUP_POSTFIX
+# e.g. category = Tex will look for TexGroup
+# all users in that Group are set to the operations of that category
+# having the roles in the TexGroup
+GROUP_POSTFIX = "Group"
+
 # Set the database connection string:
 # Examples for different DBMS:
 # MySQL: "mysql+pymysql://<username>:<password>@<host>/<db_name>?charset=utf8mb4"
