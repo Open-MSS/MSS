@@ -203,7 +203,7 @@ class Test_KmlOverlayDockWidget(object):
         assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 1
         self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
         assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Unchecked
-        assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 1
+        assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 0
         self.window.select_all()
         self.window.remove_file()
 

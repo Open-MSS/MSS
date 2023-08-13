@@ -778,6 +778,7 @@ class MSUIMscolab(QtCore.QObject):
         self.fetch_gravatar()
 
     def delete_account(self):
+        # ToDo rename to delete_own_account
         if verify_user_token(self.mscolab_server_url, self.token):
             w = QtWidgets.QWidget()
             qm = QtWidgets.QMessageBox
@@ -1548,7 +1549,7 @@ class MSUIMscolab(QtCore.QObject):
 
     def show_operation_options_in_inactivated_state(self, access_level):
         self.ui.actionUnarchiveOperation.setEnabled(False)
-        if access_level == "creator":
+        if access_level in ["creator", "admin"]:
             self.ui.actionUnarchiveOperation.setEnabled(True)
 
     def activate_operation(self):
@@ -1705,13 +1706,13 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.actionManageUsers.setEnabled(True)
             self.ui.actionUpdateOperationDesc.setEnabled(True)
             self.ui.filterCategoryCb.setEnabled(True)
+            self.ui.actionRenameOperation.setEnabled(True)
         else:
             if self.admin_window is not None:
                 self.admin_window.close()
 
         if self.access_level in ["creator"]:
             self.ui.actionDeleteOperation.setEnabled(True)
-            self.ui.actionRenameOperation.setEnabled(True)
             self.ui.actionLeaveOperation.setEnabled(False)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
