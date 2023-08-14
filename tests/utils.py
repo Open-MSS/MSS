@@ -182,7 +182,7 @@ def mscolab_check_free_port(all_ports, port):
 
 
 def mscolab_ping_server(port):
-    url = f"http://127.0.0.1:{port}/status_auth"
+    url = f"http://127.0.0.1:{port}/status"
     try:
         r = requests.get(url, timeout=(2, 10))
         if r.text == "Mscolab server":
