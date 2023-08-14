@@ -255,7 +255,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         url_recover_password = f'{self.mscolab_server_url}/reset_request'
         try:
             r = s.post(url, data=data, timeout=(2, 10))
-        except requests.exceptions.ConnectionError as ex:
+        except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
                 "Error",
@@ -316,22 +316,31 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         emailid = data['email']
         password = data['password']
         if r.status_code == 401:
-            r = self.authenticate(data, r, url)
-            if r.status_code == 200:
-                # http auth was successful
-                self.save_auth_credentials_to_config_file()
-                if r.text not in ["False", "Unauthorized Access"]:
-                    # user does not exist or password is wrong
-                    self.save_user_credentials_to_config_file(emailid, password)
-                    self.mscolab.after_login(emailid, self.mscolab_server_url, r)
-                else:
-                    self.stackedWidget.setCurrentWidget(self.loginPage)
-                    url_recover_password = f'{self.mscolab_server_url}/reset_request'
-                    self.set_status("Error", 'Oh no, you need to add a user account or '
-                                    f'<a href="{url_recover_password}">Recover Your Password</a>')
-            else:
-                self.set_status("Error", 'Oh no, server authentication were incorrect.')
+            try:
+                r = self.authenticate(data, r, url)
+            except requests.exceptions.RequestException as ex:
+                logging.error("unexpected error: %s %s %s", type(ex), url, ex)
+                self.set_status(
+                    "Error",
+                    "Failed to establish a new connection" f' to "{self.mscolab_server_url}". Try in a moment again.',
+                )
                 self.stackedWidget.setCurrentWidget(self.loginPage)
+            else:
+                if r.status_code == 200:
+                    # http auth was successful
+                    self.save_auth_credentials_to_config_file()
+                    if r.text not in ["False", "Unauthorized Access"]:
+                        # user does not exist or password is wrong
+                        self.save_user_credentials_to_config_file(emailid, password)
+                        self.mscolab.after_login(emailid, self.mscolab_server_url, r)
+                    else:
+                        self.stackedWidget.setCurrentWidget(self.loginPage)
+                        url_recover_password = f'{self.mscolab_server_url}/reset_request'
+                        self.set_status("Error", 'Oh no, you need to add a user account or '
+                                        f'<a href="{url_recover_password}">Recover Your Password</a>')
+                else:
+                    self.set_status("Error", 'Oh no, server authentication were incorrect.')
+                    self.stackedWidget.setCurrentWidget(self.loginPage)
 
     def new_user_handler(self):
         # get mscolab /token http auth credentials from cache
@@ -356,7 +365,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         url = f'{self.mscolab_server_url}/register'
         try:
             r = s.post(url, data=data, timeout=(2, 10))
-        except requests.exceptions.ConnectionError as ex:
+        except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
                 "Error",
@@ -612,17 +621,16 @@ class MSUIMscolab(QtCore.QObject):
         # create socket connection here
         try:
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
-        except Exception as ex:
-            logging.debug("Couldn't create a socket connection: %s", ex)
-            show_popup(self.ui, "Error", "Couldn't create a socket connection. Maybe the mscolab server is too old."
-                                         "New Login required!")
-            self.logout()
-        else:
             # Update Last Used
             data = {
                 "token": self.token
             }
             r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data, timeout=(2, 10))
+        except Exception as ex:
+            logging.error("Couldn't create a socket connection: %s", ex)
+            show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+            self.logout()
+        else:
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_new_permission.connect(self.render_new_permission)
@@ -791,9 +799,15 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token
             }
 
-            res = requests.post(self.mscolab_server_url + '/delete_user', data=data, timeout=(2, 10))
-            if res.status_code == 200 and json.loads(res.text)["success"] is True:
+            try:
+                r = requests.post(self.mscolab_server_url + '/delete_user', data=data, timeout=(2, 10))
+            except requests.exceptions.RequestException as e:
+                logging.error(e)
+                show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
                 self.logout()
+            else:
+                if r.status_code == 200 and json.loads(r.text)["success"] is True:
+                    self.logout()
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -883,17 +897,23 @@ class MSUIMscolab(QtCore.QObject):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data, timeout=(2, 10))
-        if r.text == "True":
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('Your operation was created successfully')
-            op_id = self.get_recent_op_id()
-            self.new_op_id = op_id
-            self.conn.handle_new_operation(op_id)
-            self.signal_operation_added.emit(op_id, path)
+        try:
+            r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data, timeout=(2, 10))
+        except requests.exceptions.RequestException as e:
+            logging.error(e)
+            show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+            self.logout()
         else:
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('The path already exists')
+            if r.text == "True":
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('Your operation was created successfully')
+                op_id = self.get_recent_op_id()
+                self.new_op_id = op_id
+                self.conn.handle_new_operation(op_id)
+                self.signal_operation_added.emit(op_id, path)
+            else:
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('The path already exists')
 
     def get_recent_op_id(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -1061,7 +1081,8 @@ class MSUIMscolab(QtCore.QObject):
                         res = requests.post(url, data=data, timeout=(2, 10))
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
-                        show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
+                        show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+                        self.logout()
                     else:
                         res.raise_for_status()
                         self.reload_operations()
@@ -1090,7 +1111,12 @@ class MSUIMscolab(QtCore.QObject):
                     "selected_userids": json.dumps([self.user["id"]])
                 }
                 url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
-                res = requests.post(url, data=data, timeout=(2, 10))
+                try:
+                    res = requests.post(url, data=data, timeout=(2, 10))
+                except requests.exceptions.RequestException as e:
+                    logging.error(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+                    self.logout()
                 if res.text != "False":
                     res = res.json()
                     if res["success"]:
@@ -1137,14 +1163,20 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_desc
                 }
                 url = url_join(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
-                if r.text == "True":
-                    # Update active operation description label
-                    self.set_operation_desc_label(entered_operation_desc)
+                try:
+                    r = requests.post(url, data=data, timeout=(2, 10))
+                except requests.exceptions.RequestException as e:
+                    logging.error(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+                    self.logout()
+                else:
+                    if r.text == "True":
+                        # Update active operation description label
+                        self.set_operation_desc_label(entered_operation_desc)
 
-                    self.reload_operation_list()
-                    self.error_dialog = QtWidgets.QErrorMessage()
-                    self.error_dialog.showMessage("Description is updated successfully.")
+                        self.reload_operation_list()
+                        self.error_dialog = QtWidgets.QErrorMessage()
+                        self.error_dialog.showMessage("Description is updated successfully.")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1168,20 +1200,26 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_name
                 }
                 url = url_join(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
-                if r.text == "True":
-                    # Update active operation name
-                    self.active_operation_name = entered_operation_name
+                try:
+                    r = requests.post(url, data=data, timeout=(2, 10))
+                except requests.exceptions.RequestException as e:
+                    logging.error(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+                    self.logout()
+                else:
+                    if r.text == "True":
+                        # Update active operation name
+                        self.active_operation_name = entered_operation_name
 
-                    # Update active operation description
-                    self.set_operation_desc_label(self.active_operation_desc)
-                    self.reload_operation_list()
-                    self.reload_windows_slot()
-                    # Update other user's operation list
-                    self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
+                        # Update active operation description
+                        self.set_operation_desc_label(self.active_operation_desc)
+                        self.reload_operation_list()
+                        self.reload_windows_slot()
+                        # Update other user's operation list
+                        self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
 
-                    self.error_dialog = QtWidgets.QErrorMessage()
-                    self.error_dialog.showMessage("Operation is renamed successfully.")
+                        self.error_dialog = QtWidgets.QErrorMessage()
+                        self.error_dialog.showMessage("Operation is renamed successfully.")
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1560,16 +1598,22 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": self.inactive_op_id,
             }
-            res = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data, timeout=(2, 10))
-            if res.text != "False":
-                res = res.json()
-                if res["success"]:
-                    self.reload_operations()
-                else:
-                    show_popup(self.ui, "Error", "Some error occurred! Could not activate operation")
-            else:
-                show_popup(self.ui, "Error", "Session expired, new login required")
+            try:
+                res = requests.post(f'{self.mscolab_server_url}/set_last_used', data=data, timeout=(2, 10))
+            except requests.exceptions.RequestException as e:
+                logging.error(e)
+                show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
                 self.logout()
+            else:
+                if res.text != "False":
+                    res = res.json()
+                    if res["success"]:
+                        self.reload_operations()
+                    else:
+                        show_popup(self.ui, "Error", "Some error occurred! Could not activate operation")
+                else:
+                    show_popup(self.ui, "Error", "Session expired, new login required")
+                    self.logout()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
