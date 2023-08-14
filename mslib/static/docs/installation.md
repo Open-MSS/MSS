@@ -41,7 +41,7 @@ to leave out the 'source' here and below).
 
 ```
   $ mamba create -n mssenv
-  $ conda activate mssenv
+  $ mamba activate mssenv
   $ mamba install mss python
 ```
 For updating an existing MSS installation to the current version, it is
@@ -50,7 +50,7 @@ shall be updated, it is important to update all packages in this
 environment. 
 
 ```
-  $ conda activate mssenv
+  $ mamba activate mssenv
   $ msui --update
 ```
 

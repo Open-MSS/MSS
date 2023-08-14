@@ -367,7 +367,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         url = f'{self.mscolab_server_url}/register'
         try:
             r = s.post(url, data=data, timeout=(2, 10))
-        except requests.exceptions.ConnectionError as ex:
+        except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
                 "Error",
@@ -749,9 +749,15 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token
             }
 
-            res = requests.post(self.mscolab_server_url + '/delete_user', data=data, timeout=(2, 10))
-            if res.status_code == 200 and json.loads(res.text)["success"] is True:
+            try:
+                r = requests.post(self.mscolab_server_url + '/delete_user', data=data, timeout=(2, 10))
+            except requests.exceptions.RequestException as e:
+                logging.error(e)
+                show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
                 self.logout()
+            else:
+                if r.status_code == 200 and json.loads(r.text)["success"] is True:
+                    self.logout()
         else:
             show_popup(self, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -841,17 +847,23 @@ class MSUIMscolab(QtCore.QObject):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data, timeout=(2, 10))
-        if r.text == "True":
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('Your operation was created successfully')
-            op_id = self.get_recent_op_id()
-            self.new_op_id = op_id
-            self.conn.handle_new_operation(op_id)
-            self.signal_operation_added.emit(op_id, path)
+        try:
+            r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data, timeout=(2, 10))
+        except requests.exceptions.RequestException as e:
+            logging.error(e)
+            show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+            self.logout()
         else:
-            self.error_dialog = QtWidgets.QErrorMessage()
-            self.error_dialog.showMessage('The path already exists')
+            if r.text == "True":
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('Your operation was created successfully')
+                op_id = self.get_recent_op_id()
+                self.new_op_id = op_id
+                self.conn.handle_new_operation(op_id)
+                self.signal_operation_added.emit(op_id, path)
+            else:
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage('The path already exists')
 
     def get_recent_op_id(self):
         if verify_user_token(self.mscolab_server_url, self.token):
@@ -1019,7 +1031,8 @@ class MSUIMscolab(QtCore.QObject):
                         res = requests.post(url, data=data, timeout=(2, 10))
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
-                        show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
+                        show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
+                        self.logout()
                     else:
                         res.raise_for_status()
                         self.reload_operations()
@@ -1124,6 +1137,7 @@ class MSUIMscolab(QtCore.QObject):
                     "attribute": 'description',
                     "value": entered_operation_desc
                 }
+
                 url = urljoin(self.mscolab_server_url, 'update_operation')
                 r = requests.post(url, data=data, timeout=(2, 10))
                 if r.text == "True":
