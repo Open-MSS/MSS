@@ -205,15 +205,13 @@ def home():
 
 @APP.route("/status")
 def hello():
-    try:
-        if request.authorization.parameters["username"] == "mscolab":
-            @conditional_decorator(auth.login_required,
-                                   mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
-            def hello2():
-                return "Mscolab server"
-    except AttributeError:
+    if request.authorization is not None:
+        if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
+            auth.login_required()
+            return "Mscolab server"
         return "Mscolab server"
-    return "Mscolab server"
+    else:
+        return "Mscolab server"
 
 
 @APP.route('/token', methods=["POST"])
