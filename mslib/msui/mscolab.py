@@ -934,6 +934,7 @@ class MSUIMscolab(QtCore.QObject):
                 return op_id
             else:
                 show_popup(self.ui, "Error", "Session expired, new login required")
+                self.signal_logout_mscolab()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1510,8 +1511,12 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
-            if r.text != "False":
+            r = None
+            try:
+                r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
+            except requests.exceptions.MissingSchema:
+                show_popup(self.ui, "Error", "Session expired, new login required")
+            if r is not None and r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
                 self.ui.filterCategoryCb.clear()
