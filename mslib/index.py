@@ -182,9 +182,9 @@ def create_app(name=""):
     def help():
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'help.md')
         html_overrides = ('<img alt="Waypoint Tutorial" '
-                         'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
-                         '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
-                         'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />')
+                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
+                          '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
+                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />')
         content = get_content(_file, html_overrides=html_overrides)
         return render_template("/content.html", act="help", content=content)
 
