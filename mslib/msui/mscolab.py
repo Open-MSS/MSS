@@ -169,7 +169,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def mscolab_url_changed(self, text):
         self.httpPasswordLe.setText(
-            get_password_from_keyring("MSCOLAB_AUTH_" + text, "mscolab"))
+            get_password_from_keyring("MSCOLAB_AUTH_" + text, config_loader(dataset="MSCOLAB_auth_user_name")))
 
     def mscolab_login_changed(self, text):
         self.loginPasswordLe.setText(
@@ -214,7 +214,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
     def connect_handler(self):
         try:
             url = str(self.urlCb.currentText())
-            auth = "mscolab", self.httpPasswordLe.text()
+            auth = config_loader(dataset="MSCOLAB_auth_user_name"), self.httpPasswordLe.text()
             s = requests.Session()
             s.auth = auth
             s.headers.update({'x-test': 'true'})

@@ -128,6 +128,9 @@ class MSUIDefaultConfig:
         "http://localhost:8083",
     ]
 
+    # Username used for http auth
+    MSCOLAB_auth_user_name = "mscolab"
+
     # category for MSC operations
     MSCOLAB_category = "default"
 
@@ -237,6 +240,7 @@ class MSUIDefaultConfig:
         'new_flighttrack_flightlevel',
         'MSCOLAB_category',
         'mscolab_server_url',
+        'MSCOLAB_auth_user_name',
         'wms_cache',
         'wms_cache_max_size_bytes',
         'wms_cache_max_age_seconds',
@@ -297,6 +301,7 @@ class MSUIDefaultConfig:
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
         "MSS_auth": "Documentation Required",
+        "MSCOLAB_auth_user_name": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
         "wms_cache": "Documentation Required",
