@@ -180,7 +180,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         if r.text != "False":
             _json = json.loads(r.text)
             creator_name = _json["username"]
-        self.operationNameLabel.setText(f"Operation: {self.operation_name} by User: {creator_name}")
+            self.operationNameLabel.setText(f"Operation: {self.operation_name} by User: {creator_name}")
         self.usernameLabel.setText(f"Logged In: {self.user['username']}")
 
     def load_import_operations(self):
