@@ -252,6 +252,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.loginEmailLe.setText(
                     config_loader(dataset="MSS_auth").get(self.mscolab_server_url))
                 self.mscolab_login_changed(self.loginEmailLe.text())
+                self.enable_login_btn()
 
                 # Change connect button text and connect disconnect handler
                 self.connectBtn.setText('Disconnect')
