@@ -43,7 +43,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     # views for mscolab
-    # viewClosesId = QtCore.Signal(int, name="viewClosesId")
+    # viewClosesId = QtCore.pyqtSignal(int, name="viewClosesId")
 
     def __init__(self, parent=None, model=None, _id=None):
         super().__init__(parent)

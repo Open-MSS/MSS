@@ -110,7 +110,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     # ToDO: Make a new parent class with all the functions in this class and inherit them
     #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
 
-    signal_parent_closes = QtCore.Signal()
+    signal_parent_closes = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
@@ -173,7 +173,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.activate_flighttrack()
         self.multipleflightrack_worker = Worker(None)
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def logout(self):
         self.operations.logout_mscolab()
         self.ui.signal_listFlighttrack_doubleClicked.disconnect()
@@ -185,7 +185,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         for idx in range(len(self.obb)):
             del self.obb[idx]
 
-    @QtCore.Slot(str, str)
+    @QtCore.pyqtSlot(str, str)
     def login(self, url, token):
         self.mscolab_server_url = url
         self.token = token
@@ -250,7 +250,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.operations.deactivate_all_operations()
         self.activate_flighttrack()
 
-    @QtCore.Slot(tuple)
+    @QtCore.pyqtSlot(tuple)
     def ft_vertices_color(self, color):
         self.color = color
         self.colorPixmap.setPixmap(self.show_color_pixmap(color))
@@ -265,19 +265,19 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         elif self.operation_list:
             self.operations.ft_color_update(color)
 
-    @QtCore.Slot(int, str)
+    @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):
         self.operations.operationsAdded(op_id, path)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def remove_operation_slot(self, op_id):
         self.operations.operationRemoved(op_id)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def update_op_id(self, op_id):
         self.operations.get_op_id(op_id)
 
-    @QtCore.Slot(ft.WaypointsTableModel)
+    @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def get_active(self, active_flighttrack):
         self.update_last_flighttrack()
         self.active_flight_track = active_flighttrack
@@ -768,11 +768,11 @@ class MultipleFlightpathOperations:
         self.token = None
         self.dict_operations = {}
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def permission_revoked(self, op_id):
         self.operationRemoved(op_id)
 
-    @QtCore.Slot(int, str)
+    @QtCore.pyqtSlot(int, str)
     def render_permission(self, op_id, path):
         self.operationsAdded(op_id, path)
 

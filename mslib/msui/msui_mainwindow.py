@@ -351,15 +351,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     """
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
-    signal_activate_flighttrack = QtCore.Signal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
-    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
-    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
-    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
-    signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
-    signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
-    signal_listFlighttrack_doubleClicked = QtCore.Signal()
-    signal_permission_revoked = QtCore.Signal(int)
-    signal_render_new_permission = QtCore.Signal(int, str)
+    signal_activate_flighttrack = QtCore.pyqtSignal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
+    signal_activate_operation = QtCore.pyqtSignal(int, name="signal_activate_operation")
+    signal_operation_added = QtCore.pyqtSignal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.pyqtSignal(int, name="signal_operation_removed")
+    signal_login_mscolab = QtCore.pyqtSignal(str, str, name="signal_login_mscolab")
+    signal_logout_mscolab = QtCore.pyqtSignal(name="signal_logout_mscolab")
+    signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
+    signal_permission_revoked = QtCore.pyqtSignal(int)
+    signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
     def __init__(self, mscolab_data_dir=None, *args):
         super().__init__(*args)
@@ -490,15 +490,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def activate_operation_slot(self, active_op_id):
         self.signal_activate_operation.emit(active_op_id)
 
-    @QtCore.Slot(int, str)
+    @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):
         self.signal_operation_added.emit(op_id, path)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def remove_operation_slot(self, op_id):
         self.signal_operation_removed.emit(op_id)
 

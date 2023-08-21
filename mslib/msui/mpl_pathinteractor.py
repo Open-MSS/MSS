@@ -910,7 +910,7 @@ class VPathInteractor(PathInteractor):
     """Subclass of PathInteractor that implements an interactively editable
        vertical profile of the flight track.
     """
-    signal_get_vsec = QtCore.Signal(name="get_vsec")
+    signal_get_vsec = QtCore.pyqtSignal(name="get_vsec")
 
     def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
@@ -1052,7 +1052,7 @@ class LPathInteractor(PathInteractor):
     """
     Subclass of PathInteractor that implements a non interactive linear profile of the flight track.
     """
-    signal_get_lsec = QtCore.Signal(name="get_lsec")
+    signal_get_lsec = QtCore.pyqtSignal(name="get_lsec")
 
     def __init__(self, ax, waypoints, redraw_xaxis=None, clear_figure=None, numintpoints=101):
         """Constructor passes a PathV instance its parent.
