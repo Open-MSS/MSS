@@ -403,14 +403,14 @@ class MSUIMscolab(QtCore.QObject):
     """
     name = "Mscolab"
 
-    signal_unarchive_operation = QtCore.Signal(int, name="signal_unarchive_operation")
-    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
-    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
-    signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
-    signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
-    signal_listFlighttrack_doubleClicked = QtCore.Signal()
-    signal_permission_revoked = QtCore.Signal(int)
-    signal_render_new_permission = QtCore.Signal(int, str)
+    signal_unarchive_operation = QtCore.pyqtSignal(int, name="signal_unarchive_operation")
+    signal_operation_added = QtCore.pyqtSignal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.pyqtSignal(int, name="signal_operation_removed")
+    signal_login_mscolab = QtCore.pyqtSignal(str, str, name="signal_login_mscolab")
+    signal_logout_mscolab = QtCore.pyqtSignal(name="signal_logout_mscolab")
+    signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
+    signal_permission_revoked = QtCore.pyqtSignal(int)
+    signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
     def __init__(self, parent=None, data_dir=None):
         super().__init__(parent)
@@ -1329,22 +1329,22 @@ class MSUIMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def reload_operation_list(self):
         if self.mscolab_server_url is not None:
             self.reload_operations()
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def reload_window(self, value):
         if self.active_op_id != value or self.ui.workLocallyCheckbox.isChecked():
             return
         self.reload_wps_from_server()
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def reload_windows_slot(self):
         self.reload_window(self.active_op_id)
 
-    @QtCore.Slot(int, int)
+    @QtCore.pyqtSlot(int, int)
     def render_new_permission(self, op_id, u_id):
         """
         op_id: operation id
@@ -1375,7 +1375,7 @@ class MSUIMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
 
-    @QtCore.Slot(int, int, str)
+    @QtCore.pyqtSlot(int, int, str)
     def handle_update_permission(self, op_id, u_id, access_level):
         """
         op_id: operation id
@@ -1441,7 +1441,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.listOperationsMSC.takeItem(self.ui.listOperationsMSC.row(remove_item))
             return remove_item.operation_path
 
-    @QtCore.Slot(int, int)
+    @QtCore.pyqtSlot(int, int)
     def handle_revoke_permission(self, op_id, u_id):
         if u_id == self.user["id"]:
             operation_name = self.delete_operation_from_list(op_id)
@@ -1457,7 +1457,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.ui.listFlightTracks.setCurrentRow(0)
                 self.ui.activate_selected_flight_track()
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def handle_operation_deleted(self, op_id):
         old_operation_name = self.active_operation_name
         old_active_id = self.active_op_id

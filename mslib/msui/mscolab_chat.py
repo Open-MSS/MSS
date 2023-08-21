@@ -375,16 +375,16 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             self.messageList.scrollToBottom()
 
     # SOCKET HANDLERS
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def handle_permissions_updated(self, _):
         self.load_users()
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_incoming_message(self, message):
         message = json.loads(message)
         self.render_new_message(message)
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_incoming_message_reply(self, reply):
         reply = json.loads(reply)
         for i in range(self.messageList.count() - 1, -1, -1):
@@ -410,7 +410,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 self.messageList.setItemWidget(item, new_message_item)
                 break
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_message_edited(self, message):
         message = json.loads(message)
         message_id = message["message_id"]
@@ -424,7 +424,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 item.setSizeHint(message_widget.sizeHint())
                 break
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_deleted_message(self, message):
         message = json.loads(message)
         message_id = message["message_id"]
