@@ -133,7 +133,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "token": self.token,
                 "op_id": self.op_id
             }
-            named_version_only = None
+            named_version_only = False
             if self.versionFilterCB.currentIndex() == 0:
                 named_version_only = True
             query_string = urlencode({"named_version": named_version_only})

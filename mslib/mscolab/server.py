@@ -422,7 +422,7 @@ def get_operation_by_id():
 @verify_user
 def get_all_changes():
     op_id = request.args.get('op_id', request.form.get('op_id', None))
-    named_version = request.args.get('named_version')
+    named_version = request.args.get('named_version') == "True"
     user = g.user
     result = fm.get_all_changes(int(op_id), user, named_version)
     if result is False:
