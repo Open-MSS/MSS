@@ -306,7 +306,7 @@ class MSUIDefaultConfig:
         "default_MSCOLAB": "Documentation Required",
         "MSS_auth": "Documentation Required",
         "MSCOLAB_auth_user_name": "Documentation Required",
-        "MSCOLAB_timeout":"Documentation Required",
+        "MSCOLAB_timeout": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
         "wms_cache": "Documentation Required",
