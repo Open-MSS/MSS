@@ -1162,6 +1162,7 @@ class MSUIMscolab(QtCore.QObject):
                     f"You're about to rename the operation - '{self.active_operation_name}' "
                     f"Enter new operation name: "
                 ),
+                text=f"{self.active_operation_name}",
             )
             if ok:
                 data = {
