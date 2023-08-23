@@ -29,8 +29,7 @@ from datetime import datetime
 import json
 
 import requests
-from urllib.parse import urljoin
-from werkzeug.urls import url_encode
+from urllib.parse import urljoin, urlencode
 
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.flighttrack import WaypointsTableModel
@@ -137,7 +136,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
             named_version_only = None
             if self.versionFilterCB.currentIndex() == 0:
                 named_version_only = True
-            query_string = url_encode({"named_version": named_version_only})
+            query_string = urlencode({"named_version": named_version_only})
             url_path = f'get_all_changes?{query_string}'
             url = urljoin(self.mscolab_server_url, url_path)
             r = requests.get(url, data=data, timeout=(2, 10))
