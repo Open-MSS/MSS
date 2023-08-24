@@ -25,7 +25,7 @@
     limitations under the License.
 """
 
-import importlib.machinery
+import importlib.util
 import os
 import sys
 import mock
@@ -198,10 +198,16 @@ class mscolab_auth(object):
         # windows needs \\ or / but mixed is terrible. *nix needs /
         mscolab_fs.writetext(constants.MSCOLAB_AUTH_FILE, config_string.replace('\\', '/'))
 
-importlib.machinery.SourceFileLoader('mswms_settings', constants.SERVER_CONFIG_FILE_PATH).load_module()
-sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
-importlib.machinery.SourceFileLoader('mscolab_settings', path).load_module()
-sys.path.insert(0, parent_path)
+
+def _load_module(module_name, path):
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+
+
+_load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
+_load_module("mscolab_settings", path)
 
 
 @pytest.fixture(autouse=True)
