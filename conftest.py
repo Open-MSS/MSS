@@ -210,6 +210,7 @@ _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
 _load_module("mscolab_settings", path)
 
 
+'''
 @pytest.fixture(autouse=True)
 def close_open_windows():
     """
@@ -234,7 +235,7 @@ def close_open_windows():
         # Some objects deny permission, pass in that case
         except RuntimeError:
             pass
-
+'''
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):
