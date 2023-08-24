@@ -277,7 +277,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             }
             url = urljoin(self.mscolab_server_url, 'message_attachment')
             try:
-                requests.post(url, data=data, files=files, timeout=(2, 10))
+                requests.post(url, data=data, files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.ConnectionError:
                 show_popup(self, "Error", "File size too large")
         self.send_message_state()
@@ -333,7 +333,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "op_id": self.op_id
         }
         url = urljoin(self.mscolab_server_url, 'authorized_users')
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             self.collaboratorsList.clear()
             users = r.json()["users"]
@@ -354,7 +354,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         # returns an array of messages
         url = urljoin(self.mscolab_server_url, "messages")
 
-        res = requests.get(url, data=data, timeout=(2, 10))
+        res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if res.text != "False":
             res = res.json()
             messages = res["messages"]
@@ -474,7 +474,7 @@ class MessageItem(QtWidgets.QWidget):
                               self.attachment_path.replace('\\', '/').split('colabdata')[1])
         else:
             img_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
-        data = requests.get(img_url, timeout=(2, 10)).content
+        data = requests.get(img_url, timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
         image = QtGui.QImage()
         image.loadFromData(data)
         self.message_image = image
@@ -654,7 +654,7 @@ class MessageItem(QtWidgets.QWidget):
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
                 file_content = requests.get(urljoin(self.chat_window.mscolab_server_url, self.attachment_path),
-                                            timeout=(2, 10)).content
+                                            timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:

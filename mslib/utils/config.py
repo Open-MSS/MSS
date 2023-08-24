@@ -134,6 +134,9 @@ class MSUIDefaultConfig:
     # category for MSC operations
     MSCOLAB_category = "default"
 
+    # timeout for MSColab in seconds. First value is for connection, second for reply
+    MSCOLAB_timeout = [2, 10]
+
     # list of MSC servers {"http://www.your-mscolab-server.de": "authuser",
     # "http://www.your-wms-server.de": "authuser"}
     MSS_auth = {}
@@ -284,6 +287,7 @@ class MSUIDefaultConfig:
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
+        "MSCOLAB_timeout": [[2, 10]],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
@@ -302,6 +306,7 @@ class MSUIDefaultConfig:
         "default_MSCOLAB": "Documentation Required",
         "MSS_auth": "Documentation Required",
         "MSCOLAB_auth_user_name": "Documentation Required",
+        "MSCOLAB_timeout": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
         "wms_cache": "Documentation Required",

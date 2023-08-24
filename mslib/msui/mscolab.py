@@ -98,7 +98,7 @@ class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArc
             }
             url = urljoin(self.mscolab.mscolab_server_url, 'set_last_used')
             try:
-                res = requests.post(url, data=data, timeout=(2, 10))
+                res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.RequestException as e:
                 logging.debug(e)
                 show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
@@ -218,7 +218,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s = requests.Session()
             s.auth = auth
             s.headers.update({'x-test': 'true'})
-            r = s.get(urljoin(url, 'status'), timeout=(2, 10))
+            r = s.get(urljoin(url, 'status'), timeout=tuple(tuple(config_loader(dataset="MSCOLAB_timeout"))))
             if r.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif r.status_code == 200:
@@ -311,7 +311,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         url = f'{self.mscolab_server_url}/token'
         url_recover_password = f'{self.mscolab_server_url}/reset_request'
         try:
-            r = s.post(url, data=data, timeout=(2, 10))
+            r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.status_code == 401:
                 raise requests.exceptions.ConnectionError
         except requests.exceptions.ConnectionError as ex:
@@ -367,7 +367,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         s.headers.update({'x-test': 'true'})
         url = f'{self.mscolab_server_url}/register'
         try:
-            r = s.post(url, data=data, timeout=(2, 10))
+            r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
@@ -585,7 +585,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data, timeout=(2, 10))
+            r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data,
+                              timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_new_permission.connect(self.render_new_permission)
@@ -751,7 +752,8 @@ class MSUIMscolab(QtCore.QObject):
             }
 
             try:
-                r = requests.post(self.mscolab_server_url + '/delete_user', data=data, timeout=(2, 10))
+                r = requests.post(self.mscolab_server_url + '/delete_user', data=data,
+                                  timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.RequestException as e:
                 logging.error(e)
                 show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
@@ -849,7 +851,8 @@ class MSUIMscolab(QtCore.QObject):
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
         try:
-            r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data, timeout=(2, 10))
+            r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data,
+                              timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         except requests.exceptions.RequestException as e:
             logging.error(e)
             show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
@@ -1029,7 +1032,7 @@ class MSUIMscolab(QtCore.QObject):
                     }
                     url = urljoin(self.mscolab_server_url, 'delete_operation')
                     try:
-                        res = requests.post(url, data=data, timeout=(2, 10))
+                        res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
                         show_popup(self.ui, "Error", "Some error occurred! Please reconnect.")
@@ -1062,7 +1065,7 @@ class MSUIMscolab(QtCore.QObject):
                     "selected_userids": json.dumps([self.user["id"]])
                 }
                 url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
-                res = requests.post(url, data=data, timeout=(2, 10))
+                res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 if res.text != "False":
                     res = res.json()
                     if res["success"]:
@@ -1109,7 +1112,7 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_category
                 }
                 url = urljoin(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
+                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 if r.text == "True":
                     self.active_operation_category = entered_operation_category
                     self.reload_operation_list()
@@ -1140,7 +1143,7 @@ class MSUIMscolab(QtCore.QObject):
                 }
 
                 url = urljoin(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
+                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 if r.text == "True":
                     # Update active operation description label
                     self.set_operation_desc_label(entered_operation_desc)
@@ -1172,7 +1175,7 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_name
                 }
                 url = urljoin(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
+                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 if r.text == "True":
                     # Update active operation name
                     self.active_operation_name = entered_operation_name
@@ -1317,7 +1320,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(self.mscolab_server_url + '/operations', data=data, timeout=(2, 10))
+            r = requests.get(self.mscolab_server_url + '/operations', data=data,
+                             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1357,7 +1361,8 @@ class MSUIMscolab(QtCore.QObject):
         data = {
             'token': self.token
         }
-        r = requests.get(self.mscolab_server_url + '/user', data=data, timeout=(2, 10))
+        r = requests.get(self.mscolab_server_url + '/user', data=data,
+                         timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
             if _json['user']['id'] == u_id:
@@ -1476,7 +1481,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
+            r = requests.get(f'{self.mscolab_server_url}/operations', data=data,
+                             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1498,7 +1504,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
+            r = requests.get(f'{self.mscolab_server_url}/operations', data=data,
+                             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
                 self.operations = _json["operations"]
@@ -1566,7 +1573,7 @@ class MSUIMscolab(QtCore.QObject):
                 }
                 url = urljoin(self.mscolab_server_url, 'set_last_used')
                 try:
-                    res = requests.post(url, data=data, timeout=(2, 10))
+                    res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 except requests.exceptions.RequestException as e:
                     logging.debug(e)
                     show_popup(self.ui, "Error", "Some error occurred! Could not archive operation.")
@@ -1608,7 +1615,8 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": item.op_id,
             }
-            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data, timeout=(2, 10))
+            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data,
+                          timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
 
             # set active_op_id here
             self.active_op_id = item.op_id
