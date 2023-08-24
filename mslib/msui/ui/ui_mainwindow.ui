@@ -230,7 +230,7 @@ Save a flight track to name it.</string>
            <property name="bottomMargin">
             <number>8</number>
            </property>
-           <item row="11" column="0">
+           <item row="12" column="0">
             <widget class="QCheckBox" name="workLocallyCheckbox">
              <property name="toolTip">
               <string>Check to work asynchronously from the server</string>
@@ -240,7 +240,7 @@ Save a flight track to name it.</string>
              </property>
             </widget>
            </item>
-           <item row="12" column="0" colspan="2">
+           <item row="13" column="0" colspan="2">
             <widget class="QPushButton" name="pbOpenOperationArchive">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -267,12 +267,50 @@ Save a flight track to name it.</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QListWidget" name="listOperationsMSC">
-             <property name="toolTip">
-              <string>List of mscolab operations.
-Double click a operation to activate and view its description.</string>
+           <item row="9" column="0">
+            <widget class="QLabel" name="categoryLabel">
+             <property name="text">
+              <string>Category:</string>
              </property>
+            </widget>
+           </item>
+           <item row="6" column="0" colspan="2">
+            <widget class="QLabel" name="workingStatusLabel">
+             <property name="text">
+              <string>No operations selected</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="1">
+            <widget class="QPushButton" name="StoreLayout">
+             <property name="text">
+              <string>Store Layout</string>
+             </property>
+            </widget>
+           </item>
+           <item row="12" column="1">
+            <widget class="QComboBox" name="serverOptionsCb">
+             <property name="toolTip">
+              <string>Fetch/Save Server options</string>
+             </property>
+             <item>
+              <property name="text">
+               <string>Server Options</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Fetch From Server</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Save To Server</string>
+              </property>
+             </item>
             </widget>
            </item>
            <item row="9" column="1">
@@ -299,49 +337,18 @@ Double click a operation to activate and view its description.</string>
              </item>
             </widget>
            </item>
-           <item row="11" column="1">
-            <widget class="QComboBox" name="serverOptionsCb">
+           <item row="4" column="0" colspan="2">
+            <widget class="QListWidget" name="listOperationsMSC">
              <property name="toolTip">
-              <string>Fetch/Save Server options</string>
-             </property>
-             <item>
-              <property name="text">
-               <string>Server Options</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Fetch From Server</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Save To Server</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="9" column="0">
-            <widget class="QLabel" name="categoryLabel">
-             <property name="text">
-              <string>Category:</string>
+              <string>List of mscolab operations.
+Double click a operation to activate and view its description.</string>
              </property>
             </widget>
            </item>
-           <item row="6" column="0" colspan="2">
-            <widget class="QLabel" name="workingStatusLabel">
+           <item row="11" column="1">
+            <widget class="QPushButton" name="RestoreLayout">
              <property name="text">
-              <string>No operations selected</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="1">
-            <widget class="QPushButton" name="StoreLayout">
-             <property name="text">
-              <string>Store Layout</string>
+              <string>Restore Layout</string>
              </property>
             </widget>
            </item>

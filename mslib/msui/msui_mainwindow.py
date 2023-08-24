@@ -38,6 +38,7 @@ import re
 import sys
 import fs
 import json
+import asyncio
 
 from mslib import __version__
 from mslib.msui.qt5 import ui_mainwindow as ui
@@ -471,6 +472,20 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.openOperationsGb.hide()
 
         self.StoreLayout.clicked.connect(self.store_operation_data)
+        self.RestoreLayout.clicked.connect(self.restore_operation_data)
+        self.allowed_widget_names = ["TopViewWindow", "SideViewWindow", "TableViewWindow", "LinearWindow"]
+        self.listOperationsMSC.itemChanged.connect(self.operation_changed)
+
+    def operation_changed(self):
+        folder_path = MSUI_CONFIG_PATH
+        file_name = self.listOperationsMSC.currentItem()
+        file_path = os.path.join(folder_path, file_name.text() + ".txt")
+        if os.path.exists(file_path):
+            result = QtWidgets.QMessageBox.question(self, "Saved Layout Detected", "Would you like to restore it?",
+                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+            if result == QtWidgets.QMessageBox.Yes:
+                self.restore_operation_data()
+        print("opertaion is changed")
 
     def store_operation_data(self):
         self.file_name = self.listOperationsMSC.currentItem()
@@ -483,10 +498,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             return
         self.widget_info = {}
         top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
-
-        allowed_widget_names = ["TopViewWindow", "SideViewWindow", "TableViewWindow", "LinearViewWindow"]
         for widget in top_level_widgets:
-            if widget.objectName() in allowed_widget_names:
+            if widget.objectName() in self.allowed_widget_names:
+                positions = []
+                if isinstance(widget, QtWidgets.QMainWindow):
+                    geometry = widget.geometry().getRect()
+                    screen_index = QtWidgets.QApplication.desktop().screenNumber(widget)
+                    is_minimized = widget.isMinimized()
+                    positions.append(geometry)
+                    positions.append(screen_index)
+                    positions.append(is_minimized)
                 child_info = {}
                 for child in widget.findChildren(QtWidgets.QWidget):
                     if isinstance(child, QtWidgets.QComboBox):
@@ -495,7 +516,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     elif isinstance(child, QtWidgets.QCheckBox):
                         child_info[child.objectName()] = {"checked": child.isChecked()}
 
-                self.widget_info[widget.objectName()] = child_info
+                itemlist = [child_info, positions]
+                self.widget_info[widget.objectName()] = itemlist
 
         folder_path = MSUI_CONFIG_PATH
         file_path = os.path.join(folder_path, self.file_name.text() + ".txt")
@@ -508,6 +530,68 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             message_box.setText(f"Dictionary has been successfully stored in {file_path}")
             message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
             message_box.exec_()
+
+    async def delayed_process(self, widget_name, saved_data, loaded_data):
+        await asyncio.sleep(1)
+
+        for widget_name, saved_data in loaded_data.items():
+            if widget_name in self.allowed_widget_names and len(saved_data) == 2:
+                positions = saved_data[1]
+                top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
+
+                for widget in top_level_widgets:
+                    if widget.objectName() == widget_name:
+                        current_position = widget.geometry().getRect()
+                        if current_position != positions[0]:
+                            widget.setGeometry(*positions[0])
+
+    def restore_operation_data(self):
+        folder_path = MSUI_CONFIG_PATH
+        file_name = self.listOperationsMSC.currentItem()
+        if file_name is None:
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Select Operation")
+            message_box.setText("Select an operation to restore layout")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+            return
+
+        file_path = os.path.join(folder_path, file_name.text() + ".txt")
+
+        if not os.path.exists(file_path):
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("File Not Found")
+            message_box.setText(f"Layout data file not found: {file_path}")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+            return
+
+        with open(file_path, 'r') as file:
+            loaded_data = json.load(file)
+
+        top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
+
+        for widget_name, saved_data in loaded_data.items():
+            if widget_name in self.allowed_widget_names:
+                if widget_name not in [w.objectName() for w in top_level_widgets]:
+                    if widget_name == "TopViewWindow":
+                        self.create_view_handler("topview")
+                    elif widget_name == "SideViewWindow":
+                        self.create_view_handler("sideview")
+                    elif widget_name == "TableViewWindow":
+                        self.create_view_handler("tableview")
+                    elif widget_name == "LinearWindow":
+                        self.create_view_handler("linearview")
+
+        asyncio.run(self.delayed_process(widget_name, saved_data, loaded_data))
+
+        # for widget in top_level_widgets:
+        #     widget_name = widget.objectName()
+        #     if widget_name in self.allowed_widget_names:
+        #         if widget_name not in loaded_data:
+        #             print(f"Extra widget found: '{widget_name}'")
+
+        print("Restore operation completed.")
 
     def bring_main_window_to_front(self):
         self.show()
