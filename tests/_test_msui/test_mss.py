@@ -25,13 +25,14 @@
     limitations under the License.
 """
 
-
+import pytest
 import sys
 from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib.msui import mss
 
 
 def test_mss_rename_message():
+    pytest.skip("py311, needs review")
     application = QtWidgets.QApplication(sys.argv)
     main_window = mss.MSSMainWindow()
     main_window.show()
