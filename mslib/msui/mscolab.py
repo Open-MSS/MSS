@@ -448,11 +448,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.actionChangeDescription.triggered.connect(self.change_description_handler)
         self.ui.actionRenameOperation.triggered.connect(self.rename_operation_handler)
         self.ui.actionArchiveOperation.triggered.connect(self.archive_operation)
-        self.ui.actionViewDescription.triggered.connect(
-            lambda: QtWidgets.QMessageBox.information(
-                None, "Operation Description",
-                f"Category: {self.active_operation_category}\n"
-                f"{self.active_operation_description}"))
+        self.ui.actionViewDescription.triggered.connect(self.view_description)
 
         self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
         # connect slot for handling operation options combobox
@@ -518,6 +514,24 @@ class MSUIMscolab(QtCore.QObject):
         else:
             self.data_dir = data_dir
         self.create_dir()
+
+    def view_description(self):
+        data = {
+            "token": self.token,
+            "op_id": self.active_op_id
+        }
+        url = urljoin(self.mscolab_server_url, "/creator_of_operation")
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        creator_name = "unknown"
+        if r.text != "False":
+            _json = json.loads(r.text)
+            creator_name = _json["username"]
+        QtWidgets.QMessageBox.information(
+            None, "Operation Description",
+            f"<html>Creator: <b>{creator_name}</b><p>"
+            f"Category: <b>{self.active_operation_category}</b><p>"
+            "<p>"
+            f"{self.active_operation_description}</html>")
 
     def open_operation_archive(self):
         self.operation_archive_browser.show()
