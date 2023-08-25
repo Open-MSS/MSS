@@ -41,10 +41,6 @@
     limitations under the License.
 """
 
-from future import standard_library
-
-standard_library.install_aliases()
-
 import glob
 import os
 import io

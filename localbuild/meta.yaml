@@ -29,7 +29,6 @@ requirements:
     - python
     - setuptools
     - pip
-    - future
     - menuinst  # [win]
   run:
     - python
