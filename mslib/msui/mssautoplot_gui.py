@@ -29,7 +29,7 @@ import sys
 import os
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.msui.qt5 import ui_mssautoplot_gui as ui
-from mslib.utils import mssautoplot 
+from mslib.utils import mssautoplot
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog
 from mslib.utils.config import config_loader, read_config_file
 from mslib.msui import constants
@@ -89,16 +89,10 @@ class Mssautoplot_gui(ui.Ui_mssautoplot):
         self.TopViewradioButton.toggled.connect(self.passToggledtop)
         self.SinglePlotradioButton.toggled.connect(self.passToggledSinglePlot)
         self.MultiplePlotsradioButton.toggled.connect(self.passToggledMultiplePlots)
-        
+
     def retrieveImage(self):
         if self.config_path == "":
             self.config_path = self.path
-        flight_name = str(self.FlightNamelineEdit.text())
-        server_url = str(self.ServerUrllineEdit.text())
-        layer = str(self.LayerlineEdit.text())
-        section = str(self.MapSectioncomboBox.currentText())
-        level = str(self.LevellineEdit.text())
-        style = str(self.StylelineEdit.text())
         init = self.StartTimedateTimeEdit.dateTime()
         valid = self.EndTimedateTimeEdit.dateTime()
         initpy = init.toPyDateTime()
@@ -113,12 +107,13 @@ class Mssautoplot_gui(ui.Ui_mssautoplot):
             starttime = inittime
             endtime = validtime
             print("calling")
-            mssautoplot.autoplot(cpath=self.config_path, view=self.view, ftrack=self.flightpath, itime="", vtime="", stime=starttime, etime=endtime, intv=interval)
+            mssautoplot.autoplot(cpath=self.config_path, view=self.view, ftrack=self.flightpath,
+                                 itime="", vtime="", stime=starttime, etime=endtime, intv=interval)
         else:
             if inittime == "2000-01-01T00:00:00":
                 inittime = ""
-            mssautoplot.autoplot(cpath=self.config_path, view=self.view, ftrack=self.flightpath, itime=inittime, vtime=validtime, stime="", etime="", intv=0)
-    
+            mssautoplot.autoplot(cpath=self.config_path, view=self.view, ftrack=self.flightpath,
+                                 itime=inittime, vtime=validtime, stime="", etime="", intv=0)
 
     def configFileBrowser(self):
         file_browser = self.FileBrowserDialog()
@@ -159,7 +154,7 @@ class Mssautoplot_gui(ui.Ui_mssautoplot):
             self.NoOfPlotsLabel.show()
             self.SinglePlotradioButton.show()
             self.MultiplePlotsradioButton.show()
-    
+
     def passToggledside(self):
         if not self.TopViewradioButton.isChecked():
             self.view = "side"
@@ -215,7 +210,6 @@ class Mssautoplot_gui(ui.Ui_mssautoplot):
         self.IntervalLabel.show()
         self.IntervalspinBox.show()
 
-
     class FileBrowserDialog(QWidget):
         def __init__(self):
             super().__init__()
@@ -225,19 +219,21 @@ class Mssautoplot_gui(ui.Ui_mssautoplot):
             self.width = 640
             self.height = 480
             self.initUI()
-        
+
         def initUI(self):
             self.setWindowTitle(self.title)
             self.setGeometry(self.left, self.top, self.width, self.height)
-            self.openFileNameDialog()       
+            self.openFileNameDialog()
             self.show()
-        
+
         def openFileNameDialog(self):
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            self.path, _ = QFileDialog.getOpenFileName(self,"mssautoplotGUI- File browser", "","All Files (*);;Python Files (*.py)", options=options)
+            self.path, _ = QFileDialog.getOpenFileName(self, "mssautoplotGUI- File browser", "",
+                                                       "All Files (*);;Python Files (*.py)", options=options)
             if self.path:
                 self.file = os.path.split(self.path)[1]
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
