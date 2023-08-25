@@ -18,7 +18,6 @@ dependencies:
       - sphinx
       - fs
       - netCDF4
-      - future
       - PyQt5
       - owslib
   - basemap >=1.3.3
