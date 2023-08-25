@@ -100,18 +100,19 @@ class KMLPatch:
             x1, y1 = self.compute_xy(interior)
             self.patches.append(self.map.plot(x1, y1, "-", zorder=10, **kwargs))
 
-    def add_multipoint(self, point, style, name):
+    def add_multipoint(self, geoms, style, name):
         """
         Plot KML points in a MultiGeometry
 
         :param point: fastkml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = (point.x, point.y)
-        self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
+        xs = [point.x for point in geoms]
+        ys = [point.y for point in geoms]
+        self.patches.append(self.map.plot(xs, ys, "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
-                name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                name, xy=(xs[0], ys[0]), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
     def add_multiline(self, line, style, name):
@@ -152,8 +153,7 @@ class KMLPatch:
             elif isinstance(placemark.geometry, geometry.Polygon):
                 self.add_polygon(placemark, style, name)
             elif isinstance(placemark.geometry, geometry.MultiPoint):
-                for geom in placemark.geometry.geoms:
-                    self.add_multipoint(geom, style, name)
+                self.add_multipoint(placemark.geometry.geoms, style, name)
             elif isinstance(placemark.geometry, geometry.MultiLineString):
                 for geom in placemark.geometry.geoms:
                     self.add_multiline(geom, style, name)
@@ -163,7 +163,7 @@ class KMLPatch:
             elif isinstance(placemark.geometry, geometry.GeometryCollection):
                 for geom in placemark.geometry.geoms:
                     if geom.geom_type == "Point":
-                        self.add_multipoint(geom, style, name)
+                        self.add_multipoint([geom], style, name)
                     elif geom.geom_type == "LineString":
                         self.add_multiline(geom, style, name)
                     elif geom.geom_type == "LinearRing":
