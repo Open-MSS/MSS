@@ -48,6 +48,7 @@ from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_op
 
 PORTS = list(range(18000, 18500))
 
+
 class Test_Mscolab_connect_window():
     def setup_method(self):
         handle_db_reset()
