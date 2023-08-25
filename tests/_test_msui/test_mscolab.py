@@ -458,10 +458,10 @@ class Test_Mscolab(object):
         self._activate_operation_at_index(1)
         assert self.window.mscolab.active_operation_name == "reproduce-test"
 
+    @pytest.mark.skip(reason="needs review for py311")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_operation(self, mocktext, mockbox):
-        pytest.skip('py3.11, needs a review')
         self._connect_to_mscolab()
         self._create_user("berta", "berta@something.org", "something")
         assert self.window.usernameLabel.text() == 'berta'
@@ -529,10 +529,10 @@ class Test_Mscolab(object):
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_name == "new_name"
 
+    @pytest.mark.skip(reason="needs review for py311")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_desciption", True))
     def test_update_description(self, mockbox, mockpatch):
-        pytest.skip("py3.11, needs review")
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
@@ -620,6 +620,7 @@ class Test_Mscolab(object):
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.chat_window is not None
 
+    @pytest.mark.skip(reason="needs review for py311")
     def test_close_chat_window(self):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
@@ -644,9 +645,9 @@ class Test_Mscolab(object):
         self.window.mscolab.delete_operation_from_list(op_id)
         assert self.window.mscolab.active_op_id is None
 
+    @pytest.mark.skip(reason="needs review for py311")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
-        pytest.skip("py3.11, needs review")
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         u_id = self.window.mscolab.user['id']

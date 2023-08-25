@@ -175,8 +175,8 @@ class Test_MSSSideViewWindow(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
+    @pytest.mark.skip(reason="needs review for py311")
     def test_no_updater(self):
-        pytest.skip("py 3.11, needs review")
         assert not hasattr(self.window, "updater")
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
