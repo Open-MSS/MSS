@@ -1132,6 +1132,9 @@ class MSUIMscolab(QtCore.QObject):
                     self.reload_operation_list()
                     self.error_dialog = QtWidgets.QErrorMessage()
                     self.error_dialog.showMessage("Description is updated successfully.")
+                else:
+                    show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                    self.logout()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
