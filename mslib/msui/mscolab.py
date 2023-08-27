@@ -508,7 +508,7 @@ class MSUIMscolab(QtCore.QObject):
         # User email
         self.email = None
         # Display all categories by default
-        self.selected_category = "ANY"
+        self.selected_category = "*ANY*"
         # Gravatar image path
         self.gravatar = None
 
@@ -1249,7 +1249,7 @@ class MSUIMscolab(QtCore.QObject):
             self.selected_category = self.ui.filterCategoryCb.currentText()
             if update_operations:
                 self.add_operations_to_ui()
-            if self.selected_category != "ANY":
+            if self.selected_category != "*ANY*":
                 items = [self.ui.listOperationsMSC.item(i) for i in range(self.ui.listOperationsMSC.count())]
                 row = 0
                 for item in items:
@@ -1257,6 +1257,8 @@ class MSUIMscolab(QtCore.QObject):
                         self.ui.listOperationsMSC.takeItem(row)
                     else:
                         row += 1
+            else:
+                self.add_operations_to_ui()
 
     def server_options_handler(self, index):
         selected_option = self.ui.serverOptionsCb.currentText()
@@ -1493,11 +1495,11 @@ class MSUIMscolab(QtCore.QObject):
                 operations = _json["operations"]
                 self.ui.filterCategoryCb.currentIndexChanged.disconnect(self.operation_category_handler)
                 self.ui.filterCategoryCb.clear()
-                categories = set(["ANY"])
+                categories = set(["*ANY*"])
                 for operation in operations:
                     categories.add(operation["category"])
-                categories.remove("ANY")
-                categories = ["ANY"] + sorted(categories)
+                categories.remove("*ANY*")
+                categories = ["*ANY*"] + sorted(categories)
                 category = config_loader(dataset="MSCOLAB_category")
                 self.ui.filterCategoryCb.addItems(categories)
                 if category in categories:
