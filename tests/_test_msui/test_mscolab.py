@@ -580,7 +580,7 @@ class Test_Mscolab(object):
                             range(self.window.mscolab.ui.listOperationsMSC.count())]
         assert ["flight5678"] == operation_pathes
 
-    def test_get_recent_op_id(self, mockbox, mockpatch):
+    def test_get_recent_op_id(self):
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
         QtTest.QTest.qWait(100)
