@@ -504,7 +504,7 @@ class MSUIMscolab(QtCore.QObject):
         # User email
         self.email = None
         # Display all categories by default
-        self.selected_category = "ANY"
+        self.selected_category = "*ANY*"
         # Gravatar image path
         self.gravatar = None
 
@@ -621,10 +621,9 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.actionAddOperation.setEnabled(True)
 
             # Populate open operations list
-            self.add_operations_to_ui()
-
+            ops = self.add_operations_to_ui()
             # Show category list
-            self.show_categories_to_ui()
+            self.show_categories_to_ui(ops)
 
             self.ui.activeOperationDesc.setHidden(False)
             self.ui.actionChangeCategory.setEnabled(False)
@@ -884,6 +883,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.error_dialog.showMessage('The path already exists')
 
     def get_recent_op_id(self):
+        logging.debug('get_recent_op_id')
         if verify_user_token(self.mscolab_server_url, self.token):
             """
             get most recent operation's op_id
@@ -1266,12 +1266,13 @@ class MSUIMscolab(QtCore.QObject):
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
-    def operation_category_handler(self):
+    def operation_category_handler(self, update_operations=True):
         # only after_login
         if self.mscolab_server_url is not None:
             self.selected_category = self.ui.filterCategoryCb.currentText()
-            if self.selected_category != "ANY":
+            if update_operations:
                 self.add_operations_to_ui()
+            if self.selected_category != "*ANY*":
                 items = [self.ui.listOperationsMSC.item(i) for i in range(self.ui.listOperationsMSC.count())]
                 row = 0
                 for item in items:
@@ -1339,6 +1340,7 @@ class MSUIMscolab(QtCore.QObject):
         """
         get most recent operation
         """
+        logging.debug('get_recent_operation')
         if verify_user_token(self.mscolab_server_url, self.token):
             data = {
                 "token": self.token
@@ -1489,6 +1491,7 @@ class MSUIMscolab(QtCore.QObject):
 
     @QtCore.pyqtSlot(int)
     def handle_operation_deleted(self, op_id):
+        logging.debug('handle_operation_deleted')
         old_operation_name = self.active_operation_name
         old_active_id = self.active_op_id
         operation_name = self.delete_operation_from_list(op_id)
@@ -1496,33 +1499,41 @@ class MSUIMscolab(QtCore.QObject):
             operation_name = old_operation_name
         show_popup(self.ui, "Success", f'Operation "{operation_name}" was deleted!', icon=1)
 
-    def show_categories_to_ui(self):
+    def show_categories_to_ui(self, ops=None):
         """
         adds the list of operation categories to the UI
         """
-        if verify_user_token(self.mscolab_server_url, self.token):
-            data = {
-                "token": self.token
-            }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data,
-                             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        logging.debug('show_categories_to_ui')
+        if verify_user_token(self.mscolab_server_url, self.token) or ops:
+            if ops is not None:
+                r = ops
+            else:
+                data = {
+                    "token": self.token
+                }
+                r = requests.get(f'{self.mscolab_server_url}/operations', data=data,
+                                 timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
+                self.ui.filterCategoryCb.currentIndexChanged.disconnect(self.operation_category_handler)
                 self.ui.filterCategoryCb.clear()
-                categories = set(["ANY"])
+                categories = set(["*ANY*"])
                 for operation in operations:
                     categories.add(operation["category"])
-                categories.remove("ANY")
-                categories = ["ANY"] + sorted(categories)
+                categories.remove("*ANY*")
+                categories = ["*ANY*"] + sorted(categories)
                 category = config_loader(dataset="MSCOLAB_category")
                 self.ui.filterCategoryCb.addItems(categories)
                 if category in categories:
                     index = categories.index(category)
                     self.ui.filterCategoryCb.setCurrentIndex(index)
+                self.operation_category_handler(update_operations=False)
+                self.ui.filterCategoryCb.currentIndexChanged.connect(self.operation_category_handler)
 
     def add_operations_to_ui(self):
         logging.debug('add_operations_to_ui')
+        r = None
         if verify_user_token(self.mscolab_server_url, self.token):
             data = {
                 "token": self.token
@@ -1574,6 +1585,7 @@ class MSUIMscolab(QtCore.QObject):
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
+        return r
 
     def show_operation_options_in_inactivated_state(self, access_level):
         self.ui.actionUnarchiveOperation.setEnabled(False)
@@ -1803,9 +1815,9 @@ class MSUIMscolab(QtCore.QObject):
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
     def reload_operations(self):
-        self.add_operations_to_ui()
+        ops = self.add_operations_to_ui()
         selected_category = self.ui.filterCategoryCb.currentText()
-        self.show_categories_to_ui()
+        self.show_categories_to_ui(ops)
         index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
         if index >= 0:
             self.ui.filterCategoryCb.setCurrentIndex(index)

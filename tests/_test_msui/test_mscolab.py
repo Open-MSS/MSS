@@ -560,6 +560,26 @@ class Test_Mscolab(object):
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_category == "new_category"
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
+    def test_any_special_category(self, mockpatch):
+        self._connect_to_mscolab()
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        QtTest.QTest.qWait(0)
+        self._create_operation("flight5678", "Description flight5678", category="furtherexample")
+        # all operations of two defined categories are found
+        assert self.window.mscolab.selected_category == "*ANY*"
+        operation_pathes = [self.window.mscolab.ui.listOperationsMSC.item(i).operation_path for i in
+                            range(self.window.mscolab.ui.listOperationsMSC.count())]
+        assert ["flight1234", "flight5678"] == operation_pathes
+        self.window.mscolab.ui.filterCategoryCb.setCurrentIndex(2)
+        QtWidgets.QApplication.processEvents()
+        # only operation of furtherexample are found
+        assert self.window.mscolab.selected_category == "furtherexample"
+        operation_pathes = [self.window.mscolab.ui.listOperationsMSC.item(i).operation_path for i in
+                            range(self.window.mscolab.ui.listOperationsMSC.count())]
+        assert ["flight5678"] == operation_pathes
+
     def test_get_recent_op_id(self):
         self._connect_to_mscolab()
         self._create_user("anton", "anton@something.org", "something")
@@ -720,14 +740,14 @@ class Test_Mscolab(object):
         read_config_file(path=config_file)
 
     @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
-    def _create_operation(self, path, description, mockbox):
+    def _create_operation(self, path, description, mockbox, category="example"):
         self.window.actionAddOperation.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str(path))
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.description.setText(str(description))
         QtWidgets.QApplication.processEvents()
-        self.window.mscolab.add_proj_dialog.category.setText("example")
+        self.window.mscolab.add_proj_dialog.category.setText(category)
         QtWidgets.QApplication.processEvents()
         okWidget = self.window.mscolab.add_proj_dialog.buttonBox.button(
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
