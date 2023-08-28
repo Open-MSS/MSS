@@ -1829,6 +1829,7 @@ class MSUIMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     def handle_waypoints_changed(self):
+        logging.debug("handle_waypoints_changed")
         if verify_user_token(self.mscolab_server_url, self.token):
             if self.ui.workLocallyCheckbox.isChecked():
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
@@ -1856,6 +1857,7 @@ class MSUIMscolab(QtCore.QObject):
                     logging.error("%s" % err)
 
     def handle_import_msc(self, file_path, extension, function, pickertype):
+        logging.debug("handle_import_msc")
         if verify_user_token(self.mscolab_server_url, self.token):
             if self.active_op_id is None:
                 return
@@ -1878,14 +1880,10 @@ class MSUIMscolab(QtCore.QObject):
                 model = ft.WaypointsTableModel(waypoints=new_waypoints)
                 xml_doc = self.waypoints_model.get_xml_doc()
                 xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
             self.waypoints_model = model
-            if self.ui.workLocallyCheckbox.isChecked():
-                self.waypoints_model.save_to_ftml(self.local_ftml_file)
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
-            else:
-                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None)
-                self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
+            self.handle_waypoints_changed()
+            self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             self.reload_view_windows()
             show_popup(self.ui, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
         else:
@@ -1893,6 +1891,7 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
 
     def handle_export_msc(self, extension, function, pickertype):
+        logging.debug("handle_export_msc")
         if verify_user_token(self.mscolab_server_url, self.token):
             if self.active_op_id is None:
                 return
