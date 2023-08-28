@@ -303,7 +303,7 @@ class FileManager:
             operation_data = operation_file.read()
         return operation_data
 
-    def get_all_changes(self, op_id, user, named_version=None):
+    def get_all_changes(self, op_id, user, named_version=False):
         """
         op_id: operation-id
         user: user of this request
@@ -314,17 +314,17 @@ class FileManager:
         perm = Permission.query.filter_by(u_id=user.id, op_id=op_id).first()
         if perm is None:
             return False
-        # Get all changes
-        if named_version is None:
-            changes = Change.query.\
-                filter_by(op_id=op_id)\
-                .order_by(Change.created_at.desc())\
-                .all()
         # Get only named versions
-        else:
+        if named_version:
             changes = Change.query\
                 .filter(Change.op_id == op_id)\
                 .filter(~Change.version_name.is_(None))\
+                .order_by(Change.created_at.desc())\
+                .all()
+        # Get all changes
+        else:
+            changes = Change.query\
+                .filter_by(op_id=op_id)\
                 .order_by(Change.created_at.desc())\
                 .all()
 
