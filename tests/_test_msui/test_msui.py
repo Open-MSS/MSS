@@ -263,7 +263,7 @@ class Test_MSSSideViewWindow(object):
     def test_plugin_import(self, open_file):
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=open_file) as mockopen:
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[open_file[0]]) as mockopen:
             assert self.window.listFlightTracks.count() == 1
             assert mockopen.call_count == 0
             self.window.last_save_directory = ROOT_DIR
