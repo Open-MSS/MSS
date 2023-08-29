@@ -611,7 +611,9 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.connectBtn.hide()
             self.ui.openOperationsGb.show()
             # display connection status
-            self.ui.mscStatusLabel.setText(self.ui.tr(f"Status: connected to '{self.mscolab_server_url}'"))
+            transport_layer = self.conn.sio.transport()
+            self.ui.mscStatusLabel.setText(self.ui.tr(
+                f"Status: connected to '{self.mscolab_server_url}' by transport layer '{transport_layer}'"))
             # display username beside useroptions toolbutton
             self.ui.usernameLabel.setText(f"{self.user['username']}")
             self.ui.usernameLabel.show()
