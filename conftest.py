@@ -211,9 +211,8 @@ _load_module("mscolab_settings", path)
 
 
 @pytest.fixture(autouse=True)
-def close_open_windows():
-    """
-    Closes all windows after every test
+def fail_if_open_message_boxes_left():
+    """Fail a test if there are any Qt message boxes left open at the end
     """
     # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
     with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
@@ -224,7 +223,7 @@ def close_open_windows():
         if any(box.call_count > 0 for box in [q, i, c, w]):
             summary = "\n".join([f"PyQt5.QtWidgets.QMessageBox.{box()._extract_mock_name()}: {box.mock_calls[:-1]}"
                                  for box in [q, i, c, w] if box.call_count > 0])
-            warnings.warn(f"An unhandled message box popped up during your test!\n{summary}")
+            pytest.fail(f"An unhandled message box popped up during your test!\n{summary}")
 
 
     # Try to close all remaining widgets after each test
