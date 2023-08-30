@@ -27,6 +27,7 @@
 import os
 import sys
 import pytest
+import mock
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
@@ -72,16 +73,6 @@ class Test_MscolabOperation(object):
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
-        # connect and login to mscolab
-        self._connect_to_mscolab()
-        self._login(self.userdata[0], self.userdata[2])
-        # activate operation and open chat window
-        self._activate_operation_at_index(0)
-        self.window.actionChat.trigger()
-        QtWidgets.QApplication.processEvents()
-        self.chat_window = self.window.mscolab.chat_window
-        QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
         self.window.mscolab.logout()
@@ -94,13 +85,17 @@ class Test_MscolabOperation(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    def test_send_message(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_send_message(self, mockquestion):
+        self._initial_data()
         self._send_message("**test message**")
         self._send_message("**test message**")
         with self.app.app_context():
             assert Message.query.filter_by(text='**test message**').count() == 2
 
-    def test_search_message(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_search_message(self, mockquestion):
+        self._initial_data()
         self._send_message("**test message**")
         self._send_message("**test message**")
         message_index = self.chat_window.messageList.count() - 1
@@ -117,13 +112,17 @@ class Test_MscolabOperation(object):
         QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index).isSelected() is True
 
-    def test_copy_message(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_copy_message(self, mockquestion):
+        self._initial_data()
         self._send_message("**test message**")
         self._send_message("**test message**")
         self._activate_context_menu_action(Actions.COPY)
         assert QtWidgets.QApplication.clipboard().text() == "**test message**"
 
-    def test_reply_message(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_reply_message(self, mockquestion):
+        self._initial_data()
         self._send_message("**test message**")
         self._send_message("**test message**")
         parent_message_id = self._get_message_id(self.chat_window.messageList.count() - 1)
@@ -136,7 +135,9 @@ class Test_MscolabOperation(object):
             assert message.count() == 1
             assert message.first().reply_id == parent_message_id
 
-    def test_edit_message(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_edit_message(self, mockquestion):
+        self._initial_data()
         self._send_message("**test message**")
         self._send_message("**test message**")
         self._activate_context_menu_action(Actions.EDIT)
@@ -146,13 +147,27 @@ class Test_MscolabOperation(object):
         with self.app.app_context():
             assert Message.query.filter_by(text='test edit').count() == 1
 
-    def test_delete_message(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_delete_message(self, mockquestion):
+        self._initial_data()
         self._send_message("**test message**")
         self._send_message("**test message**")
         self._activate_context_menu_action(Actions.DELETE)
         QtTest.QTest.qWait(100)
         with self.app.app_context():
             assert Message.query.filter_by(text='test edit').count() == 0
+
+    def _initial_data(self):
+        # connect and login to mscolab
+        self._connect_to_mscolab()
+        self._login(self.userdata[0], self.userdata[2])
+        # activate operation and open chat window
+        self._activate_operation_at_index(0)
+        self.window.actionChat.trigger()
+        QtWidgets.QApplication.processEvents()
+        self.chat_window = self.window.mscolab.chat_window
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        QtWidgets.QApplication.processEvents()
 
     def _connect_to_mscolab(self):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)

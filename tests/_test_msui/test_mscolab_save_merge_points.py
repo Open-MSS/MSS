@@ -39,7 +39,7 @@ PORTS = list(range(21000, 21500))
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_save_merge_points(self, mockbox):
         self.emailid = "mergepoints@alpha.org"
         self._create_user_data(emailid=self.emailid)
