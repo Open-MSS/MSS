@@ -1134,7 +1134,7 @@ class MSUIMscolab(QtCore.QObject):
                     self.active_operation_category = entered_operation_category
                     self.reload_operation_list()
                     self.error_dialog = QtWidgets.QErrorMessage()
-                    self.error_dialog.showMessage("Description is updated successfully.")
+                    self.error_dialog.showMessage("Category is updated successfully.")
                 else:
                     show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                     self.logout()
