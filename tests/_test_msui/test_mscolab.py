@@ -283,15 +283,10 @@ class Test_Mscolab(object):
 
     def teardown_method(self):
         self.window.mscolab.logout()
-        if self.window.mscolab.version_window:
-            self.window.mscolab.version_window.close()
-        if self.window.mscolab.conn:
-            self.window.mscolab.conn.disconnect()
-        # force close all open views
         while self.window.listViews.count() > 0:
             self.window.listViews.item(0).window.handle_force_close()
-        # close all hanging operation option windows
-        self.window.mscolab.close_external_windows()
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
@@ -523,10 +518,11 @@ class Test_Mscolab(object):
         assert self.window.listViews.count() == 0
         assert self.window.listOperationsMSC.model().rowCount() == 0
 
+    @mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_name", True))
-    def test_handle_rename_operation(self, mockbox, mockpatch, mockquestion):
+    def test_handle_rename_operation(self, mockbox, mockpatch, mockquestion, mockshowmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
@@ -539,11 +535,12 @@ class Test_Mscolab(object):
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_name == "new_name"
 
+    @mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     @pytest.mark.skip(reason="needs review for py311")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_desciption", True))
-    def test_update_description(self, mockbox, mockpatch, mockquestion):
+    def test_update_description(self, mockbox, mockpatch, mockquestion, mockshowmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
@@ -556,10 +553,11 @@ class Test_Mscolab(object):
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_description == "new_desciption"
 
+    @mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_category", True))
-    def test_update_category(self, mockbox, mockpatch, mockquestion):
+    def test_update_category(self, mockbox, mockpatch, mockquestion, mockshowmessage):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
@@ -662,23 +660,24 @@ class Test_Mscolab(object):
         self.window.mscolab.delete_operation_from_list(op_id)
         assert self.window.mscolab.active_op_id is None
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage, mockquestion):
         self._connect_to_mscolab()
-        self._create_user("something", "something@something.org", "something")
+        self._create_user("something_todelete", "something_todelete@something.org", "something_todelete")
         u_id = self.window.mscolab.user['id']
         self.window.mscolab.open_profile_window()
         QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.listOperationsMSC.model().rowCount() == 0
-        assert self.window.usernameLabel.isVisible() is False
+        assert self.window.usernameLabel.text() == "User"
         assert self.window.connectBtn.isVisible() is True
         with self.app.app_context():
             assert User.query.filter_by(emailid='something').count() == 0
             assert Permission.query.filter_by(u_id=u_id).count() == 0
 
-    def test_open_help_dialog(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
+    def test_open_help_dialog(self, mockmessage):
         self.window.actionMSColabHelp.trigger()
         QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.help_dialog is not None
