@@ -161,7 +161,7 @@ def test_get_airspaces_no_data(mockbox):
     assert airspaces == []
 
 
-@pytest.mark.skip(reason="needs review for py311")
+@pytest.mark.skip(reason="needs review because Fatal Python error: Aborted")
 @mock.patch("mslib.utils.airdata.download_progress", _download_progress_airspace)
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_get_airspaces(mockbox):

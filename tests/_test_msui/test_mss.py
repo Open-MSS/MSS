@@ -31,7 +31,7 @@ from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib.msui import mss
 
 
-@pytest.mark.skip(reason="needs review for py311")
+@pytest.mark.skip(reason="needs review no assert statement")
 def test_mss_rename_message():
     application = QtWidgets.QApplication(sys.argv)
     main_window = mss.MSSMainWindow()

@@ -80,7 +80,6 @@ class Test_FileManager(TestCase):
     def tearDown(self):
         pass
 
-    @pytest.mark.skip(reason="needs review for py311")
     def test_fetch_operation_creator(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="more_than_one")
