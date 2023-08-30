@@ -46,7 +46,7 @@ from mslib.mscolab.mscolab import handle_db_reset
 from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
-PORTS = list(range(25000, 25500))
+PORTS = list(range(25000, 25050))
 
 
 class Test_Mscolab_connect_window():
@@ -393,7 +393,9 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_work_locally_toggle(self, mockquestion):
         self._connect_to_mscolab()
-        self._login(emailid=self.userdata[0], password=self.userdata[2])
+        self._create_user("work_something", "work_something@something.org", "work_something")
+        self._create_operation("Work", "Description Work")
+        QtTest.QTest.qWait(200)
         self._activate_operation_at_index(0)
         self.window.workLocallyCheckbox.setChecked(True)
         QtWidgets.QApplication.processEvents()
@@ -488,7 +490,7 @@ class Test_Mscolab(object):
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
         assert mockbox.call_count == 1
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_handle_leave_operation(self, mockmessage, mockquestion):
         self._connect_to_mscolab()
@@ -521,11 +523,11 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
-    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_name", True))
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("my_new_name", True))
     def test_handle_rename_operation(self, mockbox, mockpatch, mockquestion, mockshowmessage):
         self._connect_to_mscolab()
-        self._create_user("something", "something@something.org", "something")
-        self._create_operation("flight1234", "Description flight1234")
+        self._create_user("Irenamesomething", "Irenamesomething@something.org", "something")
+        self._create_operation("myop12", "Description myop12")
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
@@ -533,7 +535,7 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
-        assert self.window.mscolab.active_operation_name == "new_name"
+        assert self.window.mscolab.active_operation_name == "my_new_name"
 
     @mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
