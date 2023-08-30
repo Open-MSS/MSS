@@ -36,6 +36,7 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.utils.config import modify_config_file
 
 
 PORTS = list(range(20000, 20500))
@@ -59,6 +60,7 @@ class Test_MscolabVersionHistory(object):
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         # activate operation and open chat window
         self._activate_operation_at_index(0)
