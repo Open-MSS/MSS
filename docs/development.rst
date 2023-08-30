@@ -394,6 +394,22 @@ example::
 
 
 
+Monitoring
+----------
+
+`pytest-monitor <https://pytest-monitor.readthedocs.io/en/latest/introduction.html>`_ tracks the resources (like memory and compute time) consumed by a test suite, so that you can make sure that your code does not use too much of them.
+pytest-monitor is active by default as soon as it is installed. After running your first session, a .pymon sqlite database will be accessible in the directory where pytest was run.
+
+Example::
+
+    $ pytest --db ./monitor.db
+
+    $ sqlite3 ./monitor.db
+
+    sqlite>.headers on
+
+    sqlite> select ITEM, MEM_USAGE from TEST_METRICS;
+
 Pushing your changes
 --------------------
 
