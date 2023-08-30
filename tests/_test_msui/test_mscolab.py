@@ -47,13 +47,17 @@ from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 PORTS = list(range(25000, 25050))
-
+PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 
 class Test_Mscolab_connect_window():
     def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process = PROCESS
+        self.url = URL
+        self.app = APP
+        self.cm = CM
+        self.fm = FM
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -82,7 +86,6 @@ class Test_Mscolab_connect_window():
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -113,7 +116,8 @@ class Test_Mscolab_connect_window():
         assert mslib.utils.auth.get_password_from_keyring("MSCOLAB_AUTH_" + self.url, "mscolab") == "fnord"
         assert mockset.call_args_list == [mock.call("color: green;")]
 
-    def test_disconnect(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_disconnect(self, mockquestion):
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
         QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
@@ -121,7 +125,8 @@ class Test_Mscolab_connect_window():
         # set ui_name_winodw default
         assert self.main_window.usernameLabel.text() == 'User'
 
-    def test_login(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_login(self, mockquestion):
         self._connect_to_mscolab()
         self._login(self.userdata[0], self.userdata[2])
         QtWidgets.QApplication.processEvents()
@@ -133,7 +138,8 @@ class Test_Mscolab_connect_window():
         # test operation listing visibility
         assert self.main_window.listOperationsMSC.model().rowCount() == 1
 
-    def test_logout_action_trigger(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_logout_action_trigger(self, mockquestion):
         # Login
         self._connect_to_mscolab()
         self._login(self.userdata[0], self.userdata[2])
@@ -147,7 +153,8 @@ class Test_Mscolab_connect_window():
         assert self.main_window.local_active is True
         assert self.main_window.usernameLabel.text() == "User"
 
-    def test_logout(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_logout(self, mockquestion):
         # Login
         self._connect_to_mscolab()
         self._login(self.userdata[0], self.userdata[2])
@@ -162,7 +169,8 @@ class Test_Mscolab_connect_window():
         assert self.main_window.local_active is True
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_add_user(self, mockmessage):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_add_user(self, mockmessage, mockquestion):
         self._connect_to_mscolab()
         self._create_user("something", "something@something.org", "something")
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
@@ -241,6 +249,8 @@ class Test_Mscolab_connect_window():
         read_config_file(path=config_file)
 
 
+PROCESS.terminate()
+PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab(object):
@@ -257,7 +267,11 @@ class Test_Mscolab(object):
     def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process = PROCESS
+        self.url = URL
+        self.app = APP
+        self.cm = CM
+        self.fm = FM
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -289,7 +303,6 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_work_locally_toggle(self, mockquestion):
