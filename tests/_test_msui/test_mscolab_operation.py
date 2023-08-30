@@ -42,6 +42,7 @@ PORTS = list(range(22000, 22500))
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 MSCOLAB_PROCESSES.append(PROCESS)
 
+
 class Actions(object):
     DOWNLOAD = 0
     COPY = 1

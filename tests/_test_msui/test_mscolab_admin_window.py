@@ -42,6 +42,8 @@ from conftest import MSCOLAB_PROCESSES
 PORTS = list(range(24000, 24500))
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 MSCOLAB_PROCESSES.append(PROCESS)
+
+
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabAdminWindow(object):
@@ -76,7 +78,6 @@ class Test_MscolabAdminWindow(object):
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
-
 
     def teardown_method(self):
         self.window.mscolab.logout()

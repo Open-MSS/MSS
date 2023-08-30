@@ -43,6 +43,7 @@ PORTS = list(range(20000, 20500))
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 MSCOLAB_PROCESSES.append(PROCESS)
 
+
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabVersionHistory(object):

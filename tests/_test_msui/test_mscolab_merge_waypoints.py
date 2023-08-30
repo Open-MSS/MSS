@@ -46,6 +46,7 @@ PORTS = list(range(23000, 23500))
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 MSCOLAB_PROCESSES.append(PROCESS)
 
+
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints(object):

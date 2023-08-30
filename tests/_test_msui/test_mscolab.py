@@ -51,6 +51,7 @@ PORTS = list(range(25000, 25050))
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 MSCOLAB_PROCESSES.append(PROCESS)
 
+
 class Test_Mscolab_connect_window():
     def setup_method(self):
         handle_db_reset()
