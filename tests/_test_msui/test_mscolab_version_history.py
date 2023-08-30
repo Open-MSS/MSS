@@ -36,17 +36,23 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from conftest import MSCOLAB_PROCESSES
 
 
 PORTS = list(range(20000, 20500))
-
+PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
+MSCOLAB_PROCESSES.append(PROCESS)
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabVersionHistory(object):
     def setup_method(self):
         handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process = PROCESS
+        self.url = URL
+        self.app = APP
+        self.cm = CM
+        self.fm = FM
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -56,18 +62,8 @@ class Test_MscolabVersionHistory(object):
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.window.show()
-        # connect and login to mscolab
-        self._connect_to_mscolab()
-        self._login(self.userdata[0], self.userdata[2])
-        # activate operation and open chat window
-        self._activate_operation_at_index(0)
-        self.window.actionVersionHistory.trigger()
-        QtWidgets.QApplication.processEvents()
-        self.version_window = self.window.mscolab.version_window
-        assert self.version_window is not None
-        QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
         self.window.mscolab.logout()
@@ -75,11 +71,13 @@ class Test_MscolabVersionHistory(object):
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
+        self.window.hide()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
-    def test_changes(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_changes(self, mockquestion):
+        self._initial_data()
         self._change_version_filter(1)
         len_prev = self.version_window.changes.count()
         # make a changes
@@ -94,15 +92,19 @@ class Test_MscolabVersionHistory(object):
         len_after = self.version_window.changes.count()
         assert len_prev == (len_after - 2)
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
-    def test_set_version_name(self, mockbox):
+    def test_set_version_name(self, mockbox, mockquestion):
+        self._initial_data()
         self._set_version_name()
         QtTest.QTest.qWait(100)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
         assert self.version_window.changes.count() == 1
 
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
-    def test_version_name_delete(self, mockbox):
+    def test_version_name_delete(self, mockbox, mockquestion):
+        self._initial_data()
         self._set_version_name()
         QtTest.QTest.qWait(100)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
@@ -114,6 +116,7 @@ class Test_MscolabVersionHistory(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo(self, mockbox):
+        self._initial_data()
         self._change_version_filter(1)
         # make changes
         for i in range(2):
@@ -130,7 +133,9 @@ class Test_MscolabVersionHistory(object):
         new_changes_count = self.version_window.changes.count()
         assert changes_count + 1 == new_changes_count
 
-    def test_refresh(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_refresh(self, mockquestion):
+        self._initial_data()
         self._change_version_filter(1)
         changes_count = self.version_window.changes.count()
         self.window.mscolab.waypoints_model.invert_direction()
@@ -144,6 +149,19 @@ class Test_MscolabVersionHistory(object):
         QtTest.QTest.qWait(100)
         new_changes_count = self.version_window.changes.count()
         assert new_changes_count == changes_count + 2
+
+    def _initial_data(self):
+        # connect and login to mscolab
+        self._connect_to_mscolab()
+        self._login(self.userdata[0], self.userdata[2])
+        # activate operation and open chat window
+        self._activate_operation_at_index(0)
+        self.window.actionVersionHistory.trigger()
+        QtWidgets.QApplication.processEvents()
+        self.version_window = self.window.mscolab.version_window
+        assert self.version_window is not None
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        QtWidgets.QApplication.processEvents()
 
     def _connect_to_mscolab(self):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)

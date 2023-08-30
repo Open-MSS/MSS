@@ -39,20 +39,27 @@ from tests.utils import (mscolab_start_server, mscolab_register_and_login, mscol
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
+from conftest import MSCOLAB_PROCESSES
 
 
 PORTS = list(range(23000, 23500))
-
+PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
+MSCOLAB_PROCESSES.append(PROCESS)
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints(object):
     def setup_method(self):
         handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process = PROCESS
+        self.url = URL
+        self.app = APP
+        self.cm = CM
+        self.fm = FM
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
 
     def teardown_method(self):
@@ -71,7 +78,6 @@ class Test_Mscolab_Merge_Waypoints(object):
             self.window.mscolab.conn.disconnect()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     def _create_user_data(self, emailid='merge@alpha.org'):
         with self.app.app_context():

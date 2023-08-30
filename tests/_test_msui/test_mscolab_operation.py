@@ -36,9 +36,11 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from conftest import MSCOLAB_PROCESSES
 
 PORTS = list(range(22000, 22500))
-
+PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
+MSCOLAB_PROCESSES.append(PROCESS)
 
 class Actions(object):
     DOWNLOAD = 0
@@ -53,7 +55,11 @@ class Actions(object):
 class Test_MscolabOperation(object):
     def setup_method(self):
         handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process = PROCESS
+        self.url = URL
+        self.app = APP
+        self.cm = CM
+        self.fm = FM
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -63,6 +69,7 @@ class Test_MscolabOperation(object):
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
@@ -85,7 +92,6 @@ class Test_MscolabOperation(object):
         QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     def test_send_message(self):
         self._send_message("**test message**")

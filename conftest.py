@@ -45,7 +45,7 @@ import tests.constants as constants
 sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
 shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
-
+MSCOLAB_PROCESSES = []
 class TestKeyring(keyring.backend.KeyringBackend):
     """A test keyring which always outputs the same password
     from Runtime Configuration
@@ -222,3 +222,7 @@ def configure_testsetup(request):
         VIRT_DISPLAY.stop()
     else:
         yield
+
+def pytest_sessionfinish(session, exitstatus):
+    for process in MSCOLAB_PROCESSES:
+        process.terminate()

@@ -26,6 +26,7 @@
 """
 import os
 import pytest
+import mock
 import sys
 
 from mslib.mscolab.conf import mscolab_settings
@@ -35,17 +36,22 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from conftest import MSCOLAB_PROCESSES
 
 
 PORTS = list(range(24000, 24500))
-
-
+PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
+MSCOLAB_PROCESSES.append(PROCESS)
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabAdminWindow(object):
     def setup_method(self):
         handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process = PROCESS
+        self.url = URL
+        self.app = APP
+        self.cm = CM
+        self.fm = FM
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -68,17 +74,9 @@ class Test_MscolabAdminWindow(object):
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.window.show()
-        # connect and login to mscolab
-        self._connect_to_mscolab()
-        self._login(emailid=self.userdata[0], password=self.userdata[2])
-        # activate operation and open chat window
-        self._activate_operation_at_index(0)
-        self.window.actionManageUsers.trigger()
-        QtWidgets.QApplication.processEvents()
-        self.admin_window = self.window.mscolab.admin_window
-        QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
+
 
     def teardown_method(self):
         self.window.mscolab.logout()
@@ -86,11 +84,16 @@ class Test_MscolabAdminWindow(object):
             self.window.mscolab.admin_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
+        self.window.close()
+        QtWidgets.QApplication.processEvents()
 
-    def test_permission_filter(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_permission_filter(self, mockbox):
+        self._initial_data()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Change filter to viewer
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
@@ -105,7 +108,9 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
 
-    def test_text_search_filter(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_text_search_filter(self, mockquestion):
+        self._initial_data()
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Text Search in add users Table
@@ -129,7 +134,9 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
 
-    def test_permission_and_text_together(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_permission_and_text_together(self, mockquestion):
+        self._initial_data()
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "viewer")
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
         QtWidgets.QApplication.processEvents()
@@ -140,7 +147,9 @@ class Test_MscolabAdminWindow(object):
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 0
 
-    def test_add_permissions(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_add_permissions(self, mockquestion):
+        self._initial_data()
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         users = ["name1", "name2"]
@@ -156,7 +165,9 @@ class Test_MscolabAdminWindow(object):
         assert len_unadded_users - 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
 
-    def test_modify_permissions(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_modify_permissions(self, mockquestion):
+        self._initial_data()
         users = ["name1", "name2"]
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
@@ -172,7 +183,9 @@ class Test_MscolabAdminWindow(object):
         # Check if the permission has been updated
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
 
-    def test_delete_permissions(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_delete_permissions(self, mockquestion):
+        self._initial_data()
         # Select users in the add users table
         users = ["name1", "name2"]
         self._select_users(self.admin_window.addUsersTable, users)
@@ -191,13 +204,27 @@ class Test_MscolabAdminWindow(object):
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
 
-    def test_import_permissions(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
+    def test_import_permissions(self, mockquestion):
+        self._initial_data()
         index = self.admin_window.importPermissionsCB.findText("paris", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         assert self.admin_window.modifyUsersTable.rowCount() == 1
+
+    def _initial_data(self):
+        # connect and login to mscolab
+        self._connect_to_mscolab()
+        self._login(emailid=self.userdata[0], password=self.userdata[2])
+        # activate operation and open chat window
+        self._activate_operation_at_index(0)
+        self.window.actionManageUsers.trigger()
+        QtWidgets.QApplication.processEvents()
+        self.admin_window = self.window.mscolab.admin_window
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        QtWidgets.QApplication.processEvents()
 
     def _connect_to_mscolab(self):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)

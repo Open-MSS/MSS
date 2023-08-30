@@ -45,10 +45,11 @@ from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
 from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from conftest import MSCOLAB_PROCESSES
 
 PORTS = list(range(25000, 25050))
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
-
+MSCOLAB_PROCESSES.append(PROCESS)
 
 class Test_Mscolab_connect_window():
     def setup_method(self):
@@ -250,8 +251,8 @@ class Test_Mscolab_connect_window():
         read_config_file(path=config_file)
 
 
-PROCESS.terminate()
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
+MSCOLAB_PROCESSES.append(PROCESS)
 
 
 @pytest.mark.skipif(os.name == "nt",
