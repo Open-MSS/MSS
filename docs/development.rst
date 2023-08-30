@@ -402,9 +402,9 @@ pytest-monitor is active by default as soon as it is installed. After running yo
 
 Example::
 
-    $ pytest --db ./monitor.db
+    $ pytest tests
 
-    $ sqlite3 ./monitor.db
+    $ sqlite3 .pymon
 
     sqlite>.headers on
 
