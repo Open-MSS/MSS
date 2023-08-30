@@ -49,6 +49,7 @@ from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_op
 PORTS = list(range(25000, 25050))
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
 
+
 class Test_Mscolab_connect_window():
     def setup_method(self):
         handle_db_reset()
@@ -251,6 +252,8 @@ class Test_Mscolab_connect_window():
 
 PROCESS.terminate()
 PROCESS, URL, APP, _, CM, FM = mscolab_start_server(PORTS)
+
+
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab(object):
