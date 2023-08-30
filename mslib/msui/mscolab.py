@@ -1989,11 +1989,9 @@ class MSUIMscolab(QtCore.QObject):
 
         self.operation_archive_browser.hide()
 
-        # Don't try to activate local flighttrack while testing
-        if "pytest" not in sys.modules:
-            # activate first local flighttrack after logging out
-            self.ui.listFlightTracks.setCurrentRow(0)
-            self.ui.activate_selected_flight_track()
+        # activate first local flighttrack after logging out
+        self.ui.listFlightTracks.setCurrentRow(0)
+        self.ui.activate_selected_flight_track()
 
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, merge_wp_ui.Ui_MergeWaypointsDialog):
