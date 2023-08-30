@@ -1056,8 +1056,11 @@ class MSUIMscolab(QtCore.QObject):
                         self.reload_operations()
                         self.signal_operation_removed.emit(self.active_op_id)
                         logging.debug("activate local")
-                        self.ui.listFlightTracks.setCurrentRow(0)
-                        self.ui.activate_selected_flight_track()
+                        if self.ui.listFlightTracks.count() == 0:
+                            self.switch_to_local()
+                        else:
+                            self.ui.listFlightTracks.setCurrentRow(0)
+                            self.ui.activate_selected_flight_track()
                 else:
                     show_popup(self.ui, "Error", "Entered operation name did not match!")
         else:
