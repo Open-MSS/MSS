@@ -102,6 +102,13 @@ jobs:
           && break \
         ; done)
 
+    - name: Output Monitoring from .pymon db
+      if: ${{ success() && inputs.xdist == 'no' }}
+      run |
+        cd $GITHUB_WORKSPACE \
+        && QUERY="SELECT ITEM_PATH, ITEM_VARIANT, TOTAL_TIME, MEM_USAGE FROM TEST_METRICS" \
+        && sqlite3 -column .pymon "$QUERY"
+
     - name: Collect coverage
       if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
