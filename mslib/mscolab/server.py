@@ -231,22 +231,6 @@ def verify_user(func):
                 return func(*args, **kwargs)
     return wrapper
 
-# ToDo refactor, have also a look on secrets? see discussion 
-# in https://github.com/Open-MSS/MSS/pull/1818#discussion_r1270701658
-def rndstr(size=16, alphabet=""):
-    """
-    Returns a string of random ascii characters or digits
-    :type size: int
-    :type alphabet: str
-    :param size: The length of the string
-    :param alphabet: A string with characters.
-    :return: string
-    """
-    rng = random.SystemRandom()
-    if not alphabet:
-        alphabet = string.ascii_letters[0:52] + string.digits
-    return type(alphabet)().join(rng.choice(alphabet) for _ in range(size))
-
 
 def get_idp_entity_id(selected_idp):
     """
@@ -814,12 +798,10 @@ def idp_login():
         _, response_binding = sp_config.config.getattr("endpoints", "sp")[
             "assertion_consumer_service"
         ][0]
-        relay_state = rndstr()
         entity_id = get_idp_entity_id(selected_idp)
         _, binding, http_args = sp_config.prepare_for_negotiated_authenticate(
             entityid=entity_id,
             response_binding=response_binding,
-            relay_state=relay_state,
         )
         if binding == BINDING_HTTP_REDIRECT:
             headers = dict(http_args["headers"])
@@ -872,7 +854,7 @@ def idp_login_auth():
         if email:
             user = check_login(email, token)
             if user:
-                random_token = rndstr()
+                random_token = secrets.token_hex(16)
                 user.hash_password(random_token)
                 db.session.add(user)
                 db.session.commit()
