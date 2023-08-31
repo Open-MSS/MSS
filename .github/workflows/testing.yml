@@ -106,7 +106,7 @@ jobs:
       if: ${{ success() && inputs.xdist == 'no' }}
       run |
         cd $GITHUB_WORKSPACE \
-        && QUERY="SELECT ITEM_PATH, ITEM_VARIANT, TOTAL_TIME, MEM_USAGE FROM TEST_METRICS" \
+        && QUERY="SELECT ITEM_PATH, ITEM_VARIANT, TOTAL_TIME, MEM_USAGE FROM TEST_METRICS ORDER BY MEM_USAGE" \
         && sqlite3 -column .pymon "$QUERY"
 
     - name: Collect coverage
