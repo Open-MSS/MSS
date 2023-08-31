@@ -138,13 +138,6 @@ CONFIG = {
                     #"entity_categories": ["swamid", "edugain"]
                 },
             },
-            # ToDo refactor, Could we also move the idp/modules to the colabdata? For what are they needed?
-            # see discussion in https://github.com/Open-MSS/MSS/pull/1818#pullrequestreview-1554358384
-
-            # ToDo refactor,  Is this token needed ? see discussion
-            # in https://github.com/Open-MSS/MSS/pull/1818#issuecomment-1658030366
-
-            "subject_data": "./idp.subject",
             "name_id_format": [NAMEID_FORMAT_TRANSIENT,
                                NAMEID_FORMAT_PERSISTENT]
         },
