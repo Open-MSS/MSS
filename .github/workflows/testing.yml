@@ -103,7 +103,7 @@ jobs:
         ; done)
 
     - name: Output Monitoring from .pymon db
-      if: ${{ success() && inputs.xdist == 'no' }}
+      if: ${{ success() }}
       timeout-minutes: 25
       run |
         cd $GITHUB_WORKSPACE \
