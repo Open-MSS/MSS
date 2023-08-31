@@ -98,8 +98,11 @@ def handle_mscolab_certificate_init():
     print('generating CRTs for the mscolab server......')
 
     try:
-        cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"
-        subprocess.run(cmd, shell=True, check=True)
+        cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
+               f"{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key",
+               "-nodes", "-x509", "-days", "365", "-batch", "-subj",
+               "/CN=localhost", "-out", f"{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"]
+        subprocess.run(cmd, check=True)
         print("generated CRTs for the mscolab server.")
         return True
     except subprocess.CalledProcessError as error:
@@ -110,8 +113,11 @@ def handle_local_idp_certificate_init():
     print('generating CRTs for the local identity provider......')
 
     try:
-        cmd = f"openssl req -newkey rsa:4096 -keyout {mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key -nodes -x509 -days 365 -batch -subj '/CN=localhost' -out {mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"
-        subprocess.run(cmd, shell=True, check=True)
+        cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
+               f"{mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key",
+               "-nodes", "-x509", "-days", "365", "-batch", "-subj",
+               "/CN=localhost", "-out", f"{mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"]
+        subprocess.run(cmd, check=True)
         print("generated CRTs for the local identity provider")
         return True
     except subprocess.CalledProcessError as error:
@@ -263,8 +269,9 @@ def handle_mscolab_metadata_init():
         # Add a small delay to allow the server to start up
         time.sleep(10)
 
-        cmd_curl = f"curl http://localhost:8083/metadata/ -o {mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"
-        subprocess.run(cmd_curl, shell=True, check=True)
+        cmd_curl = ["curl", "http://localhost:8083/metadata/",
+                    "-o", f"{mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"]
+        subprocess.run(cmd_curl, check=True)
         process.kill()
         print('mscolab metadata file generated succesfully')
         return True
@@ -280,8 +287,12 @@ def handle_local_idp_metadata_init():
     try:
         if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
             os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
-        cmd = f"make_metadata mslib/idp/idp_conf.py > {mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"
-        subprocess.run(cmd, shell=True, check=True)
+
+        cmd = ["make_metadata", "mslib/idp/idp_conf.py"]
+
+        with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml",
+                  "w", encoding="utf-8") as output_file:
+            subprocess.run(cmd, stdout=output_file, check=True)
         print("idp metadata file generated succesfully")
         return True
     except subprocess.CalledProcessError as error:
@@ -323,9 +334,9 @@ def handle_sso_metadata_init():
     if not handle_local_idp_metadata_init():
         print('Error while handling idp metadata.')
         return
-    
+
     print("\n\nALl necessary metadata files generated successfully")
-    
+
 
 
 def main():
