@@ -75,8 +75,6 @@ from idp_user import USERS
 from mako.lookup import TemplateLookup
 
 
-#  ToDo refactor, Try to avoid global as much as possible, 
-# See discussion in https://github.com/Open-MSS/MSS/pull/1818#issuecomment-1658068466
 logger = logging.getLogger("saml2.idp")
 
 
@@ -569,7 +567,6 @@ def verify_username_and_password(dic):
     """
     Verifies the username and password stored in the dictionary.
     """
-    global PASSWD
     # verify username and password
     if PASSWD[dic["login"][0]] == dic["password"][0]:
         return True, dic["login"][0]
