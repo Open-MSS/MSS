@@ -86,7 +86,9 @@ jobs:
         || (for i in {1..5} \
           ; do pytest tests -v --durations=0 --reverse --last-failed --lfnf=none \
           && break \
-        ; done)
+        ; done) \
+        QUERY="SELECT ITEM_PATH, ITEM_VARIANT, TOTAL_TIME, MEM_USAGE FROM TEST_METRICS ORDER BY MEM_USAGE" \
+        && sqlite3 -column .pymon "$QUERY"
 
     - name: Run tests in parallel
       if: ${{ success() && inputs.xdist == 'yes' }}
