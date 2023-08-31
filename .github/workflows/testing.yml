@@ -102,17 +102,6 @@ jobs:
           && break \
         ; done)
 
-    - name: Output Monitoring from .pymon db
-      if: ${{ success() }}
-      timeout-minutes: 25
-      run |
-        cd $GITHUB_WORKSPACE \
-        && source /opt/conda/etc/profile.d/conda.sh \
-        && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mss-${{ inputs.branch_name }}-env \
-        && QUERY="SELECT ITEM_PATH, ITEM_VARIANT, TOTAL_TIME, MEM_USAGE FROM TEST_METRICS ORDER BY MEM_USAGE" \
-        && sqlite3 -column .pymon "$QUERY"
-
     - name: Collect coverage
       if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
       env: 
