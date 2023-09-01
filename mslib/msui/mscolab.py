@@ -890,8 +890,10 @@ class MSUIMscolab(QtCore.QObject):
             """
             get most recent operation's op_id
             """
+            skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
             data = {
-                "token": self.token
+                "token": self.token,
+                "skip_archived": skip_archived
             }
             r = requests.get(self.mscolab_server_url + '/operations', data=data)
             if r.text != "False":
@@ -1537,8 +1539,10 @@ class MSUIMscolab(QtCore.QObject):
         logging.debug('add_operations_to_ui')
         r = None
         if verify_user_token(self.mscolab_server_url, self.token):
+            skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
             data = {
-                "token": self.token
+                "token": self.token,
+                "skip_archived": skip_archived
             }
             r = requests.get(f'{self.mscolab_server_url}/operations', data=data,
                              timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))

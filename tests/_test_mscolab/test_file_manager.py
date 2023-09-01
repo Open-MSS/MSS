@@ -120,6 +120,32 @@ class Test_FileManager(TestCase):
                                 'path': 'second'}]
             assert self.fm.list_operations(self.user) == expected_result
 
+    def test_list_operations_skip_archived(self):
+        with self.app.test_client():
+            self.fm.create_operation("first", "info about first", self.user, active=False)
+            self.fm.create_operation("second", "info about second", self.user)
+            expected_result_all = [{'access_level': 'creator',
+                                "active": False,
+                                'category': 'default',
+                                'description': 'info about first',
+                                'op_id': 1,
+                                'path': 'first'},
+                               {'access_level': 'creator',
+                                "active": True,
+                                'category': 'default',
+                                'description': 'info about second',
+                                'op_id': 2,
+                                'path': 'second'}]
+            expected_result_skipped_true = [{'access_level': 'creator',
+                                "active": True,
+                                'category': 'default',
+                                'description': 'info about second',
+                                'op_id': 2,
+                                'path': 'second'}]
+            assert self.fm.list_operations(self.user, skip_archived=False) == expected_result_all
+            assert self.fm.list_operations(self.user, skip_archived=True) == expected_result_skipped_true
+
+
     def test_is_creator(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='third')
