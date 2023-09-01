@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import mock
 import pytest
 import sys
 
@@ -89,6 +90,9 @@ class Test_MscolabAdminWindow(object):
             self.window.mscolab.admin_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

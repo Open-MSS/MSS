@@ -1928,6 +1928,12 @@ class MSUIMscolab(QtCore.QObject):
             return
         self.ui.local_active = True
         self.ui.menu_handler()
+
+        # disconnect socket
+        if self.conn is not None:
+            self.conn.disconnect()
+            self.conn = None
+
         # close all hanging window
         self.close_external_windows()
         self.hide_operation_options()
@@ -1960,10 +1966,6 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.activeOperationDesc.setText(self.ui.tr("Select Operation to View Description."))
         # set usernameLabel back to default
         self.ui.usernameLabel.setText("User")
-        # disconnect socket
-        if self.conn is not None:
-            self.conn.disconnect()
-            self.conn = None
         # Turn off work locally toggle
         self.ui.workLocallyCheckbox.blockSignals(True)
         self.ui.workLocallyCheckbox.setChecked(False)
