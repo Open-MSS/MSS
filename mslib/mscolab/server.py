@@ -471,7 +471,7 @@ def authorized_users():
 @APP.route('/operations', methods=['GET'])
 @verify_user
 def get_operations():
-    skip_archived = request.args.get('skip_archived',  request.form.get('skip_archived', "False"))
+    skip_archived = request.args.get('skip_archived', request.form.get('skip_archived', "False"))
     if skip_archived == "True":
         skip_archived = True
     else:

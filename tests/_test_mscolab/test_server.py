@@ -212,7 +212,6 @@ class Test_Server(TestCase):
             assert operation.active is False
             assert token is not None
 
-
     def test_get_operation_by_id(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
