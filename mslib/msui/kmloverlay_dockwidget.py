@@ -66,7 +66,7 @@ class KMLPatch(object):
         :param point: fastkml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = (point.geometry.x, point.geometry.y)
+        x, y = self.map(point.geometry.x, point.geometry.y)
         self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
@@ -107,7 +107,7 @@ class KMLPatch(object):
         :param point: fastkml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = (point.x, point.y)
+        x, y = self.map(point.x, point.y)
         self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
