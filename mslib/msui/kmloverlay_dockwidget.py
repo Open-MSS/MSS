@@ -305,8 +305,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         self.pushButton_color.clicked.connect(self.select_color)
         self.dsbx_linewidth.valueChanged.connect(self.select_linewidth)
 
-        self.listWidget.itemChanged.connect(self.flagop)  # when item changes, flag operation happens.
-
         self.settings_tag = "kmldock"
         settings = load_settings_qsettings(
             self.settings_tag, {"filename": "", "linewidth": 2, "colour": (0, 0, 0, 1),
@@ -333,6 +331,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         # When KMLoverlaywidget is opened, it ensures that the
         # color of individual KML files are already shown as icons.
         self.set_color_icons()
+        # must be connected here, lest the set_color_icons routine above causes many reloads
+        self.listWidget.itemChanged.connect(self.flagop)
         self.view.plot_kml(self)
 
     def update(self):
@@ -460,6 +460,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self, "Open KML File", os.path.dirname(str(self.directory_location)), "KML Files (*.kml)")
         if not filenames:
             return
+
+        self.listWidget.itemChanged.disconnect(self.flagop)
         self.select_file(filenames)
         # set color icons according to linewidth to newly added KML files
         for filename in filenames:
@@ -468,10 +470,12 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 for item in item_list:
                     index = self.listWidget.row(item)
                     self.listWidget.item(index).setIcon(self.show_color_icon(filename, self.set_color(filename)))
+        self.load_file()
+        self.listWidget.itemChanged.connect(self.flagop)
 
     def select_file(self, filenames):
         """
-        Initializes selected file/ files
+        Initializes selected file/files
         """
         for filename in filenames:
             if filename is None:
@@ -489,7 +493,6 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             else:
                 logging.info("%s file already added", text)
         self.labelStatusBar.setText("Status: KML Files added")
-        self.load_file()
 
     def create_list_item(self, text):
         """
@@ -512,8 +515,11 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         if self.listWidget.count() == 0:
             self.labelStatusBar.setText("Status: No Files to unselect. Click on Add KML Files to get started.")
             return
+        self.listWidget.itemChanged.disconnect(self.flagop)
         for index in range(self.listWidget.count()):
             self.listWidget.item(index).setCheckState(QtCore.Qt.Unchecked)
+        self.listWidget.itemChanged.connect(self.flagop)
+        self.load_file()
         self.labelStatusBar.setText("Status: All Files unselected")
 
     def remove_file(self):  # removes checked files
