@@ -125,6 +125,12 @@ DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
 
+# To enable logging set to True or pass a logger object to use. 
+SOCKETIO_LOGGER = True
+
+# To enable Engine.IO logging set to True or pass a logger object to use.
+ENGINEIO_LOGGER = True
+
 # used to generate and parse tokens
 SECRET_KEY = secrets.token_urlsafe(16)
 

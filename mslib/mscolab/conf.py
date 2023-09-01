@@ -33,6 +33,12 @@ class default_mscolab_settings:
     # expire token in seconds
     # EXPIRATION = 86400
 
+    # To enable logging set to True or pass a logger object to use.
+    SOCKETIO_LOGGER = False
+
+    # To enable Engine.IO logging set to True or pass a logger object to use.
+    ENGINEIO_LOGGER = False
+
     # Which origins are allowed to communicate with your server
     CORS_ORIGINS = ["*"]
 
