@@ -96,12 +96,13 @@ class default_mscolab_settings:
     # idp settings
     CONFIGURED_IDPS = [
         {
-          'idp_identity_name':'localhost_test_idp',
-          'idp_name':'Testing Identity Provider'
+            'idp_identity_name': 'localhost_test_idp',
+            'idp_name': 'Testing Identity Provider'
         },
-        # {'idp_identity_name':'idp_2','idp_name':'idp 2'},
-        # {'idp_identity_name':'idp_3','idp_name':'idp 3'},
-        ]
+        # {'idp_identity_name': 'idp_2','idp_name':'idp 2'},
+        # {'idp_identity_name': 'idp_3','idp_name':'idp 3'},
+    ]
+
 
 mscolab_settings = default_mscolab_settings()
 

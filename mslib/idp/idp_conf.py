@@ -40,7 +40,8 @@ from saml2.sigver import get_xmlsec_binary
 
 XMLSEC_PATH = get_xmlsec_binary()
 
-# CRTs and metadata files can be generated through the mscolab server. if configured that way CRTs DIRs should be same in both IDP and mscolab server.
+# CRTs and metadata files can be generated through the mscolab server.
+# if configured that way CRTs DIRs should be same in both IDP and mscolab server.
 BASE_DIR = os.path.expanduser("~")
 DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
@@ -53,9 +54,11 @@ def full_path(local_file):
 
     return os.path.join(BASEDIR, local_file)
 
+
 def sso_dir_path(local_file):
     """Return the full path by joining the MSCOLAB_SSO_DIR and local_file."""
     return os.path.join(MSCOLAB_SSO_DIR, local_file)
+
 
 HOST = 'localhost'
 PORT = 8088
@@ -73,14 +76,14 @@ SERVER_KEY = f"{MSCOLAB_SSO_DIR}/key_local_idp.key"
 CERT_CHAIN = ""
 SIGN_ALG = None
 DIGEST_ALG = None
-#SIGN_ALG = ds.SIG_RSA_SHA512
-#DIGEST_ALG = ds.DIGEST_SHA512
+# SIGN_ALG = ds.SIG_RSA_SHA512
+# DIGEST_ALG = ds.DIGEST_SHA512
 
 
 CONFIG = {
     "entityid": f"{BASE}/idp.xml",
     "description": "My IDP",
-    #"valid_for": 168,
+    # "valid_for": 168,
     "service": {
         "aa": {
             "endpoints": {
@@ -135,7 +138,7 @@ CONFIG = {
                     "lifetime": {"minutes": 15},
                     "attribute_restrictions": None, # means all I have
                     "name_form": NAME_FORMAT_URI,
-                    #"entity_categories": ["swamid", "edugain"]
+                    # "entity_categories": ["swamid", "edugain"]
                 },
             },
             "name_id_format": [NAMEID_FORMAT_TRANSIENT,
@@ -168,7 +171,7 @@ CONFIG = {
     # This database holds the map between a subject's local identifier and
     # the identifier returned to a SP
     "xmlsec_binary": XMLSEC_PATH,
-    #"attribute_map_dir": "../attributemaps",
+    # "attribute_map_dir": "../attributemaps",
     "logging": {
         "version": 1,
         "formatters": {
@@ -200,13 +203,13 @@ CONFIG = {
 
 # Authentication contexts
 
-    #(r'verify?(.*)$', do_verify),
+# (r'verify?(.*)$', do_verify),
 
 CAS_SERVER = "https://cas.umu.se"
 CAS_VERIFY = f"{BASE}/verify_cas"
 PWD_VERIFY = f"{BASE}/verify_pwd"
 
 AUTHORIZATION = {
-    "CAS" : {"ACR": "CAS", "WEIGHT": 1, "URL": CAS_VERIFY},
-    "UserPassword" : {"ACR": "PASSWORD", "WEIGHT": 2, "URL": PWD_VERIFY}
+    "CAS": {"ACR": "CAS", "WEIGHT": 1, "URL": CAS_VERIFY},
+    "UserPassword": {"ACR": "PASSWORD", "WEIGHT": 2, "URL": PWD_VERIFY}
 }

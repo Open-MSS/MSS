@@ -24,9 +24,9 @@
     limitations under the License.
 """
 # Additional Info:
-    # This file is imported from
-    # https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp_uwsgi.py
-    # and customized as MSS requirements. Pylint has been disabled for this imported file.
+# This file is imported from
+# https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp_uwsgi.py
+# and customized as MSS requirements. Pylint has been disabled for this imported file.
 
 # Parts of the code
 
@@ -175,7 +175,7 @@ class Service:
         Performs the SAML operation based on the provided SAML message and binding.
         """
         logger.debug("_operation: %s", saml_msg)
-        if not saml_msg or not "SAMLRequest" in saml_msg:
+        if not saml_msg or "SAMLRequest" not in saml_msg:
             resp = BadRequest("Error parsing request or no request")
             return resp(self.environ, self.start_response)
         else:
@@ -528,7 +528,7 @@ def do_authentication(environ, start_response, authn_context, key, redirect_uri)
     logger.debug("Do authentication")
     auth_info = AUTHN_BROKER.pick(authn_context)
 
-    if len(auth_info)>=0:
+    if len(auth_info) >= 0:
         method, reference = auth_info[0]
         logger.debug("Authn chosen: %s (ref=%s)", method, reference)
         return method(environ, start_response, reference, key, redirect_uri)

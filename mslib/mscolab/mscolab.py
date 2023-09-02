@@ -94,6 +94,7 @@ def handle_db_seed():
     seed_data()
     print("Database seeded successfully!")
 
+
 def handle_mscolab_certificate_init():
     print('generating CRTs for the mscolab server......')
 
@@ -108,6 +109,7 @@ def handle_mscolab_certificate_init():
     except subprocess.CalledProcessError as error:
         print(f"Error while generating CRTs for the mscolab server: {error}")
         return False
+
 
 def handle_local_idp_certificate_init():
     print('generating CRTs for the local identity provider......')
@@ -124,8 +126,9 @@ def handle_local_idp_certificate_init():
         print(f"Error while generated CRTs for the local identity provider: {error}")
         return False
 
+
 def handle_mscolab_backend_yaml_init():
-    saml_2_backend_yaml_content ="""name: Saml2
+    saml_2_backend_yaml_content = """name: Saml2
 config:
   entityid_endpoint: true
   mirror_force_authn: no
@@ -182,7 +185,8 @@ config:
         endpoints:
           assertion_consumer_service:
             - [http://localhost:8083/localhost_test_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
-            - [http://localhost:8083/localhost_test_idp/acs/redirect, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
+            - [http://localhost:8083/localhost_test_idp/acs/redirect,
+            'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect']
           discovery_response:
           - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
         name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
@@ -244,13 +248,14 @@ config:
   #       name_id_format_allow_create: true
 """
     try:
-        file_path=f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"
+        file_path = f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(saml_2_backend_yaml_content)
         return True
-    except (FileNotFoundError,PermissionError) as error:
+    except (FileNotFoundError, PermissionError) as error:
         print(f"Error while generated backend .yaml for the local mscolabserver: {error}")
         return False
+
 
 def handle_mscolab_metadata_init():
     '''
@@ -258,7 +263,7 @@ def handle_mscolab_metadata_init():
 
         Before running this function:
         - Ensure that USE_SAML2 is set to True.
-        - Generate the necessary keys and certificates and configure them in the .yaml 
+        - Generate the necessary keys and certificates and configure them in the .yaml
         file for the local IDP.
     '''
     print('generating metadata file for the mscolab server')
@@ -302,6 +307,7 @@ def handle_local_idp_metadata_init():
         print(f"Error while generating metadata for localhost identity provider: {error}")
         return False
 
+
 def handle_sso_crts_init():
     """
         This will generate necessary CRTs files for sso in mscolab through localhost idp
@@ -338,7 +344,6 @@ def handle_sso_metadata_init():
     print("\n\nALl necessary metadata files generated successfully")
 
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
@@ -367,9 +372,12 @@ def main():
                                  action="store_true")
     sso_conf_parser = subparsers.add_parser("sso_conf", help="single sign on process configurations")
     sso_conf_parser = sso_conf_parser.add_mutually_exclusive_group(required=True)
-    sso_conf_parser.add_argument("--init_sso_crts",help="Generate all the essential CRTs required for the Single Sign-On process using the local Identity Provider",
+    sso_conf_parser.add_argument("--init_sso_crts",
+                                 help="Generate all the essential CRTs required for the Single Sign-On process "
+                                 "using the local Identity Provider",
                                  action="store_true")
-    sso_conf_parser.add_argument("--init_sso_metadata",help="Generate all the essential metadata files required for the Single Sign-On process using the local Identity Provider",
+    sso_conf_parser.add_argument("--init_sso_metadata", help="Generate all the essential metadata files required "
+                                 "for the Single Sign-On process using the local Identity Provider",
                                  action="store_true")
 
     args = parser.parse_args()
@@ -441,7 +449,8 @@ def main():
     elif args.action == "sso_conf":
         if args.init_sso_crts:
             confirmation = confirm_action(
-                "This will reset and initiation all CRTs and SAML yaml file as default. Are you sure to continue? (y/[n]):")
+                "This will reset and initiation all CRTs and SAML yaml file as default. "
+                "Are you sure to continue? (y/[n]):")
             if confirmation is True:
                 handle_sso_crts_init()
         if args.init_sso_metadata:
@@ -449,17 +458,20 @@ def main():
                 "Are you sure you executed --init_sso_crts before running this? (y/[n]):")
             if confirmation is True:
                 confirmation = confirm_action(
-                """
-                This will generate necessary metada data file for sso in mscolab through localhost idp
+                    """
+                    This will generate necessary metada data file for sso in mscolab through localhost idp
 
-                Before running this function:
-                - Ensure that USE_SAML2 is set to True.
-                - Generate the necessary keys and certificates and configure them in the .yaml 
-                file for the local IDP.
-                
-                Are you sure you set all correctly as per the documentation? (y/[n]):""")
+                    Before running this function:
+                    - Ensure that USE_SAML2 is set to True.
+                    - Generate the necessary keys and certificates and configure them in the .yaml
+                    file for the local IDP.
+
+                    Are you sure you set all correctly as per the documentation? (y/[n]):
+                    """
+                )
                 if confirmation is True:
                     handle_sso_metadata_init()
+
 
 if __name__ == '__main__':
     main()

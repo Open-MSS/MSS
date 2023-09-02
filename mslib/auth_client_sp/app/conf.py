@@ -25,10 +25,11 @@
 """
 import secrets
 
+
 class DefaultSPSettings:
     """
     Default settings for the SP (Service Provider) application.
-    
+
     This class provides default configuration settings for the SP application.
     Modify these settings as needed for your specific application requirements.
     """
@@ -37,5 +38,6 @@ class DefaultSPSettings:
 
     # used to generate and parse tokens
     SECRET_KEY = secrets.token_urlsafe(16)
+
 
 sp_settings = DefaultSPSettings()

@@ -71,15 +71,16 @@ class User(UserMixin, db.Model):
         return self.id
 
 
-
 with app.app_context():
     db.create_all()
+
 
 @login_manager.user_loader
 def load_user(user_id):
     """ since the user_id is just the primary key of our user table,
     use it in the query for the user """
     return User.query.get(int(user_id))
+
 
 with open("mslib/auth_client_sp/saml2_backend.yaml", encoding="utf-8") as fobj:
     yaml_data = yaml.safe_load(fobj)
@@ -93,6 +94,7 @@ else:
 sp_config = SPConfig().load(yaml_data["config"]["sp_config"])
 
 sp = Saml2Client(sp_config)
+
 
 def rndstr(size=16, alphabet=""):
     """
@@ -162,17 +164,20 @@ def login():
         print(error)
         return Response("An error occurred", status=500)
 
+
 @app.route("/profile/", methods=["GET"])
 @login_required
 def profile():
     """Display the user's profile page."""
     return render_template("profile.html")
 
+
 @app.route("/logout/", methods=["GET"])
 def logout():
     """Logout the current user and redirect to the index page."""
     logout_user()
     return redirect(url_for("index"))
+
 
 @app.route("/acs/post", methods=["POST"])
 def acs_post():
@@ -192,7 +197,7 @@ def acs_post():
         db.session.add(user)
         db.session.commit()
     login_user(user, remember=True)
-    return redirect(url_for("profile", data={"email":email}))
+    return redirect(url_for("profile", data={"email": email}))
 
 
 @app.route("/acs/redirect", methods=["GET"])
@@ -204,6 +209,7 @@ def acs_redirect():
         request.form["SAMLResponse"], binding, outstanding=outstanding_queries
     )
     return str(authn_response.ava)
+
 
 if __name__ == "__main__":
     app.run()

@@ -24,9 +24,9 @@
     limitations under the License.
 """
 # Additional Info:
-    # This file is imported from
-    # https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp.py
-    # and customized as MSS requirements. Pylint has been disabled for this imported file.
+# This file is imported from
+# https://github.com/IdentityPython/pysaml2/blob/master/example/idp2/idp.py
+# and customized as MSS requirements. Pylint has been disabled for this imported file.
 
 # Parts of the code
 
@@ -1104,12 +1104,12 @@ if __name__ == "__main__":
 
     IDP = server.Server(args.config, cache=Cache())
     IDP.ticket = {}
-    
+
     current_directory = os.getcwd()
 
     LOOKUP = TemplateLookup(
-        directories=[current_directory+"/mslib/idp/templates", current_directory+"/mslib/idp/htdocs"],
-        module_directory= current_directory+"/mslib/idp/modules",
+        directories=[current_directory + "/mslib/idp/templates", current_directory + "/mslib/idp/htdocs"],
+        module_directory=current_directory + "/mslib/idp/modules",
         input_encoding="utf-8",
         output_encoding="utf-8",
     )
@@ -1135,9 +1135,8 @@ if __name__ == "__main__":
         https = "using HTTPS"
         # Creating an SSL context
         ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
-        ssl_context.load_cert_chain(CONFIG.SERVER_CERT,
-                                            CONFIG.SERVER_KEY)
-    SRV = WSGIServer(HOST, PORT, application, ssl_context= ssl_context)
+        ssl_context.load_cert_chain(CONFIG.SERVER_CERT, CONFIG.SERVER_KEY)
+    SRV = WSGIServer(HOST, PORT, application, ssl_context=ssl_context)
 
     logger.info("Server starting")
     print(f"IDP listening on {HOST}:{PORT}{_https}")

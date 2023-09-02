@@ -78,8 +78,8 @@ except ImportError as ex:
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-#setup idp login config
-if mscolab_settings.USE_SAML2 :
+# setup idp login config
+if mscolab_settings.USE_SAML2:
     with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
         yaml_data = yaml.safe_load(fobj)
 
@@ -87,9 +87,12 @@ if mscolab_settings.USE_SAML2 :
     for configured_idp in mscolab_settings.CONFIGURED_IDPS:
         # set CRTs and metadata paths for the localhost_test_idp
         if 'localhost_test_idp' in configured_idp['idp_identity_name']:
-            yaml_data["config"]["localhost_test_idp"]["key_file"] = f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'
-            yaml_data["config"]["localhost_test_idp"]["cert_file"] = f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'
-            yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'
+            yaml_data["config"]["localhost_test_idp"]["key_file"] = \
+                f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'
+            yaml_data["config"]["localhost_test_idp"]["cert_file"] = \
+                f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'
+            yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = \
+                f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'
 
     if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
         yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
@@ -251,7 +254,6 @@ def get_idp_entity_id(selected_idp):
     return entity_id
 
 
-
 @APP.route('/')
 def home():
     return render_template("/index.html")
@@ -261,8 +263,10 @@ def home():
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
     return json.dumps({
-            'message': "Mscolab server",
-            'USE_SAML2': mscolab_settings.USE_SAML2})
+        'message': "Mscolab server",
+        'USE_SAML2': mscolab_settings.USE_SAML2
+    })
+
 
 @APP.route('/token', methods=["POST"])
 @conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
@@ -758,6 +762,7 @@ def reset_request():
         logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
         return render_template('errors/403.html'), 403
 
+
 @APP.route("/metadata/", methods=['GET'])
 def metadata():
     """Return the SAML metadata XML for congiguring local host testing IDP"""
@@ -765,6 +770,7 @@ def metadata():
         None, sp_localhost_test_idp.config, 4, None, None, None, None, None
     ).decode("utf-8")
     return Response(metadata_string, mimetype="text/xml")
+
 
 @APP.route('/available_idps/', methods=['GET'])
 def available_idps():
@@ -775,7 +781,7 @@ def available_idps():
     """
     if mscolab_settings.USE_SAML2:
         configured_idps = mscolab_settings.CONFIGURED_IDPS
-        return render_template('idp/available_idps.html', configured_idps=configured_idps), 200   
+        return render_template('idp/available_idps.html', configured_idps=configured_idps), 200
     return render_template('errors/403.html'), 403
 
 
@@ -830,7 +836,7 @@ def localhost_test_idp_acs_post():
             db.session.add(user)
             db.session.commit()
 
-        else :
+        else:
             user.authentication_backend = 'localhost_test_idp'
             user.hash_password(token)
             db.session.add(user)
@@ -838,7 +844,7 @@ def localhost_test_idp_acs_post():
 
         return render_template('idp/idp_login_success.html', token=token), 200
 
-    except (NameError, AttributeError, KeyError) :
+    except (NameError, AttributeError, KeyError):
         return render_template('errors/500.html'), 500
 
 
@@ -857,9 +863,10 @@ def idp_login_auth():
                 db.session.add(user)
                 db.session.commit()
                 return json.dumps({
-                "success": True,
-                'token': random_token,
-                'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}})
+                    "success": True,
+                    'token': random_token,
+                    'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}
+                })
             return jsonify({"success": False}), 401
         return jsonify({"success": False}), 401
     except TypeError:

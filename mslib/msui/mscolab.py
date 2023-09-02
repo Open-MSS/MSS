@@ -241,7 +241,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 except (json.decoder.JSONDecodeError, KeyError):
                     idp_enabled = False
 
-                if idp_enabled :
+                if idp_enabled:
                     # Hide user creatiion seccion if IDP login enabled
                     self.addUserBtn.setHidden(True)
                     self.clickNewUserLabel.setHidden(True)
@@ -350,7 +350,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
     def idp_login_handler(self):
         """Handle IDP login Button"""
         url_idp_login = f'{self.mscolab_server_url}/available_idps'
-        webbrowser.open(url_idp_login, new = 2)
+        webbrowser.open(url_idp_login, new=2)
         self.stackedWidget.setCurrentWidget(self.idpAuthPage)
 
     def idp_auth_token_submit_handler(self):
@@ -359,7 +359,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         user_token = self.idpAuthPasswordLe.text()
 
         try:
-            data = {'token':user_token}
+            data = {'token': user_token}
             response = requests.post(url_idp_login_auth, json=data, timeout=(2, 10))
             if response.status_code == 401:
                 self.set_status("Error", 'Invalid token or token expired. Please try again')
