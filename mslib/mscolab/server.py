@@ -30,8 +30,6 @@ import logging
 import time
 import datetime
 import secrets
-import random
-import string
 import warnings
 import sys
 import fs
@@ -52,6 +50,7 @@ from saml2.config import SPConfig
 from saml2.client import Saml2Client
 from saml2.metadata import create_metadata_string
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST, SAMLError
+from flask.wrappers import Response
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Change, MessageType, User, Operation, db
@@ -60,7 +59,6 @@ from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
-from flask.wrappers import Response
 
 APP = create_app(__name__)
 mail = Mail(APP)
