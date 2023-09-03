@@ -204,6 +204,12 @@ class Test_Server(TestCase):
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             assert operation is not None
+            assert operation.active is True
+            assert token is not None
+            operation, token = self._create_operation(test_client,
+                                                      self.userdata, path="archived_operation", active=False)
+            assert operation is not None
+            assert operation.active is False
             assert token is not None
 
     def test_get_operation_by_id(self):
@@ -226,6 +232,19 @@ class Test_Server(TestCase):
             assert len(data["operations"]) == 2
             assert data["operations"][0]["path"] == "firstflightpath1"
             assert data["operations"][1]["path"] == "firstflightpath2"
+
+    def test_get_operations_skip_archived(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            self._create_operation(test_client, self.userdata, path="firstflightpath1")
+            operation, token = self._create_operation(test_client, self.userdata, path="firstflightpath2", active=False)
+            response = test_client.get('/operations', data={"token": token,
+                                                            "skip_archived": "True"})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert len(data["operations"]) == 1
+            assert data["operations"][0]["path"] == "firstflightpath1"
+            assert "firstflightpath2" not in data["operations"]
 
     def test_get_all_changes(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -383,7 +402,7 @@ class Test_Server(TestCase):
             # creator is not listed
             assert data["success"] is True
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test"):
+    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", active=True):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
@@ -391,7 +410,8 @@ class Test_Server(TestCase):
         token = data["token"]
         response = test_client.post('/create_operation', data={"token": token,
                                                                "path": path,
-                                                               "description": description})
+                                                               "description": description,
+                                                               "active": str(active)})
         assert response.status_code == 200
         assert response.data.decode('utf-8') == "True"
         operation = Operation.query.filter_by(path=path).first()

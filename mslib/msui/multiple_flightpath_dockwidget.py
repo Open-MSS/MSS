@@ -33,6 +33,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.msui_mainwindow as msui_mainwindow
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
+from mslib.utils.config import config_loader
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -113,7 +114,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     signal_parent_closes = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
-                 listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
+                 listOperationsMSC=None, category=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
         super().__init__(parent)
         # ToDO: Remove all patches, on closing dockwidget.
         self.ui = parent
@@ -122,6 +123,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.flight_path = None  # flightpath object
         self.dict_flighttrack = {}  # Dictionary of flighttrack data: patch,color,wp_model
         self.active_flight_track = activeFlightTrack
+        self.msc_category = category  # object of active category
         self.listOperationsMSC = listOperationsMSC
         self.listFlightTracks = listFlightTracks
         self.mscolab_server_url = mscolab_server_url
@@ -548,13 +550,18 @@ class MultipleFlightpathOperations:
 
     def get_wps_from_server(self):
         operations = {}
+        skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
         data = {
-            "token": self.token
+            "token": self.token,
+            "skip_archived": skip_archived
         }
         r = requests.get(self.mscolab_server_url + "/operations", data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
+        selected_category = self.parent.msc_category.currentText()
+        if selected_category != "*ANY*":
+            operations = [op for op in operations if op['category'] == selected_category]
         return operations
 
     def request_wps_from_server(self, op_id):

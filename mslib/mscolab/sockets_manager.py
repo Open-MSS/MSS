@@ -36,7 +36,8 @@ from mslib.mscolab.utils import get_message_dict
 from mslib.mscolab.utils import get_session_id
 from mslib.mscolab.conf import mscolab_settings
 
-socketio = SocketIO(cors_allowed_origins=("*" if not hasattr(mscolab_settings, "CORS_ORIGINS") or
+socketio = SocketIO(logger=mscolab_settings.SOCKETIO_LOGGER, engineio_logger=mscolab_settings.ENGINEIO_LOGGER,
+                    cors_allowed_origins=("*" if not hasattr(mscolab_settings, "CORS_ORIGINS") or
                                           "*" in mscolab_settings.CORS_ORIGINS else mscolab_settings.CORS_ORIGINS))
 
 

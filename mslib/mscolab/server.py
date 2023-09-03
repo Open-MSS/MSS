@@ -397,9 +397,11 @@ def create_operation():
     content = request.form.get('content', None)
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
+    active = (request.form.get('active', "True") == "True")
     last_used = datetime.datetime.utcnow()
     user = g.user
-    r = str(fm.create_operation(path, description, user, last_used, content=content, category=category))
+    r = str(fm.create_operation(path, description, user, last_used,
+                                content=content, category=category, active=active))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
@@ -422,7 +424,7 @@ def get_operation_by_id():
 @verify_user
 def get_all_changes():
     op_id = request.args.get('op_id', request.form.get('op_id', None))
-    named_version = request.args.get('named_version')
+    named_version = request.args.get('named_version') == "True"
     user = g.user
     result = fm.get_all_changes(int(op_id), user, named_version)
     if result is False:
@@ -465,8 +467,9 @@ def authorized_users():
 @APP.route('/operations', methods=['GET'])
 @verify_user
 def get_operations():
+    skip_archived = (request.args.get('skip_archived', request.form.get('skip_archived', "False")) == "True")
     user = g.user
-    return json.dumps({"operations": fm.list_operations(user)})
+    return json.dumps({"operations": fm.list_operations(user, skip_archived=skip_archived)})
 
 
 @APP.route('/delete_operation', methods=["POST"])

@@ -40,7 +40,7 @@ class FileManager:
     def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_operation(self, path, description, user, last_used=None, content=None, category="default"):
+    def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
         path: path to the operation
         description: description of the operation
@@ -54,7 +54,7 @@ class FileManager:
             return False
         if last_used is None:
             last_used = datetime.datetime.utcnow()
-        operation = Operation(path, description, last_used, category)
+        operation = Operation(path, description, last_used, category, active=active)
         db.session.add(operation)
         db.session.flush()
         operation_id = operation.id
@@ -96,22 +96,27 @@ class FileManager:
             return op
         return False
 
-    def list_operations(self, user):
+    def list_operations(self, user, skip_archived=False):
         """
         user: logged in user
+        skip_archived: filter by active operations
         """
         operations = []
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
-            operation = Operation.query.filter_by(id=permission.op_id).first()
-            operations.append({
-                "op_id": permission.op_id,
-                "access_level": permission.access_level,
-                "path": operation.path,
-                "description": operation.description,
-                "category": operation.category,
-                "active": operation.active
-            })
+            if skip_archived:
+                operation = Operation.query.filter_by(id=permission.op_id, active=skip_archived).first()
+            else:
+                operation = Operation.query.filter_by(id=permission.op_id).first()
+            if operation is not None:
+                operations.append({
+                    "op_id": permission.op_id,
+                    "access_level": permission.access_level,
+                    "path": operation.path,
+                    "description": operation.description,
+                    "category": operation.category,
+                    "active": operation.active
+                })
         return operations
 
     def is_member(self, u_id, op_id):
@@ -303,7 +308,7 @@ class FileManager:
             operation_data = operation_file.read()
         return operation_data
 
-    def get_all_changes(self, op_id, user, named_version=None):
+    def get_all_changes(self, op_id, user, named_version=False):
         """
         op_id: operation-id
         user: user of this request
@@ -314,17 +319,17 @@ class FileManager:
         perm = Permission.query.filter_by(u_id=user.id, op_id=op_id).first()
         if perm is None:
             return False
-        # Get all changes
-        if named_version is None:
-            changes = Change.query.\
-                filter_by(op_id=op_id)\
-                .order_by(Change.created_at.desc())\
-                .all()
         # Get only named versions
-        else:
+        if named_version:
             changes = Change.query\
                 .filter(Change.op_id == op_id)\
                 .filter(~Change.version_name.is_(None))\
+                .order_by(Change.created_at.desc())\
+                .all()
+        # Get all changes
+        else:
+            changes = Change.query\
+                .filter_by(op_id=op_id)\
                 .order_by(Change.created_at.desc())\
                 .all()
 
