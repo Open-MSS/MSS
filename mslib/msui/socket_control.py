@@ -195,4 +195,24 @@ class ConnectionManager(QtCore.QObject):
             self.signal_reload.emit(op_id)
 
     def disconnect(self):
+        # Get all pyqtSignals defined in this class and disconnect them from all slots
+        allSignals = {
+            attr
+            for attr in dir(self.__class__)
+            if isinstance(getattr(self.__class__, attr), QtCore.pyqtSignal)
+        }
+        inheritedSignals = {
+            attr
+            for base_class in self.__class__.__bases__
+            for attr in dir(base_class)
+            if isinstance(getattr(base_class, attr), QtCore.pyqtSignal)
+        }
+        signals = {getattr(self, signal) for signal in allSignals - inheritedSignals}
+        for signal in signals:
+            try:
+                signal.disconnect()
+            except TypeError:
+                # The disconnect call can fail if there are no connected slots, so catch that error here
+                pass
+
         self.sio.disconnect()

@@ -53,6 +53,7 @@ class Test_Mscolab_Merge_Waypoints(object):
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
 
     def teardown_method(self):
