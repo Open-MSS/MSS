@@ -24,9 +24,11 @@ Acknowledgement
 
 Please add the following acknowledgement and cite to your publications:
 
+
   The authors gratefully acknowledge the use of the MSS flight planning
-  software (Rautenhaus, 2012; MSS development was partially funded by
-  the Deutsche Forschungsgemeinschaft (DFG, German Research Foundation)
-  project no. UN 311/3-1)“.
+  software (Bauer et al, 2022, Rautenhaus et al, 2012;
+  MSS development was partially funded by the Deutsche Forschungsgemeinschaft
+  (DFG, German Research Foundation) project no. UN 311/3-1
+  and project no. SPP 1294 423229456)
 
 Thank you very much.
