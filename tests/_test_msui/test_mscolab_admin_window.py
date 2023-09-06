@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import os
-import mock
 import pytest
 import mock
 import sys
