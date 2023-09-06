@@ -341,6 +341,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
                                                             listFlightTracks=self.ui.listFlightTracks,
                                                             listOperationsMSC=self.ui.listOperationsMSC,
+                                                            category=self.ui.filterCategoryCb,
                                                             activeFlightTrack=self.active_flighttrack,
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
