@@ -977,6 +977,8 @@ class VPathInteractor(PathInteractor):
         y = event.ydata
         wpm = self.waypoints_model
         flightlevel = float(pressure2flightlevel(y * units.Pa).magnitude)
+        # round flightlevel to the nearest multiple of five (legal level)
+        flightlevel = 5.0 * round(flightlevel / 5)
         [lat, lon], best_index = self.plotter.get_lat_lon(event, wpm.all_waypoint_data())
         loc = find_location(lat, lon)  # skipped tolerance which uses appropriate_epsilon_km
         if loc is not None:
