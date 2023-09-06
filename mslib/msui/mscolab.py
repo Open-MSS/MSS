@@ -874,8 +874,11 @@ class MSUIMscolab(QtCore.QObject):
             self.logout()
         else:
             if r.text == "True":
-                self.error_dialog = QtWidgets.QErrorMessage()
-                self.error_dialog.showMessage('Your operation was created successfully')
+                QtWidgets.QMessageBox.information(
+                    self.ui,
+                    "Creation successful",
+                    "Your operation was created successfully.",
+                )
                 op_id = self.get_recent_op_id()
                 self.new_op_id = op_id
                 self.conn.handle_new_operation(op_id)
@@ -1134,8 +1137,11 @@ class MSUIMscolab(QtCore.QObject):
                 if r.text == "True":
                     self.active_operation_category = entered_operation_category
                     self.reload_operation_list()
-                    self.error_dialog = QtWidgets.QErrorMessage()
-                    self.error_dialog.showMessage("Description is updated successfully.")
+                    QtWidgets.QMessageBox.information(
+                        self.ui,
+                        "Update successful",
+                        "Category is updated successfully.",
+                    )
                 else:
                     show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                     self.logout()
@@ -1170,8 +1176,11 @@ class MSUIMscolab(QtCore.QObject):
                     self.set_operation_desc_label(entered_operation_desc)
 
                     self.reload_operation_list()
-                    self.error_dialog = QtWidgets.QErrorMessage()
-                    self.error_dialog.showMessage("Description is updated successfully.")
+                    QtWidgets.QMessageBox.information(
+                        self.ui,
+                        "Update successful",
+                        "Description is updated successfully.",
+                    )
                 else:
                     show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                     self.logout()
@@ -1211,8 +1220,11 @@ class MSUIMscolab(QtCore.QObject):
                     # Update other user's operation list
                     self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
 
-                    self.error_dialog = QtWidgets.QErrorMessage()
-                    self.error_dialog.showMessage("Operation is renamed successfully.")
+                    QtWidgets.QMessageBox.information(
+                        self.ui,
+                        "Rename successful",
+                        "Operation is renamed successfully.",
+                    )
                 else:
                     show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                     self.logout()
@@ -1933,6 +1945,12 @@ class MSUIMscolab(QtCore.QObject):
             return
         self.ui.local_active = True
         self.ui.menu_handler()
+
+        # disconnect socket
+        if self.conn is not None:
+            self.conn.disconnect()
+            self.conn = None
+
         # close all hanging window
         self.close_external_windows()
         self.hide_operation_options()
@@ -1965,10 +1983,6 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.activeOperationDesc.setText(self.ui.tr("Select Operation to View Description."))
         # set usernameLabel back to default
         self.ui.usernameLabel.setText("User")
-        # disconnect socket
-        if self.conn is not None:
-            self.conn.disconnect()
-            self.conn = None
         # Turn off work locally toggle
         self.ui.workLocallyCheckbox.blockSignals(True)
         self.ui.workLocallyCheckbox.setChecked(False)
@@ -1991,11 +2005,9 @@ class MSUIMscolab(QtCore.QObject):
 
         self.operation_archive_browser.hide()
 
-        # Don't try to activate local flighttrack while testing
-        if "pytest" not in sys.modules:
-            # activate first local flighttrack after logging out
-            self.ui.listFlightTracks.setCurrentRow(0)
-            self.ui.activate_selected_flight_track()
+        # activate first local flighttrack after logging out
+        self.ui.listFlightTracks.setCurrentRow(0)
+        self.ui.activate_selected_flight_track()
 
 
 class MscolabMergeWaypointsDialog(QtWidgets.QDialog, merge_wp_ui.Ui_MergeWaypointsDialog):
