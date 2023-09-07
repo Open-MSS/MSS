@@ -1435,7 +1435,7 @@ class MSUIMscolab(QtCore.QObject):
                 operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                 widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
                 widgetItem.op_id = operation["op_id"]
-                widgetItem.catgegory = operation["category"]
+                widgetItem.operation_category = operation["category"]
                 widgetItem.operation_path = operation["path"]
                 widgetItem.access_level = operation["access_level"]
                 widgetItem.active_operation_description = operation["description"]
@@ -1598,11 +1598,11 @@ class MSUIMscolab(QtCore.QObject):
                 for operation in operations:
                     operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                     widgetItem = QtWidgets.QListWidgetItem(operation_desc)
-                    widgetItem.active_operation_description = operation["description"]
                     widgetItem.op_id = operation["op_id"]
-                    widgetItem.access_level = operation["access_level"]
-                    widgetItem.operation_path = operation["path"]
                     widgetItem.operation_category = operation["category"]
+                    widgetItem.operation_path = operation["path"]
+                    widgetItem.access_level = operation["access_level"]
+                    widgetItem.active_operation_description = operation["description"]
                     try:
                         # compatibility to 7.x
                         # a newer server can distinguish older operations and move those into inactive state
