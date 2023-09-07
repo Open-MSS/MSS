@@ -1400,7 +1400,7 @@ class MSUIMscolab(QtCore.QObject):
                 operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                 widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
                 widgetItem.op_id = operation["op_id"]
-                widgetItem.catgegory = operation["category"]
+                widgetItem.operation_category = operation["category"]
                 widgetItem.operation_path = operation["path"]
                 widgetItem.access_level = operation["access_level"]
                 widgetItem.active_operation_desc = operation["description"]
