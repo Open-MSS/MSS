@@ -594,47 +594,53 @@ class MSUIMscolab(QtCore.QObject):
             show_popup(self.ui, "Error", "Couldn't create a socket connection. Maybe the MSColab server is too old. "
                                          "New Login required!")
             self.logout()
-        else:
-            # Update Last Used
-            data = {
-                "token": self.token
-            }
+            return
+        # Update Last Used
+        data = {
+            "token": self.token
+        }
+        try:
             r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data,
                               timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
-            self.conn.signal_reload.connect(self.reload_window)
-            self.conn.signal_new_permission.connect(self.render_new_permission)
-            self.conn.signal_update_permission.connect(self.handle_update_permission)
-            self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
-            self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
+        except requests.exceptions.RequestException as e:
+            logging.debug(e)
+            show_popup(self.ui, "Error", "Some error occurred! Could not update operation.")
+            self.logout()
+            return
+        self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
+        self.conn.signal_reload.connect(self.reload_window)
+        self.conn.signal_new_permission.connect(self.render_new_permission)
+        self.conn.signal_update_permission.connect(self.handle_update_permission)
+        self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
+        self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
 
-            self.ui.connectBtn.hide()
-            self.ui.openOperationsGb.show()
-            # display connection status
-            transport_layer = self.conn.sio.transport()
-            self.ui.mscStatusLabel.setText(self.ui.tr(
-                f"Status: connected to '{self.mscolab_server_url}' by transport layer '{transport_layer}'"))
-            # display username beside useroptions toolbutton
-            self.ui.usernameLabel.setText(f"{self.user['username']}")
-            self.ui.usernameLabel.show()
-            self.ui.userOptionsTb.show()
-            self.fetch_gravatar()
-            # enable add operation menu action
-            self.ui.actionAddOperation.setEnabled(True)
+        self.ui.connectBtn.hide()
+        self.ui.openOperationsGb.show()
+        # display connection status
+        transport_layer = self.conn.sio.transport()
+        self.ui.mscStatusLabel.setText(self.ui.tr(
+            f"Status: connected to '{self.mscolab_server_url}' by transport layer '{transport_layer}'"))
+        # display username beside useroptions toolbutton
+        self.ui.usernameLabel.setText(f"{self.user['username']}")
+        self.ui.usernameLabel.show()
+        self.ui.userOptionsTb.show()
+        self.fetch_gravatar()
+        # enable add operation menu action
+        self.ui.actionAddOperation.setEnabled(True)
 
-            # Populate open operations list
-            ops = self.add_operations_to_ui()
-            # Show category list
-            self.show_categories_to_ui(ops)
+        # Populate open operations list
+        ops = self.add_operations_to_ui()
+        # Show category list
+        self.show_categories_to_ui(ops)
 
-            self.ui.activeOperationDesc.setHidden(False)
-            self.ui.actionChangeCategory.setEnabled(False)
-            self.ui.actionChangeDescription.setEnabled(False)
-            self.ui.actionDeleteOperation.setEnabled(False)
-            self.ui.filterCategoryCb.setEnabled(True)
-            self.ui.actionViewDescription.setEnabled(False)
+        self.ui.activeOperationDesc.setHidden(False)
+        self.ui.actionChangeCategory.setEnabled(False)
+        self.ui.actionChangeDescription.setEnabled(False)
+        self.ui.actionDeleteOperation.setEnabled(False)
+        self.ui.filterCategoryCb.setEnabled(True)
+        self.ui.actionViewDescription.setEnabled(False)
 
-            self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
+        self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
     def fetch_gravatar(self, refresh=False):
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
@@ -1087,18 +1093,24 @@ class MSUIMscolab(QtCore.QObject):
                     "selected_userids": json.dumps([self.user["id"]])
                 }
                 url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
-                res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-                if res.text != "False":
-                    res = res.json()
-                    if res["success"]:
-                        for window in self.ui.get_active_views():
-                            window.handle_force_close()
-                        self.reload_operations()
-                    else:
-                        show_popup(self.ui, "Error", "Some error occurred! Could not leave operation.")
-                else:
-                    show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                try:
+                    res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                except requests.exceptions.RequestException as e:
+                    logging.debug(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Could not leave operation.")
                     self.logout()
+                else:
+                    if res.text != "False":
+                        res = res.json()
+                        if res["success"]:
+                            for window in self.ui.get_active_views():
+                                window.handle_force_close()
+                            self.reload_operations()
+                        else:
+                            show_popup(self.ui, "Error", "Some error occurred! Could not leave operation.")
+                    else:
+                        show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                        self.logout()
             else:
                 show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
                 self.logout()
@@ -1134,18 +1146,24 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_category
                 }
                 url = urljoin(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-                if r.text == "True":
-                    self.active_operation_category = entered_operation_category
-                    self.reload_operation_list()
-                    QtWidgets.QMessageBox.information(
-                        self.ui,
-                        "Update successful",
-                        "Category is updated successfully.",
-                    )
-                else:
-                    show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                try:
+                    r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                except requests.exceptions.RequestException as e:
+                    logging.debug(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Could not update operation.")
                     self.logout()
+                else:
+                    if r.text == "True":
+                        self.active_operation_category = entered_operation_category
+                        self.reload_operation_list()
+                        QtWidgets.QMessageBox.information(
+                            self.ui,
+                            "Update successful",
+                            "Category is updated successfully.",
+                        )
+                    else:
+                        show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                        self.logout()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1171,20 +1189,26 @@ class MSUIMscolab(QtCore.QObject):
                 }
 
                 url = urljoin(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-                if r.text == "True":
-                    # Update active operation description label
-                    self.set_operation_desc_label(entered_operation_desc)
-
-                    self.reload_operation_list()
-                    QtWidgets.QMessageBox.information(
-                        self.ui,
-                        "Update successful",
-                        "Description is updated successfully.",
-                    )
-                else:
-                    show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                try:
+                    r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                except requests.exceptions.RequestException as e:
+                    logging.debug(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Could not update operation.")
                     self.logout()
+                else:
+                    if r.text == "True":
+                        # Update active operation description label
+                        self.set_operation_desc_label(entered_operation_desc)
+
+                        self.reload_operation_list()
+                        QtWidgets.QMessageBox.information(
+                            self.ui,
+                            "Update successful",
+                            "Description is updated successfully.",
+                        )
+                    else:
+                        show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                        self.logout()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1209,26 +1233,32 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_name
                 }
                 url = urljoin(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-                if r.text == "True":
-                    # Update active operation name
-                    self.active_operation_name = entered_operation_name
-
-                    # Update active operation description
-                    self.set_operation_desc_label(self.active_operation_description)
-                    self.reload_operation_list()
-                    self.reload_windows_slot()
-                    # Update other user's operation list
-                    self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
-
-                    QtWidgets.QMessageBox.information(
-                        self.ui,
-                        "Rename successful",
-                        "Operation is renamed successfully.",
-                    )
-                else:
-                    show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                try:
+                    r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                except requests.exceptions.RequestException as e:
+                    logging.debug(e)
+                    show_popup(self.ui, "Error", "Some error occurred! Could not update operation.")
                     self.logout()
+                else:
+                    if r.text == "True":
+                        # Update active operation name
+                        self.active_operation_name = entered_operation_name
+
+                        # Update active operation description
+                        self.set_operation_desc_label(self.active_operation_description)
+                        self.reload_operation_list()
+                        self.reload_windows_slot()
+                        # Update other user's operation list
+                        self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
+
+                        QtWidgets.QMessageBox.information(
+                            self.ui,
+                            "Rename successful",
+                            "Operation is renamed successfully.",
+                        )
+                    else:
+                        show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
+                        self.logout()
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1673,8 +1703,14 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": item.op_id,
             }
-            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data,
-                          timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            try:
+                requests.post(f'{self.mscolab_server_url}/set_last_used', data=data,
+                              timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            except requests.exceptions.RequestException as e:
+                logging.debug(e)
+                show_popup(self.ui, "Error", "Some error occurred! Could not update operation.")
+                self.logout()
+                return
 
             # set active_op_id here
             self.active_op_id = item.op_id
