@@ -102,7 +102,7 @@ def get_airports(force_download=False, url=None):
     _airports_mtime = Airspace().airports_mtime
 
     if url is None:
-        url = "https://ourairports.com/data/airports.csv"
+        url = "https://davidmegginson.github.io/ourairports-data/airports.csv"
 
     file_exists = os.path.exists(os.path.join(OSDIR, "downloads", "aip", "airports.csv"))
 

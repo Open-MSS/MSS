@@ -693,15 +693,12 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         """
         if index.column() == LOCATION:
             combobox = QtWidgets.QComboBox(parent)
-            locations = config_loader(dataset='locations')
-            adds = list(locations.keys())
+            adds = set(config_loader(dataset='locations'))
             if self.parent() is not None:
-                for loc in [wp.location for wp in self.parent().waypoints_model.all_waypoint_data() if
-                            wp.location != ""]:
-                    if loc not in adds:
-                        adds.append(loc)
+                for wp in self.parent().waypoints_model.all_waypoint_data():
+                    if wp.location != "":
+                        adds.add(wp.location)
             combobox.addItems(sorted(adds))
-
             combobox.setEditable(True)
             return combobox
         else:
@@ -709,14 +706,14 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
             return QtWidgets.QItemDelegate.createEditor(self, parent, option, index)
 
     def setEditorData(self, editor, index):
-        text = index.model().data(index, QtCore.Qt.DisplayRole).value()
+        value = index.model().data(index, QtCore.Qt.DisplayRole).value()
         if index.column() in (LOCATION,):
-            i = editor.findText(text)
+            i = editor.findText(value)
             if i == -1:
                 i = 0
             editor.setCurrentIndex(i)
         else:
-            QtWidgets.QItemDelegate.setEditorData(self, editor, index)
+            editor.insert(str(value))
 
     def setModelData(self, editor, model, index):
         """

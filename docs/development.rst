@@ -465,13 +465,25 @@ As developer you should copy this directory and adjust the source path, build nu
 using a local meta.yaml recipe::
 
   $ cd yourlocalbuild
-  $ conda build .
-  $ conda create -n mssbuildtest mamba
-  $ conda activate mssbuildtest
-  $ mamba install --use-local mss
+  $ mamba build .
+  $ mamba create -n mssbuildtest
+  $ mamba activate mssbuildtest
+  $ mamba install -c local mss
 
 
 Take care on removing alpha builds, or increase the build number for a new version.
+
+
+Alternative local build by boa
+------------------------------
+
+`boa <https://boa-build.readthedocs.io/en/latest/>`_ is a new faster option to build conda packages.
+We need first to convert the existing description to a recipe.yaml::
+
+  $ cd yourlocalbuild
+  $ boa convert meta.yaml > recipe.yaml
+  $ boa build .
+  $ mamba install -c local mss
 
 
 Creating a new release

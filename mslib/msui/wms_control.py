@@ -1478,24 +1478,21 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         images = [x for x in imgs if x]
         if images:
-            if hasattr(self.view, 'fig') is False:
-                QtWidgets.QMessageBox.warning(self, self.tr("Web Map Service"), "We have only fig implemented")
-            else:
-                # Add border around seperate legends
-                if len(images) > 1:
-                    images = [ImageOps.expand(x, border=1, fill="black") for x in images]
-                max_height = int((self.view.fig.get_size_inches() * self.view.fig.get_dpi())[1] * 0.99)
-                width = max([image.width for image in images])
-                height = sum([image.height for image in images])
-                result = Image.new("RGBA", (width, height))
-                current_height = 0
-                for i, image in enumerate(images):
-                    result.paste(image, (0, current_height - i))
-                    current_height += image.height
+            # Add border around seperate legends
+            if len(images) > 1:
+                images = [ImageOps.expand(x, border=1, fill="black") for x in images]
+            max_height = int((self.view.plotter.fig.get_size_inches() * self.view.plotter.fig.get_dpi())[1] * 0.99)
+            width = max([image.width for image in images])
+            height = sum([image.height for image in images])
+            result = Image.new("RGBA", (width, height))
+            current_height = 0
+            for i, image in enumerate(images):
+                result.paste(image, (0, current_height - i))
+                current_height += image.height
 
-                if max_height < result.height:
-                    result.thumbnail((result.width, max_height), Image.ANTIALIAS)
-                return result
+            if max_height < result.height:
+                result.thumbnail((result.width, max_height), Image.ANTIALIAS)
+            return result
 
 
 class VSecWMSControlWidget(WMSControlWidget):
