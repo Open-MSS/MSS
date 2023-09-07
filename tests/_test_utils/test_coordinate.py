@@ -60,7 +60,7 @@ class TestProjections(object):
         with pytest.raises(ValueError):
             coordinate.get_projection_params('auto:42001')
         with pytest.raises(ValueError):
-            coordinate.get_projection_params('crs:84')
+            coordinate.get_projection_params('crs:83')
 
 
 class TestAngles(object):
