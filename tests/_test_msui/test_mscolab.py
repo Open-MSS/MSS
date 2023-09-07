@@ -817,4 +817,3 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
-

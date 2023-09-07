@@ -38,11 +38,9 @@ from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
 from tests.constants import ROOT_DIR, POSIX
 from mslib.msui import msui
-from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
-
 
 
 @mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
