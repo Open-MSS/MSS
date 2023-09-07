@@ -60,7 +60,7 @@
         <string>Return</string>
        </property>
        <property name="autoDefault">
-        <bool>false</bool>
+        <bool>true</bool>
        </property>
       </widget>
      </item>
@@ -124,7 +124,7 @@
           <string>Return</string>
          </property>
          <property name="autoDefault">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>

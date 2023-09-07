@@ -112,6 +112,9 @@
              <property name="text">
               <string>Connect</string>
              </property>
+             <property name="autoDefault">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
           </layout>
@@ -353,7 +356,7 @@ Double click a operation to activate and view its description.</string>
      <x>0</x>
      <y>0</y>
      <width>738</width>
-     <height>20</height>
+     <height>22</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
