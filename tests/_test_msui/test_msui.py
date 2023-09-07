@@ -29,6 +29,7 @@
 import sys
 import mock
 import os
+import fs
 import platform
 import argparse
 import pytest
@@ -37,9 +38,11 @@ from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
 from tests.constants import ROOT_DIR, POSIX
 from mslib.msui import msui
+from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
+
 
 
 @mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
@@ -139,7 +142,7 @@ class Test_MSSSideViewWindow(object):
     save_txt = os.path.join(ROOT_DIR, "example.txt")
     # import/export plugins
     import_plugins = {
-        "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
+        "TXT": ["txt", "mslib.plugins.io.text", "load_from_txt"],
         "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"],
     }
     export_plugins = {
@@ -257,24 +260,21 @@ class Test_MSSSideViewWindow(object):
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
-    @pytest.mark.parametrize(
-        "open_file", [(open_ftml, "actionImportFlightTrackFTML"),
-                      (open_txt, "actionImportFlightTrackText"), (open_fls, "actionImportFlightTrackFliteStar")])
-    def test_plugin_import(self, open_file):
+    @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
+    def test_plugin_import(self, ext):
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=open_file) as mockopen:
-            assert self.window.listFlightTracks.count() == 1
-            assert mockopen.call_count == 0
-            self.window.last_save_directory = ROOT_DIR
-            obj_name = open_file[1]
+        assert self.window.listFlightTracks.count() == 1
+        file_path = fs.path.join(self.sample_path, f'example{ext}')
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
+            full_name = f"actionImportFlightTrack{ext[1:].upper()}"
             for action in self.window.menuImportFlightTrack.actions():
-                if obj_name == action.objectName():
+                if action.objectName() == full_name:
                     action.trigger()
                     break
-            QtWidgets.QApplication.processEvents()
             assert mockopen.call_count == 1
             assert self.window.listFlightTracks.count() == 2
+            assert self.window.active_flight_track.name == "example"
 
     @pytest.mark.parametrize("save_file", [[save_ftml, "actionExportFlightTrackFTML"],
                                            [save_txt, "actionExportFlightTrackText"]])

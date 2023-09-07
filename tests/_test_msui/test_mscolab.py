@@ -246,8 +246,8 @@ class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
     # import/export plugins
     import_plugins = {
-        "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
-        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
+        "TXT": ["txt", "mslib.plugins.io.text", "load_from_txt"],
+        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"],
     }
     export_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
@@ -349,46 +349,29 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @pytest.mark.skip("fails on github with WebSocket transport is not available")
     @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_import_file(self, mockbox, ext):
         self.window.remove_plugins()
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.export_plugins):
-            self.window.add_export_plugins("qt")
-        file_path = fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}')
-        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(file_path, None)):
-            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(file_path, None)):
-                self._connect_to_mscolab()
-                self._login(emailid=self.userdata[0], password=self.userdata[2])
-                self._activate_operation_at_index(0)
-                exported_wp = WaypointsTableModel(waypoints=self.window.mscolab.waypoints_model.waypoints)
-                full_name = f"actionExportFlightTrack{ext[1:]}"
-                for action in self.window.menuExportActiveFlightTrack.actions():
-                    if action.objectName() == full_name:
-                        action.trigger()
-                        break
-                assert os.path.exists(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'))
-                QtWidgets.QApplication.processEvents()
-                self.window.mscolab.waypoints_model.invert_direction()
-                QtWidgets.QApplication.processEvents()
-                QtTest.QTest.qWait(100)
-                assert exported_wp.waypoint_data(0).lat != self.window.mscolab.waypoints_model.waypoint_data(0).lat
-                full_name = f"actionImportFlightTrack{ext[1:]}"
-                for action in self.window.menuImportFlightTrack.actions():
-                    if action.objectName() == full_name:
-                        action.trigger()
-                        break
-                QtWidgets.QApplication.processEvents()
-                QtTest.QTest.qWait(100)
-                assert len(self.window.mscolab.waypoints_model.waypoints) == 2
-                imported_wp = self.window.mscolab.waypoints_model
-                wp_count = len(imported_wp.waypoints)
-                assert wp_count == 2
-                for i in range(wp_count):
-                    assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
+        file_path = fs.path.join(self.sample_path, f'example{ext}')
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
+            # with parametrize it is maybe too fast
+            QtTest.QTest.qWait(100)
+            self._connect_to_mscolab()
+            self._login(emailid=self.userdata[0], password=self.userdata[2])
+            self._activate_operation_at_index(0)
+            wp = self.window.mscolab.waypoints_model
+            assert len(wp.waypoints) == 2
+            full_name = f"actionImportFlightTrack{ext[1:].upper()}"
+            for action in self.window.menuImportFlightTrack.actions():
+                if action.objectName() == full_name:
+                    action.trigger()
+                    break
+            assert mockopen.call_count == 1
+            imported_wp = self.window.mscolab.waypoints_model
+            assert len(imported_wp.waypoints) == 5
 
     @pytest.mark.skip("Runs in a timeout locally > 60s")
     def test_work_locally_toggle(self):
@@ -761,3 +744,4 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
+
