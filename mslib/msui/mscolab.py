@@ -151,6 +151,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         # connect login, adduser, connect buttons
         self.connectBtn.clicked.connect(self.connect_handler)
+        self.disconnectBtn.clicked.connect(self.disconnect_handler)
+        self.disconnectBtn.hide()
         self.loginBtn.clicked.connect(self.login_handler)
         self.addUserBtn.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
 
@@ -183,9 +185,9 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.newConfirmPasswordLe.setText("")
 
         if index == 1:
-            self.connectBtn.setEnabled(False)
+            self.connectBtn.hide()
         else:
-            self.connectBtn.setEnabled(True)
+            self.connectBtn.show()
 
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
@@ -210,6 +212,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def enable_login_btn(self):
         self.loginBtn.setEnabled(self.loginEmailLe.text() != "" and self.loginPasswordLe.text() != "")
+        self.loginBtn.setAutoDefault(True)
+        self.loginBtn.setFocus()
 
     def connect_handler(self):
         try:
@@ -255,12 +259,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.enable_login_btn()
 
                 # Change connect button text and connect disconnect handler
-                self.connectBtn.setText('Disconnect')
-                try:
-                    self.connectBtn.clicked.disconnect(self.connect_handler)
-                except TypeError:
-                    pass
-                self.connectBtn.clicked.connect(self.disconnect_handler)
+                self.connectBtn.hide()
+                self.disconnectBtn.show()
             else:
                 logging.error("Error %s", r)
                 self.set_status("Error", "Some unexpected error occurred. Please try again.")
@@ -295,9 +295,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.mscolab_server_url = None
         self.auth = None
 
-        self.connectBtn.setText('Connect')
-        self.connectBtn.clicked.disconnect(self.disconnect_handler)
-        self.connectBtn.clicked.connect(self.connect_handler)
+        self.connectBtn.show()
+        self.disconnectBtn.hide()
         self.set_status("Info", 'Disconnected from server.')
 
     def login_handler(self):

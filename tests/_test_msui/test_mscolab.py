@@ -116,7 +116,7 @@ class Test_Mscolab_connect_window():
     def test_disconnect(self):
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
-        QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.disconnectBtn, QtCore.Qt.LeftButton)
         assert self.window.mscolab_server_url is None
         # set ui_name_winodw default
         assert self.main_window.usernameLabel.text() == 'User'
