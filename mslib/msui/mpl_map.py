@@ -147,17 +147,10 @@ class MapCanvas(basemap.Basemap):
         self.image = None
 
         # Print project name and CRS identifier into figure.
-        crs_text = ""
-        if self.operation_name is not None:
-            crs_text += self.operation_name
-        if self.crs is not None:
-            if len(crs_text) > 0:
-                crs_text += "\n"
-            crs_text += self.crs
-        if hasattr(self, "crs_text"):  # update existing textbox
-            self.crs_text.set_text(crs_text)
-        else:
-            self.crs_text = self.ax.figure.text(0, 0, crs_text)
+        if not hasattr(self, "_info_text"):
+            self._info_text = self.ax.figure.text(0, 0, "")
+            self._infos = [None] * 4
+        self.update_info_text(name=self.operation_name, crs=self.crs)
 
         if self.appearance["draw_graticule"]:
             pass
@@ -174,6 +167,18 @@ class MapCanvas(basemap.Basemap):
         if not hasattr(self, "airspaces") or not self.airspaces:
             self.airspaces = None
             self.airspacetext = None
+
+    def update_info_text(self, openaip=None, ourairports=None, name=None, crs=None):
+        if openaip is not None:
+            self._infos[0] = openaip
+        if ourairports is not None:
+            self._infos[1] = ourairports
+        if name is not None:
+            self._infos[2] = name
+        if crs is not None:
+            self._infos[3] = crs
+        self._info_text.set_text(
+            "\n".join([_i for _i in self._infos if _i]))  # both None and ""
 
     def set_identifier(self, identifier):
         self.identifier = identifier
@@ -350,8 +355,7 @@ class MapCanvas(basemap.Basemap):
         Sets airports to visible or not visible
         """
         if (reload or not value or len(port_type) == 0) and self.airports:
-            if OURAIRPORTS_NOTICE in self.crs_text.get_text():
-                self.crs_text.set_text(self.crs_text.get_text().replace(f"{OURAIRPORTS_NOTICE}\n", ""))
+            self.update_info_text(ourairports="")
             self.airports.remove()
             self.airtext.remove()
             self.airports = None
@@ -365,8 +369,7 @@ class MapCanvas(basemap.Basemap):
         Sets airspaces to visible or not visible
         """
         if (reload or not value or len(airspaces) == 0) and self.airspaces:
-            if OPENAIP_NOTICE in self.crs_text.get_text():
-                self.crs_text.set_text(self.crs_text.get_text().replace(f"{OPENAIP_NOTICE}\n", ""))
+            self.update_info_text(openaip="")
             self.airspaces.remove()
             self.airspacetext.remove()
             self.airspaces = None
@@ -396,9 +399,7 @@ class MapCanvas(basemap.Basemap):
             if not airspaces:
                 return
 
-            if OPENAIP_NOTICE not in self.crs_text.get_text():
-                self.crs_text.set_text(f"{OPENAIP_NOTICE}\n" + self.crs_text.get_text())
-
+            self.update_info_text(openaip=OPENAIP_NOTICE)
             airspaces.sort(key=lambda x: (x["bottom"], x["top"] - x["bottom"]))
             max_height = max(airspaces[-1]["bottom"], 0.001)
             cmap = get_cmap("Blues")
@@ -464,9 +465,7 @@ class MapCanvas(basemap.Basemap):
             if not airports:
                 return
 
-            if OURAIRPORTS_NOTICE not in self.crs_text.get_text():
-                self.crs_text.set_text(f"{OURAIRPORTS_NOTICE}\n" + self.crs_text.get_text())
-
+            self.update_info_text(ourairports=OURAIRPORTS_NOTICE)
             self.airports = self.ax.scatter(lons, lats, marker="o", color="r", linewidth=1, s=9, edgecolor="black",
                                             zorder=6)
             self.airports.set_pickradius(1)
