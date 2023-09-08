@@ -28,6 +28,7 @@
 
 import mock
 import os
+import sys
 import platform
 import argparse
 import pytest
@@ -39,7 +40,7 @@ from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
-from conftest import QAPP
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 @mock.patch("mslib.msui.msui.constants.POSIX", POSIX)

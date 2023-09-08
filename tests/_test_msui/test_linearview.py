@@ -27,6 +27,7 @@
 
 import mock
 import os
+import sys
 import pytest
 import shutil
 import multiprocessing
@@ -37,7 +38,8 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
 from tests.utils import wait_until_signal
-from conftest import QAPP
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 PORTS = list(range(26000, 26500))
 

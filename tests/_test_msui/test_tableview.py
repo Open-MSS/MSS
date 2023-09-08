@@ -27,13 +27,16 @@
 
 import mock
 import os
+import sys
 import pytest
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
-from conftest import QAPP
+
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 class Test_TableView(object):

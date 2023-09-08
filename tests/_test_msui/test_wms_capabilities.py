@@ -26,10 +26,12 @@
 """
 
 import mock
-
+import sys
 from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
-from conftest import QAPP
+
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 class Test_WMSCapabilities(object):

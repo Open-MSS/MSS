@@ -26,12 +26,13 @@
 """
 
 import os
+import sys
 import fs
 import mock
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
-from conftest import QAPP
+QAPP = QtWidgets.QApplication(sys.argv)
 
 sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
 save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")

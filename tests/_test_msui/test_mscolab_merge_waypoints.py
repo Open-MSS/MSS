@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import sys
 import fs
 import mock
 import pytest
@@ -38,7 +39,9 @@ from tests.utils import (mscolab_start_server, mscolab_register_and_login, mscol
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
-from conftest import QAPP
+
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 PORTS = list(range(23000, 23500))

@@ -27,11 +27,12 @@
 import pytest
 import mock
 import os
+import sys
 import fs
 from PyQt5 import QtWidgets
 from mslib.msui import editor
 from tests.constants import ROOT_DIR
-from conftest import QAPP
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 @pytest.mark.skip("To be done for new UI")

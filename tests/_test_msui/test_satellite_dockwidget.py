@@ -26,10 +26,13 @@
 """
 
 import os
+import sys
 import mock
 from PyQt5 import QtWidgets, QtCore, QtTest
 import mslib.msui.satellite_dockwidget as sd
-from conftest import QAPP
+
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 class Test_SatelliteDockWidget(object):

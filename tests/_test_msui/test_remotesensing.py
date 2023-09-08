@@ -27,14 +27,16 @@
 
 
 import datetime
-
-from mock import Mock
-from matplotlib.collections import LineCollection
+import sys
 import pytest
 import skyfield_data
+from mock import Mock
+from matplotlib.collections import LineCollection
+from PyQt5 import QtWidgets
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
 from mslib.msui import mpl_qtwidget as qt
-from conftest import QAPP
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 def test_skyfield_data_expiration(recwarn):

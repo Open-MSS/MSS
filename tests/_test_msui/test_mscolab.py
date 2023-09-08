@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import sys
 import fs
 import fs.errors
 import fs.opener.errors
@@ -44,7 +45,9 @@ from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
 from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-from conftest import QAPP
+
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 PORTS = list(range(25000, 25500))
 

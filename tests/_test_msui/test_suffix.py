@@ -26,11 +26,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import sys
 from PyQt5 import QtWidgets, QtTest
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
-from conftest import QAPP
+
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 class Test_SuffixChange(object):

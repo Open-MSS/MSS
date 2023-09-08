@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import os
 import sys
 import mock
@@ -38,7 +37,8 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 from tests.utils import wait_until_signal
-from conftest import QAPP
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 PORTS = list(range(18000, 18500))

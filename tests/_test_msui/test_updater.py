@@ -24,12 +24,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import sys
 import mock
 from PyQt5 import QtWidgets, QtTest
 
 from mslib.msui.updater import UpdaterUI, Updater
 from mslib.utils.qt import Worker
-from conftest import QAPP
+
+QAPP = QtWidgets.QApplication(sys.argv)
 
 
 def no_conda(args=None, **named_args):
