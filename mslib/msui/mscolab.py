@@ -151,6 +151,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         # connect login, adduser, connect buttons
         self.connectBtn.clicked.connect(self.connect_handler)
+        self.connectBtn.setFocus()
         self.disconnectBtn.clicked.connect(self.disconnect_handler)
         self.disconnectBtn.hide()
         self.loginBtn.clicked.connect(self.login_handler)
@@ -184,11 +185,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.newPasswordLe.setText("")
         self.newConfirmPasswordLe.setText("")
 
-        if index == 1:
-            self.connectBtn.hide()
-        else:
-            self.connectBtn.show()
-
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
             msg = "⚠ " + msg
@@ -212,8 +208,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def enable_login_btn(self):
         self.loginBtn.setEnabled(self.loginEmailLe.text() != "" and self.loginPasswordLe.text() != "")
-        self.loginBtn.setAutoDefault(True)
-        self.loginBtn.setFocus()
 
     def connect_handler(self):
         try:
@@ -257,6 +251,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                     config_loader(dataset="MSS_auth").get(self.mscolab_server_url))
                 self.mscolab_login_changed(self.loginEmailLe.text())
                 self.enable_login_btn()
+                self.loginBtn.setFocus()
 
                 # Change connect button text and connect disconnect handler
                 self.connectBtn.hide()
@@ -296,6 +291,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.auth = None
 
         self.connectBtn.show()
+        self.connectBtn.setFocus()
         self.disconnectBtn.hide()
         self.set_status("Info", 'Disconnected from server.')
 
@@ -2002,6 +1998,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.connectBtn.show()
+        self.ui.connectBtn.setFocus()
         self.ui.openOperationsGb.hide()
         self.ui.actionAddOperation.setEnabled(False)
         # hide operation description
