@@ -42,6 +42,7 @@ from tests.utils import wait_until_signal
 
 PORTS = list(range(18000, 18500))
 
+QAPP = QtWidgets.QApplication(sys.argv)
 
 class HSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="EPSG:4326")
@@ -565,7 +566,7 @@ class TestWMSControlWidgetSetupSimple(object):
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
         self.window.show()
