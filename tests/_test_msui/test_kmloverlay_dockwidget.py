@@ -27,11 +27,11 @@
 
 import os
 import fs
-import sys
 import mock
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
+from conftest import QAPP
 
 sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
 save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
@@ -42,7 +42,7 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 class Test_KmlOverlayDockWidget(object):
 
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])

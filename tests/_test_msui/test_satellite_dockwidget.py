@@ -26,15 +26,15 @@
 """
 
 import os
-import sys
 import mock
 from PyQt5 import QtWidgets, QtCore, QtTest
 import mslib.msui.satellite_dockwidget as sd
+from conftest import QAPP
 
 
 class Test_SatelliteDockWidget(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.view = mock.Mock()
         self.window = sd.SatelliteControlWidget(view=self.view)
         self.window.show()

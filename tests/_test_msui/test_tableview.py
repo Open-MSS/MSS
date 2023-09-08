@@ -28,17 +28,17 @@
 import mock
 import os
 import pytest
-import sys
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
+from conftest import QAPP
 
 
 class Test_TableView(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
 
         # Create an initital flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),

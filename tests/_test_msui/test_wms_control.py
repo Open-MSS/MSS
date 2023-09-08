@@ -38,11 +38,11 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 from tests.utils import wait_until_signal
+from conftest import QAPP
 
 
 PORTS = list(range(18000, 18500))
 
-QAPP = QtWidgets.QApplication(sys.argv)
 
 class HSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="EPSG:4326")
@@ -60,7 +60,7 @@ class WMSControlWidgetSetup(object):
     def _setup(self, widget_type):
         wc.WMS_SERVICE_CACHE = {}
         self.port = PORTS.pop()
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:

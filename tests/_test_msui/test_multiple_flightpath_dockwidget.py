@@ -24,18 +24,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import sys
 from PyQt5 import QtWidgets, QtTest
 from mslib.msui import msui
 from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
 from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
+from conftest import QAPP
 
 
 class Test_MultipleFlightpathControlWidget():
 
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
 
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()

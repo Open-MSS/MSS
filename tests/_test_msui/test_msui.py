@@ -26,7 +26,6 @@
 """
 
 
-import sys
 import mock
 import os
 import platform
@@ -40,6 +39,7 @@ from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
+from conftest import QAPP
 
 
 @mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
@@ -67,7 +67,7 @@ def test_main():
 
 class Test_MSS_AboutDialog():
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.window = msui_mw.MSUI_AboutDialog()
 
     def test_milestone_url(self):
@@ -85,7 +85,7 @@ class Test_MSS_AboutDialog():
 
 class Test_MSS_ShortcutDialog():
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.main_window = msui_mw.MSUIMainWindow()
         self.main_window.show()
         self.shortcuts = msui_mw.MSUI_ShortcutsDialog()
@@ -153,7 +153,7 @@ class Test_MSSSideViewWindow(object):
             os.path.dirname(os.path.abspath(__file__)),
             '../',
             'data/')
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
 
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()

@@ -30,7 +30,6 @@ import mock
 import os
 import pytest
 import shutil
-import sys
 import multiprocessing
 import tempfile
 from mslib.mswms.mswms import application
@@ -39,13 +38,14 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 from tests.utils import wait_until_signal
+from conftest import QAPP
 
 PORTS = list(range(19000, 19500))
 
 
 class Test_MSS_SV_OptionsDialog(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
@@ -96,7 +96,7 @@ class Test_MSS_SV_OptionsDialog(object):
 
 class Test_MSSSideViewWindow(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
@@ -175,7 +175,7 @@ class Test_MSSSideViewWindow(object):
                     reason="multiprocessing needs currently start_method fork")
 class Test_SideViewWMS(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.port = PORTS.pop()
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):

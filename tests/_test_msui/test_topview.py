@@ -29,7 +29,6 @@ import mock
 import os
 import pytest
 import shutil
-import sys
 import multiprocessing
 import tempfile
 from mslib.mswms.mswms import application
@@ -38,13 +37,14 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
 from tests.utils import wait_until_signal
+from conftest import QAPP
 
 PORTS = list(range(28000, 28500))
 
 
 class Test_MSS_TV_MapAppearanceDialog(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.window = tv.MSUI_TV_MapAppearanceDialog(settings=_DEFAULT_SETTINGS_TOPVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
@@ -70,7 +70,7 @@ class Test_MSS_TV_MapAppearanceDialog(object):
 
 class Test_MSSTopViewWindow(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
@@ -297,7 +297,7 @@ class Test_MSSTopViewWindow(object):
 class Test_TopViewWMS(object):
     def setup_method(self):
         self.port = PORTS.pop()
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
 
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -358,7 +358,7 @@ class Test_TopViewWMS(object):
 
 class Test_MSUITopViewWindow():
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
 
     def test_kwargs_update_does_not_harm(self):
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]

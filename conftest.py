@@ -45,6 +45,8 @@ import tests.constants as constants
 sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
 shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
+QAPP = QtWidgets.QApplication(sys.argv)
+
 
 class TestKeyring(keyring.backend.KeyringBackend):
     """A test keyring which always outputs the same password

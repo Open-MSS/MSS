@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import os
-import sys
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
@@ -37,6 +36,7 @@ from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.utils.config import modify_config_file
+from conftest import QAPP
 
 PORTS = list(range(22000, 22500))
 
@@ -62,7 +62,7 @@ class Test_MscolabOperation(object):
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QAPP.instance()
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
