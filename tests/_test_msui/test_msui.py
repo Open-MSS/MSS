@@ -258,21 +258,24 @@ class Test_MSSSideViewWindow(object):
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
-    @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
-    def test_plugin_import(self, ext):
+    @pytest.mark.parametrize("name", [("example.ftml", "actionImportFlightTrackFTML", 5),
+                                      ("example.csv", "actionImportFlightTrackCSV", 5),
+                                      ("example.txt", "actionImportFlightTrackTXT", 5),
+                                      ("flitestar.txt", "actionImportFlightTrackFliteStar", 10)])
+    def test_plugin_import(self, name):
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
         assert self.window.listFlightTracks.count() == 1
-        file_path = fs.path.join(self.sample_path, f'example{ext}')
+        file_path = fs.path.join(self.sample_path, name[0])
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
-            full_name = f"actionImportFlightTrack{ext[1:].upper()}"
             for action in self.window.menuImportFlightTrack.actions():
-                if action.objectName() == full_name:
+                if action.objectName() == name[1]:
                     action.trigger()
                     break
             assert mockopen.call_count == 1
             assert self.window.listFlightTracks.count() == 2
-            assert self.window.active_flight_track.name == "example"
+            assert self.window.active_flight_track.name == name[0].split(".")[0]
+            assert len(self.window.active_flight_track.waypoints) == name[2]
 
     @pytest.mark.parametrize("save_file", [[save_ftml, "actionExportFlightTrackFTML"],
                                            [save_txt, "actionExportFlightTrackText"]])

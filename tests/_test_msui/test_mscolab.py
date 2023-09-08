@@ -380,13 +380,16 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
+    @pytest.mark.parametrize("name", [("example.ftml", "actionImportFlightTrackFTML", 5),
+                                      ("example.csv", "actionImportFlightTrackCSV", 5),
+                                      ("example.txt", "actionImportFlightTrackTXT", 5),
+                                      ("flitestar.txt", "actionImportFlightTrackFliteStar", 10)])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_import_file(self, mockbox, ext):
+    def test_import_file(self, mockbox, name):
         self.window.remove_plugins()
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        file_path = fs.path.join(self.sample_path, f'example{ext}')
+        file_path = fs.path.join(self.sample_path, name[0])
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
             # with parametrize it is maybe too fast
             QtTest.QTest.qWait(100)
@@ -395,14 +398,13 @@ class Test_Mscolab(object):
             self._activate_operation_at_index(0)
             wp = self.window.mscolab.waypoints_model
             assert len(wp.waypoints) == 2
-            full_name = f"actionImportFlightTrack{ext[1:].upper()}"
             for action in self.window.menuImportFlightTrack.actions():
-                if action.objectName() == full_name:
+                if action.objectName() == name[1]:
                     action.trigger()
                     break
             assert mockopen.call_count == 1
             imported_wp = self.window.mscolab.waypoints_model
-            assert len(imported_wp.waypoints) == 5
+            assert len(imported_wp.waypoints) == name[2]
 
     @pytest.mark.skip("Runs in a timeout locally > 60s")
     def test_work_locally_toggle(self):
