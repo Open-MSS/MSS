@@ -88,13 +88,13 @@ class Test_Server(TestCase):
             assert result["success"] is True
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
             assert result["success"] is False
-            assert result["message"] == "Oh no, this email ID is already taken!"
+            assert result["message"] == "This email ID is already taken!"
             result = register_user("UV", self.userdata[1], self.userdata[2])
             assert result["success"] is False
-            assert result["message"] == "Oh no, your email ID is not valid!"
+            assert result["message"] == "Your email ID is not valid!"
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[0])
             assert result["success"] is False
-            assert result["message"] == "Oh no, your username cannot contain @ symbol!"
+            assert result["message"] == "Your username cannot contain @ symbol!"
 
     def test_check_login(self):
         with self.app.test_client():

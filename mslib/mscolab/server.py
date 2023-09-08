@@ -160,15 +160,15 @@ def register_user(email, password, username):
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
-        return {"success": False, "message": "Oh no, your email ID is not valid!"}
+        return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
-        return {"success": False, "message": "Oh no, your username cannot contain @ symbol!"}
+        return {"success": False, "message": "Your username cannot contain @ symbol!"}
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
-        return {"success": False, "message": "Oh no, this email ID is already taken!"}
+        return {"success": False, "message": "This email ID is already taken!"}
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
-        return {"success": False, "message": "Oh no, this username is already registered"}
+        return {"success": False, "message": "This username is already registered"}
     db.session.add(user)
     db.session.commit()
     return {"success": True}
