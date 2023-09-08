@@ -566,7 +566,6 @@ class TestWMSControlWidgetSetupSimple(object):
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     def setup_method(self):
-        self.application = QAPP.instance()
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
         self.window.show()
@@ -581,7 +580,6 @@ class TestWMSControlWidgetSetupSimple(object):
     def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_xml(self):
