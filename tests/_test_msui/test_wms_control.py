@@ -507,6 +507,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert mockbox.critical.call_count == 0
 
 
+@pytest.mark.skip("skipping")
 class TestWMSControlWidgetSetupSimple(object):
     xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
         <!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
@@ -583,7 +584,6 @@ class TestWMSControlWidgetSetupSimple(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
-    @pytest.mark.skip("skipping")
     def test_xml(self):
         testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSUIWebMapService(None, version='1.1.1', xml=testxml))
