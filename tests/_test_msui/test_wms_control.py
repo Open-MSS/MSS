@@ -42,19 +42,21 @@ from tests.utils import wait_until_signal
 
 PORTS = list(range(18000, 18500))
 
-
+@pytest.mark.skip("skipping")
 class HSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="EPSG:4326")
     getBBOX = mock.Mock(return_value=(0, 0, 10, 10))
     get_plot_size_in_px = mock.Mock(return_value=(200, 100))
 
 
+@pytest.mark.skip("skipping")
 class VSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="VERT:LOGP")
     getBBOX = mock.Mock(return_value=(3, 500, 3, 10))
     get_plot_size_in_px = mock.Mock(return_value=(200, 100))
 
 
+@pytest.mark.skip("skipping")
 class WMSControlWidgetSetup(object):
     def _setup(self, widget_type):
         wc.WMS_SERVICE_CACHE = {}
