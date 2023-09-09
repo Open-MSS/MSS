@@ -42,6 +42,7 @@ from tests.utils import wait_until_signal
 
 PORTS = list(range(18000, 18500))
 
+
 @pytest.mark.skip("skipping")
 class HSecViewMockup(mock.Mock):
     get_crs = mock.Mock(return_value="EPSG:4326")
@@ -470,6 +471,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
+
 
 @pytest.mark.skip("skipping")
 @pytest.mark.skipif(os.name == "nt",
