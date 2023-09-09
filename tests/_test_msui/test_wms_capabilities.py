@@ -35,7 +35,7 @@ import mslib.msui.wms_capabilities as wc
 class Test_WMSCapabilities(object):
 
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance()
         self.capabilities = mock.Mock()
         self.capabilities.capabilities_document = u"Hölla die Waldfee".encode("utf-8")
         self.capabilities.provider = mock.Mock()
