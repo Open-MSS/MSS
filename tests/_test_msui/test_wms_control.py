@@ -475,9 +475,9 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     def setup_method(self):
         self._setup("vsec")
 
+    @pytest.mark.skip("unknown problem, getmap call to a WMS server displays an image")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
-        pytest.skip("unknown problem")
         """
         assert that a getmap call to a WMS server displays an image
         """
