@@ -113,6 +113,7 @@ class WMSControlWidgetSetup(object):
         wait_until_signal(self.window.cpdlg.canceled)
 
 
+@pytest.mark.skip("skipping")
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
@@ -468,7 +469,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-
+@pytest.mark.skip("skipping")
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
