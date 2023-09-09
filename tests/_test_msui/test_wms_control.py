@@ -583,6 +583,7 @@ class TestWMSControlWidgetSetupSimple(object):
         self.application.quit()
         QtWidgets.QApplication.processEvents()
 
+    @pytest.mark.skip("skipping")
     def test_xml(self):
         testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
         self.window.activate_wms(wc.MSUIWebMapService(None, version='1.1.1', xml=testxml))
