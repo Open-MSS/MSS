@@ -1,8 +1,8 @@
 # pylint: skip-file
 # -*- coding: utf-8 -*-
 """
-    mslib.idp.idp_uwsgi.py
-    ~~~~~~~~~~~~~~~~~~~~~~
+    msidp.idp_uwsgi.py
+    ~~~~~~~~~~~~~~~~~~
 
     WSGI application for IDP
 
@@ -70,8 +70,8 @@ from saml2.profile import ecp
 from saml2.s_utils import PolicyError, UnknownPrincipal, exception_trace, UnsupportedBinding, rndstr
 from saml2.sigver import encrypt_cert_from_item, verify_redirect_signature
 
-from idp_user import EXTRA
-from idp_user import USERS
+from msidp.idp_user import EXTRA
+from msidp.idp_user import USERS
 from mako.lookup import TemplateLookup
 
 

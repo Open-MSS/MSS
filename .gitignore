@@ -26,4 +26,4 @@ tutorials/recordings
 tutorials/cursor_image.png
 __pycache__/
 instance/
-mslib/idp/modules
+msidp/modules

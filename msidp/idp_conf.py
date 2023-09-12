@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.idp.idp_conf.py
-    ~~~~~~~~~~~~~~~~~~~~~
+    msidp.idp_conf.py
+    ~~~~~~~~~~~~~~~~~
 
     SAML2 IDP configuration with bindings, endpoints, and authentication contexts.
 
@@ -51,7 +51,6 @@ BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
 def full_path(local_file):
     """Return the full path by joining the BASEDIR and local_file."""
-
     return os.path.join(BASEDIR, local_file)
 
 
@@ -200,10 +199,6 @@ CONFIG = {
         },
     },
 }
-
-# Authentication contexts
-
-# (r'verify?(.*)$', do_verify),
 
 CAS_SERVER = "https://cas.umu.se"
 CAS_VERIFY = f"{BASE}/verify_cas"
