@@ -59,5 +59,5 @@ class Test_MultipleFlightpathControlWidget():
         QtWidgets.QApplication.processEvents()
 
     def test_initialization(self):
-        widget = MultipleFlightpathControlWidget(parent=self.widget, listFlightTracks=self.widget.ui.listFlightTracks)
+        widget = MultipleFlightpathControlWidget(parent=self.widget, listFlightTracks=self.widget.mainwindow.listFlightTracks)
         assert widget.color == (0, 0, 1, 1)

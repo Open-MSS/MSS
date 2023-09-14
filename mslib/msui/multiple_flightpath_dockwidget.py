@@ -177,7 +177,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     @QtCore.pyqtSlot()
     def logout(self):
-        self.operations.logout_mscolab()
+        if self.operations is not None:
+            self.operations.logout_mscolab()
         self.ui.signal_listFlighttrack_doubleClicked.disconnect()
         self.ui.signal_permission_revoked.disconnect()
         self.ui.signal_render_new_permission.disconnect()

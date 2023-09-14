@@ -185,13 +185,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
-    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None, token=None):
+    def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
+                 active_flighttrack=None, mscolab_server_url=None, token=None):
         """
         Set up user interface, connect signal/slots.
         """
         super().__init__(parent, model, _id)
         logging.debug(_id)
-        self.ui = parent
+        self.mainwindow = mainwindow
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -230,15 +231,15 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
-        if parent is not None:
+        if self.mainwindow is not None:
             # Update flighttrack
-            self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
-            self.ui.signal_activate_operation.connect(self.update_active_operation)
+            self.mainwindow.signal_activate_flighttrack.connect(self.update_active_flighttrack)
+            self.mainwindow.signal_activate_operation.connect(self.update_active_operation)
 
-            self.ui.signal_operation_added.connect(self.add_operation_slot)
-            self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+            self.mainwindow.signal_operation_added.connect(self.add_operation_slot)
+            self.mainwindow.signal_operation_removed.connect(self.remove_operation_slot)
 
-            self.ui.signal_login_mscolab.connect(self.login)
+            self.mainwindow.signal_login_mscolab.connect(self.login)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
@@ -339,18 +340,19 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             elif index == MULTIPLEFLIGHTPATH:
                 title = "Multiple Flightpath"
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
-                                                            listFlightTracks=self.ui.listFlightTracks,
-                                                            listOperationsMSC=self.ui.listOperationsMSC,
-                                                            category=self.ui.filterCategoryCb,
+                                                            listFlightTracks=self.mainwindow.listFlightTracks,
+                                                            listOperationsMSC=self.mainwindow.listOperationsMSC,
+                                                            category=self.mainwindow.filterCategoryCb,
                                                             activeFlightTrack=self.active_flighttrack,
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
 
-                self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
-                self.ui.signal_listFlighttrack_doubleClicked.connect(
+                self.mainwindow.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
+                self.mainwindow.signal_listFlighttrack_doubleClicked.connect(
                     lambda: self.signal_listFlighttrack_doubleClicked.emit())
-                self.ui.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
-                self.ui.signal_render_new_permission.connect(
+                self.mainwindow.signal_permission_revoked.connect(
+                    lambda op_id: self.signal_permission_revoked.emit(op_id))
+                self.mainwindow.signal_render_new_permission.connect(
                     lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
@@ -362,12 +364,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.createDockWidget(index, title, widget)
 
     def closed(self):
-        self.ui.signal_login_mscolab.disconnect()
-        self.ui.signal_logout_mscolab.disconnect()
-        self.ui.signal_listFlighttrack_doubleClicked.disconnect()
-        self.ui.signal_activate_operation.disconnect()
-        self.ui.signal_permission_revoked.disconnect()
-        self.ui.signal_render_new_permission.disconnect()
+        self.mainwindow.signal_login_mscolab.disconnect()
+        self.mainwindow.signal_logout_mscolab.disconnect()
+        self.mainwindow.signal_listFlighttrack_doubleClicked.disconnect()
+        self.mainwindow.signal_activate_operation.disconnect()
+        self.mainwindow.signal_permission_revoked.disconnect()
+        self.mainwindow.signal_render_new_permission.disconnect()
 
     @QtCore.pyqtSlot()
     def disable_cbs(self):
