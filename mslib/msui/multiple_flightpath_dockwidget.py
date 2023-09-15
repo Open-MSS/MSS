@@ -525,9 +525,6 @@ class MultipleFlightpathOperations:
         self.operation_activated = False
         self.color_change = False
 
-        # Connect signals and slots
-        self.list_operation_track.itemChanged.connect(self.set_flag)
-
         # Load operations from wps server
         server_operations = self.get_wps_from_server()
         sorted_server_operations = sorted(server_operations, key=lambda d: d["path"])
@@ -538,6 +535,10 @@ class MultipleFlightpathOperations:
             wp_model = ft.WaypointsTableModel(xml_content=xml_content)
             wp_model.name = operations["path"]
             self.create_operation(op_id, wp_model)
+
+        # This needs to be done after operations are loaded
+        # Connect signals and slots
+        self.list_operation_track.itemChanged.connect(self.set_flag)
 
     def set_flag(self):
         if self.operation_added:
@@ -617,6 +618,8 @@ class MultipleFlightpathOperations:
         """
         Activate Mscolab Operation
         """
+        # disconnect itemChanged during activation loop
+        self.list_operation_track.itemChanged.disconnect(self.set_flag)
         font = QtGui.QFont()
         for i in range(self.list_operation_track.count()):
             listItem = self.list_operation_track.item(i)
@@ -635,6 +638,8 @@ class MultipleFlightpathOperations:
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
             self.set_activate_flag()
             listItem.setFont(font)
+        # connect itemChanged after everything setup, otherwise it will be triggered on each entry
+        self.list_operation_track.itemChanged.connect(self.set_flag)
 
     def save_last_used_operation(self, op_id):
         if self.active_op_id is not None:
@@ -681,6 +686,7 @@ class MultipleFlightpathOperations:
         """
         Slot to remove operation.
         """
+        self.list_operation_track.itemChanged.disconnect(self.set_flag)
         self.operation_removed = True
         for index in range(self.list_operation_track.count()):
             if self.list_operation_track.item(index).op_id == op_id:
@@ -691,6 +697,7 @@ class MultipleFlightpathOperations:
                 self.list_operation_track.takeItem(index)
                 self.active_op_id = None
                 break
+        self.list_operation_track.itemChanged.connect(self.set_flag)
 
     def set_activate_flag(self):
         if not self.operation_activated:
