@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    msidp.idp_conf.py
-    ~~~~~~~~~~~~~~~~~
+    mslib.msidp.idp_conf.py
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     SAML2 IDP configuration with bindings, endpoints, and authentication contexts.
 

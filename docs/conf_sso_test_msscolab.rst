@@ -1,6 +1,6 @@
 Configuration MSS Colab Server with Testing IdP for SSO
 =======================================================
-Testing IDP (`msidp`) is specifically designed for testing the Single Sign-On (SSO) process with the mscolab server using PySAML2.
+Testing IDP (`mslib/msidp`) is specifically designed for testing the Single Sign-On (SSO) process with the mscolab server using PySAML2.
 
 Here is documentation that explains the configuration of the MSS Colab Server with the testing IdP.
 
@@ -102,4 +102,4 @@ When migrations finished, you can start mscolab server  using the following comm
 `$ msui`
 
 * Login with identity provider through Qt Client application.
-* To log in to the mscolab server through the identity provider, you can use the credentials specified in the ``PASSWD`` section of the ``MSS/msidp/idp.py`` file. Look for the relevant section in the file to find the necessary login credentials.
+* To log in to the mscolab server through the identity provider, you can use the credentials specified in the ``PASSWD`` section of the ``MSS/mslib/msidp/idp.py`` file. Look for the relevant section in the file to find the necessary login credentials.

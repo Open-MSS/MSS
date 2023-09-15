@@ -19,7 +19,7 @@ build:
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
     - mssautoplot = mslib.utils.mssautoplot:main
-    - msidp = msidp.idp:main
+    - msidp = mslib.msidp.idp:main
 
 requirements:
   build:
@@ -100,7 +100,6 @@ requirements:
 test:
   imports:
     - mslib
-    - msidp
   commands:
     - mswms -h
     - mswms_demodata -h

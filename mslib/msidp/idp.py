@@ -1,8 +1,8 @@
 # pylint: skip-file
 # -*- coding: utf-8 -*-
 """
-    msidp.msidp.py
-    ~~~~~~~~~~~~~~
+    mslib.msidp.idp.py
+    ~~~~~~~~~~~~~~~~~~
 
     MSS Identity provider implementation.
 
@@ -38,9 +38,9 @@ import logging
 import os
 import re
 import time
-import msidp
 import sys
 
+from mslib import msidp
 from http.cookies import SimpleCookie
 from hashlib import sha1
 from urllib.parse import parse_qs
@@ -79,8 +79,8 @@ from saml2.s_utils import PolicyError, UnknownPrincipal, UnsupportedBinding, exc
 from saml2.sigver import encrypt_cert_from_item, verify_redirect_signature
 from werkzeug.serving import run_simple as WSGIServer
 
-from msidp.idp_user import EXTRA
-from msidp.idp_user import USERS
+from mslib.msidp.idp_user import EXTRA
+from mslib.msidp.idp_user import USERS
 from mako.lookup import TemplateLookup
 
 logger = logging.getLogger("saml2.idp")

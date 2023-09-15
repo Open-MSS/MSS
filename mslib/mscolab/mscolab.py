@@ -293,7 +293,7 @@ def handle_local_idp_metadata_init():
         if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
             os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
 
-        cmd = ["make_metadata", "msidp/idp_conf.py"]
+        cmd = ["make_metadata", "mslib/msidp/idp_conf.py"]
 
         with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml",
                   "w", encoding="utf-8") as output_file:
