@@ -46,7 +46,8 @@ class Test_MultipleFlightpathControlWidget():
         self.waypoints_model = ft.WaypointsTableModel("myname")
         self.waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.widget = tv.MSUITopViewWindow(parent=self.window, model=self.waypoints_model)
+
+        self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -59,5 +60,6 @@ class Test_MultipleFlightpathControlWidget():
         QtWidgets.QApplication.processEvents()
 
     def test_initialization(self):
-        widget = MultipleFlightpathControlWidget(parent=self.widget, listFlightTracks=self.widget.mainwindow.listFlightTracks)
+        widget = MultipleFlightpathControlWidget(parent=self.widget,
+                                                 listFlightTracks=self.window.listFlightTracks)
         assert widget.color == (0, 0, 1, 1)
