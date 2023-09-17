@@ -34,6 +34,12 @@ from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
 from mslib.utils.qt import show_popup
 from mslib.utils.config import config_loader
+from mscolab.conf import mscolab_settings
+
+try:
+    VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL
+except ImportError:
+    VERIFY_SSL_MSCOLAB = True
 
 
 class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
@@ -176,7 +182,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, "/creator_of_operation")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             creator_name = _json["username"]
@@ -189,7 +195,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             self.operations = _json["operations"]
@@ -203,7 +209,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "op_id": self.op_id
             }
             url = url_join(self.mscolab_server_url, "users_without_permission")
-            res = requests.get(url, data=data, timeout=(2, 10))
+            res = requests.get(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -228,7 +234,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "op_id": self.op_id
             }
             url = url_join(self.mscolab_server_url, "users_with_permission")
-            res = requests.get(url, data=data, timeout=(2, 10))
+            res = requests.get(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -260,7 +266,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "selected_access_level": selected_access_level
             }
             url = url_join(self.mscolab_server_url, "add_bulk_permissions")
-            res = requests.post(url, data=data, timeout=(2, 10))
+            res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -291,7 +297,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "selected_access_level": selected_access_level
             }
             url = url_join(self.mscolab_server_url, "modify_bulk_permissions")
-            res = requests.post(url, data=data, timeout=(2, 10))
+            res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -319,7 +325,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "selected_userids": json.dumps(selected_userids)
             }
             url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
-            res = requests.post(url, data=data, timeout=(2, 10))
+            res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -344,7 +350,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "import_op_id": import_op_id
             }
             url = url_join(self.mscolab_server_url, 'import_permissions')
-            res = requests.post(url, data=data, timeout=(2, 10))
+            res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:

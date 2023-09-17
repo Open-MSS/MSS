@@ -28,6 +28,12 @@
 import logging
 import requests
 from mslib.utils.config import config_loader
+from mscolab.conf import mscolab_settings
+
+try:
+    VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL
+except ImportError:
+    VERIFY_SSL_MSCOLAB = True
 
 
 def verify_user_token(mscolab_server_url, token):
@@ -39,7 +45,8 @@ def verify_user_token(mscolab_server_url, token):
         "token": token
     }
     try:
-        r = requests.get(f'{mscolab_server_url}/test_authorized', data=data, timeout=(2, 10))
+        r = requests.get(f'{mscolab_server_url}/test_authorized', verify=VERIFY_SSL_MSCOLAB,
+                         data=data, timeout=(2, 10))
     except requests.exceptions.SSLError:
         logging.debug("Certificate Verification Failed")
         return False

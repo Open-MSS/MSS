@@ -87,6 +87,9 @@ class default_mscolab_settings:
     # mail accounts
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
 
+    # enable Secure Sockets Layer verification for mscolab
+    VERIFY_SSL = True
+
     # enable login by identity provider
     USE_SAML2 = False
 

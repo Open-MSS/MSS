@@ -66,6 +66,12 @@ from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
+from mscolab.conf import mscolab_settings
+
+try:
+    VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL
+except ImportError:
+    VERIFY_SSL_MSCOLAB = True
 
 
 class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArchiveBrowser):
@@ -99,7 +105,7 @@ class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArc
             }
             url = url_join(self.mscolab.mscolab_server_url, 'set_last_used')
             try:
-                res = requests.post(url, data=data, timeout=(2, 10))
+                res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             except requests.exceptions.RequestException as e:
                 logging.debug(e)
                 show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
@@ -221,7 +227,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             s = requests.Session()
             s.auth = auth
             s.headers.update({'x-test': 'true'})
-            r = s.get(url_join(url, 'status'), timeout=(2, 10))
+            r = s.get(url_join(url, 'status'), verify=VERIFY_SSL_MSCOLAB, timeout=(2, 10))
             if r.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif r.status_code == 200:
@@ -327,7 +333,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         url = f'{self.mscolab_server_url}/token'
         url_recover_password = f'{self.mscolab_server_url}/reset_request'
         try:
-            r = s.post(url, data=data, timeout=(2, 10))
+            r = s.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
             if r.status_code == 401:
                 raise requests.exceptions.ConnectionError
         except requests.exceptions.ConnectionError as ex:
@@ -360,7 +366,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         try:
             data = {'token': user_token}
-            response = requests.post(url_idp_login_auth, json=data, timeout=(2, 10))
+            response = requests.post(url_idp_login_auth, verify=VERIFY_SSL_MSCOLAB, json=data, timeout=(2, 10))
             if response.status_code == 401:
                 self.set_status("Error", 'Invalid token or token expired. Please try again')
                 self.stackedWidget.setCurrentWidget(self.loginPage)
@@ -380,7 +386,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 s.headers.update({'x-test': 'true'})
                 url = f'{self.mscolab_server_url}/token'
 
-                r = s.post(url, data=data, timeout=(2, 10))
+                r = s.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
                 if r.status_code == 401:
                     raise requests.exceptions.ConnectionError
                 if r.text == "False":
@@ -429,7 +435,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         s.headers.update({'x-test': 'true'})
         url = f'{self.mscolab_server_url}/register'
         try:
-            r = s.post(url, data=data, timeout=(2, 10))
+            r = s.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
         except requests.exceptions.ConnectionError as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
@@ -647,7 +653,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data, timeout=(2, 10))
+            r = requests.post(f"{self.mscolab_server_url}/update_last_used", verify=VERIFY_SSL_MSCOLAB, data=data,
+                              timeout=(2, 10))
             self.conn.signal_operation_list_updated.connect(self.reload_operation_list)
             self.conn.signal_reload.connect(self.reload_window)
             self.conn.signal_new_permission.connect(self.render_new_permission)
@@ -811,7 +818,8 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token
             }
 
-            res = requests.post(self.mscolab_server_url + '/delete_user', data=data, timeout=(2, 10))
+            res = requests.post(self.mscolab_server_url + '/delete_user', verify=VERIFY_SSL_MSCOLAB,
+                                data=data, timeout=(2, 10))
             if res.status_code == 200 and json.loads(res.text)["success"] is True:
                 self.logout()
         else:
@@ -903,7 +911,8 @@ class MSUIMscolab(QtCore.QObject):
         }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        r = requests.post(f'{self.mscolab_server_url}/create_operation', data=data, timeout=(2, 10))
+        r = requests.post(f'{self.mscolab_server_url}/create_operation', verify=VERIFY_SSL_MSCOLAB,
+                          data=data, timeout=(2, 10))
         if r.text == "True":
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Your operation was created successfully')
@@ -923,7 +932,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(self.mscolab_server_url + '/operations', data=data)
+            r = requests.get(self.mscolab_server_url + '/operations', verify=VERIFY_SSL_MSCOLAB,
+                             data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1078,7 +1088,7 @@ class MSUIMscolab(QtCore.QObject):
                     }
                     url = url_join(self.mscolab_server_url, 'delete_operation')
                     try:
-                        res = requests.post(url, data=data, timeout=(2, 10))
+                        res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
                     except requests.exceptions.RequestException as e:
                         logging.debug(e)
                         show_popup(self.ui, "Error", "Some error occurred! Could not delete operation.")
@@ -1110,7 +1120,7 @@ class MSUIMscolab(QtCore.QObject):
                     "selected_userids": json.dumps([self.user["id"]])
                 }
                 url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
-                res = requests.post(url, data=data, timeout=(2, 10))
+                res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
                 if res.text != "False":
                     res = res.json()
                     if res["success"]:
@@ -1157,7 +1167,7 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_category
                 }
                 url = url_join(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
+                r = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
                 if r.text == "True":
                     self.active_operation_category = entered_operation_category
                     self.reload_operation_list()
@@ -1187,7 +1197,7 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_desc
                 }
                 url = url_join(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
+                r = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
                 if r.text == "True":
                     # Update active operation description label
                     self.set_operation_desc_label(entered_operation_desc)
@@ -1218,7 +1228,7 @@ class MSUIMscolab(QtCore.QObject):
                     "value": entered_operation_name
                 }
                 url = url_join(self.mscolab_server_url, 'update_operation')
-                r = requests.post(url, data=data, timeout=(2, 10))
+                r = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
                 if r.text == "True":
                     # Update active operation name
                     self.active_operation_name = entered_operation_name
@@ -1363,7 +1373,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(self.mscolab_server_url + '/operations', data=data, timeout=(2, 10))
+            r = requests.get(self.mscolab_server_url + '/operations', verify=VERIFY_SSL_MSCOLAB,
+                             data=data, timeout=(2, 10))
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1403,7 +1414,8 @@ class MSUIMscolab(QtCore.QObject):
         data = {
             'token': self.token
         }
-        r = requests.get(self.mscolab_server_url + '/user', data=data, timeout=(2, 10))
+        r = requests.get(self.mscolab_server_url + '/user', verify=VERIFY_SSL_MSCOLAB,
+                         data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             if _json['user']['id'] == u_id:
@@ -1522,7 +1534,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
+            r = requests.get(f'{self.mscolab_server_url}/operations', verify=VERIFY_SSL_MSCOLAB,
+                             data=data, timeout=(2, 10))
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1544,7 +1557,8 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(f'{self.mscolab_server_url}/operations', data=data, timeout=(2, 10))
+            r = requests.get(f'{self.mscolab_server_url}/operations', verify=VERIFY_SSL_MSCOLAB,
+                             data=data, timeout=(2, 10))
             if r.text != "False":
                 _json = json.loads(r.text)
                 self.operations = _json["operations"]
@@ -1610,7 +1624,7 @@ class MSUIMscolab(QtCore.QObject):
                 }
                 url = url_join(self.mscolab_server_url, 'set_last_used')
                 try:
-                    res = requests.post(url, data=data, timeout=(2, 10))
+                    res = requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
                 except requests.exceptions.RequestException as e:
                     logging.debug(e)
                     show_popup(self.ui, "Error", "Some error occurred! Could not archive operation.")
@@ -1652,7 +1666,8 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": item.op_id,
             }
-            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data, timeout=(2, 10))
+            requests.post(f'{self.mscolab_server_url}/set_last_used', verify=VERIFY_SSL_MSCOLAB,
+                          data=data, timeout=(2, 10))
 
             # set active_op_id here
             self.active_op_id = item.op_id
@@ -1796,7 +1811,8 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": self.active_op_id
             }
-            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data)
+            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', verify=VERIFY_SSL_MSCOLAB,
+                             data=data)
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
                 return xml_content

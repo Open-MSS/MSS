@@ -38,6 +38,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
+from mscolab.conf import mscolab_settings
+
+try:
+    VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL
+except ImportError:
+    VERIFY_SSL_MSCOLAB = True
 
 
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
@@ -277,7 +283,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             }
             url = url_join(self.mscolab_server_url, 'message_attachment')
             try:
-                requests.post(url, data=data, files=files, timeout=(2, 10))
+                requests.post(url, verify=VERIFY_SSL_MSCOLAB, data=data, files=files, timeout=(2, 10))
             except requests.exceptions.ConnectionError:
                 show_popup(self, "Error", "File size too large")
         self.send_message_state()
@@ -333,7 +339,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "op_id": self.op_id
         }
         url = url_join(self.mscolab_server_url, 'authorized_users')
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
         if r.text != "False":
             self.collaboratorsList.clear()
             users = r.json()["users"]
@@ -354,7 +360,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         # returns an array of messages
         url = url_join(self.mscolab_server_url, "messages")
 
-        res = requests.get(url, data=data, timeout=(2, 10))
+        res = requests.get(url, verify=VERIFY_SSL_MSCOLAB, data=data, timeout=(2, 10))
         if res.text != "False":
             res = res.json()
             messages = res["messages"]
@@ -474,7 +480,7 @@ class MessageItem(QtWidgets.QWidget):
                                self.attachment_path.replace('\\', '/').split('colabdata')[1])
         else:
             img_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
-        data = requests.get(img_url, timeout=(2, 10)).content
+        data = requests.get(img_url, verify=VERIFY_SSL_MSCOLAB, timeout=(2, 10)).content
         image = QtGui.QImage()
         image.loadFromData(data)
         self.message_image = image
@@ -654,6 +660,7 @@ class MessageItem(QtWidgets.QWidget):
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
                 file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path),
+                                            verify=VERIFY_SSL_MSCOLAB,
                                             timeout=(2, 10)).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
