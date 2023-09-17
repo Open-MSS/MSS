@@ -33,7 +33,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.msui_mainwindow as msui_mainwindow
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
-from mscolab.conf import mscolab_settings
+from mslib.mscolab.conf import mscolab_settings
 
 try:
     VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL

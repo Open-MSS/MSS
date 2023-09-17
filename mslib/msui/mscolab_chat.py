@@ -38,7 +38,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
-from mscolab.conf import mscolab_settings
+from mslib.mscolab.conf import mscolab_settings
 
 try:
     VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL

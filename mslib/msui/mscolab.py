@@ -66,7 +66,7 @@ from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
-from mscolab.conf import mscolab_settings
+from mslib.mscolab.conf import mscolab_settings
 
 try:
     VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL

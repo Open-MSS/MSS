@@ -34,7 +34,7 @@ from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.qt5 import ui_mscolab_admin_window as ui
 from mslib.utils.qt import show_popup
 from mslib.utils.config import config_loader
-from mscolab.conf import mscolab_settings
+from mslib.mscolab.conf import mscolab_settings
 
 try:
     VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL

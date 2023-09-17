@@ -38,7 +38,7 @@ from mslib.msui.qt5 import ui_mscolab_version_history as ui
 from mslib.utils.qt import show_popup
 from mslib.utils.config import config_loader
 from mslib.utils.time import utc_to_local_datetime
-from mscolab.conf import mscolab_settings
+from mslib.mscolab.conf import mscolab_settings
 
 try:
     VERIFY_SSL_MSCOLAB = mscolab_settings.VERIFY_SSL
