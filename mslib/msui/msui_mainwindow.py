@@ -54,6 +54,7 @@ from mslib.utils.qt import get_open_filenames, get_save_filename
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
 from mslib.msui.constants import MSUI_CONFIG_PATH
+from mslib.mscolab.models import db, OperationLayout
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSUI_CONFIG_PATH)
@@ -471,12 +472,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.actionUpdater.triggered.connect(self.updater.show)
         self.openOperationsGb.hide()
 
+        self.last_changed_item = None
         self.StoreLayout.clicked.connect(self.store_operation_data)
         self.RestoreLayout.clicked.connect(self.restore_operation_data)
         self.allowed_widget_names = ["TopViewWindow", "SideViewWindow", "TableViewWindow", "LinearWindow"]
         self.listOperationsMSC.itemChanged.connect(self.operation_changed)
 
-    def operation_changed(self):
+    def operation_changed(self, item):
+        if item == self.last_changed_item:
+            return
         folder_path = MSUI_CONFIG_PATH
         file_name = self.listOperationsMSC.currentItem()
         file_path = os.path.join(folder_path, file_name.text() + ".txt")
@@ -486,6 +490,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if result == QtWidgets.QMessageBox.Yes:
                 self.restore_operation_data()
         print("opertaion is changed")
+        self.last_changed_item = item
 
     def store_operation_data(self):
         self.file_name = self.listOperationsMSC.currentItem()
@@ -516,12 +521,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     elif isinstance(child, QtWidgets.QCheckBox):
                         child_info[child.objectName()] = {"checked": child.isChecked()}
 
-                itemlist = [child_info, positions]
-                self.widget_info[widget.objectName()] = itemlist
+                itemlist = [widget.objectName(),child_info, positions]
+                self.widget_info[widget.windowTitle()] = itemlist
 
         folder_path = MSUI_CONFIG_PATH
         file_path = os.path.join(folder_path, self.file_name.text() + ".txt")
         json_data = json.dumps(self.widget_info, indent=4)
+        db.create_all()
+        OperationLayout.add_or_update(self.file_name.text(), json_data)
+
+        db.session.close()
 
         with open(file_path, 'w') as file:
             file.write(json_data)
@@ -535,18 +544,17 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         await asyncio.sleep(1)
 
         for widget_name, saved_data in loaded_data.items():
-            if widget_name in self.allowed_widget_names and len(saved_data) == 2:
-                positions = saved_data[1]
+            if saved_data[0] in self.allowed_widget_names and len(saved_data) == 3:
+                positions = saved_data[2]
                 top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
 
                 for widget in top_level_widgets:
-                    if widget.objectName() == widget_name:
+                    if widget.windowTitle() == widget_name:
                         current_position = widget.geometry().getRect()
                         if current_position != positions[0]:
                             widget.setGeometry(*positions[0])
 
     def restore_operation_data(self):
-        folder_path = MSUI_CONFIG_PATH
         file_name = self.listOperationsMSC.currentItem()
         if file_name is None:
             message_box = QtWidgets.QMessageBox()
@@ -556,42 +564,38 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             message_box.exec_()
             return
 
-        file_path = os.path.join(folder_path, file_name.text() + ".txt")
-
-        if not os.path.exists(file_path):
-            message_box = QtWidgets.QMessageBox()
-            message_box.setWindowTitle("File Not Found")
-            message_box.setText(f"Layout data file not found: {file_path}")
-            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
-            message_box.exec_()
-            return
-
-        with open(file_path, 'r') as file:
-            loaded_data = json.load(file)
+        loaded_data = OperationLayout.query.filter_by(operation_id=file_name.text()).first()
+        layout_data = json.loads(loaded_data.json_data)
 
         top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
 
-        for widget_name, saved_data in loaded_data.items():
-            if widget_name in self.allowed_widget_names:
-                if widget_name not in [w.objectName() for w in top_level_widgets]:
-                    if widget_name == "TopViewWindow":
-                        self.create_view_handler("topview")
-                    elif widget_name == "SideViewWindow":
-                        self.create_view_handler("sideview")
-                    elif widget_name == "TableViewWindow":
-                        self.create_view_handler("tableview")
-                    elif widget_name == "LinearWindow":
-                        self.create_view_handler("linearview")
+        for widget_name, saved_data in layout_data.items():
+            if saved_data[0] in self.allowed_widget_names:
+                if saved_data[0] not in [w.objectName() for w in top_level_widgets]:
+                    if saved_data[0] == "TopViewWindow":
+                        new_widget = self.create_view_handler("topview")
+                        new_widget.setWindowTitle(widget_name)
+                    elif saved_data[0] == "SideViewWindow":
+                        new_widget = self.create_view_handler("sideview")
+                        new_widget.setWindowTitle(widget_name)
+                    elif saved_data[0] == "TableViewWindow":
+                        new_widget = self.create_view_handler("tableview")
+                        new_widget.setWindowTitle(widget_name)
+                    elif saved_data[0] == "LinearWindow":
+                        new_widget = self.create_view_handler("linearview")
+                        new_widget.setWindowTitle(widget_name)
 
-        asyncio.run(self.delayed_process(widget_name, saved_data, loaded_data))
+        asyncio.run(self.delayed_process(widget_name, saved_data, layout_data))
 
+        # Currently if a extra widget is open we dont close it.
+        # In future if we want to close it we can use below code.
         # for widget in top_level_widgets:
         #     widget_name = widget.objectName()
         #     if widget_name in self.allowed_widget_names:
         #         if widget_name not in loaded_data:
         #             print(f"Extra widget found: '{widget_name}'")
 
-        print("Restore operation completed.")
+        print("Restore operation completed.") 
 
     def bring_main_window_to_front(self):
         self.show()
@@ -947,10 +951,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
     def create_view_handler(self, _type):
         if self.local_active:
-            self.create_view(_type, self.active_flight_track)
+            temp = self.create_view(_type, self.active_flight_track)
         else:
             self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
-            self.create_view(_type, self.mscolab.waypoints_model)
+            temp = self.create_view(_type, self.mscolab.waypoints_model)
+        return temp
 
     def create_view(self, _type, model):
         """Method called when the user selects a new view to be opened. Creates
@@ -1006,6 +1011,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             except AttributeError:
                 view_window.enable_navbar_action_buttons()
             self.viewsChanged.emit()
+        return view_window
 
     def get_active_views(self):
         active_view_windows = []
