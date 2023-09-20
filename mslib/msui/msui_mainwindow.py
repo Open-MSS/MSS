@@ -476,21 +476,26 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.StoreLayout.clicked.connect(self.store_operation_data)
         self.RestoreLayout.clicked.connect(self.restore_operation_data)
         self.allowed_widget_names = ["TopViewWindow", "SideViewWindow", "TableViewWindow", "LinearWindow"]
-        self.listOperationsMSC.itemChanged.connect(self.operation_changed)
+        self.listOperationsMSC.itemActivated.connect(self.operation_changed)
 
-    def operation_changed(self, item):
-        if item == self.last_changed_item:
+    def operation_changed(self):
+        selected_items = self.listOperationsMSC.selectedItems()
+
+        if not selected_items:
             return
-        folder_path = MSUI_CONFIG_PATH
-        file_name = self.listOperationsMSC.currentItem()
-        file_path = os.path.join(folder_path, file_name.text() + ".txt")
-        if os.path.exists(file_path):
-            result = QtWidgets.QMessageBox.question(self, "Saved Layout Detected", "Would you like to restore it?",
-                                                    QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+
+        selected_item = selected_items[0]
+        operation_name = selected_item.text()
+        loaded_data = OperationLayout.query.filter_by(operation_id=operation_name).first()
+
+        if loaded_data is not None:
+            result = QtWidgets.QMessageBox.question(
+                self, "Saved Layout Detected", "Would you like to restore it?",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+            
             if result == QtWidgets.QMessageBox.Yes:
                 self.restore_operation_data()
-        print("opertaion is changed")
-        self.last_changed_item = item
+        print("opertaion is changed", operation_name)
 
     def store_operation_data(self):
         self.file_name = self.listOperationsMSC.currentItem()
@@ -536,7 +541,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             file.write(json_data)
             message_box = QtWidgets.QMessageBox()
             message_box.setWindowTitle("Select Operation")
-            message_box.setText(f"Dictionary has been successfully stored in {file_path}")
+            message_box.setText(f"Dictionary has been successfully stored in {file_path} and also on the mscolab server")
             message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
             message_box.exec_()
 
