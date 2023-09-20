@@ -82,6 +82,7 @@ from werkzeug.serving import run_simple as WSGIServer
 from mslib.msidp.idp_user import EXTRA
 from mslib.msidp.idp_user import USERS
 from mako.lookup import TemplateLookup
+from mslib.mscolab.conf import mscolab_settings
 
 logger = logging.getLogger("saml2.idp")
 logger.setLevel(logging.WARNING)
@@ -89,7 +90,7 @@ logger.setLevel(logging.WARNING)
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(msidp.__file__))
 LOOKUP = TemplateLookup(
     directories=[os.path.join(DOCS_SERVER_PATH, "templates"), os.path.join(DOCS_SERVER_PATH, "htdocs")],
-    module_directory=os.path.join(DOCS_SERVER_PATH, "modules"),
+    module_directory=os.path.join(mscolab_settings.DATA_DIR, 'msidp_modules'),
     input_encoding="utf-8",
     output_encoding="utf-8",
 )

@@ -20,7 +20,7 @@ To set up a local identity provider with the mscolab server, you'll first need t
 
 1. Initial Steps
 ----------------
-Before getting started, you should correctly activate the environments, set the correct Python path, and be in the correct directory (`$ cd MSS`), as explained in the mss instructions : https://open-mss.github.io/develop/Setup-Instructions
+Before getting started, you should correctly activate the environments, set the correct Python path as explained in the mss instructions : https://github.com/Open-MSS/MSS/tree/develop#readme
 
 
 
@@ -39,7 +39,7 @@ Before running the command make sure to set `USE_SAML2 = False` in your `mscolab
 
 If everything is correctly set, you can generate keys and certificates simply by running
 
-`$ python mslib/mscolab/mscolab.py sso_conf --init_sso_crts`
+`$ mscolab sso_conf --init_sso_crts`
 
 .. note::
     This process generating keys and certificates for both Identity provider and mscolab server by default, If you need configure with different keys and certificates for the Identity provider, You should manually update the path of `SERVER_CERT` with the path of the generated .crt file for Identity provider, and `SERVER_KEY` with the path of the generated .key file for the Identity provider in the file `MSS/mslib/idp/idp_conf.py`.
@@ -63,7 +63,7 @@ This involves generating necessary metadata files for both the identity provider
 .. note::
     Before executing this, you should set `USE_SAML2=True` as described in the third step(Enable USE_SAML2).
 
-`$ python mslib/mscolab/mscolab.py sso_conf --init_sso_metadata`
+`$ mscolab sso_conf --init_sso_metadata`
 
 
 5. Start Identity provider
@@ -81,7 +81,7 @@ Before Starting the mscolab server, make sure to do necessary database migration
 
 When this is the first time you setup a mscolab server, you have to initialize the database by:
 
-`$ python mslib/mscolab/mscolab.py db --init`
+`$ mscolab db --init`
 
 .. note::
    An existing database maybe needs a migration, have a look for this on our documentation.
@@ -90,7 +90,7 @@ When this is the first time you setup a mscolab server, you have to initialize t
 
 When migrations finished, you can start mscolab server  using the following command:
 
-`$ python mslib/mscolab/mscolab.py start`
+`$ mscolab start`
 
 
 7. Testing Single Sign-On (SSO) process
