@@ -125,6 +125,9 @@ DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
 
+# In the unit days when Operations get archived because not used 
+ARCHIVE_THRESHOLD = 30
+
 # To enable logging set to True or pass a logger object to use. 
 SOCKETIO_LOGGER = True
 

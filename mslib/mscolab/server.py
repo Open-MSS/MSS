@@ -45,7 +45,7 @@ from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, User, Operation, db
+from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -59,7 +59,6 @@ CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CO
 migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
 
-ARCHIVE_THRESHOLD = 30
 
 try:
     from mscolab_auth import mscolab_auth
@@ -516,35 +515,18 @@ def get_operation_details():
 def set_last_used():
     # ToDo refactor move to file_manager
     op_id = request.form.get('op_id', None)
+    user = g.user
     days_ago = int(request.form.get('days', 0))
-    operation = Operation.query.filter_by(id=int(op_id)).first()
-    operation.last_used = datetime.datetime.utcnow() - datetime.timedelta(days=days_ago)
-    temp_operation_active = operation.active
-    if days_ago > ARCHIVE_THRESHOLD:
-        operation.active = False
+    fm.update_operation(int(op_id), 'last_used',
+                        datetime.datetime.utcnow() - datetime.timedelta(days=days_ago),
+                        user)
+    if days_ago > mscolab_settings.ARCHIVE_THRESHOLD:
+        fm.update_operation(int(op_id), "active", False, user)
     else:
-        operation.active = True
-    db.session.commit()
-    # Reload Operation List
-    if temp_operation_active != operation.active:
+        fm.update_operation(int(op_id), "active", True, user)
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
-    return jsonify({"success": True}), 200
-
-
-@APP.route('/update_last_used', methods=["POST"])
-@verify_user
-def update_last_used():
-    # ToDo refactor move to file_manager
-    operations = Operation.query.filter().all()
-    for operation in operations:
-        if operation.last_used is not None and \
-                (datetime.datetime.utcnow() - operation.last_used).days > 30:
-            operation.active = False
-        else:
-            operation.active = True
-    db.session.commit()
     return jsonify({"success": True}), 200
 
 

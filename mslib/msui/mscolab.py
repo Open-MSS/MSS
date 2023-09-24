@@ -584,12 +584,6 @@ class MSUIMscolab(QtCore.QObject):
         # create socket connection here
         try:
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
-            # Update Last Used
-            data = {
-                "token": self.token
-            }
-            r = requests.post(f"{self.mscolab_server_url}/update_last_used", data=data,
-                              timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         except Exception as ex:
             logging.debug("Couldn't create a socket connection: %s", ex)
             show_popup(self.ui, "Error", "Couldn't create a socket connection. Maybe the MSColab server is too old. "
@@ -1682,17 +1676,6 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.workLocallyCheckbox.blockSignals(True)
             self.ui.workLocallyCheckbox.setChecked(False)
             self.ui.workLocallyCheckbox.blockSignals(False)
-
-            # Disable Activate Operation Button
-            # self.ui.actionUnarchiveOperation.setEnabled(False)
-
-            # set last used date for operation
-            data = {
-                "token": self.token,
-                "op_id": item.op_id,
-            }
-            requests.post(f'{self.mscolab_server_url}/set_last_used', data=data,
-                          timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
 
             # set active_op_id here
             self.active_op_id = item.op_id
