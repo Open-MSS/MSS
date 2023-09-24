@@ -80,13 +80,14 @@ except ImportError as ex:
 
 # setup idp login config
 if mscolab_settings.USE_SAML2:
+    # saml_2_backend yaml config
     with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
         yaml_data = yaml.safe_load(fobj)
 
     # go through configured IDPs and set conf file paths for particular files
     for configured_idp in mscolab_settings.CONFIGURED_IDPS:
         # set CRTs and metadata paths for the localhost_test_idp
-        if 'localhost_test_idp' in configured_idp['idp_identity_name']:
+        if 'localhost_test_idp' == configured_idp['idp_identity_name']:
             yaml_data["config"]["localhost_test_idp"]["key_file"] = \
                 f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'
             yaml_data["config"]["localhost_test_idp"]["cert_file"] = \
@@ -94,17 +95,28 @@ if mscolab_settings.USE_SAML2:
             yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = \
                 f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'
 
-    if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
-        yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
-        warnings.warn("idp.xml file does not exists ! Ignore this warning when you initializeing metadata.")
+            # configuration localhost_test_idp Saml2Client
+            try:
+                if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
+                    yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
+                    warnings.warn("idp.xml file does not exists ! Ignore this warning when you initializeing metadata.")
 
-    # configuration localhost_test_idp Saml2Client
-    try:
-        localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
-        sp_localhost_test_idp = Saml2Client(localhost_test_idp)
-    except SAMLError:
-        warnings.warn("Invalid Saml2Client Config ! Please configure with valid CRTs/metadata and try again.")
-        sys.exit()
+                localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
+                sp_localhost_test_idp = Saml2Client(localhost_test_idp)
+
+            except SAMLError:
+                warnings.warn("Invalid Saml2Client Config with localhost_test_idp ! Please configure with valid CRTs\
+                              /metadata and try again.")
+                sys.exit()
+
+        # if multiple IdPs exists, development should need to implement accordingly below
+            """
+                if 'idp_2'== configured_idp['idp_identity_name']:
+                    # rest of code
+                    # set CRTs and metadata paths for the idp_2
+                    # configuration idp_2 Saml2Client
+            """
+
 
 # setup http auth
 if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
@@ -252,6 +264,26 @@ def get_idp_entity_id(selected_idp):
     entity_id = only_idp
 
     return entity_id
+
+
+def create_or_udpate_idp_user(email, username, token, authentication_backend):
+    try:
+        user = User.query.filter_by(emailid=email).first()
+
+        if not user:
+            user = User(email, username, password=token, confirmed=False, confirmed_on=None,
+                        authentication_backend=authentication_backend)
+            db.session.add(user)
+            db.session.commit()
+
+        else:
+            user.authentication_backend = authentication_backend
+            user.hash_password(token)
+            db.session.add(user)
+            db.session.commit()
+        return True
+    except (sqlalchemy.exc.OperationalError):
+        return False
 
 
 @APP.route('/')
@@ -826,23 +858,14 @@ def localhost_test_idp_acs_post():
         )
         email = authn_response.ava["email"][0]
         username = authn_response.ava["givenName"][0]
-
-        user = User.query.filter_by(emailid=email).first()
         token = generate_confirmation_token(email)
 
-        if not user:
-            user = User(email, username, password=token, confirmed=False, confirmed_on=None,
-                        authentication_backend='localhost_test_idp')
-            db.session.add(user)
-            db.session.commit()
+        idp_user_db_state = create_or_udpate_idp_user(email, username, token, 'localhost_test_idp')
 
+        if idp_user_db_state:
+            return render_template('idp/idp_login_success.html', token=token), 200
         else:
-            user.authentication_backend = 'localhost_test_idp'
-            user.hash_password(token)
-            db.session.add(user)
-            db.session.commit()
-
-        return render_template('idp/idp_login_success.html', token=token), 200
+            return render_template('errors/500.html'), 500
 
     except (NameError, AttributeError, KeyError):
         return render_template('errors/500.html'), 500
