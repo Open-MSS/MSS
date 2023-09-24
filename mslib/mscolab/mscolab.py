@@ -34,6 +34,7 @@ import sys
 import secrets
 import subprocess
 import time
+import git
 
 from mslib import __version__
 from mslib.mscolab.conf import mscolab_settings
@@ -257,7 +258,7 @@ config:
         return False
 
 
-def handle_mscolab_metadata_init():
+def handle_mscolab_metadata_init(repo_exists):
     '''
         This will generate necessary metada data file for sso in mscolab through localhost idp
 
@@ -269,7 +270,8 @@ def handle_mscolab_metadata_init():
     print('generating metadata file for the mscolab server')
 
     try:
-        process = subprocess.Popen(["python", "mslib/mscolab/mscolab.py", "start"])
+        command = ["python", "mslib/mscolab/mscolab.py", "start"] if repo_exists else ["mscolab", "start"]
+        process = subprocess.Popen(command)
 
         # Add a small delay to allow the server to start up
         time.sleep(10)
@@ -286,14 +288,21 @@ def handle_mscolab_metadata_init():
         return False
 
 
-def handle_local_idp_metadata_init():
+def handle_local_idp_metadata_init(repo_exists):
     print('generating metadata for localhost identity provider')
 
     try:
         if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
             os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
 
-        cmd = ["make_metadata", "mslib/msidp/idp_conf.py"]
+        idp_conf_path = "mslib/msidp/idp_conf.py"
+
+        if not repo_exists:
+            import site
+            site_packages_path = site.getsitepackages()[0]
+            idp_conf_path = os.path.join(site_packages_path, "mslib/msidp/idp_conf.py")
+
+        cmd = ["make_metadata", idp_conf_path]
 
         with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml",
                   "w", encoding="utf-8") as output_file:
@@ -331,13 +340,13 @@ def handle_sso_crts_init():
     print('\n\nAll CRTs and mscolab backend saml files generated successfully !')
 
 
-def handle_sso_metadata_init():
+def handle_sso_metadata_init(repo_exists):
     print('\n\ngenerating metadata files.......')
-    if not handle_mscolab_metadata_init():
+    if not handle_mscolab_metadata_init(repo_exists):
         print('Error while handling mscolab metadata.')
         return
 
-    if not handle_local_idp_metadata_init():
+    if not handle_local_idp_metadata_init(repo_exists):
         print('Error while handling idp metadata.')
         return
 
@@ -389,6 +398,13 @@ def main():
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
         sys.exit()
+
+    try:
+        _ = git.Repo(os.path.dirname(os.path.realpath(__file__)), search_parent_directories=True)
+        repo_exists = True
+
+    except git.exc.InvalidGitRepositoryError:
+        repo_exists = False
 
     updater = Updater()
     if args.update:
@@ -470,7 +486,8 @@ def main():
                     """
                 )
                 if confirmation is True:
-                    handle_sso_metadata_init()
+                    handle_sso_metadata_init(repo_exists)
+
 
 
 if __name__ == '__main__':

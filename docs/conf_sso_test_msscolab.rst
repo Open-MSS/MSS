@@ -20,7 +20,7 @@ To set up a local identity provider with the mscolab server, you'll first need t
 
 1. Initial Steps
 ----------------
-Before getting started, you should correctly activate the environments, set the correct Python path, and be in the correct directory (`$ cd MSS`), as explained in the mss instructions : https://open-mss.github.io/develop/Setup-Instructions
+Before getting started, you should correctly activate the environments, set the correct Python path as explained in the mss instructions : https://github.com/Open-MSS/MSS/tree/develop#readme
 
 
 
@@ -39,7 +39,9 @@ Before running the command make sure to set `USE_SAML2 = False` in your `mscolab
 
 If everything is correctly set, you can generate keys and certificates simply by running
 
-`$ python mslib/mscolab/mscolab.py sso_conf --init_sso_crts`
+.. code:: text
+
+    $ mscolab sso_conf --init_sso_crts
 
 .. note::
     This process generating keys and certificates for both Identity provider and mscolab server by default, If you need configure with different keys and certificates for the Identity provider, You should manually update the path of `SERVER_CERT` with the path of the generated .crt file for Identity provider, and `SERVER_KEY` with the path of the generated .key file for the Identity provider in the file `MSS/mslib/idp/idp_conf.py`.
@@ -63,7 +65,9 @@ This involves generating necessary metadata files for both the identity provider
 .. note::
     Before executing this, you should set `USE_SAML2=True` as described in the third step(Enable USE_SAML2).
 
-`$ python mslib/mscolab/mscolab.py sso_conf --init_sso_metadata`
+.. code:: text
+
+    $ mscolab sso_conf --init_sso_metadata
 
 
 5. Start Identity provider
@@ -71,7 +75,9 @@ This involves generating necessary metadata files for both the identity provider
 
 Once you set certificates and metada files you can start mscolab server and local identity provider. To start local identity provider, simply execute:
 
-`$ msidp`
+.. code:: text
+
+    $ msidp
 
 
 6. Start the mscolab Server
@@ -81,7 +87,9 @@ Before Starting the mscolab server, make sure to do necessary database migration
 
 When this is the first time you setup a mscolab server, you have to initialize the database by:
 
-`$ python mslib/mscolab/mscolab.py db --init`
+.. code:: text
+
+    $ mscolab db --init
 
 .. note::
    An existing database maybe needs a migration, have a look for this on our documentation.
@@ -90,7 +98,9 @@ When this is the first time you setup a mscolab server, you have to initialize t
 
 When migrations finished, you can start mscolab server  using the following command:
 
-`$ python mslib/mscolab/mscolab.py start`
+.. code:: text
+
+    $ mscolab start
 
 
 7. Testing Single Sign-On (SSO) process
@@ -99,7 +109,9 @@ When migrations finished, you can start mscolab server  using the following comm
 * Once you have successfully launched the server and identity provider, you can begin testing the Single Sign-On (SSO) process.
 * Start MSS PyQt application:
 
-`$ msui`
+.. code:: text
+
+    $ msui
 
 * Login with identity provider through Qt Client application.
 * To log in to the mscolab server through the identity provider, you can use the credentials specified in the ``PASSWD`` section of the ``MSS/mslib/msidp/idp.py`` file. Look for the relevant section in the file to find the necessary login credentials.
