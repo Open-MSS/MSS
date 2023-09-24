@@ -35,6 +35,7 @@ import importlib
 import logging
 import os
 import re
+import requests
 import sys
 import fs
 import json
@@ -486,7 +487,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         selected_item = selected_items[0]
         operation_name = selected_item.text()
-        loaded_data = OperationLayout.query.filter_by(operation_id=operation_name).first()
+        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout", params={"operation_name": operation_name})
+        if loaded_data.text == "None":
+            return
 
         if loaded_data is not None:
             result = QtWidgets.QMessageBox.question(
@@ -495,7 +498,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             
             if result == QtWidgets.QMessageBox.Yes:
                 self.restore_operation_data()
-        print("opertaion is changed", operation_name)
 
     def store_operation_data(self):
         self.file_name = self.listOperationsMSC.currentItem()
@@ -532,10 +534,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         folder_path = MSUI_CONFIG_PATH
         file_path = os.path.join(folder_path, self.file_name.text() + ".txt")
         json_data = json.dumps(self.widget_info, indent=4)
-        db.create_all()
-        OperationLayout.add_or_update(self.file_name.text(), json_data)
 
-        db.session.close()
+        data={"operation_name": self.file_name.text(), "layout_data": json_data}
+
+        response = requests.post(f"{self.mscolab.mscolab_server_url}/store_operation_layout", data = data, timeout=(2, 10))
+        print(response.status_code)
 
         with open(file_path, 'w') as file:
             file.write(json_data)
@@ -560,8 +563,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                             widget.setGeometry(*positions[0])
 
     def restore_operation_data(self):
-        file_name = self.listOperationsMSC.currentItem()
-        if file_name is None:
+        if self.listOperationsMSC.currentItem() is None:
             message_box = QtWidgets.QMessageBox()
             message_box.setWindowTitle("Select Operation")
             message_box.setText("Select an operation to restore layout")
@@ -569,8 +571,17 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             message_box.exec_()
             return
 
-        loaded_data = OperationLayout.query.filter_by(operation_id=file_name.text()).first()
-        layout_data = json.loads(loaded_data.json_data)
+
+        operation_name = self.listOperationsMSC.currentItem().text()
+        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout", params={"operation_name": operation_name})
+        if loaded_data.text == "None":
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Layout not found")
+            message_box.setText("No Stored Layout Found")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+            return
+        layout_data = json.loads(loaded_data.text)
 
         top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
 

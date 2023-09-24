@@ -30,7 +30,7 @@ import difflib
 import logging
 import git
 from sqlalchemy.exc import IntegrityError
-from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
+from mslib.mscolab.models import db, Operation, OperationLayout, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
 
@@ -107,6 +107,26 @@ class FileManager:
                 "active": operation.active
             })
         return operations
+
+    def store_operation_layout_data(self, operation_name, json_data):
+        db.create_all()
+        OperationLayout.add_or_update(operation_name, json_data)
+        return True
+
+    def load_operation_layout_data(self, operation_name):
+        operation_layout = OperationLayout.query.filter_by(operation_id=operation_name).first()
+        if operation_layout:
+            return operation_layout.json_data
+        return "None"
+    # def load_operation_layout_data(operation_name):
+    #     try:
+    #         layout_data = OperationLayout.query.filter_by(operation_id=operation_name).first()
+    #         if layout_data:
+    #             return layout_data.json_data
+    #         return None
+    #     except Exception as e:
+    #         print("Error loading operation layout data:", str(e))
+    #         return None
 
     def is_member(self, u_id, op_id):
         """

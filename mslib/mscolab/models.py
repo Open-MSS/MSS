@@ -113,7 +113,6 @@ class OperationLayout(db.Model):
     def __init__(self, operation_id, json_data):
         self.operation_id = operation_id
         self.json_data = json_data
-        # self.json_data = json.dumps(json_data)
     
     @classmethod
     def add_or_update(cls, operation_id, json_data):
