@@ -489,6 +489,5 @@ def main():
                     handle_sso_metadata_init(repo_exists)
 
 
-
 if __name__ == '__main__':
     main()
