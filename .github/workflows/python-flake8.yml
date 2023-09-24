@@ -8,10 +8,12 @@ on:
     branches:
     - develop
     - stable
+    - GSOC2023-NilupulManodya
   pull_request:
     branches:
     - develop
     - stable
+    - GSOC2023-NilupulManodya
 
 jobs:
   lint:

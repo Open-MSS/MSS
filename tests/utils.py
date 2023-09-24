@@ -192,6 +192,7 @@ def mscolab_ping_server(port):
         return False
     return False
 
+
 def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=10):
     handle_db_init()
     port = mscolab_check_free_port(all_ports, all_ports.pop())

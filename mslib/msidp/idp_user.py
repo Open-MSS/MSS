@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.idp.idp_user.py
-    ~~~~~~~~~~~~~~~~~~~~~
+    mslib.msidp.idp_user.py
+    ~~~~~~~~~~~~~~~~~~~~~~~
 
     User data and additional attributes for test users and affiliates.
 

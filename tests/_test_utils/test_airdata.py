@@ -27,7 +27,7 @@
 import os
 import mock
 from PyQt5 import QtWidgets
-from mslib.utils.airdata import download_progress, get_airports,\
+from mslib.utils.airdata import download_progress, get_airports, \
     get_available_airspaces, update_airspace, get_airspaces
 from tests.constants import ROOT_DIR
 

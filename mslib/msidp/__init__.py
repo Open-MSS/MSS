@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.auth_client_sp.app.conf.py
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    mslib.msidp
+    ~~~~~~~~~~~
 
-    config for sp.
+    init file of msidp
 
     This file is part of MSS.
 
@@ -23,21 +23,3 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import secrets
-
-
-class DefaultSPSettings:
-    """
-    Default settings for the SP (Service Provider) application.
-
-    This class provides default configuration settings for the SP application.
-    Modify these settings as needed for your specific application requirements.
-    """
-    # SQLite CONNECTION STRING:
-    SQLALCHEMY_DB_URI = "sqlite:///db.sqlite"
-
-    # used to generate and parse tokens
-    SECRET_KEY = secrets.token_urlsafe(16)
-
-
-sp_settings = DefaultSPSettings()

@@ -33,6 +33,7 @@ from PyQt5.QtWebEngineWidgets import QWebEngineView, QWebEngineProfile
 
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
+
 class MSUIWebBrowser(QMainWindow):
     def __init__(self, url: str):
         super().__init__()
@@ -43,7 +44,7 @@ class MSUIWebBrowser(QMainWindow):
         self._url = url
         self.profile = QWebEngineProfile().defaultProfile()
         self.profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
-        self.browser_storage_folder =  os.path.join(MSUI_CONFIG_PATH, '.cookies')
+        self.browser_storage_folder = os.path.join(MSUI_CONFIG_PATH, '.cookies')
         self.profile.setPersistentStoragePath(self.browser_storage_folder)
 
         self.back_button = QPushButton("← Back", self)
@@ -71,10 +72,11 @@ class MSUIWebBrowser(QMainWindow):
         '''
         self.profile.cookieStore().deleteAllCookies()
 
+
 if __name__ == "__main__":
     '''
-        This function will be moved to handle accordingly the test cases. 
-        The 'connection' variable determines when the web browser should be 
+        This function will be moved to handle accordingly the test cases.
+        The 'connection' variable determines when the web browser should be
         closed, typically after the user logged in and establishes a connection
     '''
 

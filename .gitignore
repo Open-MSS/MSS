@@ -5,7 +5,6 @@
 *.pyc
 *.swp
 *.patch
-idp.subject.*
 *~
 mslib/mss_config.py
 mslib/performance/data/
@@ -27,4 +26,3 @@ tutorials/recordings
 tutorials/cursor_image.png
 __pycache__/
 instance/
-mslib/idp/modules
