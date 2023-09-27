@@ -26,10 +26,11 @@
 """
 from flask_testing import TestCase
 import os
+import datetime
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation
+from mslib.mscolab.models import Operation, User
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -79,6 +80,40 @@ class Test_FileManager(TestCase):
 
     def tearDown(self):
         pass
+
+    def test_modify_user(self):
+        with self.app.test_client():
+            user = User("user@example.com", "user", "password")
+            assert user.id is None
+            assert User.query.filter_by(emailid=user.emailid).first() is None
+            # creeat the user
+            self.fm.modify_user(user, action="create")
+            user_query = User.query.filter_by(emailid=user.emailid).first()
+            assert user_query.id is not None
+            assert user_query is not None
+            assert user_query.confirmed is False
+            # cannot create a user a second time
+            assert self.fm.modify_user(user, action="create") is False
+            # confirming the user
+            confirm_time = datetime.datetime.now() + datetime.timedelta(days=1)
+            self.fm.modify_user(user_query, attribute="confirmed_on", value=confirm_time)
+            self.fm.modify_user(user_query, attribute="confirmed", value=True)
+            user_query = User.query.filter_by(id=user.id).first()
+            assert user_query.confirmed is True
+            assert user_query.confirmed_on == confirm_time
+            assert user_query.confirmed_on > user_query.registered_on
+            # deleting the user
+            self.fm.modify_user(user_query, action="delete")
+            user_query = User.query.filter_by(id=user_query.id).first()
+            assert user_query is None
+
+    def test_modify_user_special_cases(self):
+        user1 = User("user1@example.com", "user1", "password")
+        user2 = User("user2@example.com", "user2", "password")
+        self.fm.modify_user(user1, action="create")
+        self.fm.modify_user(user2, action="create")
+        user_query1 = User.query.filter_by(emailid=user1.emailid).first()
+        assert self.fm.modify_user(user_query1, "emailid", user2.emailid) is False
 
     def test_fetch_operation_creator(self):
         with self.app.test_client():
