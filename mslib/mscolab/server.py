@@ -169,9 +169,8 @@ def register_user(email, password, username):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    db.session.add(user)
-    db.session.commit()
-    return {"success": True}
+    result = fm.modify_user(user, action="create")
+    return {"success": result}
 
 
 def verify_user(func):
@@ -291,10 +290,8 @@ def confirm_email(token):
         if user.confirmed:
             return render_template('user/confirmed.html', username=user.username)
         else:
-            user.confirmed = True
-            user.confirmed_on = datetime.datetime.now()
-            db.session.add(user)
-            db.session.commit()
+            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now())
+            fm.modify_user(user, attribute="confirmed", value=True)
             return render_template('user/confirmed.html', username=user.username)
 
 
@@ -312,9 +309,8 @@ def delete_user():
     """
     # ToDo rename to delete_own_account
     user = g.user
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"success": True}), 200
+    result = fm.modify_user(user, action="delete")
+    return jsonify({"success": result}), 200
 
 
 # Chat related routes
@@ -691,8 +687,7 @@ def reset_password(token):
     if form.validate_on_submit():
         try:
             user.hash_password(form.confirm_password.data)
-            user.confirmed = True
-            db.session.commit()
+            fm.modify_user(user, "confirmed", True)
             flash('Password reset Success. Please login by the user interface.', 'category_success')
             return render_template('user/status.html')
         except IOError:

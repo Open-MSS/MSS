@@ -192,6 +192,35 @@ class FileManager:
             return False
         return perm.access_level
 
+    def modify_user(self, user, attribute=None, value=None, action=None):
+        if action == "create":
+            user_query = User.query.filter_by(emailid=str(user.emailid)).first()
+            if user_query is None:
+                db.session.add(user)
+                db.session.commit()
+            else:
+                return False
+        elif action == "delete":
+            user_query = User.query.filter_by(id=user.id).first()
+            if user_query is not None:
+                db.session.delete(user)
+                db.session.commit()
+            user_query = User.query.filter_by(id=user.id).first()
+            # on delete we return succesfull deleted
+            if user_query is None:
+                return True
+        user_query = User.query.filter_by(id=user.id).first()
+        if user_query is None:
+            return False
+        if None not in (attribute, value):
+            if attribute == "emailid":
+                user_query = User.query.filter_by(emailid=str(value)).first()
+                if user_query is not None:
+                    return False
+            setattr(user, attribute, value)
+            db.session.commit()
+        return True
+
     def update_operation(self, op_id, attribute, value, user):
         """
         op_id: operation id
