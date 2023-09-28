@@ -400,8 +400,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
     fetch = QtCore.pyqtSignal([list], name="fetch")
-    signal_disable_cbs = QtCore.Signal(name="disable_cbs")
-    signal_enable_cbs = QtCore.Signal(name="enable_cbs")
+    signal_disable_cbs = QtCore.pyqtSignal(name="disable_cbs")
+    signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
@@ -706,7 +706,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def clear_map(self):
         logging.debug("clear figure")
-        self.view.clear_figure()
+        self.view.plotter.clear_figure()
         logging.debug("enabling checkboxes in map-options if any")
         self.signal_enable_cbs.emit()
 
@@ -1481,7 +1481,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # Add border around seperate legends
             if len(images) > 1:
                 images = [ImageOps.expand(x, border=1, fill="black") for x in images]
-            max_height = int((self.view.fig.get_size_inches() * self.view.fig.get_dpi())[1] * 0.99)
+            max_height = int((self.view.plotter.fig.get_size_inches() * self.view.plotter.fig.get_dpi())[1] * 0.99)
             width = max([image.width for image in images])
             height = sum([image.height for image in images])
             result = Image.new("RGBA", (width, height))
@@ -1493,12 +1493,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if max_height < result.height:
                 result.thumbnail((result.width, max_height), Image.ANTIALIAS)
             return result
-
-        ################################################################################
-
-#
-# CLASS VSecWMSControlWidget
-#
 
 
 class VSecWMSControlWidget(WMSControlWidget):
@@ -1525,7 +1519,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         """
         self.waypoints_model = model
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def call_get_vsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
@@ -1578,10 +1572,6 @@ class VSecWMSControlWidget(WMSControlWidget):
     def is_layer_aligned(self, layer):
         crss = getattr(layer, "crsOptions", None)
         return crss is not None and any(crs.startswith("VERT") for crs in crss)
-
-#
-# CLASS HSecWMSControlWidget
-#
 
 
 class HSecWMSControlWidget(WMSControlWidget):
@@ -1669,7 +1659,7 @@ class LSecWMSControlWidget(WMSControlWidget):
         """
         self.waypoints_model = model
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def call_get_lsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()

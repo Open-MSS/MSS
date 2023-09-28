@@ -36,6 +36,7 @@ from mslib.mscolab.models import User, db, Permission, Operation
 from mslib.mscolab.server import APP as app
 
 
+# Todo: refactor move to mscolab.utils
 def add_all_users_to_all_operations(access_level='collaborator'):
     """ on db level we add all users as collaborator to all operations """
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI

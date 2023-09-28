@@ -29,8 +29,8 @@ requirements:
     - python
     - setuptools
     - pip
-    - future
     - menuinst  # [win]
+    - future
   run:
     - python
     - defusedxml
@@ -49,7 +49,7 @@ requirements:
     - pytz
     - pyqt >=5, <5.13
     - qt >=5.10, <5.13
-    - requests
+    - requests >=2.31.0
     - scipy
     - skyfield >=1.12
     - skyfield-data >=5
@@ -58,7 +58,7 @@ requirements:
     - unicodecsv
     - fs_filepicker
     - cftime >=1.0.1
-    - matplotlib >=3.3.2,<3.6
+    - matplotlib >=3.5.3
     - itsdangerous
     - pyjwt
     - flask >=2.3.2
@@ -66,7 +66,7 @@ requirements:
     - flask-mail
     - flask-migrate
     - werkzeug >=2.2.3
-    - flask-socketio =5.1.0
+    - flask-socketio >=5.1.0
     - flask-sqlalchemy >=3.0.0
     - flask-cors
     - passlib

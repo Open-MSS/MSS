@@ -38,37 +38,25 @@
       <item>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="0,0">
-          <property name="spacing">
-           <number>6</number>
+         <widget class="QLabel" name="usernameLabel">
+          <property name="text">
+           <string>Logged In: </string>
           </property>
-          <property name="sizeConstraint">
-           <enum>QLayout::SetDefaultConstraint</enum>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="operationNameLabel">
+          <property name="text">
+           <string>Operation: </string>
           </property>
-          <property name="leftMargin">
-           <number>0</number>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="creatorNameLabel">
+          <property name="text">
+           <string>Creator:</string>
           </property>
-          <property name="topMargin">
-           <number>8</number>
-          </property>
-          <property name="bottomMargin">
-           <number>8</number>
-          </property>
-          <item>
-           <widget class="QLabel" name="usernameLabel">
-            <property name="text">
-             <string>Logged In: </string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="operationNameLabel">
-            <property name="text">
-             <string>Operation: </string>
-            </property>
-           </widget>
-          </item>
-         </layout>
+         </widget>
         </item>
         <item>
          <widget class="QLabel" name="label">

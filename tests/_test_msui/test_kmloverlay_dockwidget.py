@@ -37,6 +37,8 @@ sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
 save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 
 
+# ToDo refactoring, extract helper methods into functions
+# ToDo review needed helper functions
 class Test_KmlOverlayDockWidget(object):
 
     def setup_method(self):
@@ -70,6 +72,7 @@ class Test_KmlOverlayDockWidget(object):
         path = fs.path.join(sample_path, file)
         filename = (path,)  # converted to tuple
         self.window.select_file(filename)
+        self.window.load_file()
         QtWidgets.QApplication.processEvents()
         return path
 
@@ -103,7 +106,7 @@ class Test_KmlOverlayDockWidget(object):
         assert mockbox.critical.call_count == 0
         assert self.window.listWidget.count() == index
         assert len(self.window.dict_files) == index
-        assert self.count_patches() > 0
+        assert self.count_patches() == 9
         self.window.select_all()
         self.window.remove_file()
 
@@ -118,6 +121,7 @@ class Test_KmlOverlayDockWidget(object):
         path = fs.path.join(sample_path, "satellite_predictor.txt")
         filename = (path,)  # converted to tuple
         self.window.select_file(filename)
+        self.window.load_file()
         QtWidgets.QApplication.processEvents()
         assert mockbox.critical.call_count == 1
         self.window.listWidget.clear()
@@ -203,7 +207,7 @@ class Test_KmlOverlayDockWidget(object):
         assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 1
         self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
         assert self.window.listWidget.item(0).checkState() == QtCore.Qt.Unchecked
-        assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 1
+        assert len([_x for _x in self.window.dict_files.values() if _x["patch"] is not None]) == 0
         self.window.select_all()
         self.window.remove_file()
 

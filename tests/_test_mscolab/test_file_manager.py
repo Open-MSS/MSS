@@ -26,10 +26,11 @@
 """
 from flask_testing import TestCase
 import os
+import datetime
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation
+from mslib.mscolab.models import Operation, User
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -80,6 +81,40 @@ class Test_FileManager(TestCase):
     def tearDown(self):
         pass
 
+    def test_modify_user(self):
+        with self.app.test_client():
+            user = User("user@example.com", "user", "password")
+            assert user.id is None
+            assert User.query.filter_by(emailid=user.emailid).first() is None
+            # creeat the user
+            self.fm.modify_user(user, action="create")
+            user_query = User.query.filter_by(emailid=user.emailid).first()
+            assert user_query.id is not None
+            assert user_query is not None
+            assert user_query.confirmed is False
+            # cannot create a user a second time
+            assert self.fm.modify_user(user, action="create") is False
+            # confirming the user
+            confirm_time = datetime.datetime.now() + datetime.timedelta(days=1)
+            self.fm.modify_user(user_query, attribute="confirmed_on", value=confirm_time)
+            self.fm.modify_user(user_query, attribute="confirmed", value=True)
+            user_query = User.query.filter_by(id=user.id).first()
+            assert user_query.confirmed is True
+            assert user_query.confirmed_on == confirm_time
+            assert user_query.confirmed_on > user_query.registered_on
+            # deleting the user
+            self.fm.modify_user(user_query, action="delete")
+            user_query = User.query.filter_by(id=user_query.id).first()
+            assert user_query is None
+
+    def test_modify_user_special_cases(self):
+        user1 = User("user1@example.com", "user1", "password")
+        user2 = User("user2@example.com", "user2", "password")
+        self.fm.modify_user(user1, action="create")
+        self.fm.modify_user(user2, action="create")
+        user_query1 = User.query.filter_by(emailid=user1.emailid).first()
+        assert self.fm.modify_user(user_query1, "emailid", user2.emailid) is False
+
     def test_fetch_operation_creator(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="more_than_one")
@@ -119,6 +154,31 @@ class Test_FileManager(TestCase):
                                 'op_id': 2,
                                 'path': 'second'}]
             assert self.fm.list_operations(self.user) == expected_result
+
+    def test_list_operations_skip_archived(self):
+        with self.app.test_client():
+            self.fm.create_operation("first", "info about first", self.user, active=False)
+            self.fm.create_operation("second", "info about second", self.user)
+            expected_result_all = [{'access_level': 'creator',
+                                    'active': False,
+                                    'category': 'default',
+                                    'description': 'info about first',
+                                    'op_id': 1,
+                                    'path': 'first'},
+                                   {'access_level': 'creator',
+                                    'active': True,
+                                    'category': 'default',
+                                    'description': 'info about second',
+                                    'op_id': 2,
+                                    'path': 'second'}]
+            expected_result_skipped_true = [{'access_level': 'creator',
+                                             'active': True,
+                                             'category': 'default',
+                                             'description': 'info about second',
+                                             'op_id': 2,
+                                             'path': 'second'}]
+            assert self.fm.list_operations(self.user, skip_archived=False) == expected_result_all
+            assert self.fm.list_operations(self.user, skip_archived=True) == expected_result_skipped_true
 
     def test_is_creator(self):
         with self.app.test_client():
@@ -345,7 +405,7 @@ class Test_FileManager(TestCase):
 
     def test_group_permissions(self):
         with self.app.test_client():
-            flight_path_odlo, operation_oslo = self._create_operation(flight_path="flightoslo", category="oslo")
+            flight_path_oslo, operation_oslo = self._create_operation(flight_path="flightoslo", category="oslo")
 
             flight_path_no1, operation_no_1 = self._create_operation(flight_path="flightno1", category="bergen")
             assert self.fm.is_member(self.collaboratoruser.id, operation_no_1.id) is False
@@ -367,6 +427,29 @@ class Test_FileManager(TestCase):
             # remove the user
             self.fm.delete_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id])
             assert self.fm.is_member(self.collaboratoruser.id, operation_group.id) is False
+
+    def test_existing_operation_renaming_to_a_group(self):
+        with self.app.test_client():
+            _, operation_b1 = self._create_operation(flight_path="flightb1", category="morning")
+            self.fm.add_bulk_permission(operation_b1.id, self.user, [self.collaboratoruser.id], "collaborator")
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b1.id)
+
+            # an operation where nothing can be changed on a rename
+            _, operation_b2 = self._create_operation(flight_path="flightb2", category="morning", user=self.vieweruser)
+
+            _, operation_b3 = self._create_operation(flight_path="flightb3", category="morning")
+            self.fm.add_bulk_permission(operation_b3.id, self.user, [self.collaboratoruser.id], "collaborator")
+            self.fm.add_bulk_permission(operation_b3.id, self.user, [self.vieweruser.id], "viewer")
+            assert self.fm.is_viewer(self.vieweruser.id, operation_b3.id)
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b3.id)
+            self.fm.update_operation(operation_b3.id, 'path', 'morningGroup', self.user)
+
+            assert self.fm.is_member(self.vieweruser.id, operation_b1.id)
+            assert self.fm.is_viewer(self.vieweruser.id, operation_b1.id)
+
+            # the current user has no role (admin or collobarator role) in the operation_b2 to change users
+            assert self.fm.is_member(self.collaboratoruser.id, operation_b2.id) is False
+            assert self.fm.is_collaborator(self.collaboratoruser.id, operation_b2.id) is False
 
     def test_import_permission(self):
         with self.app.test_client():

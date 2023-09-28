@@ -40,7 +40,7 @@ class FileManager:
     def __init__(self, data_dir):
         self.data_dir = data_dir
 
-    def create_operation(self, path, description, user, last_used=None, content=None, category="default"):
+    def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
         path: path to the operation
         description: description of the operation
@@ -54,7 +54,7 @@ class FileManager:
             return False
         if last_used is None:
             last_used = datetime.datetime.utcnow()
-        operation = Operation(path, description, last_used, category)
+        operation = Operation(path, description, last_used, category, active=active)
         db.session.add(operation)
         db.session.flush()
         operation_id = operation.id
@@ -86,31 +86,44 @@ class FileManager:
         op_id: operation id
         user: authenticated user
         """
-        # ToDo check need for user
-        operation = Operation.query.filter_by(id=op_id).first()
-        operation = {
-            "id": operation.id,
-            "path": operation.path,
-            "description": operation.description
-        }
-        return operation
+        if self.is_member(user.id, op_id):
+            operation = Operation.query.filter_by(id=op_id).first()
+            op = {
+                "id": operation.id,
+                "path": operation.path,
+                "description": operation.description
+            }
+            return op
+        return False
 
-    def list_operations(self, user):
+    def list_operations(self, user, skip_archived=False):
         """
         user: logged in user
+        skip_archived: filter by active operations
         """
         operations = []
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
             operation = Operation.query.filter_by(id=permission.op_id).first()
-            operations.append({
-                "op_id": permission.op_id,
-                "access_level": permission.access_level,
-                "path": operation.path,
-                "description": operation.description,
-                "category": operation.category,
-                "active": operation.active
-            })
+            if operation.last_used is not None and (
+                    datetime.datetime.utcnow() - operation.last_used).days > mscolab_settings.ARCHIVE_THRESHOLD:
+                # outdated OPs get archived
+                self.update_operation(permission.op_id, "active", False, user)
+            # new query to get uptodate data
+            if skip_archived:
+                operation = Operation.query.filter_by(id=permission.op_id, active=skip_archived).first()
+            else:
+                operation = Operation.query.filter_by(id=permission.op_id).first()
+
+            if operation is not None:
+                operations.append({
+                    "op_id": permission.op_id,
+                    "access_level": permission.access_level,
+                    "path": operation.path,
+                    "description": operation.description,
+                    "category": operation.category,
+                    "active": operation.active
+                })
         return operations
 
     def is_member(self, u_id, op_id):
@@ -186,6 +199,35 @@ class FileManager:
             return False
         return perm.access_level
 
+    def modify_user(self, user, attribute=None, value=None, action=None):
+        if action == "create":
+            user_query = User.query.filter_by(emailid=str(user.emailid)).first()
+            if user_query is None:
+                db.session.add(user)
+                db.session.commit()
+            else:
+                return False
+        elif action == "delete":
+            user_query = User.query.filter_by(id=user.id).first()
+            if user_query is not None:
+                db.session.delete(user)
+                db.session.commit()
+            user_query = User.query.filter_by(id=user.id).first()
+            # on delete we return succesfull deleted
+            if user_query is None:
+                return True
+        user_query = User.query.filter_by(id=user.id).first()
+        if user_query is None:
+            return False
+        if None not in (attribute, value):
+            if attribute == "emailid":
+                user_query = User.query.filter_by(emailid=str(value)).first()
+                if user_query is not None:
+                    return False
+            setattr(user, attribute, value)
+            db.session.commit()
+        return True
+
     def update_operation(self, op_id, attribute, value, user):
         """
         op_id: operation id
@@ -206,6 +248,16 @@ class FileManager:
             # make a directory, else movedir
             data.makedir(value)
             data.movedir(operation.path, value)
+            # when renamed to a Group operation
+            if value.endswith(mscolab_settings.GROUP_POSTFIX):
+                # getting the category
+                category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
+                # all operation with that category
+                ops_category = Operation.query.filter_by(category=category)
+                for ops in ops_category:
+                    # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
+                    # then members of this op gets added to all others of same category
+                    self.import_permissions(op_id, ops.id, user.id)
         setattr(operation, attribute, value)
         db.session.commit()
         return True
@@ -215,6 +267,7 @@ class FileManager:
         op_id: operation id
         user: logged in user
         """
+        # ToDo rename to delete_operation
         if self.auth_type(user.id, op_id) != "creator":
             return False
         Permission.query.filter_by(op_id=op_id).delete()
@@ -291,7 +344,7 @@ class FileManager:
             operation_data = operation_file.read()
         return operation_data
 
-    def get_all_changes(self, op_id, user, named_version=None):
+    def get_all_changes(self, op_id, user, named_version=False):
         """
         op_id: operation-id
         user: user of this request
@@ -302,17 +355,17 @@ class FileManager:
         perm = Permission.query.filter_by(u_id=user.id, op_id=op_id).first()
         if perm is None:
             return False
-        # Get all changes
-        if named_version is None:
-            changes = Change.query.\
-                filter_by(op_id=op_id)\
-                .order_by(Change.created_at.desc())\
-                .all()
         # Get only named versions
-        else:
+        if named_version:
             changes = Change.query\
                 .filter(Change.op_id == op_id)\
                 .filter(~Change.version_name.is_(None))\
+                .order_by(Change.created_at.desc())\
+                .all()
+        # Get all changes
+        else:
+            changes = Change.query\
+                .filter_by(op_id=op_id)\
                 .order_by(Change.created_at.desc())\
                 .all()
 
@@ -331,6 +384,7 @@ class FileManager:
 
         Get change related to id
         """
+        # ToDo refactor check user in op
         change = Change.query.filter_by(id=ch_id).first()
         if not change:
             return False
@@ -356,7 +410,8 @@ class FileManager:
         user: user of this request
 
         Undo a change
-        # ToDo a revert option, which removes only that commit's change
+        # ToDo rename to undo_changes
+        # ToDo add a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
         if (not self.is_admin(user.id, ch.op_id) and not self.is_creator(user.id, ch.op_id) and not

@@ -112,17 +112,20 @@ def create_app(name=""):
 
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
-    def get_content(filename, overrides=None):
+    def get_content(filename, md_overrides=None, html_overrides=None):
         markdown = Markdown(extensions=["fenced_code"])
         content = ""
         if os.path.isfile(filename):
             with codecs.open(filename, 'r', 'utf-8') as f:
                 md_data = f.read()
             md_data = md_data.replace(':ref:', '')
-            if overrides is not None:
-                v1, v2 = overrides
+            if md_overrides is not None:
+                v1, v2 = md_overrides
                 md_data = md_data.replace(v1, v2)
             content = markdown.convert(md_data)
+            if html_overrides is not None:
+                v1, v2 = html_overrides
+                content = content.replace(v1, v2)
         return content
 
     @APP.route("/index")
@@ -134,9 +137,11 @@ def create_app(name=""):
     def about():
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'about.md')
         img_url = url_for('overview')
-        overrides = ['![image](/mss/overview.png)', f'![image]({img_url})']
-        content = get_content(_file,
-                              overrides=overrides)
+        md_overrides = ('![image](/mss/overview.png)', f'![image]({img_url})')
+
+        html_overrrides = ('<img alt="image" src="/mss/overview.png" />',
+                           '<img class="mx-auto d-block img-fluid" alt="image" src="/mss/overview.png" />')
+        content = get_content(_file, md_overrides=md_overrides, html_overrides=html_overrrides)
         return render_template("/content.html", act="about", content=content)
 
     @APP.route("/mss/install")
@@ -176,7 +181,11 @@ def create_app(name=""):
     @APP.route("/mss/help")
     def help():
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'help.md')
-        content = get_content(_file)
+        html_overrides = ('<img alt="Waypoint Tutorial" '
+                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
+                          '<img  class="mx-auto d-block img-fluid" alt="Waypoint Tutorial" '
+                          'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />')
+        content = get_content(_file, html_overrides=html_overrides)
         return render_template("/content.html", act="help", content=content)
 
     @APP.route("/mss/imprint")

@@ -61,7 +61,13 @@ class Test_SatelliteDockWidget(object):
         assert self.view.plot_satellite_overpass.call_count == 2
         self.view.reset_mock()
 
-    def test_load_no_file(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
+    def test_load_no_file(self, mockbox):
         QtTest.QTest.mouseClick(self.window.btLoadFile, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert self.window.cbSatelliteOverpasses.count() == 0
+        mockbox.assert_called_once_with(
+            self.window,
+            "Satellite Overpass Tool",
+            "ERROR:\n<class 'fs.errors.FileExpected'>\npath '' should be a file",
+        )

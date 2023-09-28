@@ -25,7 +25,7 @@
     limitations under the License.
 """
 
-import importlib.machinery
+import importlib.util
 import os
 import sys
 import mock
@@ -125,11 +125,26 @@ DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
 
+# In the unit days when Operations get archived because not used 
+ARCHIVE_THRESHOLD = 30
+
+# To enable logging set to True or pass a logger object to use. 
+SOCKETIO_LOGGER = True
+
+# To enable Engine.IO logging set to True or pass a logger object to use.
+ENGINEIO_LOGGER = True
+
 # used to generate and parse tokens
 SECRET_KEY = secrets.token_urlsafe(16)
 
 # used to generate the password token
 SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
+
+# looks for a given category for an operation ending with GROUP_POSTFIX
+# e.g. category = Tex will look for TexGroup
+# all users in that Group are set to the operations of that category
+# having the roles in the TexGroup
+GROUP_POSTFIX = "Group"
 
 # mail settings
 MAIL_SERVER = 'localhost'
@@ -192,16 +207,21 @@ class mscolab_auth(object):
         # windows needs \\ or / but mixed is terrible. *nix needs /
         mscolab_fs.writetext(constants.MSCOLAB_AUTH_FILE, config_string.replace('\\', '/'))
 
-importlib.machinery.SourceFileLoader('mswms_settings', constants.SERVER_CONFIG_FILE_PATH).load_module()
-sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
-importlib.machinery.SourceFileLoader('mscolab_settings', path).load_module()
-sys.path.insert(0, parent_path)
+
+def _load_module(module_name, path):
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+
+
+_load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
+_load_module("mscolab_settings", path)
 
 
 @pytest.fixture(autouse=True)
-def close_open_windows():
-    """
-    Closes all windows after every test
+def fail_if_open_message_boxes_left():
+    """Fail a test if there are any Qt message boxes left open at the end
     """
     # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
     with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
@@ -212,7 +232,7 @@ def close_open_windows():
         if any(box.call_count > 0 for box in [q, i, c, w]):
             summary = "\n".join([f"PyQt5.QtWidgets.QMessageBox.{box()._extract_mock_name()}: {box.mock_calls[:-1]}"
                                  for box in [q, i, c, w] if box.call_count > 0])
-            warnings.warn(f"An unhandled message box popped up during your test!\n{summary}")
+            pytest.fail(f"An unhandled message box popped up during your test!\n{summary}")
 
 
     # Try to close all remaining widgets after each test

@@ -29,8 +29,7 @@ from datetime import datetime
 import json
 
 import requests
-from urllib.parse import urljoin
-from werkzeug.urls import url_encode
+from urllib.parse import urljoin, urlencode
 
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.msui.flighttrack import WaypointsTableModel
@@ -113,7 +112,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "op_id": self.op_id
             }
             url = urljoin(self.mscolab_server_url, 'get_operation_by_id')
-            res = requests.get(url, data=data, timeout=(2, 10))
+            res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 xml_content = json.loads(res.text)["content"]
                 waypoint_model = WaypointsTableModel(name="Current Waypoints", xml_content=xml_content)
@@ -134,13 +133,13 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "token": self.token,
                 "op_id": self.op_id
             }
-            named_version_only = None
+            named_version_only = False
             if self.versionFilterCB.currentIndex() == 0:
                 named_version_only = True
-            query_string = url_encode({"named_version": named_version_only})
+            query_string = urlencode({"named_version": named_version_only})
             url_path = f'get_all_changes?{query_string}'
             url = urljoin(self.mscolab_server_url, url_path)
-            r = requests.get(url, data=data, timeout=(2, 10))
+            r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 changes = json.loads(r.text)["changes"]
                 self.changes.clear()
@@ -182,7 +181,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "ch_id": current_item.id
             }
             url = urljoin(self.mscolab_server_url, 'get_change_content')
-            res = requests.get(url, data=data, timeout=(2, 10))
+            res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 res = res.json()
                 waypoint_model = WaypointsTableModel(xml_content=res["content"])
@@ -208,7 +207,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 "op_id": self.op_id
             }
             url = urljoin(self.mscolab_server_url, 'set_version_name')
-            res = requests.post(url, data=data, timeout=(2, 10))
+            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             return res
         else:
             # this triggers disconnect
@@ -275,7 +274,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                     "ch_id": self.changes.currentItem().id
                 }
                 url = urljoin(self.mscolab_server_url, 'undo')
-                r = requests.post(url, data=data, timeout=(2, 10))
+                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 if r.text != "False":
                     # reload windows
                     self.reloadWindows.emit()

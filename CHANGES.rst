@@ -1,6 +1,33 @@
 Changelog
 =========
 
+Version 8.3.0
+~~~~~~~~~~~~~
+
+Bug fix release and minor enhacements:
+We improved the KML docking widget feature
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/98
+
+Version 8.2.0
+~~~~~~~~~~~~~
+
+Bug fix release and minor enhacements:
+
+HINT:
+~~~~~
+We introduced to use an Operation members list for user management.
+The default of the GROUP_POSTFIX is "Group" for a given category.
+For example if your category is Tex and you have an operation named TexGroup
+then all users defined in this operation will become inherited into any new
+operation of the category Tex.
+Also when an user with admin role changes users in the TexGroup operation,
+then all operations of that Tex category will update their users.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/97?closed=1
+
 Version 8.1.1
 ~~~~~~~~~~~~~
 
