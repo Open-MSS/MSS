@@ -35,8 +35,11 @@ import importlib
 import logging
 import os
 import re
+import requests
 import sys
 import fs
+import json
+import asyncio
 
 from mslib import __version__
 from mslib.msui.qt5 import ui_mainwindow as ui
@@ -468,6 +471,142 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.actionUpdater.triggered.connect(self.updater.show)
         self.openOperationsGb.hide()
 
+        self.last_changed_item = None
+        self.StoreLayout.clicked.connect(self.store_operation_data)
+        self.RestoreLayout.clicked.connect(self.restore_operation_data)
+        self.allowed_widget_names = ["TopViewWindow", "SideViewWindow", "TableViewWindow", "LinearWindow"]
+        self.listOperationsMSC.itemActivated.connect(self.operation_changed)
+
+    def operation_changed(self):
+        selected_items = self.listOperationsMSC.selectedItems()
+
+        if not selected_items:
+            return
+
+        selected_item = selected_items[0]
+        operation_name = selected_item.text()
+        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout",
+                                   params={"operation_name": operation_name})
+        if loaded_data.text == "None":
+            return
+
+        if loaded_data is not None:
+            result = QtWidgets.QMessageBox.question(
+                self, "Saved Layout Detected", "Would you like to restore it?",
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
+
+            if result == QtWidgets.QMessageBox.Yes:
+                self.restore_operation_data()
+
+    def store_operation_data(self):
+        operation_name = self.listOperationsMSC.currentItem()
+        if self.listOperationsMSC.currentItem() is None:
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Select Operation")
+            message_box.setText("Select a operation to save layout")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+            return
+        self.widget_info = {}
+        top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
+        for widget in top_level_widgets:
+            if widget.objectName() in self.allowed_widget_names:
+                positions = []
+                if isinstance(widget, QtWidgets.QMainWindow):
+                    geometry = widget.geometry().getRect()
+                    screen_index = QtWidgets.QApplication.desktop().screenNumber(widget)
+                    is_minimized = widget.isMinimized()
+                    positions.append(geometry)
+                    positions.append(screen_index)
+                    positions.append(is_minimized)
+                child_info = {}
+                for child in widget.findChildren(QtWidgets.QWidget):
+                    if isinstance(child, QtWidgets.QComboBox):
+                        child_info[child.objectName()] = {"items": [child.itemText(i) for i in range(child.count())],
+                                                          "current_index": child.currentIndex()}
+                    elif isinstance(child, QtWidgets.QCheckBox):
+                        child_info[child.objectName()] = {"checked": child.isChecked()}
+
+                itemlist = [widget.objectName(), child_info, positions]
+                self.widget_info[widget.windowTitle()] = itemlist
+
+        json_data = json.dumps(self.widget_info, indent=4)
+
+        data = {"operation_name": operation_name.text(), "layout_data": json_data}
+
+        response = requests.post(f"{self.mscolab.mscolab_server_url}/store_operation_layout",
+                                 data=data, timeout=(2, 10))
+
+        if response.status_code == 200:
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Select Operation")
+            message_box.setText("Dictionary has been successfully stored in the mscolab server")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+
+    async def delayed_process(self, widget_name, saved_data, loaded_data):
+        await asyncio.sleep(1)
+
+        for widget_name, saved_data in loaded_data.items():
+            if saved_data[0] in self.allowed_widget_names and len(saved_data) == 3:
+                positions = saved_data[2]
+                top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
+
+                for widget in top_level_widgets:
+                    if widget.windowTitle() == widget_name:
+                        current_position = widget.geometry().getRect()
+                        if current_position != positions[0]:
+                            widget.setGeometry(*positions[0])
+
+    def restore_operation_data(self):
+        if self.listOperationsMSC.currentItem() is None:
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Select Operation")
+            message_box.setText("Select an operation to restore layout")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+            return
+
+        operation_name = self.listOperationsMSC.currentItem().text()
+        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout",
+                                   params={"operation_name": operation_name})
+        if loaded_data.text == "None":
+            message_box = QtWidgets.QMessageBox()
+            message_box.setWindowTitle("Layout not found")
+            message_box.setText("No Stored Layout Found")
+            message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            message_box.exec_()
+            return
+        layout_data = json.loads(loaded_data.text)
+
+        top_level_widgets = QtWidgets.QApplication.topLevelWidgets()
+
+        for widget_name, saved_data in layout_data.items():
+            if saved_data[0] in self.allowed_widget_names:
+                if saved_data[0] not in [w.objectName() for w in top_level_widgets]:
+                    if saved_data[0] == "TopViewWindow":
+                        new_widget = self.create_view_handler("topview")
+                        new_widget.setWindowTitle(widget_name)
+                    elif saved_data[0] == "SideViewWindow":
+                        new_widget = self.create_view_handler("sideview")
+                        new_widget.setWindowTitle(widget_name)
+                    elif saved_data[0] == "TableViewWindow":
+                        new_widget = self.create_view_handler("tableview")
+                        new_widget.setWindowTitle(widget_name)
+                    elif saved_data[0] == "LinearWindow":
+                        new_widget = self.create_view_handler("linearview")
+                        new_widget.setWindowTitle(widget_name)
+
+        asyncio.run(self.delayed_process(widget_name, saved_data, layout_data))
+
+        # Currently if a extra widget is open we dont close it.
+        # In future if we want to close it we can use below code.
+        # for widget in top_level_widgets:
+        #     widget_name = widget.objectName()
+        #     if widget_name in self.allowed_widget_names:
+        #         if widget_name not in loaded_data:
+        #             print(f"Extra widget found: '{widget_name}'")
+
     def bring_main_window_to_front(self):
         self.show()
         self.raise_()
@@ -822,10 +961,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
     def create_view_handler(self, _type):
         if self.local_active:
-            self.create_view(_type, self.active_flight_track)
+            temp = self.create_view(_type, self.active_flight_track)
         else:
             self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
-            self.create_view(_type, self.mscolab.waypoints_model)
+            temp = self.create_view(_type, self.mscolab.waypoints_model)
+        return temp
 
     def create_view(self, _type, model):
         """Method called when the user selects a new view to be opened. Creates
@@ -881,6 +1021,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             except AttributeError:
                 view_window.enable_navbar_action_buttons()
             self.viewsChanged.emit()
+        return view_window
 
     def get_active_views(self):
         active_view_windows = []
