@@ -28,7 +28,6 @@
 import datetime
 import logging
 import jwt
-import json
 
 from passlib.apps import custom_app_context as pwd_context
 from flask_sqlalchemy import SQLAlchemy
@@ -104,7 +103,9 @@ class User(db.Model):
         user = User.query.filter_by(id=data.get('id')).first()
         return user
 
+
 class OperationLayout(db.Model):
+
     __tablename__ = 'Operation_layout'
     id = db.Column(db.Integer, primary_key=True)
     operation_id = db.Column(db.String, unique=True)
@@ -113,7 +114,7 @@ class OperationLayout(db.Model):
     def __init__(self, operation_id, json_data):
         self.operation_id = operation_id
         self.json_data = json_data
-    
+
     @classmethod
     def add_or_update(cls, operation_id, json_data):
         existing_record = OperationLayout.query.filter_by(operation_id=operation_id).first()
@@ -123,6 +124,7 @@ class OperationLayout(db.Model):
             new_record = OperationLayout(operation_id=operation_id, json_data=json_data)
             db.session.add(new_record)
         db.session.commit()
+
 
 class Permission(db.Model):
 

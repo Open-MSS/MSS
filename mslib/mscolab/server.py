@@ -400,13 +400,15 @@ def get_operation_by_id():
         return "False"
     return json.dumps({"content": result})
 
+
 @APP.route('/store_operation_layout', methods=["POST"])
 def store_operation_layout():
     operation_name = request.form['operation_name']
     layout_data = request.form['layout_data']
-    
+
     fm.store_operation_layout_data(operation_name, layout_data)
     return jsonify({"success": True}), 200
+
 
 @APP.route('/load_operation_layout', methods=["GET"])
 def load_operation_layout():
@@ -415,6 +417,7 @@ def load_operation_layout():
     if layout_data:
         return layout_data
     return layout_data
+
 
 @APP.route('/get_all_changes', methods=['GET'])
 @verify_user

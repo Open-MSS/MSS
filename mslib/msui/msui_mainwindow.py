@@ -54,8 +54,6 @@ from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
-from mslib.msui.constants import MSUI_CONFIG_PATH
-from mslib.mscolab.models import db, OperationLayout
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSUI_CONFIG_PATH)
@@ -487,7 +485,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
 
         selected_item = selected_items[0]
         operation_name = selected_item.text()
-        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout", params={"operation_name": operation_name})
+        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout",
+                                   params={"operation_name": operation_name})
         if loaded_data.text == "None":
             return
 
@@ -495,13 +494,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             result = QtWidgets.QMessageBox.question(
                 self, "Saved Layout Detected", "Would you like to restore it?",
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Yes)
-            
+
             if result == QtWidgets.QMessageBox.Yes:
                 self.restore_operation_data()
 
     def store_operation_data(self):
-        self.file_name = self.listOperationsMSC.currentItem()
-        if self.listOperationsMSC.currentItem() == None:
+        operation_name = self.listOperationsMSC.currentItem()
+        if self.listOperationsMSC.currentItem() is None:
             message_box = QtWidgets.QMessageBox()
             message_box.setWindowTitle("Select Operation")
             message_box.setText("Select a operation to save layout")
@@ -524,27 +523,24 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 for child in widget.findChildren(QtWidgets.QWidget):
                     if isinstance(child, QtWidgets.QComboBox):
                         child_info[child.objectName()] = {"items": [child.itemText(i) for i in range(child.count())],
-                                                        "current_index": child.currentIndex()}
+                                                          "current_index": child.currentIndex()}
                     elif isinstance(child, QtWidgets.QCheckBox):
                         child_info[child.objectName()] = {"checked": child.isChecked()}
 
-                itemlist = [widget.objectName(),child_info, positions]
+                itemlist = [widget.objectName(), child_info, positions]
                 self.widget_info[widget.windowTitle()] = itemlist
 
-        folder_path = MSUI_CONFIG_PATH
-        file_path = os.path.join(folder_path, self.file_name.text() + ".txt")
         json_data = json.dumps(self.widget_info, indent=4)
 
-        data={"operation_name": self.file_name.text(), "layout_data": json_data}
+        data = {"operation_name": operation_name.text(), "layout_data": json_data}
 
-        response = requests.post(f"{self.mscolab.mscolab_server_url}/store_operation_layout", data = data, timeout=(2, 10))
-        print(response.status_code)
+        response = requests.post(f"{self.mscolab.mscolab_server_url}/store_operation_layout",
+                                 data=data, timeout=(2, 10))
 
-        with open(file_path, 'w') as file:
-            file.write(json_data)
+        if response.status_code == 200:
             message_box = QtWidgets.QMessageBox()
             message_box.setWindowTitle("Select Operation")
-            message_box.setText(f"Dictionary has been successfully stored in {file_path} and also on the mscolab server")
+            message_box.setText("Dictionary has been successfully stored in the mscolab server")
             message_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
             message_box.exec_()
 
@@ -571,9 +567,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             message_box.exec_()
             return
 
-
         operation_name = self.listOperationsMSC.currentItem().text()
-        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout", params={"operation_name": operation_name})
+        loaded_data = requests.get(f"{self.mscolab.mscolab_server_url}/load_operation_layout",
+                                   params={"operation_name": operation_name})
         if loaded_data.text == "None":
             message_box = QtWidgets.QMessageBox()
             message_box.setWindowTitle("Layout not found")
@@ -610,8 +606,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         #     if widget_name in self.allowed_widget_names:
         #         if widget_name not in loaded_data:
         #             print(f"Extra widget found: '{widget_name}'")
-
-        print("Restore operation completed.") 
 
     def bring_main_window_to_front(self):
         self.show()
