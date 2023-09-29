@@ -39,13 +39,12 @@ from flask import g, jsonify, request, render_template, flash
 from flask import send_from_directory, abort, url_for
 from flask_mail import Mail, Message
 from flask_cors import CORS
-from flask_migrate import Migrate
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
 from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, User, db
+from mslib.mscolab.models import Change, MessageType, User
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -56,7 +55,6 @@ from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 APP = create_app(__name__)
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
-migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
 
 
