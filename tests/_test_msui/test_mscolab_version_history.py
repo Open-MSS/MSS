@@ -26,8 +26,6 @@
 """
 import os
 import sys
-import time
-
 import pytest
 import mock
 
