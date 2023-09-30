@@ -238,11 +238,10 @@ class Test_FileManager(TestCase):
             assert ren_operation.id == operation.id
             assert ren_operation.path == rename_to
 
-    def test_delete_file(self):
-        # Todo rename "file" to operation
+    def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation4')
-            assert self.fm.delete_file(operation.id, self.user)
+            assert self.fm.delete_operation(operation.id, self.user)
             assert Operation.query.filter_by(path=flight_path).first() is None
 
     def test_get_authorized_users(self):
@@ -279,7 +278,7 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content1, self.user)
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
-            assert self.fm.get_change_content(all_changes[1]["id"]) == self.content1
+            assert self.fm.get_change_content(all_changes[1]["id"], self.user) == self.content1
 
     def test_set_version_name(self):
         with self.app.test_client():
@@ -307,15 +306,15 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             # crestor
-            assert self.fm.undo(all_changes[1]["id"], self.user)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.user)
             # check collaborator
             self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation.id)
-            assert self.fm.undo(all_changes[1]["id"], self.collaboratoruser)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.collaboratoruser)
             # check viewer
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
             assert self.fm.is_viewer(self.vieweruser.id, operation.id)
-            assert self.fm.undo(all_changes[1]["id"], self.vieweruser) is False
+            assert self.fm.undo_changes(all_changes[1]["id"], self.vieweruser) is False
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():

@@ -182,12 +182,11 @@ class Test_Files(TestCase):
             operation = Operation.query.filter_by(path=new_flight_path).first()
             assert operation.description == new_description
 
-    def test_delete_file(self):
-        # ToDo rename to operation
+    def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V10")
             assert operation.path == flight_path
-            assert self.fm.delete_file(operation.id, self.user)
+            assert self.fm.delete_operation(operation.id, self.user)
             operation = Operation.query.filter_by(path=flight_path).first()
             assert operation is None
 
@@ -206,9 +205,9 @@ class Test_Files(TestCase):
             assert self.fm.save_file(operation.id, "content2", self.user)
             assert self.fm.save_file(operation.id, "content3", self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
-            previous_change = self.fm.get_change_content(all_changes[2]["id"])
+            previous_change = self.fm.get_change_content(all_changes[2]["id"], self.user)
             assert previous_change == "content1"
-            previous_change = self.fm.get_change_content(all_changes[1]["id"])
+            previous_change = self.fm.get_change_content(all_changes[1]["id"], self.user)
             assert previous_change == "content2"
 
     def test_set_version_name(self):

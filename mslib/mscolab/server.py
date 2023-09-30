@@ -27,11 +27,9 @@
 import functools
 import json
 import logging
-import time
 import datetime
 import secrets
 import fs
-import os
 import socketio
 import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer, BadSignature
@@ -42,7 +40,6 @@ from flask_cors import CORS
 from flask_migrate import Migrate
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
-from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Change, MessageType, User, db
@@ -300,13 +297,12 @@ def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
-@APP.route("/delete_user", methods=["POST"])
+@APP.route("/delete_own_account", methods=["POST"])
 @verify_user
-def delete_user():
+def delete_own_account():
     """
     delete own account
     """
-    # ToDo rename to delete_own_account
     user = g.user
     result = fm.modify_user(user, action="delete")
     return jsonify({"success": result}), 200
@@ -316,7 +312,6 @@ def delete_user():
 @APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    # ToDo maybe move is_member part to file_manager
     user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
     if fm.is_member(user.id, op_id):
@@ -336,32 +331,18 @@ def message_attachment():
         file = request.files['file']
         message_type = MessageType(int(request.form.get("message_type")))
         user = g.user
-        # ToDo review
         users = fm.fetch_users_without_permission(int(op_id), user.id)
         if users is False:
             return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
         if file is not None:
-            with fs.open_fs('/') as home_fs:
-                file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], op_id)
-                if '\\' not in file_dir:
-                    if not home_fs.exists(file_dir):
-                        home_fs.makedirs(file_dir)
-                else:
-                    file_dir = file_dir.replace('\\', '/')
-                    if not os.path.exists(file_dir):
-                        os.makedirs(file_dir)
-                file_name, file_ext = file.filename.rsplit('.', 1)
-                file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
-                file_name = secure_filename(file_name)
-                file_path = fs.path.join(file_dir, file_name)
-                file.save(file_path)
-                static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
-                static_dir = static_dir.replace('\\', '/')
-                static_file_path = os.path.join(static_dir, op_id, file_name)
-            new_message = cm.add_message(user, static_file_path, op_id, message_type)
-            new_message_dict = get_message_dict(new_message)
-            sockio.emit('chat-message-client', json.dumps(new_message_dict))
-            return jsonify({"success": True, "path": static_file_path})
+            static_file_path = cm.add_attachment(op_id, APP.config['UPLOAD_FOLDER'], file, file_token)
+            if static_file_path is not None:
+                new_message = cm.add_message(user, static_file_path, op_id, message_type)
+                new_message_dict = get_message_dict(new_message)
+                sockio.emit('chat-message-client', json.dumps(new_message_dict))
+                return jsonify({"success": True, "path": static_file_path})
+            else:
+                return "False"
         return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
     # normal use case never gets to this
     return "False"
@@ -430,9 +411,9 @@ def get_all_changes():
 @APP.route('/get_change_content', methods=['GET'])
 @verify_user
 def get_change_content():
-    # ToDo refactor see fm.get_change_content(
     ch_id = int(request.args.get('ch_id', request.form.get('ch_id', 0)))
-    result = fm.get_change_content(ch_id)
+    user = g.user
+    result = fm.get_change_content(ch_id, user)
     if result is False:
         return "False"
     return jsonify({"content": result})
@@ -472,7 +453,7 @@ def get_operations():
 def delete_operation():
     op_id = int(request.form.get('op_id', 0))
     user = g.user
-    success = fm.delete_file(op_id, user)
+    success = fm.delete_operation(op_id, user)
     if success is False:
         return jsonify({"success": False, "message": "You don't have access for this operation!"})
 
@@ -509,7 +490,6 @@ def get_operation_details():
 @APP.route('/set_last_used', methods=["POST"])
 @verify_user
 def set_last_used():
-    # ToDo refactor move to file_manager
     op_id = request.form.get('op_id', None)
     user = g.user
     days_ago = int(request.form.get('days', 0))
@@ -526,14 +506,13 @@ def set_last_used():
     return jsonify({"success": True}), 200
 
 
-@APP.route('/undo', methods=["POST"])
+@APP.route('/undo_changes', methods=["POST"])
 @verify_user
-def undo_ftml():
-    # ToDo rename to undo_changes
+def undo_changes():
     ch_id = request.form.get('ch_id', -1)
     ch_id = int(ch_id)
     user = g.user
-    result = fm.undo(ch_id, user)
+    result = fm.undo_changes(ch_id, user)
     # get op_id from change
     ch = Change.query.filter_by(id=ch_id).first()
     if result is True:

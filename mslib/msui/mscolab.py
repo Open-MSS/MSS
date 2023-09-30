@@ -756,7 +756,7 @@ class MSUIMscolab(QtCore.QObject):
             }
 
             try:
-                r = requests.post(self.mscolab_server_url + '/delete_user', data=data,
+                r = requests.post(self.mscolab_server_url + '/delete_own_account', data=data,
                                   timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.RequestException as e:
                 logging.error(e)
