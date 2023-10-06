@@ -102,6 +102,10 @@ class default_mscolab_settings:
 
     # mail accounts
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
+    # filepath to md file with imprint
+    IMPRINT = None
+    # filepath to md file with gdpr
+    GDPR = None
 
 
 mscolab_settings = default_mscolab_settings()
