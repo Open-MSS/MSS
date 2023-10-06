@@ -100,23 +100,6 @@ class default_mscolab_settings:
     # dir where mscolab single sign process files are stored
     MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
 
-    # idp settings
-    CONFIGURED_IDPS = [
-        {
-            'idp_identity_name': 'localhost_test_idp',
-            'idp_data': {
-                'idp_name': 'Testing Identity Provider',
-            }
-
-        },
-        # {
-        #     'idp_identity_name': 'idp2',
-        #     'idp_data': {
-        #         'idp_name': '2nd Identity Provider',
-        #     }
-        # },
-    ]
-
 
 mscolab_settings = default_mscolab_settings()
 
@@ -134,11 +117,27 @@ except ImportError as ex:
     logging.warning(u"Couldn't import setup_saml2_backend (ImportError:'%s'), using dummy config.", ex)
 
     class setup_saml2_backend:
+        # idp settings
+        CONFIGURED_IDPS = [
+            {
+                'idp_identity_name': 'localhost_test_idp',
+                'idp_data': {
+                    'idp_name': 'Testing Identity Provider',
+                }
+
+            },
+            # {
+            #     'idp_identity_name': 'idp2',
+            #     'idp_data': {
+            #         'idp_name': '2nd Identity Provider',
+            #     }
+            # },
+        ]
         if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"):
             with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
                 yaml_data = yaml.safe_load(fobj)
             # go through configured IDPs and set conf file paths for particular files
-            for configured_idp in mscolab_settings.CONFIGURED_IDPS:
+            for configured_idp in CONFIGURED_IDPS:
                 # set CRTs and metadata paths for the localhost_test_idp
                 if 'localhost_test_idp' == configured_idp['idp_identity_name']:
                     yaml_data["config"]["localhost_test_idp"]["key_file"] = \

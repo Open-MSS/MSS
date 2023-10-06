@@ -210,7 +210,7 @@ def get_idp_entity_id(selected_idp):
     Finds the entity_id from the configured IDPs
     :return: the entity_id of the idp or None
     """
-    for idp_config in mscolab_settings.CONFIGURED_IDPS:
+    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
         if selected_idp == idp_config['idp_identity_name']:
             idps = idp_config['idp_data']['saml2client'].metadata.identity_providers()
             only_idp = idps[0]
@@ -751,7 +751,7 @@ def reset_request():
 @APP.route("/metadata/<idp_identity_name>", methods=['GET'])
 def metadata(idp_identity_name):
     """Return the SAML metadata XML for the requested IDP"""
-    for idp_config in mscolab_settings.CONFIGURED_IDPS:
+    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
         if idp_identity_name == idp_config['idp_identity_name']:
             sp_config = idp_config['idp_data']['saml2client']
             metadata_string = create_metadata_string(
@@ -765,11 +765,11 @@ def metadata(idp_identity_name):
 def available_idps():
     """
     This function checks if IDP (Identity Provider) is enabled in the mscolab_settings module.
-    If IDP is enabled, it retrieves the configured IDPs from mscolab_settings.CONFIGURED_IDPS
+    If IDP is enabled, it retrieves the configured IDPs from setup_saml2_backend.CONFIGURED_IDPS
     and renders the 'idp/available_idps.html' template with the list of configured IDPs.
     """
     if mscolab_settings.USE_SAML2:
-        configured_idps = mscolab_settings.CONFIGURED_IDPS
+        configured_idps = setup_saml2_backend.CONFIGURED_IDPS
         return render_template('idp/available_idps.html', configured_idps=configured_idps), 200
     return render_template('errors/403.html'), 403
 
@@ -779,7 +779,7 @@ def idp_login():
     """Handle the login process for the user by selected IDP"""
     selected_idp = request.form.get('selectedIdentityProvider')
     sp_config = None
-    for idp_config in mscolab_settings.CONFIGURED_IDPS:
+    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
         if selected_idp == idp_config['idp_identity_name']:
             sp_config = idp_config['idp_data']['saml2client']
             break
@@ -809,7 +809,7 @@ def acs_post_handler(url):
     """
     try:
         # implementation for handle  configured saml assertion consumer endpoints
-        for idp_config in mscolab_settings.CONFIGURED_IDPS:
+        for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
             # Check if the requested URL exists in the assertion_consumer_endpoints dictionary
             url_with_slash = '/' + url
             url_exists_with_slash = url_with_slash in idp_config['idp_data']['assertion_consumer_endpoints']
@@ -824,7 +824,7 @@ def acs_post_handler(url):
                 username = authn_response.ava["givenName"][0]
                 token = generate_confirmation_token(email)
 
-                idp_user_db_state = create_or_udpate_idp_user(email, username, token, 'localhost_test_idp')
+                idp_user_db_state = create_or_udpate_idp_user(email, username, token, idp_config['idp_identity_name'])
 
                 if idp_user_db_state:
                     return render_template('idp/idp_login_success.html', token=token), 200
