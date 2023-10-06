@@ -27,6 +27,13 @@
 import os
 import logging
 import secrets
+import sys
+import warnings
+import yaml
+from saml2 import SAMLError
+from saml2.client import Saml2Client
+from saml2.config import SPConfig
+from urllib.parse import urlparse
 
 
 class default_mscolab_settings:
@@ -88,7 +95,7 @@ class default_mscolab_settings:
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
 
     # enable login by identity provider
-    USE_SAML2 = False
+    USE_SAML2 = True
 
     # dir where mscolab single sign process files are stored
     MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
@@ -97,10 +104,17 @@ class default_mscolab_settings:
     CONFIGURED_IDPS = [
         {
             'idp_identity_name': 'localhost_test_idp',
-            'idp_name': 'Testing Identity Provider'
+            'idp_data': {
+                'idp_name': 'Testing Identity Provider',
+            }
+
         },
-        # {'idp_identity_name': 'idp_2','idp_name':'idp 2'},
-        # {'idp_identity_name': 'idp_3','idp_name':'idp 3'},
+        # {
+        #     'idp_identity_name': 'idp2',
+        #     'idp_data': {
+        #         'idp_name': '2nd Identity Provider',
+        #     }
+        # },
     ]
 
 
@@ -112,3 +126,55 @@ try:
     mscolab_settings.__dict__.update(user_settings.__dict__)
 except ImportError as ex:
     logging.warning(u"Couldn't import mscolab_settings (ImportError:'%s'), using dummy config.", ex)
+
+try:
+    from setup_saml2_backend import setup_saml2_backend
+    logging.info("Using user defined saml2 settings")
+except ImportError as ex:
+    logging.warning(u"Couldn't import setup_saml2_backend (ImportError:'%s'), using dummy config.", ex)
+
+    class setup_saml2_backend:
+        if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"):
+            with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
+                yaml_data = yaml.safe_load(fobj)
+            # go through configured IDPs and set conf file paths for particular files
+            for configured_idp in mscolab_settings.CONFIGURED_IDPS:
+                # set CRTs and metadata paths for the localhost_test_idp
+                if 'localhost_test_idp' == configured_idp['idp_identity_name']:
+                    yaml_data["config"]["localhost_test_idp"]["key_file"] = \
+                        f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'
+                    yaml_data["config"]["localhost_test_idp"]["cert_file"] = \
+                        f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'
+                    yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = \
+                        f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'
+
+                    # configuration localhost_test_idp Saml2Client
+                    try:
+                        if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
+                            yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
+                            warnings.warn("idp.xml file does not exists !\
+                                           Ignore this warning when you initializeing metadata.")
+
+                        localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
+                        sp_localhost_test_idp = Saml2Client(localhost_test_idp)
+
+                        configured_idp['idp_data']['saml2client'] = sp_localhost_test_idp
+                        for url_pair in (yaml_data["config"]["localhost_test_idp"]
+                                         ["service"]["sp"]["endpoints"]["assertion_consumer_service"]):
+                            saml_url, binding = url_pair
+                            path = urlparse(saml_url).path
+                            configured_idp['idp_data']['assertion_consumer_endpoints'] = \
+                                configured_idp['idp_data'].get('assertion_consumer_endpoints', []) + [path]
+
+                    except SAMLError:
+                        warnings.warn("Invalid Saml2Client Config with localhost_test_idp ! Please configure with\
+                                       valid CRTs metadata and try again.")
+                        sys.exit()
+
+                    # if multiple IdPs exists, development should need to implement accordingly below
+                    """
+                        if 'idp_2'== configured_idp['idp_identity_name']:
+                            # rest of code
+                            # set CRTs and metadata paths for the idp_2
+                            # configuration idp_2 Saml2Client
+                    """
