@@ -276,7 +276,7 @@ def handle_mscolab_metadata_init(repo_exists):
         # Add a small delay to allow the server to start up
         time.sleep(10)
 
-        cmd_curl = ["curl", "http://localhost:8083/metadata/",
+        cmd_curl = ["curl", "http://localhost:8083/metadata/localhost_test_idp",
                     "-o", f"{mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"]
         subprocess.run(cmd_curl, check=True)
         process.kill()
