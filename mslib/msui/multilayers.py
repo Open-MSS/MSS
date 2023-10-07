@@ -636,6 +636,9 @@ class Layer(QtWidgets.QTreeWidgetItem):
             self.vtime_name = valid_time_names[0]
             values = self.extents[self.vtime_name]["values"]
             self.allowed_valid_times = sorted(self.parent.dock_widget.parse_time_extent(values))
+            while len(self.allowed_valid_times) > 1000:
+                logging.warning("Too many valid times (%s). discarding 90%%.", len(self.allowed_valid_times))
+                self.allowed_valid_times = self.allowed_valid_times[::10]
             self.vtimes = [_time.isoformat() + "Z" for _time in self.allowed_valid_times]
             if len(self.allowed_valid_times) == 0:
                 logging.error("Cannot determine valid time format of %s for %s", self.header.text(0), self.text(0))

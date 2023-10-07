@@ -706,7 +706,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def clear_map(self):
         logging.debug("clear figure")
-        self.view.clear_figure()
+        self.view.plotter.clear_figure()
         logging.debug("enabling checkboxes in map-options if any")
         self.signal_enable_cbs.emit()
 
@@ -1285,7 +1285,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if ret == QtWidgets.QMessageBox.Ignore:
                 self.check_for_allowed_crs = False
             elif ret == QtWidgets.QMessageBox.No:
-                return
+                return []
 
         # get...Time() will return None if the corresponding checkboxes are
         # disabled. <None> objects passed to wms.getmap will not be included
@@ -1481,7 +1481,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             # Add border around seperate legends
             if len(images) > 1:
                 images = [ImageOps.expand(x, border=1, fill="black") for x in images]
-            max_height = int((self.view.fig.get_size_inches() * self.view.fig.get_dpi())[1] * 0.99)
+            max_height = int((self.view.plotter.fig.get_size_inches() * self.view.plotter.fig.get_dpi())[1] * 0.99)
             width = max([image.width for image in images])
             height = sum([image.height for image in images])
             result = Image.new("RGBA", (width, height))

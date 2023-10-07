@@ -337,10 +337,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = variant_to_float(value)
+                    if not (-90 <= value <= 90):
+                        raise ValueError
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("%s", ex)
+                    logging.error("%s %s '%s'", type(ex), ex, value)
                 else:
                     waypoint.lat = value
                     waypoint.location = ""
@@ -362,10 +364,12 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     # The table fields accept basically any input.
                     # If the string cannot be converted to "float" (raises ValueError), the user input is discarded.
                     value = variant_to_float(value)
+                    if not (-720 <= value <= 720):
+                        raise ValueError
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("%s", ex)
+                    logging.error("%s %s '%s'", type(ex), ex, value)
                 else:
                     waypoint.lon = value
                     waypoint.location = ""
@@ -385,7 +389,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                 except TypeError as ex:
                     logging.error("unexpected error: %s %s %s %s", type(ex), ex, type(value), value)
                 except ValueError as ex:
-                    logging.error("%s", ex)
+                    logging.error("%s %s '%s'", type(ex), ex, value)
                 else:
                     waypoint.flightlevel = flightlevel
                     waypoint.pressure = pressure
@@ -689,15 +693,12 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
         """
         if index.column() == LOCATION:
             combobox = QtWidgets.QComboBox(parent)
-            locations = config_loader(dataset='locations')
-            adds = list(locations.keys())
+            adds = set(config_loader(dataset='locations'))
             if self.parent() is not None:
-                for loc in [wp.location for wp in self.parent().waypoints_model.all_waypoint_data() if
-                            wp.location != ""]:
-                    if loc not in adds:
-                        adds.append(loc)
+                for wp in self.parent().waypoints_model.all_waypoint_data():
+                    if wp.location != "":
+                        adds.add(wp.location)
             combobox.addItems(sorted(adds))
-
             combobox.setEditable(True)
             return combobox
         else:
@@ -705,14 +706,14 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
             return QtWidgets.QItemDelegate.createEditor(self, parent, option, index)
 
     def setEditorData(self, editor, index):
-        text = index.model().data(index, QtCore.Qt.DisplayRole).value()
+        value = index.model().data(index, QtCore.Qt.DisplayRole).value()
         if index.column() in (LOCATION,):
-            i = editor.findText(text)
+            i = editor.findText(value)
             if i == -1:
                 i = 0
             editor.setCurrentIndex(i)
         else:
-            QtWidgets.QItemDelegate.setEditorData(self, editor, index)
+            editor.insert(str(value))
 
     def setModelData(self, editor, model, index):
         """
