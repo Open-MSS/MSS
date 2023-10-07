@@ -204,7 +204,7 @@ def create_app(name="", imprint=None, gdpr=None):
 
     @APP.route("/mss/imprint")
     def imprint():
-        if os.path.exists(imprint_file):
+        if file_exists(imprint_file):
             content = get_content(imprint_file)
             return render_template("/content.html", act="imprint", content=content)
         else:
@@ -212,7 +212,7 @@ def create_app(name="", imprint=None, gdpr=None):
 
     @APP.route("/mss/gpdr")
     def gdpr():
-        if os.path.exists(gdpr_file):
+        if file_exists(gdpr_file):
             content = get_content(gdpr_file)
             return render_template("/content.html", act="gdpr", content=content)
         else:
