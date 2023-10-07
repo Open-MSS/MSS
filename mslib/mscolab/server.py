@@ -820,14 +820,42 @@ def acs_post_handler(url):
                 authn_response = idp_config['idp_data']['saml2client'].parse_authn_request_response(
                     request.form["SAMLResponse"], binding, outstanding=outstanding_queries
                 )
-                email = authn_response.ava["email"][0]
-                username = authn_response.ava["givenName"][0]
-                token = generate_confirmation_token(email)
+                email = None
+                username = None
+                try:
+                    email = authn_response.ava["email"][0]
+                    username = authn_response.ava["givenName"][0]
+                    token = generate_confirmation_token(email)
+                except (NameError, AttributeError, KeyError):
 
-                idp_user_db_state = create_or_udpate_idp_user(email, username, token, idp_config['idp_identity_name'])
+                    try:
+                        # Initialize an empty dictionary to store attribute values
+                        attributes = {}
 
-                if idp_user_db_state:
-                    return render_template('idp/idp_login_success.html', token=token), 200
+                        # Loop through attribute statements
+                        for attribute_statement in authn_response.assertion.attribute_statement:
+                            for attribute in attribute_statement.attribute:
+                                attribute_name = attribute.name
+                                attribute_value = \
+                                    attribute.attribute_value[0].text if attribute.attribute_value else None
+                                attributes[attribute_name] = attribute_value
+
+                        # Extract the email and givenname attributes
+                        email = attributes.get("email")
+                        username = attributes.get("givenName")
+
+                        token = generate_confirmation_token(email)
+
+                    except (NameError, AttributeError, KeyError):
+                        render_template('errors/403.html'), 403
+
+                if email is not None and username is not None:
+                    idp_user_db_state = create_or_udpate_idp_user(email, username, token,
+                                                                  idp_config['idp_identity_name'])
+                    if idp_user_db_state:
+                        return render_template('idp/idp_login_success.html', token=token), 200
+                    else:
+                        return render_template('errors/500.html'), 500
                 else:
                     return render_template('errors/500.html'), 500
     except (NameError, AttributeError, KeyError):
@@ -861,7 +889,7 @@ def idp_login_auth():
 
 def start_server(app, sockio, cm, fm, port=8083):
     create_files()
-    sockio.run(app, port=port)
+    sockio.run(app, port=port, debug=True)
 
 
 def main():
