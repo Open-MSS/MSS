@@ -116,7 +116,7 @@ class Test_MscolabVersionHistory(object):
         assert self.version_window.changes.currentItem().version_name is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_undo(self, mockbox):
+    def test_undo_changes(self, mockbox):
         self._change_version_filter(1)
         # make changes
         for i in range(2):

@@ -273,7 +273,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                     "token": self.token,
                     "ch_id": self.changes.currentItem().id
                 }
-                url = urljoin(self.mscolab_server_url, 'undo')
+                url = urljoin(self.mscolab_server_url, 'undo_changes')
                 r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 if r.text != "False":
                     # reload windows
