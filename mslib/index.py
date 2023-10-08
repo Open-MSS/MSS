@@ -64,11 +64,25 @@ def _xstatic(name):
         return None
 
 
-def create_app(name=""):
+def file_exists(filepath=None):
+    try:
+        return os.path.isfile(filepath)
+    except TypeError:
+        return False
+
+
+def create_app(name="", imprint=None, gdpr=None):
+    imprint_file = imprint
+    gdpr_file = gdpr
+
     if "mscolab.server" in name:
         from mslib.mscolab.app import APP
     else:
         from mslib.mswms.app import APP
+
+    APP.jinja_env.globals.update(file_exists=file_exists)
+    APP.jinja_env.globals["imprint"] = imprint_file
+    APP.jinja_env.globals["gdpr"] = gdpr_file
 
     @APP.route('/xstatic/<name>/', defaults=dict(filename=''))
     @APP.route('/xstatic/<name>/<path:filename>')
@@ -190,9 +204,19 @@ def create_app(name=""):
 
     @APP.route("/mss/imprint")
     def imprint():
-        _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'imprint.md')
-        content = get_content(_file)
-        return render_template("/content.html", act="imprint", content=content)
+        if file_exists(imprint_file):
+            content = get_content(imprint_file)
+            return render_template("/content.html", act="imprint", content=content)
+        else:
+            return ""
+
+    @APP.route("/mss/gpdr")
+    def gdpr():
+        if file_exists(gdpr_file):
+            content = get_content(gdpr_file)
+            return render_template("/content.html", act="gdpr", content=content)
+        else:
+            return ""
 
     @APP.route('/mss/favicon.ico')
     def favicons():

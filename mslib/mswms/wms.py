@@ -69,12 +69,6 @@ from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_t
 # Flask basic auth's documentation
 # https://flask-basicauth.readthedocs.io/en/latest/#flask.ext.basicauth.BasicAuth.check_credentials
 
-app = create_app(__name__)
-auth = HTTPBasicAuth()
-
-realm = 'Mission Support Web Map Service'
-app.config['realm'] = realm
-
 
 class default_mswms_settings:
     base_dir = os.path.abspath(os.path.dirname(__file__))
@@ -97,6 +91,8 @@ class default_mswms_settings:
     register_horizontal_layers = []
     register_vertical_layers = []
     register_linear_layers = []
+    imprint = ""
+    gdpr = ""
     data = {}
     enable_basic_http_authentication = False
     __file__ = None
@@ -109,6 +105,12 @@ try:
     mswms_settings.__dict__.update(user_settings.__dict__)
 except ImportError as ex:
     logging.warning("Couldn't import mswms_settings (ImportError:'%s'), Using dummy config.", ex)
+
+app = create_app(__name__, imprint=mswms_settings.imprint, gdpr=mswms_settings.gdpr)
+auth = HTTPBasicAuth()
+
+realm = 'Mission Support Web Map Service'
+app.config['realm'] = realm
 
 try:
     import mswms_auth
