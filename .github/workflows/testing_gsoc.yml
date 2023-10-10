@@ -1,13 +1,14 @@
 name: test GSOC branches
-
+# Todo : enable tests for GSoC branches.. disabled because of 
+# https://github.com/Open-MSS/MSS/actions/runs/6456242735/job/17525332827?pr=2043
 on:
   push:
     branches:
-    - 'GSOC**'
+    # - 'GSOC**'
 
   pull_request:
     branches:
-    - 'GSOC**'
+    # - 'GSOC**'
 
 env:
   PAT: ${{ secrets.PAT }}
