@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 8.3.2
+~~~~~~~~~~~~~
+
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/100
+
 Version 8.3.1
 ~~~~~~~~~~~~~
 
