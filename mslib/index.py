@@ -174,7 +174,7 @@ def create_app(name="", imprint=None, gdpr=None):
                       "For further info on how to generate it, run the " \
                       "<b>gallery --help</b> command line parameter of mswms.<br>" \
                       "An example of the gallery can be seen " \
-                      "<a href=\"https://mss.readthedocs.io/en/latest/gallery/index.html\">here</a>"
+                      "<a href=\"https://mss.readthedocs.io/en/stable/gallery/index.html\">here</a>"
         return render_template("/content.html", act="plots", content=content)
 
     @APP.route("/mss/code/<path:filename>")
