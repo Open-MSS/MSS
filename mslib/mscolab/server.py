@@ -219,7 +219,7 @@ def get_idp_entity_id(selected_idp):
     return None
 
 
-def create_or_udpate_idp_user(email, username, token, authentication_backend):
+def create_or_update_idp_user(email, username, token, authentication_backend):
     try:
         user = User.query.filter_by(emailid=email).first()
 
@@ -822,6 +822,7 @@ def acs_post_handler(url):
                 )
                 email = None
                 username = None
+                token = None
                 try:
                     email = authn_response.ava["email"][0]
                     username = authn_response.ava["givenName"][0]
@@ -844,13 +845,16 @@ def acs_post_handler(url):
                         email = attributes.get("email")
                         username = attributes.get("givenName")
 
-                        token = generate_confirmation_token(email)
+                        if email is not None and username is not None:
+                            token = generate_confirmation_token(email)
+                        else:
+                            render_template('errors/403.html'), 403
 
                     except (NameError, AttributeError, KeyError):
                         render_template('errors/403.html'), 403
 
                 if email is not None and username is not None:
-                    idp_user_db_state = create_or_udpate_idp_user(email, username, token,
+                    idp_user_db_state = create_or_update_idp_user(email, username, token,
                                                                   idp_config['idp_identity_name'])
                     if idp_user_db_state:
                         return render_template('idp/idp_login_success.html', token=token), 200
