@@ -822,7 +822,7 @@ def acs_post_handler(url):
                 )
                 email = None
                 username = None
-                token = None
+
                 try:
                     email = authn_response.ava["email"][0]
                     username = authn_response.ava["givenName"][0]
@@ -842,13 +842,9 @@ def acs_post_handler(url):
                                 attributes[attribute_name] = attribute_value
 
                         # Extract the email and givenname attributes
-                        email = attributes.get("email")
-                        username = attributes.get("givenName")
-
-                        if email is not None and username is not None:
-                            token = generate_confirmation_token(email)
-                        else:
-                            render_template('errors/403.html'), 403
+                        email = attributes["email"]
+                        username = attributes["givenName"]
+                        token = generate_confirmation_token(email)
 
                     except (NameError, AttributeError, KeyError):
                         render_template('errors/403.html'), 403
