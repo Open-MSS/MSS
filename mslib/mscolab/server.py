@@ -39,13 +39,12 @@ from flask_mail import Mail, Message
 from flask_cors import CORS
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
-from werkzeug.utils import secure_filename
 from saml2.metadata import create_metadata_string
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from flask.wrappers import Response
 
 from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
-from mslib.mscolab.models import Change, MessageType, User, Operation, db
+from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
