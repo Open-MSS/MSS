@@ -36,6 +36,7 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.utils.config import modify_config_file
 
 
 PORTS = list(range(20000, 20500))
@@ -56,9 +57,11 @@ class Test_MscolabVersionHistory(object):
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         # activate operation and open chat window
         self._activate_operation_at_index(0)
@@ -113,7 +116,7 @@ class Test_MscolabVersionHistory(object):
         assert self.version_window.changes.currentItem().version_name is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_undo(self, mockbox):
+    def test_undo_changes(self, mockbox):
         self._change_version_filter(1)
         # make changes
         for i in range(2):

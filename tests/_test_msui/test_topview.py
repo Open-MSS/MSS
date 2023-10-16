@@ -32,10 +32,11 @@ import shutil
 import sys
 import multiprocessing
 import tempfile
+import mslib.msui.topview as tv
 from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
-import mslib.msui.topview as tv
+from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
 from tests.utils import wait_until_signal
 
@@ -70,12 +71,13 @@ class Test_MSS_TV_MapAppearanceDialog(object):
 
 class Test_MSSTopViewWindow(object):
     def setup_method(self):
+        mainwindow = MSUIMainWindow()
         self.application = QtWidgets.QApplication(sys.argv)
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUITopViewWindow(model=waypoints_model)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -312,7 +314,8 @@ class Test_TopViewWMS(object):
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSUITopViewWindow(model=waypoints_model)
+        mainwindow = MSUIMainWindow()
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
@@ -364,7 +367,8 @@ class Test_MSUITopViewWindow():
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUITopViewWindow(model=waypoints_model)
+        mainwindow = MSUIMainWindow()
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
 
         # user_options is a global var
         from mslib.utils.config import user_options

@@ -43,7 +43,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
 
     viewCloses = QtCore.pyqtSignal(name="viewCloses")
     # views for mscolab
-    # viewClosesId = QtCore.Signal(int, name="viewClosesId")
+    # viewClosesId = QtCore.pyqtSignal(int, name="viewClosesId")
 
     def __init__(self, parent=None, model=None, _id=None):
         super().__init__(parent)
@@ -234,10 +234,8 @@ class MSUIMplViewWindow(MSUIViewWindow):
 
             # Update Top View flighttrack name
             if hasattr(self.mpl.canvas, "map"):
-                text = self.mpl.canvas.map.crs_text.get_text()
-                old_name = self.mpl.canvas.map.operation_name
                 self.mpl.canvas.map.operation_name = model.name
-                self.mpl.canvas.map.crs_text.set_text(text.replace(old_name, model.name))
+                self.mpl.canvas.map.update_info_text(name=model.name)
                 self.mpl.canvas.map.ax.figure.canvas.draw()
 
     def getView(self):

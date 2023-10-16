@@ -43,7 +43,10 @@ def parse_iso_datetime(string):
 
 
 def parse_iso_duration(string):
-    return isodate.parse_duration(string)
+    try:
+        return isodate.parse_duration(string)
+    except isodate.ISO8601Error:
+        return datetime.timedelta(weeks=4)
 
 
 JSEC_START = datetime.datetime(2000, 1, 1)

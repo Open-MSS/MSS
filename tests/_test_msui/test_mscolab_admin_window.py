@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import mock
 import pytest
 import sys
 
@@ -35,6 +36,7 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.utils.config import modify_config_file
 
 
 PORTS = list(range(24000, 24500))
@@ -68,9 +70,11 @@ class Test_MscolabAdminWindow(object):
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         # activate operation and open chat window
         self._activate_operation_at_index(0)
@@ -86,6 +90,9 @@ class Test_MscolabAdminWindow(object):
             self.window.mscolab.admin_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        QtWidgets.QApplication.processEvents()
         self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()

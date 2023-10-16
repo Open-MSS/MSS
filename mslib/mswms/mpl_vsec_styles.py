@@ -38,7 +38,7 @@ from matplotlib import patheffects
 import numpy as np
 
 from mslib.mswms.mpl_vsec import AbstractVerticalSectionStyle
-from mslib.mswms.utils import get_cbar_label_format, make_cbar_labels_readable
+from mslib.mswms.utils import make_cbar_labels_readable
 import mslib.mswms.generics as generics
 from mslib.utils import thermolib
 from mslib.utils.units import convert_to
@@ -52,6 +52,7 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
     styles = [
         ("auto", "auto colour scale"),
         ("autolog", "auto log colour scale"), ]
+    cbar_format = None
 
     def _plot_style(self):
         ax = self.ax
@@ -97,7 +98,11 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
         self._latlon_logp_setup()
 
         # Format for colorbar labels
-        cbar_format = get_cbar_label_format(self.style, np.abs(clevs).max())
+        if self.cbar_format is None:
+            cbar_format = generics.get_cbar_label_format(self.style, np.median(np.abs(clevs)))
+        else:
+            cbar_format = self.cbar_format
+
         cbar_label = self.title
 
         # Add colorbar.

@@ -57,9 +57,6 @@ API for Web Map Service (WMS) methods and metadata.
 Currently supports only versions 1.1.1/1.3.0 of the WMS protocol.
 """
 
-from future import standard_library
-standard_library.install_aliases()
-
 import defusedxml.ElementTree as etree
 import requests
 import logging

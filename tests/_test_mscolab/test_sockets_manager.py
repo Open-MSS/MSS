@@ -29,8 +29,8 @@ import pytest
 import socketio
 import datetime
 import requests
+from urllib.parse import urljoin
 
-from werkzeug.urls import url_join
 from mslib.msui.icons import icons
 from mslib.mscolab.conf import mscolab_settings
 from tests.utils import mscolab_check_free_port, LiveSocketTestCase
@@ -233,7 +233,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
-        url = url_join(self.url, 'messages')
+        url = urljoin(self.url, 'messages')
         res = requests.get(url, data=data, timeout=(2, 10)).json()
         assert len(res["messages"]) == 2
 
@@ -269,7 +269,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
-        url = url_join(self.url, 'messages')
+        url = urljoin(self.url, 'messages')
         res = requests.get(url, data=data, timeout=(2, 10)).json()
         assert len(res["messages"]) == 1
         messages = res["messages"][0]
@@ -307,7 +307,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
             "op_id": self.operation.id,
             "message_type": int(MessageType.IMAGE)
         }
-        url = url_join(self.url, 'message_attachment')
+        url = urljoin(self.url, 'message_attachment')
         requests.post(url, data=data, files=files, timeout=(2, 10))
         upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, str(self.user.id))
         assert os.path.exists(upload_dir)

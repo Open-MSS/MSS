@@ -26,22 +26,46 @@ Automatically
 Manually
 --------
 
-Installing `MSS` from the `conda-forge` channel can be achieved by adding `conda-forge` to your channels with:
+As **Beginner** start with an installation of Mambaforge 
+Get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) for your Operation System
 
 
-    $ conda config --add channels conda-forge
+You must install mss into a new environment to ensure the most recent
+versions for dependencies (On the Anaconda Prompt on Windows, you have
+to leave out the 'source' here and below).
 
-Once the `conda-forge` channel has been enabled, `mss` can be installed with:
+```
+  $ mamba create -n mssenv
+  $ mamba activate mssenv
+  (mssenv) $ mamba install mss python
+```
+For updating an existing MSS installation to the current version, it is
+best to install it into a new environment. If an existing environment
+shall be updated, it is important to update all packages in this
+environment. 
 
-    $ conda create -n mssenv mamba
-    $ conda activate mssenv
-    (mssenv) $ mamba install mss python
-    (mssenv) $ msui
+```
+  $ mamba activate mssenv
+  (mssenv) $ msui --update
+```
 
 It is possible to list all versions of `mss` available on your platform with:
 
-
+```
     $ mamba search mss --channel conda-forge
+```
+
+For a simple test you can setup a demodata wms server and start a msolab server with default settings
+
+```
+  (mssenv) $ mswms_demodata --seed
+  (mssenv) $ export PYTHONPATH=~/mss
+  (mssenv) $ mswms &
+  (mssenv) $ mscolab start &
+  (mssenv) $ msui
+```
+
+
 
 
 Current release info

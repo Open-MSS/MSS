@@ -74,7 +74,7 @@ import mpl_toolkits.basemap
 from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import get_cbar_label_format, make_cbar_labels_readable
+from mslib.mswms.utils import make_cbar_labels_readable
 import mslib.mswms.generics as generics
 from mslib.utils import thermolib
 from mslib.utils.units import convert_to
@@ -88,6 +88,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
     styles = [
         ("auto", "auto colour scale"),
         ("autolog", "auto logcolour scale"), ]
+    cbar_format = None
 
     def _plot_style(self):
         bm = self.bm
@@ -123,13 +124,14 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
 
         # Format for colorbar labels
         cbar_label = self.title
-        cbar_format = get_cbar_label_format(self.style, np.median(np.abs(clevs)))
+        if self.cbar_format is None:
+            cbar_format = generics.get_cbar_label_format(self.style, np.median(np.abs(clevs)))
+        else:
+            cbar_format = self.cbar_format
 
         if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
-                                     label=cbar_label, format=cbar_format, ticks=ticks, extend="both")
-            cbar.set_ticks(clevs)
-            cbar.set_ticklabels(clevs)
+            self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
+                              label=cbar_label, format=cbar_format, ticks=ticks, extend="both")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="3%", height="40%", loc=cbar_location)

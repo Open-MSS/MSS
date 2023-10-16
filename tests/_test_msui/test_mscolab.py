@@ -38,7 +38,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
-from mslib.utils.config import read_config_file, config_loader
+from mslib.utils.config import read_config_file, config_loader, modify_config_file
 from tests.utils import mscolab_start_server, create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
@@ -64,6 +64,7 @@ class Test_Mscolab_connect_window():
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.main_window.create_new_flight_track()
         self.main_window.show()
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
         self.window.urlCb.setEditText(self.url)
@@ -115,15 +116,37 @@ class Test_Mscolab_connect_window():
     def test_disconnect(self):
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
-        QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
+        QtTest.QTest.mouseClick(self.window.disconnectBtn, QtCore.Qt.LeftButton)
         assert self.window.mscolab_server_url is None
         # set ui_name_winodw default
         assert self.main_window.usernameLabel.text() == 'User'
 
     def test_login(self):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         QtWidgets.QApplication.processEvents()
+        # show logged in widgets
+        assert self.main_window.usernameLabel.text() == self.userdata[1]
+        assert self.main_window.connectBtn.isVisible() is False
+        assert self.main_window.mscolab.connect_window is None
+        assert self.main_window.local_active is True
+        # test operation listing visibility
+        assert self.main_window.listOperationsMSC.model().rowCount() == 1
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
+    def test_login_with_different_account_shows_update_credentials_popup(self, mockbox):
+        self._connect_to_mscolab()
+        connect_window = self.main_window.mscolab.connect_window
+        self._login(self.userdata[0], self.userdata[2])
+        QtWidgets.QApplication.processEvents()
+        mockbox.assert_called_once_with(
+            connect_window,
+            "Update Credentials",
+            "You are using new credentials. Should your settings file be updated with the new credentials?",
+            mock.ANY,
+            mock.ANY,
+        )
         # show logged in widgets
         assert self.main_window.usernameLabel.text() == self.userdata[1]
         assert self.main_window.connectBtn.isVisible() is False
@@ -135,6 +158,7 @@ class Test_Mscolab_connect_window():
     def test_logout_action_trigger(self):
         # Login
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         QtWidgets.QApplication.processEvents()
         assert self.main_window.usernameLabel.text() == self.userdata[1]
@@ -149,6 +173,7 @@ class Test_Mscolab_connect_window():
     def test_logout(self):
         # Login
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         QtWidgets.QApplication.processEvents()
         assert self.main_window.usernameLabel.text() == self.userdata[1]
@@ -163,6 +188,7 @@ class Test_Mscolab_connect_window():
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_user(self, mockmessage):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         assert mslib.utils.auth.get_password_from_keyring("MSCOLAB",
@@ -197,6 +223,7 @@ class Test_Mscolab_connect_window():
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
+        modify_config_file({"MSS_auth": {self.url: "anand@something.org"}})
         self._create_user("anand", "anand@something.org", "anand_pass")
         # check changed settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "anand@something.org"
@@ -246,8 +273,8 @@ class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
     # import/export plugins
     import_plugins = {
-        "Text": ["txt", "mslib.plugins.io.text", "load_from_txt"],
-        "FliteStar": ["fls", "mslib.plugins.io.flitestar", "load_from_flitestar"],
+        "TXT": ["txt", "mslib.plugins.io.text", "load_from_txt"],
+        "FliteStar": ["txt", "mslib.plugins.io.flitestar", "load_from_flitestar"],
     }
     export_plugins = {
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
@@ -277,6 +304,7 @@ class Test_Mscolab(object):
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.window.show()
 
     def teardown_method(self):
@@ -296,6 +324,7 @@ class Test_Mscolab(object):
 
     def test_activate_operation(self):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         # activate a operation
         self._activate_operation_at_index(0)
@@ -305,6 +334,7 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_view_open(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         # test after activating operation
         self._activate_operation_at_index(0)
@@ -338,6 +368,7 @@ class Test_Mscolab(object):
                               "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         self.window.actionExportFlightTrackFTML.trigger()
@@ -349,50 +380,36 @@ class Test_Mscolab(object):
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
-    @pytest.mark.skip("fails on github with WebSocket transport is not available")
-    @pytest.mark.parametrize("ext", [".ftml", ".csv", ".txt"])
+    @pytest.mark.parametrize("name", [("example.ftml", "actionImportFlightTrackFTML", 5),
+                                      ("example.csv", "actionImportFlightTrackCSV", 5),
+                                      ("example.txt", "actionImportFlightTrackTXT", 5),
+                                      ("flitestar.txt", "actionImportFlightTrackFliteStar", 10)])
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_import_file(self, mockbox, ext):
+    def test_import_file(self, mockbox, name):
         self.window.remove_plugins()
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
-        with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.export_plugins):
-            self.window.add_export_plugins("qt")
-        file_path = fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}')
-        with mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName", return_value=(file_path, None)):
-            with mock.patch("PyQt5.QtWidgets.QFileDialog.getOpenFileName", return_value=(file_path, None)):
-                self._connect_to_mscolab()
-                self._login(emailid=self.userdata[0], password=self.userdata[2])
-                self._activate_operation_at_index(0)
-                exported_wp = WaypointsTableModel(waypoints=self.window.mscolab.waypoints_model.waypoints)
-                full_name = f"actionExportFlightTrack{ext[1:]}"
-                for action in self.window.menuExportActiveFlightTrack.actions():
-                    if action.objectName() == full_name:
-                        action.trigger()
-                        break
-                assert os.path.exists(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, f'test_import{ext}'))
-                QtWidgets.QApplication.processEvents()
-                self.window.mscolab.waypoints_model.invert_direction()
-                QtWidgets.QApplication.processEvents()
-                QtTest.QTest.qWait(100)
-                assert exported_wp.waypoint_data(0).lat != self.window.mscolab.waypoints_model.waypoint_data(0).lat
-                full_name = f"actionImportFlightTrack{ext[1:]}"
-                for action in self.window.menuImportFlightTrack.actions():
-                    if action.objectName() == full_name:
-                        action.trigger()
-                        break
-                QtWidgets.QApplication.processEvents()
-                QtTest.QTest.qWait(100)
-                assert len(self.window.mscolab.waypoints_model.waypoints) == 2
-                imported_wp = self.window.mscolab.waypoints_model
-                wp_count = len(imported_wp.waypoints)
-                assert wp_count == 2
-                for i in range(wp_count):
-                    assert exported_wp.waypoint_data(i).lat == imported_wp.waypoint_data(i).lat
+        file_path = fs.path.join(self.sample_path, name[0])
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
+            # with parametrize it is maybe too fast
+            QtTest.QTest.qWait(100)
+            self._connect_to_mscolab()
+            self._login(emailid=self.userdata[0], password=self.userdata[2])
+            self._activate_operation_at_index(0)
+            wp = self.window.mscolab.waypoints_model
+            assert len(wp.waypoints) == 2
+            for action in self.window.menuImportFlightTrack.actions():
+                if action.objectName() == name[1]:
+                    action.trigger()
+                    break
+            assert mockopen.call_count == 1
+            imported_wp = self.window.mscolab.waypoints_model
+            assert len(imported_wp.waypoints) == name[2]
 
     @pytest.mark.skip("Runs in a timeout locally > 60s")
     def test_work_locally_toggle(self):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         self.window.workLocallyCheckbox.setChecked(True)
@@ -413,6 +430,7 @@ class Test_Mscolab(object):
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
     def test_browse_add_operation(self, mockopen, mockmessage):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self.window.actionAddOperation.trigger()
@@ -436,59 +454,75 @@ class Test_Mscolab(object):
         assert item.operation_path == "example"
         assert item.access_level == "creator"
 
-    @mock.patch("PyQt5.QtWidgets.QErrorMessage")
-    def test_add_operation(self, mockbox):
+    def test_add_operation(self):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         assert self.window.usernameLabel.text() == 'something'
         assert self.window.connectBtn.isVisible() is False
-        self._create_operation("Alpha", "Description Alpha")
-        assert mockbox.return_value.showMessage.call_count == 1
-        with mock.patch("PyQt5.QtWidgets.QLineEdit.text", return_value=None):
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self._create_operation("Alpha", "Description Alpha")
+            m.assert_called_once_with(
+                self.window,
+                "Creation successful",
+                "Your operation was created successfully.",
+            )
+        with (mock.patch("PyQt5.QtWidgets.QLineEdit.text", return_value=None),
+              mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage") as m):
             self._create_operation("Alpha2", "Description Alpha")
-        with mock.patch("PyQt5.QtWidgets.QTextEdit.toPlainText", return_value=None):
+            m.assert_called_once_with("Path can't be empty")
+        with (mock.patch("PyQt5.QtWidgets.QTextEdit.toPlainText", return_value=None),
+              mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage") as m):
             self._create_operation("Alpha3", "Description Alpha")
-        self._create_operation("/", "Description Alpha")
-        assert mockbox.return_value.showMessage.call_count == 4
+            m.assert_called_once_with("Description can't be empty")
+        with mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage") as m:
+            self._create_operation("/", "Description Alpha")
+            m.assert_called_once_with("Path can't contain spaces or special characters")
         assert self.window.listOperationsMSC.model().rowCount() == 1
-        self._create_operation("reproduce-test", "Description Test")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self._create_operation("reproduce-test", "Description Test")
+            m.assert_called_once()
         assert self.window.listOperationsMSC.model().rowCount() == 2
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_operation_name == "Alpha"
         self._activate_operation_at_index(1)
         assert self.window.mscolab.active_operation_name == "reproduce-test"
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
-    def test_handle_delete_operation(self, mocktext, mockbox):
+    def test_handle_delete_operation(self, mocktext):
         # pytest.skip('needs a review for the delete button pressed. Seems to delete a None operation')
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "berta@something.org"}})
         self._create_user("berta", "berta@something.org", "something")
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
         operation_name = "flight7"
-        self._create_operation(operation_name, "Description flight7")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self._create_operation(operation_name, "Description flight7")
+            m.assert_called_once()
         # check for operation dir is created on server
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name))
         self._activate_operation_at_index(0)
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None
         assert self.window.listOperationsMSC.model().rowCount() == 1
-        self.window.actionDeleteOperation.trigger()
-        QtWidgets.QApplication.processEvents()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self.window.actionDeleteOperation.trigger()
+            QtWidgets.QApplication.processEvents()
+            m.assert_called_once_with(self.window, "Success", 'Operation "flight7" was deleted!')
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         # check operation dir name removed
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
-        assert mockbox.call_count == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_handle_leave_operation(self, mockmessage):
         self._connect_to_mscolab()
 
+        modify_config_file({"MSS_auth": {self.url: self.userdata3[0]}})
         self._login(self.userdata3[0], self.userdata3[2])
         QtWidgets.QApplication.processEvents()
         assert self.window.usernameLabel.text() == self.userdata3[1]
@@ -514,54 +548,89 @@ class Test_Mscolab(object):
         assert self.window.listViews.count() == 0
         assert self.window.listOperationsMSC.model().rowCount() == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_name", True))
-    def test_handle_rename_operation(self, mockbox, mockpatch):
+    def test_handle_rename_operation(self, mocktext):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
-        self._create_operation("flight1234", "Description flight1234")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self._create_operation("flight1234", "Description flight1234")
+            m.assert_called_once()
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
-        self.window.actionRenameOperation.trigger()
-        QtWidgets.QApplication.processEvents()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self.window.actionRenameOperation.trigger()
+            QtWidgets.QApplication.processEvents()
+            m.assert_called_once_with(self.window, "Rename successful", "Operation is renamed successfully.")
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_name == "new_name"
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
-    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_desciption", True))
-    def test_update_description(self, mockbox, mockpatch):
+    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_description", True))
+    def test_update_description(self, mocktext):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
-        self._create_operation("flight1234", "Description flight1234")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self._create_operation("flight1234", "Description flight1234")
+            m.assert_called_once()
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
-        self.window.actionChangeDescription.trigger()
-        QtWidgets.QApplication.processEvents()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self.window.actionChangeDescription.trigger()
+            QtWidgets.QApplication.processEvents()
+            m.assert_called_once_with(self.window, "Update successful", "Description is updated successfully.")
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
-        assert self.window.mscolab.active_operation_description == "new_desciption"
+        assert self.window.mscolab.active_operation_description == "new_description"
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_category", True))
-    def test_update_category(self, mockbox, mockpatch):
+    def test_update_category(self, mocktext):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
-        self._create_operation("flight1234", "Description flight1234")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self._create_operation("flight1234", "Description flight1234")
+            m.assert_called_once()
         assert self.window.listOperationsMSC.model().rowCount() == 1
         assert self.window.mscolab.active_operation_category == "example"
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
-        self.window.actionChangeCategory.trigger()
-        QtWidgets.QApplication.processEvents()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self.window.actionChangeCategory.trigger()
+            QtWidgets.QApplication.processEvents()
+            m.assert_called_once_with(self.window, "Update successful", "Category is updated successfully.")
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_category == "new_category"
 
-    def test_get_recent_op_id(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
+    def test_any_special_category(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user("something", "something@something.org", "something")
+        self._create_operation("flight1234", "Description flight1234")
+        QtTest.QTest.qWait(0)
+        self._create_operation("flight5678", "Description flight5678", category="furtherexample")
+        # all operations of two defined categories are found
+        assert self.window.mscolab.selected_category == "*ANY*"
+        operation_pathes = [self.window.mscolab.ui.listOperationsMSC.item(i).operation_path for i in
+                            range(self.window.mscolab.ui.listOperationsMSC.count())]
+        assert ["flight1234", "flight5678"] == operation_pathes
+        self.window.mscolab.ui.filterCategoryCb.setCurrentIndex(2)
+        QtWidgets.QApplication.processEvents()
+        # only operation of furtherexample are found
+        assert self.window.mscolab.selected_category == "furtherexample"
+        operation_pathes = [self.window.mscolab.ui.listOperationsMSC.item(i).operation_path for i in
+                            range(self.window.mscolab.ui.listOperationsMSC.count())]
+        assert ["flight5678"] == operation_pathes
+
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
+    def test_get_recent_op_id(self, mockbox):
+        self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "anton@something.org"}})
         self._create_user("anton", "anton@something.org", "something")
         QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'anton'
@@ -574,8 +643,10 @@ class Test_Mscolab(object):
         # ToDo fix number after cleanup initial data
         assert self.window.mscolab.get_recent_op_id() == current_op_id + 2
 
-    def test_get_recent_operation(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
+    def test_get_recent_operation(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "berta@something.org"}})
         self._create_user("berta", "berta@something.org", "something")
         QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'berta'
@@ -587,8 +658,10 @@ class Test_Mscolab(object):
         assert operation["path"] == "flight1234"
         assert operation["access_level"] == "creator"
 
-    def test_open_chat_window(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
+    def test_open_chat_window(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
         assert self.window.listOperationsMSC.model().rowCount() == 1
@@ -599,8 +672,10 @@ class Test_Mscolab(object):
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.chat_window is not None
 
-    def test_close_chat_window(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
+    def test_close_chat_window(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
         assert self.window.listOperationsMSC.model().rowCount() == 1
@@ -611,8 +686,10 @@ class Test_Mscolab(object):
         self.window.mscolab.close_chat_window()
         assert self.window.mscolab.chat_window is None
 
-    def test_delete_operation_from_list(self):
+    @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
+    def test_delete_operation_from_list(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "other@something.org"}})
         self._create_user("other", "other@something.org", "something")
         assert self.window.usernameLabel.text() == 'other'
         assert self.window.connectBtn.isVisible() is False
@@ -626,6 +703,7 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         u_id = self.window.mscolab.user['id']
         self.window.mscolab.open_profile_window()
@@ -672,6 +750,7 @@ class Test_Mscolab(object):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_profile_dialog(self, mockbox):
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         self.window.mscolab.profile_action.trigger()
         QtWidgets.QApplication.processEvents()
@@ -719,15 +798,14 @@ class Test_Mscolab(object):
         config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
 
-    @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
-    def _create_operation(self, path, description, mockbox):
+    def _create_operation(self, path, description, category="example"):
         self.window.actionAddOperation.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str(path))
         QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.description.setText(str(description))
         QtWidgets.QApplication.processEvents()
-        self.window.mscolab.add_proj_dialog.category.setText("example")
+        self.window.mscolab.add_proj_dialog.category.setText(category)
         QtWidgets.QApplication.processEvents()
         okWidget = self.window.mscolab.add_proj_dialog.buttonBox.button(
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
