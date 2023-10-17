@@ -97,6 +97,9 @@ class default_mscolab_settings:
     # enable login by identity provider
     USE_SAML2 = False
 
+    # SSL certificates verification during SSO.
+    VERIFY_SSL_CERT = True
+
     # dir where mscolab single sign process files are stored
     MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
 
@@ -155,6 +158,7 @@ except ImportError as ex:
                                            Ignore this warning when you initializeing metadata.")
 
                         localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
+                        localhost_test_idp.verify_ssl_cert = mscolab_settings.VERIFY_SSL_CERT
                         sp_localhost_test_idp = Saml2Client(localhost_test_idp)
 
                         configured_idp['idp_data']['saml2client'] = sp_localhost_test_idp
