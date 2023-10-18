@@ -174,7 +174,8 @@ except ImportError as ex:
                                        valid CRTs metadata and try again.")
                         sys.exit()
 
-                    # if multiple IdPs exists, development should need to implement accordingly below
+                    # if multiple IdPs exists, development should need to implement accordingly below,
+                    # make sure to set SSL certificates verification enablement.
                     """
                         if 'idp_2'== configured_idp['idp_identity_name']:
                             # rest of code
