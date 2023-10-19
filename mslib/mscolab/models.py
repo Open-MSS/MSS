@@ -28,13 +28,9 @@
 import datetime
 import logging
 import jwt
-
 from passlib.apps import custom_app_context as pwd_context
-from flask_sqlalchemy import SQLAlchemy
-from mslib.mscolab.app import APP
+from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
-
-db = SQLAlchemy(APP)
 
 
 class User(db.Model):

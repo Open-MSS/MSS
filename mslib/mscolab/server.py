@@ -27,11 +27,9 @@
 import functools
 import json
 import logging
-import time
 import datetime
 import secrets
 import fs
-import os
 import socketio
 import sqlalchemy.exc
 from itsdangerous import URLSafeTimedSerializer, BadSignature
@@ -39,29 +37,26 @@ from flask import g, jsonify, request, render_template, flash
 from flask import send_from_directory, abort, url_for, redirect
 from flask_mail import Mail, Message
 from flask_cors import CORS
-from flask_migrate import Migrate
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
-from werkzeug.utils import secure_filename
 from saml2.metadata import create_metadata_string
 from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from flask.wrappers import Response
 
 from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
-from mslib.mscolab.models import Change, MessageType, User, Operation, db
+from mslib.mscolab.models import Change, MessageType, User, db
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 
-APP = create_app(__name__)
+
+APP = create_app(__name__, imprint=mscolab_settings.IMPRINT, gdpr=mscolab_settings.GDPR)
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
-migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
 
-ARCHIVE_THRESHOLD = 30
 
 try:
     from mscolab_auth import mscolab_auth
@@ -167,18 +162,17 @@ def register_user(email, password, username):
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
-        return {"success": False, "message": "Oh no, your email ID is not valid!"}
+        return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
-        return {"success": False, "message": "Oh no, your username cannot contain @ symbol!"}
+        return {"success": False, "message": "Your username cannot contain @ symbol!"}
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
-        return {"success": False, "message": "Oh no, this email ID is already taken!"}
+        return {"success": False, "message": "This email ID is already taken!"}
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
-        return {"success": False, "message": "Oh no, this username is already registered"}
-    db.session.add(user)
-    db.session.commit()
-    return {"success": True}
+        return {"success": False, "message": "This username is already registered"}
+    result = fm.modify_user(user, action="create")
+    return {"success": result}
 
 
 def verify_user(func):
@@ -245,12 +239,23 @@ def home():
 
 
 @APP.route("/status")
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
-    return json.dumps({
-        'message': "Mscolab server",
-        'USE_SAML2': mscolab_settings.USE_SAML2
-    })
+    if request.authorization is not None:
+        if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
+            auth.login_required()
+            return json.dumps({
+                'message': "Mscolab server",
+                'USE_SAML2': mscolab_settings.USE_SAML2
+            })
+        return json.dumps({
+            'message': "Mscolab server",
+            'USE_SAML2': mscolab_settings.USE_SAML2
+        })
+    else:
+        return json.dumps({
+            'message': "Mscolab server",
+            'USE_SAML2': mscolab_settings.USE_SAML2
+        })
 
 
 @APP.route('/token', methods=["POST"])
@@ -312,9 +317,9 @@ def user_register_handler():
                 html = render_template('user/activate.html', username=username, confirm_url=confirm_url)
                 subject = "MSColab Please confirm your email"
                 send_email(email, subject, html)
-            return jsonify(result), status_code
     except TypeError:
-        return jsonify({"success": False}), 401
+        result, status_code = {"success": False}, 401
+    return jsonify(result), status_code
 
 
 @APP.route('/confirm/<token>')
@@ -330,10 +335,8 @@ def confirm_email(token):
         if user.confirmed:
             return render_template('user/confirmed.html', username=user.username)
         else:
-            user.confirmed = True
-            user.confirmed_on = datetime.datetime.now()
-            db.session.add(user)
-            db.session.commit()
+            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now())
+            fm.modify_user(user, attribute="confirmed", value=True)
             return render_template('user/confirmed.html', username=user.username)
 
 
@@ -343,60 +346,55 @@ def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
-@APP.route("/delete_user", methods=["POST"])
+@APP.route("/delete_own_account", methods=["POST"])
 @verify_user
-def delete_user():
+def delete_own_account():
+    """
+    delete own account
+    """
     user = g.user
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"success": True}), 200
+    result = fm.modify_user(user, action="delete")
+    return jsonify({"success": result}), 200
 
 
 # Chat related routes
 @APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00"))
+    user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
-    chat_messages = cm.get_messages(op_id, timestamp)
-    return jsonify({"messages": chat_messages})
+    if fm.is_member(user.id, op_id):
+        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00"))
+        chat_messages = cm.get_messages(op_id, timestamp)
+        return jsonify({"messages": chat_messages})
+    return "False"
 
 
 @APP.route("/message_attachment", methods=["POST"])
 @verify_user
 def message_attachment():
-    file_token = secrets.token_urlsafe(16)
-    file = request.files['file']
-    op_id = request.form.get("op_id", None)
-    message_type = MessageType(int(request.form.get("message_type")))
     user = g.user
-    # ToDo review
-    users = fm.fetch_users_without_permission(int(op_id), user.id)
-    if users is False:
-        return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
-    if file is not None:
-        with fs.open_fs('/') as home_fs:
-            file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], op_id)
-            if '\\' not in file_dir:
-                if not home_fs.exists(file_dir):
-                    home_fs.makedirs(file_dir)
+    op_id = request.form.get("op_id", None)
+    if fm.is_member(user.id, op_id):
+        file_token = secrets.token_urlsafe(16)
+        file = request.files['file']
+        message_type = MessageType(int(request.form.get("message_type")))
+        user = g.user
+        users = fm.fetch_users_without_permission(int(op_id), user.id)
+        if users is False:
+            return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+        if file is not None:
+            static_file_path = cm.add_attachment(op_id, APP.config['UPLOAD_FOLDER'], file, file_token)
+            if static_file_path is not None:
+                new_message = cm.add_message(user, static_file_path, op_id, message_type)
+                new_message_dict = get_message_dict(new_message)
+                sockio.emit('chat-message-client', json.dumps(new_message_dict))
+                return jsonify({"success": True, "path": static_file_path})
             else:
-                file_dir = file_dir.replace('\\', '/')
-                if not os.path.exists(file_dir):
-                    os.makedirs(file_dir)
-            file_name, file_ext = file.filename.rsplit('.', 1)
-            file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
-            file_name = secure_filename(file_name)
-            file_path = fs.path.join(file_dir, file_name)
-            file.save(file_path)
-            static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
-            static_dir = static_dir.replace('\\', '/')
-            static_file_path = os.path.join(static_dir, op_id, file_name)
-        new_message = cm.add_message(user, static_file_path, op_id, message_type)
-        new_message_dict = get_message_dict(new_message)
-        sockio.emit('chat-message-client', json.dumps(new_message_dict))
-        return jsonify({"success": True, "path": static_file_path})
-    return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+                return "False"
+        return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
+    # normal use case never gets to this
+    return "False"
 
 
 @APP.route('/uploads/<name>/<path:filename>', methods=["GET"])
@@ -424,9 +422,11 @@ def create_operation():
     content = request.form.get('content', None)
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
+    active = (request.form.get('active', "True") == "True")
     last_used = datetime.datetime.utcnow()
     user = g.user
-    r = str(fm.create_operation(path, description, user, last_used, content=content, category=category))
+    r = str(fm.create_operation(path, description, user, last_used,
+                                content=content, category=category, active=active))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
@@ -449,7 +449,7 @@ def get_operation_by_id():
 @verify_user
 def get_all_changes():
     op_id = request.args.get('op_id', request.form.get('op_id', None))
-    named_version = request.args.get('named_version')
+    named_version = request.args.get('named_version') == "True"
     user = g.user
     result = fm.get_all_changes(int(op_id), user, named_version)
     if result is False:
@@ -461,7 +461,8 @@ def get_all_changes():
 @verify_user
 def get_change_content():
     ch_id = int(request.args.get('ch_id', request.form.get('ch_id', 0)))
-    result = fm.get_change_content(ch_id)
+    user = g.user
+    result = fm.get_change_content(ch_id, user)
     if result is False:
         return "False"
     return jsonify({"content": result})
@@ -491,8 +492,9 @@ def authorized_users():
 @APP.route('/operations', methods=['GET'])
 @verify_user
 def get_operations():
+    skip_archived = (request.args.get('skip_archived', request.form.get('skip_archived', "False")) == "True")
     user = g.user
-    return json.dumps({"operations": fm.list_operations(user)})
+    return json.dumps({"operations": fm.list_operations(user, skip_archived=skip_archived)})
 
 
 @APP.route('/delete_operation', methods=["POST"])
@@ -500,7 +502,7 @@ def get_operations():
 def delete_operation():
     op_id = int(request.form.get('op_id', 0))
     user = g.user
-    success = fm.delete_file(op_id, user)
+    success = fm.delete_operation(op_id, user)
     if success is False:
         return jsonify({"success": False, "message": "You don't have access for this operation!"})
 
@@ -528,52 +530,38 @@ def update_operation():
 def get_operation_details():
     op_id = request.args.get('op_id', request.form.get('op_id', None))
     user = g.user
-    return json.dumps(fm.get_operation_details(int(op_id), user))
+    result = fm.get_operation_details(int(op_id), user)
+    if result is False:
+        return "False"
+    return json.dumps(result)
 
 
 @APP.route('/set_last_used', methods=["POST"])
 @verify_user
 def set_last_used():
     op_id = request.form.get('op_id', None)
+    user = g.user
     days_ago = int(request.form.get('days', 0))
-    operation = Operation.query.filter_by(id=int(op_id)).first()
-    operation.last_used = datetime.datetime.utcnow() - datetime.timedelta(days=days_ago)
-    temp_operation_active = operation.active
-    if days_ago > ARCHIVE_THRESHOLD:
-        operation.active = False
+    fm.update_operation(int(op_id), 'last_used',
+                        datetime.datetime.utcnow() - datetime.timedelta(days=days_ago),
+                        user)
+    if days_ago > mscolab_settings.ARCHIVE_THRESHOLD:
+        fm.update_operation(int(op_id), "active", False, user)
     else:
-        operation.active = True
-    db.session.commit()
-    # Reload Operation List
-    if temp_operation_active != operation.active:
+        fm.update_operation(int(op_id), "active", True, user)
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
     return jsonify({"success": True}), 200
 
 
-@APP.route('/update_last_used', methods=["POST"])
+@APP.route('/undo_changes', methods=["POST"])
 @verify_user
-def update_last_used():
-    operations = Operation.query.filter().all()
-    for operation in operations:
-        if operation.last_used is not None:
-            days_ago = (datetime.datetime.utcnow() - operation.last_used).days
-            if days_ago > ARCHIVE_THRESHOLD:
-                operation.active = False
-            else:
-                operation.active = True
-    db.session.commit()
-    return jsonify({"success": True}), 200
-
-
-@APP.route('/undo', methods=["POST"])
-@verify_user
-def undo_ftml():
+def undo_changes():
     ch_id = request.form.get('ch_id', -1)
     ch_id = int(ch_id)
     user = g.user
-    result = fm.undo(ch_id, user)
+    result = fm.undo_changes(ch_id, user)
     # get op_id from change
     ch = Change.query.filter_by(id=ch_id).first()
     if result is True:
@@ -709,8 +697,7 @@ def reset_password(token):
     if form.validate_on_submit():
         try:
             user.hash_password(form.confirm_password.data)
-            user.confirmed = True
-            db.session.commit()
+            fm.modify_user(user, "confirmed", True)
             flash('Password reset Success. Please login by the user interface.', 'category_success')
             return render_template('user/status.html')
         except IOError:

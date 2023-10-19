@@ -40,6 +40,15 @@ class default_mscolab_settings:
     # expire token in seconds
     # EXPIRATION = 86400
 
+    # In the unit days when Operations get archived because not used
+    ARCHIVE_THRESHOLD = 30
+
+    # To enable logging set to True or pass a logger object to use.
+    SOCKETIO_LOGGER = False
+
+    # To enable Engine.IO logging set to True or pass a logger object to use.
+    ENGINEIO_LOGGER = False
+
     # Which origins are allowed to communicate with your server
     CORS_ORIGINS = ["*"]
 
@@ -76,6 +85,13 @@ class default_mscolab_settings:
       </ListOfWaypoints>
     </FlightTrack>
     """
+
+    # looks for a given category forn a operation ending with GROUP_POSTFIX
+    # e.g. category = Tex will look for TexGroup
+    # all users in that Group are set to the operations of that category
+    # having the roles in the TexGroup
+    GROUP_POSTFIX = "Group"
+
     enable_basic_http_authentication = False
 
     # enable verification by Mail
@@ -93,6 +109,10 @@ class default_mscolab_settings:
 
     # mail accounts
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
+    # filepath to md file with imprint
+    IMPRINT = None
+    # filepath to md file with gdpr
+    GDPR = None
 
     # enable login by identity provider
     USE_SAML2 = False

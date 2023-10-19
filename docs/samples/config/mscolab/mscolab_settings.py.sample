@@ -26,6 +26,15 @@
 """
 import os
 
+# In the unit days when Operations get archived because not used
+ARCHIVE_THRESHOLD = 30
+
+# To enable logging set to True or pass a logger object to use.
+SOCKETIO_LOGGER = False
+
+# To enable Engine.IO logging set to True or pass a logger object to use.
+ENGINEIO_LOGGER = False
+
 # Set which origins are allowed to communicate with your server
 CORS_ORIGINS = ["*"]
 
@@ -46,6 +55,12 @@ MAX_UPLOAD_SIZE = 2 * 1024 * 1024
 
 # Set your secret key for token generation
 SECRET_KEY = 'MySecretKey'
+
+# looks for a given category for an operation ending with GROUP_POSTFIX
+# e.g. category = Tex will look for TexGroup
+# all users in that Group are set to the operations of that category
+# having the roles in the TexGroup
+GROUP_POSTFIX = "Group"
 
 # Set the database connection string:
 # Examples for different DBMS:
@@ -72,3 +87,9 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 
 # enable login by identity provider
 USE_SAML2 = False
+
+# looks for a given category forn a operation ending with GROUP_POSTFIX
+# e.g. category = Tex will look for TexGroup
+# all users in that Group are set to the operations of that category
+# having the roles in the TexGroup
+GROUP_POSTFIX = "Group"

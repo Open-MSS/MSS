@@ -34,13 +34,14 @@ import multiprocessing
 from flask_testing import LiveServerTestCase
 
 from PyQt5 import QtTest
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers, start_server
 from mslib.mscolab.mscolab import handle_db_init
+from mslib.utils.config import modify_config_file
 
 
 def callback_ok_image(status, response_headers):
@@ -75,7 +76,7 @@ def mscolab_register_user(app, msc_url, email, password, username):
         'password': password,
         'username': username
     }
-    url = url_join(msc_url, 'register')
+    url = urljoin(msc_url, 'register')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -86,7 +87,7 @@ def mscolab_register_and_login(app, msc_url, email, password, username):
         'email': email,
         'password': password
     }
-    url = url_join(msc_url, 'token')
+    url = urljoin(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -96,7 +97,7 @@ def mscolab_login(app, msc_url, email='a', password='a'):
         'email': email,
         'password': password
     }
-    url = url_join(msc_url, 'token')
+    url = urljoin(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -106,7 +107,7 @@ def mscolab_delete_user(app, msc_url, email, password):
         response = mscolab_login(app, msc_url, email, password)
         if response.status == '200 OK':
             data = json.loads(response.get_data(as_text=True))
-            url = url_join(msc_url, 'delete_user')
+            url = urljoin(msc_url, 'delete_own_account')
             response = app.test_client().post(url, data=data)
             if response.status == '200 OK':
                 data = json.loads(response.get_data(as_text=True))
@@ -132,7 +133,7 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
     data["path"] = path_name
     data['description'] = path_name
     data['content'] = content
-    url = url_join(msc_url, 'create_operation')
+    url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -140,12 +141,12 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
 def mscolab_delete_all_operations(app, msc_url, email, password, username):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'operations')
+    url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
     for p in response['operations']:
         data['op_id'] = p['op_id']
-        url = url_join(msc_url, 'delete_operation')
+        url = urljoin(msc_url, 'delete_operation')
         response = app.test_client().post(url, data=data)
 
 
@@ -153,7 +154,7 @@ def mscolab_create_operation(app, msc_url, response, path='f', description='desc
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
-    url = url_join(msc_url, 'create_operation')
+    url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return data, response
 
@@ -161,7 +162,7 @@ def mscolab_create_operation(app, msc_url, response, path='f', description='desc
 def mscolab_get_operation_id(app, msc_url, email, password, username, path):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'operations')
+    url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
     for p in response['operations']:
@@ -198,6 +199,9 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=1
     port = mscolab_check_free_port(all_ports, all_ports.pop())
 
     url = f"http://localhost:{port}"
+
+    # Update mscolab URL to avoid "Update Server List" message boxes
+    modify_config_file({"default_MSCOLAB": [url]})
 
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI

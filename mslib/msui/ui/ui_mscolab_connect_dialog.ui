@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>270</height>
+    <height>271</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -41,8 +41,18 @@
        <property name="text">
         <string>Connect</string>
        </property>
+       <property name="shortcut">
+        <string>Return</string>
+       </property>
        <property name="autoDefault">
-        <bool>false</bool>
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="disconnectBtn">
+       <property name="text">
+        <string>Disconnect</string>
        </property>
       </widget>
      </item>
@@ -82,8 +92,11 @@
          <property name="text">
           <string>Login</string>
          </property>
+         <property name="shortcut">
+          <string>Return</string>
+         </property>
          <property name="autoDefault">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>

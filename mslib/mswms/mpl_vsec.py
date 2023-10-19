@@ -132,7 +132,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Set axis limits and draw grid for major ticks.
         ax.set_xlim(self.lat_inds[0], self.lat_inds[-1])
         ax.set_ylim(self.p_bot, self.p_top)
-        ax.grid(b=True)
+        ax.grid(visible=True)
 
     @abstractmethod
     def _plot_style(self):

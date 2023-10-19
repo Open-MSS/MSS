@@ -111,8 +111,9 @@ class MSUIDefaultConfig:
     # URLs of default WMS servers.
     default_WMS = [
         "http://localhost:8081/",
-        "http://eumetview.eumetsat.int/geoserver/wms",
-        "https://apps.ecmwf.int/wms/?token=public"
+        "https://view.eumetsat.int/geoserver/wms",
+        "http://eccharts.ecmwf.int/wms/?token=public",
+        "https://neo.gsfc.nasa.gov/wms/wms"
     ]
 
     default_VSEC_WMS = [
@@ -128,8 +129,17 @@ class MSUIDefaultConfig:
         "http://localhost:8083",
     ]
 
+    # Username used for http auth
+    MSCOLAB_auth_user_name = "mscolab"
+
     # category for MSC operations
     MSCOLAB_category = "default"
+
+    # timeout for MSColab in seconds. First value is for connection, second for reply
+    MSCOLAB_timeout = [2, 10]
+
+    # don't query for archived operations
+    MSCOLAB_skip_archived_operations = False
 
     # list of MSC servers {"http://www.your-mscolab-server.de": "authuser",
     # "http://www.your-wms-server.de": "authuser"}
@@ -236,7 +246,9 @@ class MSUIDefaultConfig:
         'num_interpolation_points',
         'new_flighttrack_flightlevel',
         'MSCOLAB_category',
+        'MSCOLAB_skip_archived_operations',
         'mscolab_server_url',
+        'MSCOLAB_auth_user_name',
         'wms_cache',
         'wms_cache_max_size_bytes',
         'wms_cache_max_age_seconds',
@@ -280,6 +292,7 @@ class MSUIDefaultConfig:
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
+        "MSCOLAB_timeout": [[2, 10]],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
@@ -297,6 +310,8 @@ class MSUIDefaultConfig:
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
         "MSS_auth": "Documentation Required",
+        "MSCOLAB_auth_user_name": "Documentation Required",
+        "MSCOLAB_timeout": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
         "wms_cache": "Documentation Required",

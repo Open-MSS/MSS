@@ -1,3 +1,4 @@
+name: rtd
 channels:
   - conda-forge
 dependencies:
@@ -17,8 +18,7 @@ dependencies:
       - sphinx
       - fs
       - netCDF4
-      - future
       - PyQt5
       - owslib
   - basemap >=1.3.3
-  - pint <0.20
+  - pint

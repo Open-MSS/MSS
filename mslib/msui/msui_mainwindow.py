@@ -48,7 +48,7 @@ from mslib.msui import constants, editor, mscolab
 from mslib.msui.updater import UpdaterUI
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.utils.qt import get_open_filenames, get_save_filename
+from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
 
@@ -351,15 +351,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     """
 
     viewsChanged = QtCore.pyqtSignal(name="viewsChanged")
-    signal_activate_flighttrack = QtCore.Signal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
-    signal_activate_operation = QtCore.Signal(int, name="signal_activate_operation")
-    signal_operation_added = QtCore.Signal(int, str, name="signal_operation_added")
-    signal_operation_removed = QtCore.Signal(int, name="signal_operation_removed")
-    signal_login_mscolab = QtCore.Signal(str, str, name="signal_login_mscolab")
-    signal_logout_mscolab = QtCore.Signal(name="signal_logout_mscolab")
-    signal_listFlighttrack_doubleClicked = QtCore.Signal()
-    signal_permission_revoked = QtCore.Signal(int)
-    signal_render_new_permission = QtCore.Signal(int, str)
+    signal_activate_flighttrack = QtCore.pyqtSignal(ft.WaypointsTableModel, name="signal_activate_flighttrack")
+    signal_activate_operation = QtCore.pyqtSignal(int, name="signal_activate_operation")
+    signal_operation_added = QtCore.pyqtSignal(int, str, name="signal_operation_added")
+    signal_operation_removed = QtCore.pyqtSignal(int, name="signal_operation_removed")
+    signal_login_mscolab = QtCore.pyqtSignal(str, str, name="signal_login_mscolab")
+    signal_logout_mscolab = QtCore.pyqtSignal(name="signal_logout_mscolab")
+    signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
+    signal_permission_revoked = QtCore.pyqtSignal(int)
+    signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
     def __init__(self, mscolab_data_dir=None, *args):
         super().__init__(*args)
@@ -490,15 +490,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.add_import_plugins(picker_default)
         self.add_export_plugins(picker_default)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def activate_operation_slot(self, active_op_id):
         self.signal_activate_operation.emit(active_op_id)
 
-    @QtCore.Slot(int, str)
+    @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):
         self.signal_operation_added.emit(op_id, path)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def remove_operation_slot(self, op_id):
         self.signal_operation_removed.emit(op_id)
 
@@ -824,8 +824,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if self.local_active:
             self.create_view(_type, self.active_flight_track)
         else:
-            self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
-            self.create_view(_type, self.mscolab.waypoints_model)
+            try:
+                self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
+                self.create_view(_type, self.mscolab.waypoints_model)
+            except AttributeError:
+                # can happen, when the servers secret was changed
+                show_popup(self.mscolab.ui, "Error", "Session expired, new login required")
 
     def create_view(self, _type, model):
         """Method called when the user selects a new view to be opened. Creates
@@ -836,7 +840,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(parent=self, model=model,
+            view_window = topview.MSUITopViewWindow(mainwindow=self, model=model,
                                                     active_flighttrack=self.active_flight_track,
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
                                                     token=self.mscolab.token)

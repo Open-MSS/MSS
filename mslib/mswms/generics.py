@@ -35,6 +35,7 @@ Number of levels in discrete colourmaps
 """
 N_LEVELS = 16
 
+DEFAULT_CMAP = matplotlib.pyplot.cm.turbo
 
 """
 List of supported targets using the CF standard_name as unique identifier.
@@ -43,11 +44,13 @@ for vertical and horizontal cross-sections.
 """
 _TARGETS = [
     "air_temperature",
+    "air_potential_temperature",
     "eastward_wind",
     "equivalent_latitude",
     "ertel_potential_vorticity",
     "mean_age_of_air",
     "mole_fraction_of_active_chlorine_in_air",
+    "mole_fraction_of_ammonia_in_air",
     "mole_fraction_of_bromine_nitrate_in_air",
     "mole_fraction_of_bromo_methane_in_air",
     "mole_fraction_of_bromochlorodifluoromethane_in_air",
@@ -61,11 +64,15 @@ _TARGETS = [
     "mole_fraction_of_cfc113_in_air",
     "mole_fraction_of_cfc12_in_air",
     "mole_fraction_of_ethane_in_air",
+    "mole_fraction_of_ethene_in_air",
     "mole_fraction_of_formaldehyde_in_air",
+    "mole_fraction_of_formic_acid_in_air",
     "mole_fraction_of_hcfc22_in_air",
     "mole_fraction_of_hydrogen_chloride_in_air",
+    "mole_fraction_of_hydrogen_peroxide_in_air",
     "mole_fraction_of_hypobromite_in_air",
     "mole_fraction_of_methane_in_air",
+    "mole_fraction_of_methanol_in_air",
     "mole_fraction_of_nitric_acid_in_air",
     "mole_fraction_of_nitrous_oxide_in_air",
     "mole_fraction_of_nitrogen_dioxide_in_air",
@@ -96,6 +103,7 @@ Units for each standard_name. If not given, dimensionless is assumed.
 """
 _UNITS = {
     "air_temperature": "K",
+    "air_potential_temperature": "K",
     "eastward_wind": "m/s",
     "equivalent_latitude": "degree N",
     "ertel_potential_vorticity": "PVU",
@@ -161,6 +169,7 @@ for standard_name in [
     _UNITS[standard_name] = "nmol/mol"
 
 for standard_name in [
+        "mole_fraction_of_ammonia_in_air",
         "mole_fraction_of_bromine_nitrate_in_air",
         "mole_fraction_of_bromo_methane_in_air",
         "mole_fraction_of_bromochlorodifluoromethane_in_air",
@@ -171,9 +180,13 @@ for standard_name in [
         "mole_fraction_of_cfc12_in_air",
         "mole_fraction_of_cfc113_in_air",
         "mole_fraction_of_hcfc22_in_air",
+        "mole_fraction_of_hydrogen_peroxide_in_air",
         "mole_fraction_of_ethane_in_air",
+        "mole_fraction_of_ethene_in_air",
         "mole_fraction_of_formaldehyde_in_air",
+        "mole_fraction_of_formic_acid_in_air",
         "mole_fraction_of_hypobromite_in_air",
+        "mole_fraction_of_methanol_in_air",
         "mole_fraction_of_nitrogen_dioxide_in_air",
         "mole_fraction_of_nitrogen_monoxide_in_air",
         "mole_fraction_of_peroxyacetyl_nitrate_in_air",
@@ -300,6 +313,30 @@ def get_log_levels(cmin, cmax, levels=None):
                                     np.log(cmax), max(2, 1 + int(levels * cmax / delta))))
         clev = np.asarray(list(clevlo) + list(clevhi))
     return clev
+
+
+CBAR_LABEL_FORMATS = {
+    "log": "%.3g",
+    "log_ice_cloud": "%.0E",
+}
+
+
+def get_cbar_label_format(style, maxvalue):
+    if style in CBAR_LABEL_FORMATS:
+        return CBAR_LABEL_FORMATS[style]
+    if 100 <= maxvalue < 10000.:
+        label_format = "%4i"
+    elif 10 <= maxvalue < 100.:
+        label_format = "%.1f"
+    elif 1 <= maxvalue < 10.:
+        label_format = "%.2f"
+    elif 0.1 <= maxvalue < 1.:
+        label_format = "%.3f"
+    elif 0.01 <= maxvalue < 0.1:
+        label_format = "%.4f"
+    else:
+        label_format = "%.3g"
+    return label_format
 
 
 def _style_default(_dataname, _style, cmin, cmax, cmap, _data):
@@ -558,7 +595,7 @@ def get_style_parameters(dataname, style, cmin, cmax, data):
             cmin, cmax = 0., 1.
         if 0 < cmin < 0.05 * cmax:
             cmin = 0.
-    cmap = matplotlib.pyplot.cm.rainbow
+    cmap = DEFAULT_CMAP
     ticks = None
 
     if any(isinstance(_x, np.ma.core.MaskedConstant) for _x in (cmin, cmax)):

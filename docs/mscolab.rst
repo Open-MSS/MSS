@@ -67,8 +67,22 @@ After executed you get informations to exchange with users.
 
 Further options can be listed by `mscolab db -h`
 
+User Groups for Operations
+..........................
+When you want to use same set of users for different operations using same catagory
+you can do this by setting up users in a special operation.
 
-user verification by email
+On a given category for an operation ending with GROUP_POSTFIX
+e.g. on a category = Tex it will look for TexGroup.
+All users in that TexGroup operation are set to all operations of that category
+having same roles as in the TexGroup.
+
+The default ::
+
+    GROUP_POSTFIX = "Group"
+
+
+User verification by email
 ..........................
 
 With setting of `MAIL_ENABLED = True` you have to set further options in the mscolab_settings.py. These are

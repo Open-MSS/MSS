@@ -27,14 +27,10 @@
 """
 
 import numpy as np
-
-from mslib.utils.units import units, check_units
-
-from metpy.package_tools import Exporter
 from metpy.constants import Rd, g
 from metpy.xarray import preprocess_and_wrap
 
-exporter = Exporter(globals())
+from mslib.utils.units import units, check_units
 
 
 def rel_hum(p, t, q):
@@ -142,7 +138,6 @@ _STANDARD_ATMOSPHERE = [
 _HEIGHT, _TEMPERATURE, _PRESSURE, _TEMPERATURE_GRADIENT = 0, 1, 2, 3
 
 
-@exporter.export
 @preprocess_and_wrap(wrap_like='height')
 @check_units('[length]')
 def flightlevel2pressure(height):
@@ -194,7 +189,6 @@ def flightlevel2pressure(height):
     return p if is_array else p[0]
 
 
-@exporter.export
 @preprocess_and_wrap(wrap_like='pressure')
 @check_units('[pressure]')
 def pressure2flightlevel(pressure):
@@ -247,7 +241,6 @@ def pressure2flightlevel(pressure):
     return z if is_array else z[0]
 
 
-@exporter.export
 @preprocess_and_wrap(wrap_like='height')
 @check_units('[length]')
 def isa_temperature(height):
