@@ -26,10 +26,11 @@
 """
 from flask_testing import TestCase
 import os
+import datetime
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation
+from mslib.mscolab.models import Operation, User
 from mslib.mscolab.server import APP
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -80,7 +81,40 @@ class Test_FileManager(TestCase):
     def tearDown(self):
         pass
 
-    @pytest.mark.skip(reason="needs review for py311")
+    def test_modify_user(self):
+        with self.app.test_client():
+            user = User("user@example.com", "user", "password")
+            assert user.id is None
+            assert User.query.filter_by(emailid=user.emailid).first() is None
+            # creeat the user
+            self.fm.modify_user(user, action="create")
+            user_query = User.query.filter_by(emailid=user.emailid).first()
+            assert user_query.id is not None
+            assert user_query is not None
+            assert user_query.confirmed is False
+            # cannot create a user a second time
+            assert self.fm.modify_user(user, action="create") is False
+            # confirming the user
+            confirm_time = datetime.datetime.now() + datetime.timedelta(days=1)
+            self.fm.modify_user(user_query, attribute="confirmed_on", value=confirm_time)
+            self.fm.modify_user(user_query, attribute="confirmed", value=True)
+            user_query = User.query.filter_by(id=user.id).first()
+            assert user_query.confirmed is True
+            assert user_query.confirmed_on == confirm_time
+            assert user_query.confirmed_on > user_query.registered_on
+            # deleting the user
+            self.fm.modify_user(user_query, action="delete")
+            user_query = User.query.filter_by(id=user_query.id).first()
+            assert user_query is None
+
+    def test_modify_user_special_cases(self):
+        user1 = User("user1@example.com", "user1", "password")
+        user2 = User("user2@example.com", "user2", "password")
+        self.fm.modify_user(user1, action="create")
+        self.fm.modify_user(user2, action="create")
+        user_query1 = User.query.filter_by(emailid=user1.emailid).first()
+        assert self.fm.modify_user(user_query1, "emailid", user2.emailid) is False
+
     def test_fetch_operation_creator(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="more_than_one")
@@ -204,11 +238,10 @@ class Test_FileManager(TestCase):
             assert ren_operation.id == operation.id
             assert ren_operation.path == rename_to
 
-    def test_delete_file(self):
-        # Todo rename "file" to operation
+    def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation4')
-            assert self.fm.delete_file(operation.id, self.user)
+            assert self.fm.delete_operation(operation.id, self.user)
             assert Operation.query.filter_by(path=flight_path).first() is None
 
     def test_get_authorized_users(self):
@@ -245,7 +278,7 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content1, self.user)
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
-            assert self.fm.get_change_content(all_changes[1]["id"]) == self.content1
+            assert self.fm.get_change_content(all_changes[1]["id"], self.user) == self.content1
 
     def test_set_version_name(self):
         with self.app.test_client():
@@ -273,15 +306,15 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             # crestor
-            assert self.fm.undo(all_changes[1]["id"], self.user)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.user)
             # check collaborator
             self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation.id)
-            assert self.fm.undo(all_changes[1]["id"], self.collaboratoruser)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.collaboratoruser)
             # check viewer
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
             assert self.fm.is_viewer(self.vieweruser.id, operation.id)
-            assert self.fm.undo(all_changes[1]["id"], self.vieweruser) is False
+            assert self.fm.undo_changes(all_changes[1]["id"], self.vieweruser) is False
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():

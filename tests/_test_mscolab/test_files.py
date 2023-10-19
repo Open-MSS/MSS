@@ -129,7 +129,7 @@ class Test_Files(TestCase):
             changes = Change.query.filter_by(op_id=operation.id).all()
             assert changes is not None
             assert changes[0].id == 1
-            assert self.fm.undo(changes[0].id, self.user) is True
+            assert self.fm.undo_changes(changes[0].id, self.user) is True
             assert len(self.fm.get_all_changes(operation.id, self.user)) == 3
             assert "beta" in self.fm.get_file(operation.id, self.user)
 
@@ -162,9 +162,9 @@ class Test_Files(TestCase):
         with self.app.test_client():
             self._create_operation(flight_path="f3")
             op_id = get_recent_op_id(self.fm, self.user)
-            assert self.fm.delete_file(op_id, self.user2) is False
-            assert self.fm.delete_file(op_id, self.user) is True
-            assert self.fm.delete_file(op_id, self.user) is False
+            assert self.fm.delete_operation(op_id, self.user2) is False
+            assert self.fm.delete_operation(op_id, self.user) is True
+            assert self.fm.delete_operation(op_id, self.user) is False
             permissions = Permission.query.filter_by(op_id=op_id).all()
             assert len(permissions) == 0
             operations_db = Operation.query.filter_by(id=op_id).all()

@@ -30,6 +30,7 @@ requirements:
     - setuptools
     - pip
     - menuinst  # [win]
+    - future
   run:
     - python
     - defusedxml
@@ -64,7 +65,7 @@ requirements:
     - flask-httpauth
     - flask-mail
     - flask-migrate
-    - werkzeug >=2.2.3
+    - werkzeug >=2.2.3, <3.0.0
     - flask-socketio >=5.1.0
     - flask-sqlalchemy >=3.0.0
     - flask-cors

@@ -111,8 +111,9 @@ class MSUIDefaultConfig:
     # URLs of default WMS servers.
     default_WMS = [
         "http://localhost:8081/",
-        "http://eumetview.eumetsat.int/geoserver/wms",
-        "https://apps.ecmwf.int/wms/?token=public"
+        "https://view.eumetsat.int/geoserver/wms",
+        "http://eccharts.ecmwf.int/wms/?token=public",
+        "https://neo.gsfc.nasa.gov/wms/wms"
     ]
 
     default_VSEC_WMS = [

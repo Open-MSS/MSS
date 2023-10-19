@@ -110,15 +110,13 @@ def rotate_point(point, angle, origin=(0, 0)):
 def get_projection_params(proj):
     proj = proj.lower()
     if proj.startswith("crs:"):
-        raise ValueError("CRS not supported")
-
         projid = proj[4:]
         if projid == "84":
             proj_params = {
                 "basemap": {"projection": "cyl"},
                 "bbox": "degree"}
         else:
-            raise ValueError("unsupported CRS code: '%s'", proj)
+            raise ValueError("Only CRS code 84 is supported: '%s' given", proj)
 
     elif proj.startswith("auto:"):
         raise ValueError("AUTO not supported")

@@ -33,6 +33,9 @@ class default_mscolab_settings:
     # expire token in seconds
     # EXPIRATION = 86400
 
+    # In the unit days when Operations get archived because not used
+    ARCHIVE_THRESHOLD = 30
+
     # To enable logging set to True or pass a logger object to use.
     SOCKETIO_LOGGER = False
 
@@ -99,6 +102,10 @@ class default_mscolab_settings:
 
     # mail accounts
     # MAIL_DEFAULT_SENDER = 'MSS@localhost'
+    # filepath to md file with imprint
+    IMPRINT = None
+    # filepath to md file with gdpr
+    GDPR = None
 
 
 mscolab_settings = default_mscolab_settings()

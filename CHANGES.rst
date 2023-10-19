@@ -1,6 +1,23 @@
 Changelog
 =========
 
+Version 8.3.1
+~~~~~~~~~~~~~
+
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/99?closed=1
+
+Version 8.3.0
+~~~~~~~~~~~~~
+
+Bug fix release and minor enhacements:
+We improved the KML docking widget feature
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/98
+
 Version 8.2.0
 ~~~~~~~~~~~~~
 

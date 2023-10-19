@@ -206,10 +206,12 @@ def test_get_airspaces(mockbox):
 
 
 @mock.patch("mslib.utils.airdata.download_progress", _download_incomplete_airspace)
+@mock.patch("PyQt5.QtWidgets.QMessageBox.information")
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-def test_get_airspaces_missing_data(mockbox):
+def test_get_airspaces_missing_data(mockbox, infobox):
     """ We use a test file without the need for downloading to check handling """
     # update_airspace would only update after 30 days
     _cleanup_test_files()
     airspaces = get_airspaces(countries=["bg"])
     assert airspaces == []
+    infobox.assert_called_once_with(None, 'No Airspaces data in file:', 'bg_asp.xml')

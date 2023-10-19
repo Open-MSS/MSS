@@ -104,10 +104,17 @@ class FileManager:
         operations = []
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
+            operation = Operation.query.filter_by(id=permission.op_id).first()
+            if operation.last_used is not None and (
+                    datetime.datetime.utcnow() - operation.last_used).days > mscolab_settings.ARCHIVE_THRESHOLD:
+                # outdated OPs get archived
+                self.update_operation(permission.op_id, "active", False, user)
+            # new query to get uptodate data
             if skip_archived:
                 operation = Operation.query.filter_by(id=permission.op_id, active=skip_archived).first()
             else:
                 operation = Operation.query.filter_by(id=permission.op_id).first()
+
             if operation is not None:
                 operations.append({
                     "op_id": permission.op_id,
@@ -192,6 +199,35 @@ class FileManager:
             return False
         return perm.access_level
 
+    def modify_user(self, user, attribute=None, value=None, action=None):
+        if action == "create":
+            user_query = User.query.filter_by(emailid=str(user.emailid)).first()
+            if user_query is None:
+                db.session.add(user)
+                db.session.commit()
+            else:
+                return False
+        elif action == "delete":
+            user_query = User.query.filter_by(id=user.id).first()
+            if user_query is not None:
+                db.session.delete(user)
+                db.session.commit()
+            user_query = User.query.filter_by(id=user.id).first()
+            # on delete we return succesfull deleted
+            if user_query is None:
+                return True
+        user_query = User.query.filter_by(id=user.id).first()
+        if user_query is None:
+            return False
+        if None not in (attribute, value):
+            if attribute == "emailid":
+                user_query = User.query.filter_by(emailid=str(value)).first()
+                if user_query is not None:
+                    return False
+            setattr(user, attribute, value)
+            db.session.commit()
+        return True
+
     def update_operation(self, op_id, attribute, value, user):
         """
         op_id: operation id
@@ -226,12 +262,11 @@ class FileManager:
         db.session.commit()
         return True
 
-    def delete_file(self, op_id, user):
+    def delete_operation(self, op_id, user):
         """
         op_id: operation id
         user: logged in user
         """
-        # ToDo rename to delete_operation
         if self.auth_type(user.id, op_id) != "creator":
             return False
         Permission.query.filter_by(op_id=op_id).delete()
@@ -341,14 +376,18 @@ class FileManager:
             'created_at': change.created_at.strftime("%Y-%m-%d, %H:%M:%S")
         }, changes))
 
-    def get_change_content(self, ch_id):
+    def get_change_content(self, ch_id, user):
         """
         ch_id: change id
         user: user of this request
 
         Get change related to id
         """
-        # ToDo refactor check user in op
+        ch = Change.query.filter_by(id=ch_id).first()
+        perm = Permission.query.filter_by(u_id=user.id, op_id=ch.op_id).first()
+        if perm is None:
+            return False
+
         change = Change.query.filter_by(id=ch_id).first()
         if not change:
             return False
@@ -368,13 +407,12 @@ class FileManager:
         db.session.commit()
         return True
 
-    def undo(self, ch_id, user):
+    def undo_changes(self, ch_id, user):
         """
         ch_id: change-id
         user: user of this request
 
         Undo a change
-        # ToDo rename to undo_changes
         # ToDo add a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()

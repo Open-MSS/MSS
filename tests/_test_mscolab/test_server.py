@@ -88,13 +88,13 @@ class Test_Server(TestCase):
             assert result["success"] is True
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
             assert result["success"] is False
-            assert result["message"] == "Oh no, this email ID is already taken!"
+            assert result["message"] == "This email ID is already taken!"
             result = register_user("UV", self.userdata[1], self.userdata[2])
             assert result["success"] is False
-            assert result["message"] == "Oh no, your email ID is not valid!"
+            assert result["message"] == "Your email ID is not valid!"
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[0])
             assert result["success"] is False
-            assert result["message"] == "Oh no, your username cannot contain @ symbol!"
+            assert result["message"] == "Your username cannot contain @ symbol!"
 
     def test_check_login(self):
         with self.app.test_client():
@@ -149,11 +149,11 @@ class Test_Server(TestCase):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             token = self._get_token(test_client, self.userdata)
-            response = test_client.post('/delete_user', data={"token": token})
+            response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data["success"] is True
-            response = test_client.post('/delete_user', data={"token": "dsdsds"})
+            response = test_client.post('/delete_own_account', data={"token": "dsdsds"})
             assert response.status_code == 200
             assert response.data.decode('utf-8') == "False"
 
@@ -344,15 +344,6 @@ class Test_Server(TestCase):
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.post('/set_last_used', data={"token": token,
                                                                 "op_id": operation.id})
-            assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["success"] is True
-
-    def test_update_last_used(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        with self.app.test_client() as test_client:
-            operation, token = self._create_operation(test_client, self.userdata)
-            response = test_client.post('/update_last_used', data={"token": token})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data["success"] is True

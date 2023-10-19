@@ -48,7 +48,7 @@ from mslib.msui import constants, editor, mscolab
 from mslib.msui.updater import UpdaterUI
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
-from mslib.utils.qt import get_open_filenames, get_save_filename
+from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
 
@@ -824,8 +824,12 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if self.local_active:
             self.create_view(_type, self.active_flight_track)
         else:
-            self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
-            self.create_view(_type, self.mscolab.waypoints_model)
+            try:
+                self.mscolab.waypoints_model.name = self.mscolab.active_operation_name
+                self.create_view(_type, self.mscolab.waypoints_model)
+            except AttributeError:
+                # can happen, when the servers secret was changed
+                show_popup(self.mscolab.ui, "Error", "Session expired, new login required")
 
     def create_view(self, _type, model):
         """Method called when the user selects a new view to be opened. Creates
@@ -836,7 +840,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(parent=self, model=model,
+            view_window = topview.MSUITopViewWindow(mainwindow=self, model=model,
                                                     active_flighttrack=self.active_flight_track,
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
                                                     token=self.mscolab.token)

@@ -41,6 +41,7 @@ from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers, start_server
 from mslib.mscolab.mscolab import handle_db_init
+from mslib.utils.config import modify_config_file
 
 
 def callback_ok_image(status, response_headers):
@@ -106,7 +107,7 @@ def mscolab_delete_user(app, msc_url, email, password):
         response = mscolab_login(app, msc_url, email, password)
         if response.status == '200 OK':
             data = json.loads(response.get_data(as_text=True))
-            url = urljoin(msc_url, 'delete_user')
+            url = urljoin(msc_url, 'delete_own_account')
             response = app.test_client().post(url, data=data)
             if response.status == '200 OK':
                 data = json.loads(response.get_data(as_text=True))
@@ -197,6 +198,9 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=1
     port = mscolab_check_free_port(all_ports, all_ports.pop())
 
     url = f"http://localhost:{port}"
+
+    # Update mscolab URL to avoid "Update Server List" message boxes
+    modify_config_file({"default_MSCOLAB": [url]})
 
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
