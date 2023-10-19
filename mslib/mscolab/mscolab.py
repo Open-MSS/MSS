@@ -144,6 +144,7 @@ config:
     description: "MSS Collaboration Server with Testing IDP(localhost)"
     key_file: path/to/key_sp.key # Will be set from the mscolab server
     cert_file: path/to/crt_sp.crt # Will be set from the mscolab server
+    verify_ssl_cert: true # Specifies if the SSL certificates should be verified.
     organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
     contact_person:
     - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
