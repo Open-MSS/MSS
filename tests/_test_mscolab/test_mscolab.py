@@ -32,7 +32,7 @@ from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, User, Permission
-from mslib.mscolab.mscolab import (handle_db_reset, handle_db_seed, confirm_action, main, 
+from mslib.mscolab.mscolab import (handle_db_reset, handle_db_seed, confirm_action, main,
                                    handle_mscolab_certificate_init, handle_local_idp_certificate_init,
                                    handle_mscolab_backend_yaml_init, handle_mscolab_metadata_init,
                                    handle_local_idp_metadata_init)
