@@ -125,6 +125,9 @@ DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
 
+# dir where mscolab single sign process files are stored
+MSCOLAB_SSO_DIR = fs.path.join(DATA_DIR, 'filedatasso')
+
 # In the unit days when Operations get archived because not used 
 ARCHIVE_THRESHOLD = 30
 

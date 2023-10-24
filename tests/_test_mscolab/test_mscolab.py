@@ -32,7 +32,10 @@ from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, User, Permission
-from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed, confirm_action, main
+from mslib.mscolab.mscolab import (handle_db_reset, handle_db_seed, confirm_action, main, 
+                                   handle_mscolab_certificate_init, handle_local_idp_certificate_init,
+                                   handle_mscolab_backend_yaml_init, handle_mscolab_metadata_init,
+                                   handle_local_idp_metadata_init)
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_operation
 
@@ -114,3 +117,51 @@ class Test_Mscolab(TestCase):
         assert len(all_users) == 10
         all_permissions = Permission.query.all()
         assert len(all_permissions) == 17
+
+    def test_handle_mscolab_certificate_init(self):
+        handle_mscolab_certificate_init()
+        FILE_KEY = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'key_mscolab.key')
+        key_content = ''
+        with open(FILE_KEY, 'r') as file:
+            key_content = file.read()
+        assert "-----BEGIN PRIVATE KEY-----" in key_content
+        assert "-----END PRIVATE KEY-----" in key_content
+        FILE_CRT = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'crt_mscolab.crt')
+        crt_content = ''
+        with open(FILE_CRT, 'r') as file:
+            crt_content = file.read()
+        assert "-----BEGIN CERTIFICATE-----" in crt_content
+        assert "-----END CERTIFICATE-----" in crt_content
+
+    def test_handle_local_idp_certificate_init(self):
+        handle_local_idp_certificate_init()
+        FILE_KEY = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'key_local_idp.key')
+        key_content = ''
+        with open(FILE_KEY, 'r') as file:
+            key_content = file.read()
+        assert "-----BEGIN PRIVATE KEY-----" in key_content
+        assert "-----END PRIVATE KEY-----" in key_content
+        FILE_CRT = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'crt_local_idp.crt')
+        crt_content = ''
+        with open(FILE_CRT, 'r') as file:
+            crt_content = file.read()
+        assert "-----BEGIN CERTIFICATE-----" in crt_content
+        assert "-----END CERTIFICATE-----" in crt_content
+
+    def test_handle_mscolab_backend_yaml_init(self):
+        handle_mscolab_backend_yaml_init()
+        FILE_YAML = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'mss_saml2_backend.yaml')
+        mss_saml2_backend_content = ''
+        with open(FILE_YAML, 'r') as file:
+            mss_saml2_backend_content = file.read()
+        assert "localhost_test_idp" in mss_saml2_backend_content
+        assert "entityid_endpoint" in mss_saml2_backend_content
+
+    def test_handle_mscolab_metadata_init(self):
+        handle_mscolab_certificate_init()
+        mscolab_settings.USE_SAML2 = True
+        assert handle_mscolab_metadata_init(True) is True
+
+    def test_handle_local_idp_metadata_init(self):
+        handle_local_idp_certificate_init()
+        assert handle_local_idp_metadata_init(True) is True
