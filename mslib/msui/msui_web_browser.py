@@ -44,7 +44,7 @@ class MSUIWebBrowser(QMainWindow):
         self._url = url
         self.profile = QWebEngineProfile().defaultProfile()
         self.profile.setPersistentCookiesPolicy(QWebEngineProfile.ForcePersistentCookies)
-        self.browser_storage_folder = os.path.join(MSUI_CONFIG_PATH, 'webbrowser/.cookies')
+        self.browser_storage_folder = os.path.join(MSUI_CONFIG_PATH, 'webbrowser', '.cookies')
         self.profile.setPersistentStoragePath(self.browser_storage_folder)
 
         self.back_button = QPushButton("← Back", self)
