@@ -262,7 +262,7 @@ Via Docker (requires Docker installed)
 
 |
 
-    .. image:: gallery/sso_via_saml_conf/ss_docker_run_cmd.png
+    .. image:: images/sso_via_saml_conf/ss_docker_run_cmd.png
         :width: 400
 
 .. note::
@@ -276,24 +276,24 @@ Access Keycloak
     Once you successfully install and start keycloak, you can Access keycloak interface through a particular port using your web browser.
         eg:-  http://localhost:8080
 
-        .. image:: gallery/sso_via_saml_conf/ss_interface_keycloak.png
+        .. image:: images/sso_via_saml_conf/ss_interface_keycloak.png
             :width: 800
 
 Login as an admin
     You can go to the admin console and  login as an admin by providing the above provided credentials.
     
-        .. image:: gallery/sso_via_saml_conf/ss_admin_login.png
+        .. image:: images/sso_via_saml_conf/ss_admin_login.png
             :width: 400
 
 Create realm
     Once successfully logged in you should create a realm to configure IdP. You can create a realm by clicking `Add realm` button.
 
-        .. image:: gallery/sso_via_saml_conf/ss_add_realam_btn.png
+        .. image:: images/sso_via_saml_conf/ss_add_realam_btn.png
             :width: 300
 
     You need to provide a name for your realm and create.
 
-        .. image:: gallery/sso_via_saml_conf/ss_add_realam_name.png
+        .. image:: images/sso_via_saml_conf/ss_add_realam_name.png
             :width: 800
 
 Create a client specifically for SAML
@@ -302,14 +302,14 @@ Create a client specifically for SAML
 
     First you should navigate into the client section using your left navigation.
 
-        .. image:: gallery/sso_via_saml_conf/ss_left_nav_client.png
+        .. image:: images/sso_via_saml_conf/ss_left_nav_client.png
             :width: 200
     
     In the client section you can see `create` button in the top right corner.
 
     Create a new client by clicking `create` button in the top right corner.
 
-        .. image:: gallery/sso_via_saml_conf/ss_create_client_btn.png
+        .. image:: images/sso_via_saml_conf/ss_create_client_btn.png
             :width: 800
 
         .. note::
@@ -320,7 +320,7 @@ Create a client specifically for SAML
 
 
     Also make sure to select Client Protocol as saml.
-        .. image:: gallery/sso_via_saml_conf/ss_set_client_protocol.png
+        .. image:: images/sso_via_saml_conf/ss_set_client_protocol.png
                 :width: 800
 
     After creating a SAML client, make sure you set Valid Redirect URIs to match our Service Provider.
@@ -334,7 +334,7 @@ Create a client specifically for SAML
     Generate keys and certificates
 
         To generate keys and certificates first navigate into saml keys tab and click `Generate new keys` button.
-            .. image:: gallery/sso_via_saml_conf/ss_gen_keys_crts.png
+            .. image:: images/sso_via_saml_conf/ss_gen_keys_crts.png
                 :width: 800
         
         You can copy generated keys and certificates by clicking top of the key and certificate. After clicked you should need to create .crt and .key file accordingly.
@@ -368,12 +368,12 @@ Create a client specifically for SAML
 
         First go to Realm settings through left navigation,
 
-            .. image:: gallery/sso_via_saml_conf/ss_left_nav_realm_settings.png
+            .. image:: images/sso_via_saml_conf/ss_left_nav_realm_settings.png
                 :width: 200
 
         Then goto `Login` tab and enable User registration.
 
-            .. image:: gallery/sso_via_saml_conf/ss_enable_usr_reg.png
+            .. image:: images/sso_via_saml_conf/ss_enable_usr_reg.png
                 :width: 800
 
     Add email and givenName into mappers
@@ -389,36 +389,36 @@ Create a client specifically for SAML
         
         First navigate into client section through left navigation.
 
-            .. image:: gallery/sso_via_saml_conf/ss_left_nav_client.png
+            .. image:: images/sso_via_saml_conf/ss_left_nav_client.png
                     :width: 200
 
         Select client we created already
 
-            .. image:: gallery/sso_via_saml_conf/ss_client_select.png
+            .. image:: images/sso_via_saml_conf/ss_client_select.png
                     :width: 800
 
         Go to the Mapper section tab, and Click `Add Builtin` button to add Mappers.
 
-            .. image:: gallery/sso_via_saml_conf/ss_add_mappers_btn.png
+            .. image:: images/sso_via_saml_conf/ss_add_mappers_btn.png
                     :width: 800
 
         Since we need email address and givenName, enable those and click `add selected` button.
 
-            .. image:: gallery/sso_via_saml_conf/ss_enable_mappers.png
+            .. image:: images/sso_via_saml_conf/ss_enable_mappers.png
                     :width: 800
 
         Then you can see Added mappers in your interface 
 
-            .. image:: gallery/sso_via_saml_conf/ss_view_mappers.png
+            .. image:: images/sso_via_saml_conf/ss_view_mappers.png
                     :width: 800
 
 
         Set SAML Attribute Names as `email` and `givenName`.
 
-            .. image:: gallery/sso_via_saml_conf/ss_set_attribute_name1.png
+            .. image:: images/sso_via_saml_conf/ss_set_attribute_name1.png
                     :width: 800
 
-            .. image:: gallery/sso_via_saml_conf/ss_set_attribute_name2.png
+            .. image:: images/sso_via_saml_conf/ss_set_attribute_name2.png
                     :width: 800
 
     Export IdP metadata
