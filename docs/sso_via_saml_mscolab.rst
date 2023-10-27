@@ -67,7 +67,7 @@ Private key and certificate
 
 You can store your private key and certificate in any highly secure location. To configure MSColab for SSO, you just need to specify the paths to your certificate and key files in the configuration.
 
-Private key and certificates path can be setup by your `saml_2_backend.yaml` file or when you Establishing Saml2Client for the MSColab server in your `setupsaml2backend.py` file.
+Private key and certificates path can be setup by your `mss_saml2_backend.yaml` file or when you Establishing Saml2Client for the MSColab server in your `setup_saml2_backend.py` file.
 
 
 Configuring MSColab settings
@@ -88,7 +88,7 @@ Before running the MSColab server, ensure `USE_SAML` is set to `True` in your `m
 	# enable login by identity provider
     	USE_SAML2 = True
 
-To enabling login via the Identity Provider; need to implement `saml_2_backend.yaml` with paths for .crt and .key files, configure mscolab_settings.py, and configure `setup_saml2_backend.py`
+To enabling login via the Identity Provider; need to implement `mss_saml2_backend.yaml` with paths for .crt and .key files, configure mscolab_settings.py, and configure `setup_saml2_backend.py`
 
 In this implementation, as we are enabling only one IdP, there is no need to configure the default testing IdP (msidp). You can disable it simply by removing ``localhost_test_idp`` from the list of ``CONFIGURED_IDPS`` in your `setup_saml2_backend.py` file. Additionally, remember to add your ``idp_identity_name`` and ``idp_name`` accordingly.
 
@@ -96,18 +96,23 @@ In this implementation, as we are enabling only one IdP, there is no need to con
 .. code:: text
 
 	# idp settings
+    class setup_saml2_backend:
          CONFIGURED_IDPS = [
              {
-                      'idp_identity_name': 'localhost_test_idp',
+                      'idp_identity_name': 'localhost_test_idp',  #  make sure to use underscore for the blanks
                       'idp_data': {
-                          'idp_name': 'Testing Identity Provider',
+                          'idp_name': 'Testing Identity Provider',  #  this name is used on the Login page to connect to the Provider
                       }
                   },
           ,]
 
 
 .. note::
-	Idp_identity_name refers to the specific name used to identify the particular Identity Provider within the MSColab server. This name should be used in the `saml_2_backend.yaml` file when configuring your IdP, as well as in the MSColab server configurations. It's important to note that this name is not visible to end users
+    Please refer to the sample template `setup_saml2_backend.py.sample` located in the `docs/samples/config/mscolab` directory.
+
+	Idp_identity_name refers to the specific name used to identify the particular Identity Provider within the MSColab server. This name should be used in the `mss_saml2_backend.yaml` file when configuring your IdP, as well as in the MSColab server configurations. It's important to note that this name is not visible to end users
+    
+    Remember to use underscore for the blanks in your `idp_identity_name`.
 
 	Idp_name refers to the name of the Identity Provider that will be displayed in the MSColab server web interface for end users to select when configuring SSO.
 
@@ -129,14 +134,14 @@ You should do implementation by your `setup_saml2_backend.py` file.
     	# configuration idp_2 Saml2Client
     """
 
-After completing these steps, you can proceed to configure the `saml_2_backend.yaml` file.
+After completing these steps, you can proceed to configure the `mss_saml2_backend.yaml` file.
 
 Configuration mss_saml2_backend.yaml file
 -----------------------------------------
 
 You should create a new attribute using the ``idp_identity_name`` defined in the previous step. Afterward, you will need to create the necessary attributes in the `.yaml` file accordingly. If need, you can also update these attributes using the server
 
-Please refer the yaml file template to generating your IdP file.
+Please refer the yaml file template (`mss_saml2_backend.yaml.samlple`) in the directory of `docs/samples/config/mscolab` to generating your IdP file.
 
 .. code:: text
 
@@ -172,7 +177,7 @@ Please refer the yaml file template to generating your IdP file.
              - lang: en
                text: "https://open-mss.github.io/about/"
            keywords:
-             - lang: se
+             - lang: en
                text: ["MSS"]
              - lang: en
                text: ["OpenMSS"]
@@ -448,22 +453,22 @@ Configuration in MSColab settings for Keycloak
         .. code:: text
 
             # idp settings
-            CONFIGURED_IDPS = [
-                {
-                    'idp_identity_name': 'key_cloak_v_13',
-                    'Idp_data': {
-                    'idp_name': 'Keycloak V 13'
-                }
-                    
-                },
-                ]
+            class setup_saml2_backend:
+                CONFIGURED_IDPS = [
+                    {
+                            'idp_identity_name': 'key_cloak_v_13',  #  make sure to use underscore for the blanks
+                            'idp_data': {
+                                'idp_name': 'Keycloak V 13',  #  this name is used on the Login page to connect to the Provider
+                            }
+                        },
+                ,]
 
         .. note::
             Make sure to insert idp_identity_name as above ('key_cloak_v_13'), which used in this example.
 
-Configuration SAML_2_BACKEND.yaml file
+Configuration mss_saml2_backend.yaml file
 
-    Create your mss_saml_2_backend.yaml file in your ``MSCOLAB_SSO_DIR``.
+    Create your mss_saml2_backend.yaml file in your ``MSCOLAB_SSO_DIR``.
 
         .. code:: text
 
