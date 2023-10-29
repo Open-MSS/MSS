@@ -259,19 +259,22 @@ Via local installation
 |
 
 Via Docker (requires Docker installed)
+
+    .. note::
+
+        You can define KEYCLOAK_USER and KEYCLOAK_PASSWORD as you wish. Recommends using tools like pwgen to generate strong and random passwords.
+    
     * Open your terminal and run
 
     .. code:: text
 
-        docker run -p 8080:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=admin quay.io/keycloak/keycloak:13.0.1
+        docker run -p 8080:8080 -e KEYCLOAK_USER=admin -e KEYCLOAK_PASSWORD=pwgen_password quay.io/keycloak/keycloak:13.0.1
 
 |
 
     .. image:: images/sso_via_saml_conf/ss_docker_run_cmd.png
         :width: 400
 
-.. note::
-    You can define KEYCLOAK_USER and KEYCLOAK_PASSWORD as you wish.
 
 
 Setup Keycloak IdP
