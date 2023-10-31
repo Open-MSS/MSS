@@ -25,9 +25,9 @@
     limitations under the License.
 """
 import os
+import argparse
 import pytest
 import mock
-import argparse
 from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
@@ -122,64 +122,96 @@ class Test_Mscolab(TestCase):
         assert len(all_permissions) == 17
 
     def test_handle_mscolab_certificate_init(self):
+        """
+        Test the initialization of the MSColab server certificate files.
+        This function tests the initialization process of the MSColab server certificate files
+        by calling the initialization function and checking if the generated key and
+        certificate files contain the expected content.
+        """
         handle_mscolab_certificate_init()
-        FILE_KEY = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'key_mscolab.key')
+        file_key = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'key_mscolab.key')
         key_content = ''
-        with open(FILE_KEY, 'r') as file:
+        with open(file_key, 'r', encoding='utf-8') as file:
             key_content = file.read()
         assert "-----BEGIN PRIVATE KEY-----" in key_content
         assert "-----END PRIVATE KEY-----" in key_content
-        FILE_CRT = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'crt_mscolab.crt')
+        file_cert = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'crt_mscolab.crt')
         crt_content = ''
-        with open(FILE_CRT, 'r') as file:
+        with open(file_cert, 'r', encoding='utf-8') as file:
             crt_content = file.read()
         assert "-----BEGIN CERTIFICATE-----" in crt_content
         assert "-----END CERTIFICATE-----" in crt_content
 
     def test_handle_local_idp_certificate_init(self):
+        """
+        Test the initialization of the local Identity Provider (IDP) certificate files.
+        This function tests the initialization process of the local IDP certificate files
+        by calling the initialization function and checking if the generated key and
+        certificate files contain the expected content.
+        """
+
         handle_local_idp_certificate_init()
-        FILE_KEY = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'key_local_idp.key')
+        file_key = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'key_local_idp.key')
         key_content = ''
-        with open(FILE_KEY, 'r') as file:
+        with open(file_key, 'r', encoding='utf-8') as file:
             key_content = file.read()
         assert "-----BEGIN PRIVATE KEY-----" in key_content
         assert "-----END PRIVATE KEY-----" in key_content
-        FILE_CRT = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'crt_local_idp.crt')
+        file_crt = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'crt_local_idp.crt')
         crt_content = ''
-        with open(FILE_CRT, 'r') as file:
+        with open(file_crt, 'r', encoding='utf-8') as file:
             crt_content = file.read()
         assert "-----BEGIN CERTIFICATE-----" in crt_content
         assert "-----END CERTIFICATE-----" in crt_content
 
     def test_handle_mscolab_backend_yaml_init(self):
+        """
+        Test the initialization of MScolab backend YAML configuration.
+        This function tests the initialization process of the MScolab backend YAML
+        """
+
         handle_mscolab_backend_yaml_init()
-        FILE_YAML = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'mss_saml2_backend.yaml')
+        file_yaml = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'mss_saml2_backend.yaml')
         mss_saml2_backend_content = ''
-        with open(FILE_YAML, 'r') as file:
+        with open(file_yaml, 'r', encoding='utf-8') as file:
             mss_saml2_backend_content = file.read()
         assert "localhost_test_idp" in mss_saml2_backend_content
         assert "entityid_endpoint" in mss_saml2_backend_content
 
     def test_handle_mscolab_metadata_init(self):
+        """
+        Test the initialization of MSColab server metadata.
+        This function tests the initialization process of MSColab server metadata
+        by calling several initialization functions and checking if the expected
+        content is present in the generated metadata XML file.
+        """
+
         handle_mscolab_certificate_init()
         handle_mscolab_backend_yaml_init()
         mscolab_settings.USE_SAML2 = True
         assert handle_mscolab_metadata_init(True) is True
-        METADATA_XML = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'metadata_sp.xml')
+        metadata_xml = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'metadata_sp.xml')
         metadata_content = ''
-        with open(METADATA_XML, 'r') as file:
+        with open(metadata_xml, 'r', encoding='utf-8') as file:
             metadata_content = file.read()
         assert "urn:oasis:names:tc:SAML:2.0:metadata" in metadata_content
 
     def test_handle_local_idp_metadata_init(self):
+        """
+        Test the initialization of local Identity Provider (IDP) metadata.
+        This function tests the initialization process of local IDP metadata
+        by calling several initialization functions and checking if the expected
+        content is present in the generated metadata XML file.
+        """
+
         handle_local_idp_certificate_init()
         handle_mscolab_backend_yaml_init()
         handle_mscolab_certificate_init()
         mscolab_settings.USE_SAML2 = True
         handle_mscolab_metadata_init(True)
         assert handle_local_idp_metadata_init(True) is True
-        IDP_XML = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'metadata_sp.xml')
+        idp_xml = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'metadata_sp.xml')
         idp_content = ''
-        with open(IDP_XML, 'r') as file:
+        with open(idp_xml, 'r', encoding='utf-8') as file:
             idp_content = file.read()
         assert "urn:oasis:names:tc:SAML:2.0:metadata" in idp_content
