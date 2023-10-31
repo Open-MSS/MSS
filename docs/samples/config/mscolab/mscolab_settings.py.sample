@@ -93,3 +93,6 @@ USE_SAML2 = False
 # all users in that Group are set to the operations of that category
 # having the roles in the TexGroup
 GROUP_POSTFIX = "Group"
+
+# dir where mscolab single sign process files are stored
+MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')

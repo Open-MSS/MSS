@@ -171,7 +171,7 @@ config:
             - lang: en
               text: "https://open-mss.github.io/about/"
           keywords:
-            - lang: se
+            - lang: en
               text: ["MSS"]
             - lang: en
               text: ["OpenMSS"]
@@ -227,7 +227,7 @@ config:
   #           - lang: en
   #             text: "https://open-mss.github.io/about/"
   #         keywords:
-  #           - lang: se
+  #           - lang: en
   #             text: ["MSS"]
   #           - lang: en
   #             text: ["OpenMSS"]
