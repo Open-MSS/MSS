@@ -38,6 +38,9 @@ from mslib.mscolab.mscolab import (handle_db_reset, handle_db_seed, confirm_acti
                                    handle_local_idp_metadata_init)
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_operation
+from tests import constants
+
+mscolab_settings.MSCOLAB_SSO_DIR = constants.MSCOLAB_SSO_DIR
 
 
 def test_confirm_action():
@@ -159,9 +162,24 @@ class Test_Mscolab(TestCase):
 
     def test_handle_mscolab_metadata_init(self):
         handle_mscolab_certificate_init()
+        handle_mscolab_backend_yaml_init()
         mscolab_settings.USE_SAML2 = True
         assert handle_mscolab_metadata_init(True) is True
+        METADATA_XML = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'metadata_sp.xml')
+        metadata_content = ''
+        with open(METADATA_XML, 'r') as file:
+            metadata_content = file.read()
+        assert "urn:oasis:names:tc:SAML:2.0:metadata" in metadata_content
 
     def test_handle_local_idp_metadata_init(self):
         handle_local_idp_certificate_init()
+        handle_mscolab_backend_yaml_init()
+        handle_mscolab_certificate_init()
+        mscolab_settings.USE_SAML2 = True
+        handle_mscolab_metadata_init(True)
         assert handle_local_idp_metadata_init(True) is True
+        IDP_XML = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, 'metadata_sp.xml')
+        idp_content = ''
+        with open(IDP_XML, 'r') as file:
+            idp_content = file.read()
+        assert "urn:oasis:names:tc:SAML:2.0:metadata" in idp_content
