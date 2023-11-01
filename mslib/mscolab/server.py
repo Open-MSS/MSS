@@ -68,11 +68,6 @@ except ImportError as ex:
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-# setup idp login config
-if mscolab_settings.USE_SAML2:
-    setup_saml2_backend()
-
-
 # setup http auth
 if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
     logging.debug("Enabling basic HTTP authentication. Username and "
@@ -204,9 +199,9 @@ def get_idp_entity_id(selected_idp):
     Finds the entity_id from the configured IDPs
     :return: the entity_id of the idp or None
     """
-    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
-        if selected_idp == idp_config['idp_identity_name']:
-            idps = idp_config['idp_data']['saml2client'].metadata.identity_providers()
+    for config in setup_saml2_backend.CONFIGURED_IDPS:
+        if selected_idp == config['idp_identity_name']:
+            idps = config['idp_data']['saml2client'].metadata.identity_providers()
             only_idp = idps[0]
             entity_id = only_idp
             return entity_id
@@ -735,43 +730,29 @@ def reset_request():
         return render_template('errors/403.html'), 403
 
 
-@APP.route("/metadata/<idp_identity_name>", methods=['GET'])
-def metadata(idp_identity_name):
-    """Return the SAML metadata XML for the requested IDP"""
-    if mscolab_settings.USE_SAML2:
-        for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
-            if idp_identity_name == idp_config['idp_identity_name']:
-                sp_config = idp_config['idp_data']['saml2client']
-                metadata_string = create_metadata_string(
-                    None, sp_config.config, 4, None, None, None, None, None
-                ).decode("utf-8")
-                return Response(metadata_string, mimetype="text/xml")
-        return render_template('errors/404.html'), 404
-    return render_template('errors/403.html'), 403
+if mscolab_settings.USE_SAML2:
+    # setup idp login config
+    setup_saml2_backend()
 
-
-@APP.route('/available_idps/', methods=['GET'])
-def available_idps():
-    """
-    This function checks if IDP (Identity Provider) is enabled in the mscolab_settings module.
-    If IDP is enabled, it retrieves the configured IDPs from setup_saml2_backend.CONFIGURED_IDPS
-    and renders the 'idp/available_idps.html' template with the list of configured IDPs.
-    """
-    if mscolab_settings.USE_SAML2:
+    # set routes for SSO
+    @APP.route('/available_idps/', methods=['GET'])
+    def available_idps():
+        """
+        This function checks if IDP (Identity Provider) is enabled in the mscolab_settings module.
+        If IDP is enabled, it retrieves the configured IDPs from setup_saml2_backend.CONFIGURED_IDPS
+        and renders the 'idp/available_idps.html' template with the list of configured IDPs.
+        """
         configured_idps = setup_saml2_backend.CONFIGURED_IDPS
         return render_template('idp/available_idps.html', configured_idps=configured_idps), 200
-    return render_template('errors/403.html'), 403
 
-
-@APP.route("/idp_login/", methods=['POST'])
-def idp_login():
-    """Handle the login process for the user by selected IDP"""
-    if mscolab_settings.USE_SAML2:
+    @APP.route("/idp_login/", methods=['POST'])
+    def idp_login():
+        """Handle the login process for the user by selected IDP"""
         selected_idp = request.form.get('selectedIdentityProvider')
         sp_config = None
-        for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
-            if selected_idp == idp_config['idp_identity_name']:
-                sp_config = idp_config['idp_data']['saml2client']
+        for config in setup_saml2_backend.CONFIGURED_IDPS:
+            if selected_idp == config['idp_identity_name']:
+                sp_config = config['idp_data']['saml2client']
                 break
 
         try:
@@ -789,76 +770,69 @@ def idp_login():
             return Response(http_args["data"], headers=http_args["headers"])
         except (NameError, AttributeError):
             return render_template('errors/403.html'), 403
-    return render_template('errors/403.html'), 403
 
+    def create_acs_post_handler(config):
+        """
+        Create acs_post_handler function for the given idp_config.
+        """
+        def acs_post_handler():
+            """
+            Function to handle SAML authentication response.
+            """
+            try:
+                outstanding_queries = {}
+                binding = BINDING_HTTP_POST
+                authn_response = config['idp_data']['saml2client'].parse_authn_request_response(
+                    request.form["SAMLResponse"], binding, outstanding=outstanding_queries
+                )
+                email = None
+                username = None
 
-@APP.route('/<path:url>', methods=['POST'])
-def acs_post_handler(url):
-    """
-    Function to handle unknown POST requests,
-    Implemented to Handle the SAML authentication response received via POST request from configured IDPs.
-    """
-    if mscolab_settings.USE_SAML2:
-        try:
-            # implementation for handle  configured saml assertion consumer endpoints
-            for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
-                # Check if the requested URL exists in the assertion_consumer_endpoints dictionary
-                url_with_slash = '/' + url
-                url_exists_with_slash = url_with_slash in idp_config['idp_data']['assertion_consumer_endpoints']
-                url_exists_without_slash = url in idp_config['idp_data']['assertion_consumer_endpoints']
-                if url_exists_without_slash or url_exists_with_slash:
-                    outstanding_queries = {}
-                    binding = BINDING_HTTP_POST
-                    authn_response = idp_config['idp_data']['saml2client'].parse_authn_request_response(
-                        request.form["SAMLResponse"], binding, outstanding=outstanding_queries
-                    )
-                    email = None
-                    username = None
-
+                try:
+                    email = authn_response.ava["email"][0]
+                    username = authn_response.ava["givenName"][0]
+                    token = generate_confirmation_token(email)
+                except (NameError, AttributeError, KeyError):
                     try:
-                        email = authn_response.ava["email"][0]
-                        username = authn_response.ava["givenName"][0]
+                        # Initialize an empty dictionary to store attribute values
+                        attributes = {}
+
+                        # Loop through attribute statements
+                        for attribute_statement in authn_response.assertion.attribute_statement:
+                            for attribute in attribute_statement.attribute:
+                                attribute_name = attribute.name
+                                attribute_value = \
+                                    attribute.attribute_value[0].text if attribute.attribute_value else None
+                                attributes[attribute_name] = attribute_value
+
+                        # Extract the email and givenname attributes
+                        email = attributes["email"]
+                        username = attributes["givenName"]
                         token = generate_confirmation_token(email)
                     except (NameError, AttributeError, KeyError):
+                        return render_template('errors/403.html'), 403
 
-                        try:
-                            # Initialize an empty dictionary to store attribute values
-                            attributes = {}
+                if email is not None and username is not None:
+                    idp_user_db_state = create_or_update_idp_user(email,
+                                                                  username, token, idp_config['idp_identity_name'])
+                    if idp_user_db_state:
+                        return render_template('idp/idp_login_success.html', token=token), 200
+                    return render_template('errors/500.html'), 500
+                return render_template('errors/500.html'), 500
+            except (NameError, AttributeError, KeyError):
+                return render_template('errors/403.html'), 403
+        return acs_post_handler
 
-                            # Loop through attribute statements
-                            for attribute_statement in authn_response.assertion.attribute_statement:
-                                for attribute in attribute_statement.attribute:
-                                    attribute_name = attribute.name
-                                    attribute_value = \
-                                        attribute.attribute_value[0].text if attribute.attribute_value else None
-                                    attributes[attribute_name] = attribute_value
+    # Implementation for handling configured SAML assertion consumer endpoints
+    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
+        for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
+            # Dynamically add the route for the current endpoint
+            APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
+                             create_acs_post_handler(idp_config), methods=['POST'])
 
-                            # Extract the email and givenname attributes
-                            email = attributes["email"]
-                            username = attributes["givenName"]
-                            token = generate_confirmation_token(email)
-
-                        except (NameError, AttributeError, KeyError):
-                            render_template('errors/403.html'), 403
-
-                    if email is not None and username is not None:
-                        idp_user_db_state = create_or_update_idp_user(email, username, token,
-                                                                      idp_config['idp_identity_name'])
-                        if idp_user_db_state:
-                            return render_template('idp/idp_login_success.html', token=token), 200
-                        else:
-                            return render_template('errors/500.html'), 500
-                    else:
-                        return render_template('errors/500.html'), 500
-        except (NameError, AttributeError, KeyError):
-            return render_template('errors/403.html'), 403
-    return render_template('errors/403.html'), 403
-
-
-@APP.route('/idp_login_auth/', methods=['POST'])
-def idp_login_auth():
-    """Handle the SAML authentication validation of client application."""
-    if mscolab_settings.USE_SAML2:
+    @APP.route('/idp_login_auth/', methods=['POST'])
+    def idp_login_auth():
+        """Handle the SAML authentication validation of client application."""
         try:
             data = request.get_json()
             token = data.get('token')
@@ -879,7 +853,18 @@ def idp_login_auth():
             return jsonify({"success": False}), 401
         except TypeError:
             return jsonify({"success": False}), 401
-    return render_template('errors/403.html'), 403
+
+    @APP.route("/metadata/<idp_identity_name>", methods=['GET'])
+    def metadata(idp_identity_name):
+        """Return the SAML metadata XML for the requested IDP"""
+        for config in setup_saml2_backend.CONFIGURED_IDPS:
+            if idp_identity_name == config['idp_identity_name']:
+                sp_config = config['idp_data']['saml2client']
+                metadata_string = create_metadata_string(
+                    None, sp_config.config, 4, None, None, None, None, None
+                ).decode("utf-8")
+                return Response(metadata_string, mimetype="text/xml")
+        return render_template('errors/404.html'), 404
 
 
 def start_server(app, sockio, cm, fm, port=8083):
