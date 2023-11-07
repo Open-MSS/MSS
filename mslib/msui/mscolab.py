@@ -38,6 +38,7 @@ import types
 import fs
 import requests
 import re
+import webbrowser
 import urllib.request
 from urllib.parse import urljoin
 
@@ -149,12 +150,14 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.add_mscolab_urls()
         self.mscolab_url_changed(self.urlCb.currentText())
 
-        # connect login, adduser, connect buttons
+        # connect login, adduser, connect, login with idp, auth token submit buttons
         self.connectBtn.clicked.connect(self.connect_handler)
         self.connectBtn.setFocus()
         self.disconnectBtn.clicked.connect(self.disconnect_handler)
         self.disconnectBtn.hide()
         self.loginBtn.clicked.connect(self.login_handler)
+        self.loginWithIDPBtn.clicked.connect(self.idp_login_handler)
+        self.idpAuthTokenSubmitBtn.clicked.connect(self.idp_auth_token_submit_handler)
         self.addUserBtn.clicked.connect(lambda: self.stackedWidget.setCurrentWidget(self.newuserPage))
 
         # enable login button only if email and password are entered
@@ -230,6 +233,20 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.addUserBtn.setEnabled(True)
                 self.loginEmailLe.setEnabled(True)
                 self.loginPasswordLe.setEnabled(True)
+
+                try:
+                    idp_enabled = json.loads(r.text)["USE_SAML2"]
+                except (json.decoder.JSONDecodeError, KeyError):
+                    idp_enabled = False
+
+                if idp_enabled:
+                    # Hide user creatiion seccion if IDP login enabled
+                    self.addUserBtn.setHidden(True)
+                    self.clickNewUserLabel.setHidden(True)
+
+                else:
+                    # Hide login by identity provider if IDP login disabled
+                    self.loginWithIDPBtn.setHidden(True)
 
                 self.mscolab_server_url = url
                 self.auth = auth
@@ -325,6 +342,52 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         else:
             self.save_user_credentials_to_config_file(data["email"], data["password"])
             self.mscolab.after_login(data["email"], self.mscolab_server_url, r)
+
+    def idp_login_handler(self):
+        """Handle IDP login Button"""
+        url_idp_login = f'{self.mscolab_server_url}/available_idps'
+        webbrowser.open(url_idp_login, new=2)
+        self.stackedWidget.setCurrentWidget(self.idpAuthPage)
+
+    def idp_auth_token_submit_handler(self):
+        """Handle IDP authentication token submission"""
+        url_idp_login_auth = f'{self.mscolab_server_url}/idp_login_auth'
+        user_token = self.idpAuthPasswordLe.text()
+
+        try:
+            data = {'token': user_token}
+            response = requests.post(url_idp_login_auth, json=data, timeout=(2, 10))
+            if response.status_code == 401:
+                self.set_status("Error", 'Invalid token or token expired. Please try again')
+                self.stackedWidget.setCurrentWidget(self.loginPage)
+
+            elif response.status_code == 200:
+                _json = json.loads(response.text)
+                token = _json["token"]
+                user = _json["user"]
+
+                data = {
+                    "email": user["emailid"],
+                    "password": token,
+                }
+
+                s = requests.Session()
+                s.auth = self.auth
+                s.headers.update({'x-test': 'true'})
+                url = f'{self.mscolab_server_url}/token'
+
+                r = s.post(url, data=data, timeout=(2, 10))
+                if r.status_code == 401:
+                    raise requests.exceptions.ConnectionError
+                if r.text == "False":
+                    # show status indicating about wrong credentials
+                    self.set_status("Error", 'Invalid token. Please enter correct token')
+                else:
+                    self.mscolab.after_login(data["email"], self.mscolab_server_url, r)
+                    self.set_status("Success", 'Succesfully logged into mscolab server')
+
+        except requests.exceptions.RequestException as error:
+            logging.error("unexpected error: %s %s %s", type(error), url, error)
 
     def save_user_credentials_to_config_file(self, emailid, password):
         try:
