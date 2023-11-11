@@ -209,7 +209,7 @@ class Test_Mscolab(TestCase):
         #  set TESTING_USE_SAML2 and MSCOLAB_SSO_DIRthrough envs
         os.environ['TESTING_MSCOLAB_SSO_DIR'] = mscolab_settings.MSCOLAB_SSO_DIR
         os.environ['TESTING_USE_SAML2'] = "True"
-        
+
         handle_local_idp_certificate_init()
         handle_mscolab_backend_yaml_init()
         handle_mscolab_certificate_init()

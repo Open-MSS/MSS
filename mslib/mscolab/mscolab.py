@@ -43,6 +43,8 @@ from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operat
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 from mslib.utils.qt import Worker, Updater
+from mslib.mscolab import mscolab
+from mslib.msidp import idp_conf
 
 
 def handle_start(args):
@@ -271,7 +273,7 @@ def handle_mscolab_metadata_init(repo_exists):
     print('generating metadata file for the mscolab server')
 
     try:
-        command = ["python", "mslib/mscolab/mscolab.py", "start"] if repo_exists else ["mscolab", "start"]
+        command = ["python", mscolab.__file__, "start"] if repo_exists else ["mscolab", "start"]
         process = subprocess.Popen(command)
 
         # Add a small delay to allow the server to start up
@@ -296,7 +298,7 @@ def handle_local_idp_metadata_init(repo_exists):
         if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
             os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
 
-        idp_conf_path = "mslib/msidp/idp_conf.py"
+        idp_conf_path = idp_conf.__file__
 
         if not repo_exists:
             import site
