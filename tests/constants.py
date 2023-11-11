@@ -63,7 +63,12 @@ SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.getsyspath(""), SERVER_C
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
 DATA_DIR = DATA_FS.getsyspath("")
 
+# set MSCOLAB_SSO_DIR through envs
 MSCOLAB_SSO_DIR = os.path.join(os.path.expanduser("~"), 'testingdatasso')
+os.environ['TESTING_MSCOLAB_SSO_DIR'] = MSCOLAB_SSO_DIR
+
+#  set TESTING_USE_SAML2 through envs
+os.environ['TESTING_USE_SAML2'] = "True"
 
 # deployed mscolab url
 MSCOLAB_URL = "http://localhost:8083"
