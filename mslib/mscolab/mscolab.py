@@ -171,7 +171,7 @@ config:
             - lang: en
               text: "https://open-mss.github.io/about/"
           keywords:
-            - lang: se
+            - lang: en
               text: ["MSS"]
             - lang: en
               text: ["OpenMSS"]
@@ -227,7 +227,7 @@ config:
   #           - lang: en
   #             text: "https://open-mss.github.io/about/"
   #         keywords:
-  #           - lang: se
+  #           - lang: en
   #             text: ["MSS"]
   #           - lang: en
   #             text: ["OpenMSS"]
@@ -280,7 +280,7 @@ def handle_mscolab_metadata_init(repo_exists):
         cmd_curl = ["curl", "http://localhost:8083/metadata/localhost_test_idp",
                     "-o", f"{mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"]
         subprocess.run(cmd_curl, check=True)
-        process.kill()
+        process.terminate()
         print('mscolab metadata file generated succesfully')
         return True
 
