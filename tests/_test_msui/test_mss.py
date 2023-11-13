@@ -39,4 +39,3 @@ def test_mss_rename_message():
     QtWidgets.QApplication.processEvents()
     application.quit()
     QtWidgets.QApplication.processEvents()
-
