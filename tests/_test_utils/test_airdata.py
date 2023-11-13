@@ -26,7 +26,6 @@
 """
 import os
 import mock
-import pytest
 from PyQt5 import QtWidgets
 from mslib.utils.airdata import download_progress, get_airports, \
     get_available_airspaces, update_airspace, get_airspaces
@@ -161,7 +160,6 @@ def test_get_airspaces_no_data(mockbox):
     assert airspaces == []
 
 
-@pytest.mark.skip(reason="needs review for py311")
 @mock.patch("mslib.utils.airdata.download_progress", _download_progress_airspace)
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
 def test_get_airspaces(mockbox):

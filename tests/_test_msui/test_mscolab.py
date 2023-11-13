@@ -46,7 +46,7 @@ from mslib.mscolab.mscolab import handle_db_reset
 from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
-PORTS = list(range(18000, 18500))
+PORTS = list(range(25000, 25500))
 
 
 class Test_Mscolab_connect_window():
@@ -700,7 +700,6 @@ class Test_Mscolab(object):
         self.window.mscolab.delete_operation_from_list(op_id)
         assert self.window.mscolab.active_op_id is None
 
-    @pytest.mark.skip(reason="needs review for py311")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_user_delete(self, mockmessage):
         self._connect_to_mscolab()

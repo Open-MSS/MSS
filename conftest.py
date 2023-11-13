@@ -219,7 +219,6 @@ _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
 _load_module("mscolab_settings", path)
 
 
-'''
 @pytest.fixture(autouse=True)
 def fail_if_open_message_boxes_left():
     """Fail a test if there are any Qt message boxes left open at the end
@@ -243,7 +242,6 @@ def fail_if_open_message_boxes_left():
         # Some objects deny permission, pass in that case
         except RuntimeError:
             pass
-'''
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):
