@@ -92,6 +92,7 @@ requirements:
     - email_validator
     - keyring
     - dbus-python
+    - python-slugify
 
 test:
   imports:

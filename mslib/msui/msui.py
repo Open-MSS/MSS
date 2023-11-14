@@ -52,7 +52,7 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 sys.path.append(constants.MSUI_CONFIG_PATH)
 
 
-def main():
+def main(tutorial_mode=False):
     try:
         prefix = os.environ["CONDA_DEFAULT_ENV"]
     except KeyError:
@@ -69,6 +69,7 @@ def main():
                         default=os.path.join(constants.MSUI_CONFIG_PATH, "msui.log"))
     parser.add_argument("-m", "--menu", help="adds msui to menu", action="store_true", default=False)
     parser.add_argument("-d", "--deinstall", help="removes msui from menu", action="store_true", default=False)
+    parser.add_argument("-t", "--tutorials", help="prepare tutorials", action="store_true", default=False)
     parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     args = parser.parse_args()
@@ -158,7 +159,7 @@ def main():
     application.setWindowIcon(QtGui.QIcon(icons('128x128')))
     application.setApplicationDisplayName("MSUI")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
-    mainwindow = MSUIMainWindow()
+    mainwindow = MSUIMainWindow(tutorial_mode=args.tutorials)
     if version.parse(__version__) >= version.parse('9.0.0') and version.parse(__version__) < version.parse('10.0.0'):
         from mslib.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
         from mslib.utils.migration.config_before_nine import config_loader as config_loader_before_nine

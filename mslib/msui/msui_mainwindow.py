@@ -38,6 +38,7 @@ import re
 import sys
 import fs
 
+from slugify import slugify
 from mslib import __version__
 from mslib.msui.qt5 import ui_mainwindow as ui
 from mslib.msui.qt5 import ui_about_dialog as ui_ab
@@ -132,8 +133,9 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     Dialog showing shortcuts for all currently open windows
     """
 
-    def __init__(self):
+    def __init__(self, tutorial_mode=False):
         super().__init__(QtWidgets.QApplication.activeWindow())
+        self.tutorial_mode = tutorial_mode
         self.setupUi(self)
         self.current_shortcuts = None
         self.treeWidget.itemDoubleClicked.connect(self.double_clicked)
@@ -279,11 +281,32 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
                                 "Ctrl+F", None))
 
+            pix_dir = os.path.join(constants.MSUI_CONFIG_PATH, 'tutorial_images')
+            if not os.path.exists(pix_dir):
+                os.makedirs(pix_dir)
             for item in actions:
-                if item[0] not in shortcuts:
-                    shortcuts[item[0]] = {}
-                shortcuts[item[0]][item[3].strip()] = item[1:]
+                if len(item[2]) > 0:
+                    # These are twice defined, but only one can be used for highlighting
+                    if (item[2] in ['Pan', 'Home', 'Forward',
+                                    'Back', 'Zoom', 'Save', 'Mv WP',
+                                    'Ins WP', 'Del WP'] and isinstance(item[5], QtWidgets.QAction) or
+                            len(item[0].objectName()) == 0):
+                        continue
 
+                    if item[0] not in shortcuts:
+                        shortcuts[item[0]] = {}
+                    shortcuts[item[0]][item[5]] = item[1:]
+                    if self.tutorial_mode:
+                        try:
+                            prefix = item[0].objectName()
+                            attr = item[2]
+                            pixmap = item[5].grab()
+                            pix_name = slugify(f"{prefix}-{attr}")
+                            if pix_name.startswith("Search") is False:
+                                pix_file = f"{os.path.join(pix_dir, pix_name)}.png"
+                                pixmap.save(pix_file, 'png')
+                        except AttributeError:
+                            pass
         return shortcuts
 
     def filter_shortcuts(self, text="Nothing", rerun=True):
@@ -361,8 +384,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
-    def __init__(self, mscolab_data_dir=None, *args):
+    def __init__(self, mscolab_data_dir=None, tutorial_mode=False, *args):
         super().__init__(*args)
+        self.tutorial_mode = tutorial_mode
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('32x32')))
         # This code is required in Windows 7 to use the icon set by setWindowIcon in taskbar
@@ -948,13 +972,14 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if QtWidgets.QApplication.activeWindow() == self.shortcuts_dlg:
             return
 
-        self.shortcuts_dlg = MSUI_ShortcutsDialog() if not self.shortcuts_dlg else self.shortcuts_dlg
+        self.shortcuts_dlg = MSUI_ShortcutsDialog(
+            tutorial_mode=self.tutorial_mode) if not self.shortcuts_dlg else self.shortcuts_dlg
 
         # In case the dialog gets deleted by QT, recreate it
         try:
             self.shortcuts_dlg.setModal(True)
         except RuntimeError:
-            self.shortcuts_dlg = MSUI_ShortcutsDialog()
+            self.shortcuts_dlg = MSUI_ShortcutsDialog(tutorial_mode=self.tutorial_mode)
 
         self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
         self.shortcuts_dlg.reset_highlight()
