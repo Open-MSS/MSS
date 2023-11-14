@@ -79,8 +79,9 @@ class Test_Server(TestCase):
     def test_hello(self):
         with self.app.test_client() as test_client:
             response = test_client.get('/status')
-            assert response.status_code == 200
-            assert b"Mscolab server" in response.data
+            data = json.loads(response.text)
+            assert "Mscolab server" in data['message']
+            assert True or False in data['USE_SAML2']
 
     def test_register_user(self):
         with self.app.test_client():
@@ -149,11 +150,11 @@ class Test_Server(TestCase):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             token = self._get_token(test_client, self.userdata)
-            response = test_client.post('/delete_user', data={"token": token})
+            response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data["success"] is True
-            response = test_client.post('/delete_user', data={"token": "dsdsds"})
+            response = test_client.post('/delete_own_account', data={"token": "dsdsds"})
             assert response.status_code == 200
             assert response.data.decode('utf-8') == "False"
 

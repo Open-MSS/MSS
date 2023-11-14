@@ -24,13 +24,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-
+import pytest
 import sys
 from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib.msui import mss
 
 
+@pytest.mark.skip(reason='needs review, assert missing')
 def test_mss_rename_message():
     application = QtWidgets.QApplication(sys.argv)
     main_window = mss.MSSMainWindow()

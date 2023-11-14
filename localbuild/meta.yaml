@@ -19,6 +19,7 @@ build:
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
     - mssautoplot = mslib.utils.mssautoplot:main
+    - msidp = mslib.msidp.idp:main
 
 requirements:
   build:
@@ -39,7 +40,7 @@ requirements:
     - chameleon
     - execnet
     - fastkml =0.11
-    - shapely <2.0.0
+    - shapely >=2.0.0
     - pygeoif <1.0.0
     - isodate
     - lxml
@@ -47,8 +48,8 @@ requirements:
     - hdf4
     - pillow
     - pytz
-    - pyqt >=5, <5.13
-    - qt >=5.10, <5.13
+    - pyqt >=5.15.0
+    - qt >=5.15.0
     - requests >=2.31.0
     - scipy
     - skyfield >=1.12
@@ -65,7 +66,7 @@ requirements:
     - flask-httpauth
     - flask-mail
     - flask-migrate
-    - werkzeug >=2.2.3
+    - werkzeug >=2.2.3, <3.0.0
     - flask-socketio >=5.1.0
     - flask-sqlalchemy >=3.0.0
     - flask-cors
@@ -93,6 +94,9 @@ requirements:
     - keyring
     - dbus-python
     - python-slugify
+    - flask-login
+    - pysaml2
+    - libxmlsec1
 
 test:
   imports:
@@ -102,6 +106,7 @@ test:
     - mswms_demodata -h
     - msui -h
     - mscolab -h
+    - msidp -h
 
 about:
   summary: 'A web service based tool to plan atmospheric research flights.'

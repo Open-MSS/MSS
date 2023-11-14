@@ -1285,7 +1285,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if ret == QtWidgets.QMessageBox.Ignore:
                 self.check_for_allowed_crs = False
             elif ret == QtWidgets.QMessageBox.No:
-                return
+                return []
 
         # get...Time() will return None if the corresponding checkboxes are
         # disabled. <None> objects passed to wms.getmap will not be included

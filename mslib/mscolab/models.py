@@ -28,13 +28,9 @@
 import datetime
 import logging
 import jwt
-
 from passlib.apps import custom_app_context as pwd_context
-from flask_sqlalchemy import SQLAlchemy
-from mslib.mscolab.app import APP
+from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
-
-db = SQLAlchemy(APP)
 
 
 class User(db.Model):
@@ -48,14 +44,16 @@ class User(db.Model):
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(db.DateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
+    authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
-    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None):
+    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None, authentication_backend='local'):
         self.username = username
         self.emailid = emailid
         self.hash_password(password)
         self.registered_on = datetime.datetime.now()
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on
+        self.authentication_backend = authentication_backend
 
     def __repr__(self):
         return f'<User {self.username}>'

@@ -182,6 +182,9 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 </FlightTrack>
 """
 enable_basic_http_authentication = False
+
+# enable login by identity provider
+USE_SAML2 = False
 '''
     ROOT_FS = fs.open_fs(constants.ROOT_DIR)
     if not ROOT_FS.exists('mscolab'):
@@ -242,7 +245,6 @@ def fail_if_open_message_boxes_left():
         # Some objects deny permission, pass in that case
         except RuntimeError:
             pass
-
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):

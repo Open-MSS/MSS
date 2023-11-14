@@ -969,6 +969,8 @@ import mslib.mswms
 #service_country = "Germany"
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
+#imprint = ""
+#gdpr = ""
 
 
 #

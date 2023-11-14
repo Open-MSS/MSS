@@ -107,7 +107,7 @@ def mscolab_delete_user(app, msc_url, email, password):
         response = mscolab_login(app, msc_url, email, password)
         if response.status == '200 OK':
             data = json.loads(response.get_data(as_text=True))
-            url = urljoin(msc_url, 'delete_user')
+            url = urljoin(msc_url, 'delete_own_account')
             response = app.test_client().post(url, data=data)
             if response.status == '200 OK':
                 data = json.loads(response.get_data(as_text=True))
@@ -186,7 +186,8 @@ def mscolab_ping_server(port):
     url = f"http://127.0.0.1:{port}/status"
     try:
         r = requests.get(url, timeout=(2, 10))
-        if r.text == "Mscolab server":
+        data = json.loads(r.text)
+        if data['message'] == "Mscolab server" and isinstance(data['USE_SAML2'], bool):
             return True
     except requests.exceptions.ConnectionError:
         return False
