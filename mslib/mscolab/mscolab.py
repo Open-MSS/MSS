@@ -105,7 +105,7 @@ def handle_mscolab_certificate_init():
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
                "/CN=localhost", "-out", f"{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"]
         subprocess.run(cmd, check=True)
-        print("generated CRTs for the mscolab server.")
+        logging.info("generated CRTs for the mscolab server.")
         return True
     except subprocess.CalledProcessError as error:
         print(f"Error while generating CRTs for the mscolab server: {error}")
@@ -121,7 +121,7 @@ def handle_local_idp_certificate_init():
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
                "/CN=localhost", "-out", f"{mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"]
         subprocess.run(cmd, check=True)
-        print("generated CRTs for the local identity provider")
+        logging.info("generated CRTs for the local identity provider")
         return True
     except subprocess.CalledProcessError as error:
         print(f"Error while generated CRTs for the local identity provider: {error}")
@@ -281,7 +281,7 @@ def handle_mscolab_metadata_init(repo_exists):
                     "-o", f"{mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"]
         subprocess.run(cmd_curl, check=True)
         process.terminate()
-        print('mscolab metadata file generated succesfully')
+        logging.info('mscolab metadata file generated succesfully')
         return True
 
     except subprocess.CalledProcessError as error:
@@ -308,7 +308,7 @@ def handle_local_idp_metadata_init(repo_exists):
         with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml",
                   "w", encoding="utf-8") as output_file:
             subprocess.run(cmd, stdout=output_file, check=True)
-        print("idp metadata file generated succesfully")
+        logging.info("idp metadata file generated succesfully")
         return True
     except subprocess.CalledProcessError as error:
         # Delete the idp.xml file when the subprocess fails
