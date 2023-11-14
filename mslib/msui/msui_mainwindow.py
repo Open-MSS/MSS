@@ -229,10 +229,12 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                 self.treeWidget.setCurrentItem(header)
             for objectName in self.current_shortcuts[widget].keys():
                 description, text, _, shortcut, obj = self.current_shortcuts[widget][objectName]
+                if obj is None:
+                    continue
                 item = QtWidgets.QTreeWidgetItem(header)
                 item.source_object = obj
                 itemText = description if self.cbDisplayType.currentText() == 'Tooltip' \
-                    else text if self.cbDisplayType.currentText() == 'Text' else objectName
+                    else text if self.cbDisplayType.currentText() == 'Text' else obj.objectName()
                 item.setText(0, f"{itemText}: {shortcut}")
                 item.setToolTip(0, f"ToolTip: {description}\nText: {text}\nObjectName: {objectName}")
                 header.addChild(item)
