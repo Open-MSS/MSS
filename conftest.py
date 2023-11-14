@@ -246,7 +246,6 @@ def fail_if_open_message_boxes_left():
         except RuntimeError:
             pass
 
-
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):
     if Display is not None:
