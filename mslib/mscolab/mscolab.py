@@ -275,29 +275,29 @@ def handle_mscolab_metadata_init(repo_exists):
     try:
         command = ["python", os.path.join("mslib", "mscolab", "mscolab.py"),
                    "start"] if repo_exists else ["mscolab", "start"]
-        process = subprocess.Popen(command)
+        with subprocess.Popen(command) as process:
+            # maximum retires for connecting mscolab
+            max_retries = 5
+            # retry interval if retry failed
+            retry_interval = 1
 
-        # maximum retires for connecting mscolab
-        max_retries = 5
-        # retry interval if retry failed
-        retry_interval = 1
+            for _ in range(max_retries):
+                try:
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                        sock.connect(('localhost', 8083))
+                        cmd_curl = ["curl", "http://localhost:8083/metadata/localhost_test_idp",
+                                    "-o", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "metadata_sp.xml")]
+                        subprocess.run(cmd_curl, check=True)
+                        process.terminate()
+                        logging.info('mscolab metadata file generated succesfully')
+                        return True
+                except socket.error:
+                    time.sleep(retry_interval)
 
-        for _ in range(max_retries):
-            try:
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                    sock.connect(('localhost', 8083))
-                    cmd_curl = ["curl", "http://localhost:8083/metadata/localhost_test_idp",
-                                "-o", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "metadata_sp.xml")]
-                    subprocess.run(cmd_curl, check=True)
-                    process.terminate()
-                    logging.info('mscolab metadata file generated succesfully')
-                    return True
-            except socket.error:
-                time.sleep(retry_interval)
-
-        if _ == max_retries:
-            print(f'mscolab server failed to start after {max_retries} retries')
-            return False
+            if _ == max_retries:
+                print(f'error while generating metadata,'
+                      f'mscolab server failed to start after {max_retries} retries')
+                return False
 
     except subprocess.CalledProcessError as error:
         print(f"Error while generating metadata file for the mscolab server: {error}")
