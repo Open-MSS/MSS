@@ -85,8 +85,6 @@ def automate_kml():
 
     create_tutorial_images()
 
-
-
     # Adding the KML files and loading them
     try:
         x, y = pag.locateCenterOnScreen(picture('topviewwindow-add-kml-files.png'))
@@ -155,7 +153,6 @@ def automate_kml():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Change Color(folder.kml again)\' button not found on the screen.")
         raise
-
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()

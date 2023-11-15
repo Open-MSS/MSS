@@ -28,5 +28,6 @@ import os
 
 MSUI_CONFIG_PATH = os.environ.get('MSUI_CONFIG_PATH')
 
+
 def picture(name="layers.png"):
     return os.path.join(MSUI_CONFIG_PATH, 'tutorial_images', name)

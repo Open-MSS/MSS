@@ -393,7 +393,7 @@ def automate_views():
             px, py = pag.locateCenterOnScreen(picture('views', 'sideview_point1.png'))
             # point1: 127, 394
         except (ImageNotFoundException, OSError, Exception):
-            print(f"\nException : Sideview's \'Point 1\' not found on the screen.")
+            print("\nException : Sideview's \'Point 1\' not found on the screen.")
             raise
         offsets = [0, 114, 161, 200, ]
         for offset in offsets:
