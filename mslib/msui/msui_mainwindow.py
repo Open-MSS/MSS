@@ -995,7 +995,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
         self.shortcuts_dlg.reset_highlight()
         self.shortcuts_dlg.fill_list()
-        self.shortcuts_dlg.show()
+        if self.tutorial_mode:
+            self.shortcuts_dlg.hide()
+        else:
+            self.shortcuts_dlg.show()
 
         self.shortcuts_dlg.cbAdvanced.setHidden(True)
         self.shortcuts_dlg.cbHighlight.setHidden(True)
