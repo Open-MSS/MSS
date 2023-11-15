@@ -8,7 +8,7 @@
 
     This file is part of MSS.
 
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,23 +24,9 @@
     limitations under the License.
 """
 import os
-import sys
-
-use_platform = sys.platform
-if sys.platform in ('linux', 'linux2', 'darwin'):
-    use_platform = 'linux'
-
-TUTORIALS = ["hexagoncontrol",
-             "kml",
-             "mscolab",
-             "performancesettings",
-             "remotesensing",
-             "satellitetrack",
-             "views",
-             "waypoints",
-             "wms"]
 
 
-def picture(tutorial="wms", name="layers.png"):
-    if tutorial in TUTORIALS:
-        return os.path.join(os.path.abspath(os.path.normpath(os.path.dirname(__file__))), tutorial, use_platform, name)
+MSUI_CONFIG_PATH = os.environ.get('MSUI_CONFIG_PATH')
+
+def picture(name="layers.png"):
+    return os.path.join(MSUI_CONFIG_PATH, 'tutorial_images', name)

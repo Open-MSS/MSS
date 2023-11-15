@@ -64,7 +64,7 @@ def call_msui():
     """
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
-    msui.main()
+    msui.main(tutorial_mode=True)
 
 
 def platform_keys():

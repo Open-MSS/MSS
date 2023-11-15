@@ -247,6 +247,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         shortcuts = {}
         for qobject in QtWidgets.QApplication.topLevelWidgets():
             actions = []
+            # QAction
             actions.extend([
                 (action.parent().window() if hasattr(action.parent(), "window") else action.parent(),
                  action.toolTip(), action.text().replace("&&", "%%").replace("&", "").replace("%%", "&"),
@@ -254,9 +255,13 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                  ",".join([shortcut.toString() for shortcut in action.shortcuts()]), action)
                 for action in qobject.findChildren(
                     QtWidgets.QAction) if len(action.shortcuts()) > 0 or self.cbNoShortcut.checkState()])
+
+            # QShortcut
             actions.extend([(shortcut.parentWidget().window(), shortcut.whatsThis(), "",
                              shortcut.objectName(), shortcut.key().toString(), shortcut)
                             for shortcut in qobject.findChildren(QtWidgets.QShortcut)])
+
+            # QAbstractButton
             actions.extend([(button.window(), button.toolTip(), button.text().replace("&&", "%%").replace("&", "")
                              .replace("%%", "&"), button.objectName(),
                              button.shortcut().toString() if button.shortcut() else "", button)
@@ -264,12 +269,16 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                             self.cbNoShortcut.checkState()])
 
             # Additional objects which have no shortcuts, if requested
+            # QComboBox
             actions.extend([(obj.window(), obj.toolTip(), obj.currentText(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QComboBox) if self.cbNoShortcut.checkState()])
+
+            # QAbstractSpinBox, QLineEdit
             actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QAbstractSpinBox) +
                             qobject.findChildren(QtWidgets.QLineEdit)
                             if self.cbNoShortcut.checkState()])
+            # QPlainTextEdit, QTextEdit
             actions.extend([(obj.window(), obj.toolTip(), obj.toPlainText(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QPlainTextEdit) +
                             qobject.findChildren(QtWidgets.QTextEdit)
