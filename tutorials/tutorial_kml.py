@@ -49,7 +49,7 @@ def automate_kml():
 
     # Maximizing the window
     try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
+        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
 
