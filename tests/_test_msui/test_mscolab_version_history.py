@@ -28,7 +28,7 @@ import os
 import pytest
 import mock
 
-from tests.utils import mscolab_start_server
+from tests.utils import mscolab_start_server, create_msui_settings_file
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
@@ -46,6 +46,7 @@ PORTS = list(range(20000, 20500))
 class Test_MscolabVersionHistory(object):
     def setup_method(self):
         handle_db_reset()
+        create_msui_settings_file("{}")
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
