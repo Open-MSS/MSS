@@ -30,7 +30,7 @@ import shutil
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images
 from tutorials.pictures import picture
 
 
@@ -53,16 +53,18 @@ def automate_performance():
 
     # Maximizing the window
     try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
+        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
     pag.sleep(2)
     pag.hotkey('ctrl', 't')
     pag.sleep(3)
 
+    create_tutorial_images()
+
     # Opening Performance Settings dockwidget
     try:
-        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'selecttoopencontrol.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-select-to-open-control.png'))
         pag.moveTo(x + 250, y - 462, duration=1)
         if platform == 'linux' or platform == 'linux2':
             # the window need to be moved a bit below the topview window
@@ -75,7 +77,7 @@ def automate_performance():
         raise
 
     tv_x, tv_y = pag.position()
-    # Opening Hexagon Control dockwidget
+    # Opening Performance Control dockwidget
     if tv_x is not None and tv_y is not None:
         pag.moveTo(tv_x - 250, tv_y + 462, duration=2)
         pag.click(duration=2)
@@ -87,9 +89,11 @@ def automate_performance():
         pag.press(enter)
         pag.sleep(2)
 
+    create_tutorial_images()
+
     # Exploring through the file system and loading the performance settings json file for a dummy aircraft.
     try:
-        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'select.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-select-to-open-control.png'))
         pag.click(x, y, duration=2)
         pag.sleep(1)
         pag.typewrite(sample, interval=0.1)
@@ -101,7 +105,8 @@ def automate_performance():
         raise
     # Checking the Show Performance checkbox to display the settings file in the table view
     try:
-        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'show_performance.png'))
+        pic = picture('tableviewwindow-show-performance.png', boundingbox=(0, 0, 140, 23))
+        x, y = pag.locateCenterOnScreen(pic)
         pag.click(x, y, duration=2)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
@@ -110,7 +115,7 @@ def automate_performance():
 
     # Changing the maximum take off weight
     try:
-        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'maximum_takeoff_weight.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-maximum-take-off-weight-lb.png'))
         pag.click(x + 318, y, duration=2)
         pag.sleep(4)
         pag.hotkey(ctrl, 'a')
@@ -124,7 +129,7 @@ def automate_performance():
         raise
     # Changing the aircraft weight of the dummy aircraft
     try:
-        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'aircraft_weight.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-aircraft-weight-no-fuel-lb.png'))
         pag.click(x + 300, y, duration=2)
         pag.sleep(4)
         pag.hotkey(ctrl, 'a')
@@ -139,7 +144,7 @@ def automate_performance():
 
     # Changing the take off time of the dummy aircraft
     try:
-        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'take_off_time.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-take-off-time.png'))
         pag.click(x + 410, y, duration=2)
         pag.sleep(4)
         pag.hotkey(ctrl, 'a')
@@ -154,9 +159,13 @@ def automate_performance():
         print("\nException :\'Take off time\' fill box not found on the screen.")
         raise
 
+    create_tutorial_images()
+
     # Showing and hiding the performance settings
     try:
-        x, y = pag.locateCenterOnScreen(picture('performancesettings', 'show_performance.png'))
+        pic = picture('tableviewwindow-show-pe'
+                      'rformance.png', boundingbox=(0, 0, 140, 23))
+        x, y = pag.locateCenterOnScreen(pic)
         pag.click(x, y, duration=2)
         pag.sleep(3)
 
@@ -174,4 +183,4 @@ def automate_performance():
 
 
 if __name__ == '__main__':
-    start(target=automate_performance, duration=114)
+    start(target=automate_performance, duration=114, dry_run=True)
