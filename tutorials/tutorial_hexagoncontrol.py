@@ -28,7 +28,7 @@ import pyautogui as pag
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images
 from tutorials.pictures import picture
 
 
@@ -46,17 +46,18 @@ def automate_hexagoncontrol():
 
     # Maximizing the window
     try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
+        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
         raise
     pag.sleep(2)
     pag.hotkey('ctrl', 'h')
     pag.sleep(3)
+    create_tutorial_images()
 
     # Changing map to Global
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'europe_cyl.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-01-europe-cyl.png'))
         pag.click(x, y, interval=2)
         pag.press('down', presses=2, interval=0.5)
         pag.press(enter, interval=1)
@@ -67,7 +68,7 @@ def automate_hexagoncontrol():
 
     # Zooming into the map
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-zoom.png'))
         pag.click(x, y, interval=2)
         pag.move(379, 205, duration=1)
         pag.dragRel(70, 75, duration=2)
@@ -83,9 +84,12 @@ def automate_hexagoncontrol():
     pag.hotkey('ctrl', 't')
     pag.sleep(3)
 
+    # update images, because tableview was opened
+    create_tutorial_images()
+
     # Relocating Tableview by performing operations on table view
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-select-to-open-control.png'))
         pag.moveTo(x + 250, y - 462, duration=1)
         if platform == 'linux' or platform == 'linux2':
             # the window need to be moved a bit below the topview window
@@ -132,9 +136,11 @@ def automate_hexagoncontrol():
         pag.press(enter)
         pag.sleep(2)
 
+    create_tutorial_images()
+
     # Entering Centre Latitude and Centre Longitude of Delhi around which hexagon will be drawn
     try:
-        x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'center_latitude.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-center-latitude.png'))
         pag.sleep(1)
         pag.click(x + 370, y, duration=2)
         pag.sleep(1)
@@ -158,7 +164,7 @@ def automate_hexagoncontrol():
 
     # Clicking on the add hexagon button
     try:
-        x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'add_hexagon.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
         pag.click(x, y, duration=2)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
@@ -167,7 +173,7 @@ def automate_hexagoncontrol():
 
     # Changing the Radius of the hexagon
     try:
-        x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'radius.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
         pag.click(x + 400, y, duration=2)
         pag.sleep(1)
         pag.hotkey(ctrl, 'a')
@@ -181,11 +187,9 @@ def automate_hexagoncontrol():
 
     # Clicking on the Remove Hexagon Button
     try:
-        x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'remove_hexagon.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-remove-hexagon.png'))
         pag.click(x, y, duration=2)
         pag.sleep(2)
-        pag.press('left')
-        pag.sleep(1)
         pag.press(enter)
         pag.sleep(2)
     except (ImageNotFoundException, OSError, Exception):
@@ -194,7 +198,7 @@ def automate_hexagoncontrol():
 
     # Clicking on the add hexagon button
     try:
-        x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'add_hexagon.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
         pag.click(x, y, duration=2)
         pag.sleep(3)
     except (ImageNotFoundException, OSError, Exception):
@@ -203,7 +207,7 @@ def automate_hexagoncontrol():
 
     # Changing the angle of first point of the hexagon
     try:
-        x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'radius.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
         pag.sleep(1)
         pag.click(x + 967, y, duration=2)
         pag.sleep(1)
@@ -215,11 +219,9 @@ def automate_hexagoncontrol():
 
         # Clicking on the Remove Hexagon Button
         try:
-            x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'remove_hexagon.png'))
+            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-remove-hexagon.png'))
             pag.click(x, y, duration=2)
             pag.sleep(2)
-            pag.press('left')
-            pag.sleep(1)
             pag.press(enter)
             pag.sleep(2)
         except (ImageNotFoundException, OSError, Exception):
@@ -228,7 +230,7 @@ def automate_hexagoncontrol():
 
         # Clicking on the add hexagon button
         try:
-            x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'add_hexagon.png'))
+            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
             pag.click(x, y, duration=2)
             pag.sleep(3)
         except (ImageNotFoundException, OSError, Exception):
@@ -236,7 +238,7 @@ def automate_hexagoncontrol():
             raise
 
         # Changing to a different angle of first point
-        x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'radius.png'))
+        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
         pag.sleep(1)
         pag.click(x + 967, y, duration=2)
         pag.sleep(1)
@@ -248,11 +250,9 @@ def automate_hexagoncontrol():
 
         # Clicking on the Remove Hexagon Button
         try:
-            x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'remove_hexagon.png'))
+            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-remove-hexagon.png'))
             pag.click(x, y, duration=2)
             pag.sleep(2)
-            pag.press('left')
-            pag.sleep(1)
             pag.press(enter)
             pag.sleep(2)
         except (ImageNotFoundException, OSError, Exception):
@@ -261,7 +261,7 @@ def automate_hexagoncontrol():
 
         # Clicking on the add hexagon button
         try:
-            x, y = pag.locateCenterOnScreen(picture('hexagoncontrol', 'add_hexagon.png'))
+            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
             pag.click(x, y, duration=2)
             pag.sleep(3)
         except (ImageNotFoundException, OSError, Exception):
