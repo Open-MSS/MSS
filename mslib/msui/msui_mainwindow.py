@@ -52,6 +52,7 @@ from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
 from PyQt5 import QtGui, QtCore, QtWidgets
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSUI_CONFIG_PATH)
@@ -245,7 +246,7 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
         Iterates through all top level widgets and puts their shortcuts in a dictionary
         """
         shortcuts = {}
-        for qobject in QtWidgets.QApplication.topLevelWidgets():
+        for qobject in QtWidgets.QApplication.allWidgets():
             actions = []
             # QAction
             actions.extend([
@@ -288,6 +289,11 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
             actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QLabel)
                             if self.cbNoShortcut.checkState()])
+
+            # FigureCanvas
+            actions.extend([(obj.window(), "", obj.figure.axes[0].get_title(), obj.objectName(), "", obj)
+                           for obj in qobject.findChildren(FigureCanvas)
+                           if self.cbNoShortcut.checkState()])
 
             if not any(action for action in actions if action[3] == "actionShortcuts"):
                 actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
