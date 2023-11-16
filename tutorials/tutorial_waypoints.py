@@ -29,7 +29,7 @@ import datetime
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images
 from tutorials.pictures import picture
 
 
@@ -45,7 +45,7 @@ def automate_waypoints():
     # Maximizing the window
     try:
         if platform == 'linux' or platform == 'linux2':
-            pag.hotkey('winleft', 'up')
+            pag.hotkey('winleft', 'pageup')
         elif platform == 'darwin':
             pag.hotkey('ctrl', 'command', 'f')
         elif platform == 'win32':
@@ -56,9 +56,12 @@ def automate_waypoints():
     pag.hotkey('ctrl', 'h')
     pag.sleep(5)
 
+    # lets create our helper images
+    create_tutorial_images()
+
     # Adding waypoints
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-ins-wp.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\nException : Clickable button/option not found on the screen.")
@@ -81,7 +84,7 @@ def automate_waypoints():
 
     # Moving waypoints
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-mv-wp.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Move Waypoint button could not be located on the screen")
@@ -96,7 +99,7 @@ def automate_waypoints():
 
     # Deleting waypoints
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'remove_waypoint.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-del-wp.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Remove Waypoint button could not be located on the screen")
@@ -106,6 +109,7 @@ def automate_waypoints():
     pag.press('left')
     pag.sleep(3)
     if platform == 'linux' or platform == 'linux2' or platform == 'win32':
+        pag.press('left', interval=1)
         pag.press('enter', interval=1)
     elif platform == 'darwin':
         pag.press('return', interval=1)
@@ -115,7 +119,7 @@ def automate_waypoints():
     try:
         if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
             print(pag.position())
-            x, y = pag.locateCenterOnScreen(picture('waypoints', 'europe_cyl.png'))
+            x, y = pag.locateCenterOnScreen(picture('topviewwindow-01-europe-cyl.png'))
             pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Map change dropdown could not be located on the screen")
@@ -129,7 +133,7 @@ def automate_waypoints():
 
     # Zooming into the map
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-zoom.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Zoom button could not be located on the screen")
@@ -140,7 +144,7 @@ def automate_waypoints():
 
     # Panning into the map
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'pan.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-pan.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Pan button could not be located on the screen")
@@ -155,7 +159,7 @@ def automate_waypoints():
 
     # Switching to the previous appearance of the map
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'previous.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-back.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Previous button could not be located on the screen")
@@ -164,7 +168,7 @@ def automate_waypoints():
 
     # Switching to the next appearance of the map
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'next.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-forward.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Next button could not be located on the screen")
@@ -173,7 +177,7 @@ def automate_waypoints():
 
     # Resetting the map to the original size
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'home.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-home.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Home button could not be located on the screen")
@@ -182,7 +186,7 @@ def automate_waypoints():
 
     # Saving the figure
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'save.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-save.png'))
         pag.click(x, y, interval=2)
     except ImageNotFoundException:
         print("\n Exception : Save button could not be located on the screen")
