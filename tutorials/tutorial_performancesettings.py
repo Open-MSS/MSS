@@ -183,4 +183,4 @@ def automate_performance():
 
 
 if __name__ == '__main__':
-    start(target=automate_performance, duration=114, dry_run=True)
+    start(target=automate_performance, duration=114)
