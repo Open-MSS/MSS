@@ -26,7 +26,6 @@
 """
 
 import os
-import sys
 import mock
 import shutil
 import tempfile
@@ -59,7 +58,7 @@ class WMSControlWidgetSetup(object):
     def _setup(self, widget_type):
         wc.WMS_SERVICE_CACHE = {}
         self.port = PORTS.pop()
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
@@ -564,7 +563,7 @@ class TestWMSControlWidgetSetupSimple(object):
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
         self.window.show()

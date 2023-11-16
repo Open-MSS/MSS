@@ -28,7 +28,6 @@ import pytest
 import mock
 import os
 import fs
-import sys
 from PyQt5 import QtWidgets
 from mslib.msui import editor
 from tests.constants import ROOT_DIR
@@ -43,7 +42,7 @@ class Test_Editor(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
     def setup_method(self, mockmessage):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 
         self.window = editor.EditorMainWindow()
         self.save_file_name = self.save_file_name

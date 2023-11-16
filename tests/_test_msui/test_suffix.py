@@ -27,7 +27,6 @@
     limitations under the License.
 """
 
-import sys
 from PyQt5 import QtWidgets, QtTest
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
@@ -35,7 +34,7 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
 class Test_SuffixChange(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()

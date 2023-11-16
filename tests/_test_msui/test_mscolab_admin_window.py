@@ -27,7 +27,6 @@
 import os
 import mock
 import pytest
-import sys
 
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
@@ -68,7 +67,7 @@ class Test_MscolabAdminWindow(object):
         assert add_user_to_operation(path="tokyo", emailid=self.userdata[0], access_level="creator")
 
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()

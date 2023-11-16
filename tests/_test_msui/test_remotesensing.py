@@ -27,7 +27,6 @@
 
 
 import datetime
-import sys
 
 from mock import Mock
 from matplotlib.collections import LineCollection
@@ -48,7 +47,7 @@ class Test_RemoteSensingControlWidget(object):
     Tests about RemoteSensingControlWidget
     """
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.view = Mock()
         self.map = qt.TopViewPlotter()
         self.map.init_map()

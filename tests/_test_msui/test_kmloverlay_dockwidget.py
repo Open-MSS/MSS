@@ -27,7 +27,6 @@
 
 import os
 import fs
-import sys
 import mock
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
@@ -42,7 +41,7 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 class Test_KmlOverlayDockWidget(object):
 
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])

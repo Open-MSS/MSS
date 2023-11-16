@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import sys
 import mock
 from PyQt5 import QtWidgets, QtTest
 
@@ -83,7 +82,7 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_update_available.connect(update_signal)
         self.updater.on_status_update.connect(status_signal)
         self.updater.on_update_finished.connect(update_finished_signal)
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 
     def teardown_method(self):
         self.application.quit()

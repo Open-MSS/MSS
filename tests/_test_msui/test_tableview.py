@@ -28,7 +28,6 @@
 import mock
 import os
 import pytest
-import sys
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
@@ -38,7 +37,7 @@ import mslib.msui.tableview as tv
 
 class Test_TableView(object):
     def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 
         # Create an initital flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),

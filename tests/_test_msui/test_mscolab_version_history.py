@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import os
-import sys
 import pytest
 import mock
 
@@ -55,7 +54,7 @@ class Test_MscolabVersionHistory(object):
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()

@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import os
-import sys
 import fs
 import mock
 import pytest
@@ -51,7 +50,7 @@ class Test_Mscolab_Merge_Waypoints(object):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
+        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
