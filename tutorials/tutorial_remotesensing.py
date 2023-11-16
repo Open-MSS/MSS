@@ -21,12 +21,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import pyautogui as pag
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images
+
 from tutorials.pictures import picture
 
 
@@ -49,9 +49,12 @@ def automate_rs():
     pag.hotkey('ctrl', 'h')
     pag.sleep(3)
 
+    # lets create our helper images
+    create_tutorial_images()
+
     # Opening Remote Sensing dockwidget
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-select-to-open-control.png'))
         pag.click(x, y, interval=2)
         pag.sleep(1)
         pag.press('down', presses=3, interval=1)
@@ -61,10 +64,12 @@ def automate_rs():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'select to open control\' button/option not found on the screen.")
         raise
+    # update our helper images
+    create_tutorial_images()
 
     # Adding waypoints for demonstrating remote sensing
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-ins-wp.png'))
         pag.click(x, y, interval=2)
         pag.move(-50, 150, duration=1)
         pag.click(interval=2)
@@ -85,7 +90,7 @@ def automate_rs():
 
     # Showing Solar Angle Colors
     try:
-        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'showangle.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-show-angle-degree.png'))
         pag.sleep(1)
         pag.click(x, y, duration=2)
         pag.sleep(1)
@@ -115,8 +120,9 @@ def automate_rs():
 
     # Changing azimuth angles
     try:
-        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'azimuth.png'))
-        pag.click(x + 70, y, duration=1)
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-viewing-direction-azimuth.png'))
+        pag.click(x + 90, y, duration=1)
+        pag.move(100, 100)
         azimuth_x, azimuth_y = pag.position()
         pag.sleep(2)
         pag.hotkey(ctrl, 'a')
@@ -135,7 +141,7 @@ def automate_rs():
 
     # Changing elevation angles
     try:
-        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'elevation.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-elevation.png'))
         pag.click(x + 70, y, duration=1)
         pag.sleep(2)
         pag.hotkey(ctrl, 'a')
@@ -154,7 +160,7 @@ def automate_rs():
 
     # Drawing tangents to the waypoints and path
     try:
-        x, y = pag.locateCenterOnScreen(picture('remotesensing', 'drawtangent.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-draw-tangent-points.png'))
         pag.click(x, y, duration=1)
         pag.sleep(2)
         # Changing color of tangents
@@ -174,7 +180,7 @@ def automate_rs():
 
         # Zooming into the map
         try:
-            x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'))
+            x, y = pag.locateCenterOnScreen(picture('topviewwindow-zoom.png'))
             pag.click(x, y, interval=2)
             pag.move(0, 150, duration=1)
             pag.dragRel(230, 150, duration=2)
