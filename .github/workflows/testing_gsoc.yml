@@ -70,12 +70,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-develop-env \
-        && pytest -v --durations=20 --reverse --cov=mslib tests \
-        || (for i in {1..5} \
-          ; do pytest tests -v --durations=0 --reverse --last-failed --lfnf=none \
-          && break \
-        ; done)
-
+        && pytest -v --durations=20 --reverse --cov=mslib tests
 
     - name: Run tests in parallel
       if: ${{ success() }}
@@ -85,11 +80,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-develop-env \
-        && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests \
-        || (for i in {1..5} \
-          ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests --last-failed --lfnf=none \
-          && break \
-        ; done)
+        && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests
 
     - name: Collect coverage
       if: ${{ success() }}
