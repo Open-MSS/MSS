@@ -284,6 +284,11 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                             qobject.findChildren(QtWidgets.QTextEdit)
                             if self.cbNoShortcut.checkState()])
 
+            # QLabel
+            actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QLabel)
+                            if self.cbNoShortcut.checkState()])
+
             if not any(action for action in actions if action[3] == "actionShortcuts"):
                 actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
                                 "Show Current Shortcuts", "Alt+S", None))

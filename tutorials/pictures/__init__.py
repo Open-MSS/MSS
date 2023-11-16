@@ -24,10 +24,24 @@
     limitations under the License.
 """
 import os
+from PIL import Image
+from slugify import slugify
 
 
 MSUI_CONFIG_PATH = os.environ.get('MSUI_CONFIG_PATH')
 
 
-def picture(name="layers.png"):
-    return os.path.join(MSUI_CONFIG_PATH, 'tutorial_images', name)
+def picture(name="layers.png", boundingbox=None):
+    """
+    picture('multilayersdialog-temperature.png', (627,0, 657,20)) creates multilayersdialog-temperature-627-0-657-20.png
+    """
+    filename = os.path.join(MSUI_CONFIG_PATH, 'tutorial_images', name)
+    # ToDo figure how the tutorial mode can catch all elements of the UI
+    if boundingbox is not None:
+        im = Image.open(filename)
+        im1 = im.crop(boundingbox)
+        attr = '-'.join([str(item) for item in boundingbox])
+        filename = slugify(f"{name[:-4]}-{attr}")
+        filename = os.path.join(MSUI_CONFIG_PATH, f"{filename}.png")
+        im1.save(filename)
+    return filename

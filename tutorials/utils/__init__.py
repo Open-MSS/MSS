@@ -126,7 +126,7 @@ def finish():
         raise
 
 
-def start(target=None, duration=120):
+def start(target=None, duration=120, dry_run=False):
     """
     This function runs the above functions as different processes at the same time and can be
     controlled from here. (This is the main process.)
@@ -135,10 +135,12 @@ def start(target=None, duration=120):
         return
     p1 = multiprocessing.Process(target=call_msui)
     p2 = multiprocessing.Process(target=target)
-    p3 = multiprocessing.Process(target=call_recorder, kwargs={"duration": duration})
+    if not dry_run:
+        p3 = multiprocessing.Process(target=call_recorder, kwargs={"duration": duration})
+        p3.start()
 
     print("\nINFO : Starting Automation.....\n")
-    p3.start()
+
     pag.sleep(5)
     initial_ops()
     p1.start()
@@ -146,7 +148,13 @@ def start(target=None, duration=120):
 
     p2.join()
     p1.join()
-    p3.join()
+    if not dry_run:
+        p3.join()
     print("\n\nINFO : Automation Completes Successfully!")
     # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
     sys.exit()
+
+
+def create_tutorial_images():
+    pag.hotkey('ctrl', 'f')
+    pag.sleep(1)

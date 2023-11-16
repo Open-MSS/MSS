@@ -29,7 +29,7 @@ import os.path
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images
 from tutorials.pictures import picture
 
 
@@ -156,12 +156,6 @@ def automate_kml():
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
-
-
-def create_tutorial_images():
-    pag.hotkey('ctrl', 'f')
-    pag.sleep(1)
-    pag.hotkey('enter')
 
 
 if __name__ == '__main__':
