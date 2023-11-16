@@ -29,7 +29,6 @@ import importlib.util
 import os
 import sys
 import mock
-import warnings
 from PyQt5 import QtWidgets
 # Disable pyc files
 sys.dont_write_bytecode = True
@@ -125,10 +124,10 @@ DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
 
-# In the unit days when Operations get archived because not used 
+# In the unit days when Operations get archived because not used
 ARCHIVE_THRESHOLD = 30
 
-# To enable logging set to True or pass a logger object to use. 
+# To enable logging set to True or pass a logger object to use.
 SOCKETIO_LOGGER = True
 
 # To enable Engine.IO logging set to True or pass a logger object to use.
@@ -236,8 +235,6 @@ def fail_if_open_message_boxes_left():
             summary = "\n".join([f"PyQt5.QtWidgets.QMessageBox.{box()._extract_mock_name()}: {box.mock_calls[:-1]}"
                                  for box in [q, i, c, w] if box.call_count > 0])
             pytest.fail(f"An unhandled message box popped up during your test!\n{summary}")
-
-
     # Try to close all remaining widgets after each test
     for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
         try:
@@ -245,6 +242,7 @@ def fail_if_open_message_boxes_left():
         # Some objects deny permission, pass in that case
         except RuntimeError:
             pass
+
 
 @pytest.fixture(scope="session", autouse=True)
 def configure_testsetup(request):
