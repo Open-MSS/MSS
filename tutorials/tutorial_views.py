@@ -23,7 +23,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import time
 import pyautogui as pag
 
 from sys import platform
@@ -183,7 +182,7 @@ def automate_views():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Topviews WMS' \'Server\\Layers\' button/option not found on the screen.")
         pag.press('enter', interval=1)
-        #raise
+        # raise
 
     # Selecting some layers in topview layerlist
     # lookup layer entry from the multilayering checkbox
@@ -297,7 +296,7 @@ def automate_views():
         except (ImageNotFoundException, OSError, Exception):
             print("\nException : SideView's \'Get capabilities\' button/option not found on the screen.")
             pag.press('enter', interval=1)
-            #raise
+            # raise
 
         if platform == 'win32':
             pag.move(-171, -390, duration=1)
@@ -364,7 +363,8 @@ def automate_views():
         x, y = pag.locateCenterOnScreen(picture('sideviewwindow-mv-wp.png'), region=sideview_region)
         pag.click(x, y, interval=2)
         try:
-            pic = picture('sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-initialisation-2012-10-17t12-00-00z.png', boundingbox=(103, 300, 118, 312))
+            pic = picture('sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-'
+                          'initialisation-2012-10-17t12-00-00z.png', boundingbox=(103, 300, 118, 312))
             px, py = pag.locateCenterOnScreen(pic)
             # point1: 127, 394
         except (ImageNotFoundException, OSError, Exception):
@@ -752,7 +752,6 @@ def automate_views():
         # raise
         pag.press('enter')
 
-
     create_tutorial_images()
     # Selecting Some Layers in Linear wms section
     if platform == 'win32':
@@ -783,7 +782,6 @@ def automate_views():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Linearview's Lazer' option not found on the screen.")
         raise
-
 
     # Add waypoints after anaylzing the linear section wms
     try:
