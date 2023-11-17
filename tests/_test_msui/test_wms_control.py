@@ -150,7 +150,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"http://???127.0.0.1:{self.port}")
         assert mockbox.critical.call_count == 1
 
-    @pytest.mark.skip("problem in urllib3")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_connection_error(self, mockbox):
         """
