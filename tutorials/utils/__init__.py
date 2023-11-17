@@ -158,3 +158,8 @@ def start(target=None, duration=120, dry_run=False):
 def create_tutorial_images():
     pag.hotkey('ctrl', 'f')
     pag.sleep(1)
+
+
+def get_region(image):
+    region = pag.locateOnScreen(image)
+    return region
