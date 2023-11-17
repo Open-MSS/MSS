@@ -163,8 +163,7 @@ def automate_performance():
 
     # Showing and hiding the performance settings
     try:
-        pic = picture('tableviewwindow-show-pe'
-                      'rformance.png', boundingbox=(0, 0, 140, 23))
+        pic = picture('tableviewwindow-show-performance.png', boundingbox=(0, 0, 140, 23))
         x, y = pag.locateCenterOnScreen(pic)
         pag.click(x, y, duration=2)
         pag.sleep(3)
