@@ -28,7 +28,7 @@ import pyautogui as pag
 from sys import platform
 from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, create_tutorial_images
-from tutorials.pictures import picture
+from tutorials.utils.picture import picture
 
 
 def automate_waypoints():

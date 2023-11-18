@@ -29,7 +29,7 @@ import os.path
 from sys import platform
 from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish, create_tutorial_images, get_region
-from tutorials.pictures import picture
+from tutorials.utils.picture import picture
 
 
 # ToDo fix waypoint movement
