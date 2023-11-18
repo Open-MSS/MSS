@@ -95,6 +95,7 @@ def automate_mscolab():
             print("\nException :\'Url not found\' button not found on the screen.")
             raise
         create_tutorial_images()
+        pag.sleep(1)
         try:
             x2, y2 = pag.locateCenterOnScreen(picture('mscolabconnectdialog-add-user.png'))
             pag.click(x2, y2, duration=2)
@@ -251,7 +252,6 @@ def automate_mscolab():
 
     # Searching and changing user permissions and deleting users
     try:
-        # ToDo set region to look up
         selectall_right_x, selectall_right_y = pag.locateCenterOnScreen(picture('mscolabadminwindow-select-all.png'),
                                                                         region=right_side)
         pag.moveTo(selectall_right_x - 170, selectall_right_y, duration=2)
@@ -467,13 +467,12 @@ def automate_mscolab():
             pag.click(x, y + 125, duration=1)
             pag.sleep(1)
 
-            # Checking out to a particular version
-            pag.moveTo(x1 + 95, y1, duration=2)
-            pag.click(x1 + 95, y1, duration=1)
+            x2, y2 = pag.locateCenterOnScreen(picture('mscolabversionhistory-checkout.png'))
             pag.sleep(1)
-            pag.sleep(2)
+            pag.moveTo(x2, y2, duration=2)
+            pag.click(x2, y2, duration=2)
+            pag.sleep(1)
             pag.press(enter)
-            pag.sleep(2)
 
             # Filtering changes to display only named changes.
             pag.moveTo(x1 + 29, y1, duration=1)
@@ -495,6 +494,8 @@ def automate_mscolab():
 
     create_tutorial_images()
     # Activate Work Asynchronously with the mscolab server.
+    # ToDo this needs to be extracted to a different tutorial
+    """
     try:
         x, y = pag.locateCenterOnScreen(picture('msuimainwindow-work-asynchronously.png',
                                                 boundingbox=(0, 0, 149, 23)))
@@ -564,12 +565,7 @@ def automate_mscolab():
                   " not found on the screen.")
             raise
         create_tutorial_images()
-        # Todo example for sending data
-        pag.hotkey(alt, 'f4')
-        pag.press('left')
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
+
 
         # Unchecking work asynchronously
         pag.moveTo(work_async_x, work_async_y, duration=2)
@@ -578,7 +574,7 @@ def automate_mscolab():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException : Work Asynchronously (in mscolab) checkbox not found on the screen.")
         raise
-
+    """
     # Activating a local flight track
     if open_operations_x is not None and open_operations_y is not None:
         pag.moveTo(open_operations_x - 900, open_operations_y, duration=2)
@@ -661,11 +657,12 @@ def automate_mscolab():
         pag.press(enter, presses=2, interval=2)
         pag.sleep(3)
 
+    create_tutorial_images()
     # Opening user profile
     try:
-        x, y = pag.locateCenterOnScreen(picture('johndoe_profile.png'))
-        pag.moveTo(x + 32, y, duration=2)
-        pag.click(x + 32, y, duration=2)
+        x, y = pag.locateCenterOnScreen(picture('msuimainwindow-john-doe.png'))
+        pag.moveTo(x + 40, y, duration=2)
+        pag.click(x + 40, y, duration=2)
         pag.sleep(1)
         pag.press('down')
         pag.sleep(1)
@@ -686,4 +683,4 @@ def automate_mscolab():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab, duration=638, dry_run=True)
+    start(target=automate_mscolab, duration=638)
