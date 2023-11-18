@@ -315,4 +315,4 @@ def automate_waypoints():
 
 
 if __name__ == '__main__':
-    start(target=automate_waypoints, duration=280, dry_run=True)
+    start(target=automate_waypoints, duration=280)
