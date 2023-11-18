@@ -528,8 +528,9 @@ def automate_views():
             pag.press('return') if platform == 'darwin' else pag.press('enter')
             pag.sleep(2)
 
+            # offset is wrong
             # Changing Length of Flight Level
-            pag.click(x + xoffset + 236, y - 263, duration=1)
+            pag.click(x + 236, y - 263, duration=1)
             pag.sleep(1)
             pag.doubleClick(duration=1)
             pag.sleep(1)
@@ -539,7 +540,7 @@ def automate_views():
             pag.sleep(2)
 
             # Changing hPa level of waypoints
-            pag.click(x + xoffset + 367, y - 232, duration=1)
+            pag.click(x +  367, y - 232, duration=1)
             pag.sleep(1)
             pag.doubleClick(duration=1)
             pag.sleep(1)
@@ -548,8 +549,9 @@ def automate_views():
             pag.press('enter')
             pag.sleep(2)
 
+            # xoffset
             # Changing longitude of 'Location A' waypoint
-            pag.click(x + xoffset + 165, y - 294, duration=1)
+            pag.click(x + 165, y - 294, duration=1)
             pag.sleep(1)
             pag.doubleClick(duration=1)
             pag.sleep(1)
@@ -586,11 +588,11 @@ def automate_views():
             # Inserting a new row of waypoints
             try:
                 x1, y1 = pag.locateCenterOnScreen(picture('tableviewwindow-insert.png'))
-                pag.click(x + xoffset + 117, y - 294, duration=1)
+                pag.click(x + 117, y - 294, duration=1)
                 pag.sleep(2)
                 pag.click(x1, y1, duration=1)
                 pag.sleep(2)
-                pag.click(x + xoffset + 117, y - 263, duration=1)
+                pag.click(x + 117, y - 263, duration=1)
                 pag.sleep(1)
                 pag.doubleClick(duration=1)
                 pag.sleep(1)
@@ -785,7 +787,7 @@ def automate_views():
 
     # Add waypoints after anaylzing the linear section wms
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-ins-wp.png'))
         pag.click(x, y, interval=2)
         pag.sleep(1)
         pag.click(x + 30, y + 50, duration=1)
