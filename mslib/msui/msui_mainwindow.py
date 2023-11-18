@@ -295,6 +295,16 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                            for obj in qobject.findChildren(FigureCanvas)
                            if self.cbNoShortcut.checkState()])
 
+            # QMenu
+            actions.extend([(obj.window(), obj.toolTip(), obj.title(), obj.objectName(), "", obj)
+                           for obj in qobject.findChildren(QtWidgets.QMenu)
+                           if self.cbNoShortcut.checkState()])
+
+            # QMenuBar
+            actions.extend([(obj.window(), "menubar", "menubar", obj.objectName(), "", obj)
+                            for obj in qobject.findChildren(QtWidgets.QMenuBar)
+                            if self.cbNoShortcut.checkState()])
+
             if not any(action for action in actions if action[3] == "actionShortcuts"):
                 actions.append((qobject.window(), "Show Current Shortcuts", "Show Current Shortcuts",
                                 "Show Current Shortcuts", "Alt+S", None))
