@@ -28,7 +28,7 @@ import os.path
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images, get_region
 from tutorials.pictures import picture
 
 
@@ -65,37 +65,38 @@ def automate_mscolab():
     _, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
     # Maximizing the window
     try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
+        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
         raise
     pag.sleep(4)
 
+    create_tutorial_images()
     # Connecting to Mscolab (Mscolab localhost server must be activated beforehand for this to work)
     try:
-        x, y = pag.locateCenterOnScreen(picture('mscolab', 'connect_to_mscolab.png'))
+        x, y = pag.locateCenterOnScreen(picture('msuimainwindow-connect.png'))
         pag.sleep(1)
         pag.click(x, y, duration=2)
         pag.sleep(2)
-
+        create_tutorial_images()
         # Entering local host URL
         try:
-            x1, y1 = pag.locateCenterOnScreen(picture('mscolab', 'connect.png'))
-            pag.click(x1 - 100, y1, duration=2)
+            x1, y1 = pag.locateCenterOnScreen(picture('mscolabconnectdialog-http-localhost-8083.png'))
+            pag.click(x1, y1, duration=2)
             pag.sleep(1)
             pag.hotkey(ctrl, 'a')
             pag.sleep(1)
             pag.hotkey(ctrl, 'a')
             pag.typewrite(localhost_url, interval=0.2)
             pag.sleep(1)
-            pag.click(x1, y1, duration=2)
+            pag.press("enter")
             pag.sleep(2)
         except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Connect (to localhost)\' button not found on the screen.")
+            print("\nException :\'Url not found\' button not found on the screen.")
             raise
-        # Adding a new user
+        create_tutorial_images()
         try:
-            x2, y2 = pag.locateCenterOnScreen(picture('mscolab', 'add_user.png'))
+            x2, y2 = pag.locateCenterOnScreen(picture('mscolabconnectdialog-add-user.png'))
             pag.click(x2, y2, duration=2)
             pag.sleep(4)
 
@@ -111,13 +112,13 @@ def automate_mscolab():
             pag.press(enter)
             pag.sleep(2)
 
-            if pag.locateCenterOnScreen(picture('mscolab', 'emailid_taken.png')) is not None:
-                print("The email id you have provided is already registered!")
-                pag.sleep(1)
-                pag.press('left')
-                pag.sleep(1)
-                pag.press(enter)
-                pag.sleep(2)
+            # if pag.locateCenterOnScreen(picture('mscolab', 'emailid_taken.png')) is not None:
+            #    print("The email id you have provided is already registered!")
+            #    pag.sleep(1)
+            #    pag.press('left')
+            #    pag.sleep(1)
+            #    pag.press(enter)
+            #    pag.sleep(2)
 
             # Entering details of the new user that's created
             pag.press('tab', presses=2, interval=1)
@@ -132,9 +133,11 @@ def automate_mscolab():
         print("\nException :\'Connect to Mscolab\' button not found on the screen.")
         raise
 
+    create_tutorial_images()
     # Opening a new Mscolab Operation
+    file_menu = picture("msuimainwindow-menubar.png", boundingbox=(0, 0, 38, 22))
     try:
-        file_x, file_y = pag.locateCenterOnScreen(picture('mscolab', 'file.png'))
+        file_x, file_y = pag.locateCenterOnScreen(file_menu)
         pag.moveTo(file_x, file_y, duration=2)
         pag.click(file_x, file_y, duration=2)
         for _ in range(2):
@@ -149,8 +152,9 @@ def automate_mscolab():
             pag.press('tab')
             pag.sleep(2)
 
+        create_tutorial_images()
         try:
-            x1, y1 = pag.locateCenterOnScreen(picture('mscolab', 'addop_ok.png'))
+            x1, y1 = pag.locateCenterOnScreen(picture('addoperationdialog-ok.png'))
             pag.moveTo(x1, y1, duration=2)
             pag.click(x1, y1, duration=2)
             pag.sleep(2)
@@ -162,8 +166,12 @@ def automate_mscolab():
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'File\' menu button not found on the screen.")
         raise
+
+    create_tutorial_images()
+
+    pic = picture("msuimainwindow-operations.png", boundingbox=(0, 0, 72, 17))
     try:
-        open_operations_x, open_operations_y = pag.locateCenterOnScreen(picture('mscolab', 'active_operations.png'))
+        open_operations_x, open_operations_y = pag.locateCenterOnScreen(pic)
         pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
         pag.sleep(1)
         pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
@@ -177,17 +185,26 @@ def automate_mscolab():
         pag.moveTo(file_x, file_y, duration=2)
         pag.click(file_x, file_y, duration=2)
         pag.press('right', presses=2, interval=2)
+        pag.press('down', presses=3, interval=2)
+        pag.press('right')
         pag.press('down', presses=2, interval=2)
         pag.press(enter)
         pag.sleep(3)
     else:
         print('Image not Found : File menu not found (while managing users)')
 
-    # Demonstrating search and select of the users present in the network.
+    create_tutorial_images()
+    pic = picture("mscolabadminwindow-all-users-without-permission.png")
+    ref_x, ref_y = pag.locateCenterOnScreen(pic)
+    left_side = (ref_x, ref_y, 400, 800)
+
+    pic = picture("mscolabadminwindow-all-users-with-permission.png")
+    ref_x, ref_y = pag.locateCenterOnScreen(pic)
+    right_side = (ref_x, ref_y, 800, 1000)
+
     try:
-        selectall_left_x, selectall_left_y = pag.locateCenterOnScreen(picture('mscolab',
-                                                                              'manageusers_left_selectall.png'),
-                                                                      region=(0, 0, 600, sc_height))
+        selectall_left_x, selectall_left_y = pag.locateCenterOnScreen(picture('mscolabadminwindow-select-all.png'),
+                                                                      region=left_side)
         pag.moveTo(selectall_left_x, selectall_left_y, duration=2)
         pag.click(selectall_left_x, selectall_left_y, duration=1)
         pag.sleep(2)
@@ -222,7 +239,7 @@ def automate_mscolab():
             pag.click(selectall_left_x, selectall_left_y + 57 * count, duration=1)
 
         try:
-            x, y = pag.locateCenterOnScreen(picture('mscolab', 'manageusers_add.png'))
+            x, y = pag.locateCenterOnScreen(picture('mscolabadminwindow-add.png'), region=left_side)
             pag.moveTo(x, y, duration=2)
             pag.click(x, y, duration=2)
             pag.sleep(1)
@@ -234,9 +251,9 @@ def automate_mscolab():
 
     # Searching and changing user permissions and deleting users
     try:
-        selectall_right_x, selectall_right_y = pag.locateCenterOnScreen(picture('mscolab',
-                                                                                'manageusers_right_selectall.png'),
-                                                                        region=(600, 0, 1200, sc_height))
+        # ToDo set region to look up
+        selectall_right_x, selectall_right_y = pag.locateCenterOnScreen(picture('mscolabadminwindow-select-all.png'),
+                                                                        region=right_side)
         pag.moveTo(selectall_right_x - 170, selectall_right_y, duration=2)
         pag.click(selectall_right_x - 170, selectall_right_y, duration=2)
         pag.typewrite('t', interval=0.3)
@@ -256,7 +273,7 @@ def automate_mscolab():
             pag.click(duration=1)
             pag.sleep(2)
             try:
-                modify_x, modify_y = pag.locateCenterOnScreen(picture('mscolab', 'manageusers_modify.png'))
+                modify_x, modify_y = pag.locateCenterOnScreen(picture('mscolabadminwindow-modify.png'))
                 pag.click(modify_x - 141, modify_y, duration=2)
                 if i == 0:
                     pag.press('up', presses=2)
@@ -296,7 +313,7 @@ def automate_mscolab():
         print('Image Not Found: Select All button has previously not found on the screen')
 
     # Closing user permission window
-    pag.hotkey('command', 'w') if platform == 'dawrin' else pag.hotkey(alt, 'f4')
+    pag.hotkey('command', 'w') if platform == 'darwin' else pag.hotkey(alt, 'f4')
     pag.sleep(2)
 
     # Demonstrating Chat feature of mscolab to the user
@@ -309,11 +326,12 @@ def automate_mscolab():
     else:
         print('Image not Found : File menu not found (while opening Chat window)')
 
+    create_tutorial_images()
     # Sending messages to collaboraters or other users
     pag.typewrite(chat_message1, interval=0.05)
     pag.sleep(2)
     try:
-        x, y = pag.locateCenterOnScreen(picture('mscolab', 'chat_send.png'))
+        x, y = pag.locateCenterOnScreen(picture('mscolaboperation-send.png'))
         pag.moveTo(x, y, duration=2)
         pag.click(x, y, duration=2)
         pag.sleep(2)
@@ -339,7 +357,7 @@ def automate_mscolab():
         raise
     # Searching messages in the chatbox using the search bar
     try:
-        previous_x, previous_y = pag.locateCenterOnScreen(picture('mscolab', 'chat_previous.png'))
+        previous_x, previous_y = pag.locateCenterOnScreen(picture('mscolaboperation-previous.png'))
         pag.moveTo(previous_x - 70, previous_y, duration=2)
         pag.click(previous_x - 70, previous_y, duration=2)
         pag.sleep(1)
@@ -368,9 +386,10 @@ def automate_mscolab():
         pag.press(enter)
         pag.sleep(4)
 
+    create_tutorial_images()
     # Adding some waypoints to topview
     try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
+        x, y = pag.locateCenterOnScreen(picture('topviewwindow-ins-wp.png'))
         pag.moveTo(x, y, duration=2)
         pag.click(x, y, duration=2)
         pag.move(-50, 150, duration=1)
@@ -410,9 +429,10 @@ def automate_mscolab():
         pag.press(enter)
         pag.sleep(1)
 
+    create_tutorial_images()
     # Operations performed in version history window.
     try:
-        x, y = pag.locateCenterOnScreen(picture('mscolab', 'refresh_window.png'))
+        x, y = pag.locateCenterOnScreen(picture('mscolabversionhistory-refresh-window.png'))
         pag.moveTo(x, y, duration=2)
         pag.click(x, y, duration=2)
         pag.sleep(2)
@@ -429,7 +449,7 @@ def automate_mscolab():
         # Changing this change to a named version
         try:
             # Giving name to a change version.
-            x1, y1 = pag.locateCenterOnScreen(picture('mscolab', 'name_version.png'))
+            x1, y1 = pag.locateCenterOnScreen(picture('mscolabversionhistory-name-version.png'))
             pag.sleep(1)
             pag.moveTo(x1, y1, duration=2)
             pag.click(x1, y1, duration=2)
@@ -451,7 +471,6 @@ def automate_mscolab():
             pag.moveTo(x1 + 95, y1, duration=2)
             pag.click(x1 + 95, y1, duration=1)
             pag.sleep(1)
-            pag.press('left')
             pag.sleep(2)
             pag.press(enter)
             pag.sleep(2)
@@ -474,9 +493,11 @@ def automate_mscolab():
     pag.hotkey('command', 'w') if platform == 'darwin' else pag.hotkey(alt, 'f4')
     pag.sleep(4)
 
+    create_tutorial_images()
     # Activate Work Asynchronously with the mscolab server.
     try:
-        x, y = pag.locateCenterOnScreen(picture('mscolab', 'work_asynchronously.png'))
+        x, y = pag.locateCenterOnScreen(picture('msuimainwindow-work-asynchronously.png',
+                                                boundingbox=(0, 0, 149, 23)))
         pag.sleep(1)
         pag.moveTo(x, y, duration=2)
         pag.click(x, y, duration=2)
@@ -492,19 +513,22 @@ def automate_mscolab():
             pag.sleep(4)
 
         # Moving waypoints.
+        create_tutorial_images()
+        point2 = picture("topviewwindow-top-view.png", boundingbox=(322,112, 346, 135))
         try:
             if wp1_x is not None and wp2_x is not None:
-                x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'))
+                x, y = pag.locateCenterOnScreen(picture('topviewwindow-mv-wp.png'))
                 pag.click(x, y, interval=2)
                 try:
-                    wp2_x, wp2_y = pag.locateCenterOnScreen(picture('mscolab', 'topview_point2.png'))
+                    wp2_x, wp2_y = pag.locateCenterOnScreen(point2)
                 except (ImageNotFoundException, OSError, Exception):
                     print("\nException : Topview's \'Point 2\' not found on the screen.")
                     raise
                 pag.click(wp2_x, wp2_y, interval=2)
                 pag.moveTo(wp2_x, wp2_y, duration=1)
-                pag.dragTo(wp1_x, wp1_y, duration=1, button='left')
+                pag.dragTo(wp1_x, wp1_y + 20, duration=1, button='left')
                 pag.click(interval=2)
+                pag.sleep(4)
 
         except (ImageNotFoundException, OSError, Exception):
             print("\n Exception : Move Waypoint button could not be located on the screen")
@@ -524,12 +548,14 @@ def automate_mscolab():
             pag.press(enter)
             pag.sleep(3)
 
+        create_tutorial_images()
         # Overwriting Server waypoints with Local Waypoints.
         try:
-            x, y = pag.locateCenterOnScreen(picture('mscolab', 'overwrite_waypoints.png'))
+            x, y = pag.locateCenterOnScreen(picture('msuimainwindow-server-options.png'))
             pag.sleep(1)
             pag.moveTo(x, y, duration=2)
             pag.click(x, y, duration=2)
+            pag.press('down', presses=2, interval=1)
             pag.sleep(2)
             pag.press(enter)
             pag.sleep(3)
@@ -537,6 +563,13 @@ def automate_mscolab():
             print("\nException : Overwrite with local waypoints (during saving to server) button"
                   " not found on the screen.")
             raise
+        create_tutorial_images()
+        # Todo example for sending data
+        pag.hotkey(alt, 'f4')
+        pag.press('left')
+        pag.sleep(1)
+        pag.press(enter)
+        pag.sleep(2)
 
         # Unchecking work asynchronously
         pag.moveTo(work_async_x, work_async_y, duration=2)
@@ -566,7 +599,7 @@ def automate_mscolab():
         pag.sleep(4)
         # Adding waypoints in a different fashion than the pevious one (for local flighttrack)
         try:
-            x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
+            x, y = pag.locateCenterOnScreen(picture('topviewwindow-ins-wp.png'))
             pag.moveTo(x, y, duration=2)
             pag.click(x, y, duration=2)
             pag.move(-50, 150, duration=1)
@@ -598,7 +631,7 @@ def automate_mscolab():
 
         # Opening the topview again by double clicking on open views
         try:
-            x, y = pag.locateCenterOnScreen(picture('mscolab', 'openviews.png'))
+            x, y = pag.locateCenterOnScreen(picture('msuimainwindow-open-views.png'))
             pag.moveTo(x, y + 22, duration=2)
             pag.doubleClick(x, y + 22, duration=2)
             pag.sleep(3)
@@ -630,7 +663,7 @@ def automate_mscolab():
 
     # Opening user profile
     try:
-        x, y = pag.locateCenterOnScreen(picture('mscolab', 'johndoe_profile.png'))
+        x, y = pag.locateCenterOnScreen(picture('johndoe_profile.png'))
         pag.moveTo(x + 32, y, duration=2)
         pag.click(x + 32, y, duration=2)
         pag.sleep(1)
@@ -653,4 +686,4 @@ def automate_mscolab():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab, duration=638)
+    start(target=automate_mscolab, duration=638, dry_run=True)
