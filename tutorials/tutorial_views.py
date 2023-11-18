@@ -540,7 +540,7 @@ def automate_views():
             pag.sleep(2)
 
             # Changing hPa level of waypoints
-            pag.click(x +  367, y - 232, duration=1)
+            pag.click(x + 367, y - 232, duration=1)
             pag.sleep(1)
             pag.doubleClick(duration=1)
             pag.sleep(1)

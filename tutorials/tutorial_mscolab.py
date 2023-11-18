@@ -28,7 +28,7 @@ import os.path
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish, create_tutorial_images, get_region
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images
 from tutorials.utils.picture import picture
 
 
@@ -62,7 +62,7 @@ def automate_mscolab():
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
     example_image_path = os.path.join(path, 'docs/mss-logo.png')
     modify_x, modify_y = None, None
-    _, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
+    # _, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
     # Maximizing the window
     try:
         pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
