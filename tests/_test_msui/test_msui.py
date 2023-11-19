@@ -36,7 +36,7 @@ import pytest
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
-from tests.constants import ROOT_DIR, POSIX
+from tests.constants import ROOT_DIR, POSIX, MSUI_CONFIG_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
@@ -64,6 +64,65 @@ def test_main():
                                                             deinstall=True, debug=False, logfile="log.log")):
                 msui.main()
             assert pytest_wrapped_e.typename == "SystemExit"
+
+
+class Test_MSS_TutorialMode():
+    def setup_method(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.application.setApplicationDisplayName("MSUI")
+        self.main_window = msui_mw.MSUIMainWindow(tutorial_mode=True)
+        self.main_window.create_new_flight_track()
+        self.main_window.show()
+        self.main_window.shortcuts_dlg = msui_mw.MSUI_ShortcutsDialog(
+            tutorial_mode=True)
+        self.main_window.show_shortcuts(search_mode=True)
+        self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
+
+    def teardown_method(self):
+        self.main_window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+
+    def test_tutorial_dir(self):
+        dir_name, name = fs.path.split(self.tutorial_dir)
+        with fs.open_fs(dir_name) as _fs:
+            assert _fs.exists(name)
+        with fs.open_fs(self.tutorial_dir) as _fs:
+            assert _fs.listdir('/') == [
+                'msuimainwindow-menubar.png',
+                'msuimainwindow-status-disconnected.png',
+                'shortcutsdialog-filter.png',
+                'menuimportflighttrack-import-flight-track.png',
+                'msuimainwindow-operations.png',
+                'menuviews-views.png',
+                'shortcutsdialog-show-items-without-shortcut.png',
+                'menuexportactiveflighttrack-export-flight-track.png',
+                'operationarchivebrowser-close.png',
+                'msuimainwindow-connect.png',
+                'operationarchivebrowser-operation-archive.png',
+                'msuimainwindow-operation-archive.png',
+                'menuproperties-maintenance.png',
+                'menunew-new.png',
+                'shortcutsdialog-advanced-settings.png',
+                'menuoperation-operation.png',
+                'msuimainwindow-any.png',
+                'operationarchivebrowser-unarchive.png',
+                'menuhelp-help.png',
+                'msuimainwindow-no-operation-selected.png',
+                'msuimainwindow-server-options.png',
+                'shortcutsdialog-highlight-on-all-windows.png',
+                'menufile-file.png',
+                'shortcutsdialog-close.png',
+                'shortcutsdialog-display-type.png',
+                'msuimainwindow-select-operation-to-view-description.png',
+                'msuimainwindow-category.png',
+                'shortcutsdialog-text.png',
+                'msuimainwindow-open-views.png',
+                'msuimainwindow-flight-tracks.png',
+                'msuimainwindow-mscolab-server.png',
+                'msuimainwindow-work-asynchronously.png',
+                'msuimainwindow-user.png']
 
 
 class Test_MSS_AboutDialog():

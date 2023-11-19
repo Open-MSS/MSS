@@ -313,9 +313,19 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
                                 "Ctrl+F", None))
 
-            pix_dir = os.path.join(constants.MSUI_CONFIG_PATH, 'tutorial_images')
-            if not os.path.exists(pix_dir):
-                os.makedirs(pix_dir)
+            if "://" in constants.MSUI_CONFIG_PATH:
+                # Todo remove all os.path dependencies, when needed use getsyspath
+                pix_dir = fs.path.combine(constants.MSUI_CONFIG_PATH, 'tutorial_images')
+                try:
+                    _fs = fs.open_fs(pix_dir)
+                except fs.errors.CreateFailed:
+                    dir_path, name = fs.path.split(pix_dir)
+                    _fs = fs.open_fs(dir_path)
+                    _fs.makedir(name)
+            else:
+                pix_dir = os.path.join(constants.MSUI_CONFIG_PATH, 'tutorial_images')
+                if not os.path.exists(pix_dir):
+                    os.makedirs(pix_dir)
             for item in actions:
                 if len(item[2]) > 0:
                     # These are twice defined, but only one can be used for highlighting
@@ -332,10 +342,14 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                         try:
                             prefix = item[0].objectName()
                             attr = item[2]
+                            if item[5] is None:
+                                continue
                             pixmap = item[5].grab()
                             pix_name = slugify(f"{prefix}-{attr}")
                             if pix_name.startswith("Search") is False:
-                                pix_file = f"{os.path.join(pix_dir, pix_name)}.png"
+                                pix_file = f"{pix_name}.png"
+                                _fs = fs.open_fs(pix_dir)
+                                pix_file = os.path.join(_fs.getsyspath("."), pix_file)
                                 pixmap.save(pix_file, 'png')
                         except AttributeError:
                             pass
