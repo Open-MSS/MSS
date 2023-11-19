@@ -129,7 +129,7 @@ The `MSS/tutorials/textfiles` contain descriptions of the tutorial videos in tex
 converted to audio files by `audio.py` script after adding certain #ToDOs there.
 
 When you want to run the tutorial by your IDE you can disable the screenrecording by `dry_run=True`
-in the start function.
+in the `start` function. Development on a 4K display is then possible too.
 
 For running the `tutorial_mscolab.py` you must provide a cleaned database and a mcolab server running on default port.
 
