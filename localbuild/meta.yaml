@@ -93,6 +93,7 @@ requirements:
     - email_validator
     - keyring
     - dbus-python
+    - python-slugify
     - flask-login
     - pysaml2
     - libxmlsec1
