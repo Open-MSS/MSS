@@ -115,7 +115,12 @@ class Test_Mscolab_Merge_Waypoints(object):
             QtWidgets.QApplication.processEvents()
 
 
-@pytest.mark.skip("timeout on github")
+class AutoClickOverwriteMscolabMergeWaypointsDialog(mslib.msui.mscolab.MscolabMergeWaypointsDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.overwriteBtn.animateClick()
+
+
 class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_overwrite_to_server(self, mockbox):
@@ -133,15 +138,9 @@ class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
         wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat != wp_local_before.lat
 
-        # ToDo mock this messagebox
-        def handle_merge_dialog():
-            QtTest.QTest.mouseClick(self.window.mscolab.merge_dialog.overwriteBtn, QtCore.Qt.LeftButton)
-            QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait(100)
-
-        QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(2)
+        with mock.patch("mslib.msui.mscolab.MscolabMergeWaypointsDialog", AutoClickOverwriteMscolabMergeWaypointsDialog):
+            self.window.serverOptionsCb.setCurrentIndex(2)
         QtWidgets.QApplication.processEvents()
         # get the updated waypoints model from the server
         # ToDo understand why requesting in follow up test self.window.waypoints_model not working
@@ -154,6 +153,12 @@ class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
         QtTest.QTest.qWait(100)
         new_server_wp = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wp_local_before.lat == new_server_wp.lat
+
+
+class AutoClickKeepMscolabMergeWaypointsDialog(mslib.msui.mscolab.MscolabMergeWaypointsDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.keepServerBtn.animateClick()
 
 
 class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
@@ -173,15 +178,9 @@ class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
         wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat != wp_local_before.lat
 
-        # ToDo mock this messagebox
-        def handle_merge_dialog():
-            QtTest.QTest.mouseClick(self.window.mscolab.merge_dialog.keepServerBtn, QtCore.Qt.LeftButton)
-            QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait(100)
-
-        QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(2)
+        with mock.patch("mslib.msui.mscolab.MscolabMergeWaypointsDialog", AutoClickKeepMscolabMergeWaypointsDialog):
+            self.window.serverOptionsCb.setCurrentIndex(2)
         QtWidgets.QApplication.processEvents()
         # get the updated waypoints model from the server
         # ToDo understand why requesting in follow up test self.window.waypoints_model not working
@@ -213,15 +212,9 @@ class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
         wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat != wp_local_before.lat
 
-        # ToDo mock this messagebox
-        def handle_merge_dialog():
-            QtTest.QTest.mouseClick(self.window.mscolab.merge_dialog.keepServerBtn, QtCore.Qt.LeftButton)
-            QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait(100)
-
-        QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(1)
+        with mock.patch("mslib.msui.mscolab.MscolabMergeWaypointsDialog", AutoClickKeepMscolabMergeWaypointsDialog):
+            self.window.serverOptionsCb.setCurrentIndex(1)
         QtWidgets.QApplication.processEvents()
         # get the updated waypoints model from the server
         # ToDo understand why requesting in follow up test of self.window.waypoints_model not working
