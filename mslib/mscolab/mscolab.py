@@ -33,7 +33,6 @@ import shutil
 import sys
 import secrets
 import subprocess
-import time
 import git
 
 from mslib import __version__
