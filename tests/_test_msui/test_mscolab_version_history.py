@@ -78,8 +78,6 @@ class Test_MscolabVersionHistory(object):
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
     def test_changes(self):

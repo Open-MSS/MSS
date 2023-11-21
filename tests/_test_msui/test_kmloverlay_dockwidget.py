@@ -58,8 +58,6 @@ class Test_KmlOverlayDockWidget(object):
 
     def teardown_method(self):
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.window.close()
         if os.path.exists(save_kml):
             os.remove(save_kml)

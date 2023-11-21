@@ -44,8 +44,6 @@ class Test_SuffixChange(object):
     def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     def test_suffixchange(self):
         suffix = [' hPa', ' km', ' hft']

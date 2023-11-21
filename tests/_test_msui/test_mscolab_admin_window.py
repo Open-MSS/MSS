@@ -93,8 +93,6 @@ class Test_MscolabAdminWindow(object):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
     def test_permission_filter(self):

@@ -55,8 +55,6 @@ class Test_MultipleFlightpathControlWidget():
     def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     def test_initialization(self):
         widget = MultipleFlightpathControlWidget(parent=self.widget,

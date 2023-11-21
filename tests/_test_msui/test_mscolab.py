@@ -79,8 +79,6 @@ class Test_Mscolab_connect_window():
         self.window.hide()
         self.main_window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
     def test_url_combo(self):
@@ -317,8 +315,6 @@ class Test_Mscolab(object):
             self.window.listViews.item(0).window.handle_force_close()
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
     def test_activate_operation(self):

@@ -53,8 +53,6 @@ class Test_MSS_LV_Options_Dialog(object):
     def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_show(self, mockcrit):
@@ -83,8 +81,6 @@ class Test_MSSLinearViewWindow(object):
 
     def teardown_method(self):
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -144,8 +140,6 @@ class Test_LinearViewWMS(object):
 
     def teardown_method(self):
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()

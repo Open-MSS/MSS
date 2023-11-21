@@ -85,7 +85,6 @@ class Test_MSS_ShortcutDialog:
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 
     def teardown_method(self):
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)

@@ -54,8 +54,6 @@ class Test_MSS_TV_MapAppearanceDialog(object):
     def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_show(self, mockcrit):
@@ -84,8 +82,6 @@ class Test_MSSTopViewWindow(object):
 
     def teardown_method(self):
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -327,8 +323,6 @@ class Test_TopViewWMS(object):
 
     def teardown_method(self):
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()

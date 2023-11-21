@@ -86,8 +86,6 @@ class Test_MscolabOperation(object):
             self.window.mscolab.conn.disconnect()
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
     def test_send_message(self):

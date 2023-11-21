@@ -44,8 +44,6 @@ class Test_SatelliteDockWidget(object):
     def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     def test_load(self):
         path = os.path.join(os.path.dirname(__file__), "../", "data", "satellite_predictor.txt")

@@ -60,8 +60,6 @@ class Test_TableView(object):
     def teardown_method(self):
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     def test_open_hex(self):
         """

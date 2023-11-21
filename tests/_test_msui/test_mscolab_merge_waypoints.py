@@ -69,8 +69,6 @@ class Test_Mscolab_Merge_Waypoints(object):
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
     def _create_user_data(self, emailid='merge@alpha.org'):
