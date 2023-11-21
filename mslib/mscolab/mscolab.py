@@ -34,7 +34,6 @@ import sys
 import secrets
 import subprocess
 import time
-import socket
 import git
 
 from mslib import __version__
@@ -275,29 +274,14 @@ def handle_mscolab_metadata_init(repo_exists):
     try:
         command = ["python", os.path.join("mslib", "mscolab", "mscolab.py"),
                    "start"] if repo_exists else ["mscolab", "start"]
-        with subprocess.Popen(command) as process:
-            # maximum retires for connecting mscolab
-            max_retries = 5
-            # retry interval if retry failed
-            retry_interval = 1
-
-            for _ in range(max_retries):
-                try:
-                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-                        sock.connect(('localhost', 8083))
-                        cmd_curl = ["curl", "http://localhost:8083/metadata/localhost_test_idp",
-                                    "-o", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "metadata_sp.xml")]
-                        subprocess.run(cmd_curl, check=True)
-                        process.terminate()
-                        logging.info('mscolab metadata file generated succesfully')
-                        return True
-                except socket.error:
-                    time.sleep(retry_interval)
-
-            if _ == max_retries:
-                print(f'error while generating metadata,'
-                      f'mscolab server failed to start after {max_retries} retries')
-                return False
+        process = subprocess.Popen(command)
+        cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
+                    "http://localhost:8083/metadata/localhost_test_idp",
+                    "-o", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "metadata_sp.xml")]
+        subprocess.run(cmd_curl, check=True)
+        process.terminate()
+        logging.info('mscolab metadata file generated succesfully')
+        return True
 
     except subprocess.CalledProcessError as error:
         print(f"Error while generating metadata file for the mscolab server: {error}")
