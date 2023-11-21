@@ -29,7 +29,7 @@ import importlib.util
 import os
 import sys
 import mock
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtTest, sip
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -219,6 +219,18 @@ def _load_module(module_name, path):
 
 _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
 _load_module("mscolab_settings", path)
+
+
+@pytest.fixture(autouse=True)
+def fail_if_open_widgets_left():
+    """Fail a test if there are any Qt widgets left open at the end
+    """
+    yield
+    widgets = set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets())
+    assert len(widgets) == 0, "There are Qt widgets left open at the end of the test!"
+    # Delete all remaining widgets if there were any
+    for widget in widgets:
+        sip.delete(widget)
 
 
 @pytest.fixture(autouse=True)
