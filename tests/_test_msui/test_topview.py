@@ -302,10 +302,10 @@ class Test_TopViewWMS(object):
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
-        self.thread = multiprocessing.Process(
+        self.process = multiprocessing.Process(
             target=application.run,
             args=("127.0.0.1", self.port))
-        self.thread.start()
+        self.process.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -330,7 +330,9 @@ class Test_TopViewWMS(object):
         self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
-        self.thread.terminate()
+        self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def query_server(self, url):
         QtWidgets.QApplication.processEvents()

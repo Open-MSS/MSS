@@ -85,6 +85,8 @@ class Test_MscolabOperation(object):
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def test_send_message(self):
         self._send_message("**test message**")

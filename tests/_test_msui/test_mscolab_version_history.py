@@ -77,6 +77,8 @@ class Test_MscolabVersionHistory(object):
             self.window.close()
         self.window.deleteLater()
         self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def test_changes(self):
         self._change_version_filter(1)

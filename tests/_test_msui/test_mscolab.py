@@ -80,6 +80,8 @@ class Test_Mscolab_connect_window():
         self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -319,6 +321,8 @@ class Test_Mscolab(object):
             self.window.close()
         self.window.deleteLater()
         self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def test_activate_operation(self):
         self._connect_to_mscolab()

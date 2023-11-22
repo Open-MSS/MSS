@@ -68,6 +68,8 @@ class Test_Mscolab_Merge_Waypoints(object):
             self.window.close()
         self.window.deleteLater()
         self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def _create_user_data(self, emailid='merge@alpha.org'):
         with self.app.app_context():

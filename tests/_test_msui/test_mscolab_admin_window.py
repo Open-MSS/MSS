@@ -90,6 +90,8 @@ class Test_MscolabAdminWindow(object):
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()

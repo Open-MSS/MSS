@@ -67,10 +67,10 @@ class WMSControlWidgetSetup(object):
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
         QtTest.QTest.qWait(3000)
-        self.thread = multiprocessing.Process(
+        self.process = multiprocessing.Process(
             target=application.run,
             args=("127.0.0.1", self.port))
-        self.thread.start()
+        self.process.start()
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         else:
@@ -97,7 +97,9 @@ class WMSControlWidgetSetup(object):
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
-        self.thread.terminate()
+        self.process.terminate()
+        self.process.join(10)
+        self.process.close()
 
     def query_server(self, url):
         while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
