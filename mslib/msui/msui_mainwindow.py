@@ -134,8 +134,10 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
     Dialog showing shortcuts for all currently open windows
     """
 
-    def __init__(self, tutorial_mode=False):
-        super().__init__(QtWidgets.QApplication.activeWindow())
+    def __init__(self, parent=None, tutorial_mode=False):
+        if parent is None:
+            parent = QtWidgets.QApplication.activeWindow()
+        super().__init__(parent)
         self.tutorial_mode = tutorial_mode
         self.setupUi(self)
         self.current_shortcuts = None
@@ -1031,7 +1033,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         except RuntimeError:
             self.shortcuts_dlg = MSUI_ShortcutsDialog(tutorial_mode=self.tutorial_mode)
 
-        self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow(), QtCore.Qt.Dialog)
+        self.shortcuts_dlg.setParent(QtWidgets.QApplication.activeWindow() or self, QtCore.Qt.Dialog)
         self.shortcuts_dlg.reset_highlight()
         self.shortcuts_dlg.fill_list()
         if self.tutorial_mode:
