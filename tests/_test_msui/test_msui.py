@@ -42,27 +42,34 @@ from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 
 
-@mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
-def test_main():
+def test_main_version():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
                         return_value=argparse.Namespace(version=True)):
             msui.main()
         assert pytest_wrapped_e.typename == "SystemExit"
 
-    if platform.system() == "Linux":
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
-            with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
-                            return_value=argparse.Namespace(version=False, update=False, menu=True,
-                                                            deinstall=False, debug=False, logfile="log.log")):
-                msui.main()
-            assert pytest_wrapped_e.typename == "SystemExit"
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
-            with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
-                            return_value=argparse.Namespace(version=False, update=False, menu=False,
-                                                            deinstall=True, debug=False, logfile="log.log")):
-                msui.main()
-            assert pytest_wrapped_e.typename == "SystemExit"
+
+@pytest.mark.skipif(platform.system() != "Linux", reason="Linux-only test")
+@mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
+def test_main_menu():
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
+                        return_value=argparse.Namespace(version=False, update=False, menu=True,
+                                                        deinstall=False, debug=False, logfile="log.log")):
+            msui.main()
+        assert pytest_wrapped_e.typename == "SystemExit"
+
+
+@pytest.mark.skipif(platform.system() != "Linux", reason="Linux-only test")
+@mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
+def test_main_deinstall():
+    with pytest.raises(SystemExit) as pytest_wrapped_e:
+        with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
+                        return_value=argparse.Namespace(version=False, update=False, menu=False,
+                                                        deinstall=True, debug=False, logfile="log.log")):
+            msui.main()
+        assert pytest_wrapped_e.typename == "SystemExit"
 
 
 class Test_MSS_TutorialMode():
