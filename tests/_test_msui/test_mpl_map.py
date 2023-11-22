@@ -26,6 +26,7 @@
 """
 from matplotlib import pyplot as plt
 from mslib.msui.mpl_map import MapCanvas
+from PyQt5 import QtWidgets
 
 
 class Test_MapCanvas:
@@ -33,6 +34,13 @@ class Test_MapCanvas:
         kwargs = {'resolution': 'l', 'area_thresh': 1000.0, 'ax': plt.gca(), 'llcrnrlon': -15.0, 'llcrnrlat': 35.0,
                   'urcrnrlon': 30.0, 'urcrnrlat': 65.0, 'epsg': '4326'}
         self.map = MapCanvas(**kwargs)
+
+    def teardown_method(self):
+        # Matplotlib does not close its matplotlib.backends.backend_qt.MainWindow fully,
+        # so we manually get a reference to that widget and close it.
+        window = QtWidgets.QApplication.topLevelWidgets()[0]
+        window.close()
+        window.deleteLater()
 
     def test_no_coastsegs(self):
         """

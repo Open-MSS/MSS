@@ -226,6 +226,8 @@ def fail_if_open_widgets_left():
     """Fail a test if there are any Qt widgets left open at the end
     """
     yield
+    # Wait a short moment for all widgets' deleteLater to be handled
+    QtTest.QTest.qWait(100)
     widgets = set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets())
     assert len(widgets) == 0, "There are Qt widgets left open at the end of the test!"
     # Delete all remaining widgets if there were any

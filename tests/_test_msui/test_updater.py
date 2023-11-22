@@ -151,3 +151,5 @@ class Test_MSS_ShortcutDialog:
         QtTest.QTest.qWait(100)
         assert ui.statusLabel.text() == "Update successful. Please restart MSS."
         assert ui.btRestart.isEnabled()
+        ui.close()
+        ui.deleteLater()

@@ -73,14 +73,16 @@ class Test_MSS_TutorialMode():
         self.main_window.create_new_flight_track()
         self.main_window.show()
         self.main_window.shortcuts_dlg = msui_mw.MSUI_ShortcutsDialog(
-            tutorial_mode=True)
+            self.main_window,
+            tutorial_mode=True,
+        )
         self.main_window.show_shortcuts(search_mode=True)
         self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
 
     def teardown_method(self):
-        self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.main_window.close()
+        self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_tutorial_dir(self):
@@ -109,9 +111,8 @@ class Test_MSS_AboutDialog():
         assert pattern in text.decode('utf-8')
 
     def teardown_method(self):
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
 
@@ -120,13 +121,12 @@ class Test_MSS_ShortcutDialog():
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.main_window = msui_mw.MSUIMainWindow()
         self.main_window.show()
-        self.shortcuts = msui_mw.MSUI_ShortcutsDialog()
+        self.shortcuts = msui_mw.MSUI_ShortcutsDialog(self.main_window)
 
     def teardown_method(self):
-        self.shortcuts.hide()
-        self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.main_window.close()
+        self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_shortcuts_present(self):
@@ -200,11 +200,9 @@ class Test_MSSSideViewWindow(object):
             'empty_msui_settings.json',
         )
         read_config_file(path=config_file)
-        for i in range(self.window.listViews.count()):
-            self.window.listViews.item(i).window.hide()
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_no_updater(self):

@@ -93,7 +93,8 @@ class WMSControlWidgetSetup(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()
@@ -573,7 +574,8 @@ class TestWMSControlWidgetSetupSimple(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_xml(self):

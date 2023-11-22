@@ -85,13 +85,9 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.mscolab.logout()
-        if self.window.mscolab.admin_window:
-            self.window.mscolab.admin_window.close()
-        if self.window.mscolab.conn:
-            self.window.mscolab.conn.disconnect()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 

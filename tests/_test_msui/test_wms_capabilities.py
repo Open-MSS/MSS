@@ -56,6 +56,8 @@ class Test_WMSCapabilities(object):
         QtTest.QTest.qWait(100)
 
     def teardown_method(self):
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")

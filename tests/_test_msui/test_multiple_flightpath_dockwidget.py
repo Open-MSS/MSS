@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import mock
 from PyQt5 import QtWidgets, QtTest
 from mslib.msui import msui
 from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
@@ -53,7 +54,9 @@ class Test_MultipleFlightpathControlWidget():
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_initialization(self):

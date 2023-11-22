@@ -27,6 +27,7 @@
     limitations under the License.
 """
 
+import sys
 from PyQt5 import QtWidgets, QtTest
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
@@ -42,7 +43,8 @@ class Test_SuffixChange(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_suffixchange(self):

@@ -139,6 +139,10 @@ class Test_RemoteSensingControlWidget(object):
         self.solar_type = ('sun', 'total (horizon)')
         self.remote_widget = RemoteSensingControlWidget(view=self.view)
 
+    def teardown_method(self):
+        self.remote_widget.close()
+        self.remote_widget.deleteLater()
+
     @pytest.mark.parametrize(
         "lon0, lat0, h0, lon1, lat1, h1, obs_azi, expected",
         [

@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import pytest
+import sys
 from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib.msui import mss
 
@@ -36,3 +37,5 @@ def test_mss_rename_message():
     main_window.show()
     QtTest.QTest.mouseClick(main_window.pushButton, QtCore.Qt.LeftButton)
     QtWidgets.QApplication.processEvents()
+    main_window.close()
+    main_window.deleteLater()

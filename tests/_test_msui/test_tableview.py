@@ -58,7 +58,9 @@ class Test_TableView(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_open_hex(self):

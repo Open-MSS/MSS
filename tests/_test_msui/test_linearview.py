@@ -51,7 +51,8 @@ class Test_MSS_LV_Options_Dialog(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -80,7 +81,9 @@ class Test_MSSLinearViewWindow(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -139,7 +142,9 @@ class Test_LinearViewWMS(object):
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
 
     def teardown_method(self):
-        self.window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()

@@ -51,7 +51,8 @@ class Test_Editor(object):
     def teardown_method(self):
         if os.path.exists(self.save_file_name):
             os.remove(self.save_file_name)
-        self.window.hide()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)

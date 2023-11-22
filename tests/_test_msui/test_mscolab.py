@@ -75,9 +75,9 @@ class Test_Mscolab_connect_window():
             mslib.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
 
     def teardown_method(self):
-        self.main_window.mscolab.logout()
-        self.window.hide()
-        self.main_window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.main_window.close()
+        self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
@@ -315,6 +315,9 @@ class Test_Mscolab(object):
             self.window.listViews.item(0).window.handle_force_close()
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         self.process.terminate()
 
     def test_activate_operation(self):

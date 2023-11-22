@@ -56,7 +56,6 @@ class Test_Mscolab_Merge_Waypoints(object):
         self.emailid = 'merge@alpha.org'
 
     def teardown_method(self):
-        self.window.mscolab.logout()
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
@@ -65,10 +64,9 @@ class Test_Mscolab_Merge_Waypoints(object):
             if mss_dir.exists('local_mscolab_data'):
                 mss_dir.removetree('local_mscolab_data')
             assert mss_dir.exists('local_mscolab_data') is False
-        if self.window.mscolab.version_window:
-            self.window.mscolab.version_window.close()
-        if self.window.mscolab.conn:
-            self.window.mscolab.conn.disconnect()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         self.process.terminate()
 
     def _create_user_data(self, emailid='merge@alpha.org'):

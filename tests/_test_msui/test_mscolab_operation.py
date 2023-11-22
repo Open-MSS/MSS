@@ -26,6 +26,7 @@
 """
 import os
 import pytest
+import mock
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message
@@ -79,12 +80,9 @@ class Test_MscolabOperation(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.mscolab.logout()
-        if self.window.mscolab.chat_window:
-            self.window.mscolab.chat_window.hide()
-        if self.window.mscolab.conn:
-            self.window.mscolab.conn.disconnect()
-        self.window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 

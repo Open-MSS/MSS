@@ -32,6 +32,7 @@ from shutil import move
 import mock
 from nco import Nco
 import pytest
+import matplotlib
 
 import mslib.mswms.wms
 import mslib.mswms.gallery_builder
@@ -39,6 +40,7 @@ import mslib.mswms.mswms as mswms
 from importlib import reload
 from tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
 from tests.constants import DATA_DIR
+from PyQt5 import QtWidgets
 
 
 class Test_WMS(object):
@@ -465,3 +467,11 @@ class Test_WMS(object):
         assert os.path.exists(os.path.join(docsdir, "code"))
         assert os.path.exists(os.path.join(docsdir, "plots.html"))
         mslib.mswms.gallery_builder.plot_htmls = {}
+
+        # Cleanup leftover QtWidgets from matplotlib. I am not sure if this should
+        # happen here or if the functionality under test shouldn't even use Qt to begin
+        # with (its part of the server after all).
+        for widget in QtWidgets.QApplication.topLevelWidgets():
+            if isinstance(widget, matplotlib.backends.backend_qt.MainWindow):
+                widget.close()
+                widget.deleteLater()

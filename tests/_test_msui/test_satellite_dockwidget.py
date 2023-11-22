@@ -42,7 +42,8 @@ class Test_SatelliteDockWidget(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     def test_load(self):

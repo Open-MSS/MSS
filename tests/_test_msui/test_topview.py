@@ -52,7 +52,8 @@ class Test_MSS_TV_MapAppearanceDialog(object):
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        self.window.close()
+        self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -68,20 +69,22 @@ class Test_MSS_TV_MapAppearanceDialog(object):
 
 class Test_MSSTopViewWindow(object):
     def setup_method(self):
-        mainwindow = MSUIMainWindow()
+        self.main_window = MSUIMainWindow()
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=self.main_window)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
 
     def teardown_method(self):
-        self.window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.main_window.close()
+        self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -309,8 +312,8 @@ class Test_TopViewWMS(object):
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        mainwindow = MSUIMainWindow()
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.main_window = MSUIMainWindow()
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=self.main_window)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
@@ -322,7 +325,9 @@ class Test_TopViewWMS(object):
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
 
     def teardown_method(self):
-        self.window.hide()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.main_window.close()
+        self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()
@@ -370,3 +375,7 @@ class Test_MSUITopViewWindow():
                                                                                      'llcrnrlon': -15.0,
                                                                                      'urcrnrlat': 65.0,
                                                                                      'urcrnrlon': 30.0}
+
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            mainwindow.close()
+        mainwindow.deleteLater()
