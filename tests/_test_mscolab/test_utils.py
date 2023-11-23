@@ -31,7 +31,7 @@ import json
 from fs.tempfs import TempFS
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, MessageType
-from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
+from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id, get_session_id, get_message_dict, create_files, os_fs_create_dir
@@ -71,13 +71,10 @@ class Test_Utils(TestCase):
         return app
 
     def setUp(self):
-        handle_db_init()
+        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         socketio, cm, self.fm = setup_managers(self.app)
-
-    def tearDown(self):
-        handle_db_reset()
 
     @pytest.mark.skipif(os.name == "nt",
                         reason="multiprocessing needs currently start_method fork")
