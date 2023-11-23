@@ -36,7 +36,7 @@ from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
-from tests.utils import wait_until_signal
+from tests.utils import wait_until_signal, wait_until_socket_ready
 
 PORTS = list(range(26000, 26500))
 
@@ -140,6 +140,8 @@ class Test_LinearViewWMS(object):
         QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
+        # Wait for the server process to become ready
+        wait_until_socket_ready(("127.0.0.1", self.port))
 
     def teardown_method(self):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):

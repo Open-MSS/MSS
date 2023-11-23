@@ -261,6 +261,26 @@ def wait_until_signal(signal, timeout=5):
         return finished
 
 
+def wait_until_socket_ready(address, retries=10, initial_delay=0.01, backoff_factor=2, max_delay=1):
+    """Wait until the socket at address accepts connections
+
+    This function uses an exponential backoff strategy to try to return fast but also
+    allow the other party some time to become ready. The default values correspond to 10
+    retries with the following wait times in-between them in seconds:
+    [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1, 1, 1].
+    The longest wait time therefore would be 4.27 seconds.
+    """
+    retry_delay = initial_delay
+    for _ in range(retries):
+        try:
+            socket.create_connection(address)
+            return
+        except ConnectionRefusedError:
+            time.sleep(retry_delay)
+            retry_delay = min(retry_delay * backoff_factor, max_delay)
+    raise TimeoutError(f"failed to connect to {address}")
+
+
 class ExceptionMock:
     """
     Replace function calls with raised exceptions

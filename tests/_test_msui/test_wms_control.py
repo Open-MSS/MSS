@@ -36,7 +36,7 @@ from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
-from tests.utils import wait_until_signal
+from tests.utils import wait_until_signal, wait_until_socket_ready
 
 
 PORTS = list(range(18000, 18500))
@@ -80,6 +80,8 @@ class WMSControlWidgetSetup(object):
             self.window = wc.VSecWMSControlWidget(
                 view=self.view, wms_cache=self.tempdir, waypoints_model=waypoints_model)
         self.window.show()
+        # Wait for the server process to become ready
+        wait_until_socket_ready(("127.0.0.1", self.port))
 
         # Remove all previous cached URLs
         for url in self.window.multilayers.layers.copy():
