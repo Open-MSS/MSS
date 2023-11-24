@@ -28,8 +28,11 @@
 import sys
 import multiprocessing
 import pyautogui as pag
+from pyscreeze import ImageNotFoundException
+
 from mslib.msui import msui
-from tutorials.utils import screenrecorder as sr
+from tutorials.utils import screenrecorder as sr, picture
+from tutorials.utils.picture import picture
 
 
 def initial_ops():
@@ -163,3 +166,46 @@ def create_tutorial_images():
 def get_region(image):
     region = pag.locateOnScreen(image)
     return region
+
+
+def click_center_on_screen(pic, duration=2):
+    x, y = pag.locateCenterOnScreen(pic)
+    pag.click(x, y, duration=duration)
+
+
+def select_listelement(steps):
+    _, enter, _, _ = platform_keys()
+    pag.press('down', presses=steps, interval=0.5)
+    pag.press(enter, interval=1)
+    pag.sleep(5)
+
+
+def find_and_click_picture(pic_name, exception_message, duration=2):
+    try:
+        click_center_on_screen(picture(pic_name), duration)
+        pag.sleep(1)
+    except (ImageNotFoundException, OSError, Exception):
+        print(f"\nException: {exception_message}")
+        raise
+
+
+def load_kml_file(pic_name, file_path, exception_message):
+    _, enter, _, _ = platform_keys()
+    try:
+        find_and_click_picture(pic_name, exception_message)
+        pag.typewrite(file_path, interval=0.1)
+        pag.sleep(1)
+        pag.press(enter)
+    except (ImageNotFoundException, OSError, Exception):
+        print(exception_message)
+        raise
+
+
+def change_attribute(pic_name, exception_message, actions, interval=2, sleep_time=2):
+    try:
+        click_center_on_screen(picture(pic_name), interval)
+        pag.sleep(sleep_time)
+        actions()
+    except (ImageNotFoundException, OSError, Exception):
+        print(f"\nException: {exception_message}")
+        raise

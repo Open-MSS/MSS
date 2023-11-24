@@ -27,51 +27,10 @@
 import pyautogui as pag
 import os.path
 
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish, create_tutorial_images
-from tutorials.utils.picture import picture
-
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images, select_listelement, \
+    find_and_click_picture, load_kml_file, change_attribute
 
 CTRL, ENTER, WIN, ALT = platform_keys()
-
-def click_center_on_screen(pic, duration=2):
-    x, y = pag.locateCenterOnScreen(pic)
-    pag.click(x, y, duration=duration)
-
-
-def select_listelement(steps):
-    pag.press('down', presses=steps, interval=0.5)
-    pag.press(ENTER, interval=1)
-    pag.sleep(5)
-
-def find_and_click_picture(pic_name, exception_message, duration=2):
-    try:
-        click_center_on_screen(picture(pic_name), duration)
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print(f"\nException: {exception_message}")
-        raise
-
-
-def load_kml_file(pic_name, file_path, exception_message):
-    try:
-        find_and_click_picture(pic_name, exception_message)
-        pag.typewrite(file_path, interval=0.1)
-        pag.sleep(1)
-        pag.press(ENTER)
-    except (ImageNotFoundException, OSError, Exception):
-        print(exception_message)
-        raise
-
-
-def change_attribute(pic_name, exception_message, actions, interval=2, sleep_time=2):
-    try:
-        click_center_on_screen(picture(pic_name), interval)
-        pag.sleep(sleep_time)
-        actions()
-    except (ImageNotFoundException, OSError, Exception):
-        print(f"\nException: {exception_message}")
-        raise
 
 
 def automate_kml():
