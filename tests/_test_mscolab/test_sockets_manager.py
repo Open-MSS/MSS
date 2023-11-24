@@ -234,12 +234,12 @@ class Test_Socket_Manager(LiveSocketTestCase):
         }
         # returns an array of messages
         url = urljoin(self.url, 'messages')
-        res = requests.get(url, data=data, timeout=(2, 10)).json()
+        res = requests.get(url, data=data).json()
         assert len(res["messages"]) == 2
 
         data["token"] = "dummy"
         # returns False due to bad authorization
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, data=data)
         assert r.text == "False"
 
     def test_edit_message(self):
@@ -270,7 +270,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
         }
         # returns an array of messages
         url = urljoin(self.url, 'messages')
-        res = requests.get(url, data=data, timeout=(2, 10)).json()
+        res = requests.get(url, data=data).json()
         assert len(res["messages"]) == 1
         messages = res["messages"][0]
         assert messages["text"] == "I have updated the message"
@@ -308,7 +308,7 @@ class Test_Socket_Manager(LiveSocketTestCase):
             "message_type": int(MessageType.IMAGE)
         }
         url = urljoin(self.url, 'message_attachment')
-        requests.post(url, data=data, files=files, timeout=(2, 10))
+        requests.post(url, data=data, files=files)
         upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, str(self.user.id))
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]

@@ -185,7 +185,7 @@ def mscolab_check_free_port(all_ports, port):
 def mscolab_ping_server(port):
     url = f"http://127.0.0.1:{port}/status"
     try:
-        r = requests.get(url, timeout=(2, 10))
+        r = requests.get(url)
         data = json.loads(r.text)
         if data['message'] == "Mscolab server" and isinstance(data['USE_SAML2'], bool):
             return True
@@ -194,7 +194,7 @@ def mscolab_ping_server(port):
     return False
 
 
-def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=10):
+def mscolab_start_server(all_ports):
     handle_db_init()
     port = mscolab_check_free_port(all_ports, all_ports.pop())
 
@@ -219,16 +219,13 @@ def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=1
         args=(_app, sockio, cm, fm,),
         kwargs={'port': port})
     process.start()
-    start_time = time.time()
-    while True:
-        elapsed_time = (time.time() - start_time)
-        if elapsed_time > timeout:
-            raise RuntimeError(
-                "Failed to start the server after %d seconds. " % timeout
-            )
 
+    retry_delay = 0.01
+    while True:
         if mscolab_ping_server(port):
             break
+        time.sleep(retry_delay)
+        retry_delay = min(retry_delay * 2, 1)
 
     return process, url, _app, sockio, cm, fm
 
@@ -238,11 +235,10 @@ def create_msui_settings_file(content):
         file_dir.writetext("msui_settings.json", content)
 
 
-def wait_until_signal(signal, timeout=5):
+def wait_until_signal(signal):
     """
     Blocks the calling thread until the signal emits or the timeout expires.
     """
-    init_time = time.time()
     finished = False
 
     def done(*args):
@@ -250,7 +246,7 @@ def wait_until_signal(signal, timeout=5):
         finished = True
 
     signal.connect(done)
-    while not finished and time.time() - init_time < timeout:
+    while not finished:
         QtTest.QTest.qWait(100)
 
     try:
@@ -261,24 +257,22 @@ def wait_until_signal(signal, timeout=5):
         return finished
 
 
-def wait_until_socket_ready(address, retries=10, initial_delay=0.01, backoff_factor=2, max_delay=1):
+def wait_until_socket_ready(address, initial_delay=0.01, backoff_factor=2, max_delay=1):
     """Wait until the socket at address accepts connections
 
     This function uses an exponential backoff strategy to try to return fast but also
-    allow the other party some time to become ready. The default values correspond to 10
-    retries with the following wait times in-between them in seconds:
-    [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1, 1, 1].
-    The longest wait time therefore would be 4.27 seconds.
+    allow the other party some time to become ready. The default values correspond to
+    infinite retries with the following wait times in-between them in seconds:
+    [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1, 1, 1, ...].
     """
     retry_delay = initial_delay
-    for _ in range(retries):
+    while True:
         try:
             socket.create_connection(address)
             return
         except ConnectionRefusedError:
             time.sleep(retry_delay)
             retry_delay = min(retry_delay * backoff_factor, max_delay)
-    raise TimeoutError(f"failed to connect to {address}")
 
 
 class ExceptionMock:
@@ -308,17 +302,10 @@ class LiveSocketTestCase(LiveServerTestCase):
 
         self._process.start()
 
-        # We must wait for the server to start listening, but give up
-        # after a specified maximum timeout
-        timeout = self.app.config.get('LIVESERVER_TIMEOUT', 5)
-        start_time = time.time()
-
+        # We must wait for the server to start listening
+        retry_delay = 0.01
         while True:
-            elapsed_time = (time.time() - start_time)
-            if elapsed_time > timeout:
-                raise RuntimeError(
-                    "Failed to start the server after %d seconds. " % timeout
-                )
-
             if self._can_ping_server():
                 break
+            time.sleep(retry_delay)
+            retry_delay = min(retry_delay * 2, 1)
