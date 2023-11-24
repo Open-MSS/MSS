@@ -191,7 +191,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.qWait(20)
         QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.image_displayed)
+        wait_until_signal(self.window.pdlg.canceled)
 
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
