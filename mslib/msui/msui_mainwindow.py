@@ -274,10 +274,10 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
             actions.extend([(obj.window(), obj.toolTip(), obj.currentText(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QComboBox) if self.cbNoShortcut.checkState()])
 
-            # QAbstractSpinBox, QLineEdit
+            # QAbstractSpinBox, QLineEdit, QDoubleSpinBox
             actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QAbstractSpinBox) +
-                            qobject.findChildren(QtWidgets.QLineEdit)
+                            qobject.findChildren(QtWidgets.QLineEdit) + qobject.findChildren(QtWidgets.QDoubleSpinBox)
                             if self.cbNoShortcut.checkState()])
             # QPlainTextEdit, QTextEdit
             actions.extend([(obj.window(), obj.toolTip(), obj.toPlainText(), obj.objectName(), "", obj)

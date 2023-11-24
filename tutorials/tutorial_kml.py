@@ -27,133 +27,113 @@
 import pyautogui as pag
 import os.path
 
-from sys import platform
 from pyscreeze import ImageNotFoundException
 from tutorials.utils import platform_keys, start, finish, create_tutorial_images
 from tutorials.utils.picture import picture
 
 
-def automate_kml():
-    """
-    This is the main automating script of the MSS remote sensing tutorial which will be recorded and saved
-    to a file having dateframe nomenclature with a .mp4 extension(codec).
-    """
-    # Giving time for loading of the MSS GUI.
-    pag.sleep(5)
-    ctrl, enter, win, alt = platform_keys()
+CTRL, ENTER, WIN, ALT = platform_keys()
 
-    # Satellite Predictor file path
+def click_center_on_screen(pic, duration=2):
+    x, y = pag.locateCenterOnScreen(pic)
+    pag.click(x, y, duration=duration)
+
+
+def select_listelement(steps):
+    pag.press('down', presses=steps, interval=0.5)
+    pag.press(ENTER, interval=1)
+    pag.sleep(5)
+
+def find_and_click_picture(pic_name, exception_message, duration=2):
+    try:
+        click_center_on_screen(picture(pic_name), duration)
+        pag.sleep(1)
+    except (ImageNotFoundException, OSError, Exception):
+        print(f"\nException: {exception_message}")
+        raise
+
+
+def load_kml_file(pic_name, file_path, exception_message):
+    try:
+        find_and_click_picture(pic_name, exception_message)
+        pag.typewrite(file_path, interval=0.1)
+        pag.sleep(1)
+        pag.press(ENTER)
+    except (ImageNotFoundException, OSError, Exception):
+        print(exception_message)
+        raise
+
+
+def change_attribute(pic_name, exception_message, actions, interval=2, sleep_time=2):
+    try:
+        click_center_on_screen(picture(pic_name), interval)
+        pag.sleep(sleep_time)
+        actions()
+    except (ImageNotFoundException, OSError, Exception):
+        print(f"\nException: {exception_message}")
+        raise
+
+
+def automate_kml():
+    pag.sleep(5)
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
     kml_file_path1 = os.path.join(path, 'docs/samples/kml/folder.kml')
     kml_file_path2 = os.path.join(path, 'docs/samples/kml/color.kml')
 
-    # Maximizing the window
+    hotkey = WIN, 'pageup'
     try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
+        pag.hotkey(*hotkey)
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
-
-    pag.hotkey('ctrl', 'h')
+    pag.hotkey('CTRL', 'h')
     pag.sleep(1)
-    # lets create our helper images
     create_tutorial_images()
 
-    # Changing map to Global
-    try:
-        pic = picture('topviewwindow-01-europe-cyl.png')
-        x, y = pag.locateCenterOnScreen(pic)
-
-        pag.click(x, y, interval=2)
-        pag.press('down', presses=2, interval=0.5)
-        pag.press(enter, interval=1)
-        pag.sleep(5)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\n Exception : Map change dropdown could not be located on the screen")
-        raise
-
-    # Opening KML overlay dockwidget
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-select-to-open-control.png'))
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-        pag.press('down', presses=4, interval=1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control\' button/option not found on the screen.")
-
+    find_and_click_picture('topviewwindow-01-europe-cyl.png',
+                           "Map change dropdown could not be located on the screen")
+    select_listelement(2)
+    find_and_click_picture('topviewwindow-select-to-open-control.png',
+                           "'select to open control' button/option not found on the screen.")
+    select_listelement(4)
     create_tutorial_images()
 
-    # Adding the KML files and loading them
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-add-kml-files.png'))
-        pag.click(x, y, duration=2)
-        pag.sleep(1)
-        pag.typewrite(kml_file_path1, interval=0.1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
+    load_kml_file('topviewwindow-add-kml-files.png', kml_file_path1,
+                  "'Add KML Files' button not found on the screen.")
+    load_kml_file('topviewwindow-add-kml-files.png', kml_file_path2,
+                  "'Add KML Files' button not found on the screen.")
 
-        pag.click(x, y, duration=2)
-        pag.sleep(1)
-        pag.typewrite(kml_file_path2, interval=0.1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Add KML Files\' button not found on the screen.")
-        raise
+    find_and_click_picture('topviewwindow-unselect-all-files.png',
+                           "'Select All Files(Unselecting & Selecting)' "
+                           "button not found on the screen.")
+    find_and_click_picture('topviewwindow-select-all-files.png',
+                           "'Select All Files(Unselecting & Selecting)' "
+                           "button not found on the screen.")
 
-    # Unselecting and Selecting Files to demonstrate visibility on the map.
-    try:
-        x1, y1 = pag.locateCenterOnScreen(picture('topviewwindow-unselect-all-files.png'))
-        pag.click(x1, y1, duration=2)
-        pag.sleep(2)
-        try:
-            x1, y1 = pag.locateCenterOnScreen(picture('topviewwindow-select-all-files.png'))
-            pag.click(x1, y1, duration=2)
-            pag.sleep(2)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Select All Files(Unselecting & Selecting)\' button not found on the screen.")
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Select All Files(Unselecting & Selecting)\' button not found on the screen.")
-        raise
     create_tutorial_images()
-    # Selecting and Customizing the Folder.kml file
 
     pag.move(-200, 0, duration=1)
     pag.click(interval=2)
 
-    try:
-        # Changing color of folder.kml file
-        x1, y1 = pag.locateCenterOnScreen(picture('topviewwindow-change-color.png'))
-        pag.click(x1, y1, duration=2)
-        pag.sleep(4)
-        pag.move(-220, -300, duration=1)
-        pag.click(interval=2)
-        pag.press(enter)
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Change Color \' button not found on the screen.")
-        raise
-    try:
-        # Changing Linewidth of folder.kml file
-        x1, y1 = pag.locateCenterOnScreen(picture('topviewwindow-change-color.png'))
-        pag.click(x1 + 12, y1 + 50, duration=2)
-        pag.sleep(2)
-        pag.hotkey(ctrl, 'a')
-        for _ in range(8):
-            pag.press('down')
-            pag.sleep(3)
-        pag.hotkey(ctrl, 'a')
-        pag.typewrite('6.50', interval=1)
-        pag.press(enter)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Change Color(folder.kml again)\' button not found on the screen.")
-        raise
+    # ToDo color is clicked but did not change, QT bug?
+    change_attribute('topviewwindow-change-color.png',
+                     "'Change Color' button not found on the screen.",
+                     lambda: (pag.move(-220, -300, duration=1),
+                              pag.click(interval=2),
+                              pag.press(ENTER)),
+                     interval=2)
 
+    change_attribute('topviewwindow-2-00.png',
+                     "'Change Linewidth' button not found on the screen.",
+                     lambda: (pag.hotkey(CTRL,  'a'),
+                              [pag.press('down') for _ in range(8)],
+                              pag.hotkey(CTRL, 'a'),
+                              pag.typewrite('2.50', interval=1),
+                              pag.press(ENTER),
+                              pag.sleep(1),
+                              pag.hotkey(CTRL, 'a'),
+                              pag.typewrite('4.50', interval=1),
+                              pag.press(ENTER)),
+                     interval=2)
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
