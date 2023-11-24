@@ -33,7 +33,6 @@ import shutil
 import sys
 import secrets
 import subprocess
-import time
 import git
 
 from mslib import __version__
@@ -275,11 +274,8 @@ def handle_mscolab_metadata_init(repo_exists):
         command = ["python", os.path.join("mslib", "mscolab", "mscolab.py"),
                    "start"] if repo_exists else ["mscolab", "start"]
         process = subprocess.Popen(command)
-
-        # Add a small delay to allow the server to start up
-        time.sleep(10)
-
-        cmd_curl = ["curl", "http://localhost:8083/metadata/localhost_test_idp",
+        cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
+                    "http://localhost:8083/metadata/localhost_test_idp",
                     "-o", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "metadata_sp.xml")]
         subprocess.run(cmd_curl, check=True)
         process.terminate()
