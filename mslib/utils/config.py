@@ -136,7 +136,7 @@ class MSUIDefaultConfig:
     MSCOLAB_category = "default"
 
     # timeout for MSColab in seconds. First value is for connection, second for reply
-    MSCOLAB_timeout = [2, 10]
+    MSCOLAB_timeout = [10, 30]
 
     # don't query for archived operations
     MSCOLAB_skip_archived_operations = False
