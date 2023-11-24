@@ -165,6 +165,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_forward_backward_clicks(self, mockbox):
         self.query_server(f"http://127.0.0.1:{self.port}")
+        image_displayed_spy = QtTest.QSignalSpy(self.window.image_displayed)
         self.window.init_time_back_click()
         self.window.init_time_fwd_click()
         self.window.valid_time_fwd_click()
@@ -175,6 +176,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.window.cb_valid_time_back_click()
         self.window.cb_init_time_fwd_click()
         self.window.cb_valid_time_fwd_click()
+        image_displayed_spy.wait()
         try:
             self.window.secs_from_timestep("Wrong")
         except ValueError:
