@@ -80,7 +80,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-develop-env \
-        && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests
+        && pytest -vv -n logical --dist loadfile --max-worker-restart 0 tests
 
     - name: Collect coverage
       if: ${{ success() }}

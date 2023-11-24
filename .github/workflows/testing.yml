@@ -92,7 +92,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && pytest -vv -n 6 --dist loadfile --max-worker-restart 4 tests
+        && pytest -vv -n logical --dist loadfile --max-worker-restart 4 tests
 
     - name: Collect coverage
       if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
