@@ -37,7 +37,7 @@ from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
-from tests.utils import wait_until_signal, wait_until_socket_ready
+from tests.utils import wait_until_socket_ready
 
 PORTS = list(range(19000, 19500))
 
@@ -211,12 +211,13 @@ class Test_SideViewWMS(object):
         self.process.close()
 
     def query_server(self, url):
+        cpdlg_canceled_spy = QtTest.QSignalSpy(self.wms_control.cpdlg.canceled)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.wms_control.cpdlg.canceled)
+        cpdlg_canceled_spy.wait()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
@@ -224,9 +225,10 @@ class Test_SideViewWMS(object):
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(f"http://127.0.0.1:{self.port}")
+        image_displayed_spy = QtTest.QSignalSpy(self.wms_control.image_displayed)
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.wms_control.image_displayed)
+        image_displayed_spy.wait()
         assert self.window.getView().plotter.image is not None
         self.window.getView().plotter.clear_figure()
         assert self.window.getView().plotter.image is None

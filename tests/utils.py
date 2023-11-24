@@ -33,7 +33,6 @@ import multiprocessing
 
 from flask_testing import LiveServerTestCase
 
-from PyQt5 import QtTest
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
@@ -233,28 +232,6 @@ def mscolab_start_server(all_ports):
 def create_msui_settings_file(content):
     with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
         file_dir.writetext("msui_settings.json", content)
-
-
-def wait_until_signal(signal):
-    """
-    Blocks the calling thread until the signal emits or the timeout expires.
-    """
-    finished = False
-
-    def done(*args):
-        nonlocal finished
-        finished = True
-
-    signal.connect(done)
-    while not finished:
-        QtTest.QTest.qWait(100)
-
-    try:
-        signal.disconnect(done)
-    except TypeError:
-        pass
-    finally:
-        return finished
 
 
 def wait_until_socket_ready(address, initial_delay=0.01, backoff_factor=2, max_delay=1):
