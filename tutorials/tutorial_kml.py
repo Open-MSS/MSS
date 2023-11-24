@@ -28,7 +28,7 @@ import pyautogui as pag
 import os.path
 
 from tutorials.utils import platform_keys, start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, load_kml_file, change_attribute
+    find_and_click_picture, load_kml_file, change_attribute, type_and_enter
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 
@@ -84,18 +84,15 @@ def automate_kml():
     change_attribute('topviewwindow-2-00.png',
                      "'Change Linewidth' button not found on the screen.",
                      lambda: (pag.hotkey(CTRL,  'a'),
+                              # ToDo find a way to delay this
                               [pag.press('down') for _ in range(8)],
-                              pag.hotkey(CTRL, 'a'),
-                              pag.typewrite('2.50', interval=1),
-                              pag.press(ENTER),
+                              type_and_enter('2.50'),
                               pag.sleep(1),
-                              pag.hotkey(CTRL, 'a'),
-                              pag.typewrite('4.50', interval=1),
-                              pag.press(ENTER)),
+                              type_and_enter('5.50')),
                      interval=2)
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
 
 if __name__ == '__main__':
-    start(target=automate_kml, duration=220)
+    start(target=automate_kml, duration=220, dry_run=True)

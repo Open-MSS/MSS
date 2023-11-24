@@ -168,9 +168,9 @@ def get_region(image):
     return region
 
 
-def click_center_on_screen(pic, duration=2):
+def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0):
     x, y = pag.locateCenterOnScreen(pic)
-    pag.click(x, y, duration=duration)
+    pag.click(x + xoffset, y + yoffset, duration=duration)
 
 
 def select_listelement(steps):
@@ -209,3 +209,24 @@ def change_attribute(pic_name, exception_message, actions, interval=2, sleep_tim
     except (ImageNotFoundException, OSError, Exception):
         print(f"\nException: {exception_message}")
         raise
+
+
+def zoom_in(pic_name, move=(379, 205), drag=(70, 75)):
+    try:
+        x, y = pag.locateCenterOnScreen(picture(pic_name))
+        pag.click(x, y, interval=2)
+        pag.move(move[0], move[1], duration=1)
+        pag.dragRel(drag[0], drag[1], duration=2)
+        pag.sleep(5)
+    except ImageNotFoundException:
+        print("\n Exception : Zoom button could not be located on the screen")
+        raise
+
+
+def type_and_enter(value):
+    ctrl, enter, _, _ = platform_keys()
+    pag.hotkey(ctrl, 'a')
+    pag.sleep(1)
+    pag.typewrite(value, interval=0.3)
+    pag.sleep(1)
+    pag.press(enter)

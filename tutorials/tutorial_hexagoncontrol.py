@@ -28,8 +28,11 @@ import pyautogui as pag
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish, create_tutorial_images
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images, select_listelement, \
+    find_and_click_picture, click_center_on_screen, zoom_in, type_and_enter
 from tutorials.utils.picture import picture
+
+CTRL, ENTER, WIN, ALT = platform_keys()
 
 
 def automate_hexagoncontrol():
@@ -39,43 +42,26 @@ def automate_hexagoncontrol():
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
+    hotkey = WIN, 'pageup'
+    try:
+        pag.hotkey(*hotkey)
+    except Exception:
+        print("\nException : Enable Shortcuts for your system or try again!")
+
+    pag.hotkey('CTRL', 'h')
+    pag.sleep(1)
+    create_tutorial_images()
+
     tv_x = None
     tv_y = None
 
-    ctrl, enter, win, alt = platform_keys()
-
-    # Maximizing the window
-    try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-        raise
-    pag.sleep(2)
-    pag.hotkey('ctrl', 'h')
-    pag.sleep(3)
-    create_tutorial_images()
 
     # Changing map to Global
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-01-europe-cyl.png'))
-        pag.click(x, y, interval=2)
-        pag.press('down', presses=2, interval=0.5)
-        pag.press(enter, interval=1)
-        pag.sleep(5)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\n Exception : Map change dropdown could not be located on the screen")
-        raise
-
+    find_and_click_picture('topviewwindow-01-europe-cyl.png',
+                           "Map change dropdown could not be located on the screen")
+    select_listelement(2)
     # Zooming into the map
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-zoom.png'))
-        pag.click(x, y, interval=2)
-        pag.move(379, 205, duration=1)
-        pag.dragRel(70, 75, duration=2)
-        pag.sleep(5)
-    except ImageNotFoundException:
-        print("\n Exception : Zoom button could not be located on the screen")
-        raise
+    zoom_in('topviewwindow-zoom.png', move=(379, 205), drag=(70, 75))
 
     # Opening TableView
     pag.move(500, 0, duration=1)
@@ -130,11 +116,7 @@ def automate_hexagoncontrol():
     if tv_x is not None and tv_y is not None:
         pag.moveTo(tv_x - 250, tv_y + 462, duration=2)
         pag.click(duration=2)
-        pag.sleep(1)
-        pag.press('down')
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
+        select_listelement(1)
 
     create_tutorial_images()
 
@@ -144,132 +126,67 @@ def automate_hexagoncontrol():
         pag.sleep(1)
         pag.click(x + 370, y, duration=2)
         pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('28.57', interval=0.3)
-        pag.sleep(1)
-        pag.press(enter)
-
+        type_and_enter('28.57')
         pag.sleep(1)
         pag.click(x + 943, y, duration=2)
         pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('77.10', interval=0.3)
-        pag.sleep(1)
-        pag.press(enter)
+        type_and_enter('77.10')
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Center Latitude\' button not found on the screen.")
         raise
 
-    # Clicking on the add hexagon button
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
-        pag.click(x, y, duration=2)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Add Hexagon\' button not found on the screen.")
-        raise
+    find_and_click_picture('tableviewwindow-add-hexagon.png',
+                    "'Add Hexagon' button not found on the screen." )
+
 
     # Changing the Radius of the hexagon
     try:
         x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
         pag.click(x + 400, y, duration=2)
         pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('500.00', interval=0.3)
-        pag.sleep(1)
-        pag.press(enter)
+        type_and_enter('500.00')
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Radius\' button not found on the screen.")
         raise
 
-    # Clicking on the Remove Hexagon Button
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-remove-hexagon.png'))
-        pag.click(x, y, duration=2)
-        pag.sleep(2)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Remove Hexagon\' button not found on the screen.")
-        raise
 
-    # Clicking on the add hexagon button
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
-        pag.click(x, y, duration=2)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Add Hexagon\' button not found on the screen.")
-        raise
+    find_and_click_picture('tableviewwindow-remove-hexagon.png',
+                    "'Remove Hexagon' button not found on the screen.")
+    pag.press(ENTER)
+
+    find_and_click_picture('tableviewwindow-add-hexagon.png',
+                           "'Add Hexagon' button not found on the screen.")
 
     # Changing the angle of first point of the hexagon
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
-        pag.sleep(1)
-        pag.click(x + 967, y, duration=2)
-        pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('90.00', interval=0.3)
-        pag.sleep(1)
-        pag.press(enter)
 
-        # Clicking on the Remove Hexagon Button
-        try:
-            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-remove-hexagon.png'))
-            pag.click(x, y, duration=2)
-            pag.sleep(2)
-            pag.press(enter)
-            pag.sleep(2)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Remove Hexagon\' button not found on the screen.")
-            raise
+    click_center_on_screen(picture('tableviewwindow-radius.png'), xoffset=967)
+    type_and_enter('90.00')
 
-        # Clicking on the add hexagon button
-        try:
-            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
-            pag.click(x, y, duration=2)
-            pag.sleep(3)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Add Hexagon\' button not found on the screen.")
-            raise
+    # Clicking on the Remove Hexagon Button
+    find_and_click_picture('tableviewwindow-remove-hexagon.png',
+                           "'Remove Hexagon' button not found on the screen.")
+    pag.press(ENTER)
 
-        # Changing to a different angle of first point
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
-        pag.sleep(1)
-        pag.click(x + 967, y, duration=2)
-        pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('120.00', interval=0.3)
-        pag.sleep(1)
-        pag.press(enter)
 
-        # Clicking on the Remove Hexagon Button
-        try:
-            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-remove-hexagon.png'))
-            pag.click(x, y, duration=2)
-            pag.sleep(2)
-            pag.press(enter)
-            pag.sleep(2)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Remove Hexagon\' button not found on the screen.")
-            raise
+    # Clicking on the add hexagon button
+    find_and_click_picture('tableviewwindow-add-hexagon.png',
+                           "'Add Hexagon' button not found on the screen.")
 
-        # Clicking on the add hexagon button
-        try:
-            x, y = pag.locateCenterOnScreen(picture('tableviewwindow-add-hexagon.png'))
-            pag.click(x, y, duration=2)
-            pag.sleep(3)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Add Hexagon\' button not found on the screen.")
-            raise
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Radius (for Angle of first point)\' button not found on the screen.")
-        raise
+    # Changing to a different angle of first point
+    x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
+    pag.sleep(1)
+    pag.click(x + 967, y, duration=2)
+    pag.sleep(1)
+    type_and_enter('120.00')
+
+    ## Clicking on the Remove Hexagon Button
+    find_and_click_picture('tableviewwindow-remove-hexagon.png',
+                           "'Remove Hexagon' button not found on the screen.")
+    pag.press(ENTER)
+    # Clicking on the add hexagon button
+    find_and_click_picture('tableviewwindow-add-hexagon.png',
+                           "'Add Hexagon' button not found on the screen.")
+
 
     pag.moveTo(tv_x, tv_y, duration=2)
     pag.click(duration=2)
@@ -279,4 +196,5 @@ def automate_hexagoncontrol():
 
 
 if __name__ == '__main__':
-    start(target=automate_hexagoncontrol, duration=170)
+    start(target=automate_hexagoncontrol, duration=170, dry_run=True)
+
