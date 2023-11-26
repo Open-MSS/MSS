@@ -57,7 +57,8 @@ def automate_hexagoncontrol():
                            "Map change dropdown could not be located on the screen")
     select_listelement(2)
     # Zooming into the map
-    zoom_in('topviewwindow-zoom.png', move=(379, 205), drag=(70, 75))
+    zoom_in('topviewwindow-zoom.png', 'Zoom button could not be located on the screen',
+            move=(379, 205), drag=(70, 75))
 
     # Opening TableView
     pag.move(500, 0, duration=1)
