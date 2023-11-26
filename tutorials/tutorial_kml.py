@@ -83,7 +83,7 @@ def automate_kml():
 
     change_attribute('topviewwindow-2-00.png',
                      "'Change Linewidth' button not found on the screen.",
-                     lambda: (pag.hotkey(CTRL,  'a'),
+                     lambda: (pag.hotkey(CTRL, 'a'),
                               # ToDo find a way to delay this
                               [pag.press('down') for _ in range(8)],
                               type_and_enter('2.50'),

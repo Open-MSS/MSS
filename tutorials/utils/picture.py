@@ -27,5 +27,6 @@ import os
 
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
+
 def picture(name):
     return os.path.join(MSUI_CONFIG_PATH, "tutorial_images", name)

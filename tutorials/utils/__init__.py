@@ -31,7 +31,7 @@ import pyautogui as pag
 from pyscreeze import ImageNotFoundException
 
 from mslib.msui import msui
-from tutorials.utils import screenrecorder as sr, picture
+from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
 
 
