@@ -44,7 +44,7 @@ from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from flask.wrappers import Response
 
 from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
-from mslib.mscolab.models import Change, MessageType, User, db
+from mslib.mscolab.models import Change, MessageType, User
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -215,16 +215,15 @@ def create_or_update_idp_user(email, username, token, authentication_backend):
         if not user:
             user = User(email, username, password=token, confirmed=False, confirmed_on=None,
                         authentication_backend=authentication_backend)
-            db.session.add(user)
-            db.session.commit()
+            result = fm.modify_user(user, action="create")
 
         else:
             user.authentication_backend = authentication_backend
             user.hash_password(token)
-            db.session.add(user)
-            db.session.commit()
-        return True
-    except (sqlalchemy.exc.OperationalError):
+            result = fm.modify_user(user, action="update_idp_user")
+
+        return result
+    except sqlalchemy.exc.OperationalError:
         return False
 
 
@@ -842,8 +841,7 @@ if mscolab_settings.USE_SAML2:
                 if user:
                     random_token = secrets.token_hex(16)
                     user.hash_password(random_token)
-                    db.session.add(user)
-                    db.session.commit()
+                    fm.modify_user(user, action="update_idp_user")
                     return json.dumps({
                         "success": True,
                         'token': random_token,
