@@ -180,9 +180,9 @@ def select_listelement(steps):
     pag.sleep(5)
 
 
-def find_and_click_picture(pic_name, exception_message, duration=2):
+def find_and_click_picture(pic_name, exception_message, duration=2, xoffset=0, yoffset=0):
     try:
-        click_center_on_screen(picture(pic_name), duration)
+        click_center_on_screen(picture(pic_name), duration, xoffset=xoffset, yoffset=yoffset)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print(f"\nException: {exception_message}")
@@ -234,10 +234,10 @@ def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50)
         raise
 
 
-def type_and_enter(value):
+def type_and_enter(value, interval=0.3):
     ctrl, enter, _, _ = platform_keys()
     pag.hotkey(ctrl, 'a')
     pag.sleep(1)
-    pag.typewrite(value, interval=0.3)
+    pag.typewrite(value, interval=interval)
     pag.sleep(1)
     pag.press(enter)
