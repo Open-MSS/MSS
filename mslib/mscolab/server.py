@@ -209,22 +209,24 @@ def get_idp_entity_id(selected_idp):
 
 
 def create_or_update_idp_user(email, username, token, authentication_backend):
-    try:
-        user = User.query.filter_by(emailid=email).first()
-
-        if not user:
-            user = User(email, username, password=token, confirmed=False, confirmed_on=None,
-                        authentication_backend=authentication_backend)
-            result = fm.modify_user(user, action="create")
-
-        else:
-            user.authentication_backend = authentication_backend
-            user.hash_password(token)
-            result = fm.modify_user(user, action="update_idp_user")
-
-        return result
-    except sqlalchemy.exc.OperationalError:
-        return False
+    """
+    Creates or updates an idp user in the system based on the provided email, username, token, and authentication backend.
+    :param email: idp users email
+    :param username: idp users username
+    :param token: authentication token
+    :param authentication_backend: authenticated identity providers name
+    :return: bool : query success or not
+    """
+    user = User.query.filter_by(emailid=email).first()
+    if not user:
+        user = User(email, username, password=token, confirmed=False, confirmed_on=None,
+                    authentication_backend=authentication_backend)
+        result = fm.modify_user(user, action="create")
+    else:
+        user.authentication_backend = authentication_backend
+        user.hash_password(token)
+        result = fm.modify_user(user, action="update_idp_user")
+    return result
 
 
 @APP.route('/')
