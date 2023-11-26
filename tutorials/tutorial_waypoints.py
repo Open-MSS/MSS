@@ -103,7 +103,7 @@ def automate_waypoints():
 
     # Zooming into the map
     zoom_in('topviewwindow-zoom.png', 'Zoom button could not be located.',
-            move=(150, 200), drag=(400, 250))
+            move=(150, 200), dragRel=(400, 250))
 
     # Panning into the map
     panning('topviewwindow-pan.png', 'Pan button could not be located.',

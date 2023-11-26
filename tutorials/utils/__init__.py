@@ -211,12 +211,12 @@ def change_attribute(pic_name, exception_message, actions, interval=2, sleep_tim
         raise
 
 
-def zoom_in(pic_name, exception_message, move=(379, 205), drag=(70, 75)):
+def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75)):
     try:
         x, y = pag.locateCenterOnScreen(picture(pic_name))
         pag.click(x, y, interval=2)
         pag.move(move[0], move[1], duration=1)
-        pag.dragRel(drag[0], drag[1], duration=2)
+        pag.dragRel(dragRel[0], dragRel[1], duration=2)
         pag.sleep(5)
     except ImageNotFoundException:
         print(f"\nException: {exception_message}")

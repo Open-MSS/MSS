@@ -108,7 +108,7 @@ def automate_rs():
 
     # Zooming into the map
     zoom_in('topviewwindow-zoom.png', 'Zoom button could not be located.',
-            move=(260, 130), drag=(184, 135))
+            move=(260, 130), dragRel=(184, 135))
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()

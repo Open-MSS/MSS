@@ -23,11 +23,11 @@
 """
 import pyautogui as pag
 
-from sys import platform
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish, create_tutorial_images
+from tutorials.utils import platform_keys, start, finish, create_tutorial_images, select_listelement, \
+    find_and_click_picture, zoom_in
 
-from tutorials.utils.picture import picture
+
+CTRL, ENTER, WIN, ALT = platform_keys()
 
 
 def automate_rs():
@@ -36,183 +36,148 @@ def automate_rs():
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
-    pag.sleep(10)
-
-    ctrl, enter, win, alt = platform_keys()
-
-    # Maximizing the window
+    pag.sleep(5)
+    hotkey = WIN, 'pageup'
     try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
+        pag.hotkey(*hotkey)
     except Exception:
         print("\nException : Enable Shortcuts for your system or try again!")
+    pag.hotkey('CTRL', 'h')
     pag.sleep(2)
-    pag.hotkey('ctrl', 'h')
-    pag.sleep(3)
-
-    # lets create our helper images
     create_tutorial_images()
 
     # Opening Remote Sensing dockwidget
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-select-to-open-control.png'))
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-        pag.press('down', presses=3, interval=1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control\' button/option not found on the screen.")
-        raise
-    # update our helper images
+    find_and_click_picture('topviewwindow-select-to-open-control.png',
+                           'topview window selection of docking widgets not found')
+    select_listelement(3)
+    pag.press(ENTER)
+    pag.sleep(2)
+
+    # update tutorial images
     create_tutorial_images()
 
-    # Adding waypoints for demonstrating remote sensing
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-ins-wp.png'))
-        pag.click(x, y, interval=2)
-        pag.move(-50, 150, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
-        pag.move(65, 65, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
+    # enable adding waypoints
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Clickable button/option not found.')
 
-        pag.move(-150, 30, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
-        pag.move(200, 150, duration=1)
-        pag.click(interval=2)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : Add waypoint button in topview not found on the screen.")
-        raise
+    # Adding waypoints for demonstrating remote sensing
+    x, y = pag.position()
+    pag.move(-50, 150, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(65, 65, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+
+    pag.move(-150, 30, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(200, 150, duration=1)
+    pag.click(interval=2)
+    pag.sleep(2)
 
     # Showing Solar Angle Colors
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-show-angle-degree.png'))
-        pag.sleep(1)
-        pag.click(x, y, duration=2)
-        pag.sleep(1)
+    find_and_click_picture('topviewwindow-show-angle-degree.png',
+                           'Show angle in degrees not found')
+    x, y = pag.position()
 
-        for _ in range(2):
-            pag.click(x + 100, y, duration=1)
-            pag.press('down', interval=1)
-            pag.sleep(1)
-            pag.press(enter, interval=1)
-            pag.sleep(2)
-
-        for _ in range(3):
-            pag.click(x + 200, y, duration=1)
-            pag.press('down', interval=1)
-            pag.sleep(1)
-            pag.press(enter, interval=1)
-            pag.sleep(2)
-
-        pag.click(x + 200, y, duration=1)
-        pag.press('up', presses=3, interval=1)
+    for _ in range(2):
+        pag.click(x + 100, y, duration=1)
+        pag.press('down', interval=1)
         pag.sleep(1)
-        pag.press(enter, interval=1)
+        pag.press(ENTER, interval=1)
         pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Show angle\' checkbox not found on the screen.")
-        raise
+
+    for _ in range(3):
+        pag.click(x + 200, y, duration=1)
+        pag.press('down', interval=1)
+        pag.sleep(1)
+        pag.press(ENTER, interval=1)
+        pag.sleep(2)
+
+    pag.click(x + 200, y, duration=1)
+    pag.press('up', presses=3, interval=1)
+    pag.sleep(1)
+    pag.press(ENTER, interval=1)
+    pag.sleep(2)
 
     # Changing azimuth angles
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-viewing-direction-azimuth.png'))
-        pag.click(x + 90, y, duration=1)
-        pag.move(100, 100)
-        azimuth_x, azimuth_y = pag.position()
-        pag.sleep(2)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(2)
-        pag.typewrite('45', interval=1)
-        pag.press(enter)
-        pag.sleep(3)
-        pag.click(duration=1)
-        pag.hotkey(ctrl, 'a')
-        pag.typewrite('90', interval=1)
-        pag.press(enter)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Azimuth\' spinbox not found on the screen.")
-        raise
+    find_and_click_picture('topviewwindow-viewing-direction-azimuth.png',
+                           'Viewing direction azimuth not found')
+    x, y = pag.position()
+    pag.click(x + 90, y, duration=1)
+    pag.move(100, 100)
+    azimuth_x, azimuth_y = pag.position()
+    pag.sleep(2)
+    pag.hotkey(CTRL, 'a')
+    pag.sleep(2)
+    pag.typewrite('45', interval=1)
+    pag.press(ENTER)
+    pag.sleep(1)
+    pag.click(duration=1)
+    pag.hotkey(CTRL, 'a')
+    pag.typewrite('90', interval=1)
+    pag.press(ENTER)
+    pag.sleep(1)
 
     # Changing elevation angles
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-elevation.png'))
-        pag.click(x + 70, y, duration=1)
-        pag.sleep(2)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(2)
-        pag.typewrite('-1', interval=1)
-        pag.press(enter)
-        pag.sleep(3)
-        pag.click(duration=1)
-        pag.hotkey(ctrl, 'a')
-        pag.typewrite('-3', interval=1)
-        pag.press(enter)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Elevation\' spinbox not found on the screen.")
-        raise
+    find_and_click_picture('topviewwindow-elevation.png', 'elevation not found')
+    x, y = pag.position()
+    pag.click(x + 70, y, duration=1)
+    pag.sleep(2)
+    pag.hotkey(CTRL, 'a')
+    pag.sleep(2)
+    pag.typewrite('-1', interval=1)
+    pag.press(ENTER)
+    pag.sleep(1)
+    pag.click(duration=1)
+    pag.hotkey(CTRL, 'a')
+    pag.typewrite('-3', interval=1)
+    pag.press(ENTER)
+    pag.sleep(1)
+
 
     # Drawing tangents to the waypoints and path
-    try:
-        x, y = pag.locateCenterOnScreen(picture('topviewwindow-draw-tangent-points.png'))
-        pag.click(x, y, duration=1)
+    find_and_click_picture('topviewwindow-draw-tangent-points.png',
+                           'Draw tangent points not found')
+    x, y = pag.position()
+    # Changing color of tangents
+    pag.click(x + 160, y, duration=1)
+    pag.sleep(1)
+    pag.press(ENTER)
+    pag.sleep(1)
+
+    # Changing Kilometers of the tangent distance
+    pag.click(x + 250, y, duration=1)
+    pag.sleep(1)
+    pag.hotkey(CTRL, 'a')
+    pag.sleep(1)
+    pag.typewrite('20', interval=1)
+    pag.press(ENTER)
+    pag.sleep(1)
+
+    zoom_in('topviewwindow-zoom.png', "Zoom Button not found",
+            move=(0, 150), dragRel=(230, 150))
+
+
+    # Rotating the tangent through various angles
+    pag.click(azimuth_x, azimuth_y, duration=1)
+    pag.sleep(1)
+    pag.hotkey(CTRL, 'a')
+    pag.sleep(1)
+    pag.typewrite('120', interval=0.5)
+    pag.sleep(2)
+    for _ in range(10):
+        pag.press('down')
         pag.sleep(2)
-        # Changing color of tangents
-        pag.click(x + 160, y, duration=1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(1)
+    pag.sleep(1)
+    pag.click(azimuth_x + 500, y, duration=1)
+    pag.sleep(1)
 
-        # Changing Kilometers of the tangent distance
-        pag.click(x + 250, y, duration=1)
-        pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('20', interval=1)
-        pag.press(enter)
-        pag.sleep(3)
-
-        # Zooming into the map
-        try:
-            x, y = pag.locateCenterOnScreen(picture('topviewwindow-zoom.png'))
-            pag.click(x, y, interval=2)
-            pag.move(0, 150, duration=1)
-            pag.dragRel(230, 150, duration=2)
-            pag.sleep(5)
-        except ImageNotFoundException:
-            print("\n Exception : Zoom button could not be located on the screen")
-            raise
-
-        # Rotating the tangent through various angles
-        try:
-            pag.click(azimuth_x, azimuth_y, duration=1)
-            pag.sleep(1)
-            pag.hotkey(ctrl, 'a')
-            pag.sleep(1)
-            pag.typewrite('120', interval=0.5)
-            pag.sleep(2)
-            for _ in range(10):
-                pag.press('down')
-                pag.sleep(2)
-            pag.sleep(1)
-            pag.click(azimuth_x + 500, y, duration=1)
-            pag.sleep(1)
-        except UnboundLocalError:
-            print('Azimuth spinbox coordinates are not stored. Hence cannot change values.')
-            raise
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Tangent\' checkbox not found on the screen.")
-        raise
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
 
 if __name__ == '__main__':
-    start(target=automate_rs, duration=198)
+    start(target=automate_rs, duration=198, dry_run=True)
