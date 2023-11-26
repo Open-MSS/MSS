@@ -180,9 +180,9 @@ def select_listelement(steps):
     pag.sleep(5)
 
 
-def find_and_click_picture(pic_name, exception_message, duration=2, xoffset=0, yoffset=0):
+def find_and_click_picture(pic_name, exception_message, duration=2, xoffset=0, yoffset=0, bounding_box=None):
     try:
-        click_center_on_screen(picture(pic_name), duration, xoffset=xoffset, yoffset=yoffset)
+        click_center_on_screen(picture(pic_name, bounding_box=bounding_box), duration, xoffset=xoffset, yoffset=yoffset)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print(f"\nException: {exception_message}")

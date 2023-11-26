@@ -136,7 +136,6 @@ def automate_rs():
     pag.press(ENTER)
     pag.sleep(1)
 
-
     # Drawing tangents to the waypoints and path
     find_and_click_picture('topviewwindow-draw-tangent-points.png',
                            'Draw tangent points not found')
@@ -159,7 +158,6 @@ def automate_rs():
     zoom_in('topviewwindow-zoom.png', "Zoom Button not found",
             move=(0, 150), dragRel=(230, 150))
 
-
     # Rotating the tangent through various angles
     pag.click(azimuth_x, azimuth_y, duration=1)
     pag.sleep(1)
@@ -173,7 +171,6 @@ def automate_rs():
     pag.sleep(1)
     pag.click(azimuth_x + 500, y, duration=1)
     pag.sleep(1)
-
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
