@@ -81,7 +81,7 @@ def automate_views():
     pag.click(interval=2)
     pag.move(56, -63, duration=1)
     pag.click(interval=2)
-    pag.sleep(3)
+    pag.sleep(1)
 
     # use CTRL UP instead
     pag.move(-686, -56, duration=1)
@@ -92,9 +92,9 @@ def automate_views():
     pag.sleep(1)
 
     find_and_click_picture('sideviewwindow-ins-wp.png', 'Sideview Window not found')
-    x1, y1 = pag.position()
+    sx1, sy1 = pag.position()
 
-    pag.moveTo(x1, y1 - 56, duration=1)
+    pag.moveTo(sx1, sy1 - 56, duration=1)
     pag.dragRel(-50, -30, duration=2)
     pag.sleep(2)
 
@@ -120,7 +120,7 @@ def automate_views():
     type_and_enter('http://open-mss.org/', interval=0.1)
 
     create_tutorial_images()
-    pag.sleep(1)
+    pag.sleep(2)
     find_and_click_picture('multilayersdialog-get-capabilities.png',
                            "Get capabilities not found")
     pag.move(-171, -390, duration=1)
@@ -142,7 +142,7 @@ def automate_views():
     pag.sleep(1)
 
     create_tutorial_images()
-    print(int(sc_width / 2) - 100, 0, sc_width, sc_height)
+
     # Moving waypoints in Topview
     find_and_click_picture('topviewwindow-mv-wp.png',
                            'Move waypoints not found',
@@ -160,11 +160,14 @@ def automate_views():
     find_and_click_picture('topviewwindow-del-wp.png',
                            'Delete waypoints not found',
                            region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
-    x, y = pag.position()
-    pag.click(x, y, interval=2)
+    #x, y = pag.position()
+    #pag.click(x, y, interval=2)
     pag.moveTo(x3, y3, duration=1)
     pag.click(duration=1)
-    pag.press('enter', interval=1)
+    # Yes is default
+    pag.sleep(3)
+    pag.press(ENTER)
+    pag.sleep(2)
     create_tutorial_images()
 
     find_and_click_picture('topviewwindow-01-europe-cyl.png',
@@ -179,12 +182,6 @@ def automate_views():
     pag.sleep(4)
 
     # SideView Operations
-    # Opening web map service
-    #find_and_click_picture('sideviewwindow-select-to-open-control.png',
-    #                       'Sideview select to open control not found',
-    #                       region=(0, 0, int(sc_width / 2) - 100, sc_height))
-    select_listelement(1)
-
     # Locating Server Layer
     find_and_click_picture('sideviewwindow-server-layer.png',
                            'Sideview server layer not found',
@@ -230,18 +227,20 @@ def automate_views():
     x, y = pag.position()
     pag.click(x + 200, y, interval=1)
     pag.move(0, 80, duration=1)
+    pag.press(ENTER)
 
     create_tutorial_images()
     pag.sleep(2)
     # smaller region, seems the widget covers a bit the content
-    pic_name = 'sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-initialisation-2012-10-17t12-00-00z.png'
-    pic = picture(pic_name, bounding_box=(20, 20, 800, 200))
+    pic_name = ('sideviewwindow-cloud-cover-0-1-vertical-section-valid-'
+                '2012-10-18t12-00-00z-initialisation-2012-10-17t12-00-00z.png')
+    pic = picture(pic_name, bounding_box=(20, 20, 60, 300))
     loc = get_region(pic)
-    sideview_region = (0, 0, loc.left + loc.width, loc.top)
+    sideview_region = (0, 0, loc.left + 200, loc.top)
     find_and_click_picture('sideviewwindow-mv-wp.png',
-                           'Sideview not found',
+                           'Sideview move wp not found',
                            region=sideview_region)
-    pic_name = 'sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-initialisation-2012-10-17t12-00-00z.png'
+
     find_and_click_picture(pic_name, bounding_box=(103, 300, 118, 312))
     px, py = pag.position()
     offsets = [0, 114, 161, 200, ]
@@ -255,7 +254,9 @@ def automate_views():
     pag.sleep(1)
 
     # Adding waypoints in SideView
-    find_and_click_picture('sideviewwindow-ins-wp.png', region=sideview_region)
+    find_and_click_picture('sideviewwindow-ins-wp.png',
+                           'sideview ins waypoint not found',
+                           region=sideview_region)
     x, y = pag.position()
     pag.click(x + 239, y + 186, duration=1)
     pag.sleep(3)
@@ -270,10 +271,16 @@ def automate_views():
     ll_tov_x, ll_tov_y = pag.position()
     pag.click(ll_sv_x, ll_sv_y, duration=2)
     pag.hotkey('altleft', 'f4')
+    pag.press('left')
+    pag.press(ENTER)
     pag.sleep(1)
 
     pag.click(ll_tov_x, ll_tov_y, duration=2)
     pag.hotkey('altleft', 'f4')
+    pag.press('left')
+    pag.press(ENTER)
+    pag.sleep(1)
+
 
     # Table View
     # Opening Table View
@@ -291,7 +298,7 @@ def automate_views():
                            'tableview window select to open control not found')
     x, y = pag.position()
 
-    pag.moveTo(x, y - 462, duration=1)
+    pag.moveTo(x, y - 465, duration=1)
     pag.dragRel(250, 887, duration=3)
 
     pag.keyDown('altleft')
@@ -301,13 +308,14 @@ def automate_views():
     pag.sleep(1)
     pag.keyDown('altleft')
     pag.press('tab')
-    pag.press('tab', presses=2)  # This needs to be checked in Linux
-    pag.keyUp('altleft')
+    # pag.press('tab', presses=2)  # This needs to be checked in Linux
+    #pag.keyUp('altleft')
     pag.sleep(1)
 
     pag.dragRel(None, -450, duration=2)
     tv_x, tv_y = pag.position()
 
+    create_tutorial_images()
     # Locating the selecttoopencontrol for tableview to perform operations
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
                            'Tableview select to open control not found')
