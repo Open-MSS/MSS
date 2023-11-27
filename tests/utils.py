@@ -25,14 +25,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import requests
 import time
 import fs
+import sys
+import re
 import socket
 import multiprocessing
 
 from flask_testing import LiveServerTestCase
 
+from contextlib import contextmanager
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
@@ -181,52 +183,62 @@ def mscolab_check_free_port(all_ports, port):
     return port
 
 
-def mscolab_ping_server(port):
-    url = f"http://127.0.0.1:{port}/status"
+@contextmanager
+def capture_stderr():
+    class TeeToPipe:
+        def __init__(self, wrapped, pipe):
+            self.wrapped = wrapped
+            self.pipe = pipe
+
+        def write(self, data):
+            self.pipe.send(data)
+            self.wrapped.write(data)
+
+    rd, w = multiprocessing.Pipe(duplex=False)
+    stderr = sys.stderr
+    sys.stderr = TeeToPipe(stderr, w)
     try:
-        r = requests.get(url)
-        data = json.loads(r.text)
-        if data['message'] == "Mscolab server" and isinstance(data['USE_SAML2'], bool):
-            return True
-    except requests.exceptions.ConnectionError:
-        return False
-    return False
+        yield rd
+    finally:
+        sys.stderr = stderr
+        rd.close()
+        w.close()
 
 
-def mscolab_start_server(all_ports):
+def mscolab_start_server():
     handle_db_init()
-    port = mscolab_check_free_port(all_ports, all_ports.pop())
-
-    url = f"http://localhost:{port}"
-
-    # Update mscolab URL to avoid "Update Server List" message boxes
-    modify_config_file({"default_MSCOLAB": [url]})
 
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    _app.config['URL'] = url
 
     _app, sockio, cm, fm = initialize_managers(_app)
 
     # ToDo refactoring for spawn needed, fork is not implemented on windows, spawn is default on MAC and Windows
     if multiprocessing.get_start_method(allow_none=True) != 'fork':
         multiprocessing.set_start_method("fork")
-    process = multiprocessing.Process(
-        target=start_server,
-        args=(_app, sockio, cm, fm,),
-        kwargs={'port': port})
-    process.start()
+    with capture_stderr() as stderr:
+        process = multiprocessing.Process(
+            target=start_server,
+            args=(_app, sockio, cm, fm,),
+            kwargs={"port": 0, "log_output": True})
+        process.start()
 
-    retry_delay = 0.01
-    while True:
-        if mscolab_ping_server(port):
-            break
-        time.sleep(retry_delay)
-        retry_delay = min(retry_delay * 2, 1)
+        while True:
+            out = stderr.recv()
+            m = re.match(r"^\(\d+\) wsgi starting up on (https?)://([^:]+):(\d+)$", out)
+            if m is not None:
+                scheme, host, port = m.groups()
+                break
 
-    return process, url, _app, sockio, cm, fm
+    url = f"{scheme}://{host}:{port}"
+    _app.config['URL'] = url
+
+    # Update mscolab URL to avoid "Update Server List" message boxes
+    modify_config_file({"default_MSCOLAB": [url]})
+
+    return process, url, _app
 
 
 def create_msui_settings_file(content):

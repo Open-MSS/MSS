@@ -40,15 +40,12 @@ from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
 
 
-PORTS = list(range(23000, 23500))
-
-
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints(object):
     def setup_method(self):
         handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process, self.url, self.app = mscolab_start_server()
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)

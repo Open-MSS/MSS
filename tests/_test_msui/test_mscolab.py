@@ -45,14 +45,12 @@ from mslib.mscolab.mscolab import handle_db_reset
 from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
-PORTS = list(range(25000, 25500))
-
 
 class Test_Mscolab_connect_window():
     def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process, self.url, _ = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -281,7 +279,7 @@ class Test_Mscolab(object):
     def setup_method(self):
         handle_db_reset()
         self._reset_config_file()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process, self.url, self.app = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])

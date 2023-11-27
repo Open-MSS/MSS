@@ -38,8 +38,6 @@ from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.utils.config import modify_config_file
 
-PORTS = list(range(22000, 22500))
-
 
 class Actions(object):
     DOWNLOAD = 0
@@ -55,7 +53,7 @@ class Test_MscolabOperation(object):
     def setup_method(self):
         handle_db_reset()
         create_msui_settings_file("{}")
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process, self.url, self.app = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])

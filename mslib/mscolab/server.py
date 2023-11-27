@@ -868,9 +868,9 @@ if mscolab_settings.USE_SAML2:
         return render_template('errors/404.html'), 404
 
 
-def start_server(app, sockio, cm, fm, port=8083):
+def start_server(app, sockio, cm, fm, port=8083, log_output=False):
     create_files()
-    sockio.run(app, port=port)
+    sockio.run(app, port=port, log_output=log_output)
 
 
 def main():

@@ -38,16 +38,13 @@ from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_op
 from mslib.utils.config import modify_config_file
 
 
-PORTS = list(range(20000, 20500))
-
-
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabVersionHistory(object):
     def setup_method(self):
         handle_db_reset()
         create_msui_settings_file("{}")
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+        self.process, self.url, _ = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
