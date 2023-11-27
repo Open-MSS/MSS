@@ -60,32 +60,11 @@ def automate_views():
     pag.dragRel(910, -25, duration=2)
     pag.move(0, 56)
 
-    # Adding waypoints
-    pag.sleep(1)
-    pag.move(-50, 150, duration=1)
-    pag.click(interval=2)
-    pag.sleep(1)
-    pag.move(65, 65, duration=1)
-    pag.click(interval=2)
-    pag.sleep(1)
+    x1, y1 = set_topview_wp()
 
-    pag.move(-150, 30, duration=1)
-    x1, y1 = pag.position()
-    pag.click(interval=2)
-    pag.sleep(1)
-    pag.move(200, 150, duration=1)
-    pag.click(interval=2)
-    x2, y2 = pag.position()
-    pag.sleep(1)
-    pag.move(100, -80, duration=1)
-    pag.click(interval=2)
-    pag.move(56, -63, duration=1)
-    pag.click(interval=2)
-    pag.sleep(1)
+    hotkey = CTRL, 'up'
+    pag.hotkey(*hotkey)
 
-    # use CTRL UP instead
-    pag.move(-686, -56, duration=1)
-    pag.click(interval=1)
 
     pag.hotkey(CTRL, 'v')
     create_tutorial_images()
@@ -99,7 +78,6 @@ def automate_views():
     pag.sleep(2)
 
     pag.keyDown('altleft')
-    # ToDo selection of views have to be done with ctrl f
     # this selects the next window in the window manager on budgie and kde
     pag.press('tab')
     pag.keyUp('tab')
@@ -121,8 +99,13 @@ def automate_views():
 
     create_tutorial_images()
     pag.sleep(2)
-    find_and_click_picture('multilayersdialog-get-capabilities.png',
-                           "Get capabilities not found")
+
+    try:
+        find_and_click_picture('multilayersdialog-get-capabilities.png',
+                               "Get capabilities not found")
+    except TypeError:
+        pag.press(ENTER)
+
     pag.move(-171, -390, duration=1)
     pag.dragRel(10, 675, duration=2)  # To be decided
 
@@ -191,9 +174,12 @@ def automate_views():
     x, y = pag.position()
     pag.click(x + 220, y, interval=2)
     type_and_enter('http://open-mss.org/', interval=0.1)
+    try:
+        find_and_click_picture('multilayersdialog-get-capabilities.png',
+                               'Get capabilities not found')
+    except TypeError:
+        pag.press(ENTER)
 
-    find_and_click_picture('multilayersdialog-get-capabilities.png',
-                           'Get capabilities not found')
     pag.move(-171, -390, duration=1)
     pag.dragRel(10, 600, duration=2)
     ll_sv_x, ll_sv_y = pag.position()
@@ -298,8 +284,9 @@ def automate_views():
                            'tableview window select to open control not found')
     x, y = pag.position()
 
-    pag.moveTo(x, y - 465, duration=1)
-    pag.dragRel(250, 887, duration=3)
+    pag.click(x, y - 455, interval=2)
+    pag.dragRel(250, 687, duration=2)
+    pag.move(0, 455)
 
     pag.keyDown('altleft')
     pag.press('tab')
@@ -316,6 +303,7 @@ def automate_views():
     tv_x, tv_y = pag.position()
 
     create_tutorial_images()
+    pag.sleep(2d)
     # Locating the selecttoopencontrol for tableview to perform operations
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
                            'Tableview select to open control not found')
@@ -469,7 +457,11 @@ def automate_views():
     x, y = pag.position()
     pag.click(x + 220, y, interval=2)
     type_and_enter('http://open-mss.org/', interval=0.1)
-    find_and_click_picture('multilayersdialog-get-capabilities.png', 'Get capabilities not found')
+    try:
+        find_and_click_picture('multilayersdialog-get-capabilities.png',
+                               'Get capabilities not found')
+    except TypeError:
+        pag.press(ENTER)
     pag.move(-171, -390, duration=1)
     pag.dragRel(-900, 245, duration=2)
 
@@ -516,6 +508,31 @@ def automate_views():
 
     # Close Everything!
     finish()
+
+
+def set_topview_wp():
+    # Adding waypoints
+    pag.sleep(1)
+    pag.move(-50, 150, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(65, 65, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(-150, 30, duration=1)
+    x1, y1 = pag.position()
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(200, 150, duration=1)
+    pag.click(interval=2)
+    x2, y2 = pag.position()
+    pag.sleep(1)
+    pag.move(100, -80, duration=1)
+    pag.click(interval=2)
+    pag.move(56, -63, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    return x1, y1
 
 
 if __name__ == '__main__':
