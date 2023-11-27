@@ -28,7 +28,7 @@ jobs:
     - name: Trust My Directory
       run: git config --global --add safe.directory /__w/MSS/MSS
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Check for changed dependencies
       run: |
@@ -93,7 +93,7 @@ jobs:
 
     - name: Collect coverage
       if: ${{ success() }}
-      env: 
+      env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd $GITHUB_WORKSPACE \

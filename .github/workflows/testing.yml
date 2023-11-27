@@ -1,6 +1,6 @@
 name: Pytest MSS
 
-on:                                                                                  
+on:
   workflow_call:
     inputs:
       xdist:
@@ -35,7 +35,7 @@ jobs:
     - name: Trust My Directory
       run: git config --global --add safe.directory /__w/MSS/MSS
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Check for changed dependencies
       run: |
@@ -96,7 +96,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests \
+        && pytest -vv -n 6 --dist loadfile --max-worker-restart 4 tests \
         || (for i in {1..5} \
           ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests --last-failed --lfnf=none \
           && break \
@@ -104,7 +104,7 @@ jobs:
 
     - name: Collect coverage
       if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
-      env: 
+      env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cd $GITHUB_WORKSPACE \

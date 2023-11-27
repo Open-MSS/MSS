@@ -33,7 +33,6 @@ import shutil
 import sys
 import secrets
 import subprocess
-import time
 import git
 
 from mslib import __version__
@@ -103,11 +102,12 @@ def handle_mscolab_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               f"{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key",
+               os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "key_mscolab.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", f"{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt"]
+               "/CN=localhost", "-out", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR,
+                                                     "crt_mscolab.crt")]
         subprocess.run(cmd, check=True)
-        print("generated CRTs for the mscolab server.")
+        logging.info("generated CRTs for the mscolab server.")
         return True
     except subprocess.CalledProcessError as error:
         print(f"Error while generating CRTs for the mscolab server: {error}")
@@ -119,11 +119,11 @@ def handle_local_idp_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               f"{mscolab_settings.MSCOLAB_SSO_DIR}/key_local_idp.key",
+               os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "key_local_idp.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", f"{mscolab_settings.MSCOLAB_SSO_DIR}/crt_local_idp.crt"]
+               "/CN=localhost", "-out", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "crt_local_idp.crt")]
         subprocess.run(cmd, check=True)
-        print("generated CRTs for the local identity provider")
+        logging.info("generated CRTs for the local identity provider")
         return True
     except subprocess.CalledProcessError as error:
         print(f"Error while generated CRTs for the local identity provider: {error}")
@@ -252,7 +252,7 @@ config:
   #       name_id_format_allow_create: true
 """
     try:
-        file_path = f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"
+        file_path = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "mss_saml2_backend.yaml")
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(saml_2_backend_yaml_content)
         return True
@@ -275,15 +275,12 @@ def handle_mscolab_metadata_init(repo_exists):
     try:
         command = ["python", mscolab.__file__, "start"] if repo_exists else ["mscolab", "start"]
         process = subprocess.Popen(command)
-
-        # Add a small delay to allow the server to start up
-        time.sleep(10)
-
-        cmd_curl = ["curl", "http://localhost:8083/metadata/localhost_test_idp",
-                    "-o", f"{mscolab_settings.MSCOLAB_SSO_DIR}/metadata_sp.xml"]
+        cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
+                    "http://localhost:8083/metadata/localhost_test_idp",
+                    "-o", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "metadata_sp.xml")]
         subprocess.run(cmd_curl, check=True)
         process.terminate()
-        print('mscolab metadata file generated succesfully')
+        logging.info('mscolab metadata file generated succesfully')
         return True
 
     except subprocess.CalledProcessError as error:
@@ -295,27 +292,27 @@ def handle_local_idp_metadata_init(repo_exists):
     print('generating metadata for localhost identity provider')
 
     try:
-        if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
-            os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
+        if os.path.exists(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml")):
+            os.remove(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml"))
 
         idp_conf_path = idp_conf.__file__
 
         if not repo_exists:
             import site
             site_packages_path = site.getsitepackages()[0]
-            idp_conf_path = os.path.join(site_packages_path, "mslib/msidp/idp_conf.py")
+            idp_conf_path = os.path.join(site_packages_path, "mslib", "msidp", "idp_conf.py")
 
         cmd = ["make_metadata", idp_conf_path]
 
-        with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml",
+        with open(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml"),
                   "w", encoding="utf-8") as output_file:
             subprocess.run(cmd, stdout=output_file, check=True)
-        print("idp metadata file generated succesfully")
+        logging.info("idp metadata file generated succesfully")
         return True
     except subprocess.CalledProcessError as error:
         # Delete the idp.xml file when the subprocess fails
-        if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml"):
-            os.remove(f"{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml")
+        if os.path.exists(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml")):
+            os.remove(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml"))
         print(f"Error while generating metadata for localhost identity provider: {error}")
         return False
 

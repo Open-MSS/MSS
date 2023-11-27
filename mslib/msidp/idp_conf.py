@@ -39,7 +39,7 @@ from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.sigver import get_xmlsec_binary
 from tests import constants
 
-XMLSEC_PATH = get_xmlsec_binary()
+XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
 
 # CRTs and metadata files can be generated through the mscolab server.
 # if configured that way CRTs DIRs should be same in both IDP and mscolab server.

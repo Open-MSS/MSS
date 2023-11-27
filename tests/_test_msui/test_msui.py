@@ -36,7 +36,7 @@ import pytest
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
-from tests.constants import ROOT_DIR, POSIX
+from tests.constants import ROOT_DIR, POSIX, MSUI_CONFIG_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
@@ -64,6 +64,38 @@ def test_main():
                                                             deinstall=True, debug=False, logfile="log.log")):
                 msui.main()
             assert pytest_wrapped_e.typename == "SystemExit"
+
+
+class Test_MSS_TutorialMode():
+    def setup_method(self):
+        self.application = QtWidgets.QApplication(sys.argv)
+        self.application.setApplicationDisplayName("MSUI")
+        self.main_window = msui_mw.MSUIMainWindow(tutorial_mode=True)
+        self.main_window.create_new_flight_track()
+        self.main_window.show()
+        self.main_window.shortcuts_dlg = msui_mw.MSUI_ShortcutsDialog(
+            tutorial_mode=True)
+        self.main_window.show_shortcuts(search_mode=True)
+        self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
+
+    def teardown_method(self):
+        self.main_window.hide()
+        QtWidgets.QApplication.processEvents()
+        self.application.quit()
+        QtWidgets.QApplication.processEvents()
+
+    def test_tutorial_dir(self):
+        dir_name, name = fs.path.split(self.tutorial_dir)
+        with fs.open_fs(dir_name) as _fs:
+            assert _fs.exists(name)
+        # seems we don't have a window manager in the test environment on github
+        # checking only for a few
+        with (fs.open_fs(self.tutorial_dir) as _fs):
+            common_images = _fs.listdir('/')
+            assert 'menufile-file.png' in common_images
+            assert 'msuimainwindow-operation-archive.png' in common_images
+            assert 'msuimainwindow-work-asynchronously.png' in common_images
+            assert 'msuimainwindow-connect.png' in common_images
 
 
 class Test_MSS_AboutDialog():

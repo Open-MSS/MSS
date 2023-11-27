@@ -94,5 +94,8 @@ USE_SAML2 = False
 # having the roles in the TexGroup
 GROUP_POSTFIX = "Group"
 
+# Enable SSL certificate verification during SSO between MSColab and IdP
+ENABLE_SSO_SSL_CERT_VERIFICATION = True
+
 # dir where mscolab single sign process files are stored
 MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
