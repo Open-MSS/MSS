@@ -65,7 +65,6 @@ def automate_views():
     hotkey = CTRL, 'up'
     pag.hotkey(*hotkey)
 
-
     pag.hotkey(CTRL, 'v')
     create_tutorial_images()
     pag.sleep(1)
@@ -143,8 +142,6 @@ def automate_views():
     find_and_click_picture('topviewwindow-del-wp.png',
                            'Delete waypoints not found',
                            region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
-    #x, y = pag.position()
-    #pag.click(x, y, interval=2)
     pag.moveTo(x3, y3, duration=1)
     pag.click(duration=1)
     # Yes is default
@@ -267,7 +264,6 @@ def automate_views():
     pag.press(ENTER)
     pag.sleep(1)
 
-
     # Table View
     # Opening Table View
     pag.move(-80, 120, duration=1)
@@ -295,15 +291,13 @@ def automate_views():
     pag.sleep(1)
     pag.keyDown('altleft')
     pag.press('tab')
-    # pag.press('tab', presses=2)  # This needs to be checked in Linux
-    #pag.keyUp('altleft')
     pag.sleep(1)
 
     pag.dragRel(None, -450, duration=2)
     tv_x, tv_y = pag.position()
 
     create_tutorial_images()
-    pag.sleep(2d)
+    pag.sleep(2)
     # Locating the selecttoopencontrol for tableview to perform operations
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
                            'Tableview select to open control not found')
