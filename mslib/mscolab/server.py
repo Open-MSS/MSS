@@ -68,11 +68,6 @@ except ImportError as ex:
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
 
-# setup idp login config
-if mscolab_settings.USE_SAML2:
-    setup_saml2_backend()
-
-
 # setup http auth
 if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
     logging.debug("Enabling basic HTTP authentication. Username and "

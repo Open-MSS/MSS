@@ -36,7 +36,6 @@ from saml2 import BINDING_URI
 from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
-from saml2.sigver import get_xmlsec_binary
 from tests import constants
 
 XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
@@ -46,10 +45,6 @@ XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
 BASE_DIR = os.path.expanduser("~")
 DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
-
-if "PYTEST_CURRENT_TEST" in os.environ:
-    MSCOLAB_SSO_DIR = constants.MSCOLAB_SSO_DIR
-
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
