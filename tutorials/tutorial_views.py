@@ -59,37 +59,32 @@ def automate_views():
     pag.click(x, y - 56, interval=2)
     pag.dragRel(910, -25, duration=2)
     pag.move(0, 56)
-    add_tv_x, add_tv_y = pag.position()
-    # Adding waypoints
-    if add_tv_x is not None and add_tv_y is not None:
-        pag.sleep(1)
-        pag.click(add_tv_x, add_tv_y, interval=2)
-        pag.move(-50, 150, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
-        pag.move(65, 65, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
 
-        pag.move(-150, 30, duration=1)
-        x1, y1 = pag.position()
-        pag.click(interval=2)
-        pag.sleep(1)
-        pag.move(200, 150, duration=1)
-        pag.click(interval=2)
-        x2, y2 = pag.position()
-        pag.sleep(1)
-        pag.move(100, -80, duration=1)
-        pag.click(interval=2)
-        pag.move(56, -63, duration=1)
-        pag.click(interval=2)
-        pag.sleep(3)
-    else:
-        print("Screen coordinates not available for add waypoints for topview")
-        raise
+    # Adding waypoints
+    pag.sleep(1)
+    pag.move(-50, 150, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(65, 65, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+
+    pag.move(-150, 30, duration=1)
+    x1, y1 = pag.position()
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(200, 150, duration=1)
+    pag.click(interval=2)
+    x2, y2 = pag.position()
+    pag.sleep(1)
+    pag.move(100, -80, duration=1)
+    pag.click(interval=2)
+    pag.move(56, -63, duration=1)
+    pag.click(interval=2)
+    pag.sleep(3)
 
     # use CTRL UP instead
-    pag.move(-486, -56, duration=1)
+    pag.move(-686, -56, duration=1)
     pag.click(interval=1)
 
     pag.hotkey(CTRL, 'v')
@@ -125,6 +120,7 @@ def automate_views():
     type_and_enter('http://open-mss.org/', interval=0.1)
 
     create_tutorial_images()
+    pag.sleep(1)
     find_and_click_picture('multilayersdialog-get-capabilities.png',
                            "Get capabilities not found")
     pag.move(-171, -390, duration=1)
@@ -134,8 +130,10 @@ def automate_views():
     # lookup layer entry from the multilayering checkbox
     find_and_click_picture('multilayersdialog-multilayering.png',
                            'Multilayering selection not found')
-    x, y = pag.position()
 
+    x, y = pag.position()
+    # disable multilayer
+    pag.click(x, y)
     # Divergence and Geopotential
     pag.click(x + 50, y + 70, interval=2)
     pag.sleep(1)
@@ -143,6 +141,8 @@ def automate_views():
     pag.click(x + 50, y + 110, interval=2)
     pag.sleep(1)
 
+    create_tutorial_images()
+    print(int(sc_width / 2) - 100, 0, sc_width, sc_height)
     # Moving waypoints in Topview
     find_and_click_picture('topviewwindow-mv-wp.png',
                            'Move waypoints not found',
@@ -165,6 +165,7 @@ def automate_views():
     pag.moveTo(x3, y3, duration=1)
     pag.click(duration=1)
     pag.press('enter', interval=1)
+    create_tutorial_images()
 
     find_and_click_picture('topviewwindow-01-europe-cyl.png',
                            'Projection 01-europe-cyl not found',
@@ -179,8 +180,9 @@ def automate_views():
 
     # SideView Operations
     # Opening web map service
-    find_and_click_picture('sideviewwindow-select-to-open-control.png',
-                           'Sideview select to open control not found')
+    #find_and_click_picture('sideviewwindow-select-to-open-control.png',
+    #                       'Sideview select to open control not found',
+    #                       region=(0, 0, int(sc_width / 2) - 100, sc_height))
     select_listelement(1)
 
     # Locating Server Layer
@@ -231,17 +233,16 @@ def automate_views():
 
     create_tutorial_images()
     pag.sleep(2)
-
     # smaller region, seems the widget covers a bit the content
-    pic = picture('sideviewwindow-cloud-cover-0-1-vertical-section-valid-'
-                  '2012-10-18t06-00-00z-initialisation-2012-10-17t12-00-00z.png', bounding_box=(20, 20, 800, 200))
+    pic_name = 'sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-initialisation-2012-10-17t12-00-00z.png'
+    pic = picture(pic_name, bounding_box=(20, 20, 800, 200))
     loc = get_region(pic)
     sideview_region = (0, 0, loc.left + loc.width, loc.top)
     find_and_click_picture('sideviewwindow-mv-wp.png',
                            'Sideview not found',
                            region=sideview_region)
-    find_and_click_picture('sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-'
-                           'initialisation-2012-10-17t12-00-00z.png', bounding_box=(103, 300, 118, 312))
+    pic_name = 'sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-initialisation-2012-10-17t12-00-00z.png'
+    find_and_click_picture(pic_name, bounding_box=(103, 300, 118, 312))
     px, py = pag.position()
     offsets = [0, 114, 161, 200, ]
     for offset in offsets:

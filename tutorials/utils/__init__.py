@@ -35,10 +35,6 @@ from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
 
 
-# Screen Resolutions
-SC_WIDTH, SC_HEIGHT = pag.size()[0] - 1, pag.size()[1] - 1
-
-
 def initial_ops():
     """
     Executes the initial operations such as closing all opened windows and showing the desktop.
@@ -172,8 +168,11 @@ def get_region(image):
     return region
 
 
-def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=(SC_WIDTH, SC_HEIGHT)):
-    x, y = pag.locateCenterOnScreen(pic, region=region)
+def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None):
+    if region is None:
+        x, y = pag.locateCenterOnScreen(pic)
+    else:
+        x, y = pag.locateCenterOnScreen(pic, region=region)
     pag.click(x + xoffset, y + yoffset, duration=duration)
 
 
@@ -185,7 +184,7 @@ def select_listelement(steps):
 
 
 def find_and_click_picture(pic_name, exception_message, duration=2, xoffset=0, yoffset=0,
-                           bounding_box=None, region=(SC_WIDTH, SC_HEIGHT)):
+                           bounding_box=None, region=None):
     try:
         click_center_on_screen(picture(pic_name, bounding_box=bounding_box),
                                duration, xoffset=xoffset, yoffset=yoffset, region=region)
@@ -217,7 +216,7 @@ def change_attribute(pic_name, exception_message, actions, interval=2, sleep_tim
         raise
 
 
-def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), region=(SC_WIDTH, SC_HEIGHT)):
+def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), region=None):
     try:
         x, y = pag.locateCenterOnScreen(picture(pic_name), region=region)
         pag.click(x, y, interval=2)
@@ -229,7 +228,7 @@ def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), regi
         raise
 
 
-def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50), region=(SC_WIDTH, SC_HEIGHT)):
+def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50), region=None):
     try:
         x, y = pag.locateCenterOnScreen(picture(pic_name), region=region)
         pag.click(x, y, interval=2)

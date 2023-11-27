@@ -41,5 +41,4 @@ def picture(name, bounding_box=None):
         filename = os.path.join(MSUI_CONFIG_PATH, "tutorial_images", f'{new_name}.png')
         cropped_img.save(filename)
         time.sleep(1)
-    print(filename)
     return filename
