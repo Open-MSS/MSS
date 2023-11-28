@@ -269,10 +269,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             save_settings_qsettings(self.settings_tag, settings)
         QtWidgets.QWidget.changeEvent(self, event)
 
-    def set_position(self):
-        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
-        print(top_left)
-
     @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def update_active_flighttrack(self, active_flighttrack):
         """
