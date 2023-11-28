@@ -36,12 +36,13 @@ import types
 
 from mslib.msui import hexagon_dockwidget as hex
 from mslib.msui import performance_settings as perfset
-from PyQt5 import QtWidgets, QtGui
+from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_tableview_window as ui
 from mslib.utils.qt import dropEvent, dragEnterEvent
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow
 from mslib.msui.icons import icons
+from mslib.utils.config import save_settings_qsettings
 
 try:
     import mpl_toolkits.basemap.pyproj as pyproj
@@ -61,8 +62,10 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         """
         super().__init__(parent, model, _id)
+
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
+        self.settings_tag = "tableview"
 
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
@@ -88,6 +91,16 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
         self.resizeColumns()
+
+    def changeEvent(self, event):
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        bottom_right = top_left + QtCore.QPoint(self.width(), self.height())
+        if top_left.x() != 0:
+            os_screen_region = [top_left.x(), top_left.y(), bottom_right.x(), bottom_right.y()]
+            settings = {'os_screen_region': os_screen_region}
+            # we have to save this to reuse it by the tutorials
+            save_settings_qsettings(self.settings_tag, settings)
+        QtWidgets.QWidget.changeEvent(self, event)
 
     def setPerformance(self, settings):
         """

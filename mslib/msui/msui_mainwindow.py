@@ -955,6 +955,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             except AttributeError:
                 view_window.enable_navbar_action_buttons()
             self.viewsChanged.emit()
+            # this triggers the changeEvent to get the screen position.
+            # On X11, a window does not have a frame until the window manager decorates it.
+            view_window.showMaximized()
+            view_window.showNormal()
 
     def get_active_views(self):
         active_view_windows = []

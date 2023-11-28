@@ -30,7 +30,7 @@
 
 import functools
 import logging
-from mslib.utils.config import config_loader
+from mslib.utils.config import config_loader, save_settings_qsettings
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.qt5 import ui_topview_window as ui
@@ -45,6 +45,7 @@ from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui import flighttrack as ft
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
+
 
 # Dock window indices.
 WMS = 0
@@ -192,6 +193,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         super().__init__(parent, model, _id)
         logging.debug(_id)
+        self.settings_tag = "topview"
         self.mainwindow_signal_login_mscolab = mainwindow.signal_login_mscolab
         self.mainwindow_signal_logout_mscolab = mainwindow.signal_logout_mscolab
         self.mainwindow_signal_listFlighttrack_doubleClicked = mainwindow.signal_listFlighttrack_doubleClicked
@@ -256,6 +258,20 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
+
+    def changeEvent(self, event):
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        bottom_right = top_left + QtCore.QPoint(self.width(), self.height())
+        if top_left.x() != 0:
+            os_screen_region = [top_left.x(), top_left.y(), bottom_right.x(), bottom_right.y()]
+            settings = {'os_screen_region': os_screen_region}
+            # we have to save this to reuse it by the tutorials
+            save_settings_qsettings(self.settings_tag, settings)
+        QtWidgets.QWidget.changeEvent(self, event)
+
+    def set_position(self):
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        print(top_left)
 
     @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def update_active_flighttrack(self, active_flighttrack):

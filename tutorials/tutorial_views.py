@@ -26,8 +26,8 @@
 import pyautogui as pag
 
 from tutorials.utils import platform_keys, start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, zoom_in, type_and_enter, get_region
-from tutorials.utils.picture import picture
+    find_and_click_picture, zoom_in, type_and_enter
+from mslib.utils.config import load_settings_qsettings
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 
@@ -43,17 +43,17 @@ def automate_views():
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
 
-    # Screen Resolutions
-    sc_width, sc_height = pag.size()[0] - 1, pag.size()[1] - 1
-
     hotkey = WIN, 'pageup'
     pag.hotkey(*hotkey)
 
     pag.hotkey(CTRL, 'h')
     create_tutorial_images()
+    topview = load_settings_qsettings('topview', {"os_screen_region": [0, 0, 0, 0]})
     pag.sleep(1)
 
-    find_and_click_picture('topviewwindow-ins-wp.png', 'Topview Window not found')
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Topview Window not found',
+                           region=topview["os_screen_region"])
     x, y = pag.position()
     # Shifting topview window to upper right corner
     pag.click(x, y - 56, interval=2)
@@ -67,9 +67,13 @@ def automate_views():
 
     pag.hotkey(CTRL, 'v')
     create_tutorial_images()
+    sideview = load_settings_qsettings('sideview', {"os_screen_region": [0, 0, 0, 0]})
+
     pag.sleep(1)
 
-    find_and_click_picture('sideviewwindow-ins-wp.png', 'Sideview Window not found')
+    find_and_click_picture('sideviewwindow-ins-wp.png',
+                           'Sideview Window not found',
+                           region=sideview["os_screen_region"])
     sx1, sy1 = pag.position()
 
     pag.moveTo(sx1, sy1 - 56, duration=1)
@@ -87,11 +91,12 @@ def automate_views():
     # Locating Server Layer
     find_and_click_picture('topviewwindow-server-layer.png',
                            'Topview Server Layer not found',
-                           region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+                           region=topview["os_screen_region"])
     create_tutorial_images()
+
     find_and_click_picture('multilayersdialog-http-localhost-8081.png',
                            'Multilayder Dialog not found',
-                           region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+                           region=topview["os_screen_region"])
     x, y = pag.position()
     pag.click(x + 220, y, interval=2)
     type_and_enter('http://open-mss.org/', interval=0.1)
@@ -101,7 +106,8 @@ def automate_views():
 
     try:
         find_and_click_picture('multilayersdialog-get-capabilities.png',
-                               "Get capabilities not found")
+                               "Get capabilities not found",
+                               region=topview["os_screen_region"])
     except TypeError:
         pag.press(ENTER)
 
@@ -111,7 +117,8 @@ def automate_views():
     # Selecting some layers in topview layerlist
     # lookup layer entry from the multilayering checkbox
     find_and_click_picture('multilayersdialog-multilayering.png',
-                           'Multilayering selection not found')
+                           'Multilayering selection not found',
+                           region=topview["os_screen_region"])
 
     x, y = pag.position()
     # disable multilayer
@@ -128,7 +135,7 @@ def automate_views():
     # Moving waypoints in Topview
     find_and_click_picture('topviewwindow-mv-wp.png',
                            'Move waypoints not found',
-                           region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+                           region=topview["os_screen_region"])
     x, y = pag.position()
     # move point x1,y1
     pag.click(x1, y1, interval=2)
@@ -141,7 +148,7 @@ def automate_views():
     # Deleting waypoints
     find_and_click_picture('topviewwindow-del-wp.png',
                            'Delete waypoints not found',
-                           region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+                           region=topview["os_screen_region"])
     pag.moveTo(x3, y3, duration=1)
     pag.click(duration=1)
     # Yes is default
@@ -152,28 +159,30 @@ def automate_views():
 
     find_and_click_picture('topviewwindow-01-europe-cyl.png',
                            'Projection 01-europe-cyl not found',
-                           region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+                           region=topview["os_screen_region"])
     select_listelement(2)
 
     # Zooming into the map
     zoom_in('topviewwindow-zoom.png', 'Zoom button not found',
             move=(155, 121), dragRel=(260, 110),
-            region=(int(sc_width / 2) - 100, 0, sc_width, sc_height))
+            region=topview["os_screen_region"])
     pag.sleep(4)
 
     # SideView Operations
     # Locating Server Layer
     find_and_click_picture('sideviewwindow-server-layer.png',
                            'Sideview server layer not found',
-                           region=(0, 0, int(sc_width / 2) - 100, sc_height))
+                           region=sideview["os_screen_region"])
     find_and_click_picture('multilayersdialog-http-localhost-8081.png',
-                           'Inputfield for Url not found')
+                           'Inputfield for Url not found',
+                           region=sideview["os_screen_region"])
     x, y = pag.position()
     pag.click(x + 220, y, interval=2)
     type_and_enter('http://open-mss.org/', interval=0.1)
     try:
         find_and_click_picture('multilayersdialog-get-capabilities.png',
-                               'Get capabilities not found')
+                               'Get capabilities not found',
+                               region=sideview["os_screen_region"])
     except TypeError:
         pag.press(ENTER)
 
@@ -182,7 +191,9 @@ def automate_views():
     ll_sv_x, ll_sv_y = pag.position()
     gap = 16
 
-    find_and_click_picture('multilayersdialog-multilayering.png', 'Multilayering not found')
+    find_and_click_picture('multilayersdialog-multilayering.png',
+                           'Multilayering not found',
+                           region=sideview["os_screen_region"])
     x, y = pag.position()
     # Cloudcover
     pag.click(x + 50, y + 70, interval=2)
@@ -206,23 +217,25 @@ def automate_views():
     # Setting different levels and valid time
     pag.click(temp1, temp2 + (gap * 4), interval=2)
 
-    find_and_click_picture('sideviewwindow-valid.png', 'Sideview Window not found')
+    find_and_click_picture('sideviewwindow-valid.png',
+                           'Sideview Window not found',
+                           region=sideview["os_screen_region"])
     x, y = pag.position()
     pag.click(x + 200, y, interval=1)
     pag.move(0, 80, duration=1)
     pag.press(ENTER)
 
     create_tutorial_images()
+
     pag.sleep(2)
     # smaller region, seems the widget covers a bit the content
     pic_name = ('sideviewwindow-cloud-cover-0-1-vertical-section-valid-'
                 '2012-10-18t12-00-00z-initialisation-2012-10-17t12-00-00z.png')
-    pic = picture(pic_name, bounding_box=(20, 20, 60, 300))
-    loc = get_region(pic)
-    sideview_region = (0, 0, loc.left + 200, loc.top)
+    # pic = picture(pic_name, bounding_box=(20, 20, 60, 300))
+
     find_and_click_picture('sideviewwindow-mv-wp.png',
                            'Sideview move wp not found',
-                           region=sideview_region)
+                           region=sideview["os_screen_region"])
 
     find_and_click_picture(pic_name, bounding_box=(103, 300, 118, 312))
     px, py = pag.position()
@@ -239,7 +252,7 @@ def automate_views():
     # Adding waypoints in SideView
     find_and_click_picture('sideviewwindow-ins-wp.png',
                            'sideview ins waypoint not found',
-                           region=sideview_region)
+                           region=sideview["os_screen_region"])
     x, y = pag.position()
     pag.click(x + 239, y + 186, duration=1)
     pag.sleep(3)
@@ -274,10 +287,12 @@ def automate_views():
     pag.sleep(2)
 
     create_tutorial_images()
+    tableview = load_settings_qsettings('tableview', {"os_screen_region": [0, 0, 0, 0]})
     # Relocating Tableview and performing operations on table view
     # ToDo refactor to a module improve where it enters data
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
-                           'tableview window select to open control not found')
+                           'tableview window select to open control not found',
+                           region=tableview["os_screen_region"])
     x, y = pag.position()
 
     pag.click(x, y - 455, interval=2)
@@ -295,12 +310,14 @@ def automate_views():
 
     pag.dragRel(None, -450, duration=2)
     tv_x, tv_y = pag.position()
+    pag.click(tv_x, tv_y)
 
     create_tutorial_images()
     pag.sleep(2)
     # Locating the selecttoopencontrol for tableview to perform operations
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
-                           'Tableview select to open control not found')
+                           'Tableview select to open control not found',
+                           region=tableview["os_screen_region"])
     x, y = pag.position()
 
     xoffset = -50
@@ -352,7 +369,8 @@ def automate_views():
     pag.sleep(1)
     type_and_enter('12.36')
 
-    find_and_click_picture('tableviewwindow-clone.png', 'Clone button not found')
+    find_and_click_picture('tableviewwindow-clone.png', 'Clone button not found',
+                           region=tableview["os_screen_region"])
     x1, y1 = pag.position()
 
     pag.click(x + xoffset + 15, y - 263, duration=1)
@@ -370,7 +388,8 @@ def automate_views():
     type_and_enter('This is a reference comment')
 
     # Inserting a new row of waypoints
-    find_and_click_picture('tableviewwindow-insert.png', 'Insert button not found')
+    find_and_click_picture('tableviewwindow-insert.png', 'Insert button not found',
+                           region=tableview["os_screen_region"])
     x1, y1 = pag.position()
 
     pag.click(x + 117, y - 294, duration=1)
@@ -391,7 +410,8 @@ def automate_views():
     pag.move(71, 0, duration=1)
     type_and_enter('360')
 
-    find_and_click_picture('tableviewwindow-delete-selected.png', 'Delete button not')
+    find_and_click_picture('tableviewwindow-delete-selected.png', 'Delete button not',
+                           region=tableview["os_screen_region"])
     x1, y1 = pag.position()
 
     pag.click(x + 150, y - 201, duration=1)
@@ -401,7 +421,8 @@ def automate_views():
     pag.press(ENTER)
     pag.sleep(2)
 
-    find_and_click_picture('tableviewwindow-reverse.png', 'Reverse Button not found')
+    find_and_click_picture('tableviewwindow-reverse.png', 'Reverse Button not found',
+                           region=tableview["os_screen_region"])
     x1, y1 = pag.position()
 
     for _ in range(3):
@@ -427,8 +448,11 @@ def automate_views():
     pag.sleep(2)
 
     create_tutorial_images()
+    linearview = load_settings_qsettings('linearview', {"os_screen_region": [0, 0, 0, 0]})
     # Relocating Linear View
-    find_and_click_picture('linearwindow-select-to-open-control.png')
+    find_and_click_picture('linearwindow-select-to-open-control.png',
+                           "Linearview window not found",
+                           region=linearview["os_screen_region"])
 
     pag.keyDown('altleft')
     pag.press('tab')
@@ -445,15 +469,18 @@ def automate_views():
     lv_x, lv_y = pag.position()
 
     # Locating Server Layer
-    find_and_click_picture('linearwindow-server-layer.png', "Server layer button not found")
+    find_and_click_picture('linearwindow-server-layer.png',
+                           "Server layer button not found",
+                           region=linearview["os_screen_region"])
     create_tutorial_images()
-    find_and_click_picture('multilayersdialog-http-localhost-8081.png', 'Url not found')
+    find_and_click_picture('multilayersdialog-http-localhost-8081.png',
+                           'Url not found', region=linearview["os_screen_region"])
     x, y = pag.position()
     pag.click(x + 220, y, interval=2)
     type_and_enter('http://open-mss.org/', interval=0.1)
     try:
         find_and_click_picture('multilayersdialog-get-capabilities.png',
-                               'Get capabilities not found')
+                               'Get capabilities not found', region=linearview["os_screen_region"])
     except TypeError:
         pag.press(ENTER)
     pag.move(-171, -390, duration=1)
@@ -463,7 +490,9 @@ def automate_views():
     # Selecting Some Layers in Linear wms section
     gap = 16
 
-    find_and_click_picture('multilayersdialog-multilayering.png', ' Multlayer not found')
+    find_and_click_picture('multilayersdialog-multilayering.png',
+                           ' Multlayer not found',
+                           region=linearview["os_screen_region"])
     x, y = pag.position()
 
     # Cloudcover
@@ -486,7 +515,9 @@ def automate_views():
     pag.sleep(3)
 
     # Add waypoints after anaylzing the linear section wms
-    find_and_click_picture('topviewwindow-ins-wp.png', 'Topview ins wp not found')
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Topview ins wp not found',
+                           region=topview["os_screen_region"])
     x, y = pag.position()
     pag.click(x + 30, y + 50, duration=1)
 
