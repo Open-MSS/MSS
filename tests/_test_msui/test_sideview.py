@@ -30,16 +30,11 @@ import mock
 import os
 import pytest
 import shutil
-import multiprocessing
 import tempfile
-from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
-from tests.utils import wait_until_socket_ready
-
-PORTS = list(range(19000, 19500))
 
 
 class Test_MSS_SV_OptionsDialog(object):
@@ -172,16 +167,13 @@ class Test_MSSSideViewWindow(object):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_SideViewWMS(object):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mswms_server):
+        self.url = mswms_server
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-        self.port = PORTS.pop()
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
-        self.process = multiprocessing.Process(
-            target=application.run,
-            args=("127.0.0.1", self.port))
-        self.process.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -197,18 +189,12 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
-        # Wait for the server process to become ready
-        wait_until_socket_ready(("127.0.0.1", self.port))
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
-        self.process.terminate()
-        self.process.join(10)
-        self.process.close()
 
     def query_server(self, url):
         cpdlg_canceled_spy = QtTest.QSignalSpy(self.wms_control.cpdlg.canceled)
@@ -224,7 +210,7 @@ class Test_SideViewWMS(object):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
         image_displayed_spy = QtTest.QSignalSpy(self.wms_control.image_displayed)
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()

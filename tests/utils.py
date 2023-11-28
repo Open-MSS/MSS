@@ -31,6 +31,9 @@ import sys
 import re
 import socket
 import multiprocessing
+import werkzeug
+import pytest
+import mslib.mswms.mswms
 
 from flask_testing import LiveServerTestCase
 
@@ -241,27 +244,26 @@ def mscolab_start_server():
     return process, url, _app
 
 
+@pytest.fixture
+def mswms_server():
+    scheme = "http"
+    host = "127.0.0.1"
+    server = werkzeug.serving.make_server(host=host, port=0, app=mslib.mswms.mswms.application, threaded=True)
+    port = server.socket.getsockname()[1]
+    process = multiprocessing.Process(target=server.serve_forever, daemon=True)
+    process.start()
+    url = f"{scheme}://{host}:{port}"
+    try:
+        yield url
+    finally:
+        process.terminate()
+        process.join(10)
+        process.close()
+
+
 def create_msui_settings_file(content):
     with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
         file_dir.writetext("msui_settings.json", content)
-
-
-def wait_until_socket_ready(address, initial_delay=0.01, backoff_factor=2, max_delay=1):
-    """Wait until the socket at address accepts connections
-
-    This function uses an exponential backoff strategy to try to return fast but also
-    allow the other party some time to become ready. The default values correspond to
-    infinite retries with the following wait times in-between them in seconds:
-    [0.01, 0.02, 0.04, 0.08, 0.16, 0.32, 0.64, 1, 1, 1, ...].
-    """
-    retry_delay = initial_delay
-    while True:
-        try:
-            socket.create_connection(address)
-            return
-        except ConnectionRefusedError:
-            time.sleep(retry_delay)
-            retry_delay = min(retry_delay * backoff_factor, max_delay)
 
 
 class ExceptionMock:
