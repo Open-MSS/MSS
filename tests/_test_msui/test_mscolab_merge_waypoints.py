@@ -33,7 +33,7 @@ import mslib.utils.auth
 from mslib.msui import flighttrack as ft
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
-from tests.utils import (mscolab_start_server, mscolab_register_and_login, mscolab_create_operation,
+from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
                          mscolab_delete_all_operations, mscolab_delete_user)
 from mslib.msui import mscolab
 from mslib.msui import msui
@@ -43,16 +43,16 @@ from mslib.mscolab.mscolab import handle_db_reset
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints(object):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_server):
+        self.url, self.app = mscolab_server
         handle_db_reset()
-        self.process, self.url, self.app = mscolab_start_server()
         QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
-
-    def teardown_method(self):
+        yield
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
@@ -64,9 +64,6 @@ class Test_Mscolab_Merge_Waypoints(object):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
-        self.process.terminate()
-        self.process.join(10)
-        self.process.close()
 
     def _create_user_data(self, emailid='merge@alpha.org'):
         with self.app.app_context():

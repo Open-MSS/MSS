@@ -28,7 +28,6 @@ import os
 import pytest
 import mock
 
-from tests.utils import mscolab_start_server, create_msui_settings_file
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
@@ -41,10 +40,10 @@ from mslib.utils.config import modify_config_file
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabVersionHistory(object):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_server):
+        self.url, _ = mscolab_server
         handle_db_reset()
-        create_msui_settings_file("{}")
-        self.process, self.url, _ = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -68,14 +67,10 @@ class Test_MscolabVersionHistory(object):
         assert self.version_window is not None
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
-        self.process.terminate()
-        self.process.join(10)
-        self.process.close()
 
     def test_changes(self):
         self._change_version_filter(1)

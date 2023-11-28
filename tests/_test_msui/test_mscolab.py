@@ -38,19 +38,18 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader, modify_config_file
-from tests.utils import mscolab_start_server, create_msui_settings_file, ExceptionMock
+from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
-from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
 class Test_Mscolab_connect_window():
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_server):
+        self.url, _ = mscolab_server
         handle_db_reset()
-        self._reset_config_file()
-        self.process, self.url, _ = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -71,15 +70,11 @@ class Test_Mscolab_connect_window():
                       "berta@something.org", "anton@something.org",
                       "other@something.org"]:
             mslib.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.main_window.close()
         self.main_window.deleteLater()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
-        self.process.join(10)
-        self.process.close()
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -257,11 +252,6 @@ class Test_Mscolab_connect_window():
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def _reset_config_file(self):
-        create_msui_settings_file('{ }')
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
-        read_config_file(path=config_file)
-
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
@@ -276,10 +266,10 @@ class Test_Mscolab(object):
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
     }
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_server):
+        self.url, self.app = mscolab_server
         handle_db_reset()
-        self._reset_config_file()
-        self.process, self.url, self.app = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -302,8 +292,7 @@ class Test_Mscolab(object):
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
-
-    def teardown_method(self):
+        yield
         self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
@@ -317,9 +306,6 @@ class Test_Mscolab(object):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
-        self.process.terminate()
-        self.process.join(10)
-        self.process.close()
 
     def test_activate_operation(self):
         self._connect_to_mscolab()
@@ -791,11 +777,6 @@ class Test_Mscolab(object):
         okWidget = self.connect_window.newUserBb.button(self.connect_window.newUserBb.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-
-    def _reset_config_file(self):
-        create_msui_settings_file('{ }')
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
-        read_config_file(path=config_file)
 
     def _create_operation(self, path, description, category="example"):
         self.window.actionAddOperation.trigger()

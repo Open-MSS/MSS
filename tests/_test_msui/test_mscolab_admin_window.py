@@ -30,7 +30,6 @@ import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
-from tests.utils import mscolab_start_server, create_msui_settings_file
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.mscolab import handle_db_reset
@@ -41,10 +40,10 @@ from mslib.utils.config import modify_config_file
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabAdminWindow(object):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_server):
+        self.url, _ = mscolab_server
         handle_db_reset()
-        create_msui_settings_file("{}")
-        self.process, self.url, _ = mscolab_start_server()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -80,15 +79,11 @@ class Test_MscolabAdminWindow(object):
         self.admin_window = self.window.mscolab.admin_window
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
-        self.process.join(10)
-        self.process.close()
 
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()

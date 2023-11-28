@@ -236,6 +236,9 @@ generate_initial_config()
 # This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
 from tests.utils import create_msui_settings_file
 
+# Make fixtures available everywhere
+from tests.utils import mscolab_server, mswms_server
+
 
 @pytest.fixture(autouse=True)
 def reset_config():

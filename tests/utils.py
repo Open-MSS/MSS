@@ -208,7 +208,8 @@ def capture_stderr():
         w.close()
 
 
-def mscolab_start_server():
+@pytest.fixture
+def mscolab_server():
     handle_db_init()
 
     _app = APP
@@ -241,7 +242,12 @@ def mscolab_start_server():
     # Update mscolab URL to avoid "Update Server List" message boxes
     modify_config_file({"default_MSCOLAB": [url]})
 
-    return process, url, _app
+    try:
+        yield url, _app
+    finally:
+        process.terminate()
+        process.join(10)
+        process.close()
 
 
 @pytest.fixture
