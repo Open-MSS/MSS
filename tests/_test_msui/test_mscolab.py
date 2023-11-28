@@ -38,7 +38,7 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader, modify_config_file
-from tests.utils import create_msui_settings_file, ExceptionMock
+from tests.utils import ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
@@ -189,15 +189,15 @@ class Test_Mscolab_connect_window():
         assert self.main_window.usernameLabel.text() == 'something'
         assert self.main_window.mscolab.connect_window is None
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
-    def test_add_users_without_updating_credentials_in_config_file(self, mockmessage):
-        create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
+    def test_add_users_without_updating_credentials_in_config_file(self):
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
-        self._create_user("anand", "anand@something.org", "anand_pass")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No):
+            self._create_user("anand", "anand@something.org", "anand_pass")
         # check changed settings
         assert mslib.utils.auth.get_password_from_keyring(service_name=self.url,
                                                           username="anand@something.org") == "anand_pass"
@@ -205,9 +205,8 @@ class Test_Mscolab_connect_window():
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_add_users_with_updating_credentials_in_config_file(self, mockmessage):
-        create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
+    def test_add_users_with_updating_credentials_in_config_file(self):
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         mslib.utils.auth.save_password_to_keyring(service_name=self.url,
                                                   username="something@something.org", password="something")
         read_config_file()
@@ -215,7 +214,8 @@ class Test_Mscolab_connect_window():
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         self._connect_to_mscolab()
         assert self.window.mscolab_server_url is not None
-        self._create_user("anand", "anand@something.org", "anand_pass")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes):
+            self._create_user("anand", "anand@something.org", "anand_pass")
         # check changed settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "anand@something.org"
         assert mslib.utils.auth.get_password_from_keyring(service_name=self.url,
