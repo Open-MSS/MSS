@@ -57,8 +57,8 @@ class Test_Mscolab_connect_window():
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
-        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+        QtTest.QTest.qWait(500)
         self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.main_window.create_new_flight_track()
         self.main_window.show()
@@ -287,8 +287,8 @@ class Test_Mscolab(object):
         assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2])
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
-        QtTest.QTest.qWait(500)
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+        QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()

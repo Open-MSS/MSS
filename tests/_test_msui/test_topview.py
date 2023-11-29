@@ -64,8 +64,8 @@ class Test_MSS_TV_MapAppearanceDialog(object):
 
 class Test_MSSTopViewWindow(object):
     def setup_method(self):
-        self.main_window = MSUIMainWindow()
         self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+        self.main_window = MSUIMainWindow()
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
