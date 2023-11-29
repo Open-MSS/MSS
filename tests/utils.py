@@ -232,7 +232,7 @@ def mscolab_server(_mscolab_server):
     return url, app
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def mswms_server():
     scheme = "http"
     host = "127.0.0.1"
