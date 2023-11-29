@@ -27,8 +27,6 @@
 """
 import time
 import fs
-import sys
-import re
 import socket
 import multiprocessing
 import werkzeug
@@ -37,7 +35,6 @@ import mslib.mswms.mswms
 
 from flask_testing import LiveServerTestCase
 
-from contextlib import contextmanager
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
@@ -186,31 +183,19 @@ def mscolab_check_free_port(all_ports, port):
     return port
 
 
-@contextmanager
-def capture_stderr():
-    class TeeToPipe:
-        def __init__(self, wrapped, pipe):
-            self.wrapped = wrapped
-            self.pipe = pipe
-
-        def write(self, data):
-            self.pipe.send(data)
-            self.wrapped.write(data)
-
-    rd, w = multiprocessing.Pipe(duplex=False)
-    stderr = sys.stderr
-    sys.stderr = TeeToPipe(stderr, w)
-    try:
-        yield rd
-    finally:
-        sys.stderr = stderr
-        rd.close()
-        w.close()
-
-
-@pytest.fixture
-def mscolab_server():
+# This needs to be a session-scoped fixture because eventlet does not go well with
+# multiprocessing. Spawning one process over the entire session seems to be okay, but
+# doing it more often will eventually lead to some hard to debug issues (e.g. the server
+# simply not responding for no apparent reason).
+# I have explored other ways to run the server (async_mode="threading", threading.Thread
+# instead of multiprocessing, eventlet.spawn) but just could not get this to work as a
+# function-scoped fixture.
+@pytest.fixture(scope="session")
+def _mscolab_server():
     handle_db_init()
+
+    scheme = "http"
+    host = "127.0.0.1"
 
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
@@ -219,28 +204,17 @@ def mscolab_server():
 
     _app, sockio, cm, fm = initialize_managers(_app)
 
-    # ToDo refactoring for spawn needed, fork is not implemented on windows, spawn is default on MAC and Windows
-    if multiprocessing.get_start_method(allow_none=True) != 'fork':
-        multiprocessing.set_start_method("fork")
-    with capture_stderr() as stderr:
-        process = multiprocessing.Process(
-            target=start_server,
-            args=(_app, sockio, cm, fm,),
-            kwargs={"port": 0, "log_output": True})
-        process.start()
+    import eventlet
+    import eventlet.wsgi
+    import eventlet.green
 
-        while True:
-            out = stderr.recv()
-            m = re.match(r"^\(\d+\) wsgi starting up on (https?)://([^:]+):(\d+)$", out)
-            if m is not None:
-                scheme, host, port = m.groups()
-                break
+    eventlet_socket = eventlet.listen((host, 0))
+    port = eventlet_socket.getsockname()[1]
+    process = multiprocessing.Process(target=eventlet.wsgi.server, args=(eventlet_socket, _app), daemon=True)
+    process.start()
 
     url = f"{scheme}://{host}:{port}"
     _app.config['URL'] = url
-
-    # Update mscolab URL to avoid "Update Server List" message boxes
-    modify_config_file({"default_MSCOLAB": [url]})
 
     try:
         yield url, _app
@@ -248,6 +222,14 @@ def mscolab_server():
         process.terminate()
         process.join(10)
         process.close()
+
+
+@pytest.fixture
+def mscolab_server(_mscolab_server):
+    url, app = _mscolab_server
+    # Update mscolab URL to avoid "Update Server List" message boxes
+    modify_config_file({"default_MSCOLAB": [url]})
+    return url, app
 
 
 @pytest.fixture

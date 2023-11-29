@@ -231,7 +231,7 @@ generate_initial_config()
 from tests.utils import create_msui_settings_file
 
 # Make fixtures available everywhere
-from tests.utils import mscolab_server, mswms_server
+from tests.utils import mscolab_server, _mscolab_server, mswms_server
 
 
 @pytest.fixture(autouse=True)
