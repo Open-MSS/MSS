@@ -51,9 +51,7 @@ class TestKeyring(keyring.backend.KeyringBackend):
     """
     priority = 1
 
-    passwords = {}
-
-    def reset(self):
+    def __init__(self):
         self.passwords = {}
 
     def set_password(self, servicename, username, password):
@@ -67,13 +65,9 @@ class TestKeyring(keyring.backend.KeyringBackend):
             del self.passwords[servicename + username]
 
 
-# set the keyring for keyring lib
-keyring.set_keyring(TestKeyring())
-
-
 @pytest.fixture(autouse=True)
 def keyring_reset():
-    keyring.get_keyring().reset()
+    keyring.set_keyring(TestKeyring())
 
 
 def pytest_addoption(parser):
