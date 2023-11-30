@@ -44,7 +44,7 @@ XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
 # if configured that way CRTs DIRs should be same in both IDP and mscolab server.
 BASE_DIR = os.path.expanduser("~")
 DATA_DIR = os.path.join(BASE_DIR, "colabdata")
-MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
+MSCOLAB_SSO_DIR = os.getenv("TESTING_MSCOLAB_SSO_DIR", os.path.join(DATA_DIR, 'datasso'))
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 
