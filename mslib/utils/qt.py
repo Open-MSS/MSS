@@ -376,9 +376,9 @@ class Worker(QtCore.QThread):
     finished = QtCore.pyqtSignal(object)
     failed = QtCore.pyqtSignal(Exception)
 
-    def __init__(self, function):
+    def __init__(self, parent, function):
         Worker.workers.add(self)
-        super().__init__()
+        super().__init__(parent)
         self.function = function
         # pyqtSignals don't work without an application eventloop running
         if QtCore.QCoreApplication.startingUp():
@@ -406,12 +406,12 @@ class Worker(QtCore.QThread):
                 pass
 
     @staticmethod
-    def create(function, on_success=None, on_failure=None, start=True):
+    def create(parent, function, on_success=None, on_failure=None, start=True):
         """
         Create, connect and directly execute a Worker in a single line.
         Inspired by QThread.create only available in C++17.
         """
-        worker = Worker(function)
+        worker = Worker(parent, function)
         if on_success:
             worker.finished.connect(on_success)
         if on_failure:
@@ -472,7 +472,7 @@ class Updater(QtCore.QObject):
         """
         Starts the updater process
         """
-        Worker.create(self._check_version)
+        Worker.create(self, self._check_version)
 
     def _check_version(self):
         """
@@ -581,7 +581,7 @@ class Updater(QtCore.QObject):
             self.on_status_update.emit("Update failed, please do it manually.")
             self.on_log_update.emit(str(e))
 
-        Worker.create(self._update_mss, on_failure=on_failure)
+        Worker.create(self, self._update_mss, on_failure=on_failure)
 
 
 class NonQtCallback:
