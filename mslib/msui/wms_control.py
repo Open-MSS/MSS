@@ -511,14 +511,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Progress dialog to inform the user about image ongoing retrievals.
         self.pdlg = QtWidgets.QProgressDialog(
             "retrieving image...", "Cancel", 0, 10, parent=self)
-        self.pdlg.close()
+        self.pdlg.hide()
 
         # Progress dialog to inform the user about ongoing capability requests.
         self.capabilities_worker = Worker(self, None)
         self.cpdlg = QtWidgets.QProgressDialog(
             "retrieving wms capabilities...", "Cancel", 0, 10, parent=self)
         self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
-        self.cpdlg.close()
+        self.cpdlg.hide()
 
         self.thread_prefetch = QtCore.QThread()  # no parent!
         self.thread_prefetch.start()
@@ -595,7 +595,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
                 self.activate_wms(wms)
                 WMS_SERVICE_CACHE[wms.url] = wms
-                self.cpdlg.close()
+                self.cpdlg.hide()
 
         def on_failure(e):
             try:
@@ -637,10 +637,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         self.capabilities_worker.start()
                         # On a new auth password we seems to need a manual close of the progress bar
                         # and load getcapabilities
-                        self.cpdlg.close()
+                        self.cpdlg.hide()
                         self.get_capabilities()
                     else:
-                        self.cpdlg.close()
+                        self.cpdlg.hide()
                         return
                 else:
                     logging.error("cannot load capabilities document.. "
@@ -648,14 +648,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     QtWidgets.QMessageBox.critical(
                         self.multilayers, self.tr("Web Map Service"),
                         self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
-                    self.cpdlg.close()
+                    self.cpdlg.hide()
             except Exception as ex:
                 logging.error("cannot load capabilities document.. "
                               "no layers can be used in this view.")
                 QtWidgets.QMessageBox.critical(
                     self.multilayers, self.tr("Web Map Service"),
                     self.tr(f"ERROR: We cannot load the capability document!\n\n{type(ex)}\n{ex}"))
-                self.cpdlg.close()
+                self.cpdlg.hide()
 
         try:
             str(base_url)
@@ -663,7 +663,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             logging.error("got a unicode url?!: '%s'", base_url)
             QtWidgets.QMessageBox.critical(self.multilayers, self.tr("Web Map Service"),
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
-            self.cpdlg.close()
+            self.cpdlg.hide()
 
         Worker.create(self, lambda: MSUIWebMapService(base_url, version=version,
                                                       username=auth_username, password=auth_password),
@@ -745,7 +745,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.multilayers, self.tr("Web Map Service"),
                     self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
             finally:
-                self.cpdlg.close()
+                self.cpdlg.hide()
 
         self.display_capabilities_dialog()
         Worker.create(self, lambda: requests.get(base_url, params=params, timeout=(5, 60)),
@@ -1374,7 +1374,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def continue_retrieve_image(self, img, legend_img, layer, style, init_time, valid_time, md5_filename):
         if self.pdlg.wasCanceled() or self.expected_img != md5_filename:
             return
-        self.pdlg.close()
+        self.pdlg.hide()
         if img is None:
             return
 
