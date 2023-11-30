@@ -44,7 +44,7 @@ from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
 from flask.wrappers import Response
 
 from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
-from mslib.mscolab.models import Change, MessageType, User, db
+from mslib.mscolab.models import Change, MessageType, User
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -209,23 +209,24 @@ def get_idp_entity_id(selected_idp):
 
 
 def create_or_update_idp_user(email, username, token, authentication_backend):
-    try:
-        user = User.query.filter_by(emailid=email).first()
-
-        if not user:
-            user = User(email, username, password=token, confirmed=False, confirmed_on=None,
-                        authentication_backend=authentication_backend)
-            db.session.add(user)
-            db.session.commit()
-
-        else:
-            user.authentication_backend = authentication_backend
-            user.hash_password(token)
-            db.session.add(user)
-            db.session.commit()
-        return True
-    except (sqlalchemy.exc.OperationalError):
-        return False
+    """
+    Creates or updates an idp user in the system based on the provided email, username, token, and authentication backend.
+    :param email: idp users email
+    :param username: idp users username
+    :param token: authentication token
+    :param authentication_backend: authenticated identity providers name
+    :return: bool : query success or not
+    """
+    user = User.query.filter_by(emailid=email).first()
+    if not user:
+        user = User(email, username, password=token, confirmed=False, confirmed_on=None,
+                    authentication_backend=authentication_backend)
+        result = fm.modify_user(user, action="create")
+    else:
+        user.authentication_backend = authentication_backend
+        user.hash_password(token)
+        result = fm.modify_user(user, action="update_idp_user")
+    return result
 
 
 @APP.route('/')
@@ -842,8 +843,7 @@ if mscolab_settings.USE_SAML2:
                 if user:
                     random_token = secrets.token_hex(16)
                     user.hash_password(random_token)
-                    db.session.add(user)
-                    db.session.commit()
+                    fm.modify_user(user, action="update_idp_user")
                     return json.dumps({
                         "success": True,
                         'token': random_token,
