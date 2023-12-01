@@ -29,6 +29,7 @@ import fs
 import difflib
 import logging
 import git
+import threading
 from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
@@ -39,6 +40,16 @@ class FileManager:
 
     def __init__(self, data_dir):
         self.data_dir = data_dir
+        self.operation_dict_lock = threading.Lock()
+        self.operation_locks = {}
+
+    def _get_operation_lock(self, op_id):
+        with self.operation_dict_lock:
+            try:
+                return self.operation_locks[op_id]
+            except KeyError:
+                self.operation_locks[op_id] = threading.Lock()
+                return self.operation_locks[op_id]
 
     def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
@@ -58,28 +69,31 @@ class FileManager:
         db.session.add(operation)
         db.session.flush()
         operation_id = operation.id
-        # this is the only insertion with "creator" access_level
-        perm = Permission(user.id, operation_id, "creator")
-        db.session.add(perm)
-        db.session.commit()
-        # here we can import the permissions from Group file
-        if not path.endswith(mscolab_settings.GROUP_POSTFIX):
-            import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
-            if import_op is not None:
-                self.import_permissions(import_op.id, operation_id, user.id)
-        data = fs.open_fs(self.data_dir)
-        data.makedir(operation.path)
-        operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
-        if content is not None:
-            operation_file.write(content)
-        else:
-            operation_file.write(mscolab_settings.STUB_CODE)
-        operation_path = fs.path.combine(self.data_dir, operation.path)
-        r = git.Repo.init(operation_path)
-        r.git.clear_cache()
-        r.index.add(['main.ftml'])
-        r.index.commit("initial commit")
-        return True
+
+        op_lock = self._get_operation_lock(operation_id)
+        with op_lock:
+            # this is the only insertion with "creator" access_level
+            perm = Permission(user.id, operation_id, "creator")
+            db.session.add(perm)
+            db.session.commit()
+            # here we can import the permissions from Group file
+            if not path.endswith(mscolab_settings.GROUP_POSTFIX):
+                import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
+                if import_op is not None:
+                    self.import_permissions(import_op.id, operation_id, user.id)
+            data = fs.open_fs(self.data_dir)
+            data.makedir(operation.path)
+            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
+            if content is not None:
+                operation_file.write(content)
+            else:
+                operation_file.write(mscolab_settings.STUB_CODE)
+            operation_path = fs.path.combine(self.data_dir, operation.path)
+            r = git.Repo.init(operation_path)
+            r.git.clear_cache()
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")
+            return True
 
     def get_operation_details(self, op_id, user):
         """
@@ -308,31 +322,33 @@ class FileManager:
         if not operation:
             return False
 
-        with fs.open_fs(self.data_dir) as data:
-            """
-            old file is read, the diff between old and new is calculated and stored
-            as 'Change' in changes table. comment for each change is optional
-            """
-            old_data = data.readtext(fs.path.combine(operation.path, 'main.ftml'))
-            old_data_lines = old_data.splitlines()
-            content_lines = content.splitlines()
-            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-            diff_content = '\n'.join(list(diff))
-            data.writetext(fs.path.combine(operation.path, 'main.ftml'), content)
-        # commit changes if comment is not None
-        if diff_content != "":
-            # commit to git repository
-            operation_path = fs.path.combine(self.data_dir, operation.path)
-            repo = git.Repo(operation_path)
-            repo.git.clear_cache()
-            repo.index.add(['main.ftml'])
-            cm = repo.index.commit("committing changes")
-            # change db table
-            change = Change(op_id, user.id, cm.hexsha)
-            db.session.add(change)
-            db.session.commit()
-            return True
-        return False
+        op_lock = self._get_operation_lock(operation.id)
+        with op_lock:
+            with fs.open_fs(self.data_dir) as data:
+                """
+                old file is read, the diff between old and new is calculated and stored
+                as 'Change' in changes table. comment for each change is optional
+                """
+                old_data = data.readtext(fs.path.combine(operation.path, 'main.ftml'))
+                old_data_lines = old_data.splitlines()
+                content_lines = content.splitlines()
+                diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+                diff_content = '\n'.join(list(diff))
+                data.writetext(fs.path.combine(operation.path, 'main.ftml'), content)
+            # commit changes if comment is not None
+            if diff_content != "":
+                # commit to git repository
+                operation_path = fs.path.combine(self.data_dir, operation.path)
+                repo = git.Repo(operation_path)
+                repo.git.clear_cache()
+                repo.index.add(['main.ftml'])
+                cm = repo.index.commit("committing changes")
+                # change db table
+                change = Change(op_id, user.id, cm.hexsha)
+                db.session.add(change)
+                db.session.commit()
+                return True
+            return False
 
     def get_file(self, op_id, user):
         """
@@ -345,10 +361,12 @@ class FileManager:
         operation = Operation.query.filter_by(id=op_id).first()
         if operation is None:
             return False
-        with fs.open_fs(self.data_dir) as data:
-            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'r')
-            operation_data = operation_file.read()
-        return operation_data
+        op_lock = self._get_operation_lock(op_id)
+        with op_lock:
+            with fs.open_fs(self.data_dir) as data:
+                operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'r')
+                operation_data = operation_file.read()
+            return operation_data
 
     def get_all_changes(self, op_id, user, named_version=False):
         """
@@ -432,22 +450,24 @@ class FileManager:
         if not ch or not operation:
             return False
 
-        operation_path = fs.path.join(self.data_dir, operation.path)
-        repo = git.Repo(operation_path)
-        repo.git.clear_cache()
-        try:
-            file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
-            with fs.open_fs(operation_path) as proj_fs:
-                proj_fs.writetext('main.ftml', file_content)
-            repo.index.add(['main.ftml'])
-            cm = repo.index.commit(f"checkout to {ch.commit_hash}")
-            change = Change(ch.op_id, user.id, cm.hexsha)
-            db.session.add(change)
-            db.session.commit()
-            return True
-        except Exception as ex:
-            logging.debug(ex)
-            return False
+        op_lock = self._get_operation_lock(operation.id)
+        with op_lock:
+            operation_path = fs.path.join(self.data_dir, operation.path)
+            repo = git.Repo(operation_path)
+            repo.git.clear_cache()
+            try:
+                file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
+                with fs.open_fs(operation_path) as proj_fs:
+                    proj_fs.writetext('main.ftml', file_content)
+                repo.index.add(['main.ftml'])
+                cm = repo.index.commit(f"checkout to {ch.commit_hash}")
+                change = Change(ch.op_id, user.id, cm.hexsha)
+                db.session.add(change)
+                db.session.commit()
+                return True
+            except Exception as ex:
+                logging.debug(ex)
+                return False
 
     def fetch_users_without_permission(self, op_id, u_id):
         if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
