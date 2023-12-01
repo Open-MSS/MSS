@@ -28,17 +28,12 @@
 import requests
 import time
 import fs
-import socket
-import multiprocessing
-
-from flask_testing import LiveServerTestCase
 
 from PyQt5 import QtTest
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
-from mslib.mscolab.server import initialize_managers, start_server
 
 
 def callback_ok_image(status, response_headers):
@@ -167,18 +162,6 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, path):
             return p['op_id']
 
 
-def mscolab_check_free_port(all_ports, port):
-    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        _s.bind(("127.0.0.1", port))
-    except (socket.error, IOError):
-        port = all_ports.pop()
-        port = mscolab_check_free_port(all_ports, port)
-    else:
-        _s.close()
-    return port
-
-
 def create_msui_settings_file(content):
     with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
         file_dir.writetext("msui_settings.json", content)
@@ -227,32 +210,3 @@ class ExceptionMock:
 
     def raise_exc(self, *args, **kwargs):
         raise self.exc
-
-
-class LiveSocketTestCase(LiveServerTestCase):
-
-    def _spawn_live_server(self):
-        self._process = None
-        port_value = self._port_value
-        app, sockio, cm, fm = initialize_managers(self.app)
-        self._process = multiprocessing.Process(
-            target=start_server,
-            args=(app, sockio, cm, fm,),
-            kwargs={'port': port_value.value})
-
-        self._process.start()
-
-        # We must wait for the server to start listening, but give up
-        # after a specified maximum timeout
-        timeout = self.app.config.get('LIVESERVER_TIMEOUT', 5)
-        start_time = time.time()
-
-        while True:
-            elapsed_time = (time.time() - start_time)
-            if elapsed_time > timeout:
-                raise RuntimeError(
-                    "Failed to start the server after %d seconds. " % timeout
-                )
-
-            if self._can_ping_server():
-                break
