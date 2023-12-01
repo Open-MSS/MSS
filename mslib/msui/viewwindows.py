@@ -26,11 +26,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
 
 from abc import abstractmethod
 
 from PyQt5 import QtCore, QtWidgets
-import logging
+from mslib.utils.config import save_settings_qsettings
 
 
 class MSUIViewWindow(QtWidgets.QMainWindow):
@@ -211,6 +212,24 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             self.btInvertDirection.setEnabled(False)
             self.cbTools.setEnabled(False)
             self.tableWayPoints.setEnabled(False)
+
+    def changeEvent(self, event):
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        if top_left.x() != 0:
+            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
+            settings = {'os_screen_region': os_screen_region}
+            # we have to save this to reuse it by the tutorials
+            save_settings_qsettings(self.settings_tag, settings)
+        QtWidgets.QWidget.changeEvent(self, event)
+
+    def moveEvent(self, event):
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        if top_left.x() != 0:
+            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
+            settings = {'os_screen_region': os_screen_region}
+            # we have to save this to reuse it by the tutorials
+            save_settings_qsettings(self.settings_tag, settings)
+        QtWidgets.QWidget.moveEvent(self, event)
 
 
 class MSUIMplViewWindow(MSUIViewWindow):

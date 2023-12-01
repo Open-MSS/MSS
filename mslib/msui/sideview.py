@@ -28,9 +28,8 @@
 
 import logging
 import functools
-import pyautogui as pag
 
-from PyQt5 import QtGui, QtWidgets, QtCore
+from PyQt5 import QtGui, QtWidgets
 
 from mslib.msui.qt5 import ui_sideview_window as ui
 from mslib.msui.qt5 import ui_sideview_options as ui_opt
@@ -38,7 +37,7 @@ from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
 from mslib.utils import thermolib
-from mslib.utils.config import config_loader, save_settings_qsettings
+from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
 
 # Dock window indices.
@@ -280,28 +279,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
-
-    def changeEvent(self, event):
-        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
-        if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
-            settings = {'os_screen_region': os_screen_region}
-            # we have to save this to reuse it by the tutorials
-            save_settings_qsettings(self.settings_tag, settings)
-            im = pag.screenshot(region=os_screen_region)
-            im.save('/tmp/msui/sv_changing.png')
-        QtWidgets.QWidget.changeEvent(self, event)
-
-    def moveEvent(self, event):
-        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
-        if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
-            settings = {'os_screen_region': os_screen_region}
-            # we have to save this to reuse it by the tutorials
-            save_settings_qsettings(self.settings_tag, settings)
-            im = pag.screenshot(region=os_screen_region)
-            im.save('/tmp/msui/sv_moveing.png')
-        QtWidgets.QWidget.moveEvent(self, event)
 
     def update_predefined_maps(self, extra):
         pass

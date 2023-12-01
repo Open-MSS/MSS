@@ -25,8 +25,8 @@
     limitations under the License.
 """
 
-from mslib.utils.config import config_loader, save_settings_qsettings
-from PyQt5 import QtGui, QtWidgets, QtCore
+from mslib.utils.config import config_loader
+from PyQt5 import QtGui, QtWidgets
 from mslib.msui.qt5 import ui_linearview_window as ui
 from mslib.msui.qt5 import ui_linearview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
@@ -107,24 +107,6 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
-
-    def changeEvent(self, event):
-        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
-        if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
-            settings = {'os_screen_region': os_screen_region}
-            # we have to save this to reuse it by the tutorials
-            save_settings_qsettings(self.settings_tag, settings)
-        QtWidgets.QWidget.changeEvent(self, event)
-
-    def moveEvent(self, event):
-        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
-        if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
-            settings = {'os_screen_region': os_screen_region}
-            # we have to save this to reuse it by the tutorials
-            save_settings_qsettings(self.settings_tag, settings)
-        QtWidgets.QWidget.moveEvent(self, event)
 
     def update_predefined_maps(self, extra):
         pass
