@@ -19,7 +19,6 @@ sphinx_rtd_theme
 gitpython
 pynco
 conda-verify
-Flask-Testing
 pytest-reverse
 eventlet>0.30.2
 dnspython>=2.0.0, <2.3.0

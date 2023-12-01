@@ -26,45 +26,29 @@
 """
 import os
 import secrets
+import pytest
 
-from flask_testing import TestCase
 from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, Message, MessageType
-from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-from mslib.mscolab.sockets_manager import setup_managers
 
 
-class Test_Chat_Manager(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
+class Test_Chat_Manager:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app, mscolab_managers):
+        self.app = mscolab_app
+        _, self.cm, _ = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.operation_name = "europe"
-        socketio, self.cm, self.fm = setup_managers(self.app)
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_add_message(self):
         with self.app.test_client():

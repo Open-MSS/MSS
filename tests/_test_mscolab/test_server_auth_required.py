@@ -27,41 +27,23 @@
 import os
 import pytest
 
-from flask_testing import TestCase
 from mslib.mscolab.conf import mscolab_settings
 
 mscolab_settings.enable_basic_http_authentication = True
 try:
-    from mslib.mscolab.server import authfunc, verify_pw, initialize_managers, get_auth_token, register_user, APP
+    from mslib.mscolab.server import authfunc, verify_pw, initialize_managers, get_auth_token, register_user
 except ImportError:
     pytest.skip("this test runs only by an explicit call "
                 "e.g. pytest tests/_test_mscolab/test_server_auth_required.py", allow_module_level=True)
 
-from mslib.mscolab.mscolab import handle_db_reset
-
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_Server_Auth_Not_Valid(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
+class Test_Server_Auth_Not_Valid:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app):
+        self.app = mscolab_app
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-
-    def tearDown(self):
-        pass
 
     def test_initialize_managers(self):
         app, sockio, cm, fm = initialize_managers(self.app)
