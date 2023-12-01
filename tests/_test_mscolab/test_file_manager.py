@@ -24,40 +24,21 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask_testing import TestCase
-import os
 import datetime
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, User
-from mslib.mscolab.server import APP
-from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.mscolab import handle_db_reset
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_FileManager(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
+class Test_FileManager:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_managers):
+        self.app, _, _, self.fm = mscolab_managers
         handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
-        self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
 
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         self.user = get_user(self.userdata[0])
@@ -77,9 +58,8 @@ class Test_FileManager(TestCase):
         assert add_user('UV80@uv80', 'UV80', 'uv80')
         self.adminuser = get_user('UV80@uv80')
         self._example_data()
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_modify_user(self):
         with self.app.test_client():

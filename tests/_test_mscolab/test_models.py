@@ -24,33 +24,22 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 
-from flask_testing import TestCase
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.server import register_user, APP
+from mslib.mscolab.server import register_user
 from mslib.mscolab.models import User
 
 
-class Test_User(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
+class Test_User:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app):
         handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert result["success"] is True
+        with mscolab_app.app_context():
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            assert result["success"] is True
+            yield
 
     def test_generate_auth_token(self):
         user = User(self.userdata[0], self.userdata[1], self.userdata[2])

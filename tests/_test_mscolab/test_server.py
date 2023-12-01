@@ -24,9 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from flask_testing import TestCase
-import os
 import pytest
 import json
 import io
@@ -34,33 +31,19 @@ import io
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
 from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.server import initialize_managers, check_login, register_user, APP
+from mslib.mscolab.server import initialize_managers, check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_Server(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
+class Test_Server:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app):
+        self.app = mscolab_app
         handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_initialize_managers(self):
         app, sockio, cm, fm = initialize_managers(self.app)
