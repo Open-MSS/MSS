@@ -110,13 +110,21 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
     def changeEvent(self, event):
         top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
-        bottom_right = top_left + QtCore.QPoint(self.width(), self.height())
         if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), bottom_right.x(), bottom_right.y()]
+            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
             settings = {'os_screen_region': os_screen_region}
             # we have to save this to reuse it by the tutorials
             save_settings_qsettings(self.settings_tag, settings)
         QtWidgets.QWidget.changeEvent(self, event)
+
+    def moveEvent(self, event):
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        if top_left.x() != 0:
+            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
+            settings = {'os_screen_region': os_screen_region}
+            # we have to save this to reuse it by the tutorials
+            save_settings_qsettings(self.settings_tag, settings)
+        QtWidgets.QWidget.moveEvent(self, event)
 
     def update_predefined_maps(self, extra):
         pass

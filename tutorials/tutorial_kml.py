@@ -34,6 +34,7 @@ CTRL, ENTER, WIN, ALT = platform_keys()
 
 
 def automate_kml():
+
     pag.sleep(5)
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
     kml_file_path1 = os.path.join(path, 'docs/samples/kml/folder.kml')
@@ -80,6 +81,9 @@ def automate_kml():
                               pag.click(interval=2),
                               pag.press(ENTER)),
                      interval=2)
+
+    create_tutorial_images()
+    pag.sleep(1)
 
     change_attribute('topviewwindow-2-00.png',
                      "'Change Linewidth' button not found on the screen.",

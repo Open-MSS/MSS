@@ -30,6 +30,8 @@
 
 import functools
 import logging
+import pyautogui as pag
+
 from mslib.utils.config import config_loader, save_settings_qsettings
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
@@ -45,7 +47,6 @@ from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui import flighttrack as ft
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
-
 
 # Dock window indices.
 WMS = 0
@@ -261,13 +262,25 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     def changeEvent(self, event):
         top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
-        bottom_right = top_left + QtCore.QPoint(self.width(), self.height())
         if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), bottom_right.x(), bottom_right.y()]
+            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
             settings = {'os_screen_region': os_screen_region}
             # we have to save this to reuse it by the tutorials
             save_settings_qsettings(self.settings_tag, settings)
+            im = pag.screenshot(region=os_screen_region)
+            im.save('/tmp/msui/tv_changing.png')
         QtWidgets.QWidget.changeEvent(self, event)
+
+    def moveEvent(self, event):
+        top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
+        if top_left.x() != 0:
+            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
+            settings = {'os_screen_region': os_screen_region}
+            # we have to save this to reuse it by the tutorials
+            save_settings_qsettings(self.settings_tag, settings)
+            im = pag.screenshot(region=os_screen_region)
+            im.save('/tmp/msui/tv_moveing.png')
+        QtWidgets.QWidget.moveEvent(self, event)
 
     @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def update_active_flighttrack(self, active_flighttrack):

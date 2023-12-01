@@ -172,6 +172,7 @@ def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None):
     if region is None:
         x, y = pag.locateCenterOnScreen(pic)
     else:
+        type(region)
         x, y = pag.locateCenterOnScreen(pic, region=region)
     pag.click(x + xoffset, y + yoffset, duration=duration)
 
@@ -191,6 +192,9 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
                                duration, xoffset=xoffset, yoffset=yoffset, region=region)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
+        im = pag.screenshot(region=region)
+        im.save('/tmp/msui/failure.png')
+
         print(f"\nException: {message}")
         raise
 

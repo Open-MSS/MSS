@@ -34,11 +34,11 @@ from mslib.msui.constants import MSUI_CONFIG_PATH
 def picture(name, bounding_box=None):
     filename = os.path.join(MSUI_CONFIG_PATH, "tutorial_images", name)
     if bounding_box is not None:
-        img = Image.open(filename)
-        cropped_img = img.crop(bounding_box)
-        part = '-'.join([str(val) for val in bounding_box])
-        new_name = slugify(f'{Path(name).stem}-{part}')
-        filename = os.path.join(MSUI_CONFIG_PATH, "tutorial_images", f'{new_name}.png')
-        cropped_img.save(filename)
+        with Image.open(filename) as img:
+            cropped_img = img.crop(bounding_box)
+            part = '-'.join([str(val) for val in bounding_box])
+            new_name = slugify(f'{Path(name).stem}-{part}')
+            filename = os.path.join(MSUI_CONFIG_PATH, "tutorial_images", f'{new_name}.png')
+            cropped_img.save(filename)
         time.sleep(1)
     return filename
