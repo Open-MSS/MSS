@@ -15,12 +15,10 @@ pytest-timeout
 sphinx
 sphinx_rtd_theme
 gitpython
-gevent
 pynco
 conda-verify
 Flask-Testing
 pytest-reverse
-eventlet>0.30.2
 dnspython>=2.0.0, <2.3.0
 gsl==2.7.0
 boa

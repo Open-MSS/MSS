@@ -183,13 +183,6 @@ def mscolab_check_free_port(all_ports, port):
     return port
 
 
-# This needs to be a session-scoped fixture because eventlet does not go well with
-# multiprocessing. Spawning one process over the entire session seems to be okay, but
-# doing it more often will eventually lead to some hard to debug issues (e.g. the server
-# simply not responding for no apparent reason).
-# I have explored other ways to run the server (async_mode="threading", threading.Thread
-# instead of multiprocessing, eventlet.spawn) but just could not get this to work as a
-# function-scoped fixture.
 @pytest.fixture(scope="session")
 def _mscolab_server():
     handle_db_init()
@@ -204,13 +197,9 @@ def _mscolab_server():
 
     _app, sockio, cm, fm = initialize_managers(_app)
 
-    import eventlet
-    import eventlet.wsgi
-    import eventlet.green
-
-    eventlet_socket = eventlet.listen((host, 0))
-    port = eventlet_socket.getsockname()[1]
-    process = multiprocessing.Process(target=eventlet.wsgi.server, args=(eventlet_socket, _app), daemon=True)
+    server = werkzeug.serving.make_server(host=host, port=0, app=_app, threaded=True)
+    port = server.socket.getsockname()[1]
+    process = multiprocessing.Process(target=server.serve_forever, daemon=True)
     process.start()
 
     url = f"{scheme}://{host}:{port}"
