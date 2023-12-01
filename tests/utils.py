@@ -25,22 +25,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import time
 import fs
-import socket
 import multiprocessing
 import werkzeug
 import pytest
 import mslib.mswms.mswms
-
-from flask_testing import LiveServerTestCase
 
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers, start_server
+from mslib.mscolab.server import APP, initialize_managers
 from mslib.mscolab.mscolab import handle_db_init
 from mslib.utils.config import modify_config_file
 
@@ -171,42 +167,34 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, path):
             return p['op_id']
 
 
-def mscolab_check_free_port(all_ports, port):
-    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        _s.bind(("127.0.0.1", port))
-    except (socket.error, IOError):
-        port = all_ports.pop()
-        port = mscolab_check_free_port(all_ports, port)
-    else:
-        _s.close()
-    return port
-
-
 @pytest.fixture(scope="session")
-def _mscolab_server():
-    handle_db_init()
-
-    scheme = "http"
-    host = "127.0.0.1"
-
+def mscolab_app():
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    return _app
 
-    _app, sockio, cm, fm = initialize_managers(_app)
 
-    server = werkzeug.serving.make_server(host=host, port=0, app=_app, threaded=True)
+@pytest.fixture(scope="session")
+def mscolab_managers(mscolab_app):
+    return initialize_managers(mscolab_app)
+
+
+@pytest.fixture(scope="session")
+def _mscolab_server(mscolab_managers):
+    handle_db_init()
+    app, _, _, _ = mscolab_managers
+    scheme = "http"
+    host = "127.0.0.1"
+    server = werkzeug.serving.make_server(host=host, port=0, app=app, threaded=True)
     port = server.socket.getsockname()[1]
     process = multiprocessing.Process(target=server.serve_forever, daemon=True)
     process.start()
-
     url = f"{scheme}://{host}:{port}"
-    _app.config['URL'] = url
-
+    app.config['URL'] = url
     try:
-        yield url, _app
+        yield url, app
     finally:
         process.terminate()
         process.join(10)
@@ -255,25 +243,3 @@ class ExceptionMock:
 
     def raise_exc(self, *args, **kwargs):
         raise self.exc
-
-
-class LiveSocketTestCase(LiveServerTestCase):
-
-    def _spawn_live_server(self):
-        self._process = None
-        port_value = self._port_value
-        app, sockio, cm, fm = initialize_managers(self.app)
-        self._process = multiprocessing.Process(
-            target=start_server,
-            args=(app, sockio, cm, fm,),
-            kwargs={'port': port_value.value})
-
-        self._process.start()
-
-        # We must wait for the server to start listening
-        retry_delay = 0.01
-        while True:
-            if self._can_ping_server():
-                break
-            time.sleep(retry_delay)
-            retry_delay = min(retry_delay * 2, 1)

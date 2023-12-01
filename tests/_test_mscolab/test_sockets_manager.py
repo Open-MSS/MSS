@@ -26,46 +26,27 @@
 """
 import os
 import pytest
+import socket
 import socketio
 import datetime
 import requests
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 from mslib.msui.icons import icons
 from mslib.mscolab.conf import mscolab_settings
-from tests.utils import mscolab_check_free_port, LiveSocketTestCase
-from mslib.mscolab.server import APP, initialize_managers
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
 from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.sockets_manager import SocketsManager
 from mslib.mscolab.models import Permission, User, Message, MessageType
 
 
-PORTS = list(range(27000, 27500))
-
-
-class Test_Socket_Manager(LiveSocketTestCase):
-    run_gc_after_test = True
-    chat_messages_counter = [0, 0, 0]  # three sockets connected a, b, and c
-    chat_messages_counter_a = 0  # only for first test
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 1
-        app.config['LIVESERVER_PORT'] = mscolab_check_free_port(PORTS, PORTS.pop())
-        return app
-
-    def setUp(self):
+class Test_Socket_Manager:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_managers, mscolab_server):
+        self.app, _, self.cm, self.fm = mscolab_managers
+        self.url, _ = mscolab_server
         handle_db_reset()
         self.sockets = []
-        # self.app = APP
-        self.app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        self.app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        self.app, _, self.cm, self.fm = initialize_managers(self.app)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.operation_name = "europe"
@@ -77,12 +58,22 @@ class Test_Socket_Manager(LiveSocketTestCase):
         self.anotheruser = get_user(self.anotheruserdata[0])
         self.token = self.user.generate_auth_token()
         self.operation = get_operation(self.operation_name)
-        self.url = self.get_server_url()
         self.sm = SocketsManager(self.cm, self.fm)
+        yield
+        for sock in self.sockets:
+            sock.disconnect()
 
-    def tearDown(self):
-        for socket in self.sockets:
-            socket.disconnect()
+    def _can_ping_server(self):
+        parsed_url = urlparse(self.url)
+        host, port = parsed_url.hostname, parsed_url.port
+        try:
+            sock = socket.create_connection((host, port))
+            success = True
+        except socket.error:
+            success = False
+        finally:
+            sock.close()
+        return success
 
     def _connect(self):
         sio = socketio.Client(reconnection_attempts=5)
@@ -109,7 +100,8 @@ class Test_Socket_Manager(LiveSocketTestCase):
     def test_join_creator_to_operatiom(self):
         sio = self._connect()
         operation = self._new_operation('new_operation', "example decription")
-        assert self.fm.get_file(int(operation.id), self.user) is False
+        with self.app.app_context():
+            assert self.fm.get_file(int(operation.id), self.user) is False
         json_config = {"token": self.token,
                        "op_id": operation.id}
 
