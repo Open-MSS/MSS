@@ -31,9 +31,11 @@ import pyautogui as pag
 from pyscreeze import ImageNotFoundException
 
 from mslib.msui import msui
-from tutorials.tutorial_views import ENTER
 from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
+from tutorials.utils.platform_keys import platform_keys
+
+CTRL, ENTER, WIN, ALT = platform_keys()
 
 
 def initial_ops():
@@ -69,24 +71,6 @@ def call_msui():
     Calls the main MSS GUI window since operations are to be performed on it only.
     """
     msui.main(tutorial_mode=True)
-
-
-def platform_keys():
-    #  sys.platform specific keyse
-    if sys.platform == 'linux' or sys.platform == 'linux2':
-        enter = 'enter'
-        win = 'winleft'
-        ctrl = 'ctrl'
-        alt = 'altleft'
-    elif sys.platform == 'win32':
-        enter = 'enter'
-        win = 'win'
-        ctrl = 'ctrl'
-        alt = 'alt'
-    elif sys.platform == 'darwin':
-        enter = 'return'
-        ctrl = 'command'
-    return ctrl, enter, win, alt
 
 
 def finish():
