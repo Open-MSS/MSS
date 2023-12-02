@@ -1,6 +1,6 @@
 """
     msui.tutorials.tutorial_mscolab
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This python script generates an automatic demonstration of how to use Mission Support System Collaboration for users
     to collaborate in flight planning and thereby explain how to use it's various functionalities.

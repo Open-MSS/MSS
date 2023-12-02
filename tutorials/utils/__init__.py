@@ -25,6 +25,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import platform
 import sys
 import multiprocessing
 import pyautogui as pag
@@ -33,7 +35,7 @@ from pyscreeze import ImageNotFoundException
 from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
-from tutorials.utils.platform import platform_keys
+from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 
@@ -119,6 +121,9 @@ def start(target=None, duration=120, dry_run=False):
     This function runs the above functions as different processes at the same time and can be
     controlled from here. (This is the main process.)
     """
+    if platform.system() == 'Linux':
+        # makes shure the keyboard is set to US
+        os.system("setxkbmap -layout us")
     if target is None:
         return
     p1 = multiprocessing.Process(target=call_msui)
@@ -157,7 +162,6 @@ def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None):
     if region is None:
         x, y = pag.locateCenterOnScreen(pic)
     else:
-        type(region)
         x, y = pag.locateCenterOnScreen(pic, region=region)
     pag.click(x + xoffset, y + yoffset, duration=duration)
 
@@ -178,7 +182,9 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         print(f"\nException: {message}")
-        raise
+        im = pag.screenshot(region=region)
+        im.save('/tmp/msui/failure.png')
+        # raise
 
 
 def load_kml_file(pic_name, file_path, exception_message):
@@ -235,8 +241,6 @@ def type_and_enter(value, interval=0.3):
     :param value (str): The value to be typed.
     :param interval (float, optional): The interval between typing each character. Defaults to 0.3 seconds.
 
-    Returns: None
-
     Example:
         type_and_enter("Hello, World!")
     """
@@ -264,8 +268,6 @@ def move_window(os_screen_region, x_drag_rel, y_drag_rel, x_mouse_down_offset=10
     :param x_mouse_down_offset (int): The offset from the left corner of the window where the mouse button
       will be pressed.
       This is useful to avoid clicking on any buttons or icons within the window. The default value is 100.
-
-    Returns: None
 
     Example usage:
     os_screen_region = (100, 200, 800, 600)
@@ -298,8 +300,6 @@ def move_and_setup_layerchooser(os_screen_region, x_move, y_move, x_drag_rel, y_
     :param x_mouse_down_offset (optional):  The offset from the left corner of the window where the mouse button
       will be pressed. This is useful to avoid clicking on any buttons or icons within the window. Defaults to 220.
 
-    Returns:
-    This method does not have a return value.
 
     Example Usage:
     move_and_setup_layerchooser((0, 0, 1920, 1080), 100, -50, 200, 100, x_mouse_down_offset=300)
@@ -313,8 +313,42 @@ def move_and_setup_layerchooser(os_screen_region, x_move, y_move, x_drag_rel, y_
     type_and_enter('http://open-mss.org/', interval=0.1)
     try:
         find_and_click_picture('multilayersdialog-get-capabilities.png',
-                               'Get capabilities not found', region="os_screen_region")
+                               'Get capabilities not found', region=os_screen_region)
     except TypeError:
         pag.press(ENTER)
     pag.move(x_move, y_move, duration=1)
     pag.dragRel(x_drag_rel, y_drag_rel, duration=2)
+
+
+def show_other_widgets():
+    """
+    Displays other widgets in the application.
+
+    This method shows the sideview, linearview, and topview of the application.
+    It uses the `pag` module from the PyAutoGUI library to simulate key presses.
+
+    Note:
+    - The 'altleft' key is pressed and released in the following sections to navigate through the application.
+    - The 'tab' key is pressed multiple times to switch between different views.
+
+    Example usage:
+    show_other_widgets()
+
+    """
+    # show sideview
+    pag.keyDown('altleft')
+    pag.press('tab')
+    pag.press('tab')
+    pag.keyUp('altleft')
+    pag.sleep(1)
+    # show linearview also
+    pag.keyDown('altleft')
+    pag.press('tab')
+    pag.keyUp('altleft')
+    # show topview also
+    pag.keyDown('altleft')
+    pag.press('tab')
+    pag.press('tab')
+    pag.press('tab')
+    pag.keyUp('altleft')
+    pag.sleep(1)

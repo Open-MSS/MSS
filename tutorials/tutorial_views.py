@@ -25,9 +25,10 @@
 """
 import pyautogui as pag
 
-from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, zoom_in, type_and_enter, move_window, move_and_setup_layerchooser
-from tutorials.utils.platform import platform_keys
+from tutorials.utils import (start, finish, create_tutorial_images, select_listelement,
+                             find_and_click_picture, zoom_in, type_and_enter, move_window,
+                             move_and_setup_layerchooser, show_other_widgets)
+from tutorials.utils.platform_keys import platform_keys
 from mslib.utils.config import load_settings_qsettings
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -221,17 +222,9 @@ def automate_views():
     y_drag_rel = 687
     move_window(tableview["os_screen_region"], x_drag_rel, y_drag_rel)
 
-    # show other views together
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.press('tab')
-    pag.keyUp('altleft')
-    pag.sleep(1)
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.sleep(1)
+    show_other_widgets()
 
-    pag.dragRel(None, -450, duration=2)
+    # pag.dragRel(None, -450, duration=2)
     tv_x, tv_y = pag.position()
     pag.click(tv_x, tv_y)
     pag.sleep(1)
@@ -275,23 +268,7 @@ def automate_views():
 
     move_window(linearview["os_screen_region"], x_drag_rel, y_drag_rel)
 
-    # show sideview
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.press('tab')
-    pag.keyUp('altleft')
-    pag.sleep(1)
-    # show linearview also
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.keyUp('altleft')
-    # show topview also
-    pag.keyDown('altleft')
-    pag.press('tab')
-    pag.press('tab')
-    pag.press('tab')
-    pag.keyUp('altleft')
-    pag.sleep(1)
+    show_other_widgets()
 
     lv_x, lv_y = pag.position()
     create_tutorial_images()
@@ -604,10 +581,11 @@ def sv_adjust_altitude(os_screen_region):
     find_and_click_picture('sideviewwindow-mv-wp.png',
                            'Sideview move wp not found',
                            region=os_screen_region)
-    find_and_click_picture(pic_name, bounding_box=(103, 300, 118, 312))
+    find_and_click_picture(pic_name, bounding_box=(187, 300, 206, 312))
     # adjust altitude of sideview waypoints
     px, py = pag.position()
-    offsets = [0, 60, 161, 200, ]
+    offsets = [0, 60, 93]
+
     for offset in offsets:
         pag.click(px + offset, py, interval=2)
         pag.moveTo(px + offset, py, duration=1)
