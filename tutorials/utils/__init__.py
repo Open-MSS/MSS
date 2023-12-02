@@ -177,9 +177,6 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
                                duration, xoffset=xoffset, yoffset=yoffset, region=region)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
-        im = pag.screenshot(region=region)
-        im.save('/tmp/msui/failure.png')
-
         print(f"\nException: {message}")
         raise
 
