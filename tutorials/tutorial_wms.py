@@ -27,7 +27,8 @@ import pyautogui as pag
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, create_tutorial_images
+from tutorials.utils import start, create_tutorial_images
+from tutorials.utils.platform import platform_keys
 from tutorials.utils.picture import picture
 
 

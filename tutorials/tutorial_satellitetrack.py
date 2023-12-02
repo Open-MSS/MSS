@@ -23,8 +23,9 @@
 """
 import os.path
 import pyautogui as pag
-from tutorials.utils import platform_keys, start, finish, create_tutorial_images, select_listelement, \
+from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
     find_and_click_picture, type_and_enter, zoom_in
+from tutorials.utils.platform import platform_keys
 
 
 CTRL, ENTER, WIN, ALT = platform_keys()

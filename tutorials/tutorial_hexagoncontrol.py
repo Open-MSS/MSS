@@ -28,8 +28,9 @@ import pyautogui as pag
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish, create_tutorial_images, select_listelement, \
+from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
     find_and_click_picture, click_center_on_screen, zoom_in, type_and_enter
+from tutorials.utils.platform import platform_keys
 from tutorials.utils.picture import picture
 
 CTRL, ENTER, WIN, ALT = platform_keys()

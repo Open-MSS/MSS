@@ -33,7 +33,7 @@ from pyscreeze import ImageNotFoundException
 from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
-from tutorials.utils.platform_keys import platform_keys
+from tutorials.utils.platform import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 
