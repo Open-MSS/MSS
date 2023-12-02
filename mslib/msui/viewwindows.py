@@ -216,7 +216,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
     def changeEvent(self, event):
         top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
         if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
+            os_screen_region = (top_left.x(), top_left.y(), self.width(), self.height())
             settings = {'os_screen_region': os_screen_region}
             # we have to save this to reuse it by the tutorials
             save_settings_qsettings(self.settings_tag, settings)
@@ -225,7 +225,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
     def moveEvent(self, event):
         top_left = self.mapToGlobal(QtCore.QPoint(0, 0))
         if top_left.x() != 0:
-            os_screen_region = [top_left.x(), top_left.y(), self.width(), self.height()]
+            os_screen_region = (top_left.x(), top_left.y(), self.width(), self.height())
             settings = {'os_screen_region': os_screen_region}
             # we have to save this to reuse it by the tutorials
             save_settings_qsettings(self.settings_tag, settings)

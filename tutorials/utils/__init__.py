@@ -31,6 +31,7 @@ import pyautogui as pag
 from pyscreeze import ImageNotFoundException
 
 from mslib.msui import msui
+from tutorials.tutorial_views import ENTER
 from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
 
@@ -245,9 +246,94 @@ def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50)
 
 
 def type_and_enter(value, interval=0.3):
+    """
+    Type and Enter method
+
+    This method types the given value and then presses the Enter key on the keyboard.
+
+    :param value (str): The value to be typed.
+    :param interval (float, optional): The interval between typing each character. Defaults to 0.3 seconds.
+
+    Returns: None
+
+    Example:
+        type_and_enter("Hello, World!")
+    """
     ctrl, enter, _, _ = platform_keys()
     pag.hotkey(ctrl, 'a')
     pag.sleep(1)
     pag.typewrite(value, interval=interval)
     pag.sleep(1)
     pag.press(enter)
+
+
+def move_window(os_screen_region, x_drag_rel, y_drag_rel, x_mouse_down_offset=100):
+    """
+
+    Move the window to a new position.
+
+    :param os_screen_region (tuple): A tuple containing the screen region of the window to be moved.
+      It should have the format (x, y, w, h), where x and y are the coordinates of the top-left
+      corner of the window, and w and h are the width and height of the window, respectively.
+    :param  x_drag_rel (int): The amount to drag the window horizontally relative to its current position.
+      Positive values will move the window to the right, while negative values will move it
+      to the left.
+    :param y_drag_rel (int): The amount to drag the window vertically relative to its current position.
+      Positive values will move the window down, while negative values will move it up.
+    :param x_mouse_down_offset (int): The offset from the left corner of the window where the mouse button
+      will be pressed.
+      This is useful to avoid clicking on any buttons or icons within the window. The default value is 100.
+
+    Returns: None
+
+    Example usage:
+    os_screen_region = (100, 200, 800, 600)
+    x_drag_rel = 100
+    y_drag_rel = 50
+    move_window(os_screen_region, x_drag_rel, y_drag_rel)
+
+    This will move the window located at (100, 200) to a new position that is 100 pixels to the right and 50 pixels
+    down from its current position.
+
+    """
+    x, y = os_screen_region[0:2]
+    # x, y is left corner where the msui logo is
+    pag.mouseDown(x + x_mouse_down_offset, y - 10, duration=10)
+    pag.sleep(1)
+    pag.dragRel(x_drag_rel, y_drag_rel, duration=2)
+    pag.mouseUp()
+
+
+def move_and_setup_layerchooser(os_screen_region, x_move, y_move, x_drag_rel, y_drag_rel, x_mouse_down_offset=220):
+    """
+
+    Move and set up the layer chooser in a given screen region.
+
+    :param os_screen_region: The screen region where the actions will be performed.
+    :param x_move: The horizontal distance to move the mouse cursor.
+    :param y_move: The vertical distance to move the mouse cursor.
+    :param x_drag_rel: The horizontal distance to drag the mouse cursor relative to its current position.
+    :param y_drag_rel: The vertical distance to drag the mouse cursor relative to its current position.
+    :param x_mouse_down_offset (optional):  The offset from the left corner of the window where the mouse button
+      will be pressed. This is useful to avoid clicking on any buttons or icons within the window. Defaults to 220.
+
+    Returns:
+    This method does not have a return value.
+
+    Example Usage:
+    move_and_setup_layerchooser((0, 0, 1920, 1080), 100, -50, 200, 100, x_mouse_down_offset=300)
+    move_and_setup_layerchooser((0, 0, 1920, 1080), -50, 0, 100, 200)
+
+    """
+    find_and_click_picture('multilayersdialog-http-localhost-8081.png',
+                           'Url not found', region=os_screen_region)
+    x, y = pag.position()
+    pag.click(x + x_mouse_down_offset, y, interval=2)
+    type_and_enter('http://open-mss.org/', interval=0.1)
+    try:
+        find_and_click_picture('multilayersdialog-get-capabilities.png',
+                               'Get capabilities not found', region="os_screen_region")
+    except TypeError:
+        pag.press(ENTER)
+    pag.move(x_move, y_move, duration=1)
+    pag.dragRel(x_drag_rel, y_drag_rel, duration=2)
