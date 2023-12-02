@@ -49,14 +49,14 @@ def automate_views():
     create_tutorial_images()
     pag.sleep(1)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
-
     # move topview on screen
     x_drag_rel = 910
     y_drag_rel = -10
     move_window(topview["os_screen_region"], x_drag_rel, y_drag_rel)
+    create_tutorial_images()
+    pag.sleep(1)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
-
-    tv_add_waypoints(topview)
+    tv_add_waypoints(topview['os_screen_region'])
     # memorize last added point
     x1, y1 = pag.position()
 
