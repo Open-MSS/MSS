@@ -289,13 +289,12 @@ def automate_views():
     pag.sleep(1)
     linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
     # Selecting Some Layers in Linear wms section
-    gap = 16
+    gap = 32
     lvll_region = list(linearview["os_screen_region"])
     lvll_region[0] = lvll_region[0] - 900 - 171
     find_and_click_picture('multilayersdialog-multilayering.png',
                            ' Multilayer not found',
                            region=tuple(lvll_region))
-    # ToDo check list selection works
     x, y = pag.position()
     # unselect multilayer
     pag.click(x, y)
@@ -304,9 +303,6 @@ def automate_views():
     # Cloudcover
     pag.click(x + 50, y + 70, interval=2)
     pag.sleep(1)
-    temp1, temp2 = x, y
-    pag.click(x + 50, y, interval=2)
-    pag.sleep(3)
     pag.move(0, gap, duration=1)
     pag.click(interval=1)
     pag.sleep(3)
@@ -316,14 +312,9 @@ def automate_views():
     pag.move(0, gap, duration=1)
     pag.click(interval=1)
     pag.sleep(3)
-    pag.move(0, -gap * 4, duration=1)
-    pag.click(interval=1)
-    pag.sleep(3)
-
-    pag.click(x + 30, y + 50, duration=1)
 
     # CLosing Linear View Layer List
-    pag.click(temp1, temp2 + (gap * 4), duration=2)
+    pag.click(x, y, duration=2)
     pag.sleep(1)
     pag.hotkey('altleft', 'f4')
 
