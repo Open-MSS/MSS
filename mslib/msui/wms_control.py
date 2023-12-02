@@ -782,10 +782,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.prefetcher is not None:
             self.prefetch.disconnect(self.prefetcher.fetch_maps)
         if self.fetcher is not None:
-            try:
-                self.fetch.disconnect(self.fetcher.fetch_maps)
-            except TypeError as e:
-                logging.error(e)
+            self.fetch.disconnect(self.fetcher.fetch_maps)
 
         self.prefetcher = WMSMapFetcher(self.wms_cache)
         self.prefetcher.moveToThread(self.thread_prefetch)
