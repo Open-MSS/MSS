@@ -97,14 +97,14 @@ def automate_views():
     create_tutorial_images()
     move_and_setup_layerchooser(topview["os_screen_region"], -171, -390, 10, 675)
 
-    tvll_region = topview["os_screen_region"]
+    tvll_region = list(topview["os_screen_region"])
     tvll_region[3] = tvll_region[3] + 675
 
     # Selecting some layers in topview layerlist
     # lookup layer entry from the multilayering checkbox
     find_and_click_picture('multilayersdialog-multilayering.png',
                            'Multilayering selection not found',
-                           region=tvll_region)
+                           region=tuple(tvll_region))
 
     x, y = pag.position()
     # disable multilayer
@@ -313,11 +313,11 @@ def automate_views():
     linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
     # Selecting Some Layers in Linear wms section
     gap = 16
-    lvll_region = linearview["os_screen_region"]
+    lvll_region = list(linearview["os_screen_region"])
     lvll_region[0] = lvll_region[0] - 900 - 171
     find_and_click_picture('multilayersdialog-multilayering.png',
                            ' Multilayer not found',
-                           region=lvll_region)
+                           region=tuple(lvll_region))
     x, y = pag.position()
 
     # Cloudcover
@@ -378,11 +378,11 @@ def sv_layers(os_screen_region, tvll_region):
 
     """
     gap = 16
-    svll_region = os_screen_region
+    svll_region = list(os_screen_region)
     svll_region[3] = tvll_region[3] + 600
     find_and_click_picture('multilayersdialog-multilayering.png',
                            'Multilayering not found',
-                           region=svll_region)
+                           region=tuple(svll_region))
     x, y = pag.position()
     # Cloudcover
     pag.click(x + 50, y + 70, interval=2)
