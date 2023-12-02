@@ -264,7 +264,7 @@ def automate_views():
 
     # move linearview on screen
     x_drag_rel = 0
-    y_drag_rel = 430
+    y_drag_rel = 630
 
     move_window(linearview["os_screen_region"], x_drag_rel, y_drag_rel)
 
@@ -295,13 +295,17 @@ def automate_views():
     find_and_click_picture('multilayersdialog-multilayering.png',
                            ' Multilayer not found',
                            region=tuple(lvll_region))
+    # ToDo check list selection works
     x, y = pag.position()
+    # unselect multilayer
+    pag.click(x, y)
+    pag.sleep(1)
 
     # Cloudcover
     pag.click(x + 50, y + 70, interval=2)
     pag.sleep(1)
     temp1, temp2 = x, y
-    pag.click(x, y, interval=2)
+    pag.click(x + 50, y, interval=2)
     pag.sleep(3)
     pag.move(0, gap, duration=1)
     pag.click(interval=1)
@@ -316,11 +320,6 @@ def automate_views():
     pag.click(interval=1)
     pag.sleep(3)
 
-    # Add waypoints after anaylzing the linear section wms
-    find_and_click_picture('topviewwindow-ins-wp.png',
-                           'Topview ins wp not found',
-                           region=topview["os_screen_region"])
-    x, y = pag.position()
     pag.click(x + 30, y + 50, duration=1)
 
     # CLosing Linear View Layer List
@@ -482,8 +481,8 @@ def tab_clone(os_screen_region, x, y, xoffset):
     pag.click(x + xoffset + 85, y - 232, duration=1)
     pag.sleep(1)
     type_and_enter('65.26')
-    pag.click(x + xoffset + 585, y - 232, duration=1)
-    pag.doubleClick()
+    pag.click(x + xoffset + 550, y - 232, duration=1)
+    pag.doubleClick(duration=1)
     type_and_enter('Comment1')
 
 
@@ -519,15 +518,12 @@ def tab_add_data():
     pag.sleep(1)
     # no blank in values
     type_and_enter('StopPoint', interval=0.1)
-    import time
-    time.sleep(3)
     # Changing hPa level of waypoints
     pag.click(x + xoffset + 170, y - 232, duration=1)
     pag.sleep(1)
     pag.doubleClick()
     pag.sleep(1)
     type_and_enter('250')
-    time.sleep(3)
     # xoffset
     # Changing longitude of 'Location A' waypoint
     pag.click(x + xoffset + 125, y - 294, duration=1)
@@ -535,7 +531,6 @@ def tab_add_data():
     pag.doubleClick()
     pag.sleep(1)
     type_and_enter('12.36')
-    time.sleep(3)
     return x, xoffset, y
 
 

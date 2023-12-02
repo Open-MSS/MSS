@@ -36,6 +36,7 @@ from mslib.msui import msui
 from tutorials.utils import screenrecorder as sr
 from tutorials.utils.picture import picture
 from tutorials.utils.platform_keys import platform_keys
+from mslib.msui.constants import MSUI_CONFIG_PATH
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 
@@ -181,10 +182,11 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
                                duration, xoffset=xoffset, yoffset=yoffset, region=region)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
-        print(f"\nException: {message}")
+        filename = os.path.join(MSUI_CONFIG_PATH, "failure.png")
+        print(f"\nException: {message} see {filename} for details")
         im = pag.screenshot(region=region)
-        im.save('/tmp/msui/failure.png')
-        # raise
+        im.save(filename)
+        raise
 
 
 def load_kml_file(pic_name, file_path, exception_message):
