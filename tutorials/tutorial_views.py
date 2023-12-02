@@ -48,12 +48,13 @@ def automate_views():
     pag.hotkey(CTRL, 'h')
     create_tutorial_images()
     pag.sleep(1)
-    topview = load_settings_qsettings('topview', {"os_screen_region": [0, 0, 0, 0]})
+    topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
 
     # move topview on screen
     x_drag_rel = 910
     y_drag_rel = -10
     move_window(topview["os_screen_region"], x_drag_rel, y_drag_rel)
+    topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
 
     tv_add_waypoints(topview)
     # memorize last added point
@@ -71,7 +72,7 @@ def automate_views():
     pag.hotkey(CTRL, 'v')
     pag.sleep(1)
     create_tutorial_images()
-    sideview = load_settings_qsettings('sideview', {"os_screen_region": [0, 0, 0, 0]})
+    sideview = load_settings_qsettings('sideview', {"os_screen_region": (0, 0, 0, 0)})
 
     # move sideview on screen
     x_drag_rel = -50
@@ -86,7 +87,7 @@ def automate_views():
     pag.keyUp('tab')
     pag.keyUp('altleft')
     pag.sleep(1)
-    topview = load_settings_qsettings('topview', {"os_screen_region": [0, 0, 0, 0]})
+    topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     # Locating Server Layer
@@ -118,7 +119,7 @@ def automate_views():
     create_tutorial_images()
     ll_tov_x, ll_tov_y = pag.position()
     pag.sleep(1)
-    topview = load_settings_qsettings('topview', {"os_screen_region": [0, 0, 0, 0]})
+    topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     # Moving waypoints in Topview
@@ -138,7 +139,7 @@ def automate_views():
     pag.sleep(2)
     create_tutorial_images()
     pag.sleep(1)
-    topview = load_settings_qsettings('topview', {"os_screen_region": [0, 0, 0, 0]})
+    topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     find_and_click_picture('topviewwindow-01-europe-cyl.png',
@@ -153,7 +154,7 @@ def automate_views():
     pag.sleep(2)
     create_tutorial_images()
     pag.sleep(1)
-    sideview = load_settings_qsettings('sideview', {"os_screen_region": [0, 0, 0, 0]})
+    sideview = load_settings_qsettings('sideview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     # SideView Operations
@@ -179,7 +180,7 @@ def automate_views():
 
     create_tutorial_images()
     pag.sleep(1)
-    sideview = load_settings_qsettings('sideview', {"os_screen_region": [0, 0, 0, 0]})
+    sideview = load_settings_qsettings('sideview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     pag.sleep(2)
@@ -214,7 +215,7 @@ def automate_views():
 
     create_tutorial_images()
     pag.sleep(1)
-    tableview = load_settings_qsettings('tableview', {"os_screen_region": [0, 0, 0, 0]})
+    tableview = load_settings_qsettings('tableview', {"os_screen_region": (0, 0, 0, 0)})
     # move tableview on screen
     x_drag_rel = 250
     y_drag_rel = 687
@@ -234,7 +235,7 @@ def automate_views():
     tv_x, tv_y = pag.position()
     pag.click(tv_x, tv_y)
     pag.sleep(1)
-    tableview = load_settings_qsettings('tableview', {"os_screen_region": [0, 0, 0, 0]})
+    tableview = load_settings_qsettings('tableview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
     create_tutorial_images()
     pag.sleep(2)
@@ -266,7 +267,7 @@ def automate_views():
 
     create_tutorial_images()
     pag.sleep(1)
-    linearview = load_settings_qsettings('linearview', {"os_screen_region": [0, 0, 0, 0]})
+    linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
 
     # move linearview on screen
     x_drag_rel = 0
@@ -295,7 +296,7 @@ def automate_views():
     lv_x, lv_y = pag.position()
     create_tutorial_images()
     pag.sleep(1)
-    linearview = load_settings_qsettings('linearview', {"os_screen_region": [0, 0, 0, 0]})
+    linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     # Locating Server Layer
@@ -309,7 +310,7 @@ def automate_views():
 
     create_tutorial_images()
     pag.sleep(1)
-    linearview = load_settings_qsettings('linearview', {"os_screen_region": [0, 0, 0, 0]})
+    linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
     # Selecting Some Layers in Linear wms section
     gap = 16
     lvll_region = linearview["os_screen_region"]
