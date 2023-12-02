@@ -614,11 +614,11 @@ def sv_adjust_altitude(os_screen_region):
         pag.click(interval=2)
 
 
-def tv_add_waypoints(topview):
+def tv_add_waypoints(os_screen_region):
 
     find_and_click_picture('topviewwindow-ins-wp.png',
                            'Topview Window not found',
-                           region=topview["os_screen_region"])
+                           region=os_screen_region)
     # Adding waypoints
     pag.sleep(1)
     pag.move(-50, 150, duration=1)
