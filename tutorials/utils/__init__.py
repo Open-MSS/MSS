@@ -61,7 +61,13 @@ def initial_ops():
 
 def call_recorder(x_start=0, y_start=0, x_width=int(pag.size()[0]), y_width=int(pag.size()[1]), duration=120):
     """
-    Calls the screen recorder class to start the recording of the automation.
+    Starts a call recording of the specified area on the screen.
+
+    :param x_start: (optional) The x-coordinate of the starting point for the recording area. Defaults to 0.
+    :param y_start: (optional) The y-coordinate of the starting point for the recording area. Defaults to 0.
+    :param x_width: (optional) The width of the recording area. Defaults to the width of the screen.
+    :param y_width: (optional) The height of the recording area. Defaults to the height of the screen.
+    :param duration: (optional) The duration of the recording in seconds. Defaults to 120 seconds.
     """
     sr.ScreenRecorder()
     rec = sr.ScreenRecorder(x_start, y_start, x_width, y_width)
@@ -77,6 +83,12 @@ def call_msui():
 
 
 def finish():
+    """
+    Closes all open windows and exits the application.
+
+    This method is used to automate the process of closing all open windows and exiting the application.
+
+    """
     # clean up and close all
     try:
         if sys.platform == 'linux' or sys.platform == 'linux2':
@@ -119,8 +131,14 @@ def finish():
 
 def start(target=None, duration=120, dry_run=False):
     """
-    This function runs the above functions as different processes at the same time and can be
-    controlled from here. (This is the main process.)
+    Starts the automation process.
+
+    :param target: A function representing the target task to be automated. Default is None.
+    :param duration: An integer representing the duration of the recording in seconds. Default is 120.
+    :param dry_run: A boolean indicating whether to run in dry-run mode or not. Default is False.
+    :return: None
+
+    Note: Uncomment the line pag.press('q') if recording windows do not close in some cases.
     """
     if platform.system() == 'Linux':
         # makes shure the keyboard is set to US
@@ -150,16 +168,41 @@ def start(target=None, duration=120, dry_run=False):
 
 
 def create_tutorial_images():
+    """
+
+    This method `create_tutorial_images` is used to simulate the keyboard key
+    combination 'Ctrl + F' and then puts the program to sleep for 1 second.
+
+    """
     pag.hotkey('ctrl', 'f')
     pag.sleep(1)
 
 
 def get_region(image):
+    """
+    Find the region of the given image on the screen.
+
+    :param image: The image to locate on the screen.
+    :return: The region of the image found on the screen.
+    :rtype: tuple(int, int, int, int)
+    """
     region = pag.locateOnScreen(image)
     return region
 
 
 def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, click=True):
+    """
+    Clicks the center of an image on the screen.
+
+    :param pic: The image file or partial image file to locate on the screen.
+    :param duration: The duration (in seconds) for the click action. Default is 2 seconds.
+    :param xoffset: The horizontal offset from the center of the image. Default is 0.
+    :param yoffset: The vertical offset from the center of the image. Default is 0.
+    :param region: The region on the screen to search for the image. Default is None, which searches the entire screen.
+    :param click: Indicates whether to perform the click action. Default is True.
+
+    :return: None
+    """
     if region is None:
         x, y = pag.locateCenterOnScreen(pic)
     else:
@@ -169,6 +212,14 @@ def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, c
 
 
 def select_listelement(steps, sleep=5, key=ENTER):
+    """
+    Selects an element from a list by moving the cursor downward and pressing a key.
+
+    :param steps: Number of times to move the cursor downward.
+    :param sleep: Time to sleep after pressing the key (default is 5 seconds).
+    :param key: Key to press after moving the cursor (default is 'ENTER').
+    :return: None
+    """
     pag.press('down', presses=steps, interval=0.5)
     if key is not None:
         pag.press(key, interval=1)
@@ -177,6 +228,27 @@ def select_listelement(steps, sleep=5, key=ENTER):
 
 def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset=0, yoffset=0,
                            bounding_box=None, region=None, click=True):
+    """
+
+    Finds a specified picture and clicks on it.
+    When the image can't be found, an exception is raised and a failure.png image is created
+
+    :param pic_name: The name of the picture to find. This can be a file name or a string pattern.
+    :param exception_message: Optional. Custom exception message to be displayed if the picture is not found.
+     Defaults to None.
+    :param duration: Optional. The duration of the click in seconds. Defaults to 2.
+    :param xoffset: Optional. The x-axis offset for the click position. Defaults to 0.
+    :param yoffset: Optional. The y-axis offset for the click position. Defaults to 0.
+    :param bounding_box: Optional. The bounding box for the search area. Defaults to None.
+    :param region: Optional. The region in which to search for the picture. Defaults to None.
+    :param click: Optional. Indicates whether to perform the click action. Defaults to True.
+
+    :raises ImageNotFoundException: If the picture is not found.
+    :raises OSError: If there is an error while processing the picture.
+    :raises Exception: If any other exception occurs.
+
+    :returns: A tuple containing the x and y coordinates of the clicked position.
+    """
     x, y = (0, 0)
     message = exception_message if exception_message is not None else f"{pic_name} not found"
     try:
@@ -197,18 +269,31 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
 
 
 def load_kml_file(pic_name, file_path, exception_message):
-    _, enter, _, _ = platform_keys()
+    """
+    Loads a KML file using the given picture name and file path.
+
+    :param pic_name: The name of the picture to be found and clicked.
+    :param file_path: The path to the KML file.
+    :param exception_message: The exception message to be printed and raised if an error occurs.
+    :raises ImageNotFoundException: If the specified picture cannot be found.
+    :raises OSError: If an error occurs while typing the file path or pressing the ENTER key.
+    :raises Exception: If an unknown error occurs.
+
+    """
     try:
         find_and_click_picture(pic_name, exception_message)
         pag.typewrite(file_path, interval=0.1)
         pag.sleep(1)
-        pag.press(enter)
+        pag.press(ENTER)
     except (ImageNotFoundException, OSError, Exception):
         print(exception_message)
         raise
 
 
-def change_attribute(pic_name, exception_message, actions, interval=2, sleep_time=2):
+def change_color(pic_name, exception_message, actions, interval=2, sleep_time=2):
+    """
+    Changes the color of the specified picture and performs the given actions.
+    """
     try:
         click_center_on_screen(picture(pic_name), interval)
         pag.sleep(sleep_time)
@@ -219,6 +304,19 @@ def change_attribute(pic_name, exception_message, actions, interval=2, sleep_tim
 
 
 def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), region=None):
+    """
+    This method locates a given picture on the screen, clicks on it, moves the mouse cursor,
+    performs a drag motion, waits for 5 seconds, and raises an exception if the picture is not found
+
+    :param pic_name: The name of the picture to locate on the screen.
+    :param exception_message: The message to be displayed in case the picture is not found.
+    :param move: The amount to move the mouse cursor horizontally and vertically after clicking on the picture.
+     Defaults to (379, 205).
+    :param dragRel: The amount to drag the mouse cursor horizontally and vertically after moving.
+     Defaults to (70, 75).
+    :param region: The specific region of the screen to search for the picture.
+     Defaults to None, which means the entire screen will be searched.
+    """
     try:
         x, y = pag.locateCenterOnScreen(picture(pic_name), region=region)
         pag.click(x, y, interval=2)
@@ -231,6 +329,15 @@ def zoom_in(pic_name, exception_message, move=(379, 205), dragRel=(70, 75), regi
 
 
 def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50), region=None):
+    """
+    Executes panning action on the screen.
+
+    :param pic_name: The name of the picture file to locate on the screen.
+    :param exception_message: The message to display in case of exceptions.
+    :param moveRel: The relative movements to be made after clicking on the picture. Defaults to (400, 400).
+    :param dragRel: The relative movements to be made during the dragging action. Defaults to (-100, -50).
+    :param region: The region of the screen to search for the picture. Defaults to None.
+    """
     try:
         x, y = pag.locateCenterOnScreen(picture(pic_name), region=region)
         pag.click(x, y, interval=2)
@@ -249,9 +356,6 @@ def type_and_key(value, interval=0.1, key=ENTER):
 
     :param value (str): The value to be typed.
     :param interval (float, optional): The interval between typing each character. Defaults to 0.3 seconds.
-
-    Example:
-        type_and_key("Hello, World!")
     """
     pag.hotkey(CTRL, 'a')
     pag.sleep(1)
@@ -265,15 +369,15 @@ def move_window(os_screen_region, x_drag_rel, y_drag_rel, x_mouse_down_offset=10
 
     Move the window to a new position.
 
-    :param os_screen_region (tuple): A tuple containing the screen region of the window to be moved.
+    :param os_screen_region: A tuple containing the screen region of the window to be moved.
       It should have the format (x, y, w, h), where x and y are the coordinates of the top-left
       corner of the window, and w and h are the width and height of the window, respectively.
-    :param  x_drag_rel (int): The amount to drag the window horizontally relative to its current position.
+    :param  x_drag_rel: The amount to drag the window horizontally relative to its current position.
       Positive values will move the window to the right, while negative values will move it
       to the left.
-    :param y_drag_rel (int): The amount to drag the window vertically relative to its current position.
+    :param y_drag_rel: The amount to drag the window vertically relative to its current position.
       Positive values will move the window down, while negative values will move it up.
-    :param x_mouse_down_offset (int): The offset from the left corner of the window where the mouse button
+    :param x_mouse_down_offset: The offset from the left corner of the window where the mouse button
       will be pressed.
       This is useful to avoid clicking on any buttons or icons within the window. The default value is 100.
 

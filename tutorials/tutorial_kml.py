@@ -28,7 +28,7 @@ import pyautogui as pag
 import os.path
 
 from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, load_kml_file, change_attribute, type_and_key
+    find_and_click_picture, load_kml_file, change_color, type_and_key
 from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -76,25 +76,24 @@ def automate_kml():
     pag.click(interval=2)
 
     # ToDo color is clicked but did not change, QT bug?
-    change_attribute('topviewwindow-change-color.png',
-                     "'Change Color' button not found on the screen.",
-                     lambda: (pag.move(-220, -300, duration=1),
-                              pag.click(interval=2),
-                              pag.press(ENTER)),
-                     interval=2)
+    change_color('topviewwindow-change-color.png',
+                 "'Change Color' button not found on the screen.",
+                 lambda: (pag.move(-220, -300, duration=1),
+                          pag.click(interval=2),
+                          pag.press(ENTER)),
+                 interval=2)
 
     create_tutorial_images()
     pag.sleep(1)
-
-    change_attribute('topviewwindow-2-00.png',
-                     "'Change Linewidth' button not found on the screen.",
-                     lambda: (pag.hotkey(CTRL, 'a'),
-                              # ToDo find a way to delay this
-                              [pag.press('down') for _ in range(8)],
-                              type_and_key('2.50'),
-                              pag.sleep(1),
-                              type_and_key('5.50')),
-                     interval=2)
+    # ToDo find a way to delay this
+    change_color('topviewwindow-2-00.png',
+                 "'Change Linewidth' button not found on the screen.",
+                 lambda: (pag.hotkey(CTRL, 'a'),
+                          [pag.press('down') for _ in range(8)],
+                          type_and_key('2.50'),
+                          pag.sleep(1),
+                          type_and_key('5.50')),
+                 interval=2)
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
