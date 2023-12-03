@@ -184,7 +184,7 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
                                duration, xoffset=xoffset, yoffset=yoffset, region=region, click=click)
         x, y = pag.position()
         # ToDo verify
-        pag.moveTo(x, y, duration=duration)
+        # pag.moveTo(x, y, duration=duration)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         filename = os.path.join(MSUI_CONFIG_PATH, "failure.png")
@@ -241,7 +241,7 @@ def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50)
         raise
 
 
-def type_and_key(value, interval=0.2, key=ENTER):
+def type_and_key(value, interval=0.1, key=ENTER):
     """
     Type and Enter method
 

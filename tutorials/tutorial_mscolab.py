@@ -57,53 +57,194 @@ def automate_mscolab():
     pag.hotkey(*hotkey)
 
     create_tutorial_images()
-
-    pag.sleep(2)
-    modify_x, modify_y = None, None
-
     connect_to_mscolab_url()
     create_tutorial_images()
-    pag.sleep(1)
     create_user()
     login_user_after_creation()
-    # only for testing login_user()
     create_tutorial_images()
     create_operation()
     create_tutorial_images()
     open_operations_x, open_operations_y = activate_operation()
-    # open admin window
+    demonstrate_adminwindow()
+    demonstrate_chatting()
+    wp1_x, wp1_y = demonstrate_topview_wp()
+    demonstrate_versionhistory()
+    create_tutorial_images()
+    demonstrate_work_asynchronously(wp1_x, wp1_y)
+    demonstrate_toggle_between_local_and_mscolab(open_operations_x, open_operations_y)
+    demonstrate_delete_operation()
+    create_tutorial_images()
+    demonstrate_delete_account()
+    print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
+    finish()
+
+
+def demonstrate_delete_account():
+    find_and_click_picture('msuimainwindow-john-doe.png',
+                           'John Doe (in mscolab window) Profile/Logo button not found.',
+                           xoffset=40)
+    select_listelement(1)
+    create_tutorial_images()
+    find_and_click_picture('profilewindow-delete-account.png',
+                           'Delete account not found.')
+    pag.press(ENTER)
+
+
+def demonstrate_delete_operation():
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
                            bounding_box=(89, 0, 150, 22))
-
-    select_listelement(4, key=None)
+    select_listelement(4, key=None, sleep=1)
     pag.press('right')
-    select_listelement(2)
-    pag.sleep(1)
+    select_listelement(4, key=None, sleep=1)
+    pag.press(ENTER)
+    # Deleting the operation
+    pag.sleep(2)
+    type_and_key(OPERATION_NAME, interval=0.3)
+    pag.press(ENTER)
 
+
+def demonstrate_toggle_between_local_and_mscolab(open_operations_x, open_operations_y):
+    # Activating a local flight track
+    if open_operations_x is not None and open_operations_y is not None:
+        pag.moveTo(open_operations_x - 900, open_operations_y, duration=2)
+        pag.sleep(1)
+        pag.doubleClick(open_operations_x - 900, open_operations_y, duration=2)
+        pag.sleep(2)
+    else:
+        print("Image Not Found : Open Operations label (for activating local flighttrack) not found, previously!")
+    # Opening Topview again and making some changes in it
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Views menu not found',
+                           bounding_box=(40, 0, 80, 22))
+    select_listelement(1, sleep=1)
     create_tutorial_images()
+    pag.sleep(4)
+    # Adding waypoints in a different fashion than the pevious one (for local flighttrack)
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Add waypoint (in topview again) button not found.')
+    pag.move(-50, 150, duration=1)
+    pag.click(interval=2)
 
+    pag.sleep(1)
+    pag.move(65, 10, duration=1)
+    pag.click(duration=2)
+    pag.sleep(1)
+    pag.move(-100, 10, duration=1)
+    pag.click(duration=2)
+    pag.sleep(1)
+    pag.move(90, 10, duration=1)
+    pag.click(duration=2)
+    pag.sleep(3)
+    # Sending topview to the background
+    pag.hotkey('CTRL', 'up')
+    # Activating the opened mscolab operation
+    if open_operations_x is not None and open_operations_y is not None:
+        pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
+        pag.sleep(1)
+        pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
+        pag.sleep(3)
+
+        # Opening the topview again by double-clicking on open views
+        x, y = find_and_click_picture('msuimainwindow-open-views.png', 'open views not found')
+
+        pag.moveTo(x, y + 22, duration=2)
+        pag.doubleClick(x, y + 22, duration=2)
+        pag.sleep(3)
+
+        # Closing the topview
+        pag.hotkey(ALT, 'f4')
+        pag.press('left')
+        pag.sleep(1)
+        pag.press(ENTER)
+        pag.sleep(2)
+    else:
+        print("Image Not Found : Open Operations label (for activating mscolab operation) not found, previously!")
+
+
+def demonstrate_work_asynchronously(wp1_x, wp1_y):
+    find_and_click_picture('msuimainwindow-work-asynchronously.png',
+                           'Work Asynchronously (in mscolab) '
+                           'checkbox not found ', bounding_box=(0, 0, 149, 23))
+    work_async_x, work_async_y = pag.position()
+    pag.sleep(3)
+    # Opening Topview again to move waypoints during working locally!
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Views menu not found',
+                           bounding_box=(40, 0, 80, 22))
+    select_listelement(1, sleep=1)
+    find_and_click_picture('msuimainwindow-server-options.png',
+                           'Server options button not found.')
+    select_listelement(1)
+    create_tutorial_images()
+    find_and_click_picture('mergewaypointsdialog-keep-server-waypoints.png',
+                           'Merge waypoints keepe server waypoints not found')
+    pag.press(ENTER)
+    pag.keyDown('altleft')
+    # this selects the next window in the window manager on budgie and kde
+    pag.press('tab')
+    pag.keyUp('tab')
+    pag.keyUp('altleft')
+    # Moving waypoints.
+    create_tutorial_images()
+    find_and_click_picture('topviewwindow-mv-wp.png',
+                           'Move waypoints not found')
+    wp2_x, wp2_y = find_and_click_picture('topviewwindow-top-view.png',
+                                          'Topviews Point 2 not found on the screen.',
+                                          bounding_box=(322, 112, 346, 135))
+    pag.click(wp2_x, wp2_y, interval=2)
+    pag.moveTo(wp2_x, wp2_y, duration=1)
+    pag.dragTo(wp1_x, wp1_y + 20, duration=1, button='left')
+    pag.click(interval=2)
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Topview Window not found')
+    pag.move(-50, 150, duration=1)
+    pag.click(interval=2)
+    # Closing topview after displacing waypoints
+    pag.hotkey(ALT, 'f4')
+    pag.press('left')
+    pag.sleep(1)
+    pag.press(ENTER)
+    pag.sleep(2)
+    find_and_click_picture('msuimainwindow-server-options.png',
+                           'Overwrite with local waypoints (during saving to server) button not found.')
+    select_listelement(2)
+    create_tutorial_images()
+    find_and_click_picture('mergewaypointsdialog-overwrite-with-local-waypoints.png',
+                           'Merge waypoints overwrite with local waypoints not found.')
+    pag.press(ENTER)
+    create_tutorial_images()
+    # Unchecking work asynchronously
+    pag.moveTo(work_async_x, work_async_y, duration=2)
+    pag.click(work_async_x, work_async_y, duration=2)
+
+
+def demonstrate_adminwindow():
+    # open admin window
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(89, 0, 150, 22), duration=1)
+    select_listelement(4, key=None, sleep=1)
+    pag.press('right')
+    select_listelement(2, sleep=1)
+    pag.sleep(1)
+    create_tutorial_images()
     # positions of buttons in the view mscolab admin windo
     pic = picture("mscolabadminwindow-all-users-without-permission.png")
-    ref_x, ref_y = pag.locateCenterOnScreen(pic)
-    left_side = (ref_x, ref_y, 400, 800)
-
+    pos = pag.locateOnScreen(pic)
+    left_side = (pos.left, pos.top, 500, 800)
     pic = picture("mscolabadminwindow-all-users-with-permission.png")
-    ref_x, ref_y = pag.locateCenterOnScreen(pic)
-    right_side = (ref_x, ref_y, 800, 1000)
-
+    pos = pag.locateOnScreen(pic)
+    right_side = (pos.left, pos.top, 500, 1000)
     selectall_left_x, selectall_left_y = find_and_click_picture('mscolabadminwindow-select-all.png',
                                                                 'Select All leftside button not found',
-                                                                region=left_side, click=False)
-
+                                                                region=left_side)
     pag.moveTo(selectall_left_x, selectall_left_y, duration=2)
-
     pag.click(selectall_left_x, selectall_left_y, duration=1)
     pag.sleep(2)
     pag.moveTo(selectall_left_x + 90, selectall_left_y, duration=2)
     pag.click(selectall_left_x + 90, selectall_left_y, duration=1)
     pag.sleep(2)
-
     pag.click(selectall_left_x - 61, selectall_left_y, duration=1)
     pag.typewrite('test', interval=1)
     pag.moveTo(selectall_left_x, selectall_left_y, duration=2)
@@ -112,7 +253,6 @@ def automate_mscolab():
     pag.moveTo(selectall_left_x + 90, selectall_left_y, duration=2)
     pag.click(duration=2)
     pag.sleep(2)
-
     # Deleting search item from the search box
     pag.click(selectall_left_x - 61, selectall_left_y, duration=2)
     pag.sleep(1)
@@ -120,7 +260,6 @@ def automate_mscolab():
     pag.sleep(1)
     pag.press('backspace')
     pag.sleep(2)
-
     # Selecting and adding users for collaborating in the operation.
     if selectall_left_x is not None and selectall_left_y is not None:
         for count in range(4):
@@ -128,19 +267,22 @@ def automate_mscolab():
             pag.click(selectall_left_x, selectall_left_y + 57 * count, duration=1)
         x, y = find_and_click_picture('mscolabadminwindow-add.png',
                                       'Add (all the users) button not found on the screen.',
-                                      region=left_side, click=False)
+                                      region=left_side)
 
         pag.moveTo(x, y, duration=2)
         pag.click(x, y, duration=2)
         pag.sleep(1)
     else:
         print('Not able to select users for adding')
-
     # Searching and changing user permissions and deleting users
     selectall_right_x, selectall_right_y = find_and_click_picture('mscolabadminwindow-select-all.png',
                                                                   'Select All (modifying permissions) '
                                                                   'button not found on the screen.',
-                                                                  region=right_side, click=False)
+                                                                  region=right_side)
+    find_and_click_picture('mscolabadminwindow-deselect-all.png',
+                           'Select All (modifying permissions) '
+                           'button not found on the screen.',
+                           region=right_side)
     pag.moveTo(selectall_right_x - 170, selectall_right_y, duration=2)
     pag.click(selectall_right_x - 170, selectall_right_y, duration=2)
     pag.typewrite('t', interval=0.3)
@@ -148,7 +290,6 @@ def automate_mscolab():
     pag.hotkey(CTRL, 'a')
     pag.press('backspace')
     pag.sleep(1)
-
     # Selecting and modifying user roles
     if selectall_right_x is not None and selectall_right_y is not None:
         for i in range(3):
@@ -158,7 +299,8 @@ def automate_mscolab():
             pag.sleep(2)
             modify_x, modify_y = find_and_click_picture('mscolabadminwindow-modify.png',
                                                         'Modify (access permissions) '
-                                                        'button not found on the screen.)', click=False)
+                                                        'button not found on the screen.)',
+                                                        region=right_side)
             pag.click(modify_x - 141, modify_y, duration=2)
             if i == 0:
                 pag.press('up', presses=2)
@@ -193,20 +335,75 @@ def automate_mscolab():
         pag.sleep(1)
     else:
         print('Image Not Found: Select All button has previously not found on the screen')
-
     # Closing user permission window
     pag.hotkey(ALT, 'f4')
     pag.sleep(2)
 
-    qdemonstrate_chatting()
 
+def demonstrate_versionhistory():
+    # Opening version history window.
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(89, 0, 150, 22))
+    select_listelement(2, sleep=1)
+    create_tutorial_images()
+    # Operations performed in version history window.
+    x, y = find_and_click_picture('mscolabversionhistory-refresh-window.png',
+                                  'Refresh Window (in version history window) button not found.')
+    pag.moveTo(x, y, duration=2)
+    pag.click(x, y, duration=2)
+    pag.sleep(2)
+    pag.click(x, y + 32, duration=2)
+    pag.sleep(1)
+    pag.press('down')
+    pag.sleep(1)
+    pag.press(ENTER)
+    pag.sleep(2)
+    pag.moveTo(x, y + 164, duration=1)
+    pag.click(x, y + 164, duration=1)
+    pag.sleep(4)
+    # Changing this change to a named version
+    # Giving name to a change version.
+    x1, y1 = pag.locateCenterOnScreen(picture('mscolabversionhistory-name-version.png'))
+    pag.sleep(1)
+    pag.moveTo(x1, y1, duration=2)
+    pag.click(x1, y1, duration=2)
+    pag.sleep(1)
+    pag.typewrite('Initial waypoint', interval=0.3)
+    pag.sleep(1)
+    pag.press(ENTER)
+    pag.sleep(1)
+    pag.moveTo(x, y + 93, duration=1)
+    pag.click(x, y + 93, duration=1)
+    pag.sleep(2)
+    pag.moveTo(x, y + 125, duration=1)
+    pag.click(x, y + 125, duration=1)
+    pag.sleep(1)
+    x2, y2 = pag.locateCenterOnScreen(picture('mscolabversionhistory-checkout.png'))
+    pag.sleep(1)
+    pag.moveTo(x2, y2, duration=2)
+    pag.click(x2, y2, duration=2)
+    pag.sleep(1)
+    pag.press(ENTER)
+    # Filtering changes to display only named changes.
+    pag.moveTo(x1 + 29, y1, duration=1)
+    pag.click(x1 + 29, y1, duration=1)
+    pag.sleep(1)
+    pag.press('up')
+    pag.sleep(1)
+    pag.press(ENTER)
+    pag.sleep(3)
+    # Closing the Version History Window
+    pag.hotkey(ALT, 'f4')
+    pag.sleep(4)
+
+
+def demonstrate_topview_wp():
     # Opening Topview
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
                            bounding_box=(40, 0, 80, 22))
-
-    select_listelement(1)
-
+    select_listelement(1, sleep=1)
     create_tutorial_images()
     # Adding some waypoints to topview
     find_and_click_picture('topviewwindow-ins-wp.png',
@@ -219,241 +416,19 @@ def automate_mscolab():
     pag.click(duration=2)
     # wp2_x, wp2_y = pag.position()
     pag.sleep(1)
-
     pag.move(-150, 30, duration=1)
     pag.click(duration=2)
     pag.sleep(1)
     pag.move(180, 100, duration=1)
     pag.click(duration=2)
     pag.sleep(3)
-
     # Closing the topview
     pag.hotkey(ALT, 'f4')
     pag.press('left')
     pag.sleep(1)
     pag.press(ENTER)
     pag.sleep(1)
-
-    # Opening version history window.
-    find_and_click_picture("msuimainwindow-menubar.png",
-                           'Operation menu not found',
-                           bounding_box=(89, 0, 150, 22))
-    select_listelement(2)
-
-    create_tutorial_images()
-    # Operations performed in version history window.
-
-    x, y = find_and_click_picture('mscolabversionhistory-refresh-window.png',
-                                  'Refresh Window (in version history window) button not found.')
-    pag.moveTo(x, y, duration=2)
-    pag.click(x, y, duration=2)
-    pag.sleep(2)
-    pag.click(x, y + 32, duration=2)
-    pag.sleep(1)
-    pag.press('down')
-    pag.sleep(1)
-    pag.press(ENTER)
-    pag.sleep(2)
-
-    pag.moveTo(x, y + 164, duration=1)
-    pag.click(x, y + 164, duration=1)
-    pag.sleep(4)
-    # Changing this change to a named version
-
-    # Giving name to a change version.
-    x1, y1 = pag.locateCenterOnScreen(picture('mscolabversionhistory-name-version.png'))
-    pag.sleep(1)
-    pag.moveTo(x1, y1, duration=2)
-    pag.click(x1, y1, duration=2)
-    pag.sleep(1)
-    pag.typewrite('Initial waypoint', interval=0.3)
-    pag.sleep(1)
-    pag.press(ENTER)
-    pag.sleep(1)
-
-    pag.moveTo(x, y + 93, duration=1)
-    pag.click(x, y + 93, duration=1)
-    pag.sleep(2)
-
-    pag.moveTo(x, y + 125, duration=1)
-    pag.click(x, y + 125, duration=1)
-    pag.sleep(1)
-
-    x2, y2 = pag.locateCenterOnScreen(picture('mscolabversionhistory-checkout.png'))
-    pag.sleep(1)
-    pag.moveTo(x2, y2, duration=2)
-    pag.click(x2, y2, duration=2)
-    pag.sleep(1)
-    pag.press(ENTER)
-
-    # Filtering changes to display only named changes.
-    pag.moveTo(x1 + 29, y1, duration=1)
-    pag.click(x1 + 29, y1, duration=1)
-    pag.sleep(1)
-    pag.press('up')
-    pag.sleep(1)
-    pag.press(ENTER)
-    pag.sleep(3)
-
-    # Closing the Version History Window
-    pag.hotkey(ALT, 'f4')
-    pag.sleep(4)
-
-    create_tutorial_images()
-    # Activate Work Asynchronously with the mscolab server.
-    # ToDo this needs to be extracted to a different tutorial
-
-    find_and_click_picture('msuimainwindow-work-asynchronously.png',
-                           'Work Asynchronously (in mscolab) '
-                           'checkbox not found ', bounding_box=(0, 0, 149, 23))
-
-    work_async_x, work_async_y = pag.position()
-    pag.sleep(3)
-    # Opening Topview again to move waypoints during working locally!
-    find_and_click_picture("msuimainwindow-menubar.png",
-                           'Views menu not found',
-                           bounding_box=(40, 0, 80, 22))
-    select_listelement(1)
-
-    # Moving waypoints.
-    create_tutorial_images()
-    wp2_x, wp2_y = find_and_click_picture('topviewwindow-top-view.png',
-                                          'Topviews Point 2 not found on the screen.',
-                                          bounding_box=(322, 112, 346, 135))
-
-    if wp1_x is not None and wp2_x is not None:
-        find_and_click_picture('topviewwindow-mv-wp.png',
-                               'Move Waypoint button could not be located')
-
-        pag.click(wp2_x, wp2_y, interval=2)
-        pag.moveTo(wp2_x, wp2_y, duration=1)
-        pag.dragTo(wp1_x, wp1_y + 20, duration=1, button='left')
-        pag.click(interval=2)
-        pag.sleep(4)
-
-    # Closing topview after displacing waypoints
-    pag.hotkey(ALT, 'f4')
-    pag.press('left')
-    pag.sleep(1)
-    pag.press(ENTER)
-    pag.sleep(2)
-
-    # Saving to Server the Work that has been done asynchronously.
-    if work_async_x is not None and work_async_y is not None:
-        pag.moveTo(work_async_x + 600, work_async_y, duration=2)
-        pag.click(work_async_x + 600, work_async_y, duration=2)
-        pag.press('down', presses=2, interval=1)
-        pag.press(ENTER)
-        pag.sleep(3)
-
-    create_tutorial_images()
-
-    # Overwriting Server waypoints with Local Waypoints.
-    find_and_click_picture('msuimainwindow-server-options.png',
-                           'Overwrite with local waypoints (during saving to server) button not found.')
-
-    pag.press('down', presses=2, interval=1)
-    pag.sleep(2)
-    pag.press(ENTER)
-    pag.sleep(3)
-    create_tutorial_images()
-
-    # Unchecking work asynchronously
-    pag.moveTo(work_async_x, work_async_y, duration=2)
-    pag.click(work_async_x, work_async_y, duration=2)
-    pag.sleep(3)
-
-    # Activating a local flight track
-    if open_operations_x is not None and open_operations_y is not None:
-        pag.moveTo(open_operations_x - 900, open_operations_y, duration=2)
-        pag.sleep(1)
-        pag.doubleClick(open_operations_x - 900, open_operations_y, duration=2)
-        pag.sleep(2)
-    else:
-        print("Image Not Found : Open Operations label (for activating local flighttrack) not found, previously!")
-
-    # Opening Topview again and making some changes in it
-    find_and_click_picture("msuimainwindow-menubar.png",
-                           'Views menu not found',
-                           bounding_box=(40, 0, 80, 22))
-    select_listelement(1)
-    create_tutorial_images()
-    pag.sleep(4)
-    # Adding waypoints in a different fashion than the pevious one (for local flighttrack)
-    find_and_click_picture('topviewwindow-ins-wp.png',
-                           'Add waypoint (in topview again) button not found.')
-
-    pag.move(-50, 150, duration=1)
-    pag.click(interval=2)
-    pag.sleep(1)
-    pag.move(65, 10, duration=1)
-    pag.click(duration=2)
-    pag.sleep(1)
-
-    pag.move(-100, 10, duration=1)
-    pag.click(duration=2)
-    pag.sleep(1)
-    pag.move(90, 10, duration=1)
-    pag.click(duration=2)
-    pag.sleep(3)
-
-    # Sending topview to the background
-    pag.hotkey('CTRL', 'up')
-
-    # Activating the opened mscolab operation
-    if open_operations_x is not None and open_operations_y is not None:
-        pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
-        pag.sleep(1)
-        pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
-        pag.sleep(3)
-
-        # Opening the topview again by double-clicking on open views
-        x, y = find_and_click_picture('msuimainwindow-open-views.png', 'open views not found')
-
-        pag.moveTo(x, y + 22, duration=2)
-        pag.doubleClick(x, y + 22, duration=2)
-        pag.sleep(3)
-
-        # Closing the topview
-        pag.hotkey(ALT, 'f4')
-        pag.press('left')
-        pag.sleep(1)
-        pag.press(ENTER)
-        pag.sleep(2)
-    else:
-        print("Image Not Found : Open Operations label (for activating mscolab operation) not found, previously!")
-
-    find_and_click_picture("msuimainwindow-menubar.png",
-                           'Operation menu not found',
-                           bounding_box=(89, 0, 150, 22))
-    select_listelement(4, key=None)
-    pag.click('right')
-    select_listelement(4, key=None)
-    pag.click(ENTER)
-
-    # Deleting the operation
-    pag.sleep(2)
-    type_and_key(OPERATION_NAME, interval=0.3)
-
-    create_tutorial_images()
-    # Opening user profile
-    x, y = find_and_click_picture('msuimainwindow-john-doe.png',
-                                  'John Doe (in mscolab window) Profile/Logo button not found.',
-                                  xoffset=40)
-    pag.sleep(1)
-    pag.press('down')
-    pag.sleep(1)
-    pag.press(ENTER, presses=2, interval=2)
-    pag.sleep(2)
-
-    pag.click(x + 32, y, duration=2)
-    pag.sleep(1)
-    pag.press('down', presses=2, interval=2)
-    pag.press(ENTER)
-    pag.sleep(3)
-
-    print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    return wp1_x, wp1_y
 
 
 def demonstrate_chatting():
@@ -461,7 +436,7 @@ def demonstrate_chatting():
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
                            bounding_box=(89, 0, 150, 22))
-    select_listelement(1)
+    select_listelement(1, sleep=1)
     pag.sleep(3)
     create_tutorial_images()
     chat_message1 = 'Hi buddy! What\'s the next plan? I have marked the points in topview for the dummy operation.'
@@ -523,9 +498,9 @@ def create_operation():
     find_and_click_picture("msuimainwindow-menubar.png",
                            'File menu not found',
                            bounding_box=(0, 0, 38, 22))
-    select_listelement(1, key=None)
+    select_listelement(1, key=None, sleep=1)
     pag.press('right')
-    select_listelement(1)
+    select_listelement(1, sleep=1)
     pag.sleep(1)
     pag.press('tab')
     for value in [OPERATION_NAME, OPERATION_DESCRIPTION]:
@@ -539,18 +514,13 @@ def create_operation():
 
 
 def login_user_after_creation():
-    # Login
+    # Login new user
     pag.press('tab', presses=2)
     type_and_key(ENTER, key='tab')
     type_and_key(PASSWORD, key='tab')
     pag.press(ENTER)
     # store userdata
     pag.press('left')
-    pag.press(ENTER)
-
-
-def login_user():
-    type_and_key(EMAIL)
     pag.press(ENTER)
 
 
@@ -572,7 +542,6 @@ def connect_to_mscolab_url():
     find_and_click_picture('msuimainwindow-connect.png',
                            "Connect to Mscolab button not found on the screen.")
     create_tutorial_images()
-    pag.sleep(2)
     # create user on server
     find_and_click_picture('mscolabconnectdialog-http-localhost-8083.png', 'Url not found')
     type_and_key(MSCOLAB_URL)
