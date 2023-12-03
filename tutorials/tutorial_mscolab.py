@@ -66,7 +66,7 @@ def automate_mscolab():
     pag.sleep(1)
     create_user()
     login_user_after_creation()
-    # login_user()
+    # only for testing login_user()
     create_tutorial_images()
     create_operation()
     create_tutorial_images()
@@ -94,7 +94,7 @@ def automate_mscolab():
 
     selectall_left_x, selectall_left_y = find_and_click_picture('mscolabadminwindow-select-all.png',
                                                                 'Select All leftside button not found',
-                                                                region=left_side)
+                                                                region=left_side, click=False)
 
     pag.moveTo(selectall_left_x, selectall_left_y, duration=2)
 
@@ -128,7 +128,7 @@ def automate_mscolab():
             pag.click(selectall_left_x, selectall_left_y + 57 * count, duration=1)
         x, y = find_and_click_picture('mscolabadminwindow-add.png',
                                       'Add (all the users) button not found on the screen.',
-                                      region=left_side)
+                                      region=left_side, click=False)
 
         pag.moveTo(x, y, duration=2)
         pag.click(x, y, duration=2)
@@ -140,7 +140,7 @@ def automate_mscolab():
     selectall_right_x, selectall_right_y = find_and_click_picture('mscolabadminwindow-select-all.png',
                                                                   'Select All (modifying permissions) '
                                                                   'button not found on the screen.',
-                                                                  region=right_side)
+                                                                  region=right_side, click=False)
     pag.moveTo(selectall_right_x - 170, selectall_right_y, duration=2)
     pag.click(selectall_right_x - 170, selectall_right_y, duration=2)
     pag.typewrite('t', interval=0.3)
@@ -158,7 +158,7 @@ def automate_mscolab():
             pag.sleep(2)
             modify_x, modify_y = find_and_click_picture('mscolabadminwindow-modify.png',
                                                         'Modify (access permissions) '
-                                                        'button not found on the screen.)')
+                                                        'button not found on the screen.)', click=False)
             pag.click(modify_x - 141, modify_y, duration=2)
             if i == 0:
                 pag.press('up', presses=2)
@@ -198,7 +198,7 @@ def automate_mscolab():
     pag.hotkey(ALT, 'f4')
     pag.sleep(2)
 
-    demonstrate_chatting()
+    qdemonstrate_chatting()
 
     # Opening Topview
     find_and_click_picture("msuimainwindow-menubar.png",

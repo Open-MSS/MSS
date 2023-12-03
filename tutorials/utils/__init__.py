@@ -159,12 +159,13 @@ def get_region(image):
     return region
 
 
-def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None):
+def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, click=True):
     if region is None:
         x, y = pag.locateCenterOnScreen(pic)
     else:
         x, y = pag.locateCenterOnScreen(pic, region=region)
-    pag.click(x + xoffset, y + yoffset, duration=duration)
+    if click:
+        pag.click(x + xoffset, y + yoffset, duration=duration)
 
 
 def select_listelement(steps, sleep=5, key=ENTER):
@@ -175,12 +176,12 @@ def select_listelement(steps, sleep=5, key=ENTER):
 
 
 def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset=0, yoffset=0,
-                           bounding_box=None, region=None):
+                           bounding_box=None, region=None, click=True):
     x, y = (0, 0)
     message = exception_message if exception_message is not None else f"{pic_name} not found"
     try:
         click_center_on_screen(picture(pic_name, bounding_box=bounding_box),
-                               duration, xoffset=xoffset, yoffset=yoffset, region=region)
+                               duration, xoffset=xoffset, yoffset=yoffset, region=region, click=click)
         x, y = pag.position()
         # ToDo verify
         pag.moveTo(x, y, duration=duration)
