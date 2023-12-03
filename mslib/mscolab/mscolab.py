@@ -46,6 +46,10 @@ from mslib.mscolab import mscolab
 from mslib.msidp import idp_conf
 
 
+# ToDo: refactor after testing this is a work around just for testing
+import sys
+sys.path.append("../../")
+
 def handle_start(args):
     from mslib.mscolab.server import APP, initialize_managers, start_server
     setup_logging(args)
@@ -273,6 +277,9 @@ def handle_mscolab_metadata_init(repo_exists):
     print('generating metadata file for the mscolab server')
 
     try:
+        import sys
+        print(sys.path)
+
         command = ["python", mscolab.__file__, "start"] if repo_exists else ["mscolab", "start"]
         process = subprocess.Popen(command)
         cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
