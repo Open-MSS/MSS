@@ -58,7 +58,6 @@ def automate_performance():
 
     pag.hotkey(CTRL, 't')
     create_tutorial_images()
-    pag.sleep(1)
     # Opening Performance Settings dockwidget
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
                            'Select to open control not found')
@@ -118,11 +117,10 @@ def automate_performance():
                                bounding_box=(0, 0, 140, 23))
         # update tutorial images
         create_tutorial_images()
-        pag.sleep(2)
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
 
 if __name__ == '__main__':
-    start(target=automate_performance, duration=114, dry_run=True)
+    start(target=automate_performance, duration=114)

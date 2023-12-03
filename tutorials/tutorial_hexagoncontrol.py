@@ -72,7 +72,7 @@ def automate_hexagoncontrol():
     create_tutorial_images()
 
     # show both open windows arranged on screen
-    tv_x, tv_y = arrange_open_app_windows()
+    tv_x, tv_y = _arrange_open_app_windows()
 
     # Opening Hexagon Control dockwidget
     if tv_x is not None and tv_y is not None:
@@ -152,7 +152,7 @@ def automate_hexagoncontrol():
     finish()
 
 
-def arrange_open_app_windows():
+def _arrange_open_app_windows():
     # Relocating Tableview by performing operations on table view
     tv_x = None
     tv_y = None

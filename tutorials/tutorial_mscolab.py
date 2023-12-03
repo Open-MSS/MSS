@@ -55,31 +55,31 @@ def automate_mscolab():
     pag.sleep(2)
     hotkey = WIN, 'pageup'
     pag.hotkey(*hotkey)
-
+    # create initial images, needs to become updated when elements on the widget change
     create_tutorial_images()
-    connect_to_mscolab_url()
+    _connect_to_mscolab_url()
     create_tutorial_images()
-    create_user()
-    login_user_after_creation()
+    _create_user()
+    _login_user_after_creation()
     create_tutorial_images()
-    create_operation()
+    _create_operation()
     create_tutorial_images()
-    open_operations_x, open_operations_y = activate_operation()
-    demonstrate_adminwindow()
-    demonstrate_chatting()
-    wp1_x, wp1_y = demonstrate_topview_wp()
-    demonstrate_versionhistory()
+    open_operations_x, open_operations_y = _activate_operation()
+    _adminwindow()
+    _chatting()
+    wp1_x, wp1_y = _topview_wp()
+    _versionhistory()
     create_tutorial_images()
-    demonstrate_work_asynchronously(wp1_x, wp1_y)
-    demonstrate_toggle_between_local_and_mscolab(open_operations_x, open_operations_y)
-    demonstrate_delete_operation()
+    _work_asynchronously(wp1_x, wp1_y)
+    _toggle_between_local_and_mscolab(open_operations_x, open_operations_y)
+    _delete_operation()
     create_tutorial_images()
-    demonstrate_delete_account()
+    _delete_account()
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
 
-def demonstrate_delete_account():
+def _delete_account():
     find_and_click_picture('msuimainwindow-john-doe.png',
                            'John Doe (in mscolab window) Profile/Logo button not found.',
                            xoffset=40)
@@ -90,7 +90,7 @@ def demonstrate_delete_account():
     pag.press(ENTER)
 
 
-def demonstrate_delete_operation():
+def _delete_operation():
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
                            bounding_box=(89, 0, 150, 22))
@@ -104,7 +104,7 @@ def demonstrate_delete_operation():
     pag.press(ENTER)
 
 
-def demonstrate_toggle_between_local_and_mscolab(open_operations_x, open_operations_y):
+def _toggle_between_local_and_mscolab(open_operations_x, open_operations_y):
     # Activating a local flight track
     if open_operations_x is not None and open_operations_y is not None:
         pag.moveTo(open_operations_x - 900, open_operations_y, duration=2)
@@ -162,7 +162,7 @@ def demonstrate_toggle_between_local_and_mscolab(open_operations_x, open_operati
         print("Image Not Found : Open Operations label (for activating mscolab operation) not found, previously!")
 
 
-def demonstrate_work_asynchronously(wp1_x, wp1_y):
+def _work_asynchronously(wp1_x, wp1_y):
     find_and_click_picture('msuimainwindow-work-asynchronously.png',
                            'Work Asynchronously (in mscolab) '
                            'checkbox not found ', bounding_box=(0, 0, 149, 23))
@@ -206,6 +206,7 @@ def demonstrate_work_asynchronously(wp1_x, wp1_y):
     pag.sleep(1)
     pag.press(ENTER)
     pag.sleep(2)
+    create_tutorial_images()
     find_and_click_picture('msuimainwindow-server-options.png',
                            'Overwrite with local waypoints (during saving to server) button not found.')
     select_listelement(2)
@@ -219,7 +220,7 @@ def demonstrate_work_asynchronously(wp1_x, wp1_y):
     pag.click(work_async_x, work_async_y, duration=2)
 
 
-def demonstrate_adminwindow():
+def _adminwindow():
     # open admin window
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
@@ -340,7 +341,7 @@ def demonstrate_adminwindow():
     pag.sleep(2)
 
 
-def demonstrate_versionhistory():
+def _versionhistory():
     # Opening version history window.
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
@@ -398,7 +399,7 @@ def demonstrate_versionhistory():
     pag.sleep(4)
 
 
-def demonstrate_topview_wp():
+def _topview_wp():
     # Opening Topview
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
@@ -431,7 +432,7 @@ def demonstrate_topview_wp():
     return wp1_x, wp1_y
 
 
-def demonstrate_chatting():
+def _chatting():
     # Demonstrating Chat feature of mscolab to the user
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
@@ -482,7 +483,7 @@ def demonstrate_chatting():
     pag.sleep(2)
 
 
-def activate_operation():
+def _activate_operation():
     find_and_click_picture('msuimainwindow-operations.png',
                            'Operations label not found on screen',
                            bounding_box=(0, 0, 72, 17))
@@ -494,7 +495,7 @@ def activate_operation():
     return open_operations_x, open_operations_y
 
 
-def create_operation():
+def _create_operation():
     find_and_click_picture("msuimainwindow-menubar.png",
                            'File menu not found',
                            bounding_box=(0, 0, 38, 22))
@@ -507,13 +508,12 @@ def create_operation():
         type_and_key(value, key='tab', interval=0.05)
     pag.sleep(1)
     create_tutorial_images()
-    pag.sleep(1)
     find_and_click_picture('addoperationdialog-ok.png',
                            'OK button when adding a new operation not found on the screen.')
     pag.press(ENTER)
 
 
-def login_user_after_creation():
+def _login_user_after_creation():
     # Login new user
     pag.press('tab', presses=2)
     type_and_key(ENTER, key='tab')
@@ -524,7 +524,7 @@ def login_user_after_creation():
     pag.press(ENTER)
 
 
-def create_user():
+def _create_user():
     find_and_click_picture('mscolabconnectdialog-add-user.png', 'Add User Button not found')
     pag.sleep(4)
     # Entering details of new user
@@ -537,7 +537,7 @@ def create_user():
     pag.sleep(2)
 
 
-def connect_to_mscolab_url():
+def _connect_to_mscolab_url():
     # connect
     find_and_click_picture('msuimainwindow-connect.png',
                            "Connect to Mscolab button not found on the screen.")
@@ -552,4 +552,4 @@ def connect_to_mscolab_url():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab, duration=638, dry_run=True)
+    start(target=automate_mscolab, duration=638)

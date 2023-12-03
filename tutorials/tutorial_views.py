@@ -2,7 +2,7 @@
     msui.tutorials.tutorial_views
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This python script generates an automatic demonstration of how to use the top view, side view, table view and
+    This python script generates an automatic demonstration of how to use the top view, side view, table view andq
     linear view section of Mission Support System in creating a operation and planning the flightrack.
 
     This file is part of MSS.
@@ -48,6 +48,7 @@ def automate_views():
 
     pag.hotkey(CTRL, 'h')
     create_tutorial_images()
+
     pag.sleep(1)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     # move topview on screen
@@ -55,9 +56,8 @@ def automate_views():
     y_drag_rel = -10
     move_window(topview["os_screen_region"], x_drag_rel, y_drag_rel)
     create_tutorial_images()
-    pag.sleep(1)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
-    tv_add_waypoints(topview['os_screen_region'])
+    _tv_add_waypoints(topview['os_screen_region'])
     # memorize last added point
     x1, y1 = pag.position()
 
@@ -119,12 +119,11 @@ def automate_views():
 
     create_tutorial_images()
     ll_tov_x, ll_tov_y = pag.position()
-    pag.sleep(1)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     # Moving waypoints in Topview
-    tv_move_waypoints(topview["os_screen_region"], x1, y1)
+    _tv_move_waypoints(topview["os_screen_region"], x1, y1)
     x3, y3 = pag.position()
     pag.sleep(1)
 
@@ -139,7 +138,6 @@ def automate_views():
     pag.press(ENTER)
     pag.sleep(2)
     create_tutorial_images()
-    pag.sleep(1)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
@@ -154,7 +152,6 @@ def automate_views():
             region=topview["os_screen_region"])
     pag.sleep(2)
     create_tutorial_images()
-    pag.sleep(1)
     sideview = load_settings_qsettings('sideview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
@@ -169,7 +166,7 @@ def automate_views():
 
     ll_sv_x, ll_sv_y = pag.position()
 
-    sv_layers(sideview["os_screen_region"], tvll_region)
+    _sv_layers(sideview["os_screen_region"], tvll_region)
 
     find_and_click_picture('sideviewwindow-valid.png',
                            'Sideview Window not found',
@@ -180,17 +177,14 @@ def automate_views():
     pag.press(ENTER)
 
     create_tutorial_images()
-    pag.sleep(1)
     sideview = load_settings_qsettings('sideview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
     pag.sleep(2)
-    sv_adjust_altitude(sideview["os_screen_region"])
+    _sv_adjust_altitude(sideview["os_screen_region"])
 
     create_tutorial_images()
-    pag.sleep(1)
-
-    sv_add_waypoints(sideview["os_screen_region"])
+    _sv_add_waypoints(sideview["os_screen_region"])
 
     # Closing list layer of sideview and topview to make screen a little less congested.
     pag.click(ll_sv_x, ll_sv_y, duration=2)
@@ -215,7 +209,6 @@ def automate_views():
     pag.sleep(2)
 
     create_tutorial_images()
-    pag.sleep(1)
     tableview = load_settings_qsettings('tableview', {"os_screen_region": (0, 0, 0, 0)})
     # move tableview on screen
     x_drag_rel = 250
@@ -231,17 +224,16 @@ def automate_views():
     tableview = load_settings_qsettings('tableview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
     create_tutorial_images()
-    pag.sleep(2)
     # Locating the selecttoopencontrol for tableview to perform operations
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
                            'Tableview select to open control not found',
                            region=tableview["os_screen_region"])
     # explaining the tableview
-    x, xoffset, y = tab_add_data()
-    tab_clone(tableview["os_screen_region"], x, y, xoffset)
-    tab_insert(tableview["os_screen_region"], x, y, xoffset)
-    tab_delete(tableview["os_screen_region"], x, y)
-    tab_reverse(tableview["os_screen_region"])
+    x, xoffset, y = _tab_add_data()
+    _tab_clone(tableview["os_screen_region"], x, y, xoffset)
+    _tab_insert(tableview["os_screen_region"], x, y, xoffset)
+    _tab_delete(tableview["os_screen_region"], x, y)
+    _tab_reverse(tableview["os_screen_region"])
 
     # Closing Table View to make space on screen
     pag.click(tv_x, tv_y, duration=1)
@@ -259,7 +251,6 @@ def automate_views():
     pag.sleep(1)
 
     create_tutorial_images()
-    pag.sleep(1)
     linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
 
     # move linearview on screen
@@ -272,7 +263,6 @@ def automate_views():
 
     lv_x, lv_y = pag.position()
     create_tutorial_images()
-    pag.sleep(1)
     linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
@@ -282,11 +272,9 @@ def automate_views():
                            region=linearview["os_screen_region"])
 
     create_tutorial_images()
-    pag.sleep(2)
-    move_and_setup_layerchooser(linearview["os_screen_region"], -171, -390, -900, 245)
+    move_and_setup_layerchooser(linearview["os_screen_region"], -171, -390, 900, 100)
 
     create_tutorial_images()
-    pag.sleep(1)
     linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
     # Selecting Some Layers in Linear wms section
     gap = 32
@@ -327,7 +315,7 @@ def automate_views():
     finish()
 
 
-def sv_layers(os_screen_region, tvll_region):
+def _sv_layers(os_screen_region, tvll_region):
     """
 
     Selects in the sideview layer chooser some layers
@@ -341,7 +329,7 @@ def sv_layers(os_screen_region, tvll_region):
     Example usage:
     os_screen_region = [0, 0, 1920, 1080]
     tvll_region = [100, 100, 500, 500]
-    sv_layers(os_screen_region, tvll_region)
+    _sv_layers(os_screen_region, tvll_region)
 
     """
     gap = 16
@@ -373,7 +361,7 @@ def sv_layers(os_screen_region, tvll_region):
     pag.click(temp1, temp2 + (gap * 4), interval=2)
 
 
-def tab_reverse(os_screen_region):
+def _tab_reverse(os_screen_region):
     """
     Reverses the order of a table view displayed on the screen.
 
@@ -390,7 +378,7 @@ def tab_reverse(os_screen_region):
         pag.sleep(1.5)
 
 
-def tab_delete(os_screen_region, x, y):
+def _tab_delete(os_screen_region, x, y):
     """
     Delete a selected tab in a table view.
 
@@ -411,7 +399,7 @@ def tab_delete(os_screen_region, x, y):
     pag.sleep(2)
 
 
-def tab_insert(os_screen_region, x, y, xoffset):
+def _tab_insert(os_screen_region, x, y, xoffset):
     """
     Inserts multiple new row of waypoints into the table view.
 
@@ -444,7 +432,7 @@ def tab_insert(os_screen_region, x, y, xoffset):
     type_and_key('360')
 
 
-def tab_clone(os_screen_region, x, y, xoffset):
+def _tab_clone(os_screen_region, x, y, xoffset):
     """
     Clone a table line in the specified screen region.
 
@@ -458,7 +446,7 @@ def tab_clone(os_screen_region, x, y, xoffset):
     :raises: Exception - If the clone button is not found.
 
     Example usage:
-    tab_clone(os_screen_region, x, xoffset, y)
+    _tab_clone(os_screen_region, x, xoffset, y)
     """
     find_and_click_picture('tableviewwindow-clone.png', 'Clone button not found',
                            region=os_screen_region)
@@ -477,7 +465,7 @@ def tab_clone(os_screen_region, x, y, xoffset):
     type_and_key('Comment1')
 
 
-def tab_add_data():
+def _tab_add_data():
     x, y = pag.position()
     xoffset = -100
     # Changing names of certain waypoints to predefined names
@@ -525,7 +513,7 @@ def tab_add_data():
     return x, xoffset, y
 
 
-def tv_move_waypoints(os_screen_region, x, y):
+def _tv_move_waypoints(os_screen_region, x, y):
     find_and_click_picture('topviewwindow-mv-wp.png',
                            'Move waypoints not found',
                            region=os_screen_region)
@@ -535,7 +523,7 @@ def tv_move_waypoints(os_screen_region, x, y):
     pag.click(interval=2)
 
 
-def sv_add_waypoints(os_screen_region):
+def _sv_add_waypoints(os_screen_region):
     # Adding waypoints in SideView
     find_and_click_picture('sideviewwindow-ins-wp.png',
                            'sideview ins waypoint not found',
@@ -551,7 +539,7 @@ def sv_add_waypoints(os_screen_region):
     pag.sleep(1)
 
 
-def sv_adjust_altitude(os_screen_region):
+def _sv_adjust_altitude(os_screen_region):
     """
     Adjusts the altitude of sideview waypoints.
 
@@ -579,7 +567,7 @@ def sv_adjust_altitude(os_screen_region):
         pag.click(interval=2)
 
 
-def tv_add_waypoints(os_screen_region):
+def _tv_add_waypoints(os_screen_region):
 
     find_and_click_picture('topviewwindow-ins-wp.png',
                            'Topview Window not found',
@@ -600,4 +588,4 @@ def tv_add_waypoints(os_screen_region):
 
 
 if __name__ == '__main__':
-    start(target=automate_views, duration=567, dry_run=True)
+    start(target=automate_views, duration=567)
