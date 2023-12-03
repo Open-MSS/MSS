@@ -169,7 +169,8 @@ def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None):
 
 def select_listelement(steps, sleep=5, key=ENTER):
     pag.press('down', presses=steps, interval=0.5)
-    pag.press(key, interval=1)
+    if key is not None:
+        pag.press(key, interval=1)
     pag.sleep(sleep)
 
 
@@ -182,7 +183,7 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
                                duration, xoffset=xoffset, yoffset=yoffset, region=region)
         x, y = pag.position()
         # ToDo verify
-        # pag.moveTo(x, y, duration=duration)
+        pag.moveTo(x, y, duration=duration)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         filename = os.path.join(MSUI_CONFIG_PATH, "failure.png")

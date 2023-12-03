@@ -52,11 +52,12 @@ def automate_mscolab():
     recorded and saved to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
-    pag.sleep(5)
+    pag.sleep(2)
     hotkey = WIN, 'pageup'
     pag.hotkey(*hotkey)
 
     create_tutorial_images()
+
     pag.sleep(2)
     modify_x, modify_y = None, None
 
@@ -64,49 +65,21 @@ def automate_mscolab():
     create_tutorial_images()
     pag.sleep(1)
     create_user()
-    login_user()
-
+    login_user_after_creation()
+    # login_user()
     create_tutorial_images()
-    # Opening a new Mscolab Operation
-
-    file_x, file_y = find_and_click_picture("msuimainwindow-menubar.png", 'File menu not found', bounding_box=(0, 0, 38, 22))
-    pag.moveTo(file_x, file_y, duration=2)
-    pag.click(file_x, file_y, duration=2)
-    for _ in range(2):peration_of_john_doe
-        pag.press('down')
-        pag.sleep(1)
-        pag.press(ENTER)
-        pag.sleep(2)
-    pag.press('tab')
-    for value in [OPERATION_NAME, OPERATION_DESCRIPTION]:
-        type_and_key(value, key='tab', interval=0.05)
-
+    create_operation()
     create_tutorial_images()
-    find_and_click_picture('addoperationdialog-ok.png',
-                           'OK button when adding a new operation not found on the screen.')
-    create_tutorial_images()
+    open_operations_x, open_operations_y = activate_operation()
+    # open admin window
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(89, 0, 150, 22))
 
-    find_and_click_picture('msuimainwindow-operations.png',
-                           'Operations label not found on screen',
-                           bounding_box=(0, 0, 72, 17))
-    open_operations_x, open_operations_y = pag.position()
-    pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
+    select_listelement(4, key=None)
+    pag.press('right')
+    select_listelement(2)
     pag.sleep(1)
-    pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
-    pag.sleep(2)
-
-    # Managing Users for the operation that you are working on
-    if file_x is not None and file_y is not None:
-        pag.moveTo(file_x, file_y, duration=2)
-        pag.click(file_x, file_y, duration=2)
-        pag.press('right', presses=2, interval=2)
-        pag.press('down', presses=3, interval=2)
-        pag.press('right')
-        pag.press('down', presses=2, interval=2)
-        pag.press(ENTER)
-        pag.sleep(3)
-    else:
-        print('Image not Found : File menu not found (while managing users)')
 
     create_tutorial_images()
 
@@ -226,14 +199,11 @@ def automate_mscolab():
     pag.sleep(2)
 
     # Demonstrating Chat feature of mscolab to the user
-    if file_x is not None and file_y is not None:
-        pag.moveTo(file_x, file_y, duration=2)
-        pag.click(file_x, file_y, duration=2)
-        pag.press('right', presses=2, interval=2)
-        pag.press(ENTER)
-        pag.sleep(3)
-    else:
-        print('Image not Found : File menu not found (while opening Chat window)')
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(89, 0, 150, 22))
+    select_listelement(1)
+    pag.sleep(3)
 
     create_tutorial_images()
     chat_message1 = 'Hi buddy! What\'s the next plan? I have marked the points in topview for the dummy operation.'
@@ -282,14 +252,10 @@ def automate_mscolab():
     pag.sleep(2)
 
     # Opening Topview
-    if file_x is not None and file_y is not None:
-        pag.moveTo(file_x, file_y, duration=2)
-        pag.click(file_x, file_y, duration=2)
-        pag.sleep(1)
-        pag.press('right')
-        pag.sleep(1)
-        pag.press(ENTER)
-        pag.sleep(4)
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(40, 0, 80, 22))
+    select_listelement(1)
 
     create_tutorial_images()
     # Adding some waypoints to topview
@@ -321,15 +287,10 @@ def automate_mscolab():
     pag.sleep(1)
 
     # Opening version history window.
-    if file_x is not None and file_y is not None:
-        pag.moveTo(file_x, file_y, duration=2)
-        pag.click(file_x, file_y, duration=2)
-        pag.press('right', presses=2, interval=1)
-        pag.sleep(1)
-        pag.press('down')
-        pag.sleep(1)
-        pag.press(ENTER)
-        pag.sleep(1)
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(89, 0, 150, 22))
+    select_listelement(2)
 
     create_tutorial_images()
     # Operations performed in version history window.
@@ -401,13 +362,10 @@ def automate_mscolab():
     work_async_x, work_async_y = pag.position()
     pag.sleep(3)
     # Opening Topview again to move waypoints during working locally!
-    if file_x is not None and file_y is not None:
-        pag.moveTo(file_x, file_y, duration=2)
-        pag.click(file_x, file_y, duration=2)
-        pag.press('right')
-        pag.sleep(1)
-        pag.press(ENTER)
-        pag.sleep(4)
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Views menu not found',
+                           bounding_box=(40, 0, 80, 22))
+    select_listelement(1)
 
     # Moving waypoints.
     create_tutorial_images()
@@ -467,34 +425,32 @@ def automate_mscolab():
         print("Image Not Found : Open Operations label (for activating local flighttrack) not found, previously!")
 
     # Opening Topview again and making some changes in it
-    if file_x is not None and file_y is not None:
-        pag.moveTo(file_x, file_y, duration=2)
-        pag.click(file_x, file_y, duration=2)
-        pag.sleep(1)
-        pag.press('right')
-        pag.sleep(1)
-        pag.press(ENTER)
-        pag.sleep(4)
-        # Adding waypoints in a different fashion than the pevious one (for local flighttrack)
-        find_and_click_picture('topviewwindow-ins-wp.png',
-                               'Add waypoint (in topview again) button not found.')
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Views menu not found',
+                           bounding_box=(40, 0, 80, 22))
+    select_listelement(1)
+    create_tutorial_images()
+    pag.sleep(4)
+    # Adding waypoints in a different fashion than the pevious one (for local flighttrack)
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Add waypoint (in topview again) button not found.')
 
-        pag.move(-50, 150, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
-        pag.move(65, 10, duration=1)
-        pag.click(duration=2)
-        pag.sleep(1)
+    pag.move(-50, 150, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(65, 10, duration=1)
+    pag.click(duration=2)
+    pag.sleep(1)
 
-        pag.move(-100, 10, duration=1)
-        pag.click(duration=2)
-        pag.sleep(1)
-        pag.move(90, 10, duration=1)
-        pag.click(duration=2)
-        pag.sleep(3)
+    pag.move(-100, 10, duration=1)
+    pag.click(duration=2)
+    pag.sleep(1)
+    pag.move(90, 10, duration=1)
+    pag.click(duration=2)
+    pag.sleep(3)
 
-        # Sending topview to the background
-        pag.hotkey('CTRL', 'up')
+    # Sending topview to the background
+    pag.hotkey('CTRL', 'up')
 
     # Activating the opened mscolab operation
     if open_operations_x is not None and open_operations_y is not None:
@@ -519,19 +475,17 @@ def automate_mscolab():
     else:
         print("Image Not Found : Open Operations label (for activating mscolab operation) not found, previously!")
 
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(89, 0, 150, 22))
+    select_listelement(4, key=None)
+    pag.click('right')
+    select_listelement(4, key=None)
+    pag.click(ENTER)
+
     # Deleting the operation
-    if file_x is not None and file_y is not None:
-        pag.moveTo(file_x, file_y, duration=2)
-        pag.click(file_x, file_y, duration=1)
-        pag.sleep(1)
-        pag.press('right', presses=2, interval=1)
-        pag.sleep(1)
-        pag.press('down', presses=3, interval=1)
-        pag.press(ENTER, presses=2, interval=2)
-        pag.sleep(2)
-        pag.typewrite(OPERATION_NAME, interval=0.3)
-        pag.press(ENTER, presses=2, interval=2)
-        pag.sleep(3)
+    pag.sleep(2)
+    type_and_key(OPERATION_NAME, interval=0.3)
 
     create_tutorial_images()
     # Opening user profile
@@ -554,7 +508,38 @@ def automate_mscolab():
     finish()
 
 
-def login_user():
+def activate_operation():
+    find_and_click_picture('msuimainwindow-operations.png',
+                           'Operations label not found on screen',
+                           bounding_box=(0, 0, 72, 17))
+    open_operations_x, open_operations_y = pag.position()
+    pag.moveTo(open_operations_x, open_operations_y + 20, duration=2)
+    pag.sleep(1)
+    pag.doubleClick(open_operations_x, open_operations_y + 20, duration=2)
+    pag.sleep(2)
+    return open_operations_x, open_operations_y
+
+
+def create_operation():
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'File menu not found',
+                           bounding_box=(0, 0, 38, 22))
+    select_listelement(1, key=None)
+    pag.press('right')
+    select_listelement(1)
+    pag.sleep(1)
+    pag.press('tab')
+    for value in [OPERATION_NAME, OPERATION_DESCRIPTION]:
+        type_and_key(value, key='tab', interval=0.05)
+    pag.sleep(1)
+    create_tutorial_images()
+    pag.sleep(1)
+    find_and_click_picture('addoperationdialog-ok.png',
+                           'OK button when adding a new operation not found on the screen.')
+    pag.press(ENTER)
+
+
+def login_user_after_creation():
     # Login
     pag.press('tab', presses=2)
     type_and_key(ENTER, key='tab')
@@ -562,6 +547,11 @@ def login_user():
     pag.press(ENTER)
     # store userdata
     pag.press('left')
+    pag.press(ENTER)
+
+
+def login_user():
+    type_and_key(EMAIL)
     pag.press(ENTER)
 
 
