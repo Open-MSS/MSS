@@ -24,7 +24,7 @@
 import os.path
 import pyautogui as pag
 from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, type_and_enter, zoom_in
+    find_and_click_picture, type_and_key, zoom_in
 from tutorials.utils.platform_keys import platform_keys
 
 
@@ -67,7 +67,7 @@ def automate_rs():
     # Todo find and use QLineEdit leFile instead of Load button
     # Loading the file
     find_and_click_picture('topviewwindow-load.png', 'Load button not found', xoffset=-150)
-    type_and_enter(satellite_path, interval=0.1)
+    type_and_key(satellite_path, interval=0.1)
     find_and_click_picture('topviewwindow-load.png', 'Load button not found')
 
     # Switching between different date and time of satellite overpass.

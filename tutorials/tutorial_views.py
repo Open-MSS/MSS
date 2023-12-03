@@ -26,7 +26,7 @@
 import pyautogui as pag
 
 from tutorials.utils import (start, finish, create_tutorial_images, select_listelement,
-                             find_and_click_picture, zoom_in, type_and_enter, move_window,
+                             find_and_click_picture, zoom_in, type_and_key, move_window,
                              move_and_setup_layerchooser, show_other_widgets)
 from tutorials.utils.platform_keys import platform_keys
 from mslib.utils.config import load_settings_qsettings
@@ -435,13 +435,13 @@ def tab_insert(os_screen_region, x, y, xoffset):
     pag.sleep(1)
     pag.doubleClick()
     pag.sleep(1)
-    type_and_enter('58')
+    type_and_key('58')
     pag.sleep(1)
     pag.click(x + xoffset + 170, y - 232, duration=1)
     pag.sleep(1)
     pag.doubleClick()
     pag.sleep(1)
-    type_and_enter('360')
+    type_and_key('360')
 
 
 def tab_clone(os_screen_region, x, y, xoffset):
@@ -471,10 +471,10 @@ def tab_clone(os_screen_region, x, y, xoffset):
     pag.sleep(1)
     pag.click(x + xoffset + 85, y - 232, duration=1)
     pag.sleep(1)
-    type_and_enter('65.26')
+    type_and_key('65.26')
     pag.click(x + xoffset + 550, y - 232, duration=1)
     pag.doubleClick(duration=1)
-    type_and_enter('Comment1')
+    type_and_key('Comment1')
 
 
 def tab_add_data():
@@ -499,7 +499,7 @@ def tab_add_data():
     pag.sleep(1)
     # marks word
     pag.doubleClick()
-    type_and_enter('Location')
+    type_and_key('Location')
     # annother waypoint name
     pag.click(x + xoffset, y - 263, duration=1)
     pag.sleep(1)
@@ -508,20 +508,20 @@ def tab_add_data():
     pag.doubleClick()
     pag.sleep(1)
     # no blank in values
-    type_and_enter('StopPoint', interval=0.1)
+    type_and_key('StopPoint', interval=0.1)
     # Changing hPa level of waypoints
     pag.click(x + xoffset + 170, y - 232, duration=1)
     pag.sleep(1)
     pag.doubleClick()
     pag.sleep(1)
-    type_and_enter('250')
+    type_and_key('250')
     # xoffset
     # Changing longitude of 'Location A' waypoint
     pag.click(x + xoffset + 125, y - 294, duration=1)
     pag.sleep(1)
     pag.doubleClick()
     pag.sleep(1)
-    type_and_enter('12.36')
+    type_and_key('12.36')
     return x, xoffset, y
 
 

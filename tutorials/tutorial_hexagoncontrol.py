@@ -29,7 +29,7 @@ import pyautogui as pag
 from sys import platform
 from pyscreeze import ImageNotFoundException
 from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, click_center_on_screen, zoom_in, type_and_enter
+    find_and_click_picture, click_center_on_screen, zoom_in, type_and_key
 from tutorials.utils.platform_keys import platform_keys
 from tutorials.utils.picture import picture
 
@@ -88,11 +88,11 @@ def automate_hexagoncontrol():
         pag.sleep(1)
         pag.click(x + 370, y, duration=2)
         pag.sleep(1)
-        type_and_enter('28.57')
+        type_and_key('28.57')
         pag.sleep(1)
         pag.click(x + 943, y, duration=2)
         pag.sleep(1)
-        type_and_enter('77.10')
+        type_and_key('77.10')
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Center Latitude\' button not found on the screen.")
         raise
@@ -105,7 +105,7 @@ def automate_hexagoncontrol():
         x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
         pag.click(x + 400, y, duration=2)
         pag.sleep(1)
-        type_and_enter('500.00')
+        type_and_key('500.00')
     except (ImageNotFoundException, OSError, Exception):
         print("\nException :\'Radius\' button not found on the screen.")
         raise
@@ -119,7 +119,7 @@ def automate_hexagoncontrol():
 
     # Changing the angle of first point of the hexagon
     click_center_on_screen(picture('tableviewwindow-radius.png'), xoffset=967)
-    type_and_enter('90.00')
+    type_and_key('90.00')
 
     # Clicking on the Remove Hexagon Button
     find_and_click_picture('tableviewwindow-remove-hexagon.png',
@@ -135,7 +135,7 @@ def automate_hexagoncontrol():
     pag.sleep(1)
     pag.click(x + 967, y, duration=2)
     pag.sleep(1)
-    type_and_enter('120.00')
+    type_and_key('120.00')
 
     # Clicking on the Remove Hexagon Button
     find_and_click_picture('tableviewwindow-remove-hexagon.png',

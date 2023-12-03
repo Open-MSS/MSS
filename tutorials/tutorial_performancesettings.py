@@ -28,7 +28,7 @@ import shutil
 import tempfile
 
 from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, type_and_enter
+    find_and_click_picture, type_and_key
 from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -75,7 +75,7 @@ def automate_performance():
 
     # Exploring through the file system and loading the performance settings json file for a dummy aircraft.
     find_and_click_picture('tableviewwindow-select.png', 'Select button not found')
-    type_and_enter(sample)
+    type_and_key(sample)
 
     # Checking the Show Performance checkbox to display the settings file in the table view
     find_and_click_picture('tableviewwindow-show-performance.png',
@@ -87,7 +87,7 @@ def automate_performance():
                            'Max take off weight lb not found')
     x, y = pag.position()
     pag.click(x + 318, y, duration=2)
-    type_and_enter('87000')
+    type_and_key('87000')
     pag.sleep(2)
 
     # Changing the aircraft weight of the dummy aircraft
@@ -95,18 +95,18 @@ def automate_performance():
                            'Aircraft weight no fuel not found')
     x, y = pag.position()
     pag.click(x + 300, y, duration=2)
-    type_and_enter('48000')
+    type_and_key('48000')
 
     # Changing the take off time of the dummy aircraft
     find_and_click_picture('tableviewwindow-take-off-time.png',
                            'take off time not found')
     x, y = pag.position()
     pag.click(x + 410, y, duration=2)
-    type_and_enter('')
+    type_and_key('')
     for _ in range(5):
         pag.press('up')
         pag.sleep(2)
-    type_and_enter('04', interval=0.5)
+    type_and_key('04', interval=0.5)
 
     # update tutorial images
     create_tutorial_images()

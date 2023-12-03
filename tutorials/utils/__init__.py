@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft  und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2022 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -167,19 +167,22 @@ def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None):
     pag.click(x + xoffset, y + yoffset, duration=duration)
 
 
-def select_listelement(steps):
-    _, enter, _, _ = platform_keys()
+def select_listelement(steps, sleep=5, key=ENTER):
     pag.press('down', presses=steps, interval=0.5)
-    pag.press(enter, interval=1)
-    pag.sleep(5)
+    pag.press(key, interval=1)
+    pag.sleep(sleep)
 
 
 def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset=0, yoffset=0,
                            bounding_box=None, region=None):
+    x, y = (0, 0)
     message = exception_message if exception_message is not None else f"{pic_name} not found"
     try:
         click_center_on_screen(picture(pic_name, bounding_box=bounding_box),
                                duration, xoffset=xoffset, yoffset=yoffset, region=region)
+        x, y = pag.position()
+        # ToDo verify
+        # pag.moveTo(x, y, duration=duration)
         pag.sleep(1)
     except (ImageNotFoundException, OSError, Exception):
         filename = os.path.join(MSUI_CONFIG_PATH, "failure.png")
@@ -187,6 +190,8 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
         im = pag.screenshot(region=region)
         im.save(filename)
         raise
+
+    return (x, y)
 
 
 def load_kml_file(pic_name, file_path, exception_message):
@@ -234,7 +239,7 @@ def panning(pic_name, exception_message, moveRel=(400, 400), dragRel=(-100, -50)
         raise
 
 
-def type_and_enter(value, interval=0.3):
+def type_and_key(value, interval=0.2, key=ENTER):
     """
     Type and Enter method
 
@@ -244,14 +249,13 @@ def type_and_enter(value, interval=0.3):
     :param interval (float, optional): The interval between typing each character. Defaults to 0.3 seconds.
 
     Example:
-        type_and_enter("Hello, World!")
+        type_and_key("Hello, World!")
     """
-    ctrl, enter, _, _ = platform_keys()
-    pag.hotkey(ctrl, 'a')
+    pag.hotkey(CTRL, 'a')
     pag.sleep(1)
     pag.typewrite(value, interval=interval)
     pag.sleep(1)
-    pag.press(enter)
+    pag.press(key)
 
 
 def move_window(os_screen_region, x_drag_rel, y_drag_rel, x_mouse_down_offset=100):
@@ -312,7 +316,7 @@ def move_and_setup_layerchooser(os_screen_region, x_move, y_move, x_drag_rel, y_
                            'Url not found', region=os_screen_region)
     x, y = pag.position()
     pag.click(x + x_mouse_down_offset, y, interval=2)
-    type_and_enter('http://open-mss.org/', interval=0.1)
+    type_and_key('http://open-mss.org/', interval=0.1)
     try:
         find_and_click_picture('multilayersdialog-get-capabilities.png',
                                'Get capabilities not found', region=os_screen_region)

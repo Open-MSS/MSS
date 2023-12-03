@@ -28,7 +28,7 @@ import pyautogui as pag
 import os.path
 
 from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, load_kml_file, change_attribute, type_and_enter
+    find_and_click_picture, load_kml_file, change_attribute, type_and_key
 from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -91,9 +91,9 @@ def automate_kml():
                      lambda: (pag.hotkey(CTRL, 'a'),
                               # ToDo find a way to delay this
                               [pag.press('down') for _ in range(8)],
-                              type_and_enter('2.50'),
+                              type_and_key('2.50'),
                               pag.sleep(1),
-                              type_and_enter('5.50')),
+                              type_and_key('5.50')),
                      interval=2)
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
