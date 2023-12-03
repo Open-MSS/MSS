@@ -198,71 +198,19 @@ def automate_mscolab():
     pag.hotkey(ALT, 'f4')
     pag.sleep(2)
 
-    # Demonstrating Chat feature of mscolab to the user
-    find_and_click_picture("msuimainwindow-menubar.png",
-                           'Operation menu not found',
-                           bounding_box=(89, 0, 150, 22))
-    select_listelement(1)
-    pag.sleep(3)
-
-    create_tutorial_images()
-    chat_message1 = 'Hi buddy! What\'s the next plan? I have marked the points in topview for the dummy operation.'
-    chat_message2 = 'Hey there user! This is the chat feature of MSCOLAB. You can have a conversation with your '
-
-    # Sending messages to collaboraters or other users
-    pag.typewrite(chat_message1, interval=0.05)
-    pag.sleep(2)
-    x, y = find_and_click_picture('mscolaboperation-send.png',
-                                  'Send (while in chat window) button not found on the screen.')
-    pag.typewrite(chat_message2, interval=0.05)
-    pag.sleep(1)
-    pag.press(ENTER)
-    pag.sleep(2)
-
-    # Uploading an example image of msui logo.
-    pag.moveTo(x, y + 40, duration=2)
-    pag.click(x, y + 40, duration=2)
-    pag.sleep(1)
-    pag.typewrite(EXMPLE_IMAGE_PATH, interval=0.2)
-    pag.sleep(1)
-    pag.press(ENTER)
-    pag.sleep(1)
-    pag.moveTo(x, y, duration=2)
-    pag.click(x, y, duration=2)
-    pag.sleep(2)
-
-    # Searching messages in the chatbox using the search bar
-    previous_x, previous_y = find_and_click_picture('mscolaboperation-previous.png',
-                                                    'Previous (while in chat window searching'
-                                                    ' operation) button not found.')
-    pag.moveTo(previous_x - 70, previous_y, duration=2)
-    pag.click(previous_x - 70, previous_y, duration=2)
-    pag.sleep(1)
-    search_message = 'chat feature of MSCOLAB'
-    pag.typewrite(search_message, interval=0.3)
-    pag.sleep(1)
-    pag.moveTo(previous_x + 82, previous_y, duration=2)
-    pag.click(previous_x + 82, previous_y, duration=2)
-    pag.sleep(2)
-    pag.moveTo(previous_x, previous_y, duration=2)
-    pag.click(previous_x, previous_y, duration=2)
-    pag.sleep(2)
-    # Closing the Chat Window
-    pag.hotkey(ALT, 'f4')
-    pag.sleep(2)
+    demonstrate_chatting()
 
     # Opening Topview
     find_and_click_picture("msuimainwindow-menubar.png",
                            'Operation menu not found',
                            bounding_box=(40, 0, 80, 22))
+
     select_listelement(1)
 
     create_tutorial_images()
     # Adding some waypoints to topview
-    x, y = find_and_click_picture('topviewwindow-ins-wp.png',
-                                  'Topview insert wp button not found')
-    pag.moveTo(x, y, duration=2)
-    pag.click(x, y, duration=2)
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Topview insert wp button not found')
     pag.move(-50, 150, duration=1)
     pag.click(interval=2)
     wp1_x, wp1_y = pag.position()
@@ -506,6 +454,57 @@ def automate_mscolab():
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
+
+
+def demonstrate_chatting():
+    # Demonstrating Chat feature of mscolab to the user
+    find_and_click_picture("msuimainwindow-menubar.png",
+                           'Operation menu not found',
+                           bounding_box=(89, 0, 150, 22))
+    select_listelement(1)
+    pag.sleep(3)
+    create_tutorial_images()
+    chat_message1 = 'Hi buddy! What\'s the next plan? I have marked the points in topview for the dummy operation.'
+    chat_message2 = 'Hey there user! This is the chat feature of MSCOLAB. You can have a conversation with your '
+    # Sending messages to collaboraters or other users
+    pag.typewrite(chat_message1, interval=0.05)
+    pag.sleep(2)
+    x, y = find_and_click_picture('mscolaboperation-send.png',
+                                  'Send (while in chat window) button not found on the screen.')
+    pag.typewrite(chat_message2, interval=0.05)
+    pag.sleep(1)
+    pag.press(ENTER)
+    pag.sleep(2)
+    # Uploading an example image of msui logo.
+    pag.moveTo(x, y + 40, duration=2)
+    pag.click(x, y + 40, duration=2)
+    pag.sleep(1)
+    pag.typewrite(EXMPLE_IMAGE_PATH, interval=0.2)
+    pag.sleep(1)
+    pag.press(ENTER)
+    pag.sleep(1)
+    pag.moveTo(x, y, duration=2)
+    pag.click(x, y, duration=2)
+    pag.sleep(2)
+    # Searching messages in the chatbox using the search bar
+    previous_x, previous_y = find_and_click_picture('mscolaboperation-previous.png',
+                                                    'Previous (while in chat window searching'
+                                                    ' operation) button not found.')
+    pag.moveTo(previous_x - 70, previous_y, duration=2)
+    pag.click(previous_x - 70, previous_y, duration=2)
+    pag.sleep(1)
+    search_message = 'chat feature of MSCOLAB'
+    pag.typewrite(search_message, interval=0.3)
+    pag.sleep(1)
+    pag.moveTo(previous_x + 82, previous_y, duration=2)
+    pag.click(previous_x + 82, previous_y, duration=2)
+    pag.sleep(2)
+    pag.moveTo(previous_x, previous_y, duration=2)
+    pag.click(previous_x, previous_y, duration=2)
+    pag.sleep(2)
+    # Closing the Chat Window
+    pag.hotkey(ALT, 'f4')
+    pag.sleep(2)
 
 
 def activate_operation():
