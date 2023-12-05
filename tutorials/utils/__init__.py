@@ -178,7 +178,7 @@ def create_tutorial_images():
     pag.sleep(1)
 
 
-def get_region(image):
+def get_region(image, region=None):
     """
     Find the region of the given image on the screen.
 
@@ -186,8 +186,11 @@ def get_region(image):
     :return: The region of the image found on the screen.
     :rtype: tuple(int, int, int, int)
     """
-    region = pag.locateOnScreen(image)
-    return region
+    if region is not None:
+        image_region = pag.locateOnScreen(picture(image), region=region)
+    else:
+        image_region = pag.locateOnScreen(picture(image))
+    return image_region
 
 
 def click_center_on_screen(pic, duration=2, xoffset=0, yoffset=0, region=None, click=True):
@@ -464,3 +467,14 @@ def show_other_widgets():
     pag.press('tab')
     pag.keyUp('altleft')
     pag.sleep(1)
+
+
+def msui_full_screen_and_open_first_view(view_cmd='h'):
+    hotkey = WIN, 'pageup'
+    pag.hotkey(*hotkey)
+    pag.sleep(1)
+    if view_cmd is not None:
+        pag.hotkey(CTRL, view_cmd)
+        pag.sleep(1)
+    create_tutorial_images()
+    pag.sleep(2)

@@ -23,12 +23,14 @@
 """
 import os.path
 import pyautogui as pag
-from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, type_and_key, zoom_in
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view,
+                             create_tutorial_images, select_listelement, find_and_click_picture, type_and_key, zoom_in)
 from tutorials.utils.platform_keys import platform_keys
 
 
 CTRL, ENTER, WIN, ALT = platform_keys()
+PATH = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+SATELLITE_PATH = os.path.join(PATH, 'docs/samples/satellite_tracks/satellite_predictor.txt')
 
 
 def automate_rs():
@@ -41,12 +43,7 @@ def automate_rs():
     # Satellite Predictor file path
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
     satellite_path = os.path.join(path, 'docs/samples/satellite_tracks/satellite_predictor.txt')
-    hotkey = WIN, 'pageup'
-    try:
-        pag.hotkey(*hotkey)
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-    pag.hotkey('CTRL', 'h')
+    msui_full_screen_and_open_first_view()
     pag.sleep(2)
     create_tutorial_images()
 

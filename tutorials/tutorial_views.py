@@ -25,8 +25,8 @@
 """
 import pyautogui as pag
 
-from tutorials.utils import (start, finish, create_tutorial_images, select_listelement,
-                             find_and_click_picture, zoom_in, type_and_key, move_window,
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
+                             select_listelement, find_and_click_picture, zoom_in, type_and_key, move_window,
                              move_and_setup_layerchooser, show_other_widgets)
 from tutorials.utils.platform_keys import platform_keys
 from mslib.utils.config import load_settings_qsettings
@@ -43,11 +43,7 @@ def automate_views():
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
 
-    hotkey = WIN, 'pageup'
-    pag.hotkey(*hotkey)
-
-    pag.hotkey(CTRL, 'h')
-    create_tutorial_images()
+    msui_full_screen_and_open_first_view()
 
     pag.sleep(1)
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})

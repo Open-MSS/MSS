@@ -27,8 +27,8 @@
 import pyautogui as pag
 import datetime
 
-from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, zoom_in, panning
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, select_listelement,
+                             find_and_click_picture, zoom_in, panning)
 from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -42,14 +42,7 @@ def automate_waypoints():
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
 
-    hotkey = WIN, 'pageup'
-    try:
-        pag.hotkey(*hotkey)
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-    pag.hotkey('CTRL', 'h')
-    pag.sleep(1)
-    create_tutorial_images()
+    msui_full_screen_and_open_first_view()
 
     # enable adding waypoints
     find_and_click_picture('topviewwindow-ins-wp.png',

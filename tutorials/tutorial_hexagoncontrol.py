@@ -28,8 +28,8 @@ import pyautogui as pag
 
 from sys import platform
 from pyscreeze import ImageNotFoundException
-from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, click_center_on_screen, zoom_in, type_and_key
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
+                             select_listelement, find_and_click_picture, click_center_on_screen, zoom_in, type_and_key)
 from tutorials.utils.platform_keys import platform_keys
 from tutorials.utils.picture import picture
 
@@ -41,17 +41,8 @@ def automate_hexagoncontrol():
     This is the main automating script of the MSS hexagon control of table view which will be recorded and saved
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
-    # Giving time for loading of the MSS GUI.
     pag.sleep(5)
-    hotkey = WIN, 'pageup'
-    try:
-        pag.hotkey(*hotkey)
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-
-    pag.hotkey('CTRL', 'h')
-    pag.sleep(1)
-    create_tutorial_images()
+    msui_full_screen_and_open_first_view()
 
     # Changing map to Global
     find_and_click_picture('topviewwindow-01-europe-cyl.png',

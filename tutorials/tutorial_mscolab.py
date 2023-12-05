@@ -25,8 +25,8 @@
 import os
 import pyautogui as pag
 
-from tutorials.utils import (start, finish, create_tutorial_images, select_listelement,
-                             find_and_click_picture, type_and_key)
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
+                             select_listelement, find_and_click_picture, type_and_key)
 
 from tutorials.utils.platform_keys import platform_keys
 from tutorials.utils.picture import picture
@@ -52,9 +52,8 @@ def automate_mscolab():
     recorded and saved to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
-    pag.sleep(2)
-    hotkey = WIN, 'pageup'
-    pag.hotkey(*hotkey)
+    pag.sleep(5)
+    msui_full_screen_and_open_first_view(view_cmd=None)
     # create initial images, needs to become updated when elements on the widget change
     create_tutorial_images()
     _connect_to_mscolab_url()

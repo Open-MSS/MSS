@@ -27,8 +27,8 @@ import pyautogui as pag
 import shutil
 import tempfile
 
-from tutorials.utils import start, finish, create_tutorial_images, select_listelement, \
-    find_and_click_picture, type_and_key
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view,
+                             create_tutorial_images, select_listelement, find_and_click_picture, type_and_key)
 from tutorials.utils.platform_keys import platform_keys
 
 CTRL, ENTER, WIN, ALT = platform_keys()
@@ -49,15 +49,7 @@ def automate_performance():
     sample = os.path.join(dirpath, 'example.json')
     shutil.copy(ps_file_path, sample)
 
-    # Maximizing the window
-    hotkey = WIN, 'pageup'
-    try:
-        pag.hotkey(*hotkey)
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-
-    pag.hotkey(CTRL, 't')
-    create_tutorial_images()
+    msui_full_screen_and_open_first_view(view_cmd='t')
     # Opening Performance Settings dockwidget
     find_and_click_picture('tableviewwindow-select-to-open-control.png',
                            'Select to open control not found')
