@@ -39,18 +39,26 @@ def automate_rs():
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
+
     msui_full_screen_and_open_first_view()
+
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
-    _open_remote_sensing_widget(topview["os_screen_region"])
-    add_waypoints_to_topview(topview["os_screen_region"])
-    _show_solar_angle(topview["os_screen_region"])
-    azimuth_x, azimuth_y = _change_azimuth_angle(topview["os_screen_region"])
-    _change_elevation_angle(topview["os_screen_region"])
-    x, y = _draw_tangents_to_the_waypoints(topview["os_screen_region"])
+    os_screen_region = topview["os_screen_region"]
+
+    _open_remote_sensing_widget(os_screen_region)
+    add_waypoints_to_topview(os_screen_region)
+    _show_solar_angle(os_screen_region)
+
+    azimuth_x, azimuth_y = _change_azimuth_angle(os_screen_region)
+    _change_elevation_angle(os_screen_region)
+
+    x, y = _draw_tangents_to_the_waypoints(os_screen_region)
+
     _change_tangent_distance(x, y)
-    _rotate_the_tangent_by_different_angels(azimuth_x, azimuth_y, y, topview["os_screen_region"])
+    _rotate_the_tangent_by_different_angels(azimuth_x, azimuth_y, y, os_screen_region)
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
+
     finish()
 
 
