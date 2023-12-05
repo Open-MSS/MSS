@@ -183,4 +183,4 @@ def _show_solar_angle(os_screen_region):
 
 
 if __name__ == '__main__':
-    start(target=automate_rs, duration=198, dry_run=True)
+    start(target=automate_rs, duration=198)

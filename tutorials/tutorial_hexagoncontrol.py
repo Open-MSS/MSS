@@ -149,4 +149,4 @@ def _arrange_open_app_windows():
 
 
 if __name__ == '__main__':
-    start(target=automate_hexagoncontrol, duration=170, dry_run=True)
+    start(target=automate_hexagoncontrol, duration=170)

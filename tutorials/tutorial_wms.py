@@ -226,4 +226,4 @@ def automate_wms():
 
 
 if __name__ == '__main__':
-    start(target=automate_wms, duration=280, dry_run=True)
+    start(target=automate_wms, duration=280)

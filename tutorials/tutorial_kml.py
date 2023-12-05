@@ -103,4 +103,4 @@ def _change_linewidth(img_name, actions):
 
 
 if __name__ == '__main__':
-    start(target=automate_kml, duration=220, dry_run=True)
+    start(target=automate_kml, duration=220)
