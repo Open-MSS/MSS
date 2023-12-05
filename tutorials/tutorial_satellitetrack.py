@@ -41,8 +41,6 @@ def automate_rs():
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
     # Satellite Predictor file path
-    path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    satellite_path = os.path.join(path, 'docs/samples/satellite_tracks/satellite_predictor.txt')
     msui_full_screen_and_open_first_view()
     pag.sleep(2)
     create_tutorial_images()
@@ -64,7 +62,7 @@ def automate_rs():
     # Todo find and use QLineEdit leFile instead of Load button
     # Loading the file
     find_and_click_picture('topviewwindow-load.png', 'Load button not found', xoffset=-150)
-    type_and_key(satellite_path, interval=0.1)
+    type_and_key(SATELLITE_PATH, interval=0.1)
     find_and_click_picture('topviewwindow-load.png', 'Load button not found')
 
     # Switching between different date and time of satellite overpass.
