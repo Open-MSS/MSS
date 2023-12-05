@@ -470,6 +470,14 @@ def show_other_widgets():
 
 
 def msui_full_screen_and_open_first_view(view_cmd='h'):
+    """
+    Open the first view and go full screen in MSUI.
+
+    :param view_cmd: The command to open the view (default is 'h' for Home).
+    :type view_cmd: str
+
+    :return: None
+    """
     hotkey = WIN, 'pageup'
     pag.hotkey(*hotkey)
     pag.sleep(1)
@@ -477,4 +485,24 @@ def msui_full_screen_and_open_first_view(view_cmd='h'):
         pag.hotkey(CTRL, view_cmd)
         pag.sleep(1)
     create_tutorial_images()
+    pag.sleep(2)
+
+
+def add_waypoints_to_topview(os_screen_region):
+    # enable adding waypoints
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Clickable button/option not found.',
+                           region=os_screen_region)
+    # Adding waypoints for demonstrating remote sensing
+    pag.move(-50, 150, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(65, 65, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(-150, 30, duration=1)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(200, 150, duration=1)
+    pag.click(interval=2)
     pag.sleep(2)
