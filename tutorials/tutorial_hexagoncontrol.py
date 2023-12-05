@@ -26,12 +26,10 @@
 
 import pyautogui as pag
 
-from sys import platform
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
-                             select_listelement, find_and_click_picture, click_center_on_screen, zoom_in, type_and_key)
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images, move_window,
+                             select_listelement, find_and_click_picture, zoom_in, type_and_key)
 from tutorials.utils.platform_keys import platform_keys
-from tutorials.utils.picture import picture
+from mslib.utils.config import load_settings_qsettings
 
 CTRL, ENTER, WIN, ALT = platform_keys()
 
@@ -58,134 +56,97 @@ def automate_hexagoncontrol():
     pag.sleep(1)
     pag.hotkey('ctrl', 't')
     pag.sleep(3)
-
     # update images, because tableview was opened
     create_tutorial_images()
 
-    # show both open windows arranged on screen
-    tv_x, tv_y = _arrange_open_app_windows()
-
-    # Opening Hexagon Control dockwidget
-    if tv_x is not None and tv_y is not None:
-        pag.moveTo(tv_x - 250, tv_y + 462, duration=2)
-        pag.click(duration=2)
-        select_listelement(1)
-
+    # show both open windows arranged on screen and open hexagon control widget
+    _arrange_open_app_windows()
+    tableview = load_settings_qsettings('tableview', {"os_screen_region": (0, 0, 0, 0)})
     create_tutorial_images()
 
     # Entering Centre Latitude and Centre Longitude of Delhi around which hexagon will be drawn
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-center-latitude.png'))
-        pag.sleep(1)
-        pag.click(x + 370, y, duration=2)
-        pag.sleep(1)
-        type_and_key('28.57')
-        pag.sleep(1)
-        pag.click(x + 943, y, duration=2)
-        pag.sleep(1)
-        type_and_key('77.10')
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Center Latitude\' button not found on the screen.")
-        raise
-
+    find_and_click_picture('tableviewwindow-0-00-degn.png',
+                           '0.00 degN not found',
+                           region=tableview["os_screen_region"])
+    type_and_key('28.57')
+    find_and_click_picture('tableviewwindow-0-00-dege.png',
+                           '0.00 degE not found',
+                           region=tableview["os_screen_region"])
+    type_and_key('77.10')
     find_and_click_picture('tableviewwindow-add-hexagon.png',
-                           "'Add Hexagon' button not found on the screen.")
+                           "'Add Hexagon' button not found on the screen.",
+                           region=tableview["os_screen_region"])
 
     # Changing the Radius of the hexagon
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
-        pag.click(x + 400, y, duration=2)
-        pag.sleep(1)
-        type_and_key('500.00')
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Radius\' button not found on the screen.")
-        raise
-
+    find_and_click_picture('tableviewwindow-200-00-km.png', '200 km not found',
+                           region=tableview["os_screen_region"])
+    type_and_key('500.00')
     find_and_click_picture('tableviewwindow-remove-hexagon.png',
-                           "'Remove Hexagon' button not found on the screen.")
+                           "'Remove Hexagon' button not found on the screen.",
+                           region=tableview["os_screen_region"])
     pag.press(ENTER)
-
     find_and_click_picture('tableviewwindow-add-hexagon.png',
-                           "'Add Hexagon' button not found on the screen.")
+                           "'Add Hexagon' button not found on the screen.",
+                           region=tableview["os_screen_region"])
 
     # Changing the angle of first point of the hexagon
-    click_center_on_screen(picture('tableviewwindow-radius.png'), xoffset=967)
+    find_and_click_picture('tableviewwindow-0-00-deg.png', '0.00 deg not found',
+                           region=tableview["os_screen_region"])
     type_and_key('90.00')
 
-    # Clicking on the Remove Hexagon Button
-    find_and_click_picture('tableviewwindow-remove-hexagon.png',
-                           "'Remove Hexagon' button not found on the screen.")
-    pag.press(ENTER)
+    _remove_hexagon()
+    _add_hexagon()
 
-    # Clicking on the add hexagon button
-    find_and_click_picture('tableviewwindow-add-hexagon.png',
-                           "'Add Hexagon' button not found on the screen.")
-
+    create_tutorial_images()
     # Changing to a different angle of first point
-    x, y = pag.locateCenterOnScreen(picture('tableviewwindow-radius.png'))
-    pag.sleep(1)
-    pag.click(x + 967, y, duration=2)
-    pag.sleep(1)
+    find_and_click_picture('tableviewwindow-90-00-deg.png', '90.00 deg not found',
+                           region=tableview["os_screen_region"])
     type_and_key('120.00')
 
-    # Clicking on the Remove Hexagon Button
-    find_and_click_picture('tableviewwindow-remove-hexagon.png',
-                           "'Remove Hexagon' button not found on the screen.")
-    pag.press(ENTER)
-    # Clicking on the add hexagon button
-    find_and_click_picture('tableviewwindow-add-hexagon.png',
-                           "'Add Hexagon' button not found on the screen.")
-
-    pag.moveTo(tv_x, tv_y, duration=2)
-    pag.click(duration=2)
+    _remove_hexagon()
+    create_tutorial_images()
+    _add_hexagon()
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
 
+def _add_hexagon():
+    # Clicking on the add hexagon button
+    find_and_click_picture('tableviewwindow-add-hexagon.png',
+                           "'Add Hexagon' button not found on the screen.")
+
+
+def _remove_hexagon():
+    # Clicking on the Remove Hexagon Button
+    find_and_click_picture('tableviewwindow-remove-hexagon.png',
+                           "'Remove Hexagon' button not found on the screen.")
+    pag.press(ENTER)
+
+
 def _arrange_open_app_windows():
     # Relocating Tableview by performing operations on table view
-    tv_x = None
-    tv_y = None
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-select-to-open-control.png'))
-        pag.moveTo(x + 250, y - 462, duration=1)
-        if platform == 'linux' or platform == 'linux2':
-            # the window need to be moved a bit below the topview window
-            pag.dragRel(400, 387, duration=2)
-        elif platform == 'win32' or platform == 'darwin':
-            pag.dragRel(200, 487, duration=2)
-        pag.sleep(2)
-        if platform == 'linux' or platform == 'linux2':
-            # this is to select over the window manager the topview and brings it on top
-            # ToDo the help search function should be used for this (ctrl f)
-            pag.keyDown('altleft')
-            pag.press('tab')
-            pag.keyUp('tab')
-            pag.press('tab')
-            pag.keyUp('tab')
-            pag.keyUp('altleft')
-        elif platform == 'win32':
-            pag.keyDown('alt')
-            pag.press('tab')
-            pag.press('right')
-            pag.keyUp('alt')
-        elif platform == 'darwin':
-            pag.keyDown('command')
-            pag.press('tab')
-            pag.press('right')
-            pag.keyUp('command')
-        pag.sleep(1)
-        if platform == 'win32' or platform == 'darwin':
-            pag.dragRel(None, -700, duration=2)
-            tv_x, tv_y = pag.position()
-        elif platform == 'linux' or platform == 'linux2':
-            tv_x, tv_y = pag.position()
-    except (ImageNotFoundException, OSError, TypeError, Exception):
-        print("\nException : TableView's Select to open Control option not found on the screen.")
-        raise
-    return tv_x, tv_y
+    tableview = load_settings_qsettings('tableview', {"os_screen_region": (0, 0, 0, 0)})
+    x_drag_rel = 250
+    y_drag_rel = 687
+    move_window(tableview["os_screen_region"], x_drag_rel, y_drag_rel)
+    tableview = load_settings_qsettings('tableview', {"os_screen_region": (0, 0, 0, 0)})
+    find_and_click_picture('tableviewwindow-select-to-open-control.png',
+                           'select to open control not found',
+                           region=tableview["os_screen_region"])
+    select_listelement(1)
+
+    pag.sleep(1)
+    create_tutorial_images()
+
+    pag.keyDown('altleft')
+    pag.press('tab')
+    pag.keyUp('tab')
+    pag.press('tab')
+    pag.keyUp('tab')
+    pag.keyUp('altleft')
+    pag.sleep(1)
 
 
 if __name__ == '__main__':
-    start(target=automate_hexagoncontrol, duration=170)
+    start(target=automate_hexagoncontrol, duration=170, dry_run=True)
