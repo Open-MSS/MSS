@@ -830,12 +830,12 @@ def save_figure(self, *args):
         filters = []
         for name, exts in sorted_filetypes:
             exts_list = " ".join(['*.%s' % ext for ext in exts])
-            filter = '%s (%s)' % (name, exts_list)
-            filters.append(filter)
+            filter_value = '%s (%s)' % (name, exts_list)
+            filters.append(filter_value)
 
-        fname, filter = _getSaveFileName(self.parent,
-                                         title="Choose a filename to save to",
-                                         filename=start, filters=filters)
+        fname, filter_value = _getSaveFileName(self.parent,
+                                               title="Choose a filename to save to",
+                                               filename=start, filters=filters)
         if fname is not None:
             if not fname.endswith(filter[1:]):
                 fname = filter.replace('*', fname)

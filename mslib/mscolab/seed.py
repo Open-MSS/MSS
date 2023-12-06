@@ -46,7 +46,6 @@ def add_all_users_to_all_operations(access_level='collaborator'):
         all_path = [operation.path for operation in all_operations]
         db.session.close()
     for path in all_path:
-        access_level = 'collaborator'
         if path == "TEMPLATE":
             access_level = 'admin'
         add_all_users_default_operation(path=path, access_level=access_level)

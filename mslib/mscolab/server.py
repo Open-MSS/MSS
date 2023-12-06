@@ -210,7 +210,8 @@ def get_idp_entity_id(selected_idp):
 
 def create_or_update_idp_user(email, username, token, authentication_backend):
     """
-    Creates or updates an idp user in the system based on the provided email, username, token, and authentication backend.
+    Creates or updates an idp user in the system based on the provided email,
+     username, token, and authentication backend.
     :param email: idp users email
     :param username: idp users username
     :param token: authentication token
@@ -260,7 +261,7 @@ def get_auth_token():
     emailid = request.form['email']
     password = request.form['password']
     user = check_login(emailid, password)
-    if user:
+    if user is not False:
         if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
                 token = user.generate_auth_token()

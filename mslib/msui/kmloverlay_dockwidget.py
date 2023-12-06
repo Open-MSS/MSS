@@ -44,16 +44,16 @@ class KMLPatch:
     Represents a KML overlay.
     """
 
-    def __init__(self, mapcanvas, kml, color="red", linewidth=1):
+    def __init__(self, mapcanvas, kml_data, color="red", linewidth=1):
         self.map = mapcanvas
-        self.kml = kml
+        self.kml = kml_data
         self.patches = []
         self.color = color
         self.linewidth = linewidth
         self.draw()
 
-    def compute_xy(self, geometry):
-        unzipped = list(zip(*geometry.coords))
+    def compute_xy(self, geometry_data):
+        unzipped = list(zip(*geometry_data.coords))
         x, y = self.map.gcpoints_path(unzipped[0], unzipped[1])
         if self.map.projection == "cyl":  # hack for wraparound
             x = normalize_longitude(x, self.map.llcrnrlon, self.map.urcrnrlon)
@@ -567,8 +567,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                                  self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
-                except (AttributeError, IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
-                        et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
+                except (AttributeError, IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError,
+                        et.XMLSchemaParseError, et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
                                                 " is either an invalid KML File or has an error.")

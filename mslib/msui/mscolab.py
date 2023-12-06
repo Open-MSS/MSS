@@ -585,7 +585,7 @@ class MSUIMscolab(QtCore.QObject):
             _json = json.loads(r.text)
             creator_name = _json["username"]
         QtWidgets.QMessageBox.information(
-            None, "Operation Description",
+            self.ui, "Operation Description",
             f"<html>Creator: <b>{creator_name}</b><p>"
             f"Category: <b>{self.active_operation_category}</b><p>"
             "<p>"

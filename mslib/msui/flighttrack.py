@@ -128,7 +128,7 @@ class Waypoint:
     properties. Used internally by WaypointsTableModel.
     """
 
-    def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
+    def __init__(self, lat=0., lon=0., flightlevel=0., location="", comments=""):
         self.location = location
         locations = config_loader(dataset='locations')
         if location in locations:
