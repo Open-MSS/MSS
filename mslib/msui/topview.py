@@ -30,6 +30,7 @@
 
 import functools
 import logging
+
 from mslib.utils.config import config_loader
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
@@ -192,6 +193,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         super().__init__(parent, model, _id)
         logging.debug(_id)
+        self.settings_tag = "topview"
         self.mainwindow_signal_login_mscolab = mainwindow.signal_login_mscolab
         self.mainwindow_signal_logout_mscolab = mainwindow.signal_logout_mscolab
         self.mainwindow_signal_listFlighttrack_doubleClicked = mainwindow.signal_listFlighttrack_doubleClicked

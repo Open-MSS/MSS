@@ -61,8 +61,10 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         """
         super().__init__(parent, model, _id)
+
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
+        self.settings_tag = "tableview"
 
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))

@@ -57,11 +57,12 @@ Keep the following things in mind before running a script
 Getting Started
 ---------------
 
-On the Anaconda terminal, type the following ::
+On the terminal, type the following ::
 
  cd ..../MSS/$
  $ export PYTHONPATH=.../MSS        # Path of MSS
- $ conda activate mssdev
+ $ export MSUI_CONFIG_PATH=/tmp/msui_tutorials   # Path where msui_settings.json gets created and all heler images
+ $ mamba activate mssdev
  (mssdev)$ mamba install --file requirements.d/tutorials.txt
 
 This will install all the dependencies required for running of the tutorials.

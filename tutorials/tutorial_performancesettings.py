@@ -22,16 +22,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import pyautogui as pag
 import os.path
-import tempfile
+import pyautogui as pag
 import shutil
+import tempfile
 
-from sys import platform
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish, create_tutorial_images
-from tutorials.utils.picture import picture
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view,
+                             create_tutorial_images, select_listelement, find_and_click_picture, type_and_key)
+from tutorials.utils.platform_keys import platform_keys
+
+CTRL, ENTER, WIN, ALT = platform_keys()
 
 
 def automate_performance():
@@ -42,140 +42,73 @@ def automate_performance():
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
 
-    ctrl, enter, win, alt = platform_keys()
-
-    # Satellite Predictor file path
+    # Performance file path
     path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
     ps_file_path = os.path.join(path, 'docs/samples/config/msui/performance_simple.json.sample')
     dirpath = tempfile.mkdtemp()
     sample = os.path.join(dirpath, 'example.json')
     shutil.copy(ps_file_path, sample)
 
-    # Maximizing the window
-    try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'pageup')
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-    pag.sleep(2)
-    pag.hotkey('ctrl', 't')
-    pag.sleep(3)
-
-    create_tutorial_images()
-
+    msui_full_screen_and_open_first_view(view_cmd='t')
     # Opening Performance Settings dockwidget
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-select-to-open-control.png'))
-        pag.moveTo(x + 250, y - 462, duration=1)
-        if platform == 'linux' or platform == 'linux2':
-            # the window need to be moved a bit below the topview window
-            pag.dragRel(400, 387, duration=2)
-        elif platform == 'win32' or platform == 'darwin':
-            pag.dragRel(200, 487, duration=2)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control\' button/option not found on the screen.")
-        raise
+    find_and_click_picture('tableviewwindow-select-to-open-control.png',
+                           'Select to open control not found')
+    select_listelement(2)
+    pag.press(ENTER)
+    x, y = pag.position()
 
-    tv_x, tv_y = pag.position()
-    # Opening Performance Control dockwidget
-    if tv_x is not None and tv_y is not None:
-        pag.moveTo(tv_x - 250, tv_y + 462, duration=2)
-        pag.click(duration=2)
-        pag.sleep(1)
-        pag.press('down')
-        pag.sleep(1)
-        pag.press('down')
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
+    pag.moveTo(x + 250, y - 462, duration=1)
+    pag.dragRel(400, 387, duration=2)
+    pag.sleep(1)
 
+    # updating tutorial images
     create_tutorial_images()
 
     # Exploring through the file system and loading the performance settings json file for a dummy aircraft.
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-select-to-open-control.png'))
-        pag.click(x, y, duration=2)
-        pag.sleep(1)
-        pag.typewrite(sample, interval=0.1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Select\' button (for loading performance_settings.json file) not found on the screen.")
-        raise
+    find_and_click_picture('tableviewwindow-select.png', 'Select button not found')
+    type_and_key(sample)
+
     # Checking the Show Performance checkbox to display the settings file in the table view
-    try:
-        pic = picture('tableviewwindow-show-performance.png', boundingbox=(0, 0, 140, 23))
-        x, y = pag.locateCenterOnScreen(pic)
-        pag.click(x, y, duration=2)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Show Performance\' checkbox not found on the screen.")
-        raise
+    find_and_click_picture('tableviewwindow-show-performance.png',
+                           'Show performance button not found',
+                           bounding_box=(0, 0, 140, 23))
 
     # Changing the maximum take off weight
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-maximum-take-off-weight-lb.png'))
-        pag.click(x + 318, y, duration=2)
-        pag.sleep(4)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('87000', interval=0.3)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Maximum Takeoff Weight\' fill box not found on the screen.")
-        raise
+    find_and_click_picture('tableviewwindow-maximum-take-off-weight-lb.png',
+                           'Max take off weight lb not found')
+    x, y = pag.position()
+    pag.click(x + 318, y, duration=2)
+    type_and_key('87000')
+    pag.sleep(2)
+
     # Changing the aircraft weight of the dummy aircraft
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-aircraft-weight-no-fuel-lb.png'))
-        pag.click(x + 300, y, duration=2)
-        pag.sleep(4)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('48000', interval=0.3)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Aircraft weight\' fill box not found on the screen.")
-        raise
+    find_and_click_picture('tableviewwindow-aircraft-weight-no-fuel-lb.png',
+                           'Aircraft weight no fuel not found')
+    x, y = pag.position()
+    pag.click(x + 300, y, duration=2)
+    type_and_key('48000')
 
     # Changing the take off time of the dummy aircraft
-    try:
-        x, y = pag.locateCenterOnScreen(picture('tableviewwindow-take-off-time.png'))
-        pag.click(x + 410, y, duration=2)
-        pag.sleep(4)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        for _ in range(5):
-            pag.press('up')
-            pag.sleep(2)
-        pag.typewrite('04', interval=0.5)
-        pag.press(enter)
+    find_and_click_picture('tableviewwindow-take-off-time.png',
+                           'take off time not found')
+    x, y = pag.position()
+    pag.click(x + 410, y, duration=2)
+    type_and_key('')
+    for _ in range(5):
+        pag.press('up')
         pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Take off time\' fill box not found on the screen.")
-        raise
+    type_and_key('04', interval=0.5)
 
+    # update tutorial images
     create_tutorial_images()
 
     # Showing and hiding the performance settings
-    try:
-        pic = picture('tableviewwindow-show-performance.png', boundingbox=(0, 0, 140, 23))
-        x, y = pag.locateCenterOnScreen(pic)
-        pag.click(x, y, duration=2)
-        pag.sleep(3)
-
-        pag.click(x, y, duration=2)
-        pag.sleep(3)
-
-        pag.click(x, y, duration=2)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Show Performance\' checkbox not found on the screen.")
-        raise
+    for _ in range(3):
+        find_and_click_picture('tableviewwindow-show-performance.png',
+                               'show performance button not found',
+                               bounding_box=(0, 0, 140, 23))
+        # update tutorial images
+        create_tutorial_images()
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()

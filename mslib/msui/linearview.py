@@ -84,6 +84,8 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         Set up user interface, connect signal/slots.
         """
         super().__init__(parent, model, _id)
+        self.settings_tag = "linearview"
+
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 

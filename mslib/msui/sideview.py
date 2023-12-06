@@ -259,7 +259,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         super().__init__(parent, model, _id)
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
-
+        self.settings_tag = "sideview"
         # Dock windows [WMS]:
         self.cbTools.clear()
         self.cbTools.addItems(["(select to open control)", "Vertical Section WMS"])

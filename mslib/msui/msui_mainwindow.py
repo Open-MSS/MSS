@@ -274,10 +274,10 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
             actions.extend([(obj.window(), obj.toolTip(), obj.currentText(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QComboBox) if self.cbNoShortcut.checkState()])
 
-            # QAbstractSpinBox, QLineEdit
+            # QAbstractSpinBox, QLineEdit, QDoubleSpinBox
             actions.extend([(obj.window(), obj.toolTip(), obj.text(), obj.objectName(), "", obj)
                             for obj in qobject.findChildren(QtWidgets.QAbstractSpinBox) +
-                            qobject.findChildren(QtWidgets.QLineEdit)
+                            qobject.findChildren(QtWidgets.QLineEdit) + qobject.findChildren(QtWidgets.QDoubleSpinBox)
                             if self.cbNoShortcut.checkState()])
             # QPlainTextEdit, QTextEdit
             actions.extend([(obj.window(), obj.toolTip(), obj.toPlainText(), obj.objectName(), "", obj)
@@ -955,6 +955,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             except AttributeError:
                 view_window.enable_navbar_action_buttons()
             self.viewsChanged.emit()
+            # this triggers the changeEvent to get the screen position.
+            # On X11, a window does not have a frame until the window manager decorates it.
+            view_window.showMaximized()
+            view_window.showNormal()
 
     def get_active_views(self):
         active_view_windows = []
