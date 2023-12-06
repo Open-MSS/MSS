@@ -39,6 +39,7 @@ PORTS = list(range(21000, 21500))
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
+    @pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_merge_points(self, mockbox):
         self.emailid = "mergepoints@alpha.org"
@@ -58,8 +59,6 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
             QtWidgets.QApplication.processEvents()
             QtTest.QTest.qWait(100)
 
-        if merge_waypoints_model is None:
-            pytest.skip("merge_waypoints_model undefined")
         QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton, delay=1)
         # trigger save to server action from server options combobox
