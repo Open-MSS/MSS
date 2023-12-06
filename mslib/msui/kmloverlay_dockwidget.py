@@ -44,16 +44,16 @@ class KMLPatch:
     Represents a KML overlay.
     """
 
-    def __init__(self, mapcanvas, kml, color="red", linewidth=1):
+    def __init__(self, mapcanvas, kml_data, color="red", linewidth=1):
         self.map = mapcanvas
-        self.kml = kml
+        self.kml = kml_data
         self.patches = []
         self.color = color
         self.linewidth = linewidth
         self.draw()
 
-    def compute_xy(self, geometry):
-        unzipped = list(zip(*geometry.coords))
+    def compute_xy(self, geometry_data):
+        unzipped = list(zip(*geometry_data.coords))
         x, y = self.map.gcpoints_path(unzipped[0], unzipped[1])
         if self.map.projection == "cyl":  # hack for wraparound
             x = normalize_longitude(x, self.map.llcrnrlon, self.map.urcrnrlon)
