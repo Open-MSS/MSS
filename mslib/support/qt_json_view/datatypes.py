@@ -259,7 +259,7 @@ class RangeType(DataType):
         metrics = painter.fontMetrics()
         spinbox_option = QtWidgets.QStyleOptionSpinBox()
         start_rect = QtCore.QRect(option.rect)
-        start_rect.setWidth(start_rect.width() / 3.0)
+        start_rect.setWidth(int(start_rect.width() / 3.0))
         spinbox_option.rect = start_rect
         spinbox_option.frame = True
         spinbox_option.state = option.state
