@@ -29,6 +29,9 @@ import fs
 import multiprocessing
 import werkzeug
 import pytest
+import time
+import urllib
+import requests
 import mslib.mswms.mswms
 
 from urllib.parse import urljoin
@@ -193,6 +196,8 @@ def _mscolab_server(mscolab_managers):
     process.start()
     url = f"{scheme}://{host}:{port}"
     app.config['URL'] = url
+    while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
+        time.sleep(0.5)
     try:
         yield url, app
     finally:
@@ -218,12 +223,22 @@ def mswms_server():
     process = multiprocessing.Process(target=server.serve_forever, daemon=True)
     process.start()
     url = f"{scheme}://{host}:{port}"
+    while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
+        time.sleep(0.5)
     try:
         yield url
     finally:
         process.terminate()
         process.join(10)
         process.close()
+
+
+def is_url_response_ok(url):
+    try:
+        response = requests.get(url)
+        return response.status_code == 200
+    except:  # noqa: E722
+        return False
 
 
 def create_msui_settings_file(content):
