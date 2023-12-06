@@ -34,7 +34,7 @@
 
 import types
 
-from mslib.msui import hexagon_dockwidget as hex
+from mslib.msui import hexagon_dockwidget as hex_dock
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtWidgets, QtGui
 from mslib.msui.qt5 import ui_tableview_window as ui
@@ -115,7 +115,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         if index >= 0:
             if index == 0:
                 title = "Hexagon Control"
-                widget = hex.HexagonControlWidget(view=self)
+                widget = hex_dock.HexagonControlWidget(view=self)
             elif index == 1:
                 title = "Performance Settings"
                 widget = perfset.MSUI_PerformanceSettingsWidget(
@@ -202,7 +202,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         wps = self.waypoints_model.all_waypoint_data()
         if len(wps) - len(rows) < 2:
             QtWidgets.QMessageBox.warning(
-                None, "Remove waypoint",
+                self.tableWayPoints, "Remove waypoint",
                 "Cannot remove waypoint, the flight track needs to consist of at least two points.")
             return False
         else:
@@ -212,7 +212,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
                     for waypoint in waypoints])
 
             return QtWidgets.QMessageBox.question(
-                None, "Remove waypoint", text,
+                self.tableWayPoints, "Remove waypoint", text,
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
 
