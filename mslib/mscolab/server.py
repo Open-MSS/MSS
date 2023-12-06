@@ -210,7 +210,8 @@ def get_idp_entity_id(selected_idp):
 
 def create_or_update_idp_user(email, username, token, authentication_backend):
     """
-    Creates or updates an idp user in the system based on the provided email, username, token, and authentication backend.
+    Creates or updates an idp user in the system based on the provided email,
+     username, token, and authentication backend.
     :param email: idp users email
     :param username: idp users username
     :param token: authentication token

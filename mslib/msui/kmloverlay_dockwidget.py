@@ -567,8 +567,8 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                                  self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
-                except (AttributeError, IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError, et.XMLSchemaParseError,
-                        et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
+                except (AttributeError, IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError,
+                        et.XMLSchemaParseError, et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +
                                                 " is either an invalid KML File or has an error.")

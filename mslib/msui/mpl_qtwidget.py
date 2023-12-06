@@ -834,8 +834,8 @@ def save_figure(self, *args):
             filters.append(filter_value)
 
         fname, filter_value = _getSaveFileName(self.parent,
-                                         title="Choose a filename to save to",
-                                         filename=start, filters=filters)
+                                               title="Choose a filename to save to",
+                                               filename=start, filters=filters)
         if fname is not None:
             if not fname.endswith(filter[1:]):
                 fname = filter.replace('*', fname)
