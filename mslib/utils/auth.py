@@ -76,7 +76,7 @@ def get_password_from_keyring(service_name=NAME, username=""):
             else:
                 return cred.password
         except (keyring.errors.KeyringLocked, keyring.errors.InitError, DBusErrorResponse) as ex:
-            logging.warn(ex)
+            logging.warning(ex)
             return None
 
 
