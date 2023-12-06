@@ -67,9 +67,9 @@ class MSUIWebBrowser(QMainWindow):
         self.show()
 
     def closeEvent(self, event):
-        '''
+        """
             Delete all cookies when closing the web browser
-        '''
+        """
         self.profile.cookieStore().deleteAllCookies()
 
 
@@ -83,15 +83,15 @@ if __name__ == "__main__":
     CONNECTION = False
 
     def close_qtwebengine():
-        '''
+        """
             Close the main window
-        '''
+        """
         main.close()
 
     def check_connection():
-        '''
+        """
             Schedule the close_qtwebengine function to be called asynchronously
-        '''
+        """
         if CONNECTION:
             QTimer.singleShot(0, close_qtwebengine)
 
