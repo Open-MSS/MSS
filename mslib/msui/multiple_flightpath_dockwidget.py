@@ -40,10 +40,10 @@ class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
     """
     """
 
-    def __init__(self, flighttrack_model, op_id: int, parent=None, type=QtWidgets.QListWidgetItem.UserType):
+    def __init__(self, flighttrack_model, op_id: int, parent=None, user_type=QtWidgets.QListWidgetItem.UserType):
         view_name = flighttrack_model.name
         super().__init__(
-            view_name, parent, type
+            view_name, parent, user_type
         )
         self.parent = parent
         self.flighttrack_model = flighttrack_model
