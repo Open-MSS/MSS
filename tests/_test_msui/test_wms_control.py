@@ -50,15 +50,8 @@ class VSecViewMockup(mock.Mock):
 
 
 class WMSControlWidgetSetup(object):
-    @pytest.fixture(autouse=True)
-    def _with_mswms_server(self, mswms_server):
-        self.url = mswms_server
-        parsed_url = urllib.parse.urlparse(self.url)
-        self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
-
     def _setup(self, widget_type):
         wc.WMS_SERVICE_CACHE = {}
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
@@ -88,7 +81,7 @@ class WMSControlWidgetSetup(object):
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def teardown_method(self):
+    def _teardown(self):
         self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
@@ -110,8 +103,14 @@ class WMSControlWidgetSetup(object):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mswms_server, qapp):
+        self.url = mswms_server
+        parsed_url = urllib.parse.urlparse(self.url)
+        self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
         self._setup("hsec")
+        yield
+        self._teardown()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_no_server(self, mockbox):
@@ -474,8 +473,14 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, mswms_server, qapp):
+        self.url = mswms_server
+        parsed_url = urllib.parse.urlparse(self.url)
+        self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
         self._setup("vsec")
+        yield
+        self._teardown()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
@@ -568,8 +573,8 @@ class TestWMSControlWidgetSetupSimple(object):
         <Dimension name="ELEVATION" units="hPa"> </Dimension>
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
         self.window.show()
@@ -580,8 +585,7 @@ class TestWMSControlWidgetSetupSimple(object):
             self.window.multilayers.delete_server(server)
 
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()

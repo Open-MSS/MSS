@@ -27,21 +27,21 @@
 
 import os
 import mock
+import pytest
 from PyQt5 import QtWidgets, QtCore, QtTest
 import mslib.msui.satellite_dockwidget as sd
 
 
 class Test_SatelliteDockWidget(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.view = mock.Mock()
         self.window = sd.SatelliteControlWidget(view=self.view)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()

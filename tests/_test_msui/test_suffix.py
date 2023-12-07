@@ -26,6 +26,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 
 import sys
 from PyQt5 import QtWidgets, QtTest
@@ -34,15 +35,14 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
 
 class Test_SuffixChange(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()

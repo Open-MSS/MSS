@@ -41,7 +41,7 @@ from mslib.utils.config import modify_config_file
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabVersionHistory(object):
     @pytest.fixture(autouse=True)
-    def setup(self, mscolab_server):
+    def setup(self, mscolab_server, qapp):
         self.url, _ = mscolab_server
         handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -50,7 +50,6 @@ class Test_MscolabVersionHistory(object):
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()

@@ -31,8 +31,7 @@ from mslib.msui import mss
 
 
 @pytest.mark.skip(reason='needs review, assert missing')
-def test_mss_rename_message():
-    _ = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+def test_mss_rename_message(qapp):
     main_window = mss.MSSMainWindow()
     main_window.show()
     QtTest.QTest.mouseClick(main_window.pushButton, QtCore.Qt.LeftButton)

@@ -38,15 +38,14 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
 
 
 class Test_MSS_TV_MapAppearanceDialog(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = tv.MSUI_TV_MapAppearanceDialog(settings=_DEFAULT_SETTINGS_TOPVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
@@ -63,8 +62,8 @@ class Test_MSS_TV_MapAppearanceDialog(object):
 
 
 class Test_MSSTopViewWindow(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.main_window = MSUIMainWindow()
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -75,8 +74,7 @@ class Test_MSSTopViewWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.main_window.close()
         self.main_window.deleteLater()
@@ -291,9 +289,8 @@ class Test_MSSTopViewWindow(object):
                     reason="multiprocessing needs currently start_method fork")
 class Test_TopViewWMS(object):
     @pytest.fixture(autouse=True)
-    def setup(self, mswms_server):
+    def setup(self, mswms_server, qapp):
         self.url = mswms_server
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
 
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -350,8 +347,9 @@ class Test_TopViewWMS(object):
 
 
 class Test_MSUITopViewWindow():
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
+        pass
 
     def test_kwargs_update_does_not_harm(self):
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]

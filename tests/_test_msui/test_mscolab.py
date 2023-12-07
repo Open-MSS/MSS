@@ -47,7 +47,7 @@ from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_op
 
 class Test_Mscolab_connect_window():
     @pytest.fixture(autouse=True)
-    def setup(self, mscolab_server):
+    def setup(self, mscolab_server, qapp):
         self.url, _ = mscolab_server
         handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -57,7 +57,6 @@ class Test_Mscolab_connect_window():
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         QtTest.QTest.qWait(500)
         self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.main_window.create_new_flight_track()
@@ -267,7 +266,7 @@ class Test_Mscolab(object):
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, mscolab_server):
+    def setup(self, mscolab_server, qapp):
         self.url, self.app = mscolab_server
         handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -287,7 +286,6 @@ class Test_Mscolab(object):
         assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2])
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()

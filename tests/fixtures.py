@@ -29,12 +29,53 @@ import pytest
 import time
 import urllib
 import mslib.mswms.mswms
+import mock
 
+from PyQt5 import QtWidgets, sip
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers
 from mslib.mscolab.mscolab import handle_db_init
 from mslib.utils.config import modify_config_file
-from tests.utils import is_url_response_ok
+from tests.utils import is_url_response_ok, qt_wait_until
+
+
+# This global keeps the QApplication from getting gc'ed to early. The qapp
+# fixture and using this global is inspired by what pytest-qt does as well and
+# this global seems to fix some issues with deleted QObject's that came up.
+_qapp_instance = None
+
+
+@pytest.fixture
+def qapp():
+    qapp = QtWidgets.QApplication.instance()
+    if qapp is None:
+        global _qapp_instance
+        qapp = _qapp_instance = QtWidgets.QApplication([])
+
+    # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
+    with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.information") as i, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as c, \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.warning") as w:
+        yield qapp
+
+        # Fail a test if there are any Qt message boxes left open at the end
+        if any(box.call_count > 0 for box in [q, i, c, w]):
+            summary = "\n".join([f"PyQt5.QtWidgets.QMessageBox.{box()._extract_mock_name()}: {box.mock_calls[:-1]}"
+                                 for box in [q, i, c, w] if box.call_count > 0])
+            pytest.fail(f"An unhandled message box popped up during your test!\n{summary}")
+
+    try:
+        # Wait until all top level windows and widgets are closed and deleted
+        qt_wait_until(
+            lambda: len(set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets())) == 0
+        )
+    except TimeoutError:
+        # Not all widgets were closed properly, fail the test and delete all remaining widgets
+        widgets = set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets())
+        assert len(widgets) == 0, f"There are Qt widgets left open at the end of the test!\n{widgets=}"
+        for widget in widgets:
+            sip.delete(widget)
 
 
 @pytest.fixture(scope="session")

@@ -30,7 +30,6 @@ import datetime
 
 from mock import Mock
 from matplotlib.collections import LineCollection
-from PyQt5 import QtWidgets
 import pytest
 import skyfield_data
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
@@ -46,8 +45,8 @@ class Test_RemoteSensingControlWidget(object):
     """
     Tests about RemoteSensingControlWidget
     """
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.view = Mock()
         self.map = qt.TopViewPlotter()
         self.map.init_map()
@@ -138,8 +137,7 @@ class Test_RemoteSensingControlWidget(object):
                       datetime.datetime(2023, 4, 15, 11, 18, 27, 735581)]
         self.solar_type = ('sun', 'total (horizon)')
         self.remote_widget = RemoteSensingControlWidget(view=self.view)
-
-    def teardown_method(self):
+        yield
         self.remote_widget.close()
         self.remote_widget.deleteLater()
 

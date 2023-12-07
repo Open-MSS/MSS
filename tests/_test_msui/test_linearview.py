@@ -37,15 +37,14 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
 
 
 class Test_MSS_LV_Options_Dialog(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = tv.MSUI_LV_Options_Dialog(settings=_DEFAULT_SETTINGS_LINEARVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.close()
         self.window.deleteLater()
         QtWidgets.QApplication.processEvents()
@@ -61,8 +60,8 @@ class Test_MSS_LV_Options_Dialog(object):
 
 
 class Test_MSSLinearViewWindow(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
@@ -74,8 +73,7 @@ class Test_MSSLinearViewWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
@@ -111,9 +109,8 @@ class Test_MSSLinearViewWindow(object):
                     reason="multiprocessing needs currently start_method fork")
 class Test_LinearViewWMS(object):
     @pytest.fixture(autouse=True)
-    def setup(self, mswms_server):
+    def setup(self, mswms_server, qapp):
         self.url = mswms_server
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)

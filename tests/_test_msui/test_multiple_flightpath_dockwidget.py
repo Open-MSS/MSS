@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import mock
+import pytest
 from PyQt5 import QtWidgets, QtTest
 from mslib.msui import msui
 from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
@@ -34,9 +35,8 @@ import mslib.msui.topview as tv
 
 class Test_MultipleFlightpathControlWidget():
 
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()
 
@@ -52,8 +52,7 @@ class Test_MultipleFlightpathControlWidget():
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()

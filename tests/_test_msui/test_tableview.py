@@ -36,9 +36,8 @@ import mslib.msui.tableview as tv
 
 
 class Test_TableView(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication.instance() or QtWidgets.QApplication([])
-
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         # Create an initital flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),
                              ft.Waypoint(48.10, 10.27, 200),
@@ -56,8 +55,7 @@ class Test_TableView(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
