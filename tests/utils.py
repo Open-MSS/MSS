@@ -26,22 +26,12 @@
     limitations under the License.
 """
 import fs
-import multiprocessing
-import werkzeug
-import pytest
-import time
-import urllib
 import requests
-import mslib.mswms.mswms
 
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers
-from mslib.mscolab.mscolab import handle_db_init
-from mslib.utils.config import modify_config_file
 
 
 def callback_ok_image(status, response_headers):
@@ -168,69 +158,6 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, path):
     for p in response['operations']:
         if p['path'] == path:
             return p['op_id']
-
-
-@pytest.fixture(scope="session")
-def mscolab_app():
-    _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    return _app
-
-
-@pytest.fixture(scope="session")
-def mscolab_managers(mscolab_app):
-    return initialize_managers(mscolab_app)
-
-
-@pytest.fixture(scope="session")
-def _mscolab_server(mscolab_managers):
-    handle_db_init()
-    app, _, _, _ = mscolab_managers
-    scheme = "http"
-    host = "127.0.0.1"
-    server = werkzeug.serving.make_server(host=host, port=0, app=app, threaded=True)
-    port = server.socket.getsockname()[1]
-    process = multiprocessing.Process(target=server.serve_forever, daemon=True)
-    process.start()
-    url = f"{scheme}://{host}:{port}"
-    app.config['URL'] = url
-    while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
-        time.sleep(0.5)
-    try:
-        yield url, app
-    finally:
-        process.terminate()
-        process.join(10)
-        process.close()
-
-
-@pytest.fixture
-def mscolab_server(_mscolab_server):
-    url, app = _mscolab_server
-    # Update mscolab URL to avoid "Update Server List" message boxes
-    modify_config_file({"default_MSCOLAB": [url]})
-    return url, app
-
-
-@pytest.fixture(scope="session")
-def mswms_server():
-    scheme = "http"
-    host = "127.0.0.1"
-    server = werkzeug.serving.make_server(host=host, port=0, app=mslib.mswms.mswms.application, threaded=True)
-    port = server.socket.getsockname()[1]
-    process = multiprocessing.Process(target=server.serve_forever, daemon=True)
-    process.start()
-    url = f"{scheme}://{host}:{port}"
-    while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
-        time.sleep(0.5)
-    try:
-        yield url
-    finally:
-        process.terminate()
-        process.join(10)
-        process.close()
 
 
 def is_url_response_ok(url):
