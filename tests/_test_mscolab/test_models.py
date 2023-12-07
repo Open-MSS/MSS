@@ -50,8 +50,8 @@ class Test_User:
     def test_verify_auth_token(self):
         user = User(self.userdata[0], self.userdata[1], self.userdata[2])
         token = user.generate_auth_token()
-        id = user.verify_auth_token(token)
-        assert user.id == id
+        uid = user.verify_auth_token(token)
+        assert user.id == uid
 
     def test_verify_password(self):
         user = User(self.userdata[0], self.userdata[1], self.userdata[2])
