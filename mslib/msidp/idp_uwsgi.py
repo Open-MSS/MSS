@@ -528,7 +528,7 @@ def do_authentication(environ, start_response, authn_context, key, redirect_uri)
     logger.debug("Do authentication")
     auth_info = AUTHN_BROKER.pick(authn_context)
 
-    if len(auth_info) >= 0:
+    if len(auth_info) > 0:
         method, reference = auth_info[0]
         logger.debug("Authn chosen: %s (ref=%s)", method, reference)
         return method(environ, start_response, reference, key, redirect_uri)
