@@ -31,7 +31,6 @@ import pytest
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.utils import get_recent_op_id
 
 
@@ -39,7 +38,6 @@ class Test_Files:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_managers):
         self.app, _, _, self.fm = mscolab_managers
-        handle_db_reset()
 
         self.userdata = 'UV11@uv11', 'UV11', 'uv11'
         self.userdata2 = 'UV12@uv12', 'UV12', 'uv12'

@@ -26,7 +26,6 @@
 """
 import pytest
 
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import register_user
 from mslib.mscolab.models import User
 
@@ -34,7 +33,6 @@ from mslib.mscolab.models import User
 class Test_User:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         with mscolab_app.app_context():
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])

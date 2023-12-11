@@ -27,7 +27,6 @@
 import pytest
 
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import (add_user, get_user, add_operation, add_user_to_operation,
                                 delete_user, delete_operation, add_all_users_default_operation)
 
@@ -36,7 +35,6 @@ class Test_Seed:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_managers):
         self.app, _, _, self.fm = mscolab_managers
-        handle_db_reset()
         self.operation_name = "XYZ"
         self.description = "Template"
         self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0'

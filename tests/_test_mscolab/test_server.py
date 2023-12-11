@@ -30,7 +30,6 @@ import io
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.server import initialize_managers, check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
@@ -40,7 +39,6 @@ class Test_Server:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
         self.app = mscolab_app
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         with self.app.app_context():
             yield

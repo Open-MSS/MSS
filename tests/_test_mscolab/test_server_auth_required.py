@@ -35,14 +35,11 @@ except ImportError:
     pytest.skip("this test runs only by an explicit call "
                 "e.g. pytest tests/_test_mscolab/test_server_auth_required.py", allow_module_level=True)
 
-from mslib.mscolab.mscolab import handle_db_reset
-
 
 class Test_Server_Auth_Not_Valid:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
         self.app = mscolab_app
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
 
     def test_initialize_managers(self):

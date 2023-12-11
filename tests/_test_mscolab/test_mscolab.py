@@ -63,7 +63,6 @@ def test_main():
 class Test_Mscolab:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
-        handle_db_reset()
         with mscolab_app.app_context():
             yield
 

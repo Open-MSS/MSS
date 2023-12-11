@@ -33,7 +33,6 @@ from mslib.mscolab.models import Message
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.utils.config import modify_config_file
 
@@ -52,7 +51,6 @@ class Test_MscolabOperation(object):
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_server, qapp):
         self.url, self.app = mscolab_server
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])

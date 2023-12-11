@@ -37,7 +37,6 @@ from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
                          mscolab_delete_all_operations, mscolab_delete_user)
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.mscolab import handle_db_reset
 
 
 @pytest.mark.skipif(os.name == "nt",
@@ -46,7 +45,6 @@ class Test_Mscolab_Merge_Waypoints(object):
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_server, qapp):
         self.url, self.app = mscolab_server
-        handle_db_reset()
         QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()

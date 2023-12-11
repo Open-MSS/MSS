@@ -41,7 +41,6 @@ from mslib.utils.config import read_config_file, config_loader, modify_config_fi
 from tests.utils import ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
@@ -49,7 +48,6 @@ class Test_Mscolab_connect_window():
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_server, qapp):
         self.url, _ = mscolab_server
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -268,7 +266,6 @@ class Test_Mscolab(object):
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_server, qapp):
         self.url, self.app = mscolab_server
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])

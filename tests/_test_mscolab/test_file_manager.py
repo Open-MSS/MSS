@@ -29,14 +29,12 @@ import pytest
 
 from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.mscolab import handle_db_reset
 
 
 class Test_FileManager:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_managers):
         self.app, _, _, self.fm = mscolab_managers
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
 

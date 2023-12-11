@@ -34,7 +34,7 @@ import mock
 from PyQt5 import QtWidgets, sip
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers
-from mslib.mscolab.mscolab import handle_db_init
+from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok, qt_wait_until
 
@@ -79,23 +79,35 @@ def qapp():
 
 
 @pytest.fixture(scope="session")
-def mscolab_app():
+def mscolab_session_app():
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    handle_db_init()
     return _app
 
 
-@pytest.fixture(scope="session")
-def mscolab_managers(mscolab_app):
-    return initialize_managers(mscolab_app)
+@pytest.fixture
+def mscolab_app(mscolab_session_app):
+    handle_db_reset()
+    return mscolab_session_app
 
 
 @pytest.fixture(scope="session")
-def mscolab_session_server(mscolab_managers):
-    handle_db_init()
-    app, _, _, _ = mscolab_managers
+def mscolab_session_managers(mscolab_session_app):
+    return initialize_managers(mscolab_session_app)
+
+
+@pytest.fixture
+def mscolab_managers(mscolab_session_managers):
+    handle_db_reset()
+    return mscolab_session_managers
+
+
+@pytest.fixture(scope="session")
+def mscolab_session_server(mscolab_session_managers):
+    app, _, _, _ = mscolab_session_managers
     scheme = "http"
     host = "127.0.0.1"
     server = werkzeug.serving.make_server(host=host, port=0, app=app, threaded=True)
@@ -117,6 +129,7 @@ def mscolab_session_server(mscolab_managers):
 @pytest.fixture
 def mscolab_server(mscolab_session_server):
     url, app = mscolab_session_server
+    handle_db_reset()
     # Update mscolab URL to avoid "Update Server List" message boxes
     modify_config_file({"default_MSCOLAB": [url]})
     return url, app

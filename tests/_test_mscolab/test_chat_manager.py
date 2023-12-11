@@ -32,7 +32,6 @@ from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, Message, MessageType
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
@@ -40,7 +39,6 @@ class Test_Chat_Manager:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_managers):
         self.app, _, self.cm, _ = mscolab_managers
-        handle_db_reset()
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.operation_name = "europe"
