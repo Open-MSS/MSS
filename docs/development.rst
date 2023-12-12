@@ -132,7 +132,7 @@ Requirements
 2. Software requirement
 
   | Python
-  | `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_
+  | `Miniforge <https://github.com/conda-forge/miniforge#install>`_
   | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
 
 
@@ -145,7 +145,7 @@ Requirements
 Using predefined docker images instead of installing all requirements
 .....................................................................
 
-You can easily use our testing docker images which have all libraries pre installed. These are based on mambaforgen.
+You can easily use our testing docker images which have all libraries pre installed. These are based on miniforge.
 We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have mss-develop-env defined.
 In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these evironments.
 
@@ -171,12 +171,12 @@ Use the docker env on your computer, initial setup
 This example shows by using mss-stable-env how to set it up for testing and development of stable branch. The images gets updates
 when we have to add new dependencies or have do pinning of existing modules. On an updated image you need to redo these steps ::
 
-    rm -rf $HOME/mambaforge/envs/mss-stable-env # cleanup the existing env
-    mkdir $HOME/mambaforge/envs/mss-stable-env  # create the dir to bind to
+    rm -rf $HOME/miniforge/envs/mss-stable-env # cleanup the existing env
+    mkdir $HOME/miniforge/envs/mss-stable-env  # create the dir to bind to
     xhost +local:docker                         # may be needed
-    docker run -it --rm --mount type=volume,dst=/opt/conda/envs/mss-stable-env,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$HOME/mambaforge/envs/mss-stable-env --network host openmss/testing-stable # do the volume bind
+    docker run -it --rm --mount type=volume,dst=/opt/conda/envs/mss-stable-env,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$HOME/miniforge/envs/mss-stable-env --network host openmss/testing-stable # do the volume bind
     exit                                        # we are in the container, escape :)
-    sudo ln -s $HOME/mambaforge/envs/mss-stable-env /opt/conda/envs/mss-stable-env # we need the origin location linked because hashbangs interpreters are with that path. (only once needed)
+    sudo ln -s $HOME/miniforge/envs/mss-stable-env /opt/conda/envs/mss-stable-env # we need the origin location linked because hashbangs interpreters are with that path. (only once needed)
     conda activate mss-stable-env               # activate env
     cd workspace/MSS                            # go to your workspace MSS dir
     export PYTHONPATH=`pwd`                     # add it to the PYTHONPATH
@@ -197,7 +197,7 @@ After the image was configured you can use it like a self installed env ::
 Manual Installing dependencies
 ..............................
 
-MSS is based on the software of the conda-forge channel located. The channel is predefined in Mambaforge.
+MSS is based on the software of the conda-forge channel located. The channel is predefined in Miniforge.
 
 Create an environment and install the dependencies needed for the mss package::
 
