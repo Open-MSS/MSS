@@ -147,6 +147,7 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.modifyUsersTable, users, "admin")
         assert len_unadded_users - 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
+        QtTest.QTest.qWait(1000)
 
     def test_modify_permissions(self):
         users = ["name1", "name2"]
@@ -163,6 +164,7 @@ class Test_MscolabAdminWindow(object):
         QtWidgets.QApplication.processEvents()
         # Check if the permission has been updated
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
+        QtTest.QTest.qWait(1000)
 
     def test_delete_permissions(self):
         # Select users in the add users table
@@ -182,6 +184,7 @@ class Test_MscolabAdminWindow(object):
         self._check_users_present(self.admin_window.addUsersTable, users)
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
+        QtTest.QTest.qWait(1000)
 
     def test_import_permissions(self):
         index = self.admin_window.importPermissionsCB.findText("paris", QtCore.Qt.MatchFixedString)

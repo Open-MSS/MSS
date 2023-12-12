@@ -27,11 +27,13 @@
 """
 import fs
 import requests
+import time
 
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
+from PyQt5 import QtTest
 
 
 def callback_ok_image(status, response_headers):
@@ -171,6 +173,22 @@ def is_url_response_ok(url):
 def create_msui_settings_file(content):
     with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
         file_dir.writetext("msui_settings.json", content)
+
+
+def qt_wait_until(predicate, timeout=10):
+    """Wait using qWait until the predicate is satisfied or a timeout expires
+
+    This function is inspired by pytest-qt's wait_until method.
+    """
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            if predicate():
+                return
+        except:  # noqa: E722
+            pass
+        QtTest.QTest.qWait(100)
+    raise TimeoutError("qt_wait_until waited for longer than {} seconds".format(timeout))
 
 
 class ExceptionMock:

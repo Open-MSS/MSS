@@ -38,7 +38,7 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader, modify_config_file
-from tests.utils import ExceptionMock
+from tests.utils import ExceptionMock, qt_wait_until
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
@@ -458,10 +458,12 @@ class Test_Mscolab(object):
         with mock.patch("PyQt5.QtWidgets.QErrorMessage.showMessage") as m:
             self._create_operation("/", "Description Alpha")
             m.assert_called_once_with("Path can't contain spaces or special characters")
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 1)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self._create_operation("reproduce-test", "Description Test")
             m.assert_called_once()
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 2)
         assert self.window.listOperationsMSC.model().rowCount() == 2
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_operation_name == "Alpha"
@@ -484,8 +486,10 @@ class Test_Mscolab(object):
         # check for operation dir is created on server
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name))
         self._activate_operation_at_index(0)
+        qt_wait_until(lambda: self.window.mscolab.get_recent_op_id() is not None)
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 1)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionDeleteOperation.trigger()
@@ -536,6 +540,7 @@ class Test_Mscolab(object):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self._create_operation("flight1234", "Description flight1234")
             m.assert_called_once()
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 1)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
@@ -555,6 +560,7 @@ class Test_Mscolab(object):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self._create_operation("flight1234", "Description flight1234")
             m.assert_called_once()
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 1)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
@@ -574,6 +580,7 @@ class Test_Mscolab(object):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self._create_operation("flight1234", "Description flight1234")
             m.assert_called_once()
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 1)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         assert self.window.mscolab.active_operation_category == "example"
         self._activate_operation_at_index(0)
@@ -644,6 +651,7 @@ class Test_Mscolab(object):
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 1)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
@@ -658,6 +666,7 @@ class Test_Mscolab(object):
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
         self._create_operation("flight1234", "Description flight1234")
+        qt_wait_until(lambda: self.window.listOperationsMSC.model().rowCount() == 1)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None

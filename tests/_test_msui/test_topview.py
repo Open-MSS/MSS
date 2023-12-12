@@ -35,6 +35,7 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
+from tests.utils import qt_wait_until
 
 
 class Test_MSS_TV_MapAppearanceDialog(object):
@@ -334,13 +335,13 @@ class Test_TopViewWMS(object):
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
-        image_displayed_spy = QtTest.QSignalSpy(self.wms_control.image_displayed)
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        image_displayed_spy.wait()
+        qt_wait_until(lambda: self.window.getView().map.image is not None)
         assert self.window.getView().map.image is not None
         self.window.getView().set_settings({})
         self.window.getView().clear_figure()
+        qt_wait_until(lambda: self.window.getView().map.image is None)
         assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()
         assert mockbox.critical.call_count == 0
