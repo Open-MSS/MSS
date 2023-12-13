@@ -85,6 +85,9 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 </FlightTrack>
 """
 
+# accounts on a database on the server
+DIRECT_LOGIN = True
+
 # enable login by identity provider
 USE_SAML2 = False
 

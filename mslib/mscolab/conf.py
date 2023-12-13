@@ -117,6 +117,9 @@ class default_mscolab_settings:
     # enable login by identity provider
     USE_SAML2 = False
 
+    # accounts on a database on the server
+    DIRECT_LOGIN = True
+
     # Enable SSL certificate verification during SSO between MSColab and IdP
     ENABLE_SSO_SSL_CERT_VERIFICATION = True
 
