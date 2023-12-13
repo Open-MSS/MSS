@@ -250,8 +250,6 @@ class Test_Mscolab_connect_window():
         QtWidgets.QApplication.processEvents()
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab(object):
     sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
     # import/export plugins
@@ -386,7 +384,6 @@ class Test_Mscolab(object):
             imported_wp = self.window.mscolab.waypoints_model
             assert len(imported_wp.waypoints) == name[2]
 
-    @pytest.mark.skip("Runs in a timeout locally > 60s")
     def test_work_locally_toggle(self):
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -405,10 +402,8 @@ class Test_Mscolab(object):
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
-    @pytest.mark.skip("fails often on github on a timeout >60s")
-    @mock.patch("mslib.msui.mscolab.QtWidgets.QErrorMessage.showMessage")
     @mock.patch("mslib.msui.mscolab.get_open_filename", return_value=os.path.join(sample_path, u"example.ftml"))
-    def test_browse_add_operation(self, mockopen, mockmessage):
+    def test_browse_add_operation(self, mockopen):
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user("something", "something@something.org", "something")
@@ -425,7 +420,9 @@ class Test_Mscolab(object):
         QtWidgets.QApplication.processEvents()
         okWidget = self.window.mscolab.add_proj_dialog.buttonBox.button(
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
-        QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
+            m.assert_called_once()
         # we need to wait for the update of the operation list
         QtTest.QTest.qWait(200)
         QtWidgets.QApplication.processEvents()
@@ -472,7 +469,6 @@ class Test_Mscolab(object):
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
     def test_handle_delete_operation(self, mocktext):
-        # pytest.skip('needs a review for the delete button pressed. Seems to delete a None operation')
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: "berta@something.org"}})
         self._create_user("berta", "berta@something.org", "something")

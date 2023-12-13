@@ -286,8 +286,6 @@ class Test_MSSTopViewWindow(object):
             assert mockbox.critical.call_count == 0
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_TopViewWMS(object):
     @pytest.fixture(autouse=True)
     def setup(self, mswms_server, qapp):

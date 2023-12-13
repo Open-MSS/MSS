@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import mock
 import pytest
 from tests._test_msui.test_mscolab_merge_waypoints import Test_Mscolab_Merge_Waypoints
@@ -32,9 +31,6 @@ from mslib.msui import flighttrack as ft
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
-# ToDo Understand why this needs to be skipped, it runs when direct called
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
     @pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")

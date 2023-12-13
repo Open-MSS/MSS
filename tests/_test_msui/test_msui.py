@@ -264,8 +264,7 @@ class Test_MSSSideViewWindow(object):
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_open_config(self, mockbox):
-        pytest.skip("To be done")
-        self.window.actionConfigurationEditor.trigger()
+        self.window.actionConfiguration.trigger()
         QtWidgets.QApplication.processEvents()
         self.window.config_editor.close()
         assert mockbox.critical.call_count == 0
@@ -328,22 +327,21 @@ class Test_MSSSideViewWindow(object):
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
-    @pytest.mark.skip("needs to be refactored to become independent")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=export_plugins)
     def test_add_plugins(self, mockopen, mockbox):
         assert len(self.window.menuImportFlightTrack.actions()) == 2
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
-        assert len(self.window.import_plugins) == 1
-        assert len(self.window.export_plugins) == 1
+        assert len(self.window.import_plugins) == 0
+        assert len(self.window.export_plugins) == 0
 
         self.window.remove_plugins()
         self.window.add_import_plugins("qt")
         self.window.add_export_plugins("qt")
         assert len(self.window.import_plugins) == 1
         assert len(self.window.export_plugins) == 1
-        assert len(self.window.menuImportFlightTrack.actions()) == 2
-        assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
+        assert len(self.window.menuImportFlightTrack.actions()) == 3
+        assert len(self.window.menuExportActiveFlightTrack.actions()) == 3
         assert mockbox.critical.call_count == 0
 
         self.window.remove_plugins()
@@ -363,8 +361,8 @@ class Test_MSSSideViewWindow(object):
         self.window.remove_plugins()
         assert len(self.window.import_plugins) == 0
         assert len(self.window.export_plugins) == 0
-        assert len(self.window.menuImportFlightTrack.actions()) == 1
-        assert len(self.window.menuExportActiveFlightTrack.actions()) == 1
+        assert len(self.window.menuImportFlightTrack.actions()) == 2
+        assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)

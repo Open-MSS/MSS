@@ -105,8 +105,6 @@ class Test_MSSLinearViewWindow(object):
         assert mockdlg.return_value.destroy.call_count == 1
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_LinearViewWMS(object):
     @pytest.fixture(autouse=True)
     def setup(self, mswms_server, qapp):

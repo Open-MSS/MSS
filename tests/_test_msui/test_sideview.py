@@ -132,7 +132,6 @@ class Test_MSSSideViewWindow(object):
         assert mockdlg.return_value.exec_.call_count == 1
         assert mockdlg.return_value.destroy.call_count == 1
 
-    @pytest.mark.skip("fails with mockbox.critical.call_count in reverse order")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_insert_point(self, mockbox):
         """
@@ -163,8 +162,6 @@ class Test_MSSSideViewWindow(object):
         assert mockbox.critical.call_count == 0
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_SideViewWMS(object):
     @pytest.fixture(autouse=True)
     def setup(self, mswms_server, qapp):

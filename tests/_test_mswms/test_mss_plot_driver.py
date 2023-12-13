@@ -186,7 +186,6 @@ class Test_VSec(object):
         assert noframe != img
 
     def test_VS_LagrantoTrajStyle_PL_01(self):
-        pytest.skip("data not available")
         img = self.plot(mpl_vsec_styles.VS_LagrantoTrajStyle_PL_01(driver=self.vsec))
         assert img is not None
         noframe = self.plot(mpl_vsec_styles.VS_LagrantoTrajStyle_PL_01(driver=self.vsec), noframe=True)
