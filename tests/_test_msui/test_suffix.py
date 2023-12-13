@@ -28,7 +28,6 @@
 """
 import pytest
 
-import sys
 from PyQt5 import QtWidgets, QtTest
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW

@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import pytest
-import sys
 from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib.msui import mss
 
