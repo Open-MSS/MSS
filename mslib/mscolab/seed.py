@@ -394,7 +394,6 @@ def seed_data():
             db_perm = Permission(perm['u_id'], perm['op_id'], perm['access_level'])
             db.session.add(db_perm)
         db.session.commit()
-        db.session.close()
 
     with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
         file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
