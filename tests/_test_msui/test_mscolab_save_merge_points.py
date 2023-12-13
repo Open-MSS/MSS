@@ -24,13 +24,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import pytest
+import mock
 from tests._test_msui.test_mscolab_merge_waypoints import Test_Mscolab_Merge_Waypoints
 from mslib.msui import flighttrack as ft
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
-@pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
     def test_save_merge_points(self):
         self.emailid = "mergepoints@alpha.org"
@@ -53,7 +52,9 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
         QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton, delay=1)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(2)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.serverOptionsCb.setCurrentIndex(2)
+            m.assert_called_once()
         QtWidgets.QApplication.processEvents()
         # get the updated waypoints model from the server
         # ToDo understand why requesting in follow up test of self.window.waypoints_model not working

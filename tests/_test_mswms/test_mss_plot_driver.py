@@ -186,7 +186,6 @@ class Test_VSec:
         assert noframe != img
 
     def test_VS_LagrantoTrajStyle_PL_01(self):
-        pytest.skip("data not available")
         img = self.plot(mpl_vsec_styles.VS_LagrantoTrajStyle_PL_01(driver=self.vsec))
         assert img is not None
         noframe = self.plot(mpl_vsec_styles.VS_LagrantoTrajStyle_PL_01(driver=self.vsec), noframe=True)
@@ -199,7 +198,6 @@ class Test_VSec:
         assert noframe != img
 
     def test_VS_gallery_template(self):
-        pytest.skip('Test can be biased. In pytest-reverse when there is not a plot_examples it can''t import')
         # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)
@@ -504,7 +502,6 @@ class Test_HSec:
         assert noframe != img
 
     def test_HS_gallery_template(self):
-        pytest.skip('Test can be biased. In pytest-reverse when there is not a plot_examples it can''t import')
         # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)

@@ -117,7 +117,6 @@ class Test_MSSSideViewWindow:
         assert mockdlg.return_value.exec_.call_count == 1
         assert mockdlg.return_value.destroy.call_count == 1
 
-    @pytest.mark.skip("fails with mockbox.critical.call_count in reverse order")
     def test_insert_point(self):
         """
         Test inserting a point inside and outside the canvas
