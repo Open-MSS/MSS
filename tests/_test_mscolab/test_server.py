@@ -57,7 +57,7 @@ class Test_Server(TestCase):
 
     def setUp(self):
         handle_db_reset()
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.userdata = 'UV10@uv10.org', 'UV10', 'uv10'
 
     def tearDown(self):
         pass

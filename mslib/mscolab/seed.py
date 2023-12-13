@@ -231,52 +231,52 @@ def seed_data():
             'username': 'a',
             'id': 8,
             'password': 'a',
-            'emailid': 'a'
+            'emailid': 'a@notexisting.org'
         }, {
             'username': 'b',
             'id': 9,
             'password': 'b',
-            'emailid': 'b'
+            'emailid': 'b@notexisting.org'
         }, {
             'username': 'c',
             'id': 10,
             'password': 'c',
-            'emailid': 'c'
+            'emailid': 'c@notexisting.org'
         }, {
             'username': 'd',
             'id': 11,
             'password': 'd',
-            'emailid': 'd'
+            'emailid': 'd@notexisting.org'
         }, {
             'username': 'test1',
             'id': 12,
             'password': 'test1',
-            'emailid': 'test1'
+            'emailid': 'test1@notexisting.org'
         }, {
             'username': 'test2',
             'id': 13,
             'password': 'test2',
-            'emailid': 'test2'
+            'emailid': 'test2@notexisting.org'
         }, {
             'username': 'test3',
             'id': 14,
             'password': 'test3',
-            'emailid': 'test3'
+            'emailid': 'test3@notexisting.org'
         }, {
             'username': 'test4',
             'id': 15,
             'password': 'test4',
-            'emailid': 'test4'
+            'emailid': 'test4@notexisting.org'
         }, {
             'username': 'mscolab_user',
             'id': 16,
             'password': 'password',
-            'emailid': 'mscolab_user'
+            'emailid': 'mscolab_user@notexisting.org'
         }, {
             'username': 'merge_waypoints_user',
             'id': 17,
             'password': 'password',
-            'emailid': 'merge_waypoints_user'
+            'emailid': 'merge_waypoints_user@notexisting.org'
         }]
         for user in users:
             db_user = User(user['emailid'], user['username'], user['password'])

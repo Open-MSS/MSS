@@ -39,17 +39,28 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
-    password = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255))
     registered_on = db.Column(db.DateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(db.DateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
-    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None, authentication_backend='local'):
+    def __init__(self, emailid, username, password=None, confirmed=False,
+                 confirmed_on=None, authentication_backend='local'):
+        if authentication_backend == 'local' and password is None or len(str(password.strip())) == 0:
+            logging.error('Password for user "%s" is empty and backend is local' % username)
+            raise ValueError('Password is empty and backend is local')
         self.username = username
         self.emailid = emailid
-        self.hash_password(password)
+        if authentication_backend == 'local':
+            if len(password.strip()) == 0:
+                logging.error('password for user "%s" is empty' % username)
+                raise ValueError('Password is empty')
+            self.hash_password(password)
+        else:
+            # we don't store a password for a different backend than local
+            self.password = None
         self.registered_on = datetime.datetime.now()
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on
@@ -66,25 +77,28 @@ class User(db.Model):
 
     def generate_auth_token(self, expiration=None):
         # Importing conf here to avoid loading settings on opening chat window
+        # ToDo it might be better to rename expiration to default_expiration_time or similar, to clarify that this
+        # will be used if the settings do not specify an expiration.
         from mslib.mscolab.conf import mscolab_settings
         expiration = mscolab_settings.__dict__.get('EXPIRATION', expiration)
         if expiration is None:
             expiration = 864000
-            token = jwt.encode(
-                {
-                    "id": self.id,
-                    "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
-                },
-                mscolab_settings.SECRET_KEY,
-                algorithm="HS256"
-            )
-            return token
+        token = jwt.encode(
+            {
+                "id": self.id,
+                "exp": datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=expiration)
+            },
+            mscolab_settings.SECRET_KEY,
+            algorithm="HS256"
+        )
+        return token
 
     @staticmethod
     def verify_auth_token(token):
         """
         token is the authentication string provided by client for each request
         """
+        # ToDo move to server module
         # Importing conf here to avoid loading settings on opening chat window
         from mslib.mscolab.conf import mscolab_settings
         try:
@@ -94,8 +108,8 @@ class User(db.Model):
                 leeway=datetime.timedelta(seconds=30),
                 algorithms=["HS256"]
             )
-        except Exception as e:
-            logging.debug("Bad Token %s", str(e))
+        except jwt.InvalidTokenError:
+            logging.debug("Bad Token")
             return None
 
         user = User.query.filter_by(id=data.get('id')).first()

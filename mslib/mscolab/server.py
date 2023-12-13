@@ -153,19 +153,23 @@ def check_login(emailid, password):
 
 
 def register_user(email, password, username):
-    user = User(email, username, password)
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
         return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
         return {"success": False, "message": "Your username cannot contain @ symbol!"}
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
+        return {"success": False, "message": "Your username or email cannot be empty"}
+    # check user exists
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
         return {"success": False, "message": "This email ID is already taken!"}
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
+    # new user
+    user = User(email, username, password)
     result = fm.modify_user(user, action="create")
     return {"success": result}
 
@@ -208,24 +212,26 @@ def get_idp_entity_id(selected_idp):
     return None
 
 
-def create_or_update_idp_user(email, username, token, authentication_backend):
+def create_or_update_idp_user(email, username, authentication_backend):
     """
-    Creates or updates an idp user in the system based on the provided email,
+    Creates or updates an idp user profile in the system based on the provided email,
      username, token, and authentication backend.
     :param email: idp users email
     :param username: idp users username
-    :param token: authentication token
     :param authentication_backend: authenticated identity providers name
     :return: bool : query success or not
     """
+    if authentication_backend == 'local':
+        logging.error("wrong backend name for IDP users defined")
+        raise ValueError("IDP user creation needs a valid authentication_backend name")
     user = User.query.filter_by(emailid=email).first()
     if not user:
-        user = User(email, username, password=token, confirmed=False, confirmed_on=None,
+        user = User(email, username, password=None, confirmed=False, confirmed_on=None,
                     authentication_backend=authentication_backend)
         result = fm.modify_user(user, action="create")
     else:
         user.authentication_backend = authentication_backend
-        user.hash_password(token)
+        user.password = None
         result = fm.modify_user(user, action="update_idp_user")
     return result
 
@@ -815,8 +821,7 @@ if mscolab_settings.USE_SAML2:
                         return render_template('errors/403.html'), 403
 
                 if email is not None and username is not None:
-                    idp_user_db_state = create_or_update_idp_user(email,
-                                                                  username, token, idp_config['idp_identity_name'])
+                    idp_user_db_state = create_or_update_idp_user(email,use rname, idp_config['idp_identity_name'])
                     if idp_user_db_state:
                         return render_template('idp/idp_login_success.html', token=token), 200
                     return render_template('errors/500.html'), 500
