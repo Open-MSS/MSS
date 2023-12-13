@@ -821,7 +821,7 @@ if mscolab_settings.USE_SAML2:
                         return render_template('errors/403.html'), 403
 
                 if email is not None and username is not None:
-                    idp_user_db_state = create_or_update_idp_user(email,use rname, idp_config['idp_identity_name'])
+                    idp_user_db_state = create_or_update_idp_user(email, username, idp_config['idp_identity_name'])
                     if idp_user_db_state:
                         return render_template('idp/idp_login_success.html', token=token), 200
                     return render_template('errors/500.html'), 500
