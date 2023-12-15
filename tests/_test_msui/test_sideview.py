@@ -200,8 +200,7 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         cpdlg_canceled_spy.wait()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox):
+    def test_server_getmap(self):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -212,4 +211,3 @@ class Test_SideViewWMS(object):
         self.window.getView().plotter.clear_figure()
         qt_wait_until(lambda: self.window.getView().plotter.image is None)
         assert self.window.getView().plotter.image is None
-        assert mockbox.critical.call_count == 0

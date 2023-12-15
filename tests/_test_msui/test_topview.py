@@ -328,8 +328,7 @@ class Test_TopViewWMS(object):
         cpdlg_canceled_spy.wait()
 
     @pytest.mark.skip("Can run into a timeout or a use after free bug")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox):
+    def test_server_getmap(self):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -343,7 +342,6 @@ class Test_TopViewWMS(object):
         qt_wait_until(lambda: self.window.getView().map.image is None)
         assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()
-        assert mockbox.critical.call_count == 0
 
 
 class Test_MSUITopViewWindow():

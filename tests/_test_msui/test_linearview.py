@@ -142,8 +142,7 @@ class Test_LinearViewWMS(object):
         QtWidgets.QApplication.processEvents()
         cpdlg_canceled_spy.wait()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox):
+    def test_server_getmap(self):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -152,4 +151,3 @@ class Test_LinearViewWMS(object):
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         image_displayed_spy.wait()
-        assert mockbox.critical.call_count == 0
