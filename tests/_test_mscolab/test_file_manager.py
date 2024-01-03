@@ -95,7 +95,7 @@ class Test_FileManager(TestCase):
             # cannot create a user a second time
             assert self.fm.modify_user(user, action="create") is False
             # confirming the user
-            confirm_time = datetime.datetime.now() + datetime.timedelta(days=1)
+            confirm_time = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=1)
             self.fm.modify_user(user_query, attribute="confirmed_on", value=confirm_time)
             self.fm.modify_user(user_query, attribute="confirmed", value=True)
             user_query = User.query.filter_by(id=user.id).first()

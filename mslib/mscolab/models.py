@@ -50,7 +50,7 @@ class User(db.Model):
         self.username = username
         self.emailid = emailid
         self.hash_password(password)
-        self.registered_on = datetime.datetime.now()
+        self.registered_on = datetime.datetime.now(tz=datetime.timezone.utc)
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on
         self.authentication_backend = authentication_backend

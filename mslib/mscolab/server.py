@@ -332,7 +332,7 @@ def confirm_email(token):
         if user.confirmed:
             return render_template('user/confirmed.html', username=user.username)
         else:
-            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now())
+            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
             fm.modify_user(user, attribute="confirmed", value=True)
             return render_template('user/confirmed.html', username=user.username)
 
