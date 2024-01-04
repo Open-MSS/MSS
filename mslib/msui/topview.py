@@ -191,8 +191,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         """
         Set up user interface, connect signal/slots.
         """
-        if parent is None:
-            parent = mainwindow
         super().__init__(parent, model, _id)
         logging.debug(_id)
         self.settings_tag = "topview"
