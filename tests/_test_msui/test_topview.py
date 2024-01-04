@@ -76,6 +76,9 @@ class Test_MSSTopViewWindow(object):
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
         yield
+        self.window.force_close = True
+        self.window.close()
+        self.window.deleteLater()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.main_window.close()
         self.main_window.deleteLater()
@@ -312,6 +315,9 @@ class Test_TopViewWMS(object):
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
+        self.window.force_close = True
+        self.window.close()
+        self.window.deleteLater()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.main_window.close()
         self.main_window.deleteLater()

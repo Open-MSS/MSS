@@ -53,6 +53,9 @@ class Test_MultipleFlightpathControlWidget():
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
         yield
+        self.widget.force_close = True
+        self.widget.close()
+        self.widget.deleteLater()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         self.window.deleteLater()
