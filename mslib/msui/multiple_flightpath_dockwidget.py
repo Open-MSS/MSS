@@ -173,7 +173,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.create_list_item(wp_model)
 
         self.activate_flighttrack()
-        self.multipleflightrack_worker = Worker(self, None)
+        self.multipleflightrack_worker = Worker(None)
 
     @QtCore.pyqtSlot()
     def logout(self):

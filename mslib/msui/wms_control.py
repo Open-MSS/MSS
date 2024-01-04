@@ -514,7 +514,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.pdlg.hide()
 
         # Progress dialog to inform the user about ongoing capability requests.
-        self.capabilities_worker = Worker(self, None)
+        self.capabilities_worker = Worker(None)
         self.cpdlg = QtWidgets.QProgressDialog(
             "retrieving wms capabilities...", "Cancel", 0, 10, parent=self)
         self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
@@ -665,8 +665,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                                            self.tr("ERROR: We cannot parse unicode URLs!"))
             self.cpdlg.hide()
 
-        Worker.create(self, lambda: MSUIWebMapService(base_url, version=version,
-                                                      username=auth_username, password=auth_password),
+        Worker.create(lambda: MSUIWebMapService(base_url, version=version,
+                                                username=auth_username, password=auth_password),
                       on_success, on_failure)
 
     def wms_url_changed(self, text):
@@ -748,7 +748,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self.cpdlg.hide()
 
         self.display_capabilities_dialog()
-        Worker.create(self, lambda: requests.get(base_url, params=params, timeout=(5, 60)),
+        Worker.create(lambda: requests.get(base_url, params=params, timeout=(5, 60)),
                       on_success, on_failure)
 
     def activate_wms(self, wms, cache=False):
