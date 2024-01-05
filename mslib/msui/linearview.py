@@ -105,6 +105,9 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         self.openTool(WMS + 1)
 
+    def __del__(self):
+        del self.mpl.canvas.waypoints_interactor
+
     def update_predefined_maps(self, extra):
         pass
 

@@ -256,6 +256,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
             self.mainwindow_signal_login_mscolab.connect(self.login)
 
+    def __del__(self):
+        del self.mpl.canvas.waypoints_interactor
+
     @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def update_active_flighttrack(self, active_flighttrack):
         """
