@@ -62,7 +62,6 @@ jobs:
         | sed -e "s/menuinst.*//" \
         | sed -e "s/.*://" > reqs.txt \
         && cat requirements.d/development.txt >> reqs.txt \
-        && echo pyvirtualdisplay >> reqs.txt \
         && cat reqs.txt \
         && mamba env remove -n mss-${{ inputs.branch_name }}-env \
         && mamba create -y -n mss-${{ inputs.branch_name }}-env --file reqs.txt
@@ -82,7 +81,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && pytest -v --durations=20 --reverse --cov=mslib tests
+        && xvfb-run pytest -v --durations=20 --reverse --cov=mslib tests
 
     - name: Run tests in parallel
       if: ${{ success() && inputs.xdist == 'yes' }}
@@ -92,7 +91,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && pytest -vv -n logical --dist loadfile --max-worker-restart 4 --reverse tests
+        && xvfb-run pytest -vv -n logical --dist loadfile --max-worker-restart 4 --reverse tests
 
     - name: Collect coverage
       if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
