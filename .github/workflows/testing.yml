@@ -81,7 +81,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && xvfb-run pytest -v --durations=20 --reverse --cov=mslib tests
+        && env QT_QPA_PLATFORM=offscreen pytest -v --durations=20 --reverse --cov=mslib tests
 
     - name: Run tests in parallel
       if: ${{ success() && inputs.xdist == 'yes' }}
@@ -91,7 +91,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && xvfb-run pytest -vv -n logical --dist loadfile --max-worker-restart 4 --reverse tests
+        && env QT_QPA_PLATFORM=offscreen pytest -vv -n logical --dist loadfile --max-worker-restart 4 --reverse tests
 
     - name: Collect coverage
       if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
