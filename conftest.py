@@ -86,15 +86,6 @@ def pytest_generate_tests(metafunc):
         msui_settings_file_fs.close()
 
 
-if os.getenv("TESTS_VISIBLE") == "TRUE":
-    Display = None
-else:
-    try:
-        from pyvirtualdisplay import Display
-    except ImportError:
-        Display = None
-
-
 def generate_initial_config():
     """Generate an initial state for the configuration directory in tests.constants.ROOT_FS
     """
@@ -252,17 +243,3 @@ def reset_config():
 
 # Make fixtures available everywhere
 from tests.fixtures import *
-
-
-@pytest.fixture(scope="session", autouse=True)
-def configure_testsetup(request):
-    if Display is not None:
-        # needs for invisible window output xvfb installed,
-        # default backend for visible output is xephyr
-        # by visible=0 you get xvfb
-        VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
-        VIRT_DISPLAY.start()
-        yield
-        VIRT_DISPLAY.stop()
-    else:
-        yield
