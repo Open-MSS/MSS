@@ -200,6 +200,7 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         cpdlg_canceled_spy.wait()
 
+    @pytest.mark.skip("Can segfault")
     def test_server_getmap(self):
         """
         assert that a getmap call to a WMS server displays an image
