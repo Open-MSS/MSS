@@ -31,8 +31,8 @@ from mslib.msui import flighttrack as ft
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
+@pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
-    @pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_merge_points(self, mockbox):
         self.emailid = "mergepoints@alpha.org"
