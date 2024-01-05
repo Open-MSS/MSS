@@ -6,6 +6,7 @@ py
 mock
 pycodestyle
 pytest
+pytest-qt
 pytest-xdist
 pytest-cov
 pytest-timeout

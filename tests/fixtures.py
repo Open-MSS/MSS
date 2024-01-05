@@ -39,19 +39,8 @@ from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok, qt_wait_until
 
 
-# This global keeps the QApplication from getting gc'ed to early. The qapp
-# fixture and using this global is inspired by what pytest-qt does as well and
-# this global seems to fix some issues with deleted QObject's that came up.
-_qapp_instance = None
-
-
 @pytest.fixture
-def qapp():
-    qapp = QtWidgets.QApplication.instance()
-    if qapp is None:
-        global _qapp_instance
-        qapp = _qapp_instance = QtWidgets.QApplication([])
-
+def qapp(qapp):
     # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
     with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
             mock.patch("PyQt5.QtWidgets.QMessageBox.information") as i, \
@@ -71,11 +60,9 @@ def qapp():
             lambda: len(set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets())) == 0
         )
     except TimeoutError:
-        # Not all widgets were closed properly, fail the test and delete all remaining widgets
+        # Not all widgets were closed properly, fail the test
         widgets = set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets())
         assert len(widgets) == 0, f"There are Qt widgets left open at the end of the test!\n{widgets=}"
-        for widget in widgets:
-            sip.delete(widget)
 
 
 @pytest.fixture(scope="session")
