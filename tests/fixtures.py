@@ -112,7 +112,8 @@ def mscolab_session_server(mscolab_session_managers):
     host = "127.0.0.1"
     server = werkzeug.serving.make_server(host=host, port=0, app=app, threaded=True)
     port = server.socket.getsockname()[1]
-    process = multiprocessing.Process(target=server.serve_forever, daemon=True)
+    ctx = multiprocessing.get_context("fork")
+    process = ctx.Process(target=server.serve_forever, daemon=True)
     process.start()
     url = f"{scheme}://{host}:{port}"
     app.config['URL'] = url
@@ -141,7 +142,8 @@ def mswms_server():
     host = "127.0.0.1"
     server = werkzeug.serving.make_server(host=host, port=0, app=mslib.mswms.mswms.application, threaded=True)
     port = server.socket.getsockname()[1]
-    process = multiprocessing.Process(target=server.serve_forever, daemon=True)
+    ctx = multiprocessing.get_context("fork")
+    process = ctx.Process(target=server.serve_forever, daemon=True)
     process.start()
     url = f"{scheme}://{host}:{port}"
     while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
