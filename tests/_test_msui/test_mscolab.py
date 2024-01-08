@@ -43,7 +43,6 @@ from tests.utils import mscolab_start_server, create_msui_settings_file, Excepti
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.mscolab.mscolab import handle_db_reset
-from tests.constants import MSUI_CONFIG_PATH
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 PORTS = list(range(25000, 25500))
@@ -52,7 +51,6 @@ PORTS = list(range(25000, 25500))
 class Test_Mscolab_connect_window():
     def setup_method(self):
         handle_db_reset()
-        self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
@@ -261,11 +259,6 @@ class Test_Mscolab_connect_window():
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def _reset_config_file(self):
-        create_msui_settings_file('{ }')
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
-        read_config_file(path=config_file)
-
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
@@ -282,7 +275,6 @@ class Test_Mscolab(object):
 
     def setup_method(self):
         handle_db_reset()
-        self._reset_config_file()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
@@ -792,11 +784,6 @@ class Test_Mscolab(object):
         okWidget = self.connect_window.newUserBb.button(self.connect_window.newUserBb.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-
-    def _reset_config_file(self):
-        create_msui_settings_file('{ }')
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
-        read_config_file(path=config_file)
 
     def _create_operation(self, path, description, category="example"):
         self.window.actionAddOperation.trigger()
