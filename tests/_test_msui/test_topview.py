@@ -359,7 +359,7 @@ class Test_TopViewWMS(object):
         assert mockbox.critical.call_count == 0
 
 
-class Test_MSUITopViewWindow():
+class Test_MSUITopViewWindow:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
 

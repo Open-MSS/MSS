@@ -32,7 +32,7 @@ import pytest
 from mslib.mswms import mswms
 
 
-class _Application():
+class _Application:
     """ dummy to skip starting the wms server"""
     @staticmethod
     def run(host, port):
