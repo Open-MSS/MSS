@@ -156,6 +156,10 @@ except ImportError as ex:
             #     }
             # },
         ]
+        #  Setting up the path from environment variables to settings is only for testing purposes
+        mscolab_settings.MSCOLAB_SSO_DIR = os.getenv("TESTING_MSCOLAB_SSO_DIR", mscolab_settings.MSCOLAB_SSO_DIR)
+        mscolab_settings.USE_SAML2 = bool(os.getenv("TESTING_USE_SAML2", mscolab_settings.USE_SAML2))
+
         if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"):
             with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
                 yaml_data = yaml.safe_load(fobj)
