@@ -32,7 +32,7 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 import mslib.msui.satellite_dockwidget as sd
 
 
-class Test_SatelliteDockWidget(object):
+class Test_SatelliteDockWidget:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.view = mock.Mock()

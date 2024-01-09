@@ -32,7 +32,7 @@ import werkzeug
 LOGGER = logging.getLogger(__name__)
 
 
-class TestCIMultiDict(object):
+class TestCIMultiDict:
 
     class CaseInsensitiveMultiDict(werkzeug.datastructures.ImmutableMultiDict):
         """Extension to werkzeug.datastructures.ImmutableMultiDict

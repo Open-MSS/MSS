@@ -269,7 +269,7 @@ class Test_Mscolab_connect_window:
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_Mscolab(object):
+class Test_Mscolab:
     sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
     # import/export plugins
     import_plugins = {

@@ -42,7 +42,7 @@ from tests.utils import wait_until_signal
 PORTS = list(range(26000, 26500))
 
 
-class Test_MSS_LV_Options_Dialog(object):
+class Test_MSS_LV_Options_Dialog:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSUI_LV_Options_Dialog(settings=_DEFAULT_SETTINGS_LINEARVIEW)
@@ -67,7 +67,7 @@ class Test_MSS_LV_Options_Dialog(object):
         assert mockcrit.critical.call_count == 0
 
 
-class Test_MSSLinearViewWindow(object):
+class Test_MSSLinearViewWindow:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
@@ -116,7 +116,7 @@ class Test_MSSLinearViewWindow(object):
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_LinearViewWMS(object):
+class Test_LinearViewWMS:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.port = PORTS.pop()

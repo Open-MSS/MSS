@@ -43,7 +43,7 @@ def test_skyfield_data_expiration(recwarn):
     assert len(recwarn) == 0, [_x.message for _x in recwarn]
 
 
-class Test_RemoteSensingControlWidget(object):
+class Test_RemoteSensingControlWidget:
     """
     Tests about RemoteSensingControlWidget
     """

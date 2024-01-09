@@ -1,3 +1,3 @@
-class mscolab_auth(object):
+class mscolab_auth:
      password = "please use the methods to save only the encrypted value"
      allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]

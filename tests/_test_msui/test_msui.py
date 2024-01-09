@@ -158,7 +158,7 @@ class Test_MSS_ShortcutDialog:
     # ToDo we need a test for reset_highlight when e.g. Transparent was selected and afterwards topview was destroyed
 
 
-class Test_MSSSideViewWindow(object):
+class Test_MSSSideViewWindow:
     # temporary file paths to test open feature
     sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
     open_csv = os.path.join(sample_path, "example.csv")
