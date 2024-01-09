@@ -86,7 +86,7 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 """
 
 # enable login by identity provider
-USE_SAML2 = False
+use_saml2 = False
 
 # looks for a given category forn a operation ending with GROUP_POSTFIX
 # e.g. category = Tex will look for TexGroup

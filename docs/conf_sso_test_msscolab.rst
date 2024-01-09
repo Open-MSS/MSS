@@ -11,7 +11,7 @@ To set up a local identity provider with the mscolab server, you'll first need t
 
     1. Initial Steps
     2. Generate Keys and Certificates
-    3. Enable USE_SAML2
+    3. Enable use_saml2
     4. Generate Metadata Files
     5. Start the Identity Provider
     6. Start the mscolab Server
@@ -29,13 +29,13 @@ Before getting started, you should correctly activate the environments, set the 
 
 This involves generating both `.key` files and `.crt` files for both the Identity provider and mscolab server and `backend_saml.yaml` file. 
 
-Before running the command make sure to set `USE_SAML2 = False` in your `mscolab_settings.py` file,  You can accomplish this by following these steps:
+Before running the command make sure to set `use_saml2 = False` in your `mscolab_settings.py` file,  You can accomplish this by following these steps:
 
 - Add to the `PYTHONPATH` where your `mscolab_settings.py`.
-- Add `USE_SAML2 = False` in your `mscolab_settings.py` file.
+- Add `use_saml2 = False` in your `mscolab_settings.py` file.
 
 .. note::
-    If you set `USE_SAML2 = True` without keys and certificates, this will not execute. So, make sure to set `USE_SAML2 = False` before executing the command.
+    If you set `use_saml2 = True` without keys and certificates, this will not execute. So, make sure to set `use_saml2 = False` before executing the command.
 
 If everything is correctly set, you can generate keys and certificates simply by running
 
@@ -47,15 +47,15 @@ If everything is correctly set, you can generate keys and certificates simply by
     This process generating keys and certificates for both Identity provider and mscolab server by default, If you need configure with different keys and certificates for the Identity provider, You should manually update the path of `SERVER_CERT` with the path of the generated .crt file for Identity provider, and `SERVER_KEY` with the path of the generated .key file for the Identity provider in the file `MSS/mslib/idp/idp_conf.py`.
 
 
-3. Enable USE_SAML2
+3. Enable use_saml2
 -------------------
 
 To enable SAML2-based login (identity provider-based login), 
 
-- To start the process update `USE_SAML2 = True` in your `mscolab_settings.py` file.
+- To start the process update `use_saml2 = True` in your `mscolab_settings.py` file.
 
 .. note::
-    After enabling the `USE_SAML2` option, the subsequent step involves adding the `CONFIGURED_IDPS` dictionary for the MSS Colab Server. This dictionary must contain keys for each active Identity Provider, denoted by their `idp_identity_name`, along with their respective `idp_name`. Once this dictionary is configured, it should be utilized to update several aspects of the mscolab server, including the SAML2Client configuration in the .yml file. This ensures seamless integration with the enabled IDPs. By default, configuration has been set up for the localhost IDP, and any additional configurations required should be performed by the developer.
+    After enabling the `use_saml2` option, the subsequent step involves adding the `CONFIGURED_IDPS` dictionary for the MSS Colab Server. This dictionary must contain keys for each active Identity Provider, denoted by their `idp_identity_name`, along with their respective `idp_name`. Once this dictionary is configured, it should be utilized to update several aspects of the mscolab server, including the SAML2Client configuration in the .yml file. This ensures seamless integration with the enabled IDPs. By default, configuration has been set up for the localhost IDP, and any additional configurations required should be performed by the developer.
 
 4. Generate metadata files
 --------------------------
@@ -63,7 +63,7 @@ To enable SAML2-based login (identity provider-based login),
 This involves generating necessary metadata files for both the identity provider and the service provider. You can generate them by simply running the below command.
 
 .. note::
-    Before executing this, you should set `USE_SAML2=True` as described in the third step(Enable USE_SAML2).
+    Before executing this, you should set `use_saml2=True` as described in the third step(Enable use_saml2).
 
 .. code:: text
 
