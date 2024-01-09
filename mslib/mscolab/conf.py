@@ -115,7 +115,7 @@ class default_mscolab_settings:
     GDPR = None
 
     # enable login by identity provider
-    USE_SAML2 = False
+     use_saml2 = False
 
     # Enable SSL certificate verification during SSO between MSColab and IdP
     ENABLE_SSO_SSL_CERT_VERIFICATION = True

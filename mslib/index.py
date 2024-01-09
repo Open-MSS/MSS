@@ -210,7 +210,7 @@ def create_app(name="", imprint=None, gdpr=None):
         else:
             return ""
 
-    @APP.route("/mss/gpdr")
+    @APP.route("/mss/gdpr")
     def gdpr():
         if file_exists(gdpr_file):
             content = get_content(gdpr_file)

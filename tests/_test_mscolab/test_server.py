@@ -81,7 +81,7 @@ class Test_Server(TestCase):
             response = test_client.get('/status')
             data = json.loads(response.text)
             assert "Mscolab server" in data['message']
-            assert True or False in data['USE_SAML2']
+            assert True or False in data[' use_saml2']
 
     def test_register_user(self):
         with self.app.test_client():
