@@ -187,7 +187,7 @@ def mscolab_ping_server(port):
     try:
         r = requests.get(url, timeout=(2, 10))
         data = json.loads(r.text)
-        if data['message'] == "Mscolab server" and isinstance(data['USE_SAML2'], bool):
+        if data['message'] == "Mscolab server" and isinstance(data[' use_saml2'], bool):
             return True
     except requests.exceptions.ConnectionError:
         return False
@@ -268,6 +268,7 @@ class ExceptionMock:
     with mock.patch("requests.get", new=ExceptionMock(requests.exceptions.ConnectionError).raise_exc):
         self._login()
     """
+
     def __init__(self, exc):
         self.exc = exc
 

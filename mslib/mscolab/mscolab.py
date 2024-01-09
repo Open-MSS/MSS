@@ -264,7 +264,7 @@ def handle_mscolab_metadata_init(repo_exists):
         This will generate necessary metada data file for sso in mscolab through localhost idp
 
         Before running this function:
-        - Ensure that USE_SAML2 is set to True.
+        - Ensure that  use_saml2 is set to True.
         - Generate the necessary keys and certificates and configure them in the .yaml
         file for the local IDP.
     """
@@ -477,7 +477,7 @@ def main():
                     This will generate necessary metada data file for sso in mscolab through localhost idp
 
                     Before running this function:
-                    - Ensure that USE_SAML2 is set to True.
+                    - Ensure that  use_saml2 is set to True.
                     - Generate the necessary keys and certificates and configure them in the .yaml
                     file for the local IDP.
 
