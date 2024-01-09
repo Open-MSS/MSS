@@ -25,8 +25,8 @@
     limitations under the License.
 """
 
-import sys
 import mock
+import pytest
 
 from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
@@ -34,8 +34,8 @@ import mslib.msui.wms_capabilities as wc
 
 class Test_WMSCapabilities:
 
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.capabilities = mock.Mock()
         self.capabilities.capabilities_document = u"Hölla die Waldfee".encode("utf-8")
         self.capabilities.provider = mock.Mock()
@@ -47,6 +47,8 @@ class Test_WMSCapabilities:
         self.capabilities.provider.contact.address = None
         self.capabilities.provider.contact.postcode = None
         self.capabilities.provider.contact.city = None
+        yield
+        QtWidgets.QApplication.processEvents()
 
     def start_window(self):
         self.window = wc.WMSCapabilitiesBrowser(
@@ -55,11 +57,6 @@ class Test_WMSCapabilities:
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
-
-    def teardown_method(self):
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_window_start(self, mockbox):

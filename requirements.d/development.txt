@@ -9,6 +9,7 @@ pytest
 pytest-cache
 pytest-pep8
 pytest-flake8
+pytest-qt
 pytest-xdist
 pytest-cov
 pytest-timeout
@@ -25,4 +26,3 @@ dnspython>=2.0.0, <2.3.0
 gsl==2.7.0
 boa
 xmlschema<2.5.0
-

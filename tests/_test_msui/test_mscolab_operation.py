@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import os
-import sys
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
@@ -52,7 +51,8 @@ class Actions:
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabOperation:
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -62,7 +62,6 @@ class Test_MscolabOperation:
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
@@ -77,16 +76,13 @@ class Test_MscolabOperation:
         self.chat_window = self.window.mscolab.chat_window
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.mscolab.logout()
         if self.window.mscolab.chat_window:
             self.window.mscolab.chat_window.hide()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 

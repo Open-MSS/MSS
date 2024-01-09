@@ -49,7 +49,7 @@ def test_keyring():
 
 def test_get_auth_from_url_and_name():
     # set start condition to prevent definitions from a test earlier
-    constants.AUTH_LOGIN_CACHE == {}
+    constants.AUTH_LOGIN_CACHE = {}
     # empty http_auth definition
     server_url = "http://example.com"
     http_auth = config_loader(dataset="MSS_auth")

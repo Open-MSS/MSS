@@ -26,7 +26,6 @@
 """
 
 
-import sys
 import mock
 import os
 import fs
@@ -67,9 +66,9 @@ def test_main():
 
 
 class Test_MSS_TutorialMode:
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.application.setApplicationDisplayName("MSUI")
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
+        qapp.setApplicationDisplayName("MSUI")
         self.main_window = msui_mw.MSUIMainWindow(tutorial_mode=True)
         self.main_window.create_new_flight_track()
         self.main_window.show()
@@ -77,11 +76,8 @@ class Test_MSS_TutorialMode:
             tutorial_mode=True)
         self.main_window.show_shortcuts(search_mode=True)
         self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
-
-    def teardown_method(self):
+        yield
         self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_tutorial_dir(self):
@@ -99,9 +95,12 @@ class Test_MSS_TutorialMode:
 
 
 class Test_MSS_AboutDialog:
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = msui_mw.MSUI_AboutDialog()
+        yield
+        self.window.hide()
+        QtWidgets.QApplication.processEvents()
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
@@ -109,25 +108,16 @@ class Test_MSS_AboutDialog:
         pattern = f'value="is:closed milestone:{__version__[:-1]}"'
         assert pattern in text.decode('utf-8')
 
-    def teardown_method(self):
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-
 
 class Test_MSS_ShortcutDialog:
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.main_window = msui_mw.MSUIMainWindow()
         self.main_window.show()
         self.shortcuts = msui_mw.MSUI_ShortcutsDialog()
-
-    def teardown_method(self):
+        yield
         self.shortcuts.hide()
         self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_shortcuts_present(self):
@@ -181,12 +171,12 @@ class Test_MSSSideViewWindow:
         # "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
     }
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.sample_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '../',
             'data/')
-        self.application = QtWidgets.QApplication(sys.argv)
 
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()
@@ -194,8 +184,7 @@ class Test_MSSSideViewWindow:
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         config_file = os.path.join(
             self.sample_path,
             'empty_msui_settings.json',
@@ -204,8 +193,6 @@ class Test_MSSSideViewWindow:
         for i in range(self.window.listViews.count()):
             self.window.listViews.item(i).window.hide()
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_no_updater(self):

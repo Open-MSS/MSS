@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import os
-import sys
 import fs
 import mock
 import pytest
@@ -47,16 +46,15 @@ PORTS = list(range(23000, 23500))
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints:
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
-
-    def teardown_method(self):
+        yield
         self.window.mscolab.logout()
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
@@ -70,7 +68,6 @@ class Test_Mscolab_Merge_Waypoints:
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 

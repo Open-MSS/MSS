@@ -24,8 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import sys
 import mock
+import pytest
 from PyQt5 import QtWidgets, QtTest
 
 from mslib.msui.updater import UpdaterUI, Updater
@@ -65,7 +65,8 @@ def create_mock(function, on_success=None, on_failure=None, start=True):
 
 
 class Test_MSS_ShortcutDialog:
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.updater = Updater()
         self.status = ""
         self.update_available = False
@@ -83,10 +84,7 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_update_available.connect(update_signal)
         self.updater.on_status_update.connect(status_signal)
         self.updater.on_update_finished.connect(update_finished_signal)
-        self.application = QtWidgets.QApplication(sys.argv)
-
-    def teardown_method(self):
-        self.application.quit()
+        yield
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)

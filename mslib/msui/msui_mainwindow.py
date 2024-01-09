@@ -1014,7 +1014,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         """
         dlg = MSUI_AboutDialog(parent=self)
         dlg.setModal(True)
-        dlg.exec_()
+        dlg.show()
 
     def show_shortcuts(self, search_mode=False):
         """Show the shortcuts dialog to the user.
