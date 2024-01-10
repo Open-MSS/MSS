@@ -2,6 +2,7 @@
 # $ conda create --name <env> --file <this file>
 # platform: linux-64
 pep8
+flake8-builtins
 py
 mock
 pycodestyle
@@ -25,4 +26,3 @@ dnspython>=2.0.0, <2.3.0
 gsl==2.7.0
 boa
 xmlschema<2.5.0
-
