@@ -843,10 +843,10 @@ class MSUIMscolab(QtCore.QObject):
                     self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
 
             def browse():
-                type = self.add_proj_dialog.cb_ImportType.currentText()
+                import_type = self.add_proj_dialog.cb_ImportType.currentText()
                 file_type = ["Flight track (*.ftml)"]
-                if type != 'FTML':
-                    file_type = [f"Flight track (*.{self.ui.import_plugins[type][1]})"]
+                if import_type != 'FTML':
+                    file_type = [f"Flight track (*.{self.ui.import_plugins[import_type][1]})"]
 
                 file_path = get_open_filename(
                     self.ui, "Open Flighttrack file", "", ';;'.join(file_type))
@@ -856,7 +856,7 @@ class MSUIMscolab(QtCore.QObject):
                         with open_fs(fs.path.dirname(file_path)) as file_dir:
                             file_content = file_dir.readtext(file_name)
                     else:
-                        function = self.ui.import_plugins[type][0]
+                        function = self.ui.import_plugins[import_type][0]
                         ft_name, waypoints = function(file_path)
                         model = ft.WaypointsTableModel(waypoints=waypoints)
                         xml_doc = model.get_xml_doc()

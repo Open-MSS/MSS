@@ -79,7 +79,8 @@ class MSUIWebMapService(ogcwms.WebMapService):
     """
 
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
-               format=None, size=None, time=None, init_time=None,
+               format=None,  # noqa: A002
+               size=None, time=None, init_time=None,
                path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
                time_name="time", init_time_name="init_time",
                exceptions='XML', method='Get',
@@ -1241,7 +1242,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
 
     def retrieve_image(self, layers=None, crs="EPSG:4326", bbox=None, path_string=None,
-                       width=800, height=400, transparent=False, format="image/png"):
+                       width=800, height=400, transparent=False,
+                       format="image/png",  # noqa: A002
+                       ):
         """Retrieve an image of the layer currently selected in the
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If

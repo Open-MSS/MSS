@@ -55,9 +55,9 @@ class TestCIMultiDict:
                     return v
             raise KeyError(repr(key))
 
-    def test_multidict(object):
-        dict = TestCIMultiDict.CaseInsensitiveMultiDict([('title', 'MSS')])
+    def test_multidict(self):
+        test_dict = TestCIMultiDict.CaseInsensitiveMultiDict([('title', 'MSS')])
         dict_multidict = multidict.CIMultiDict([('title', 'MSS')])
         assert 'title' in dict_multidict
         assert 'tiTLE' in dict_multidict
-        assert dict_multidict['Title'] == dict['tITLE']
+        assert dict_multidict['Title'] == test_dict['tITLE']

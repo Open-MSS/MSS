@@ -109,7 +109,7 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
     """
 
     def __init__(self, flighttrack_model, parent=None,
-                 type=QtWidgets.QListWidgetItem.UserType):
+                 user_type=QtWidgets.QListWidgetItem.UserType):
         """Item class for the list widget that accommodates the open flight
            tracks.
 
@@ -123,7 +123,7 @@ class QFlightTrackListWidgetItem(QtWidgets.QListWidgetItem):
         """
         view_name = flighttrack_model.name
         super().__init__(
-            view_name, parent, type)
+            view_name, parent, user_type)
 
         self.parent = parent
         self.flighttrack_model = flighttrack_model

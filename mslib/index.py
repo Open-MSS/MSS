@@ -193,7 +193,7 @@ def create_app(name="", imprint=None, gdpr=None):
                             headers={"Content-disposition": f"attachment; filename={filename.split('-')[0]}.py"})
 
     @APP.route("/mss/help")
-    def help():
+    def help():  # noqa: A001
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'help.md')
         html_overrides = ('<img alt="Waypoint Tutorial" '
                           'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
