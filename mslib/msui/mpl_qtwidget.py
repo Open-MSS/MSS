@@ -1499,7 +1499,7 @@ class MplTopViewCanvas(MplCanvas):
         self.pdlg.close()
 
     @property
-    def map(self):
+    def map(self):  # noqa: A003
         return self.plotter.map
 
     def init_map(self, model=None, **kwargs):

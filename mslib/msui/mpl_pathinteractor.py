@@ -1150,8 +1150,8 @@ class HPathInteractor(PathInteractor):
         # (bounds = left, bottom, width, height)
         ax_bounds = self.plotter.ax.bbox.bounds
         diagonal = math.hypot(round(ax_bounds[2]), round(ax_bounds[3]))
-        map = self.plotter.map
-        map_delta = get_distance(map.llcrnrlat, map.llcrnrlon, map.urcrnrlat, map.urcrnrlon)
+        plot_map = self.plotter.map
+        map_delta = get_distance(plot_map.llcrnrlat, plot_map.llcrnrlon, plot_map.urcrnrlat, plot_map.urcrnrlon)
         km_per_px = map_delta / diagonal
 
         return km_per_px * px

@@ -135,9 +135,9 @@ class TestMigration:
             result = dict()
             result[default] = mailid
             assert config_loader_before_nine(dataset="MSS_auth") == {"https://www.your-mscolab-server.de": "youruser"}
-            all = config_loader_before_nine()
+            config = config_loader_before_nine()
             # old version knows MSCOLAB_mailid
-            assert "MSCOLAB_mailid" in all.keys()
+            assert "MSCOLAB_mailid" in config.keys()
             new_version = JsonConversion()
             # converting and storing
             new_version.change_parameters()
@@ -154,6 +154,6 @@ class TestMigration:
             # added MSCOLAB_mailid to the url based on default_MSCOLAB
             mss_auth = config_loader(dataset="MSS_auth")
             assert mss_auth == {"https://www.your-mscolab-server.de": mailid}
-            all = config_loader()
+            config = config_loader()
             # new version forgot about MSCOLAB_mailid
-            assert "MSCOLAB_mailid" not in all.keys()
+            assert "MSCOLAB_mailid" not in config.keys()

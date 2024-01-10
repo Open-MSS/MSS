@@ -36,7 +36,7 @@ from mslib.mscolab.message_type import MessageType
 class User(db.Model):
 
     __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255), unique=True)
@@ -105,7 +105,7 @@ class User(db.Model):
 class Permission(db.Model):
 
     __tablename__ = 'permissions'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     access_level = db.Column(db.Enum("admin", "collaborator", "viewer", "creator", name="access_level"))
@@ -127,7 +127,7 @@ class Permission(db.Model):
 class Operation(db.Model):
 
     __tablename__ = "operations"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     path = db.Column(db.String(255), unique=True)
     category = db.Column(db.String(255))
     description = db.Column(db.String(255))
@@ -158,7 +158,7 @@ class Operation(db.Model):
 class Message(db.Model):
 
     __tablename__ = "messages"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
@@ -182,7 +182,7 @@ class Message(db.Model):
 class Change(db.Model):
 
     __tablename__ = "changes"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     commit_hash = db.Column(db.String(255), default=None)

@@ -39,7 +39,7 @@ from mslib.mscolab.sockets_manager import setup_managers
 
 
 class Message:
-    id = 1
+    id = 1  # noqa: A003
     u_id = 2
 
     class user:
