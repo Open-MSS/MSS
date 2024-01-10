@@ -41,7 +41,7 @@ from mslib.msui import constants
 from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 
-class MSUIDefaultConfig(object):
+class MSUIDefaultConfig:
     """Central configuration for the Mission Support System User Interface
        Application (msui).
 

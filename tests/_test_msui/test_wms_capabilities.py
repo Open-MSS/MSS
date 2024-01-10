@@ -32,7 +32,7 @@ from PyQt5 import QtWidgets, QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
 
 
-class Test_WMSCapabilities(object):
+class Test_WMSCapabilities:
 
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)

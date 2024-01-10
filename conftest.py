@@ -208,7 +208,7 @@ USE_SAML2 = False
         config_string = '''
 import hashlib
 
-class mscolab_auth(object):
+class mscolab_auth:
      password = "testvaluepassword"
      allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
 '''

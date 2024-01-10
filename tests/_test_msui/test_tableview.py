@@ -36,7 +36,7 @@ from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
 
 
-class Test_TableView(object):
+class Test_TableView:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
 

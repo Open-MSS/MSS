@@ -43,7 +43,7 @@ from tests.utils import wait_until_signal
 PORTS = list(range(19000, 19500))
 
 
-class Test_MSS_SV_OptionsDialog(object):
+class Test_MSS_SV_OptionsDialog:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
@@ -94,7 +94,7 @@ class Test_MSS_SV_OptionsDialog(object):
         assert mockdlg.call_count == 1
 
 
-class Test_MSSSideViewWindow(object):
+class Test_MSSSideViewWindow:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
@@ -173,7 +173,7 @@ class Test_MSSSideViewWindow(object):
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_SideViewWMS(object):
+class Test_SideViewWMS:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.port = PORTS.pop()

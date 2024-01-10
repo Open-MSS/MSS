@@ -55,7 +55,7 @@ class VSecViewMockup(mock.Mock):
     get_plot_size_in_px = mock.Mock(return_value=(200, 100))
 
 
-class WMSControlWidgetSetup(object):
+class WMSControlWidgetSetup:
     def _setup(self, widget_type):
         wc.WMS_SERVICE_CACHE = {}
         self.port = PORTS.pop()
@@ -506,7 +506,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert mockbox.critical.call_count == 0
 
 
-class TestWMSControlWidgetSetupSimple(object):
+class TestWMSControlWidgetSetupSimple:
     xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
         <!DOCTYPE WMT_MS_Capabilities SYSTEM "http://schemas.opengis.net/wms/1.1.1/capabilities_1_1_1.dtd">
         <WMT_MS_Capabilities version="1.1.1" updateSequence="0">

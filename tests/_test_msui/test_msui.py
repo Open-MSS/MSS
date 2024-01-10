@@ -66,7 +66,7 @@ def test_main():
             assert pytest_wrapped_e.typename == "SystemExit"
 
 
-class Test_MSS_TutorialMode():
+class Test_MSS_TutorialMode:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.application.setApplicationDisplayName("MSUI")
@@ -98,7 +98,7 @@ class Test_MSS_TutorialMode():
             assert 'msuimainwindow-connect.png' in common_images
 
 
-class Test_MSS_AboutDialog():
+class Test_MSS_AboutDialog:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui_mw.MSUI_AboutDialog()
@@ -116,7 +116,7 @@ class Test_MSS_AboutDialog():
         QtWidgets.QApplication.processEvents()
 
 
-class Test_MSS_ShortcutDialog():
+class Test_MSS_ShortcutDialog:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.main_window = msui_mw.MSUIMainWindow()
@@ -158,7 +158,7 @@ class Test_MSS_ShortcutDialog():
     # ToDo we need a test for reset_highlight when e.g. Transparent was selected and afterwards topview was destroyed
 
 
-class Test_MSSSideViewWindow(object):
+class Test_MSSSideViewWindow:
     # temporary file paths to test open feature
     sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
     open_csv = os.path.join(sample_path, "example.csv")

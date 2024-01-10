@@ -43,7 +43,7 @@ from tests.utils import wait_until_signal
 PORTS = list(range(28000, 28500))
 
 
-class Test_MSS_TV_MapAppearanceDialog(object):
+class Test_MSS_TV_MapAppearanceDialog:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
         self.window = tv.MSUI_TV_MapAppearanceDialog(settings=_DEFAULT_SETTINGS_TOPVIEW)
@@ -69,7 +69,7 @@ class Test_MSS_TV_MapAppearanceDialog(object):
         assert mockcrit.critical.call_count == 0
 
 
-class Test_MSSTopViewWindow(object):
+class Test_MSSTopViewWindow:
     def setup_method(self):
         mainwindow = MSUIMainWindow()
         self.application = QtWidgets.QApplication(sys.argv)
@@ -296,7 +296,7 @@ class Test_MSSTopViewWindow(object):
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_TopViewWMS(object):
+class Test_TopViewWMS:
     def setup_method(self):
         self.port = PORTS.pop()
         self.application = QtWidgets.QApplication(sys.argv)
@@ -359,7 +359,7 @@ class Test_TopViewWMS(object):
         assert mockbox.critical.call_count == 0
 
 
-class Test_MSUITopViewWindow():
+class Test_MSUITopViewWindow:
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)
 

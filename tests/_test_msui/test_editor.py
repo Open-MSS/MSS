@@ -35,7 +35,7 @@ from tests.constants import ROOT_DIR
 
 
 @pytest.mark.skip("To be done for new UI")
-class Test_Editor(object):
+class Test_Editor:
     sample_file = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "data", "msui_settings.json"))
     sample_file = sample_file.replace('\\', '/')
 

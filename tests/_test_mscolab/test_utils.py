@@ -38,18 +38,18 @@ from mslib.mscolab.utils import get_recent_op_id, get_session_id, get_message_di
 from mslib.mscolab.sockets_manager import setup_managers
 
 
-class Message():
+class Message:
     id = 1
     u_id = 2
 
-    class user():
+    class user:
         username = "name"
     text = "Moin"
     message_type = MessageType.TEXT
     reply_id = 0
     replies = []
 
-    class created_at():
+    class created_at:
         def strftime(value):
             pass
 

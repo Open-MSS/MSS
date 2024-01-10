@@ -32,7 +32,7 @@ from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 
 
-class Test_MultipleFlightpathControlWidget():
+class Test_MultipleFlightpathControlWidget:
 
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)

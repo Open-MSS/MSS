@@ -46,7 +46,7 @@ PORTS = list(range(23000, 23500))
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_Mscolab_Merge_Waypoints(object):
+class Test_Mscolab_Merge_Waypoints:
     def setup_method(self):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)

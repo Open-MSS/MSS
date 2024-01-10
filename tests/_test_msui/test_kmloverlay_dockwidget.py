@@ -39,7 +39,7 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 
 # ToDo refactoring, extract helper methods into functions
 # ToDo review needed helper functions
-class Test_KmlOverlayDockWidget(object):
+class Test_KmlOverlayDockWidget:
 
     def setup_method(self):
         self.application = QtWidgets.QApplication(sys.argv)

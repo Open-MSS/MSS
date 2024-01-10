@@ -41,7 +41,7 @@ from mslib.utils.config import modify_config_file
 PORTS = list(range(22000, 22500))
 
 
-class Actions(object):
+class Actions:
     DOWNLOAD = 0
     COPY = 1
     REPLY = 2
@@ -51,7 +51,7 @@ class Actions(object):
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_MscolabOperation(object):
+class Test_MscolabOperation:
     def setup_method(self):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)

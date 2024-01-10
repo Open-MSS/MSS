@@ -40,7 +40,7 @@ from tests.utils import create_msui_settings_file
 LOGGER = logging.getLogger(__name__)
 
 
-class TestSettingsSave(object):
+class TestSettingsSave:
     """
     tests save_settings_qsettings and load_settings_qsettings from ./utils.py
     # TODO make sure do a clean setup, not inside the 'msui' config file.
@@ -59,7 +59,7 @@ class TestSettingsSave(object):
         assert settings["foo"] == "bar"
 
 
-class TestConfigLoader(object):
+class TestConfigLoader:
     """
     tests config file for client
     """

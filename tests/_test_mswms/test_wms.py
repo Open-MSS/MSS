@@ -41,7 +41,7 @@ from tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, ca
 from tests.constants import DATA_DIR
 
 
-class Test_WMS(object):
+class Test_WMS:
     def test_get_query_string_missing_parameters(self):
         environ = {
             'wsgi.url_scheme': 'http',

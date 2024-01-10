@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 TypeRole = QtCore.Qt.UserRole + 1
 
 
-class DataType(object):
+class DataType:
     """Base class for data types."""
 
     # (mss)
