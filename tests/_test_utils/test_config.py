@@ -121,7 +121,6 @@ class TestConfigLoader(object):
         """
         on a user defined empty msui_settings_json this test should return the default value for num_labels
         """
-        create_msui_settings_file('{ }')
         if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
             pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
@@ -210,7 +209,6 @@ class TestConfigLoader(object):
         """
         Test to check if modify_config_file properly stores a key-value pair in an empty config file
         """
-        create_msui_settings_file('{ }')
         if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
             pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
@@ -242,7 +240,6 @@ class TestConfigLoader(object):
         """
         Test to check if modify_config_file raises a KeyError when a key is empty
         """
-        create_msui_settings_file('{ }')
         if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
             pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {

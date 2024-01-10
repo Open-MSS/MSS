@@ -44,6 +44,7 @@ def _download_progress_airports(path, url):
 323361,"00AA","small_airport","Aero B Ranch Airport",38.704022,-101.473911,3435,"NA",\
 "US","US-KS","Leoti","no","00AA",,"00AA",,,'''
     file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airports.csv")
+    os.makedirs(os.path.dirname(file_path))
     with open(file_path, "w") as f:
         f.write(text)
 
@@ -76,6 +77,7 @@ def _download_progress_airspace(path, url):
 </OPENAIP>
 '''
     file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
+    os.makedirs(os.path.dirname(file_path))
     with open(file_path, "w") as f:
         f.write(text)
 
@@ -94,6 +96,7 @@ def _download_incomplete_airspace(path, url):
 </OPENAIP>
 '''
     file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
+    os.makedirs(os.path.dirname(file_path))
     with open(file_path, "w") as f:
         f.write(text)
 
@@ -111,6 +114,7 @@ def _cleanup_test_files():
 
 def test_download_progress():
     file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airdata")
+    os.makedirs(os.path.dirname(file_path))
     download_progress(file_path, 'http://speedtest.ftp.otenet.gr/files/test100k.db')
     assert os.path.exists(file_path)
 
