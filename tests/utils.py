@@ -38,10 +38,7 @@ from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers, start_server
-from mslib.mscolab.mscolab import handle_db_init
-from mslib.utils.config import modify_config_file
+from mslib.mscolab.server import initialize_managers, start_server
 
 
 def callback_ok_image(status, response_headers):
@@ -182,60 +179,17 @@ def mscolab_check_free_port(all_ports, port):
     return port
 
 
-def mscolab_ping_server(port):
-    url = f"http://127.0.0.1:{port}/status"
-    try:
-        r = requests.get(url, timeout=(2, 10))
-        data = json.loads(r.text)
-        if data['message'] == "Mscolab server" and isinstance(data['USE_SAML2'], bool):
-            return True
-    except requests.exceptions.ConnectionError:
-        return False
-    return False
-
-
-def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=10):
-    handle_db_init()
-    port = mscolab_check_free_port(all_ports, all_ports.pop())
-
-    url = f"http://localhost:{port}"
-
-    # Update mscolab URL to avoid "Update Server List" message boxes
-    modify_config_file({"default_MSCOLAB": [url]})
-
-    _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    _app.config['URL'] = url
-
-    _app, sockio, cm, fm = initialize_managers(_app)
-
-    # ToDo refactoring for spawn needed, fork is not implemented on windows, spawn is default on MAC and Windows
-    if multiprocessing.get_start_method(allow_none=True) != 'fork':
-        multiprocessing.set_start_method("fork")
-    process = multiprocessing.Process(
-        target=start_server,
-        args=(_app, sockio, cm, fm,),
-        kwargs={'port': port})
-    process.start()
-    start_time = time.time()
-    while True:
-        elapsed_time = (time.time() - start_time)
-        if elapsed_time > timeout:
-            raise RuntimeError(
-                "Failed to start the server after %d seconds. " % timeout
-            )
-
-        if mscolab_ping_server(port):
-            break
-
-    return process, url, _app, sockio, cm, fm
-
-
 def create_msui_settings_file(content):
     with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
         file_dir.writetext("msui_settings.json", content)
+
+
+def is_url_response_ok(url):
+    try:
+        response = requests.get(url)
+        return response.status_code == 200
+    except:  # noqa: E722
+        return False
 
 
 def wait_until_signal(signal, timeout=5):

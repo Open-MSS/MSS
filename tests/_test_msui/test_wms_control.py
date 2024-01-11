@@ -31,15 +31,11 @@ import shutil
 import tempfile
 import pytest
 import hashlib
-import multiprocessing
-from mslib.mswms.mswms import application
+import urllib
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
 from tests.utils import wait_until_signal
-
-
-PORTS = list(range(18000, 18500))
 
 
 class HSecViewMockup(mock.Mock):
@@ -55,9 +51,14 @@ class VSecViewMockup(mock.Mock):
 
 
 class WMSControlWidgetSetup:
+    @pytest.fixture(autouse=True)
+    def _with_mswms_server(self, mswms_server):
+        self.url = mswms_server
+        parsed_url = urllib.parse.urlparse(self.url)
+        self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
+
     def _setup(self, widget_type):
         wc.WMS_SERVICE_CACHE = {}
-        self.port = PORTS.pop()
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
@@ -66,10 +67,6 @@ class WMSControlWidgetSetup:
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
         QtTest.QTest.qWait(3000)
-        self.thread = multiprocessing.Process(
-            target=application.run,
-            args=("127.0.0.1", self.port))
-        self.thread.start()
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         else:
@@ -95,7 +92,6 @@ class WMSControlWidgetSetup:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
-        self.thread.terminate()
 
     def query_server(self, url):
         while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
@@ -123,7 +119,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server("http://127.0.0.1:8882")
+        self.query_server(f"{self.scheme}://{self.host}:{self.port-1}")
         assert mockbox.critical.call_count == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -131,7 +127,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"127.0.0.1:{self.port}")
+        self.query_server(f"{self.host}:{self.port}")
         assert mockbox.critical.call_count == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -139,7 +135,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"hppd://127.0.0.1:{self.port}")
+        self.query_server(f"hppd://{self.host}:{self.port}")
         assert mockbox.critical.call_count == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -147,7 +143,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"http://???127.0.0.1:{self.port}")
+        self.query_server(f"{self.scheme}://???{self.host}:{self.port}")
         assert mockbox.critical.call_count == 1
 
     @pytest.mark.skip("problem in urllib3")
@@ -156,12 +152,12 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"http://.....127.0.0.1:{self.port}")
+        self.query_server(f"{self.scheme}://.....{self.host}:{self.port}")
         assert mockbox.critical.call_count == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_forward_backward_clicks(self, mockbox):
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
         self.window.init_time_back_click()
         self.window.init_time_fwd_click()
         self.window.valid_time_fwd_click()
@@ -183,7 +179,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that an aborted getmap call does not change the displayed image
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(20)
@@ -201,7 +197,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -218,7 +214,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
 
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
@@ -249,7 +245,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that changing between servers still allows image retrieval
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
         assert mockbox.critical.call_count == 0
 
         QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
@@ -285,13 +281,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that multilayers get created, handled and drawn properly
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+        self.query_server(self.url)
+        server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
-        assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
-        assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
+        assert "header" in self.window.multilayers.layers[f"{self.url}/"]
+        assert "wms" in self.window.multilayers.layers[f"{self.url}/"]
         self.window.multilayers.cbMultilayering.setChecked(True)
 
         for i in range(0, server.childCount()):
@@ -327,13 +323,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.mark.skip("Fails testing reverse order")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_filter_handling(self, mockbox):
-        self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+        self.query_server(self.url)
+        server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
-        assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
-        assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
+        assert "header" in self.window.multilayers.layers[f"{self.url}/"]
+        assert "wms" in self.window.multilayers.layers[f"{self.url}/"]
 
         starts_at = 40 * self.window.multilayers.scale
         icon_start_fav = starts_at + 3
@@ -367,7 +363,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtTest.QTest.mouseMove(self.window.multilayers.listLayers, QtCore.QPoint(icon_start_del + 3, 0), -1)
         QtWidgets.QApplication.processEvents()
         self.window.multilayers.check_icon_clicked(server)
-        assert len(self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+        assert len(self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                                 QtCore.Qt.MatchFixedString)) == 0
         assert mockbox.critical.call_count == 0
 
@@ -376,13 +372,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that singlelayer mode behaves as expected
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+        self.query_server(self.url)
+        server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         self.window.cbAutoUpdate.setCheckState(False)
         assert server is not None
-        assert "header" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
-        assert "wms" in self.window.multilayers.layers[f"http://127.0.0.1:{self.port}/"]
+        assert "header" in self.window.multilayers.layers[f"{self.url}/"]
+        assert "wms" in self.window.multilayers.layers[f"{self.url}/"]
 
         self.window.multilayers.cbMultilayering.setChecked(True)
         self.window.multilayers.cbMultilayering.setChecked(False)
@@ -413,8 +409,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that synced layers share their options
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+        self.query_server(self.url)
+        server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         self.window.cbAutoUpdate.setCheckState(False)
         server.setExpanded(True)
@@ -443,8 +439,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.wms_control.WMSMapFetcher.moveToThread")
     def test_server_no_thread(self, mockbox, mockthread):
-        self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+        self.query_server(self.url)
+        server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         self.window.cbAutoUpdate.setCheckState(False)
         server.setExpanded(True)
@@ -456,7 +452,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.window.image_displayed)
 
-        urlstr = f"http://127.0.0.1:{self.port}/mss/logo.png"
+        urlstr = f"{self.url}/mss/logo.png"
         md5_filname = os.path.join(self.window.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
         self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
         self.window.fetcher.fetch_legend(urlstr, use_cache=True, md5_filename=md5_filname)
@@ -482,7 +478,7 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.window.image_displayed)
@@ -499,8 +495,8 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that drawing a layer through code doesn't fail for vsec
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
-        server = self.window.multilayers.listLayers.findItems(f"http://127.0.0.1:{self.port}/",
+        self.query_server(self.url)
+        server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
         server.child(0).draw()
         wait_until_signal(self.window.image_displayed)

@@ -30,24 +30,18 @@ import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
-from tests.utils import mscolab_start_server
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.utils.config import modify_config_file
-
-
-PORTS = list(range(24000, 24500))
 
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_MscolabAdminWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+    def setup(self, qapp, mscolab_server):
+        self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -91,7 +85,6 @@ class Test_MscolabAdminWindow:
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()

@@ -25,8 +25,20 @@
 """
 import pytest
 import mock
+import multiprocessing
+import time
+import urllib
+import mslib.mswms.mswms
+import eventlet
+import eventlet.wsgi
 
 from PyQt5 import QtWidgets
+from contextlib import contextmanager
+from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import APP, initialize_managers
+from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
+from mslib.utils.config import modify_config_file
+from tests.utils import is_url_response_ok
 
 
 @pytest.fixture
@@ -60,3 +72,117 @@ def close_remaining_widgets():
 @pytest.fixture
 def qapp(qapp, fail_if_open_message_boxes_left, close_remaining_widgets):
     yield qapp
+
+
+@pytest.fixture(scope="session")
+def mscolab_session_app():
+    """Session-scoped fixture that provides the WSGI app instance for MSColab.
+
+    This fixture should not be used in tests. Instead use :func:`mscolab_app`, which
+    handles per-test cleanup as well.
+    """
+    _app = APP
+    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
+    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+    handle_db_init()
+    return _app
+
+
+@pytest.fixture(scope="session")
+def mscolab_session_managers(mscolab_session_app):
+    """Session-scoped fixture that provides the managers for the MSColab app.
+
+    This fixture should not be used in tests. Instead use :func:`mscolab_managers`,
+    which handles per-test cleanup as well.
+    """
+    return initialize_managers(mscolab_session_app)[1:]
+
+
+@pytest.fixture(scope="session")
+def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
+    """Session-scoped fixture that provides a running MSColab server.
+
+    This fixture should not be used in tests. Instead use :func:`mscolab_server`, which
+    handles per-test cleanup as well.
+    """
+    with _running_eventlet_server(mscolab_session_app) as url:
+        yield url
+
+
+@pytest.fixture
+def reset_mscolab(mscolab_session_app):
+    """Cleans up before every test that uses MSColab.
+
+    This fixture is not explicitly needed in tests, it is used in the other fixtures to
+    do the cleanup actions.
+    """
+    handle_db_reset()
+
+
+@pytest.fixture
+def mscolab_app(mscolab_session_app, reset_mscolab):
+    """Fixture that provides the MSColab WSGI app instance and does cleanup actions.
+
+    :returns: A WSGI app instance.
+    """
+    return mscolab_session_app
+
+
+@pytest.fixture
+def mscolab_managers(mscolab_session_managers, reset_mscolab):
+    """Fixture that provides the MSColab managers and does cleanup actions.
+
+    :returns: A tuple (SocketIO, ChatManager, FileManager) as returned by
+        initialize_managers.
+    """
+    return mscolab_session_managers
+
+
+@pytest.fixture
+def mscolab_server(mscolab_session_server, reset_mscolab):
+    """Fixture that provides a running MSColab server and does cleanup actions.
+
+    :returns: The URL where the server is running.
+    """
+    # Update mscolab URL to avoid "Update Server List" message boxes
+    modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
+    return mscolab_session_server
+
+
+@pytest.fixture(scope="session")
+def mswms_app():
+    """Fixture that provides the MSWMS WSGI app instance."""
+    return mslib.mswms.mswms.application
+
+
+@pytest.fixture(scope="session")
+def mswms_server(mswms_app):
+    """Fixture that provides a running MSWMS server.
+
+    :returns: The URL where the server is running.
+    """
+    with _running_eventlet_server(mswms_app) as url:
+        yield url
+
+
+@contextmanager
+def _running_eventlet_server(app):
+    """Context manager that starts the app in an eventlet server and returns its URL."""
+    scheme = "http"
+    host = "127.0.0.1"
+    socket = eventlet.listen((host, 0))
+    port = socket.getsockname()[1]
+    url = f"{scheme}://{host}:{port}"
+    app.config['URL'] = url
+    ctx = multiprocessing.get_context("fork")
+    process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app), daemon=True)
+    try:
+        process.start()
+        while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
+            time.sleep(0.5)
+        yield url
+    finally:
+        process.terminate()
+        process.join(10)
+        process.close()

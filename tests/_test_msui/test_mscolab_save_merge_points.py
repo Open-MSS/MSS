@@ -32,9 +32,6 @@ from mslib.msui import flighttrack as ft
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
-PORTS = list(range(21000, 21500))
-
-
 @pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")

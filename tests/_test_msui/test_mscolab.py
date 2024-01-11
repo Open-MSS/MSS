@@ -38,20 +38,16 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader, modify_config_file
-from tests.utils import mscolab_start_server, create_msui_settings_file, ExceptionMock
+from tests.utils import create_msui_settings_file, ExceptionMock
 from mslib.msui import msui
 from mslib.msui import mscolab
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-
-PORTS = list(range(25000, 25500))
 
 
 class Test_Mscolab_connect_window:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+    def setup(self, qapp, mscolab_server):
+        self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -76,7 +72,6 @@ class Test_Mscolab_connect_window:
         self.window.hide()
         self.main_window.hide()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -270,9 +265,9 @@ class Test_Mscolab:
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+    def setup(self, qapp, mscolab_app, mscolab_server):
+        self.app = mscolab_app
+        self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -305,7 +300,6 @@ class Test_Mscolab:
             self.window.listViews.item(0).window.handle_force_close()
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
-        self.process.terminate()
 
     def test_activate_operation(self):
         self._connect_to_mscolab()
