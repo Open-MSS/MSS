@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import sys
 import os
 import fs
 import fs.errors
@@ -49,7 +48,8 @@ PORTS = list(range(25000, 25500))
 
 
 class Test_Mscolab_connect_window:
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -60,7 +60,6 @@ class Test_Mscolab_connect_window:
         self.user = get_user(self.userdata[0])
 
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
         self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.main_window.create_new_flight_track()
         self.main_window.show()
@@ -72,13 +71,10 @@ class Test_Mscolab_connect_window:
                       "berta@something.org", "anton@something.org",
                       "other@something.org"]:
             mslib.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
-
-    def teardown_method(self):
+        yield
         self.main_window.mscolab.logout()
         self.window.hide()
         self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
@@ -273,7 +269,8 @@ class Test_Mscolab:
         "Text": ["txt", "mslib.plugins.io.text", "save_to_txt"],
     }
 
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         handle_db_reset()
         self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -294,12 +291,10 @@ class Test_Mscolab:
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
-
-    def teardown_method(self):
+        yield
         self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
@@ -310,8 +305,6 @@ class Test_Mscolab:
             self.window.listViews.item(0).window.handle_force_close()
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         self.process.terminate()
 
     def test_activate_operation(self):

@@ -24,7 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import sys
+import pytest
 from PyQt5 import QtWidgets, QtTest
 from mslib.msui import msui
 from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
@@ -33,10 +33,8 @@ import mslib.msui.topview as tv
 
 
 class Test_MultipleFlightpathControlWidget:
-
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()
 
@@ -52,11 +50,8 @@ class Test_MultipleFlightpathControlWidget:
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_initialization(self):

@@ -27,11 +27,9 @@
 
 
 import datetime
-import sys
 
 from mock import Mock
 from matplotlib.collections import LineCollection
-from PyQt5 import QtWidgets
 import pytest
 import skyfield_data
 from mslib.msui.remotesensing_dockwidget import RemoteSensingControlWidget
@@ -47,8 +45,8 @@ class Test_RemoteSensingControlWidget:
     """
     Tests about RemoteSensingControlWidget
     """
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.view = Mock()
         self.map = qt.TopViewPlotter()
         self.map.init_map()

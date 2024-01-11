@@ -27,8 +27,8 @@
 
 import os
 import fs
-import sys
 import mock
+import pytest
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
@@ -41,8 +41,8 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 # ToDo review needed helper functions
 class Test_KmlOverlayDockWidget:
 
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])
@@ -56,10 +56,7 @@ class Test_KmlOverlayDockWidget:
         self.window.select_all()
         self.window.remove_file()
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
+        yield
         QtWidgets.QApplication.processEvents()
         self.window.close()
         if os.path.exists(save_kml):

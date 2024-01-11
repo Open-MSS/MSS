@@ -28,7 +28,6 @@
 import mock
 import os
 import pytest
-import sys
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
@@ -37,9 +36,8 @@ import mslib.msui.tableview as tv
 
 
 class Test_TableView:
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         # Create an initital flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),
                              ft.Waypoint(48.10, 10.27, 200),
@@ -57,11 +55,8 @@ class Test_TableView:
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_open_hex(self):

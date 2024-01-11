@@ -29,7 +29,6 @@ import mock
 import os
 import pytest
 import shutil
-import sys
 import multiprocessing
 import tempfile
 from mslib.mswms.mswms import application
@@ -43,18 +42,15 @@ PORTS = list(range(26000, 26500))
 
 
 class Test_MSS_LV_Options_Dialog:
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = tv.MSUI_LV_Options_Dialog(settings=_DEFAULT_SETTINGS_LINEARVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -68,8 +64,8 @@ class Test_MSS_LV_Options_Dialog:
 
 
 class Test_MSSLinearViewWindow:
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
@@ -81,11 +77,8 @@ class Test_MSSLinearViewWindow:
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
@@ -117,8 +110,8 @@ class Test_MSSLinearViewWindow:
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_LinearViewWMS:
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.port = PORTS.pop()
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -142,11 +135,8 @@ class Test_LinearViewWMS:
         QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()

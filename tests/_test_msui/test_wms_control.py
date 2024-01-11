@@ -26,7 +26,6 @@
 """
 
 import os
-import sys
 import mock
 import shutil
 import tempfile
@@ -59,7 +58,6 @@ class WMSControlWidgetSetup:
     def _setup(self, widget_type):
         wc.WMS_SERVICE_CACHE = {}
         self.port = PORTS.pop()
-        self.application = QtWidgets.QApplication(sys.argv)
         if widget_type == "hsec":
             self.view = HSecViewMockup()
         else:
@@ -93,10 +91,8 @@ class WMSControlWidgetSetup:
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
 
-    def teardown_method(self):
+    def _teardown(self):
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
         self.thread.terminate()
@@ -116,8 +112,11 @@ class WMSControlWidgetSetup:
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self._setup("hsec")
+        yield
+        self._teardown()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_no_server(self, mockbox):
@@ -471,8 +470,11 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self._setup("vsec")
+        yield
+        self._teardown()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_server_getmap(self, mockbox):
@@ -563,8 +565,8 @@ class TestWMSControlWidgetSetupSimple:
         <Dimension name="ELEVATION" units="hPa"> </Dimension>
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
         self.window.show()
@@ -575,11 +577,8 @@ class TestWMSControlWidgetSetupSimple:
             self.window.multilayers.delete_server(server)
 
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_xml(self):

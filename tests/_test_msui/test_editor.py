@@ -28,7 +28,6 @@ import pytest
 import mock
 import os
 import fs
-import sys
 from PyQt5 import QtWidgets
 from mslib.msui import editor
 from tests.constants import ROOT_DIR
@@ -41,21 +40,17 @@ class Test_Editor:
 
     save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
-    def setup_method(self, mockmessage):
-        self.application = QtWidgets.QApplication(sys.argv)
-
-        self.window = editor.EditorMainWindow()
-        self.save_file_name = self.save_file_name
-        self.window.show()
-
-    def teardown_method(self):
-        if os.path.exists(self.save_file_name):
-            os.remove(self.save_file_name)
-        self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window = editor.EditorMainWindow()
+            self.save_file_name = self.save_file_name
+            self.window.show()
+            yield
+            if os.path.exists(self.save_file_name):
+                os.remove(self.save_file_name)
+            self.window.hide()
+            QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
     def test_file_open(self, mockfile):

@@ -220,11 +220,10 @@ For developers we provide additional packages for running tests, activate your e
 
   $ mamba install --file requirements.d/development.txt
 
-On linux install the `conda-forge package pyvirtualdisplay` and `xvfb` from your linux package manager.
-This is used to run tests on a virtual display.
-If you don't want tests redirected to the xvfb display just setup an environment variable::
+On linux install `xvfb` from your linux package manager.
+This can be used to run tests on an invisible virtual display by prepending the pytest call with `xvfb-run`, e.g.::
 
- $ export TESTS_VISIBLE=TRUE
+  $ xvfb-run pytest ...
 
 We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
@@ -540,4 +539,3 @@ GSoC'19 Projects
 - `Anveshan Lal: Updating Geographical Plotting Routines <https://github.com/Open-MSS/MSS/wiki/Cartopy:-Updating-Geographical-Plotting-Routines----GSoC-2019>`_
 
 - `Shivashis Padhi: Collaborative editing of flight path in real-time <https://github.com/Open-MSS/MSS/wiki/Mscolab:-Collaborative-editing-of-flight-path-in-real-time---GSoC19>`_
-

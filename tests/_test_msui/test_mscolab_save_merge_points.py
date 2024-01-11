@@ -35,11 +35,10 @@ from PyQt5 import QtCore, QtTest, QtWidgets
 PORTS = list(range(21000, 21500))
 
 
-# ToDo Understand why this needs to be skipped, it runs when direct called
+@pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
-    @pytest.mark.skip("Uses QTimer, which can break other unrelated tests")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_save_merge_points(self, mockbox):
         self.emailid = "mergepoints@alpha.org"
