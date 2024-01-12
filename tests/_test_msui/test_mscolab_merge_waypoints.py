@@ -41,7 +41,7 @@ from mslib.utils.config import modify_config_file
 
 class Test_Mscolab_Merge_Waypoints:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mscolab_app, mscolab_server):
+    def setup(self, qtbot, mscolab_app, mscolab_server):
         self.app = mscolab_app
         self.url = mscolab_server
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)

@@ -34,7 +34,7 @@ import mslib.msui.topview as tv
 
 class Test_MultipleFlightpathControlWidget:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()
 

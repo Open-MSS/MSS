@@ -35,7 +35,7 @@ import mslib.msui.wms_capabilities as wc
 class Test_WMSCapabilities:
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.capabilities = mock.Mock()
         self.capabilities.capabilities_document = u"Hölla die Waldfee".encode("utf-8")
         self.capabilities.provider = mock.Mock()

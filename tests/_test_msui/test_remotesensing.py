@@ -46,7 +46,7 @@ class Test_RemoteSensingControlWidget:
     Tests about RemoteSensingControlWidget
     """
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.view = Mock()
         self.map = qt.TopViewPlotter()
         self.map.init_map()

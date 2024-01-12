@@ -34,7 +34,7 @@ import mslib.msui.satellite_dockwidget as sd
 
 class Test_SatelliteDockWidget:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.view = mock.Mock()
         self.window = sd.SatelliteControlWidget(view=self.view)
         self.window.show()

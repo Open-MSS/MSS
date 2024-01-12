@@ -38,7 +38,7 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
 
 class Test_MSS_LV_Options_Dialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = tv.MSUI_LV_Options_Dialog(settings=_DEFAULT_SETTINGS_LINEARVIEW)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -54,7 +54,7 @@ class Test_MSS_LV_Options_Dialog:
 
 class Test_MSSLinearViewWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
@@ -86,7 +86,7 @@ class Test_MSSLinearViewWindow:
 
 class Test_LinearViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mswms_server):
+    def setup(self, qtbot, mswms_server):
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
