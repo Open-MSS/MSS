@@ -32,6 +32,7 @@ import pytest
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
+from tests.utils import set_force_close
 import mslib.msui.tableview as tv
 
 
@@ -50,11 +51,10 @@ class Test_TableView:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         self.window = tv.MSUITableViewWindow(model=waypoints_model)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
 
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_open_hex(self):
         """

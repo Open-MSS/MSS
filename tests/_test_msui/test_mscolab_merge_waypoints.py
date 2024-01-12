@@ -33,7 +33,7 @@ from mslib.msui import flighttrack as ft
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest
 from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
-                         mscolab_delete_all_operations, mscolab_delete_user)
+                         mscolab_delete_all_operations, mscolab_delete_user, set_force_close)
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.utils.config import modify_config_file
@@ -45,6 +45,7 @@ class Test_Mscolab_Merge_Waypoints:
         self.app = mscolab_app
         self.url = mscolab_server
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
         yield
@@ -57,8 +58,6 @@ class Test_Mscolab_Merge_Waypoints:
             if mss_dir.exists('local_mscolab_data'):
                 mss_dir.removetree('local_mscolab_data')
             assert mss_dir.exists('local_mscolab_data') is False
-        if self.window.mscolab.version_window:
-            self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
 

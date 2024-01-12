@@ -444,6 +444,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         except (ImportError, AttributeError) as error:
             logging.debug("AttributeError, ImportError Exception %s", error)
 
+        self.force_close = False
         self.config_editor = None
         self.local_active = True
         self.new_flight_track_counter = 0
@@ -1069,10 +1070,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
-        ret = QtWidgets.QMessageBox.warning(
-            self, self.tr("Mission Support System"),
-            self.tr("Do you want to close the Mission Support System application?"),
-            QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
+        if self.force_close:
+            ret = QtWidgets.QMessageBox.Yes
+        else:
+            ret = QtWidgets.QMessageBox.warning(
+                self, self.tr("Mission Support System"),
+                self.tr("Do you want to close the Mission Support System application?"),
+                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.No)
 
         if ret == QtWidgets.QMessageBox.Yes:
             if self.mscolab.help_dialog is not None:

@@ -49,20 +49,21 @@ class Test_WMSCapabilities:
         self.capabilities.provider.contact.city = None
         yield
 
-    def start_window(self):
+    def start_window(self, qtbot):
         self.window = wc.WMSCapabilitiesBrowser(
             url="http://example.com",
             capabilities=self.capabilities)
+        qtbot.add_widget(self.window)
         QtTest.QTest.qWaitForWindowExposed(self.window)
 
-    def test_window_start(self):
-        self.start_window()
+    def test_window_start(self, qtbot):
+        self.start_window(qtbot)
 
-    def test_window_contact_none(self):
+    def test_window_contact_none(self, qtbot):
         self.capabilities.provider.contact = None
-        self.start_window()
+        self.start_window(qtbot)
 
-    def test_switch_view(self):
-        self.start_window()
+    def test_switch_view(self, qtbot):
+        self.start_window(qtbot)
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
