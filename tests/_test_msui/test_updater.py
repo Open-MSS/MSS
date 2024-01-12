@@ -128,7 +128,7 @@ class Test_MSS_ShortcutDialog:
     @mock.patch("subprocess.Popen", new=SubprocessSameMock)
     @mock.patch("subprocess.run", new=SubprocessSameMock)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
-    def test_ui(self, mock):
+    def test_ui(self, mock, qtbot):
         ui = UpdaterUI()
         ui.updater.on_update_available.emit("", "")
         assert ui.statusLabel.text() == "Update successful. Please restart MSS."

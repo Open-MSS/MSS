@@ -241,11 +241,7 @@ class Test_TopViewWMS:
 
 
 class Test_MSUITopViewWindow:
-    @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        pass
-
-    def test_kwargs_update_does_not_harm(self):
+    def test_kwargs_update_does_not_harm(self, qtbot):
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
