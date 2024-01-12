@@ -137,6 +137,7 @@ class Test_RemoteSensingControlWidget:
                       datetime.datetime(2023, 4, 15, 11, 18, 27, 735581)]
         self.solar_type = ('sun', 'total (horizon)')
         self.remote_widget = RemoteSensingControlWidget(view=self.view)
+        qtbot.add_widget(self.remote_widget)
 
     @pytest.mark.parametrize(
         "lon0, lat0, h0, lon1, lat1, h1, obs_azi, expected",

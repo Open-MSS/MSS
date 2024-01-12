@@ -34,16 +34,16 @@ from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
+from tests.utils import set_force_close
 
 
 class Test_MSS_LV_Options_Dialog:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
         self.window = tv.MSUI_LV_Options_Dialog(settings=_DEFAULT_SETTINGS_LINEARVIEW)
+        qtbot.add_widget(self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_show(self):
         pass
@@ -62,10 +62,9 @@ class Test_MSSLinearViewWindow:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         self.window = tv.MSUILinearViewWindow(model=waypoints_model)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
@@ -97,13 +96,13 @@ class Test_LinearViewWMS:
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         self.window = tv.MSUILinearViewWindow(model=waypoints_model)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
-        self.window.hide()
         shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):

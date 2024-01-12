@@ -49,13 +49,13 @@ class Test_KmlOverlayDockWidget:
         self.view.map.gcpoints_path = mock.Mock(side_effect=lambda x, y: (x, y))
 
         self.window = kd.KMLOverlayControlWidget(view=self.view)
+        qtbot.add_widget(self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         # start load test
         self.window.select_all()
         self.window.remove_file()
         yield
-        self.window.close()
         if os.path.exists(save_kml):
             os.remove(save_kml)
 

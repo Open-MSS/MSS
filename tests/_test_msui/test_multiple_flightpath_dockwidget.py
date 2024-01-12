@@ -29,6 +29,7 @@ from PyQt5 import QtTest
 from mslib.msui import msui
 from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
 from mslib.msui import flighttrack as ft
+from tests.utils import set_force_close
 import mslib.msui.topview as tv
 
 
@@ -36,6 +37,7 @@ class Test_MultipleFlightpathControlWidget:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
         self.window = msui.MSUIMainWindow()
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.create_new_flight_track()
 
         self.window.actionNewFlightTrack.trigger()
@@ -46,10 +48,9 @@ class Test_MultipleFlightpathControlWidget:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window)
+        qtbot.add_widget(self.widget, before_close_func=set_force_close)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_initialization(self):
         widget = MultipleFlightpathControlWidget(parent=self.widget,

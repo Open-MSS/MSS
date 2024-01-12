@@ -39,7 +39,7 @@ from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.utils.config import read_config_file, config_loader, modify_config_file
-from tests.utils import create_msui_settings_file, ExceptionMock
+from tests.utils import create_msui_settings_file, ExceptionMock, set_force_close
 from mslib.msui import msui
 from mslib.msui import mscolab
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
@@ -57,6 +57,7 @@ class Test_Mscolab_connect_window:
         self.user = get_user(self.userdata[0])
 
         self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        qtbot.add_widget(self.main_window, before_close_func=set_force_close)
         self.main_window.create_new_flight_track()
         self.main_window.show()
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
@@ -69,8 +70,6 @@ class Test_Mscolab_connect_window:
             mslib.utils.auth.del_password_from_keyring(service_name="MSCOLAB", username=email)
         yield
         self.main_window.mscolab.logout()
-        self.window.hide()
-        self.main_window.hide()
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -279,21 +278,15 @@ class Test_Mscolab:
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.create_new_flight_track()
         self.window.show()
 
         self.total_created_operations = 0
         yield
         self.window.mscolab.logout()
-        if self.window.mscolab.version_window:
-            self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        # force close all open views
-        while self.window.listViews.count() > 0:
-            self.window.listViews.item(0).window.handle_force_close()
-        # close all hanging operation option windows
-        self.window.mscolab.close_external_windows()
 
     def test_activate_operation(self, qtbot):
         self._connect_to_mscolab(qtbot)
