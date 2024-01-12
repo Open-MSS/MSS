@@ -58,7 +58,7 @@ Furthermore, you will need to configure saml2 setup in your `setup_saml2_backend
 
         $ more mscolab_settings.py
         
-        USE_SAML2 = True
+        use_saml2 = True
 
 Also, you should be careful to return the attributes `username` and `email` address accordingly from the IdP along with the SAML response.
 
@@ -86,7 +86,7 @@ Before running the MSColab server, ensure `USE_SAML` is set to `True` in your `m
 .. code:: text
 
 	# enable login by identity provider
-    	USE_SAML2 = True
+    	use_saml2 = True
 
 To enabling login via the Identity Provider; need to implement `mss_saml2_backend.yaml` with paths for .crt and .key files, configure mscolab_settings.py, and configure `setup_saml2_backend.py`
 
@@ -449,7 +449,7 @@ Configuration in MSColab settings for Keycloak
         .. code:: text
 
             # enable login by identity provider
-            USE_SAML2 = True
+            use_saml2 = True
 
     2. Insert Keycloak into list of CONFIGURE_IDP in your setup_saml2_backend.py
 

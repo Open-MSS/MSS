@@ -242,16 +242,16 @@ def hello():
             auth.login_required()
             return json.dumps({
                 'message': "Mscolab server",
-                'USE_SAML2': mscolab_settings.USE_SAML2
+                'use_saml2': mscolab_settings.use_saml2
             })
         return json.dumps({
             'message': "Mscolab server",
-            'USE_SAML2': mscolab_settings.USE_SAML2
+            'use_saml2': mscolab_settings.use_saml2
         })
     else:
         return json.dumps({
             'message': "Mscolab server",
-            'USE_SAML2': mscolab_settings.USE_SAML2
+            'use_saml2': mscolab_settings.use_saml2
         })
 
 
@@ -732,7 +732,7 @@ def reset_request():
         return render_template('errors/403.html'), 403
 
 
-if mscolab_settings.USE_SAML2:
+if mscolab_settings.use_saml2:
     # setup idp login config
     setup_saml2_backend()
 

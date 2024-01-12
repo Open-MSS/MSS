@@ -182,7 +182,7 @@ STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
 enable_basic_http_authentication = False
 
 # enable login by identity provider
-USE_SAML2 = False
+use_saml2 = False
 '''
         ROOT_FS = fs.open_fs(constants.ROOT_DIR)
         if not ROOT_FS.exists('mscolab'):
