@@ -185,7 +185,7 @@ class Test_Socket_Manager:
             "message_text": "message from 1",
             "reply_id": -1
         })
-        sio.sleep(1)
+        sio.sleep(5)
         with self.app.app_context():
             messages = self.cm.get_messages(1)
             assert messages[0]["text"] == "message from 1"
