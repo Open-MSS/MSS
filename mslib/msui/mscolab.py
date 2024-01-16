@@ -239,12 +239,17 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 except (json.decoder.JSONDecodeError, KeyError):
                     idp_enabled = False
 
-                if idp_enabled:
-                    # Hide user creatiion seccion if IDP login enabled
+                try:
+                    direct_login = json.loads(r.text)["direct_login"]
+                except (json.decoder.JSONDecodeError, KeyError):
+                    direct_login = True
+
+                if not direct_login:
+                    # Hide user creation when this is disabled on the server
                     self.addUserBtn.setHidden(True)
                     self.clickNewUserLabel.setHidden(True)
 
-                else:
+                if not idp_enabled:
                     # Hide login by identity provider if IDP login disabled
                     self.loginWithIDPBtn.setHidden(True)
 
