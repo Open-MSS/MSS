@@ -193,15 +193,14 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.view.reset_mock()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox):
+    def test_server_getmap(self, mockbox, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
 
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
@@ -210,15 +209,14 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.view.reset_mock()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap_cached(self, mockbox):
+    def test_server_getmap_cached(self, mockbox, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
 
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         # assert mockbox.critical.call_count == 0
 
@@ -473,15 +471,14 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self._teardown()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox):
+    def test_server_getmap(self, mockbox, qtbot):
         pytest.skip("unknown problem")
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.wms_control.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1

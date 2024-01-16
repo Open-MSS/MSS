@@ -71,20 +71,18 @@ class Test_MscolabVersionHistory:
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
 
-    def test_changes(self):
+    def test_changes(self, qtbot):
         self._change_version_filter(1)
         len_prev = self.version_window.changes.count()
         # make a changes
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        self.version_window.load_all_changes()
-        QtWidgets.QApplication.processEvents()
-        len_after = self.version_window.changes.count()
-        assert len_prev == (len_after - 2)
+
+        def assert_():
+            self.version_window.load_all_changes()
+            len_after = self.version_window.changes.count()
+            assert len_prev == (len_after - 2)
+        qtbot.wait_until(assert_)
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_set_version_name(self, mockbox):
@@ -105,14 +103,19 @@ class Test_MscolabVersionHistory:
         assert self.version_window.changes.currentItem().version_name is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_undo_changes(self, mockbox):
+    def test_undo_changes(self, mockbox, qtbot):
         self._change_version_filter(1)
+        assert self.version_window.changes.count() == 0
         # make changes
         for i in range(2):
             self.window.mscolab.waypoints_model.invert_direction()
             QtWidgets.QApplication.processEvents()
             QtTest.QTest.qWait(100)
-        self.version_window.load_all_changes()
+
+        def assert_():
+            self.version_window.load_all_changes()
+            assert self.version_window.changes.count() == 2
+        qtbot.wait_until(assert_)
         QtWidgets.QApplication.processEvents()
         changes_count = self.version_window.changes.count()
         self._activate_change_at_index(1)
