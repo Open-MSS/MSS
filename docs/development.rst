@@ -393,6 +393,23 @@ example::
 
 
 
+Writing Tests
+-------------
+
+Ideally every new feature or bug fix should be accompanied by tests
+that make sure that the feature works as intended or that the bug is indeed fixed
+(and won't turn up again in the future).
+The best way to find out how to write such tests is by taking a look at the existing tests,
+maybe finding one that is similar
+and adapting it to the new test case.
+
+MSS uses pytest as a test runner and therefore their `docs <https://docs.pytest.org/en/latest/contents.html>`_ are relevant here.
+
+Common resources that a test might need,
+like e.g. a running MSColab server or a QApplication instance for GUI tests,
+are collected in :mod:`tests.fixtures` in the form of pytest fixtures that can be requested as needed in tests.
+
+
 Pushing your changes
 --------------------
 

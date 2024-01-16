@@ -33,23 +33,19 @@ import mslib.utils.auth
 from mslib.msui import flighttrack as ft
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
-from tests.utils import (mscolab_start_server, mscolab_register_and_login, mscolab_create_operation,
+from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
                          mscolab_delete_all_operations, mscolab_delete_user)
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.mscolab import handle_db_reset
-
-
-PORTS = list(range(23000, 23500))
 
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+    def setup(self, qapp, mscolab_app, mscolab_server):
+        self.app = mscolab_app
+        self.url = mscolab_server
         QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
@@ -69,7 +65,6 @@ class Test_Mscolab_Merge_Waypoints:
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     def _create_user_data(self, emailid='merge@alpha.org'):
         with self.app.app_context():

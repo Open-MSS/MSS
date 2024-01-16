@@ -25,39 +25,23 @@
     limitations under the License.
 """
 # ToDo have to be merged into test_file_manager
-from flask_testing import TestCase
 import os
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
-from mslib.mscolab.server import APP
-from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.utils import get_recent_op_id
 
 
 @pytest.mark.skipif(os.name == "nt",
                     reason="multiprocessing needs currently start_method fork")
-class Test_Files(TestCase):
-    render_templates = False
+class Test_Files:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app, mscolab_managers):
+        self.app = mscolab_app
+        _, _, self.fm = mscolab_managers
 
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
-
-        self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
         self.userdata = 'UV11@uv11', 'UV11', 'uv11'
         self.userdata2 = 'UV12@uv12', 'UV12', 'uv12'
 
@@ -69,9 +53,8 @@ class Test_Files(TestCase):
         assert self.user is not None
         self.file_message_counter = [0] * 2
         self._example_data()
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_create_operation(self):
         with self.app.test_client():

@@ -29,17 +29,13 @@ import mock
 import os
 import pytest
 import shutil
-import multiprocessing
 import tempfile
 import mslib.msui.topview as tv
-from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
 from tests.utils import wait_until_signal
-
-PORTS = list(range(28000, 28500))
 
 
 class Test_MSS_TV_MapAppearanceDialog:
@@ -291,16 +287,11 @@ class Test_MSSTopViewWindow:
                     reason="multiprocessing needs currently start_method fork")
 class Test_TopViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        self.port = PORTS.pop()
-
+    def setup(self, qapp, mswms_server):
+        self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
-        self.thread = multiprocessing.Process(
-            target=application.run,
-            args=("127.0.0.1", self.port))
-        self.thread.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -322,7 +313,6 @@ class Test_TopViewWMS:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
-        self.thread.terminate()
 
     def query_server(self, url):
         QtWidgets.QApplication.processEvents()
@@ -337,7 +327,7 @@ class Test_TopViewWMS:
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
+        self.query_server(self.url)
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.image_displayed)
