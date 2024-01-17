@@ -122,6 +122,7 @@ BASE_DIR = ROOT_DIR
 DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
 MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
+MSCOLAB_SSO_DIR = fs.path.join(DATA_DIR, 'datasso')
 
 # In the unit days when Operations get archived because not used
 ARCHIVE_THRESHOLD = 30
