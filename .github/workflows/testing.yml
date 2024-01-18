@@ -3,9 +3,6 @@ name: Pytest MSS
 on:
   workflow_call:
     inputs:
-      xdist:
-        required: true
-        type: string
       branch_name:
         required: true
         type: string
@@ -30,6 +27,11 @@ jobs:
 
     container:
       image: openmss/testing-${{ inputs.branch_name }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        order: ["normal", "reverse"]
 
     steps:
     - name: Trust My Directory
@@ -74,27 +76,17 @@ jobs:
         && mamba list
 
     - name: Run tests
-      if: ${{ success() && inputs.xdist == 'no' }}
-      timeout-minutes: 25
+      timeout-minutes: 10
       run: |
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && xvfb-run pytest -v --durations=20 --reverse --cov=mslib tests
-
-    - name: Run tests in parallel
-      if: ${{ success() && inputs.xdist == 'yes' }}
-      timeout-minutes: 25
-      run: |
-        cd $GITHUB_WORKSPACE \
-        && source /opt/conda/etc/profile.d/conda.sh \
-        && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mss-${{ inputs.branch_name }}-env \
-        && xvfb-run pytest -vv -n 6 --dist loadfile --max-worker-restart 4 tests
+        && xvfb-run pytest -v -n 6 --dist loadfile --max-worker-restart 4 --durations=20 --cov=mslib \
+          ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
 
     - name: Collect coverage
-      if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && inputs.xdist == 'no'}}
+      if: ${{ success() && inputs.event_name == 'push' && inputs.branch_name == 'develop' && matrix.order == 'normal' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -106,7 +98,7 @@ jobs:
         && coveralls --service=github
 
     - name: Invoke dockertesting image creation
-      if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no'}}
+      if: ${{ always() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
       uses: benc-uk/workflow-dispatch@v1.2.2
       with:
         workflow: Update Image testing-${{ inputs.branch_name }}
