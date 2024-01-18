@@ -955,7 +955,8 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "skip_archived": skip_archived
             }
-            r = requests.get(self.mscolab_server_url + '/operations', data=data)
+            url = urljoin(self.mscolab_server_url, '/operations')
+            r = requests.get(url, data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
@@ -1442,8 +1443,9 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            r = requests.get(self.mscolab_server_url + '/operations', data=data,
-                             timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            url = urljoin(self.mscolab_server_url, '/operations')
+            timeout = tuple(config_loader(dataset="MSCOLAB_timeout"))
+            r = requests.get(url, timeout=timeout, data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
                 operations = _json["operations"]
