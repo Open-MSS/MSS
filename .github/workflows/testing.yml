@@ -32,6 +32,8 @@ jobs:
       fail-fast: false
       matrix:
         order: ["normal", "reverse"]
+        xdist-n: ["6", "auto", "logical"]
+        xdist-dist: ["loadfile", "load", "worksteal"]
 
     steps:
     - name: Trust My Directory
@@ -82,7 +84,7 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && xvfb-run pytest -v -n 6 --dist loadfile --max-worker-restart 4 --durations=20 --cov=mslib \
+        && xvfb-run pytest -v -n ${{ matrix.xdist-n }} --dist ${{ matrix.xdist-dist }} --durations=20 --cov=mslib \
           ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
 
     - name: Collect coverage
