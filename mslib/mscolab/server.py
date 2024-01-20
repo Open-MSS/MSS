@@ -244,18 +244,18 @@ def hello():
             auth.login_required()
             return json.dumps({
                 'message': "Mscolab server",
-                'USE_SAML2': mscolab_settings.USE_SAML2,
+                'use_saml2': mscolab_settings.USE_SAML2,
                 'direct_login': mscolab_settings.DIRECT_LOGIN
             })
         return json.dumps({
             'message': "Mscolab server",
-            'USE_SAML2': mscolab_settings.USE_SAML2,
+            'use_saml2': mscolab_settings.USE_SAML2,
             'direct_login': mscolab_settings.DIRECT_LOGIN
         })
     else:
         return json.dumps({
             'message': "Mscolab server",
-            'USE_SAML2': mscolab_settings.USE_SAML2,
+            'use_saml2': mscolab_settings.USE_SAML2,
             'direct_login': mscolab_settings.DIRECT_LOGIN
         })
 
