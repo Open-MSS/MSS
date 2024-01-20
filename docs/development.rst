@@ -342,9 +342,7 @@ Use the -v option to get a verbose result. By the -k option you could select one
 Verify Code Style
 .................
 
-A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
-
-Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
+A flake8 only test is done with `flake8 mslib tests`.
 
 Coverage
 ........
