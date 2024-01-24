@@ -50,8 +50,6 @@ class Message:
             pass
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Utils:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers):
@@ -62,8 +60,6 @@ class Test_Utils:
         with self.app.app_context():
             yield
 
-    @pytest.mark.skipif(os.name == "nt",
-                        reason="multiprocessing needs currently start_method fork")
     def test_get_recent_oid(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])

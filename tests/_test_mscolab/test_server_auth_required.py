@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
@@ -37,8 +36,6 @@ except ImportError:
                 "e.g. pytest tests/_test_mscolab/test_server_auth_required.py", allow_module_level=True)
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Server_Auth_Not_Valid:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):

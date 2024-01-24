@@ -175,6 +175,8 @@ def _running_eventlet_server(app):
     port = socket.getsockname()[1]
     url = f"{scheme}://{host}:{port}"
     app.config['URL'] = url
+    if "fork" not in multiprocessing.get_all_start_methods():
+        pytest.skip("requires the multiprocessing start_method 'fork', which is unavailable on this system")
     ctx = multiprocessing.get_context("fork")
     process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app), daemon=True)
     try:

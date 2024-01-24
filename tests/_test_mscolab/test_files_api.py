@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import fs
 import pytest
 
@@ -32,8 +31,6 @@ from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Files:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers):
