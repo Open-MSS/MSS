@@ -132,7 +132,9 @@ class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
         assert wp_server_before.lat != wp_local_before.lat
 
         # trigger save to server action from server options combobox
-        with mock.patch("mslib.msui.mscolab.MscolabMergeWaypointsDialog", AutoClickOverwriteMscolabMergeWaypointsDialog):
+        with mock.patch(
+            "mslib.msui.mscolab.MscolabMergeWaypointsDialog",
+                AutoClickOverwriteMscolabMergeWaypointsDialog):
             self.window.serverOptionsCb.setCurrentIndex(2)
         QtWidgets.QApplication.processEvents()
         # get the updated waypoints model from the server
