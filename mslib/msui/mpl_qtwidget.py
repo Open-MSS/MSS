@@ -475,6 +475,10 @@ class SideViewPlotter(ViewPlotter):
         for ax, typ in zip((self.ax, self.ax2), (vaxis, vaxis2)):
             ylabel, major_ticks, minor_ticks, labels = self._determine_ticks_labels(typ)
 
+            major_ticks_units = getattr(major_ticks, "units", None)
+            if ax.yaxis.units is None and major_ticks_units is not None:
+                ax.yaxis.set_units(major_ticks_units)
+
             ax.set_ylabel(ylabel, fontsize=plot_title_size)
             ax.set_yticks(minor_ticks, minor=True)
             ax.set_yticks(major_ticks, minor=False)
