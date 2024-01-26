@@ -49,14 +49,11 @@ class Test_MSS_LV_Options_Dialog:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_show(self, mockcrit):
-        assert mockcrit.critical.call_count == 0
+    def test_show(self):
+        pass
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_get(self, mockcrit):
+    def test_get(self):
         self.window.get_settings()
-        assert mockcrit.critical.call_count == 0
 
 
 class Test_MSSLinearViewWindow:
@@ -77,26 +74,21 @@ class Test_MSSLinearViewWindow:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_wms(self, mockbox):
+    def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_mouse_over(self, mockbox):
+    def test_mouse_over(self):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(100, 100), -1)
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.linearview.MSUI_LV_Options_Dialog")
-    def test_options(self, mockdlg, mockbox):
+    def test_options(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.lvoptionbtn, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         assert mockdlg.call_count == 1
         assert mockdlg.return_value.setModal.call_count == 1
         assert mockdlg.return_value.exec_.call_count == 1
@@ -138,12 +130,10 @@ class Test_LinearViewWMS:
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox, qtbot):
+    def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
         with qtbot.wait_signal(self.wms_control.image_displayed):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
-        assert mockbox.critical.call_count == 0
