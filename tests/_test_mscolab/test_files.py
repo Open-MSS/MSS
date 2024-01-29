@@ -34,8 +34,6 @@ from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Files:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers):

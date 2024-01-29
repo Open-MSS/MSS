@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
@@ -44,8 +43,6 @@ class Actions:
     DELETE = 4
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_MscolabOperation:
     @pytest.fixture(autouse=True)
     def setup(self, qapp, mscolab_app, mscolab_server):

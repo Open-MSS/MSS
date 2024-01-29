@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import fs
 import mock
 import pytest
@@ -39,8 +38,6 @@ from mslib.msui import mscolab
 from mslib.msui import msui
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Mscolab_Merge_Waypoints:
     @pytest.fixture(autouse=True)
     def setup(self, qapp, mscolab_app, mscolab_server):
