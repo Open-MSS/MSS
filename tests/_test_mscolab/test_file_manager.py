@@ -65,7 +65,7 @@ class Test_FileManager:
             user = User("user@example.com", "user", "password")
             assert user.id is None
             assert User.query.filter_by(emailid=user.emailid).first() is None
-            # creeat the user
+            # create the user
             self.fm.modify_user(user, action="create")
             user_query = User.query.filter_by(emailid=user.emailid).first()
             assert user_query.id is not None
@@ -75,16 +75,18 @@ class Test_FileManager:
             assert self.fm.modify_user(user, action="create") is False
             # confirming the user
             confirm_time = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=1)
-            self.fm.modify_user(user_query, attribute="confirmed_on", value=confirm_time)
+            confirm_time_with_tz = confirm_time.replace(tzinfo=datetime.timezone.utc)
+            self.fm.modify_user(user_query, attribute="confirmed_on", value=confirm_time_with_tz)
             self.fm.modify_user(user_query, attribute="confirmed", value=True)
             user_query = User.query.filter_by(id=user.id).first()
             assert user_query.confirmed is True
-            assert user_query.confirmed_on == confirm_time
+            assert user_query.confirmed_on == confirm_time_with_tz
             assert user_query.confirmed_on > user_query.registered_on
             # deleting the user
             self.fm.modify_user(user_query, action="delete")
             user_query = User.query.filter_by(id=user_query.id).first()
             assert user_query is None
+
 
     def test_modify_user_special_cases(self):
         user1 = User("user1@example.com", "user1", "password")
