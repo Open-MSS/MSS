@@ -86,7 +86,6 @@ class Test_FileManager:
             user_query = User.query.filter_by(id=user_query.id).first()
             assert user_query is None
 
-
     def test_modify_user_special_cases(self):
         user1 = User("user1@example.com", "user1", "password")
         user2 = User("user2@example.com", "user2", "password")
