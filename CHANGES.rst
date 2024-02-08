@@ -1,13 +1,28 @@
 Changelog
 =========
 
+
+
+Version 8.3.3
+~~~~~~~~~~~~~
+
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/101?closed=1
+
+Fixes for msmws and mscolab:
+- security: fix potential path manipulation in the server sources
+
+
 Version 8.3.2
 ~~~~~~~~~~~~~
 
 Bug fix release:
 
 All changes:
-https://github.com/Open-MSS/MSS/milestone/100
+https://github.com/Open-MSS/MSS/milestone/100?closed=1
+
 
 Version 8.3.1
 ~~~~~~~~~~~~~
@@ -24,7 +39,7 @@ Bug fix release and minor enhacements:
 We improved the KML docking widget feature
 
 All changes:
-https://github.com/Open-MSS/MSS/milestone/98
+https://github.com/Open-MSS/MSS/milestone/98?closed=1
 
 Version 8.2.0
 ~~~~~~~~~~~~~
