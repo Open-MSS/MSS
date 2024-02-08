@@ -222,7 +222,7 @@ def create_or_update_idp_user(email, username, token, authentication_backend):
     user = User.query.filter_by(emailid=email).first()
     if not user:
         # using an IDP for a new account/profile, e-mail is already verified by the IDP
-        confirm_time = datetime.datetime.now() + datetime.timedelta(seconds=1)
+        confirm_time = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=1)
         user = User(email, username, password=token, confirmed=True, confirmed_on=confirm_time,
                     authentication_backend=authentication_backend)
         result = fm.modify_user(user, action="create")
@@ -338,7 +338,7 @@ def confirm_email(token):
         if user.confirmed:
             return render_template('user/confirmed.html', username=user.username)
         else:
-            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now())
+            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
             fm.modify_user(user, attribute="confirmed", value=True)
             return render_template('user/confirmed.html', username=user.username)
 

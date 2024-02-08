@@ -195,7 +195,7 @@ class Test_Socket_Manager:
             messages = self.cm.get_messages(1, timestamp)
             assert len(messages) == 2
             assert messages[0]["u_id"] == self.user.id
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d, %H:%M:%S")
+            timestamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d, %H:%M:%S")
             messages = self.cm.get_messages(1, timestamp)
             assert len(messages) == 0
 
