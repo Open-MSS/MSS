@@ -32,6 +32,8 @@ import secrets
 import fs
 import socketio
 import sqlalchemy.exc
+import werkzeug
+
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask import g, jsonify, request, render_template, flash
 from flask import send_from_directory, abort, url_for, redirect
@@ -406,7 +408,7 @@ def uploads(name=None, filename=None):
         abort(404)
     if filename is None:
         abort(404)
-    return send_from_directory(fs.path.join(base_path, name), filename)
+    return send_from_directory(base_path, werkzeug.security.safe_join("", name, filename))
 
 
 # 413: Payload Too Large

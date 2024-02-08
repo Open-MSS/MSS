@@ -29,6 +29,7 @@ import sys
 import os
 import codecs
 import mslib
+import werkzeug
 
 from flask import render_template
 from flask import send_from_directory, send_file, url_for
@@ -180,11 +181,15 @@ def create_app(name="", imprint=None, gdpr=None):
     @APP.route("/mss/code/<path:filename>")
     def code(filename):
         download = request.args.get("download", False)
-        _file = os.path.join(STATIC_LOCATION, 'code', filename)
+        _file = werkzeug.security.safe_join(STATIC_LOCATION, "code", filename)
+        if _file is None:
+            abort(404)
         content = get_content(_file)
         if not download:
             return render_template("/content.html", act="code", content=content)
         else:
+            if not os.path.isfile(_file):
+                abort(404)
             with open(_file) as f:
                 text = f.read()
             return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
