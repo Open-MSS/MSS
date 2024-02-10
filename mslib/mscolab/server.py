@@ -425,7 +425,7 @@ def create_operation():
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
     active = (request.form.get('active', "True") == "True")
-    last_used = datetime.datetime.utcnow()
+    last_used = datetime.datetime.now(tz=datetime.timezone.utc)
     user = g.user
     r = str(fm.create_operation(path, description, user, last_used,
                                 content=content, category=category, active=active))
@@ -545,7 +545,7 @@ def set_last_used():
     user = g.user
     days_ago = int(request.form.get('days', 0))
     fm.update_operation(int(op_id), 'last_used',
-                        datetime.datetime.utcnow() - datetime.timedelta(days=days_ago),
+                        datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
                         user)
     if days_ago > mscolab_settings.ARCHIVE_THRESHOLD:
         fm.update_operation(int(op_id), "active", False, user)

@@ -145,7 +145,7 @@ class Operation(db.Model):
         self.category = category
         self.active = active
         if self.last_used is None:
-            self.last_used = datetime.datetime.utcnow()
+            self.last_used = datetime.datetime.now(tz=datetime.timezone.utc)
         else:
             self.last_used = last_used
 
