@@ -24,6 +24,11 @@ jobs:
     container:
       image: openmss/testing-develop
 
+    strategy:
+      fail-fast: false
+      matrix:
+        order: ["normal", "reverse"]
+
     steps:
     - name: Trust My Directory
       run: git config --global --add safe.directory /__w/MSS/MSS
@@ -63,23 +68,14 @@ jobs:
 
     - name: Run tests
       if: ${{ success() }}
-      timeout-minutes: 25
+      timeout-minutes: 10
       run: |
         cd $GITHUB_WORKSPACE \
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-develop-env \
-        && xvfb-run pytest -v --durations=20 --reverse --cov=mslib tests
-
-    - name: Run tests in parallel
-      if: ${{ success() }}
-      timeout-minutes: 25
-      run: |
-        cd $GITHUB_WORKSPACE \
-        && source /opt/conda/etc/profile.d/conda.sh \
-        && source /opt/conda/etc/profile.d/mamba.sh \
-        && mamba activate mss-develop-env \
-        && xvfb-run pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests
+        && xvfb-run pytest -v -n 6 --dist loadfile --max-worker-restart 4 --durations=20 --cov=mslib \
+          ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
 
     - name: Collect coverage
       if: ${{ success() }}
