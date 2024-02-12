@@ -6,12 +6,14 @@ on:
 
 
 jobs:
-  trigger_stable_test:
+  trigger-testing-stable:
     runs-on: ubuntu-latest
+    permissions:
+        actions: write
     steps:
       - uses: benc-uk/workflow-dispatch@v1.2.2
         with:
-          workflow: testing-stable
+          workflow: testing-stable.yml
           ref: stable
 
   test-develop-scheduled:
