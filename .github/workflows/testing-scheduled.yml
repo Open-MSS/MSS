@@ -9,7 +9,7 @@ jobs:
   trigger-testing-stable:
     runs-on: ubuntu-latest
     permissions:
-        actions: write
+      actions: write
     steps:
       - uses: benc-uk/workflow-dispatch@v1.2.2
         with:
