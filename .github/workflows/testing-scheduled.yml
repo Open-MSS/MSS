@@ -2,7 +2,7 @@ name: new dependency test (scheduled)
 
 on:
   schedule:
-    - cron: '30 5 * * 1' 
+    - cron: '30 5 * * 1'
 
 
 jobs:
@@ -17,14 +17,10 @@ jobs:
           ref: stable
 
   test-develop-scheduled:
-    uses: 
+    uses:
       ./.github/workflows/testing.yml
     with:
-      xdist: no
       branch_name: develop
       event_name: ${{ github.event_name }}
     secrets:
       PAT: ${{ secrets.PAT }}
-
-
-
