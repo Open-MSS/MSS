@@ -43,6 +43,13 @@ jobs:
         || (echo Dependencies differ \
             && echo "triggerdockerbuild=yes" >> $GITHUB_ENV )
 
+    - name: Install pyvirtualdisplay if on stable
+      if: ${{ inputs.branch_name == 'stable' }}
+      run: |
+        source /opt/conda/etc/profile.d/conda.sh
+        source /opt/conda/etc/profile.d/mamba.sh
+        mamba install -n mss-${{ inputs.branch_name }}-env pyvirtualdisplay
+
     - name: Always rebuild dependencies for scheduled builds
       if: ${{ success() && inputs.event_name == 'schedule' && inputs.branch_name == 'stable' && env.triggerdockerbuild != 'yes' }}
       run: |
