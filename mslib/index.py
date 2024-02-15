@@ -85,7 +85,6 @@ def create_app(name="", imprint=None, gdpr=None):
     APP.jinja_env.globals["imprint"] = imprint_file
     APP.jinja_env.globals["gdpr"] = gdpr_file
 
-    @APP.route('/xstatic/<name>/', defaults=dict(filename=''))
     @APP.route('/xstatic/<name>/<path:filename>')
     def files(name, filename):
 
