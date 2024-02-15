@@ -309,8 +309,7 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_name == self.operation_name
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_view_open(self, mockbox):
+    def test_view_open(self):
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
@@ -334,10 +333,14 @@ class Test_Mscolab:
         active_windows = self.window.get_active_views()
         topview = active_windows[1]
         tableview = active_windows[0]
-        self.window.mscolab.handle_update_permission(operation, uid, "viewer")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.mscolab.handle_update_permission(operation, uid, "viewer")
+            m.assert_called_once()
         assert not tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and not action.isEnabled() for action in topview.mpl.navbar.actions())
-        self.window.mscolab.handle_update_permission(operation, uid, "creator")
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.mscolab.handle_update_permission(operation, uid, "creator")
+            m.assert_called_once()
         assert tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
@@ -362,8 +365,7 @@ class Test_Mscolab:
                                       ("example.csv", "actionImportFlightTrackCSV", 5),
                                       ("example.txt", "actionImportFlightTrackTXT", 5),
                                       ("flitestar.txt", "actionImportFlightTrackFliteStar", 10)])
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_import_file(self, mockbox, name):
+    def test_import_file(self, name):
         self.window.remove_plugins()
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
@@ -372,13 +374,16 @@ class Test_Mscolab:
             # with parametrize it is maybe too fast
             QtTest.QTest.qWait(100)
             self._connect_to_mscolab()
+            modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
             self._login(emailid=self.userdata[0], password=self.userdata[2])
             self._activate_operation_at_index(0)
             wp = self.window.mscolab.waypoints_model
             assert len(wp.waypoints) == 2
             for action in self.window.menuImportFlightTrack.actions():
                 if action.objectName() == name[1]:
-                    action.trigger()
+                    with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+                        action.trigger()
+                        m.assert_called_once()
                     break
             assert mockopen.call_count == 1
             imported_wp = self.window.mscolab.waypoints_model
@@ -569,8 +574,7 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_category == "new_category"
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.information")
-    def test_any_special_category(self, mockbox, qtbot):
+    def test_any_special_category(self, qtbot):
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user(qtbot, "something", "something@something.org", "something")
@@ -694,34 +698,35 @@ class Test_Mscolab:
         QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.help_dialog is None
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    @mock.patch("sys.exit")
-    def test_create_dir_exceptions(self, mockexit, mockbox):
-        with mock.patch("fs.open_fs", new=ExceptionMock(fs.errors.CreateFailed).raise_exc):
+    def test_create_dir_exceptions(self):
+        with mock.patch("fs.open_fs", new=ExceptionMock(fs.errors.CreateFailed).raise_exc), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox, \
+                mock.patch("sys.exit") as mockexit:
             self.window.mscolab.data_dir = "://"
             self.window.mscolab.create_dir()
-            assert mockbox.critical.call_count == 1
-            assert mockexit.call_count == 1
+            critbox.assert_called_once()
+            mockexit.assert_called_once()
 
-        with mock.patch("fs.open_fs", new=ExceptionMock(fs.opener.errors.UnsupportedProtocol).raise_exc):
+        with mock.patch("fs.open_fs", new=ExceptionMock(fs.opener.errors.UnsupportedProtocol).raise_exc), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox, \
+                mock.patch("sys.exit") as mockexit:
             self.window.mscolab.data_dir = "://"
             self.window.mscolab.create_dir()
-            assert mockbox.critical.call_count == 2
-            assert mockexit.call_count == 2
+            critbox.assert_called_once()
+            mockexit.assert_called_once()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_profile_dialog(self, mockbox, qtbot):
+    def test_profile_dialog(self, qtbot):
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user(qtbot, "something", "something@something.org", "something")
         self.window.mscolab.profile_action.trigger()
         QtWidgets.QApplication.processEvents()
         # case: default gravatar is set and no messagebox is called
-        assert mockbox.critical.call_count == 0
         assert self.window.mscolab.prof_diag is not None
         # case: trying to fetch non-existing gravatar
-        self.window.mscolab.fetch_gravatar(refresh=True)
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
+            self.window.mscolab.fetch_gravatar(refresh=True)
+            critbox.assert_called_once()
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
 
     def _connect_to_mscolab(self):

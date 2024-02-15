@@ -50,26 +50,19 @@ class Test_MSS_SV_OptionsDialog:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_show(self, mockcrit):
-        assert mockcrit.critical.call_count == 0
+    def test_show(self):
+        pass
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_get(self, mockcrit):
+    def test_get(self):
         self.window.get_settings()
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_addLevel(self, mockcrit):
+    def test_addLevel(self):
         QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_removeLevel(self, mockcrit):
+    def test_removeLevel(self):
         QtTest.QTest.mouseClick(self.window.btDelete, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.critical.call_count == 0
 
     def test_getFlightLevels(self):
         levels = self.window.get_flight_levels()
@@ -104,34 +97,28 @@ class Test_MSSSideViewWindow:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_wms(self, mockbox):
+    def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_mouse_over(self, mockbox):
+    def test_mouse_over(self):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(20, 20), -1)
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.sideview.MSUI_SV_OptionsDialog")
-    def test_options(self, mockdlg, mockbox):
+    def test_options(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.btOptions, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         assert mockdlg.call_count == 1
         assert mockdlg.return_value.setModal.call_count == 1
         assert mockdlg.return_value.exec_.call_count == 1
         assert mockdlg.return_value.destroy.call_count == 1
 
     @pytest.mark.skip("fails with mockbox.critical.call_count in reverse order")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_insert_point(self, mockbox):
+    def test_insert_point(self):
         """
         Test inserting a point inside and outside the canvas
         """
@@ -149,15 +136,12 @@ class Test_MSSSideViewWindow:
         # click again on same position
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_y_axes(self, mockbox):
+    def test_y_axes(self):
         self.window.getView().get_settings()["secondary_axis"] = "pressure altitude"
         self.window.getView().set_settings(self.window.getView().get_settings())
         self.window.getView().get_settings()["secondary_axis"] = "flight level"
         self.window.getView().set_settings(self.window.getView().get_settings())
-        assert mockbox.critical.call_count == 0
 
 
 class Test_SideViewWMS:
@@ -195,8 +179,7 @@ class Test_SideViewWMS:
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox, qtbot):
+    def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -207,4 +190,3 @@ class Test_SideViewWMS:
 
         self.window.getView().plotter.clear_figure()
         assert self.window.getView().plotter.image is None
-        assert mockbox.critical.call_count == 0

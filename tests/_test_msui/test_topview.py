@@ -50,15 +50,11 @@ class Test_MSS_TV_MapAppearanceDialog:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_show(self, mockcrit):
-        assert mockcrit.critical.call_count == 0
+    def test_show(self):
+        pass
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_get(self, mockcrit):
-        assert mockcrit.critical.call_count == 0
+    def test_get(self):
         self.window.get_settings()
-        assert mockcrit.critical.call_count == 0
 
 
 class Test_MSSTopViewWindow:
@@ -78,20 +74,15 @@ class Test_MSSTopViewWindow:
         self.window.hide()
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_wms(self, mockbox):
+    def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_sat(self, mockbox):
+    def test_open_sat(self):
         self.window.cbTools.currentIndexChanged.emit(2)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_rs(self, mockcrit):
+    def test_open_rs(self):
         self.window.cbTools.currentIndexChanged.emit(3)
         QtWidgets.QApplication.processEvents()
         rsdock = self.window.docks[2].widget()
@@ -104,16 +95,12 @@ class Test_MSSTopViewWindow:
         QtTest.QTest.mouseClick(rsdock.cbDrawTangents, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         rsdock.cbShowSolarAngle.setChecked(True)
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_kml(self, mockbox):
+    def test_open_kml(self):
         self.window.cbTools.currentIndexChanged.emit(4)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_insert_point(self, mockbox):
+    def test_insert_point(self):
         """
         Test inserting a point inside and outside the canvas
         """
@@ -130,12 +117,10 @@ class Test_MSSTopViewWindow:
         # click again on same position
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
-        assert mockbox.critical.call_count == 0
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
-    def test_remove_point_yes(self, mockcrit, mockbox):
+    def test_remove_point_yes(self, mockbox):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
@@ -147,14 +132,12 @@ class Test_MSSTopViewWindow:
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.call_count == 0
         assert len(self.window.waypoints_model.waypoints) == 3
         assert mockbox.call_count == 1
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.No)
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
-    def test_remove_point_no(self, mockcrit, mockbox):
+    def test_remove_point_no(self, mockbox):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
@@ -172,10 +155,8 @@ class Test_MSSTopViewWindow:
         QtWidgets.QApplication.processEvents()
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 4
-        assert mockcrit.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_move_point(self, mockbox):
+    def test_move_point(self):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
@@ -195,10 +176,8 @@ class Test_MSSTopViewWindow:
             self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=point)
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_roundtrip(self, mockbox):
+    def test_roundtrip(self):
         """
         Test connecting the last and first point
         Test connecting the first point to itself
@@ -224,63 +203,49 @@ class Test_MSSTopViewWindow:
         # Remove connection
         self.window.waypoints_model.removeRows(count, 1)
         assert len(self.window.waypoints_model.waypoints) == count
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_map_options(self, mockbox):
+    def test_map_options(self):
         self.window.mpl.canvas.map.set_graticule_visible(True)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_graticule_visible(False)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_fillcontinents_visible(False)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_fillcontinents_visible(True)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_coastlines_visible(False)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         self.window.mpl.canvas.map.set_coastlines_visible(True)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
         with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[{"type": "small_airport", "name": "Test",
                                                                           "latitude_deg": 52, "longitude_deg": 13,
                                                                           "elevation_ft": 0}]):
             self.window.mpl.canvas.map.set_draw_airports(True)
             QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
         with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[]):
             self.window.mpl.canvas.map.set_draw_airports(True)
             QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
         with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[{"type": "small_airport", "name": "Test",
                                                                           "latitude_deg": -52, "longitude_deg": -13,
                                                                           "elevation_ft": 0}]):
             self.window.mpl.canvas.map.set_draw_airports(True)
             QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
 
         with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[{"name": "Test", "top": 1, "bottom": 0,
                                                                            "polygon": [(13, 52), (14, 53), (13, 52)],
                                                                            "country": "DE"}]):
             self.window.mpl.canvas.map.set_draw_airspaces(True)
             QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
         with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[]):
             self.window.mpl.canvas.map.set_draw_airspaces(True)
             QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
         with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[{"name": "Test", "top": 1, "bottom": 0,
                                                                            "polygon": [(-13, -52), (-14, -53),
                                                                                        (-13, -52)],
                                                                            "country": "DE"}]):
             self.window.mpl.canvas.map.set_draw_airspaces(True)
             QtWidgets.QApplication.processEvents()
-            assert mockbox.critical.call_count == 0
 
 
 class Test_TopViewWMS:
@@ -320,8 +285,7 @@ class Test_TopViewWMS:
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox):
+    def test_server_getmap(self):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -334,7 +298,6 @@ class Test_TopViewWMS:
         self.window.getView().clear_figure()
         assert self.window.getView().map.image is None
         self.window.mpl.canvas.redraw_map()
-        assert mockbox.critical.call_count == 0
 
 
 class Test_MSUITopViewWindow:
