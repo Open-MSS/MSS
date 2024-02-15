@@ -82,9 +82,9 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && pytest -v --durations=20 --reverse --cov=mslib tests \
+        && xvfb-run pytest -v --durations=20 --reverse --cov=mslib tests \
         || (for i in {1..5} \
-          ; do pytest tests -v --durations=0 --reverse --last-failed --lfnf=none \
+          ; do xvfb-run pytest tests -v --durations=0 --reverse --last-failed --lfnf=none \
           && break \
         ; done)
 
@@ -96,9 +96,9 @@ jobs:
         && source /opt/conda/etc/profile.d/conda.sh \
         && source /opt/conda/etc/profile.d/mamba.sh \
         && mamba activate mss-${{ inputs.branch_name }}-env \
-        && pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests \
+        && xvfb-run pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests \
         || (for i in {1..5} \
-          ; do pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests --last-failed --lfnf=none \
+          ; do xvfb-run pytest -vv -n 6 --dist loadfile --max-worker-restart 0 tests --last-failed --lfnf=none \
           && break \
         ; done)
 
