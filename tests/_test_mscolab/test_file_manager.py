@@ -79,7 +79,7 @@ class Test_FileManager:
             self.fm.modify_user(user_query, attribute="confirmed", value=True)
             user_query = User.query.filter_by(id=user.id).first()
             assert user_query.confirmed is True
-            assert user_query.confirmed_on.replace(tzinfo=None) == confirm_time.replace(tzinfo=None)
+            assert user_query.confirmed_on.replace(tzinfo=datetime.timezone.utc) == confirm_time
             assert user_query.confirmed_on > user_query.registered_on
             # deleting the user
             self.fm.modify_user(user_query, action="delete")
