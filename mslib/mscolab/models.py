@@ -42,9 +42,7 @@ class User(db.Model):
     password = db.Column(db.String(255), unique=True)
     registered_on = db.Column(db.DateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
-    confirmed_on = db.Column(db.DateTime(timezone=True),
-                             nullable=True,
-                             default=datetime.datetime.now(tz=datetime.timezone.utc))
+    confirmed_on = db.Column(db.DateTime(timezone=True), nullable=True, default=None)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
