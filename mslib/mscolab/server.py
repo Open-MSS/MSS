@@ -833,10 +833,13 @@ if mscolab_settings.USE_SAML2:
 
     # Implementation for handling configured SAML assertion consumer endpoints
     for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
-        for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
-            # Dynamically add the route for the current endpoint
-            APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
-                             create_acs_post_handler(idp_config), methods=['POST'])
+        try:
+            for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
+                # Dynamically add the route for the current endpoint
+                APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
+                                 create_acs_post_handler(idp_config), methods=['POST'])
+        except (NameError, AttributeError, KeyError) as ex:
+            logging.debug("USE_SAML2 is %s, Failure is: %s" % (mscolab_settings.USE_SAML2, ex))
 
     @APP.route('/idp_login_auth/', methods=['POST'])
     def idp_login_auth():
