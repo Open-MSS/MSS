@@ -99,11 +99,14 @@ class Test_FileManager:
             flight_path, operation = self._create_operation(flight_path="more_than_one")
             self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+            self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
 
             assert operation.path == flight_path
             assert self.fm.fetch_operation_creator(operation.id, self.user.id) == self.user.username
             assert self.fm.fetch_operation_creator(operation.id, self.collaboratoruser.id) == self.user.username
             assert self.fm.fetch_operation_creator(operation.id, self.vieweruser.id) == self.user.username
+            assert self.fm.fetch_operation_creator(operation.id, self.adminuser.id) == self.user.username
+
             # this user is not defined in that OP
             assert self.fm.fetch_operation_creator(operation.id, self.op2user.id) is False
 
