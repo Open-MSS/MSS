@@ -33,6 +33,7 @@ from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
 import sqlalchemy.types as types
 
+
 class Awaredatetime(types.TypeDecorator):
     impl = types.DateTime(timezone=True)
 
@@ -45,7 +46,6 @@ class Awaredatetime(types.TypeDecorator):
         if value is not None:
             return value.replace(tzinfo=datetime.timezone.utc)
         return value
-
 
 
 class User(db.Model):
