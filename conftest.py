@@ -74,18 +74,6 @@ def keyring_reset():
     keyring.get_keyring().reset()
 
 
-def pytest_addoption(parser):
-    parser.addoption("--msui_settings", action="store")
-
-
-def pytest_generate_tests(metafunc):
-    option_value = metafunc.config.option.msui_settings
-    if option_value is not None:
-        msui_settings_file_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
-        msui_settings_file_fs.writetext("msui_settings.json", option_value)
-        msui_settings_file_fs.close()
-
-
 def generate_initial_config():
     """Generate an initial state for the configuration directory in tests.constants.ROOT_FS
     """
