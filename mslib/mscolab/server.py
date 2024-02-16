@@ -839,7 +839,7 @@ if mscolab_settings.USE_SAML2:
                 APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
                                  create_acs_post_handler(idp_config), methods=['POST'])
         except (NameError, AttributeError, KeyError) as ex:
-            logging.debug("USE_SAML2 is %s, Failure is: %s" % (mscolab_settings.USE_SAML2, ex))
+            logging.warning("USE_SAML2 is %s, Failure is: %s", (mscolab_settings.USE_SAML2, ex))
 
     @APP.route('/idp_login_auth/', methods=['POST'])
     def idp_login_auth():
