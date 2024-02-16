@@ -344,6 +344,36 @@ class Test_Mscolab:
         assert tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
+    def test_multiple_views_and_multiple_flightpath(self):
+        """
+        checks that we can have multiple topviews with the multiple flightpath dockingwidget
+        and we are able to cycle a login/logout
+        """
+        self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(emailid=self.userdata[0], password=self.userdata[2])
+        # test after activating operation
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.get_active_views()) == 1
+        self.window.actionTopView.trigger()
+        QtWidgets.QApplication.processEvents()
+        assert len(self.window.get_active_views()) == 2
+        topview_0 = self.window.listViews.item(0)
+        # open multiple flightpath first window
+        topview_0.window.cbTools.currentIndexChanged.emit(6)
+        QtWidgets.QApplication.processEvents()
+        topview_1 = self.window.listViews.item(1)
+        # open multiple flightpath second window
+        topview_1.window.cbTools.currentIndexChanged.emit(6)
+        QtWidgets.QApplication.processEvents()
+        assert self.window.usernameLabel.text() == self.userdata[1]
+        self.window.mscolab.logout()
+        self._connect_to_mscolab()
+        self._login(emailid=self.userdata[0], password=self.userdata[2])
+        assert self.window.usernameLabel.text() == self.userdata[1]
+
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
                               "Flight track (*.ftml)"))
