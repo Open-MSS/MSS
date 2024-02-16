@@ -495,7 +495,9 @@ class FileManager:
         return users
 
     def fetch_operation_creator(self, op_id, u_id):
-        if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
+        if (not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id) and
+                not self.is_collaborator(u_id, op_id) and not self.is_viewer(u_id, op_id)):
+            # any participant of the OP is allowed to see who is the creator
             return False
         current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
         return current_operation_creator.user.username
