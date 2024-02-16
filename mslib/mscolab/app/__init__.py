@@ -30,7 +30,7 @@ from flask_migrate import Migrate
 
 import mslib
 
-from flask import Flask
+from flask import Flask, url_for
 from mslib.mscolab.conf import mscolab_settings
 from flask_sqlalchemy import SQLAlchemy
 from mslib.mswms.gallery_builder import STATIC_LOCATION
@@ -65,3 +65,14 @@ APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
 
 db = SQLAlchemy(APP)
 migrate = Migrate(APP, db, render_as_batch=True)
+
+
+def get_topmenu():
+    menu = [
+        (url_for('index'), 'Mission Support System',
+         ((url_for('about'), 'About'),
+          (url_for('install'), 'Install'),
+          (url_for('help'), 'Help'),
+          )),
+    ]
+    return menu
