@@ -34,7 +34,7 @@ from mslib.mscolab.message_type import MessageType
 import sqlalchemy.types as types
 
 
-class awareDateTime(types.TypeDecorator):
+class AwareDateTime(types.TypeDecorator):
     impl = types.DateTime
 
     def process_bind_param(self, value, dialect):
@@ -55,9 +55,9 @@ class User(db.Model):
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255), unique=True)
-    registered_on = db.Column(awareDateTime, nullable=False)
+    registered_on = db.Column(AwareDateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
-    confirmed_on = db.Column(awareDateTime, nullable=True)
+    confirmed_on = db.Column(AwareDateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
