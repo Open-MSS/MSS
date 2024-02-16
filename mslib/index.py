@@ -25,21 +25,15 @@
     limitations under the License.
 """
 
-import sys
 import os
-import codecs
 import mslib
-import werkzeug
 
 from flask import render_template
 from flask import send_from_directory, send_file, url_for
 from flask import abort
-from flask import request
-from flask import Response
-from markdown import Markdown
 from xstatic.main import XStatic
 from mslib.msui.icons import icons
-from mslib.mswms.gallery_builder import STATIC_LOCATION
+from mslib.utils.get_content import get_content
 
 # set the operation root directory as the static folder
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
@@ -77,9 +71,9 @@ def create_app(name="", imprint=None, gdpr=None):
     gdpr_file = gdpr
 
     if "mscolab.server" in name:
-        from mslib.mscolab.app import APP
+        from mslib.mscolab.app import APP, get_topmenu
     else:
-        from mslib.mswms.app import APP
+        from mslib.mswms.app import APP, get_topmenu
 
     APP.jinja_env.globals.update(file_exists=file_exists)
     APP.jinja_env.globals["imprint"] = imprint_file
@@ -103,44 +97,7 @@ def create_app(name="", imprint=None, gdpr=None):
         base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img')
         return send_from_directory(base_path, filename)
 
-    def get_topmenu():
-        if "mscolab" in " ".join(sys.argv):
-            menu = [
-                (url_for('index'), 'Mission Support System',
-                 ((url_for('about'), 'About'),
-                  (url_for('install'), 'Install'),
-                  (url_for('help'), 'Help'),
-                  )),
-            ]
-        else:
-            menu = [
-                (url_for('index'), 'Mission Support System',
-                 ((url_for('about'), 'About'),
-                  (url_for('install'), 'Install'),
-                  (url_for("plots"), 'Gallery'),
-                  (url_for('help'), 'Help'),
-                  )),
-            ]
-
-        return menu
-
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
-
-    def get_content(filename, md_overrides=None, html_overrides=None):
-        markdown = Markdown(extensions=["fenced_code"])
-        content = ""
-        if os.path.isfile(filename):
-            with codecs.open(filename, 'r', 'utf-8') as f:
-                md_data = f.read()
-            md_data = md_data.replace(':ref:', '')
-            if md_overrides is not None:
-                v1, v2 = md_overrides
-                md_data = md_data.replace(v1, v2)
-            content = markdown.convert(md_data)
-            if html_overrides is not None:
-                v1, v2 = html_overrides
-                content = content.replace(v1, v2)
-        return content
 
     @APP.route("/index")
     def index():
@@ -163,38 +120,6 @@ def create_app(name="", imprint=None, gdpr=None):
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'installation.md')
         content = get_content(_file)
         return render_template("/content.html", act="install", content=content)
-
-    @APP.route("/mss/plots")
-    def plots():
-        if STATIC_LOCATION != "" and os.path.exists(os.path.join(STATIC_LOCATION, 'plots.html')):
-            _file = os.path.join(STATIC_LOCATION, 'plots.html')
-            content = get_content(_file)
-        else:
-            content = "Gallery was not generated for this server.<br>" \
-                      "For further info on how to generate it, run the " \
-                      "<b>gallery --help</b> command line parameter of mswms.<br>" \
-                      "An example of the gallery can be seen " \
-                      "<a href=\"https://mss.readthedocs.io/en/stable/gallery/index.html\">here</a>"
-        return render_template("/content.html", act="plots", content=content)
-
-    @APP.route("/mss/code/<path:filename>")
-    def code(filename):
-        download = request.args.get("download", False)
-        _file = werkzeug.security.safe_join(STATIC_LOCATION, "code", filename)
-        if _file is None:
-            abort(404)
-        content = get_content(_file)
-        if not download:
-            return render_template("/content.html", act="code", content=content)
-        else:
-            if not os.path.isfile(_file):
-                abort(404)
-            with open(_file) as f:
-                text = f.read()
-            return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
-                                    .splitlines(keepends=True)][1:-2]),
-                            mimetype="text/plain",
-                            headers={"Content-disposition": f"attachment; filename={filename.split('-')[0]}.py"})
 
     @APP.route("/mss/help")
     def help():  # noqa: A001
