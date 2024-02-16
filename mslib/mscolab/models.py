@@ -31,6 +31,21 @@ import jwt
 from passlib.apps import custom_app_context as pwd_context
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
+import sqlalchemy.types as types
+
+class Awaredatetime(types.TypeDecorator):
+    impl = types.DateTime(timezone=True)
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return value.astimezone(datetime.timezone.utc)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return value.replace(tzinfo=datetime.timezone.utc)
+        return value
+
 
 
 class User(db.Model):
@@ -42,7 +57,7 @@ class User(db.Model):
     password = db.Column(db.String(255), unique=True)
     registered_on = db.Column(db.DateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
-    confirmed_on = db.Column(db.TIMESTAMP(timezone=True), nullable=True, default=None)
+    confirmed_on = db.Column(Awaredatetime, nullable=True, default=None)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
