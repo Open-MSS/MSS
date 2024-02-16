@@ -237,10 +237,10 @@ class Test_MSSSideViewWindow:
         QtWidgets.QApplication.processEvents()
 
     def test_open_config(self):
-        pytest.skip("To be done")
-        self.window.actionConfigurationEditor.trigger()
+        self.window.actionConfiguration.trigger()
         QtWidgets.QApplication.processEvents()
-        self.window.config_editor.close()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.config_editor.close()
 
     def test_open_shortcut(self):
         self.window.actionShortcuts.trigger()
@@ -298,21 +298,20 @@ class Test_MSSSideViewWindow:
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
-    @pytest.mark.skip("needs to be refactored to become independent")
     @mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=export_plugins)
-    def test_add_plugins(self, mockopen, mockbox):
+    def test_add_plugins(self, mockopen):
         assert len(self.window.menuImportFlightTrack.actions()) == 2
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
-        assert len(self.window.import_plugins) == 1
-        assert len(self.window.export_plugins) == 1
+        assert len(self.window.import_plugins) == 0
+        assert len(self.window.export_plugins) == 0
 
         self.window.remove_plugins()
         self.window.add_import_plugins("qt")
         self.window.add_export_plugins("qt")
         assert len(self.window.import_plugins) == 1
         assert len(self.window.export_plugins) == 1
-        assert len(self.window.menuImportFlightTrack.actions()) == 2
-        assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
+        assert len(self.window.menuImportFlightTrack.actions()) == 3
+        assert len(self.window.menuExportActiveFlightTrack.actions()) == 3
 
         self.window.remove_plugins()
         with mock.patch("importlib.import_module", new=ExceptionMock(Exception()).raise_exc), \
@@ -333,8 +332,8 @@ class Test_MSSSideViewWindow:
         self.window.remove_plugins()
         assert len(self.window.import_plugins) == 0
         assert len(self.window.export_plugins) == 0
-        assert len(self.window.menuImportFlightTrack.actions()) == 1
-        assert len(self.window.menuExportActiveFlightTrack.actions()) == 1
+        assert len(self.window.menuImportFlightTrack.actions()) == 2
+        assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)

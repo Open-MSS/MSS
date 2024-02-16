@@ -144,7 +144,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"{self.scheme}://???{self.host}:{self.port}")
         assert mockbox.critical.call_count == 1
 
-    @pytest.mark.skip("problem in urllib3")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_connection_error(self, mockbox):
         """
@@ -226,32 +225,29 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("needs a review")
-    def test_server_service_cache(self):
+    def test_server_service_cache(self, qtbot):
         """
         assert that changing between servers still allows image retrieval
         """
         self.query_server(self.url)
 
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.cpdlg.canceled)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as qm_critical:
+            with qtbot.wait_signal(self.window.cpdlg.canceled):
+                QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
+                QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
+                QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
+            qm_critical.assert_called_once()
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, ord(str(self.port)[3]))
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.cpdlg.canceled)
 
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.cpdlg.canceled):
+            QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, ord(str(self.port)[-1]))
+            QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
+            QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
+
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -299,7 +295,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("Fails testing reverse order")
     def test_filter_handling(self):
         self.query_server(self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
@@ -309,13 +304,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert "header" in self.window.multilayers.layers[f"{self.url}/"]
         assert "wms" in self.window.multilayers.layers[f"{self.url}/"]
 
-        starts_at = 40 * self.window.multilayers.scale
+        starts_at = int(40 * self.window.multilayers.scale)
         icon_start_fav = starts_at + 3
         if self.window.multilayers.cbMultilayering.isChecked():
             checkbox_width = round(self.window.multilayers.height * 0.75)
             icon_start_fav += checkbox_width + 6
 
-        starts_at = 20 * self.window.multilayers.scale
+        starts_at = int(20 * self.window.multilayers.scale)
         icon_start_del = starts_at + 3
 
         # Check layer filter is working
@@ -442,19 +437,17 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         self._teardown()
 
     def test_server_getmap(self, qtbot):
-        pytest.skip("unknown problem")
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
-        with qtbot.wait_signal(self.wms_control.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("IndexError: list index out of range")
     def test_multilayer_drawing(self):
         """
         assert that drawing a layer through code doesn't fail for vsec
