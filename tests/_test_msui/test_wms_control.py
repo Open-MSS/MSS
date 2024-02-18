@@ -112,13 +112,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         yield
         self._teardown()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_no_server(self, mockbox):
+    def test_no_server(self):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"{self.scheme}://{self.host}:{self.port-1}")
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
+            self.query_server(f"{self.scheme}://{self.host}:{self.port-1}")
+            mock_critical.assert_called_once()
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_no_schema(self, mockbox):
