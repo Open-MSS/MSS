@@ -198,70 +198,53 @@ class Test_MSSSideViewWindow:
     def test_no_updater(self):
         assert not hasattr(self.window, "updater")
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_app_start(self, mockbox):
-        assert mockbox.critical.call_count == 0
+    def test_app_start(self):
+        pass
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_new_flightrack(self, mockbox):
+    def test_new_flightrack(self):
         assert self.window.listFlightTracks.count() == 1
         self.window.actionNewFlightTrack.trigger()
         QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_topview(self, mockbox):
+    def test_open_topview(self):
         assert self.window.listViews.count() == 0
         self.window.actionTopView.trigger()
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         assert self.window.listViews.count() == 1
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_sideview(self, mockbox):
+    def test_open_sideview(self):
         assert self.window.listViews.count() == 0
         self.window.actionSideView.trigger()
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         assert self.window.listViews.count() == 1
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_tableview(self, mockbox):
+    def test_open_tableview(self):
         assert self.window.listViews.count() == 0
         self.window.actionTableView.trigger()
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         assert self.window.listViews.count() == 1
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_linearview(self, mockbox):
+    def test_open_linearview(self):
         assert self.window.listViews.count() == 0
         self.window.actionLinearView.trigger()
         self.window.listViews.itemActivated.emit(self.window.listViews.item(0))
         QtWidgets.QApplication.processEvents()
         assert self.window.listViews.count() == 1
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_about(self, mockbox):
+    def test_open_about(self):
         self.window.actionAboutMSUI.trigger()
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_config(self, mockbox):
-        pytest.skip("To be done")
-        self.window.actionConfigurationEditor.trigger()
+    def test_open_config(self):
+        self.window.actionConfiguration.trigger()
         QtWidgets.QApplication.processEvents()
-        self.window.config_editor.close()
-        assert mockbox.critical.call_count == 0
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.config_editor.close()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_shortcut(self, mockbox):
+    def test_open_shortcut(self):
         self.window.actionShortcuts.trigger()
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
     @pytest.mark.parametrize("save_file", [[save_ftml]])
     def test_plugin_saveas(self, save_file):
@@ -315,51 +298,49 @@ class Test_MSSSideViewWindow:
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
 
-    @pytest.mark.skip("needs to be refactored to become independent")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=export_plugins)
-    def test_add_plugins(self, mockopen, mockbox):
+    def test_add_plugins(self, mockopen):
         assert len(self.window.menuImportFlightTrack.actions()) == 2
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
-        assert len(self.window.import_plugins) == 1
-        assert len(self.window.export_plugins) == 1
+        assert len(self.window.import_plugins) == 0
+        assert len(self.window.export_plugins) == 0
 
         self.window.remove_plugins()
         self.window.add_import_plugins("qt")
         self.window.add_export_plugins("qt")
         assert len(self.window.import_plugins) == 1
         assert len(self.window.export_plugins) == 1
-        assert len(self.window.menuImportFlightTrack.actions()) == 2
-        assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
-        assert mockbox.critical.call_count == 0
+        assert len(self.window.menuImportFlightTrack.actions()) == 3
+        assert len(self.window.menuExportActiveFlightTrack.actions()) == 3
 
         self.window.remove_plugins()
-        with mock.patch("importlib.import_module", new=ExceptionMock(Exception()).raise_exc):
+        with mock.patch("importlib.import_module", new=ExceptionMock(Exception()).raise_exc), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
             self.window.add_import_plugins("qt")
             self.window.add_export_plugins("qt")
-            assert mockbox.critical.call_count == 2
+            assert critbox.call_count == 2
 
         self.window.remove_plugins()
         with mock.patch("mslib.msui.ms"
                         "ui.MSUIMainWindow.add_plugin_submenu",
-                        new=ExceptionMock(Exception()).raise_exc):
+                        new=ExceptionMock(Exception()).raise_exc), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
             self.window.add_import_plugins("qt")
             self.window.add_export_plugins("qt")
-            assert mockbox.critical.call_count == 4
+            assert critbox.call_count == 2
 
         self.window.remove_plugins()
         assert len(self.window.import_plugins) == 0
         assert len(self.window.export_plugins) == 0
-        assert len(self.window.menuImportFlightTrack.actions()) == 1
-        assert len(self.window.menuExportActiveFlightTrack.actions()) == 1
+        assert len(self.window.menuImportFlightTrack.actions()) == 2
+        assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     @mock.patch("mslib.msui.msui_mainwindow.get_save_filename", return_value=save_ftml)
     @mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[save_ftml])
-    def test_flight_track_io(self, mockload, mocksave, mockq, mocki, mockw, mockbox):
+    def test_flight_track_io(self, mockload, mocksave, mockq, mocki, mockw):
         self.window.actionCloseSelectedFlightTrack.trigger()
         assert mocki.call_count == 1
         self.window.actionNewFlightTrack.trigger()

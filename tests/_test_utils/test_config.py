@@ -121,8 +121,6 @@ class TestConfigLoader:
         """
         on a user defined empty msui_settings_json this test should return the default value for num_labels
         """
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert ":" not in file_content
@@ -143,8 +141,6 @@ class TestConfigLoader:
         on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
         create_msui_settings_file('{"num_interpolation_points": 20 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" not in file_content
@@ -168,8 +164,6 @@ class TestConfigLoader:
         on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
         create_msui_settings_file('{"num_interpolation_points": 201, "num_labels": 10 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" in file_content
@@ -187,8 +181,6 @@ class TestConfigLoader:
         on a user defined msui_settings_json with duplicate and empty keys should raise FatalUserError
         """
         create_msui_settings_file('{"num_interpolation_points": 201, "num_interpolation_points": 10 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_interpolation_points" in file_content
@@ -197,8 +189,6 @@ class TestConfigLoader:
             read_config_file(path=config_file)
 
         create_msui_settings_file('{"": 201, "num_labels": 10 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" in file_content
@@ -209,8 +199,6 @@ class TestConfigLoader:
         """
         Test to check if modify_config_file properly stores a key-value pair in an empty config file
         """
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
             "num_labels": 20
         }
@@ -225,8 +213,6 @@ class TestConfigLoader:
         Test to check if modify_config_file properly modifies a key-value pair in the config file
         """
         create_msui_settings_file('{"num_labels": 14}')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
             "num_labels": 20
         }
@@ -240,8 +226,6 @@ class TestConfigLoader:
         """
         Test to check if modify_config_file raises a KeyError when a key is empty
         """
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
             "": "sree",
             "num_labels": "20"

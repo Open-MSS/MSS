@@ -132,7 +132,6 @@ def test_get_downloaded_airports(mockbox):
         airports = get_airports(force_download=True)
         assert len(airports) > 0
         assert 'continent' in airports[0].keys()
-        assert mockbox.critical.call_count == 0
 
 
 def test_get_available_airspaces():
@@ -150,7 +149,6 @@ def test_update_airspace(mockbox):
         with open(example_file, 'r') as f:
             text = f.read()
         assert "<!-- For Testing ONLY -->" in text
-        assert mockbox.critical.call_count == 0
 
 
 @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
@@ -204,7 +202,6 @@ def test_get_airspaces(mockbox):
                      (22.739444444444445, 42.88527777777778)]
         }
     ]
-    assert mockbox.critical.call_count == 0
 
 
 @mock.patch("mslib.utils.airdata.download_progress", _download_incomplete_airspace)

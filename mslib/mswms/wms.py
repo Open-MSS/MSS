@@ -49,6 +49,7 @@ import logging
 import shutil
 import tempfile
 import traceback
+import werkzeug
 import urllib.parse
 
 from xml.etree import ElementTree
@@ -56,11 +57,11 @@ from chameleon import PageTemplateLoader
 from owslib.crs import axisorder_yx
 from PIL import Image
 import numpy as np
-from flask import request, make_response, render_template
+from flask import request, make_response, render_template, Response, abort
 from flask_httpauth import HTTPBasicAuth
-
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
+from mslib.utils.get_content import get_content
 from mslib.utils.time import parse_iso_datetime
 from mslib.index import create_app
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
@@ -998,3 +999,37 @@ def application():
         for response_header in response_headers:
             res.headers[response_header[0]] = response_header[1]
         return res
+
+
+@app.route("/mss/plots")
+def plots():
+    if STATIC_LOCATION != "" and os.path.exists(os.path.join(STATIC_LOCATION, 'plots.html')):
+        _file = os.path.join(STATIC_LOCATION, 'plots.html')
+        content = get_content(_file)
+    else:
+        content = "Gallery was not generated for this server.<br>" \
+                  "For further info on how to generate it, run the " \
+                  "<b>gallery --help</b> command line parameter of mswms.<br>" \
+                  "An example of the gallery can be seen " \
+                  "<a href=\"https://mss.readthedocs.io/en/stable/gallery/index.html\">here</a>"
+    return render_template("/content.html", act="plots", content=content)
+
+
+@app.route("/mss/code/<path:filename>")
+def code(filename):
+    download = request.args.get("download", False)
+    _file = werkzeug.security.safe_join(STATIC_LOCATION, "code", filename)
+    if _file is None:
+        abort(404)
+    content = get_content(_file)
+    if not download:
+        return render_template("/content.html", act="code", content=content)
+    else:
+        if not os.path.isfile(_file):
+            abort(404)
+        with open(_file) as f:
+            text = f.read()
+        return Response("".join([s.replace("\t", "", 1) for s in text.split("```python")[-1]
+                                .splitlines(keepends=True)][1:-2]),
+                        mimetype="text/plain",
+                        headers={"Content-disposition": f"attachment; filename={filename.split('-')[0]}.py"})

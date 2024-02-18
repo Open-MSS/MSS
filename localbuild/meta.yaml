@@ -39,7 +39,7 @@ requirements:
     - basemap >=1.3.3
     - chameleon
     - execnet
-    - fastkml =0.11
+    - fastkml >=0.11
     - shapely >=2.0.0
     - pygeoif <1.0.0
     - isodate

@@ -144,7 +144,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.query_server(f"{self.scheme}://???{self.host}:{self.port}")
         assert mockbox.critical.call_count == 1
 
-    @pytest.mark.skip("problem in urllib3")
     @mock.patch("PyQt5.QtWidgets.QMessageBox")
     def test_connection_error(self, mockbox):
         """
@@ -154,8 +153,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert mockbox.critical.call_count == 1
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_forward_backward_clicks(self, mockbox):
+    def test_forward_backward_clicks(self):
         self.query_server(self.url)
         self.window.init_time_back_click()
         self.window.init_time_fwd_click()
@@ -171,11 +169,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
             self.window.secs_from_timestep("Wrong")
         except ValueError:
             pass
-        assert mockbox.critical.call_count == 0
 
     @pytest.mark.skip("Has a race condition where the abort might not happen fast enough")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_abort_getmap(self, mockbox):
+    def test_server_abort_getmap(self):
         """
         assert that an aborted getmap call does not change the displayed image
         """
@@ -192,8 +188,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_metadata.call_count == 0
         self.view.reset_mock()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox, qtbot):
+    def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -202,14 +197,11 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
-        assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
-        self.view.reset_mock()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap_cached(self, mockbox, qtbot):
+    def test_server_getmap_cached(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
@@ -217,8 +209,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
         with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-
-        # assert mockbox.critical.call_count == 0
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -231,51 +221,39 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.window.image_displayed)
 
-        assert mockbox.critical.call_count == 0
-
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("needs a review")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_service_cache(self, mockbox):
+    def test_server_service_cache(self, qtbot):
         """
         assert that changing between servers still allows image retrieval
         """
         self.query_server(self.url)
-        assert mockbox.critical.call_count == 0
 
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.cpdlg.canceled)
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as qm_critical:
+            with qtbot.wait_signal(self.window.cpdlg.canceled):
+                QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
+                QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
+                QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
+            qm_critical.assert_called_once()
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
-        mockbox.reset_mock()
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, ord(str(self.port)[3]))
-        QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.cpdlg.canceled)
-        assert mockbox.critical.call_count == 0
 
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.cpdlg.canceled):
+            QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, ord(str(self.port)[-1]))
+            QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Slash)
+            QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
-        assert mockbox.critical.call_count == 0
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_multilayer_handling(self, mockbox):
+    def test_multilayer_handling(self):
         """
         assert that multilayers get created, handled and drawn properly
         """
@@ -313,14 +291,11 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.window.image_displayed)
 
-        assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @pytest.mark.skip("Fails testing reverse order")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_filter_handling(self, mockbox):
+    def test_filter_handling(self):
         self.query_server(self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
@@ -329,13 +304,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert "header" in self.window.multilayers.layers[f"{self.url}/"]
         assert "wms" in self.window.multilayers.layers[f"{self.url}/"]
 
-        starts_at = 40 * self.window.multilayers.scale
+        starts_at = int(40 * self.window.multilayers.scale)
         icon_start_fav = starts_at + 3
         if self.window.multilayers.cbMultilayering.isChecked():
             checkbox_width = round(self.window.multilayers.height * 0.75)
             icon_start_fav += checkbox_width + 6
 
-        starts_at = 20 * self.window.multilayers.scale
+        starts_at = int(20 * self.window.multilayers.scale)
         icon_start_del = starts_at + 3
 
         # Check layer filter is working
@@ -363,10 +338,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.window.multilayers.check_icon_clicked(server)
         assert len(self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                                 QtCore.Qt.MatchFixedString)) == 0
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_singlelayer_handling(self, mockbox):
+    def test_singlelayer_handling(self):
         """
         assert that singlelayer mode behaves as expected
         """
@@ -397,13 +370,11 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.window.image_displayed)
 
-        assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_multilayer_syncing(self, mockbox):
+    def test_multilayer_syncing(self):
         """
         assert that synced layers share their options
         """
@@ -432,11 +403,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert layer_a.get_level() == layer_b.get_level()
         assert layer_a.get_vtime() == layer_b.get_vtime()
         assert layer_a.get_itime() == layer_a.get_itimes()[-1]
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.wms_control.WMSMapFetcher.moveToThread")
-    def test_server_no_thread(self, mockbox, mockthread):
+    def test_server_no_thread(self, mockthread):
         self.query_server(self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
@@ -455,7 +424,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.window.fetcher.fetch_legend(urlstr, use_cache=False, md5_filename=md5_filname)
         self.window.fetcher.fetch_legend(urlstr, use_cache=True, md5_filename=md5_filname)
 
-        assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
@@ -468,25 +436,19 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         yield
         self._teardown()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox, qtbot):
-        pytest.skip("unknown problem")
+    def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
-        with qtbot.wait_signal(self.wms_control.image_displayed):
+        with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
-        assert mockbox.critical.call_count == 0
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
-        self.view.reset_mock()
 
-    @pytest.mark.skip("IndexError: list index out of range")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_multilayer_drawing(self, mockbox):
+    def test_multilayer_drawing(self):
         """
         assert that drawing a layer through code doesn't fail for vsec
         """
@@ -495,8 +457,6 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
                                                               QtCore.Qt.MatchFixedString)[0]
         server.child(0).draw()
         wait_until_signal(self.window.image_displayed)
-
-        assert mockbox.critical.call_count == 0
 
 
 class TestWMSControlWidgetSetupSimple:
@@ -796,8 +756,7 @@ class TestWMSControlWidgetSetupSimple:
         assert [self.window.cbInitTime.itemText(i) for i in range(self.window.cbInitTime.count())] == \
             ['2012-10-16T12:00:00Z', '2012-10-17T12:00:00Z']
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_xml_time_error(self, mockbox):
+    def test_xml_time_error(self):
         dimext_time_error = """
             <Dimension name="TIME" units="ISO8610"> </Dimension>
             <Extent name="TIME"> a2012-10-17T12:00:00Z/2012-10-18T00:00:00Z/PT6H </Extent>"""
