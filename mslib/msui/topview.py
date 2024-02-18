@@ -379,12 +379,16 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.createDockWidget(index, title, widget)
 
     def closed(self):
-        self.mainwindow_signal_login_mscolab.disconnect()
-        self.mainwindow_signal_logout_mscolab.disconnect()
-        self.mainwindow_signal_listFlighttrack_doubleClicked.disconnect()
-        self.mainwindow_signal_activate_operation.disconnect()
-        self.mainwindow_signal_permission_revoked.disconnect()
-        self.mainwindow_signal_render_new_permission.disconnect()
+        # A disconnect can be performed only once.
+        try:
+            self.mainwindow_signal_login_mscolab.disconnect()
+            self.mainwindow_signal_logout_mscolab.disconnect()
+            self.mainwindow_signal_listFlighttrack_doubleClicked.disconnect()
+            self.mainwindow_signal_activate_operation.disconnect()
+            self.mainwindow_signal_permission_revoked.disconnect()
+            self.mainwindow_signal_render_new_permission.disconnect()
+        except TypeError as ex:
+            logging.debug("mscolab connection already closed: %s", ex)
 
     @QtCore.pyqtSlot()
     def disable_cbs(self):
