@@ -96,7 +96,7 @@ requirements:
     - python-slugify
     - flask-login
     - pysaml2
-    - libxmlsec1
+    - libxmlsec1  # [not win]
 
 test:
   imports:
