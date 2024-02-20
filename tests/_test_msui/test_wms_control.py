@@ -112,45 +112,45 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         yield
         self._teardown()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_no_server(self, mockbox):
+    def test_no_server(self):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"{self.scheme}://{self.host}:{self.port-1}")
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
+            self.query_server(f"{self.scheme}://{self.host}:{self.port-1}")
+            mock_critical.assert_called_once()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_no_schema(self, mockbox):
+    def test_no_schema(self):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"{self.host}:{self.port}")
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
+            self.query_server(f"{self.host}:{self.port}")
+            mock_critical.assert_called_once()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_invalid_schema(self, mockbox):
+    def test_invalid_schema(self):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"hppd://{self.host}:{self.port}")
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
+            self.query_server(f"hppd://{self.host}:{self.port}")
+            mock_critical.assert_called_once()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_invalid_url(self, mockbox):
+    def test_invalid_url(self):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"{self.scheme}://???{self.host}:{self.port}")
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
+            self.query_server(f"{self.scheme}://???{self.host}:{self.port}")
+            mock_critical.assert_called_once()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_connection_error(self, mockbox):
+    def test_connection_error(self):
         """
         assert that a message box informs about server troubles
         """
-        self.query_server(f"{self.scheme}://.....{self.host}:{self.port}")
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
+            self.query_server(f"{self.scheme}://.....{self.host}:{self.port}")
+            mock_critical.assert_called_once()
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
     def test_forward_backward_clicks(self):
