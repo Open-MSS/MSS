@@ -147,7 +147,7 @@ class Operation(db.Model):
     category = db.Column(db.String(255))
     description = db.Column(db.String(255))
     active = db.Column(db.Boolean)
-    last_used = db.Column(db.DateTime)
+    last_used = db.Column(AwareDateTime)
 
     def __init__(self, path, description, last_used=None, category="default", active=True):
         """
