@@ -34,7 +34,6 @@ import sqlalchemy.types
 
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
-import sqlalchemy.types
 
 
 class AwareDateTime(sqlalchemy.types.TypeDecorator):
