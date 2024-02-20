@@ -50,20 +50,6 @@ class AwareDateTime(sqlalchemy.types.TypeDecorator):
         return value
 
 
-class AwareDateTime(sqlalchemy.types.TypeDecorator):
-    impl = sqlalchemy.types.DateTime
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            return value.astimezone(datetime.timezone.utc)
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None:
-            return value.replace(tzinfo=datetime.timezone.utc)
-        return value
-
-
 class User(db.Model):
 
     __tablename__ = 'users'
