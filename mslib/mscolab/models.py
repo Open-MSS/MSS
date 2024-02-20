@@ -28,10 +28,12 @@
 import datetime
 import logging
 import jwt
+
 from passlib.apps import custom_app_context as pwd_context
+import sqlalchemy.types
+
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
-import sqlalchemy.types
 
 
 class AwareDateTime(sqlalchemy.types.TypeDecorator):
