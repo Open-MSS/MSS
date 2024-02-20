@@ -31,11 +31,11 @@ import jwt
 from passlib.apps import custom_app_context as pwd_context
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
-import sqlalchemy.types as types
+import sqlalchemy.types
 
 
-class AwareDateTime(types.TypeDecorator):
-    impl = types.DateTime
+class AwareDateTime(sqlalchemy.types.TypeDecorator):
+    impl = sqlalchemy.types.DateTime
 
     def process_bind_param(self, value, dialect):
         if value is not None:
@@ -160,7 +160,7 @@ class Operation(db.Model):
         self.category = category
         self.active = active
         if self.last_used is None:
-            self.last_used = datetime.datetime.utcnow()
+            self.last_used = datetime.datetime.now(tz=datetime.timezone.utc)
         else:
             self.last_used = last_used
 
