@@ -28,10 +28,27 @@
 import datetime
 import logging
 import jwt
+
 from passlib.apps import custom_app_context as pwd_context
+import sqlalchemy.types
+
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
 import sqlalchemy.types
+
+
+class AwareDateTime(sqlalchemy.types.TypeDecorator):
+    impl = sqlalchemy.types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return value.astimezone(datetime.timezone.utc)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return value.replace(tzinfo=datetime.timezone.utc)
+        return value
 
 
 class AwareDateTime(sqlalchemy.types.TypeDecorator):
