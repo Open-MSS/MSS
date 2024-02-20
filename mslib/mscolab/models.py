@@ -28,9 +28,26 @@
 import datetime
 import logging
 import jwt
+
 from passlib.apps import custom_app_context as pwd_context
+import sqlalchemy.types
+
 from mslib.mscolab.app import db
 from mslib.mscolab.message_type import MessageType
+
+
+class AwareDateTime(sqlalchemy.types.TypeDecorator):
+    impl = sqlalchemy.types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return value.astimezone(datetime.timezone.utc)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return value.replace(tzinfo=datetime.timezone.utc)
+        return value
 
 
 class User(db.Model):
@@ -40,9 +57,9 @@ class User(db.Model):
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255), unique=True)
-    registered_on = db.Column(db.DateTime, nullable=False)
+    registered_on = db.Column(AwareDateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
-    confirmed_on = db.Column(db.DateTime, nullable=True)
+    confirmed_on = db.Column(AwareDateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
@@ -145,7 +162,7 @@ class Operation(db.Model):
         self.category = category
         self.active = active
         if self.last_used is None:
-            self.last_used = datetime.datetime.utcnow()
+            self.last_used = datetime.datetime.now(tz=datetime.timezone.utc)
         else:
             self.last_used = last_used
 
