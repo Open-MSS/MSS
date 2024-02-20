@@ -120,7 +120,8 @@ class FileManager:
         for permission in permissions:
             operation = Operation.query.filter_by(id=permission.op_id).first()
             if operation.last_used is not None and (
-                    datetime.datetime.now(tz=datetime.timezone.utc) - operation.last_used).days > mscolab_settings.ARCHIVE_THRESHOLD:
+                    datetime.datetime.now(tz=datetime.timezone.utc) - operation.last_used
+            ).days > mscolab_settings.ARCHIVE_THRESHOLD:
                 # outdated OPs get archived
                 self.update_operation(permission.op_id, "active", False, user)
             # new query to get uptodate data
