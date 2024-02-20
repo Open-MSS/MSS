@@ -4,7 +4,6 @@ on:
   push:
     branches:
     - develop
-    - jets
 
   pull_request:
     branches:

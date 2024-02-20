@@ -8,7 +8,6 @@ on:
     branches:
     - develop
     - stable
-    - jets
     - GSOC2023-NilupulManodya
     - GSOC2023-ShubhGaur
   pull_request:
