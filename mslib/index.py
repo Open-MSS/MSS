@@ -89,11 +89,8 @@ def create_app(name="", imprint=None, gdpr=None):
             abort(404)
         return send_from_directory(base_path, filename)
 
-    @APP.route('/mss_theme/<name>/', defaults=dict(filename=''))
-    @APP.route('/mss_theme/<name>/<path:filename>')
-    def mss_theme(name, filename):
-        if name != 'img':
-            abort(404)
+    @APP.route('/mss_theme/img/<path:filename>')
+    def mss_theme(filename):
         base_path = os.path.join(DOCS_SERVER_PATH, 'static', 'img')
         return send_from_directory(base_path, filename)
 
