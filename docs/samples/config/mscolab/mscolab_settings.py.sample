@@ -28,6 +28,9 @@ import os
 import logging
 
 class mscolab_settings:
+    # In the unit "months" when Operations get archived because not used
+    ARCHIVE_THRESHOLD = 2
+
     # Set which origins are allowed to communicate with your server
     CORS_ORIGINS = ["*"]
 
