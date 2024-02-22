@@ -27,6 +27,7 @@
 import os
 import logging
 
+
 class mscolab_settings:
     # In the unit months when Operations get archived because not used
     ARCHIVE_THRESHOLD = 2

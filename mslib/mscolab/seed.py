@@ -224,7 +224,7 @@ def archive_operation(path=None, emailid=None):
                     return False
                 operation.active = False
                 operation.last_used = (
-                    datetime.datetime.utcnow() - 
+                    datetime.datetime.utcnow() -
                     dateutil.relativedelta.relativedelta(months=mscolab_settings.ARCHIVE_THRESHOLD)
                 )
 
