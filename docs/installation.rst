@@ -41,11 +41,15 @@ Manual
 Mamba based installation
 ........................
 
-We strongly recommend to start from `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_,
+
+
+We strongly recommend to start from `Miniforge <https://github.com/conda-forge/miniforge#install>`_,
 a community project of the conda-forge community.
 
-As **Beginner** start with an installation of Mambaforge
-- Get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__ for your Operation System
+As **Beginner** start with an installation of Miniforge
+- Get `miniforge <https://github.com/conda-forge/miniforge#download>`__ for your Operation System
+
+If you use already Mambaforge please read the `FAQ <https://github.com/conda-forge/miniforge#faq>`__
 
 Install MSS
 ~~~~~~~~~~~
@@ -70,7 +74,7 @@ We suggest to create a mss user.
 * login as mss user
 * create a *src* directory in /home/mss
 * cd src
-* get `mambaforge <https://github.com/conda-forge/miniforge#mambaforge>`__
+* get `miniforge <https://github.com/conda-forge/miniforge#download>`__
 * set execute bit on install script
 * execute script, enable environment in .bashrc
 * login again
@@ -99,14 +103,13 @@ Conda based installation
 `Anaconda <https://www.anaconda.com/>`_ provides an enterprise-ready data analytics
 platform that empowers companies to adopt a modern open data science analytics architecture.
 
-..  warning::
-    Installing Mamba in Anaconda setup is not recommended. We strongly recommend to use the Mambaforge method (see above).
-
 Please add the channel conda-forge to your defaults::
 
   $ conda config --add channels conda-forge
 
 The conda-forge channel must be on top of the list before the anaconda default channel.
+
+From September 2023 libmamba is the `default installer in anaconda <https://conda.org/blog/2023-07-05-conda-libmamba-solver-rollout/>`__.
 
 Install MSS
 ~~~~~~~~~~~
@@ -114,7 +117,6 @@ Install MSS
 You must install mss into a new environment to ensure the most recent
 versions for dependencies. ::
 
-    $ conda install -n base conda-libmamba-solver
     $ conda create -n mssenv
     $ conda activate mssenv
     (mssenv) $ conda install mss=$mss_version python --solver=libmamba
@@ -245,4 +247,3 @@ You can start server and client by loading the image ::
   $ Singularity > mswms_demodata --seed  # creates in your $HOME a mss/ folder with testdata
   $ Singularity > export PYTHONPATH=$HOME/mss; mswms # starts the development server
   $ Singularity > mscolab db --init; mscolab start # starts the mscolab development server
-
