@@ -218,7 +218,10 @@ def archive_operation(path=None, emailid=None):
                 elif perm.access_level != "creator":
                     return False
                 operation.active = False
-                operation.last_used = datetime.datetime.utcnow() - dateutil.relativedelta.relativedelta(months=2)
+                operation.last_used = (
+                    datetime.datetime.now(tz=datetime.timezone.utc) -
+                    dateutil.relativedelta.relativedelta(months=2)
+                )
                 db.session.commit()
 
 
