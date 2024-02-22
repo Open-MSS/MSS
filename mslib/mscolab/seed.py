@@ -223,7 +223,9 @@ def archive_operation(path=None, emailid=None):
                 elif perm.access_level != "creator":
                     return False
                 operation.active = False
-                operation.last_used = datetime.datetime.utcnow() - dateutil.relativedelta.relativedelta(months=mscolab_settings.ARCHIVE_THRESHOLD)       
+                operation.last_used = datetime.datetime.utcnow() - \
+                        dateutil.relativedelta.relativedelta(months=mscolab_settings.ARCHIVE_THRESHOLD)
+
                 db.session.commit()
 
 
