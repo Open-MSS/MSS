@@ -107,8 +107,8 @@ Icons
 We use icons in mslib.mui.editor from the tango-icon-library
 Author: Jakub Steiner jimmac@gmail.com
 
-License: https://github.com/freedesktop/tango-icon-library/blob/master/COPYING.PublicDomain
-Further Information: http://tango.freedesktop.org
+License: https://gitlab.freedesktop.org/tango/tango-icon-library/-/blob/master/COPYING.PublicDomain
+Further Information: https://gitlab.freedesktop.org/tango/tango-icon-library
 
 Airports Data
 -------------
