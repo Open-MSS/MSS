@@ -65,10 +65,8 @@ class Test_MscolabOperation:
         # activate operation and open chat window
         self._activate_operation_at_index(0)
         self.window.actionChat.trigger()
-        QtWidgets.QApplication.processEvents()
         self.chat_window = self.window.mscolab.chat_window
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.mscolab.logout()
         if self.window.mscolab.chat_window:
@@ -76,7 +74,6 @@ class Test_MscolabOperation:
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_send_message(self, qtbot):
         self._send_message(qtbot, "**test message**")
@@ -90,15 +87,11 @@ class Test_MscolabOperation:
         message_index = self.chat_window.messageList.count() - 1
         # self.window.chat_window.searchMessageLineEdit.setText("test message")
         self.chat_window.searchMessageLineEdit.setText("test message")
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index).isSelected() is True
         QtTest.QTest.mouseClick(self.chat_window.searchPrevBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index - 1).isSelected() is True
         QtTest.QTest.mouseClick(self.chat_window.searchNextBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert self.chat_window.messageList.item(message_index).isSelected() is True
 
     def test_copy_message(self, qtbot):
@@ -148,23 +141,19 @@ class Test_MscolabOperation:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _activate_operation_at_index(self, index):
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
 
     def _activate_context_menu_action(self, action_index):
         item = self.chat_window.messageList.item(self.chat_window.messageList.count() - 1)

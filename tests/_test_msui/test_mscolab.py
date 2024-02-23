@@ -71,7 +71,6 @@ class Test_Mscolab_connect_window:
         self.main_window.mscolab.logout()
         self.window.hide()
         self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_url_combo(self):
         assert self.window.urlCb.count() >= 1
@@ -114,7 +113,6 @@ class Test_Mscolab_connect_window:
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
-        QtWidgets.QApplication.processEvents()
         # show logged in widgets
         assert self.main_window.usernameLabel.text() == self.userdata[1]
         assert self.main_window.connectBtn.isVisible() is False
@@ -128,7 +126,6 @@ class Test_Mscolab_connect_window:
         self._connect_to_mscolab()
         connect_window = self.main_window.mscolab.connect_window
         self._login(self.userdata[0], self.userdata[2])
-        QtWidgets.QApplication.processEvents()
         mockbox.assert_called_once_with(
             connect_window,
             "Update Credentials",
@@ -149,11 +146,9 @@ class Test_Mscolab_connect_window:
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
-        QtWidgets.QApplication.processEvents()
         assert self.main_window.usernameLabel.text() == self.userdata[1]
         # Logout
         self.main_window.mscolab.logout_action.trigger()
-        QtWidgets.QApplication.processEvents()
         assert self.main_window.listOperationsMSC.model().rowCount() == 0
         assert self.main_window.mscolab.conn is None
         assert self.main_window.local_active is True
@@ -164,7 +159,6 @@ class Test_Mscolab_connect_window:
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
-        QtWidgets.QApplication.processEvents()
         assert self.main_window.usernameLabel.text() == self.userdata[1]
         # Logout
         self.main_window.mscolab.logout()
@@ -224,30 +218,22 @@ class Test_Mscolab_connect_window:
         self.window.urlCb.setEditText(self.url)
         self.window.httpPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _login(self, emailid="a", password="a"):
         self.window.loginEmailLe.setText(emailid)
         self.window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _create_user(self, username, email, password):
         QtTest.QTest.mouseClick(self.window.addUserBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         self.window.newUsernameLe.setText(str(username))
-        QtWidgets.QApplication.processEvents()
         self.window.newEmailLe.setText(str(email))
-        QtWidgets.QApplication.processEvents()
         self.window.newPasswordLe.setText(str(password))
-        QtWidgets.QApplication.processEvents()
         self.window.newConfirmPasswordLe.setText(str(password))
-        QtWidgets.QApplication.processEvents()
         okWidget = self.window.newUserBb.button(self.window.newUserBb.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
 
 
 class Test_Mscolab:
@@ -316,16 +302,12 @@ class Test_Mscolab:
         # test after activating operation
         self._activate_operation_at_index(0)
         self.window.actionTableView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 1
         self.window.actionTopView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 2
         self.window.actionSideView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 3
         self.window.actionLinearView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 4
 
         operation = self.window.mscolab.active_op_id
@@ -353,7 +335,6 @@ class Test_Mscolab:
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         self.window.actionExportFlightTrackFTML.trigger()
-        QtWidgets.QApplication.processEvents()
         exported_waypoints = WaypointsTableModel(filename=fs.path.join(self.window.mscolab.data_dir,
                                                                        'test_export.ftml'))
         wp_count = len(self.window.mscolab.waypoints_model.waypoints)
@@ -395,14 +376,11 @@ class Test_Mscolab:
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         self.window.workLocallyCheckbox.setChecked(True)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         wpdata_local = self.window.mscolab.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckbox.setChecked(False)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
@@ -414,15 +392,10 @@ class Test_Mscolab:
         self._create_user(qtbot, "something", "something@something.org", "something")
         assert self.window.listOperationsMSC.model().rowCount() == 0
         self.window.actionAddOperation.trigger()
-        QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str("example"))
-        QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.description.setText(str("example"))
-        QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.category.setText(str("example"))
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mscolab.add_proj_dialog.browse, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         okWidget = self.window.mscolab.add_proj_dialog.buttonBox.button(
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
@@ -430,7 +403,6 @@ class Test_Mscolab:
             m.assert_called_once()
         # we need to wait for the update of the operation list
         QtTest.QTest.qWait(200)
-        QtWidgets.QApplication.processEvents()
         assert self.window.listOperationsMSC.model().rowCount() == 1
         item = self.window.listOperationsMSC.item(0)
         assert item.operation_path == "example"
@@ -476,13 +448,11 @@ class Test_Mscolab:
         assert self.window.listOperationsMSC.model().rowCount() == 1
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionDeleteOperation.trigger()
-            QtWidgets.QApplication.processEvents()
             qtbot.wait_until(
                 lambda: m.assert_called_once_with(self.window, "Success", 'Operation "flight7" was deleted!')
             )
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         # check operation dir name removed
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
@@ -493,7 +463,6 @@ class Test_Mscolab:
 
         modify_config_file({"MSS_auth": {self.url: self.userdata3[0]}})
         self._login(self.userdata3[0], self.userdata3[2])
-        QtWidgets.QApplication.processEvents()
         assert self.window.usernameLabel.text() == self.userdata3[1]
         assert self.window.connectBtn.isVisible() is False
 
@@ -504,14 +473,11 @@ class Test_Mscolab:
         assert op_id is not None
 
         self.window.actionTopView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 1
         self.window.actionSideView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.get_active_views()) == 2
 
         self.window.actionLeaveOperation.trigger()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
 
         def assert_leave_operation_done():
@@ -531,7 +497,6 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionRenameOperation.trigger()
-            QtWidgets.QApplication.processEvents()
             m.assert_called_once_with(self.window, "Rename successful", "Operation is renamed successfully.")
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
@@ -548,7 +513,6 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionChangeDescription.trigger()
-            QtWidgets.QApplication.processEvents()
             m.assert_called_once_with(self.window, "Update successful", "Description is updated successfully.")
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
@@ -566,7 +530,6 @@ class Test_Mscolab:
         assert self.window.mscolab.active_op_id is not None
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionChangeCategory.trigger()
-            QtWidgets.QApplication.processEvents()
             m.assert_called_once_with(self.window, "Update successful", "Category is updated successfully.")
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
@@ -585,7 +548,6 @@ class Test_Mscolab:
                             range(self.window.mscolab.ui.listOperationsMSC.count())]
         assert ["flight1234", "flight5678"] == operation_pathes
         self.window.mscolab.ui.filterCategoryCb.setCurrentIndex(2)
-        QtWidgets.QApplication.processEvents()
         # only operation of furtherexample are found
         assert self.window.mscolab.selected_category == "furtherexample"
         operation_pathes = [self.window.mscolab.ui.listOperationsMSC.item(i).operation_path for i in
@@ -633,7 +595,6 @@ class Test_Mscolab:
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
         self.window.actionChat.trigger()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(0)
         assert self.window.mscolab.chat_window is not None
 
@@ -646,7 +607,6 @@ class Test_Mscolab:
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
         self.window.actionChat.trigger()
-        QtWidgets.QApplication.processEvents()
         self.window.mscolab.close_chat_window()
         assert self.window.mscolab.chat_window is None
 
@@ -672,7 +632,6 @@ class Test_Mscolab:
         u_id = self.window.mscolab.user['id']
         self.window.mscolab.open_profile_window()
         QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert self.window.listOperationsMSC.model().rowCount() == 0
         assert self.window.usernameLabel.isVisible() is False
         assert self.window.connectBtn.isVisible() is True
@@ -682,18 +641,14 @@ class Test_Mscolab:
 
     def test_open_help_dialog(self):
         self.window.actionMSColabHelp.trigger()
-        QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.help_dialog is not None
 
     def test_close_help_dialog(self):
         self.window.actionMSColabHelp.trigger()
-        QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.help_dialog is not None
         QtTest.QTest.mouseClick(
             self.window.mscolab.help_dialog.okayBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(50)
-        QtWidgets.QApplication.processEvents()
         assert self.window.mscolab.help_dialog is None
 
     def test_create_dir_exceptions(self):
@@ -718,7 +673,6 @@ class Test_Mscolab:
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user(qtbot, "something", "something@something.org", "something")
         self.window.mscolab.profile_action.trigger()
-        QtWidgets.QApplication.processEvents()
         # case: default gravatar is set and no messagebox is called
         assert self.window.mscolab.prof_diag is not None
         # case: trying to fetch non-existing gravatar
@@ -733,30 +687,22 @@ class Test_Mscolab:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _create_user(self, qtbot, username, email, password):
         QtTest.QTest.mouseClick(self.connect_window.addUserBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         self.connect_window.newUsernameLe.setText(str(username))
-        QtWidgets.QApplication.processEvents()
         self.connect_window.newEmailLe.setText(str(email))
-        QtWidgets.QApplication.processEvents()
         self.connect_window.newPasswordLe.setText(str(password))
-        QtWidgets.QApplication.processEvents()
         self.connect_window.newConfirmPasswordLe.setText(str(password))
-        QtWidgets.QApplication.processEvents()
         okWidget = self.connect_window.newUserBb.button(self.connect_window.newUserBb.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
 
         def assert_user_created():
             assert self.window.usernameLabel.text() == username
@@ -765,17 +711,12 @@ class Test_Mscolab:
 
     def _create_operation_unchecked(self, path, description, category="example"):
         self.window.actionAddOperation.trigger()
-        QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.path.setText(str(path))
-        QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.description.setText(str(description))
-        QtWidgets.QApplication.processEvents()
         self.window.mscolab.add_proj_dialog.category.setText(category)
-        QtWidgets.QApplication.processEvents()
         okWidget = self.window.mscolab.add_proj_dialog.buttonBox.button(
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
         QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
 
     def _create_operation(self, qtbot, path, description, category="example"):
         self.total_created_operations = self.total_created_operations + 1
@@ -795,6 +736,4 @@ class Test_Mscolab:
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()

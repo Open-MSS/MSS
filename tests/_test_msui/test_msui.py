@@ -78,7 +78,6 @@ class Test_MSS_TutorialMode:
         self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
         yield
         self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_tutorial_dir(self):
         dir_name, name = fs.path.split(self.tutorial_dir)
@@ -100,7 +99,6 @@ class Test_MSS_AboutDialog:
         self.window = msui_mw.MSUI_AboutDialog()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
@@ -118,7 +116,6 @@ class Test_MSS_ShortcutDialog:
         yield
         self.shortcuts.hide()
         self.main_window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_shortcuts_present(self):
         # Assert list gets filled properly
@@ -181,9 +178,7 @@ class Test_MSSSideViewWindow:
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         config_file = os.path.join(
             self.sample_path,
@@ -193,7 +188,6 @@ class Test_MSSSideViewWindow:
         for i in range(self.window.listViews.count()):
             self.window.listViews.item(i).window.hide()
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_no_updater(self):
         assert not hasattr(self.window, "updater")
@@ -204,47 +198,39 @@ class Test_MSSSideViewWindow:
     def test_new_flightrack(self):
         assert self.window.listFlightTracks.count() == 1
         self.window.actionNewFlightTrack.trigger()
-        QtWidgets.QApplication.processEvents()
         assert self.window.listFlightTracks.count() == 2
 
     def test_open_topview(self):
         assert self.window.listViews.count() == 0
         self.window.actionTopView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert self.window.listViews.count() == 1
 
     def test_open_sideview(self):
         assert self.window.listViews.count() == 0
         self.window.actionSideView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert self.window.listViews.count() == 1
 
     def test_open_tableview(self):
         assert self.window.listViews.count() == 0
         self.window.actionTableView.trigger()
-        QtWidgets.QApplication.processEvents()
         assert self.window.listViews.count() == 1
 
     def test_open_linearview(self):
         assert self.window.listViews.count() == 0
         self.window.actionLinearView.trigger()
         self.window.listViews.itemActivated.emit(self.window.listViews.item(0))
-        QtWidgets.QApplication.processEvents()
         assert self.window.listViews.count() == 1
 
     def test_open_about(self):
         self.window.actionAboutMSUI.trigger()
-        QtWidgets.QApplication.processEvents()
 
     def test_open_config(self):
         self.window.actionConfiguration.trigger()
-        QtWidgets.QApplication.processEvents()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.config_editor.close()
 
     def test_open_shortcut(self):
         self.window.actionShortcuts.trigger()
-        QtWidgets.QApplication.processEvents()
 
     @pytest.mark.parametrize("save_file", [[save_ftml]])
     def test_plugin_saveas(self, save_file):
@@ -255,7 +241,6 @@ class Test_MSSSideViewWindow:
             assert mocksave.call_count == 0
             self.window.last_save_directory = ROOT_DIR
             self.window.actionSaveActiveFlightTrackAs.trigger()
-            QtWidgets.QApplication.processEvents()
             assert mocksave.call_count == 1
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
@@ -293,7 +278,6 @@ class Test_MSSSideViewWindow:
                 if obj_name == action.objectName():
                     action.trigger()
                     break
-            QtWidgets.QApplication.processEvents()
             assert mocksave.call_count == 1
             assert os.path.exists(save_file[0])
             os.remove(save_file[0])
