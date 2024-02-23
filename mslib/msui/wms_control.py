@@ -475,9 +475,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Initialise date/time fields with current day, 00 UTC.
         self.dteInitTime.setDateTime(QtCore.QDateTime(
-            datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
+            datetime.now(tz=datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)))
         self.dteValidTime.setDateTime(QtCore.QDateTime(
-            datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
+            datetime.now(tz=datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)))
 
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
