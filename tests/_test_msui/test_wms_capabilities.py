@@ -54,7 +54,6 @@ class Test_WMSCapabilities:
             url="http://example.com",
             capabilities=self.capabilities)
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtTest.QTest.qWait(100)
 
     def test_window_start(self):
         self.start_window()

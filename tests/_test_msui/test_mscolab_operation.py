@@ -54,7 +54,6 @@ class Test_MscolabOperation:
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-        QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
@@ -131,7 +130,6 @@ class Test_MscolabOperation:
         self._send_message(qtbot, "**test message**")
         self._send_message(qtbot, "**test message**")
         self._activate_context_menu_action(Actions.DELETE)
-        QtTest.QTest.qWait(100)
         with self.app.app_context():
             assert Message.query.filter_by(text='test edit').count() == 0
 
@@ -141,13 +139,11 @@ class Test_MscolabOperation:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _activate_operation_at_index(self, index):
         item = self.window.listOperationsMSC.item(index)

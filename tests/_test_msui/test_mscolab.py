@@ -55,7 +55,6 @@ class Test_Mscolab_connect_window:
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
-        QtTest.QTest.qWait(500)
         self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.main_window.create_new_flight_track()
         self.main_window.show()
@@ -218,13 +217,11 @@ class Test_Mscolab_connect_window:
         self.window.urlCb.setEditText(self.url)
         self.window.httpPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.window.connectBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _login(self, emailid="a", password="a"):
         self.window.loginEmailLe.setText(emailid)
         self.window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.window.loginBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _create_user(self, username, email, password):
         QtTest.QTest.mouseClick(self.window.addUserBtn, QtCore.Qt.LeftButton)
@@ -268,7 +265,6 @@ class Test_Mscolab:
         assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2])
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
-        QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
@@ -352,8 +348,6 @@ class Test_Mscolab:
             self.window.add_import_plugins("qt")
         file_path = fs.path.join(self.sample_path, name[0])
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
-            # with parametrize it is maybe too fast
-            QtTest.QTest.qWait(100)
             self._connect_to_mscolab()
             modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
             self._login(emailid=self.userdata[0], password=self.userdata[2])
@@ -376,12 +370,9 @@ class Test_Mscolab:
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         self._activate_operation_at_index(0)
         self.window.workLocallyCheckbox.setChecked(True)
-        QtTest.QTest.qWait(100)
         self.window.mscolab.waypoints_model.invert_direction()
-        QtTest.QTest.qWait(100)
         wpdata_local = self.window.mscolab.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckbox.setChecked(False)
-        QtTest.QTest.qWait(100)
         wpdata_server = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wpdata_local.lat != wpdata_server.lat
 
@@ -401,8 +392,6 @@ class Test_Mscolab:
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
             m.assert_called_once()
-        # we need to wait for the update of the operation list
-        QtTest.QTest.qWait(200)
         assert self.window.listOperationsMSC.model().rowCount() == 1
         item = self.window.listOperationsMSC.item(0)
         assert item.operation_path == "example"
@@ -453,7 +442,6 @@ class Test_Mscolab:
             )
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
-        QtTest.QTest.qWait(0)
         # check operation dir name removed
         assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
 
@@ -478,7 +466,6 @@ class Test_Mscolab:
         assert len(self.window.get_active_views()) == 2
 
         self.window.actionLeaveOperation.trigger()
-        QtTest.QTest.qWait(0)
 
         def assert_leave_operation_done():
             assert self.window.mscolab.active_op_id is None
@@ -498,7 +485,6 @@ class Test_Mscolab:
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionRenameOperation.trigger()
             m.assert_called_once_with(self.window, "Rename successful", "Operation is renamed successfully.")
-        QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_name == "new_name"
 
@@ -514,7 +500,6 @@ class Test_Mscolab:
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionChangeDescription.trigger()
             m.assert_called_once_with(self.window, "Update successful", "Description is updated successfully.")
-        QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_description == "new_description"
 
@@ -531,7 +516,6 @@ class Test_Mscolab:
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionChangeCategory.trigger()
             m.assert_called_once_with(self.window, "Update successful", "Category is updated successfully.")
-        QtTest.QTest.qWait(0)
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_category == "new_category"
 
@@ -540,7 +524,6 @@ class Test_Mscolab:
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
         self._create_user(qtbot, "something", "something@something.org", "something")
         self._create_operation(qtbot, "flight1234", "Description flight1234")
-        QtTest.QTest.qWait(0)
         self._create_operation(qtbot, "flight5678", "Description flight5678", category="furtherexample")
         # all operations of two defined categories are found
         assert self.window.mscolab.selected_category == "*ANY*"
@@ -559,7 +542,6 @@ class Test_Mscolab:
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: "anton@something.org"}})
         self._create_user(qtbot, "anton", "anton@something.org", "something")
-        QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'anton'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -575,7 +557,6 @@ class Test_Mscolab:
         self._connect_to_mscolab()
         modify_config_file({"MSS_auth": {self.url: "berta@something.org"}})
         self._create_user(qtbot, "berta", "berta@something.org", "something")
-        QtTest.QTest.qWait(100)
         assert self.window.usernameLabel.text() == 'berta'
         assert self.window.connectBtn.isVisible() is False
         assert self.window.listOperationsMSC.model().rowCount() == 0
@@ -595,7 +576,6 @@ class Test_Mscolab:
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
         self.window.actionChat.trigger()
-        QtTest.QTest.qWait(0)
         assert self.window.mscolab.chat_window is not None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok)
@@ -648,7 +628,6 @@ class Test_Mscolab:
         assert self.window.mscolab.help_dialog is not None
         QtTest.QTest.mouseClick(
             self.window.mscolab.help_dialog.okayBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(50)
         assert self.window.mscolab.help_dialog is None
 
     def test_create_dir_exceptions(self):
@@ -687,13 +666,11 @@ class Test_Mscolab:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _create_user(self, qtbot, username, email, password):
         QtTest.QTest.mouseClick(self.connect_window.addUserBtn, QtCore.Qt.LeftButton)

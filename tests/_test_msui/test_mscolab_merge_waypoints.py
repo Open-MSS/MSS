@@ -44,7 +44,6 @@ class Test_Mscolab_Merge_Waypoints:
     def setup(self, qapp, mscolab_app, mscolab_server):
         self.app = mscolab_app
         self.url = mscolab_server
-        QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
@@ -81,14 +80,12 @@ class Test_Mscolab_Merge_Waypoints:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _login(self, emailid="merge_waypoints_user", password="password"):
         modify_config_file({"MSS_auth": {self.url: self.emailid}})
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _activate_operation_at_index(self, index):
         item = self.window.listOperationsMSC.item(index)
@@ -206,7 +203,6 @@ class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
         self._create_user_data(emailid=self.emailid)
         wp_server_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckbox.setChecked(True)
-        QtTest.QTest.qWait(100)
         wp_local = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wp_local.lat == wp_server_before.lat
         self.window.mscolab.waypoints_model.invert_direction()
@@ -226,5 +222,4 @@ class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
         assert len(new_local_wp.waypoints) == 2
         assert new_local_wp.waypoint_data(0).lat == wp_server_before.lat
         self.window.workLocallyCheckbox.setChecked(False)
-        QtTest.QTest.qWait(100)
         assert self.window.mscolab.waypoints_model.waypoint_data(0).lat == wp_server_before.lat

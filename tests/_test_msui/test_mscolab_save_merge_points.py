@@ -35,7 +35,6 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
         self.emailid = "mergepoints@alpha.org"
         self._create_user_data(emailid=self.emailid)
         self.window.workLocallyCheckbox.setChecked(True)
-        QtTest.QTest.qWait(100)
         self.window.mscolab.waypoints_model.invert_direction()
         merge_waypoints_model = None
 
@@ -45,7 +44,6 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
             self._select_waypoints(self.window.mscolab.merge_dialog.serverWaypointsTable)
             merge_waypoints_model = self.window.mscolab.merge_dialog.merge_waypoints_model
             QtTest.QTest.mouseClick(self.window.mscolab.merge_dialog.saveBtn, QtCore.Qt.LeftButton)
-            QtTest.QTest.qWait(100)
 
         QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton, delay=1)
@@ -64,7 +62,6 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
         for wp_index in range(new_wp_count):
             assert new_local_wp.waypoint_data(wp_index).lat == merge_waypoints_model.waypoint_data(wp_index).lat
         self.window.workLocallyCheckbox.setChecked(False)
-        QtTest.QTest.qWait(100)
         new_server_wp = self.window.mscolab.waypoints_model
         assert len(new_server_wp.waypoints) == new_wp_count
         for wp_index in range(new_wp_count):

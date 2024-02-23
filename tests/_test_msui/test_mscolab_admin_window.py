@@ -58,7 +58,6 @@ class Test_MscolabAdminWindow:
         assert add_operation("tokyo", "test tokyo")
         assert add_user_to_operation(path="tokyo", emailid=self.userdata[0], access_level="creator")
 
-        QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
@@ -136,7 +135,6 @@ class Test_MscolabAdminWindow:
         self._check_users_present(self.admin_window.modifyUsersTable, users, "admin")
         assert len_unadded_users - 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users + 2 == self.admin_window.modifyUsersTable.rowCount()
-        QtTest.QTest.qWait(1000)
 
     def test_modify_permissions(self):
         users = ["name1", "name2"]
@@ -151,7 +149,6 @@ class Test_MscolabAdminWindow:
         QtTest.QTest.mouseClick(self.admin_window.modifyUsersBtn, QtCore.Qt.LeftButton)
         # Check if the permission has been updated
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
-        QtTest.QTest.qWait(1000)
 
     def test_delete_permissions(self):
         # Select users in the add users table
@@ -169,13 +166,11 @@ class Test_MscolabAdminWindow:
         self._check_users_present(self.admin_window.addUsersTable, users)
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
         assert len_added_users - 2 == self.admin_window.modifyUsersTable.rowCount()
-        QtTest.QTest.qWait(1000)
 
     def test_import_permissions(self):
         index = self.admin_window.importPermissionsCB.findText("paris", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(100)
         assert self.admin_window.modifyUsersTable.rowCount() == 1
 
     def _connect_to_mscolab(self):
@@ -184,20 +179,17 @@ class Test_MscolabAdminWindow:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _activate_operation_at_index(self, index):
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtTest.QTest.qWait(500)
 
     def _select_users(self, table, users):
         for row_num in range(table.rowCount()):

@@ -99,7 +99,6 @@ class Test_LinearViewWMS:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         self.window = tv.MSUILinearViewWindow(model=waypoints_model)
         self.window.show()
-        QtTest.QTest.qWait(2000)
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
         self.wms_control = self.window.docks[0].widget()
