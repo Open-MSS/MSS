@@ -24,29 +24,21 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
-import sys
 import pytest
 import mock
 
-from tests.utils import mscolab_start_server
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.mscolab import handle_db_reset
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.utils.config import modify_config_file
 
 
-PORTS = list(range(20000, 20500))
-
-
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_MscolabVersionHistory(object):
-    def setup_method(self):
-        handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+class Test_MscolabVersionHistory:
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp, mscolab_server):
+        self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -54,11 +46,12 @@ class Test_MscolabVersionHistory(object):
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
         self._connect_to_mscolab()
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         # activate operation and open chat window
         self._activate_operation_at_index(0)
@@ -68,31 +61,25 @@ class Test_MscolabVersionHistory(object):
         assert self.version_window is not None
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.mscolab.logout()
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
-    def test_changes(self):
+    def test_changes(self, qtbot):
         self._change_version_filter(1)
         len_prev = self.version_window.changes.count()
         # make a changes
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        self.version_window.load_all_changes()
-        QtWidgets.QApplication.processEvents()
-        len_after = self.version_window.changes.count()
-        assert len_prev == (len_after - 2)
+
+        def assert_():
+            self.version_window.load_all_changes()
+            len_after = self.version_window.changes.count()
+            assert len_prev == (len_after - 2)
+        qtbot.wait_until(assert_)
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_set_version_name(self, mockbox):
@@ -113,14 +100,19 @@ class Test_MscolabVersionHistory(object):
         assert self.version_window.changes.currentItem().version_name is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
-    def test_undo(self, mockbox):
+    def test_undo_changes(self, mockbox, qtbot):
         self._change_version_filter(1)
+        assert self.version_window.changes.count() == 0
         # make changes
         for i in range(2):
             self.window.mscolab.waypoints_model.invert_direction()
             QtWidgets.QApplication.processEvents()
             QtTest.QTest.qWait(100)
-        self.version_window.load_all_changes()
+
+        def assert_():
+            self.version_window.load_all_changes()
+            assert self.version_window.changes.count() == 2
+        qtbot.wait_until(assert_)
         QtWidgets.QApplication.processEvents()
         changes_count = self.version_window.changes.count()
         self._activate_change_at_index(1)

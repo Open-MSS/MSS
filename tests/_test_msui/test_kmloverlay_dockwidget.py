@@ -27,8 +27,8 @@
 
 import os
 import fs
-import sys
 import mock
+import pytest
 from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
@@ -39,10 +39,10 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 
 # ToDo refactoring, extract helper methods into functions
 # ToDo review needed helper functions
-class Test_KmlOverlayDockWidget(object):
+class Test_KmlOverlayDockWidget:
 
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])
@@ -56,10 +56,7 @@ class Test_KmlOverlayDockWidget(object):
         self.window.select_all()
         self.window.remove_file()
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
+        yield
         QtWidgets.QApplication.processEvents()
         self.window.close()
         if os.path.exists(save_kml):
@@ -90,8 +87,7 @@ class Test_KmlOverlayDockWidget(object):
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_select_file(self, mockbox):
+    def test_select_file(self):
         """
         Test All geometries and styles are being parsed without crashing
         """
@@ -103,27 +99,26 @@ class Test_KmlOverlayDockWidget(object):
             assert self.window.listWidget.item(index).checkState() == QtCore.Qt.Checked
             index = index + 1
         assert self.window.directory_location == path
-        assert mockbox.critical.call_count == 0
         assert self.window.listWidget.count() == index
         assert len(self.window.dict_files) == index
         assert self.count_patches() == 9
         self.window.select_all()
         self.window.remove_file()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_select_file_error(self, mockbox):
+    def test_select_file_error(self):
         """
         Test that program mitigates loading a non-existing file
         """
-        # load a non existing path
-        self.window.select_all()
-        self.window.remove_file()
-        path = fs.path.join(sample_path, "satellite_predictor.txt")
-        filename = (path,)  # converted to tuple
-        self.window.select_file(filename)
-        self.window.load_file()
-        QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 1
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
+            # load a non existing path
+            self.window.select_all()
+            self.window.remove_file()
+            path = fs.path.join(sample_path, "satellite_predictor.txt")
+            filename = (path,)  # converted to tuple
+            self.window.select_file(filename)
+            self.window.load_file()
+            QtWidgets.QApplication.processEvents()
+            critbox.assert_called_once()
         self.window.listWidget.clear()
         self.window.dict_files = {}
 
@@ -153,9 +148,8 @@ class Test_KmlOverlayDockWidget(object):
         assert self.window.dict_files == {}  # Dictionary should be empty
         assert self.count_patches() == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.kmloverlay_dockwidget.get_save_filename", return_value=save_kml)
-    def test_merge_file(self, mocksave, mockbox):
+    def test_merge_file(self, mocksave):
         """
         Test merging files into a single file without crashing
         """

@@ -24,8 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import sys
 import mock
+import pytest
 from PyQt5 import QtWidgets, QtTest
 
 from mslib.msui.updater import UpdaterUI, Updater
@@ -53,19 +53,10 @@ class SubprocessSameMock:
         self.args = args
 
 
-def create_mock(function, on_success=None, on_failure=None, start=True):
-    worker = Worker(function)
-    if on_success:
-        worker.finished.connect(on_success)
-    if on_failure:
-        worker.failed.connect(on_failure)
-    if start:
-        worker.run()
-    return worker
-
-
+@mock.patch("mslib.utils.qt.Worker.start", Worker.run)
 class Test_MSS_ShortcutDialog:
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.updater = Updater()
         self.status = ""
         self.update_available = False
@@ -83,15 +74,11 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_update_available.connect(update_signal)
         self.updater.on_status_update.connect(status_signal)
         self.updater.on_update_finished.connect(update_finished_signal)
-        self.application = QtWidgets.QApplication(sys.argv)
-
-    def teardown_method(self):
-        self.application.quit()
+        yield
         QtWidgets.QApplication.processEvents()
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)
     @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)
-    @mock.patch("mslib.utils.qt.Worker.create", create_mock)
     def test_update_recognised(self):
         self.updater.run()
 
@@ -105,7 +92,6 @@ class Test_MSS_ShortcutDialog:
 
     @mock.patch("subprocess.Popen", new=SubprocessSameMock)
     @mock.patch("subprocess.run", new=SubprocessSameMock)
-    @mock.patch("mslib.utils.qt.Worker.create", create_mock)
     def test_no_update(self):
         self.updater.run()
         assert self.status == "Your MSS is up to date."
@@ -114,7 +100,6 @@ class Test_MSS_ShortcutDialog:
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)
     @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)
-    @mock.patch("mslib.utils.qt.Worker.create", create_mock)
     def test_update_failed(self):
         self.updater.run()
         assert self.updater.new_version == "999.999.999"
@@ -126,7 +111,6 @@ class Test_MSS_ShortcutDialog:
 
     @mock.patch("subprocess.Popen", new=no_conda)
     @mock.patch("subprocess.run", new=no_conda)
-    @mock.patch("mslib.utils.qt.Worker.create", create_mock)
     def test_no_conda(self):
         self.updater.run()
         assert self.updater.new_version is None and self.updater.old_version is None
@@ -135,7 +119,6 @@ class Test_MSS_ShortcutDialog:
 
     @mock.patch("subprocess.Popen", new=no_conda)
     @mock.patch("subprocess.run", new=no_conda)
-    @mock.patch("mslib.utils.qt.Worker.create", create_mock)
     def test_exception(self):
         self.updater.new_version = "999.999.999"
         self.updater.old_version = "999.999.999"
@@ -146,7 +129,6 @@ class Test_MSS_ShortcutDialog:
     @mock.patch("subprocess.Popen", new=SubprocessSameMock)
     @mock.patch("subprocess.run", new=SubprocessSameMock)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
-    @mock.patch("mslib.utils.qt.Worker.create", create_mock)
     def test_ui(self, mock):
         ui = UpdaterUI()
         ui.updater.on_update_available.emit("", "")

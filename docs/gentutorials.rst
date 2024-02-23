@@ -42,7 +42,7 @@ System Requirements
 Keep the following things in mind before running a script
 
 * You should have only an **US keyboard layout**. If you have a different keyboard layout, you just need to change it to
-  US keyboard!
+  US keyboard! Typewriting of urls in a DE keyboard layout does not write `:` and `//`.
 * The **cursor.py** python file will run only on Linux and not on Windows for grabbing the mouse pointer image.
 
 * The screenrecorder.py works only in **Full HD Screens**.
@@ -57,11 +57,12 @@ Keep the following things in mind before running a script
 Getting Started
 ---------------
 
-On the Anaconda terminal, type the following ::
+On the terminal, type the following ::
 
  cd ..../MSS/$
  $ export PYTHONPATH=.../MSS        # Path of MSS
- $ conda activate mssdev
+ $ export MSUI_CONFIG_PATH=/tmp/msui_tutorials   # Path where msui_settings.json gets created and all heler images
+ $ mamba activate mssdev
  (mssdev)$ mamba install --file requirements.d/tutorials.txt
 
 This will install all the dependencies required for running of the tutorials.
@@ -70,9 +71,6 @@ This will install all the dependencies required for running of the tutorials.
 **On Linux additionally** ::
 
     $ sudo apt-get install scrot
-    $ sudo apt-get install python3-tk
-    $ sudo apt-get install python3-dev
-    $ sudo apt-get install libx11-dev libxext-dev libxfixes-dev libxi-dev
 
 
 Now, just go into the **../MSS/tutorials/** directory ::
@@ -84,6 +82,9 @@ Now, just go into the **../MSS/tutorials/** directory ::
 
 You must go into the tutorials directcory and then run the .py files. And always remember to add the PYTHONPATH to
 ........../MSS/ directory.
+You have also to set the MSUI_CONFIG_PATH to a tmp directory. The comparison images are created below this directory.
+The user's msui_settings.conf is not changed.
+
 You cannot just do like this ::
 
     $ python MSS/tutorials/sreenrecorder.py     # This will be problematic.
@@ -117,7 +118,7 @@ Each python file inside MSS/tutorials can be run directly like ::
 
 (mssdev)~/..MSS/tutorials/ $ python screenrecorder.py
 
-For recording anything on your screen. The videos will be then saved to `MSS/tutorials/Screen Recordings/`
+For recording anything on your screen. The videos will be then saved to `MSS/tutorials/recordings/`
 
 For all the tutorials, you can do the same, example ::
 
@@ -127,6 +128,11 @@ For all the tutorials, you can do the same, example ::
 
 The `MSS/tutorials/textfiles` contain descriptions of the tutorial videos in text format, these later can be
 converted to audio files by `audio.py` script after adding certain #ToDOs there.
+
+When you want to run the tutorial by your IDE you can disable the screenrecording by `dry_run=True`
+in the `start` function. Development on a 4K display is then possible too.
+
+For running the `tutorial_mscolab.py` you must provide a cleaned database and a mcolab server running on default port.
 
 **Note**
 In  tutorials development, when creating a class of Screen Recorder as ::
@@ -196,5 +202,5 @@ batch scripts
 ~~~~~~~~~~~~~
 
 Two batch scripts can be used to create tutorials.
-start_tutorial.sh is to create one tutorial and tutorials.batch
+`start_tutorial.sh` is to create one tutorial and `tutorials.batch`
 is used to create all tutorials compressed to gifcycles.

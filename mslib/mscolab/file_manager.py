@@ -29,18 +29,29 @@ import fs
 import difflib
 import logging
 import git
+import threading
 from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
 
-class FileManager(object):
+class FileManager:
     """Class with handler functions for file related functionalities"""
 
     def __init__(self, data_dir):
         self.data_dir = data_dir
+        self.operation_dict_lock = threading.Lock()
+        self.operation_locks = {}
 
-    def create_operation(self, path, description, user, last_used=None, content=None, category="default"):
+    def _get_operation_lock(self, op_id):
+        with self.operation_dict_lock:
+            try:
+                return self.operation_locks[op_id]
+            except KeyError:
+                self.operation_locks[op_id] = threading.Lock()
+                return self.operation_locks[op_id]
+
+    def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
         path: path to the operation
         description: description of the operation
@@ -53,33 +64,36 @@ class FileManager(object):
         if proj_available is not None:
             return False
         if last_used is None:
-            last_used = datetime.datetime.utcnow()
-        operation = Operation(path, description, last_used, category)
+            last_used = datetime.datetime.now(tz=datetime.timezone.utc)
+        operation = Operation(path, description, last_used, category, active=active)
         db.session.add(operation)
         db.session.flush()
         operation_id = operation.id
-        # this is the only insertion with "creator" access_level
-        perm = Permission(user.id, operation_id, "creator")
-        db.session.add(perm)
-        db.session.commit()
-        # here we can import the permissions from Group file
-        if not path.endswith(mscolab_settings.GROUP_POSTFIX):
-            import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
-            if import_op is not None:
-                self.import_permissions(import_op.id, operation_id, user.id)
-        data = fs.open_fs(self.data_dir)
-        data.makedir(operation.path)
-        operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
-        if content is not None:
-            operation_file.write(content)
-        else:
-            operation_file.write(mscolab_settings.STUB_CODE)
-        operation_path = fs.path.combine(self.data_dir, operation.path)
-        r = git.Repo.init(operation_path)
-        r.git.clear_cache()
-        r.index.add(['main.ftml'])
-        r.index.commit("initial commit")
-        return True
+
+        op_lock = self._get_operation_lock(operation_id)
+        with op_lock:
+            # this is the only insertion with "creator" access_level
+            perm = Permission(user.id, operation_id, "creator")
+            db.session.add(perm)
+            db.session.commit()
+            # here we can import the permissions from Group file
+            if not path.endswith(mscolab_settings.GROUP_POSTFIX):
+                import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
+                if import_op is not None:
+                    self.import_permissions(import_op.id, operation_id, user.id)
+            data = fs.open_fs(self.data_dir)
+            data.makedir(operation.path)
+            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
+            if content is not None:
+                operation_file.write(content)
+            else:
+                operation_file.write(mscolab_settings.STUB_CODE)
+            operation_path = fs.path.combine(self.data_dir, operation.path)
+            r = git.Repo.init(operation_path)
+            r.git.clear_cache()
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")
+            return True
 
     def get_operation_details(self, op_id, user):
         """
@@ -96,22 +110,35 @@ class FileManager(object):
             return op
         return False
 
-    def list_operations(self, user):
+    def list_operations(self, user, skip_archived=False):
         """
         user: logged in user
+        skip_archived: filter by active operations
         """
         operations = []
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
             operation = Operation.query.filter_by(id=permission.op_id).first()
-            operations.append({
-                "op_id": permission.op_id,
-                "access_level": permission.access_level,
-                "path": operation.path,
-                "description": operation.description,
-                "category": operation.category,
-                "active": operation.active
-            })
+            if operation.last_used is not None and (
+                    datetime.datetime.now(tz=datetime.timezone.utc) - operation.last_used
+            ).days > mscolab_settings.ARCHIVE_THRESHOLD:
+                # outdated OPs get archived
+                self.update_operation(permission.op_id, "active", False, user)
+            # new query to get uptodate data
+            if skip_archived:
+                operation = Operation.query.filter_by(id=permission.op_id, active=skip_archived).first()
+            else:
+                operation = Operation.query.filter_by(id=permission.op_id).first()
+
+            if operation is not None:
+                operations.append({
+                    "op_id": permission.op_id,
+                    "access_level": permission.access_level,
+                    "path": operation.path,
+                    "description": operation.description,
+                    "category": operation.category,
+                    "active": operation.active
+                })
         return operations
 
     def is_member(self, u_id, op_id):
@@ -187,6 +214,42 @@ class FileManager(object):
             return False
         return perm.access_level
 
+    def modify_user(self, user, attribute=None, value=None, action=None):
+        if action == "create":
+            user_query = User.query.filter_by(emailid=str(user.emailid)).first()
+            if user_query is None:
+                db.session.add(user)
+                db.session.commit()
+            else:
+                return False
+        elif action == "delete":
+            user_query = User.query.filter_by(id=user.id).first()
+            if user_query is not None:
+                db.session.delete(user)
+                db.session.commit()
+            user_query = User.query.filter_by(id=user.id).first()
+            # on delete we return succesfull deleted
+            if user_query is None:
+                return True
+        elif action == "update_idp_user":
+            user_query = User.query.filter_by(emailid=str(user.emailid)).first()
+            if user_query is not None:
+                db.session.add(user)
+                db.session.commit()
+            else:
+                return False
+        user_query = User.query.filter_by(id=user.id).first()
+        if user_query is None:
+            return False
+        if None not in (attribute, value):
+            if attribute == "emailid":
+                user_query = User.query.filter_by(emailid=str(value)).first()
+                if user_query is not None:
+                    return False
+            setattr(user, attribute, value)
+            db.session.commit()
+        return True
+
     def update_operation(self, op_id, attribute, value, user):
         """
         op_id: operation id
@@ -221,12 +284,11 @@ class FileManager(object):
         db.session.commit()
         return True
 
-    def delete_file(self, op_id, user):
+    def delete_operation(self, op_id, user):
         """
         op_id: operation id
         user: logged in user
         """
-        # ToDo rename to delete_operation
         if self.auth_type(user.id, op_id) != "creator":
             return False
         Permission.query.filter_by(op_id=op_id).delete()
@@ -261,31 +323,33 @@ class FileManager(object):
         if not operation:
             return False
 
-        with fs.open_fs(self.data_dir) as data:
-            """
-            old file is read, the diff between old and new is calculated and stored
-            as 'Change' in changes table. comment for each change is optional
-            """
-            old_data = data.readtext(fs.path.combine(operation.path, 'main.ftml'))
-            old_data_lines = old_data.splitlines()
-            content_lines = content.splitlines()
-            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-            diff_content = '\n'.join(list(diff))
-            data.writetext(fs.path.combine(operation.path, 'main.ftml'), content)
-        # commit changes if comment is not None
-        if diff_content != "":
-            # commit to git repository
-            operation_path = fs.path.combine(self.data_dir, operation.path)
-            repo = git.Repo(operation_path)
-            repo.git.clear_cache()
-            repo.index.add(['main.ftml'])
-            cm = repo.index.commit("committing changes")
-            # change db table
-            change = Change(op_id, user.id, cm.hexsha)
-            db.session.add(change)
-            db.session.commit()
-            return True
-        return False
+        op_lock = self._get_operation_lock(operation.id)
+        with op_lock:
+            with fs.open_fs(self.data_dir) as data:
+                """
+                old file is read, the diff between old and new is calculated and stored
+                as 'Change' in changes table. comment for each change is optional
+                """
+                old_data = data.readtext(fs.path.combine(operation.path, 'main.ftml'))
+                old_data_lines = old_data.splitlines()
+                content_lines = content.splitlines()
+                diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+                diff_content = '\n'.join(list(diff))
+                data.writetext(fs.path.combine(operation.path, 'main.ftml'), content)
+            # commit changes if comment is not None
+            if diff_content != "":
+                # commit to git repository
+                operation_path = fs.path.combine(self.data_dir, operation.path)
+                repo = git.Repo(operation_path)
+                repo.git.clear_cache()
+                repo.index.add(['main.ftml'])
+                cm = repo.index.commit("committing changes")
+                # change db table
+                change = Change(op_id, user.id, cm.hexsha)
+                db.session.add(change)
+                db.session.commit()
+                return True
+            return False
 
     def get_file(self, op_id, user):
         """
@@ -298,12 +362,14 @@ class FileManager(object):
         operation = Operation.query.filter_by(id=op_id).first()
         if operation is None:
             return False
-        with fs.open_fs(self.data_dir) as data:
-            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'r')
-            operation_data = operation_file.read()
-        return operation_data
+        op_lock = self._get_operation_lock(op_id)
+        with op_lock:
+            with fs.open_fs(self.data_dir) as data:
+                operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'r')
+                operation_data = operation_file.read()
+            return operation_data
 
-    def get_all_changes(self, op_id, user, named_version=None):
+    def get_all_changes(self, op_id, user, named_version=False):
         """
         op_id: operation-id
         user: user of this request
@@ -314,17 +380,17 @@ class FileManager(object):
         perm = Permission.query.filter_by(u_id=user.id, op_id=op_id).first()
         if perm is None:
             return False
-        # Get all changes
-        if named_version is None:
-            changes = Change.query.\
-                filter_by(op_id=op_id)\
-                .order_by(Change.created_at.desc())\
-                .all()
         # Get only named versions
-        else:
+        if named_version:
             changes = Change.query\
                 .filter(Change.op_id == op_id)\
                 .filter(~Change.version_name.is_(None))\
+                .order_by(Change.created_at.desc())\
+                .all()
+        # Get all changes
+        else:
+            changes = Change.query\
+                .filter_by(op_id=op_id)\
                 .order_by(Change.created_at.desc())\
                 .all()
 
@@ -336,14 +402,18 @@ class FileManager(object):
             'created_at': change.created_at.strftime("%Y-%m-%d, %H:%M:%S")
         }, changes))
 
-    def get_change_content(self, ch_id):
+    def get_change_content(self, ch_id, user):
         """
         ch_id: change id
         user: user of this request
 
         Get change related to id
         """
-        # ToDo refactor check user in op
+        ch = Change.query.filter_by(id=ch_id).first()
+        perm = Permission.query.filter_by(u_id=user.id, op_id=ch.op_id).first()
+        if perm is None:
+            return False
+
         change = Change.query.filter_by(id=ch_id).first()
         if not change:
             return False
@@ -363,13 +433,12 @@ class FileManager(object):
         db.session.commit()
         return True
 
-    def undo(self, ch_id, user):
+    def undo_changes(self, ch_id, user):
         """
         ch_id: change-id
         user: user of this request
 
         Undo a change
-        # ToDo rename to undo_changes
         # ToDo add a revert option, which removes only that commit's change
         """
         ch = Change.query.filter_by(id=ch_id).first()
@@ -382,22 +451,24 @@ class FileManager(object):
         if not ch or not operation:
             return False
 
-        operation_path = fs.path.join(self.data_dir, operation.path)
-        repo = git.Repo(operation_path)
-        repo.git.clear_cache()
-        try:
-            file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
-            with fs.open_fs(operation_path) as proj_fs:
-                proj_fs.writetext('main.ftml', file_content)
-            repo.index.add(['main.ftml'])
-            cm = repo.index.commit(f"checkout to {ch.commit_hash}")
-            change = Change(ch.op_id, user.id, cm.hexsha)
-            db.session.add(change)
-            db.session.commit()
-            return True
-        except Exception as ex:
-            logging.debug(ex)
-            return False
+        op_lock = self._get_operation_lock(operation.id)
+        with op_lock:
+            operation_path = fs.path.join(self.data_dir, operation.path)
+            repo = git.Repo(operation_path)
+            repo.git.clear_cache()
+            try:
+                file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
+                with fs.open_fs(operation_path) as proj_fs:
+                    proj_fs.writetext('main.ftml', file_content)
+                repo.index.add(['main.ftml'])
+                cm = repo.index.commit(f"checkout to {ch.commit_hash}")
+                change = Change(ch.op_id, user.id, cm.hexsha)
+                db.session.add(change)
+                db.session.commit()
+                return True
+            except Exception as ex:
+                logging.debug(ex)
+                return False
 
     def fetch_users_without_permission(self, op_id, u_id):
         if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
@@ -425,7 +496,8 @@ class FileManager(object):
         return users
 
     def fetch_operation_creator(self, op_id, u_id):
-        if not self.is_admin(u_id, op_id) and not self.is_creator(u_id, op_id):
+        if not self.is_member(u_id, op_id):
+            # any participant of the OP is allowed to see who is the creator
             return False
         current_operation_creator = Permission.query.filter_by(op_id=op_id, access_level="creator").first()
         return current_operation_creator.user.username

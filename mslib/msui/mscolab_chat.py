@@ -31,9 +31,9 @@ import fs
 import requests
 from markdown import Markdown
 from markdown.extensions import Extension
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 
-from mslib.mscolab.models import MessageType
+from mslib.mscolab.message_type import MessageType
 from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
@@ -83,7 +83,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         parent: widget parent
         mscolab_server_url: server url for mscolab
         """
-        super(MSColabChatWindow, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.mscolab_server_url = mscolab_server_url
@@ -275,9 +275,9 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 "op_id": self.op_id,
                 "message_type": int(self.attachment_type)
             }
-            url = url_join(self.mscolab_server_url, 'message_attachment')
+            url = urljoin(self.mscolab_server_url, 'message_attachment')
             try:
-                requests.post(url, data=data, files=files, timeout=(2, 10))
+                requests.post(url, data=data, files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.ConnectionError:
                 show_popup(self, "Error", "File size too large")
         self.send_message_state()
@@ -332,8 +332,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "token": self.token,
             "op_id": self.op_id
         }
-        url = url_join(self.mscolab_server_url, 'authorized_users')
-        r = requests.get(url, data=data, timeout=(2, 10))
+        url = urljoin(self.mscolab_server_url, 'authorized_users')
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             self.collaboratorsList.clear()
             users = r.json()["users"]
@@ -352,9 +352,9 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
         }
         # returns an array of messages
-        url = url_join(self.mscolab_server_url, "messages")
+        url = urljoin(self.mscolab_server_url, "messages")
 
-        res = requests.get(url, data=data, timeout=(2, 10))
+        res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if res.text != "False":
             res = res.json()
             messages = res["messages"]
@@ -375,16 +375,16 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             self.messageList.scrollToBottom()
 
     # SOCKET HANDLERS
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def handle_permissions_updated(self, _):
         self.load_users()
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_incoming_message(self, message):
         message = json.loads(message)
         self.render_new_message(message)
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_incoming_message_reply(self, reply):
         reply = json.loads(reply)
         for i in range(self.messageList.count() - 1, -1, -1):
@@ -410,7 +410,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 self.messageList.setItemWidget(item, new_message_item)
                 break
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_message_edited(self, message):
         message = json.loads(message)
         message_id = message["message_id"]
@@ -424,7 +424,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                 item.setSizeHint(message_widget.sizeHint())
                 break
 
-    @QtCore.Slot(str)
+    @QtCore.pyqtSlot(str)
     def handle_deleted_message(self, message):
         message = json.loads(message)
         message_id = message["message_id"]
@@ -442,7 +442,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
 
 class MessageItem(QtWidgets.QWidget):
     def __init__(self, message, chat_window):
-        super(MessageItem, self).__init__()
+        super().__init__()
         self.id = message["id"]
         self.u_id = message["u_id"]
         self.username = message["username"]
@@ -470,11 +470,11 @@ class MessageItem(QtWidgets.QWidget):
         MAX_WIDTH = MAX_HEIGHT = 300
         self.messageBox = QtWidgets.QLabel()
         if '\\' in self.attachment_path:
-            img_url = url_join(self.chat_window.mscolab_server_url,
-                               self.attachment_path.replace('\\', '/').split('colabdata')[1])
+            img_url = urljoin(self.chat_window.mscolab_server_url,
+                              self.attachment_path.replace('\\', '/').split('colabdata')[1])
         else:
-            img_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
-        data = requests.get(img_url, timeout=(2, 10)).content
+            img_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
+        data = requests.get(img_url, timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
         image = QtGui.QImage()
         image.loadFromData(data)
         self.message_image = image
@@ -505,7 +505,7 @@ class MessageItem(QtWidgets.QWidget):
 
     def setup_text_message_box(self):
         if self.message_type == MessageType.DOCUMENT:
-            doc_url = url_join(self.chat_window.mscolab_server_url, self.attachment_path)
+            doc_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
             file_name = fs.path.basename(self.attachment_path)
             self.message_text = f"Document: [{file_name}]({doc_url})"
         self.messageBox = self.get_text_browser(self.message_text)
@@ -653,8 +653,8 @@ class MessageItem(QtWidgets.QWidget):
         if self.message_type == MessageType.DOCUMENT:
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
-                file_content = requests.get(url_join(self.chat_window.mscolab_server_url, self.attachment_path),
-                                            timeout=(2, 10)).content
+                file_content = requests.get(urljoin(self.chat_window.mscolab_server_url, self.attachment_path),
+                                            timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:

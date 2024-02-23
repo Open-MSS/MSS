@@ -2,29 +2,25 @@ name: new dependency test (scheduled)
 
 on:
   schedule:
-    - cron: '30 5 * * 1' 
+    - cron: '30 5 * * 1'
 
 
-jobs:     
-  test-stable-scheduled:
-    uses: 
-      ./.github/workflows/testing.yml
-    with:
-      xdist: no
-      branch_name: stable
-      event_name: ${{ github.event_name }}
-    secrets:
-      PAT: ${{ secrets.PAT }}
+jobs:
+  trigger-testing-stable:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - uses: benc-uk/workflow-dispatch@v1.2.2
+        with:
+          workflow: testing-stable.yml
+          ref: stable
 
   test-develop-scheduled:
-    uses: 
+    uses:
       ./.github/workflows/testing.yml
     with:
-      xdist: no
       branch_name: develop
       event_name: ${{ github.event_name }}
     secrets:
       PAT: ${{ secrets.PAT }}
-
-
-

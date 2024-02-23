@@ -24,44 +24,31 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import secrets
+import pytest
 
-from flask_testing import TestCase
+from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Message, MessageType
-from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.server import APP
+from mslib.mscolab.models import Operation, Message, MessageType
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-from mslib.mscolab.sockets_manager import setup_managers
 
 
-class Test_Chat_Manager(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
+class Test_Chat_Manager:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app, mscolab_managers):
+        self.app = mscolab_app
+        _, self.cm, _ = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
         self.operation_name = "europe"
-        socketio, self.cm, self.fm = setup_managers(self.app)
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_add_message(self):
         with self.app.test_client():
@@ -89,3 +76,17 @@ class Test_Chat_Manager(TestCase):
             self.cm.delete_message(message.id)
             message = Message.query.filter(Message.id == message.id).first()
             assert message is None
+
+    def test_add_attachment(self):
+        sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
+        filename = "example.csv"
+        name, ext = filename.split('.')
+        open_csv = os.path.join(sample_path, "example.csv")
+        operation = Operation.query.filter_by(path=self.operation_name).first()
+        token = secrets.token_urlsafe(16)
+        with open(open_csv, 'rb') as fp:
+            file = FileStorage(fp, filename=filename, content_type="text/csv")
+            static_path = self.cm.add_attachment(operation.id, mscolab_settings.UPLOAD_FOLDER, file, token)
+            assert name in static_path
+            assert static_path.endswith(ext)
+            assert token in static_path

@@ -25,12 +25,9 @@
     limitations under the License.
 """
 
-import importlib.machinery
+import importlib.util
 import os
 import sys
-import mock
-import warnings
-from PyQt5 import QtWidgets
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -41,9 +38,8 @@ import keyring
 from mslib.mswms.demodata import DataFiles
 import tests.constants as constants
 
-# make a copy for mscolab test, so that we read different pathes during parallel tests.
-sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
-shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
+# This import must come after importing tests.constants due to MSUI_CONFIG_PATH being set there
+from mslib.utils.config import read_config_file
 
 
 class TestKeyring(keyring.backend.KeyringBackend):
@@ -53,193 +49,186 @@ class TestKeyring(keyring.backend.KeyringBackend):
     """
     priority = 1
 
+    passwords = {}
+
+    def reset(self):
+        self.passwords = {}
+
     def set_password(self, servicename, username, password):
-        pass
+        self.passwords[servicename + username] = password
 
     def get_password(self, servicename, username):
-        return "password from TestKeyring"
+        return self.passwords.get(servicename + username, "password from TestKeyring")
 
     def delete_password(self, servicename, username):
-        pass
+        if servicename + username in self.passwords:
+            del self.passwords[servicename + username]
+
 
 # set the keyring for keyring lib
 keyring.set_keyring(TestKeyring())
 
 
-def pytest_addoption(parser):
-    parser.addoption("--msui_settings", action="store")
+@pytest.fixture(autouse=True)
+def keyring_reset():
+    keyring.get_keyring().reset()
 
 
-def pytest_generate_tests(metafunc):
-    option_value = metafunc.config.option.msui_settings
-    if option_value is not None:
-        msui_settings_file_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
-        msui_settings_file_fs.writetext("msui_settings.json", option_value)
-        msui_settings_file_fs.close()
-
-
-if os.getenv("TESTS_VISIBLE") == "TRUE":
-    Display = None
-else:
-    try:
-        from pyvirtualdisplay import Display
-    except ImportError:
-        Display = None
-
-if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
-    print('\n configure testdata')
-    # ToDo check pytest tmpdir_factory
-    examples = DataFiles(data_fs=constants.DATA_FS,
-                         server_config_fs=constants.SERVER_CONFIG_FS)
-    examples.create_server_config(detailed_information=True)
-    examples.create_data()
-
-if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
-    config_string = f'''# -*- coding: utf-8 -*-
-"""
-
-    mslib.mscolab.conf.py.example
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    config for mscolab.
-
-    This file is part of MSS.
-
-    :copyright: Copyright 2019 Shivashis Padhi
-    :copyright: Copyright 2019-2023 by the MSS team, see AUTHORS.
-    :license: APACHE-2.0, see LICENSE for details.
-
-    Licensed under the Apache License, Version 2.0 (the "License");
-    you may not use this file except in compliance with the License.
-    You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing, software
-    distributed under the License is distributed on an "AS IS" BASIS,
-    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-    See the License for the specific language governing permissions and
-    limitations under the License.
-"""
-class mscolab_settings(object):
-
-    # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
-    import os
-    import logging
-    import fs
-    import secrets
-    from werkzeug.urls import url_join
-
-    ROOT_DIR = '{constants.ROOT_DIR}'
-    # directory where mss output files are stored
-    root_fs = fs.open_fs(ROOT_DIR)
-    if not root_fs.exists('colabTestData'):
-        root_fs.makedir('colabTestData')
-    BASE_DIR = ROOT_DIR
-    DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
-    # mscolab data directory
-    MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
-
-    # used to generate and parse tokens
-    SECRET_KEY = secrets.token_urlsafe(16)
-
-    # used to generate the password token
-    SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
-    
-    # looks for a given category for an operation ending with GROUP_POSTFIX
-    # e.g. category = Tex will look for TexGroup
-    # all users in that Group are set to the operations of that category
-    # having the roles in the TexGroup
-    GROUP_POSTFIX = "Group"
-
-    # mail settings
-    MAIL_SERVER = 'localhost'
-    MAIL_PORT = 25
-    MAIL_USE_TLS = False
-    MAIL_USE_SSL = True
-
-    # mail authentication
-    MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
-    MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
-
-    # mail accounts
-    MAIL_DEFAULT_SENDER = 'MSS@localhost'
-
-    # enable verification by Mail
-    MAIL_ENABLED = False
-
-    SQLALCHEMY_DB_URI = 'sqlite:///' + url_join(DATA_DIR, 'mscolab.db')
-
-    # mscolab file upload settings
-    UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
-    MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
-
-    # text to be written in new mscolab based ftml files.
-    STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-    <FlightTrack version="1.7.6">
-      <ListOfWaypoints>
-        <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-          <Comments></Comments>
-        </Waypoint>
-      </ListOfWaypoints>
-    </FlightTrack>
+def generate_initial_config():
+    """Generate an initial state for the configuration directory in tests.constants.ROOT_FS
     """
-    enable_basic_http_authentication = False
-    '''
-    ROOT_FS = fs.open_fs(constants.ROOT_DIR)
-    if not ROOT_FS.exists('mscolab'):
-        ROOT_FS.makedir('mscolab')
-    with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
-        # windows needs \\ or / but mixed is terrible. *nix needs /
-        mscolab_fs.writetext('mscolab_settings.py', config_string.replace('\\', '/'))
-    path = fs.path.join(constants.ROOT_DIR, 'mscolab', 'mscolab_settings.py')
-    parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
+    if not constants.ROOT_FS.exists("msui/testdata"):
+        constants.ROOT_FS.makedirs("msui/testdata")
+
+    # make a copy for mscolab test, so that we read different pathes during parallel tests.
+    sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
+    shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
+
+    if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
+        print('\n configure testdata')
+        # ToDo check pytest tmpdir_factory
+        examples = DataFiles(data_fs=constants.DATA_FS,
+                             server_config_fs=constants.SERVER_CONFIG_FS)
+        examples.create_server_config(detailed_information=True)
+        examples.create_data()
+
+    if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
+        config_string = f'''
+# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
+import os
+import logging
+import fs
+import secrets
+from urllib.parse import urljoin
+
+ROOT_DIR = '{constants.ROOT_DIR}'
+# directory where mss output files are stored
+root_fs = fs.open_fs(ROOT_DIR)
+if not root_fs.exists('colabTestData'):
+    root_fs.makedir('colabTestData')
+BASE_DIR = ROOT_DIR
+DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
+# mscolab data directory
+MSCOLAB_DATA_DIR = fs.path.join(DATA_DIR, 'filedata')
+MSCOLAB_SSO_DIR = fs.path.join(DATA_DIR, 'datasso')
+
+# In the unit days when Operations get archived because not used
+ARCHIVE_THRESHOLD = 30
+
+# To enable logging set to True or pass a logger object to use.
+SOCKETIO_LOGGER = True
+
+# To enable Engine.IO logging set to True or pass a logger object to use.
+ENGINEIO_LOGGER = True
+
+# used to generate and parse tokens
+SECRET_KEY = secrets.token_urlsafe(16)
+
+# used to generate the password token
+SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
+
+# looks for a given category for an operation ending with GROUP_POSTFIX
+# e.g. category = Tex will look for TexGroup
+# all users in that Group are set to the operations of that category
+# having the roles in the TexGroup
+GROUP_POSTFIX = "Group"
+
+# mail settings
+MAIL_SERVER = 'localhost'
+MAIL_PORT = 25
+MAIL_USE_TLS = False
+MAIL_USE_SSL = True
+
+# mail authentication
+MAIL_USERNAME = os.environ.get('APP_MAIL_USERNAME')
+MAIL_PASSWORD = os.environ.get('APP_MAIL_PASSWORD')
+
+# mail accounts
+MAIL_DEFAULT_SENDER = 'MSS@localhost'
+
+# enable verification by Mail
+MAIL_ENABLED = False
+
+SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
+
+# mscolab file upload settings
+UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+
+# text to be written in new mscolab based ftml files.
+STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
+<FlightTrack version="1.7.6">
+  <ListOfWaypoints>
+    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
+      <Comments></Comments>
+    </Waypoint>
+    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
+      <Comments></Comments>
+    </Waypoint>
+  </ListOfWaypoints>
+</FlightTrack>
+"""
+enable_basic_http_authentication = False
+
+# enable login by identity provider
+USE_SAML2 = False
+'''
+        ROOT_FS = fs.open_fs(constants.ROOT_DIR)
+        if not ROOT_FS.exists('mscolab'):
+            ROOT_FS.makedir('mscolab')
+        with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
+            # windows needs \\ or / but mixed is terrible. *nix needs /
+            mscolab_fs.writetext(constants.MSCOLAB_CONFIG_FILE, config_string.replace('\\', '/'))
+        path = fs.path.join(constants.ROOT_DIR, 'mscolab', constants.MSCOLAB_CONFIG_FILE)
+        parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
+
+    if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_AUTH_FILE):
+        config_string = '''
+import hashlib
+
+class mscolab_auth:
+     password = "testvaluepassword"
+     allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
+'''
+        ROOT_FS = fs.open_fs(constants.ROOT_DIR)
+        if not ROOT_FS.exists('mscolab'):
+            ROOT_FS.makedir('mscolab')
+        with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
+            # windows needs \\ or / but mixed is terrible. *nix needs /
+            mscolab_fs.writetext(constants.MSCOLAB_AUTH_FILE, config_string.replace('\\', '/'))
+
+    def _load_module(module_name, path):
+        spec = importlib.util.spec_from_file_location(module_name, path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
 
 
-importlib.machinery.SourceFileLoader('mswms_settings', constants.SERVER_CONFIG_FILE_PATH).load_module()
-sys.path.insert(0, constants.SERVER_CONFIG_FS.root_path)
-importlib.machinery.SourceFileLoader('mscolab_settings', path).load_module()
-sys.path.insert(0, parent_path)
+    _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
+    _load_module("mscolab_settings", path)
+
+
+generate_initial_config()
+
+
+# This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
+from tests.utils import create_msui_settings_file
 
 
 @pytest.fixture(autouse=True)
-def close_open_windows():
+def reset_config():
+    """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
     """
-    Closes all windows after every test
-    """
-    # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
-    with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
-            mock.patch("PyQt5.QtWidgets.QMessageBox.information") as i, \
-            mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as c, \
-            mock.patch("PyQt5.QtWidgets.QMessageBox.warning") as w:
-        yield
-        if any(box.call_count > 0 for box in [q, i, c, w]):
-            summary = "\n".join([f"PyQt5.QtWidgets.QMessageBox.{box()._extract_mock_name()}: {box.mock_calls[:-1]}"
-                                 for box in [q, i, c, w] if box.call_count > 0])
-            warnings.warn(f"An unhandled message box popped up during your test!\n{summary}")
+    # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is deleted.
+    for e in constants.ROOT_FS.walk.files(exclude=["mscolab.db"]):
+        constants.ROOT_FS.remove(e)
+    for e in constants.ROOT_FS.walk.dirs(search="depth"):
+        constants.ROOT_FS.removedir(e)
+
+    generate_initial_config()
+    create_msui_settings_file("{}")
+    read_config_file()
 
 
-    # Try to close all remaining widgets after each test
-    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
-        try:
-            qobject.destroy()
-        # Some objects deny permission, pass in that case
-        except RuntimeError:
-            pass
-
-
-@pytest.fixture(scope="session", autouse=True)
-def configure_testsetup(request):
-    if Display is not None:
-        # needs for invisible window output xvfb installed,
-        # default backend for visible output is xephyr
-        # by visible=0 you get xvfb
-        VIRT_DISPLAY = Display(visible=0, size=(1280, 1024))
-        VIRT_DISPLAY.start()
-        yield
-        VIRT_DISPLAY.stop()
-    else:
-        yield
+# Make fixtures available everywhere
+from tests.fixtures import *

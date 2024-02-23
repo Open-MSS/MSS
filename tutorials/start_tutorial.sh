@@ -9,6 +9,7 @@
 ## xvfb-run --server-args="-screen 0 1920x1080x24" ./start_tutorial.sh python ./tutorial_commands.py
 ##
 export LC_ALL=C
+export MSUI_CONFIG_PATH=/tmp/msui_tutorials
 # fluxbox &
 set -e
 

@@ -24,8 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
-import sys
 import fs
 import mock
 import pytest
@@ -34,28 +32,23 @@ import mslib.utils.auth
 from mslib.msui import flighttrack as ft
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
-from tests.utils import (mscolab_start_server, mscolab_register_and_login, mscolab_create_operation,
+from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
                          mscolab_delete_all_operations, mscolab_delete_user)
 from mslib.msui import mscolab
 from mslib.msui import msui
-from mslib.mscolab.mscolab import handle_db_reset
+from mslib.utils.config import modify_config_file
 
 
-PORTS = list(range(23000, 23500))
-
-
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_Mscolab_Merge_Waypoints(object):
-    def setup_method(self):
-        handle_db_reset()
-        self.process, self.url, self.app, _, self.cm, self.fm = mscolab_start_server(PORTS)
+class Test_Mscolab_Merge_Waypoints:
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp, mscolab_app, mscolab_server):
+        self.app = mscolab_app
+        self.url = mscolab_server
         QtTest.QTest.qWait(500)
-        self.application = QtWidgets.QApplication(sys.argv)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
-
-    def teardown_method(self):
+        yield
         self.window.mscolab.logout()
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
@@ -69,9 +62,7 @@ class Test_Mscolab_Merge_Waypoints(object):
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
-        self.process.terminate()
 
     def _create_user_data(self, emailid='merge@alpha.org'):
         with self.app.app_context():
@@ -95,6 +86,7 @@ class Test_Mscolab_Merge_Waypoints(object):
         QtTest.QTest.qWait(500)
 
     def _login(self, emailid="merge_waypoints_user", password="password"):
+        modify_config_file({"MSS_auth": {self.url: self.emailid}})
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
@@ -115,92 +107,107 @@ class Test_Mscolab_Merge_Waypoints(object):
             QtWidgets.QApplication.processEvents()
 
 
-@pytest.mark.skip("timeout on github")
+class AutoClickOverwriteMscolabMergeWaypointsDialog(mslib.msui.mscolab.MscolabMergeWaypointsDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.overwriteBtn.animateClick()
+
+
 class Test_Overwrite_To_Server(Test_Mscolab_Merge_Waypoints):
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_save_overwrite_to_server(self, mockbox):
+    def test_save_overwrite_to_server(self, qtbot):
         self.emailid = "save_overwrite@alpha.org"
         self._create_user_data(emailid=self.emailid)
         wp_server_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckbox.setChecked(True)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        wp_local = self.window.mscolab.waypoints_model.waypoint_data(0)
-        assert wp_local.lat == wp_server_before.lat
+
+        def assert_():
+            wp_local = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_local.lat == wp_server_before.lat
+        qtbot.wait_until(assert_)
+
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
+
+        def assert_():
+            wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_server_before.lat != wp_local_before.lat
+        qtbot.wait_until(assert_)
         wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
-        assert wp_server_before.lat != wp_local_before.lat
 
-        # ToDo mock this messagebox
-        def handle_merge_dialog():
-            QtTest.QTest.mouseClick(self.window.mscolab.merge_dialog.overwriteBtn, QtCore.Qt.LeftButton)
-            QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait(100)
-
-        QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(2)
-        QtWidgets.QApplication.processEvents()
-        # get the updated waypoints model from the server
-        # ToDo understand why requesting in follow up test self.window.waypoints_model not working
-        server_xml = self.window.mscolab.request_wps_from_server()
-        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        new_local_wp = server_waypoints_model.waypoint_data(0)
-        assert wp_local_before.lat == new_local_wp.lat
+        with mock.patch(
+            "mslib.msui.mscolab.MscolabMergeWaypointsDialog",
+            AutoClickOverwriteMscolabMergeWaypointsDialog), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.serverOptionsCb.setCurrentIndex(2)
+            m.assert_called_once()
+
+        def assert_():
+            # get the updated waypoints model from the server
+            server_xml = self.window.mscolab.request_wps_from_server()
+            server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
+            new_local_wp = server_waypoints_model.waypoint_data(0)
+            assert wp_local_before.lat == new_local_wp.lat
+        qtbot.wait_until(assert_)
+
         self.window.workLocallyCheckbox.setChecked(False)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        new_server_wp = self.window.mscolab.waypoints_model.waypoint_data(0)
-        assert wp_local_before.lat == new_server_wp.lat
+
+        def assert_():
+            new_server_wp = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_local_before.lat == new_server_wp.lat
+        qtbot.wait_until(assert_)
+
+
+class AutoClickKeepMscolabMergeWaypointsDialog(mslib.msui.mscolab.MscolabMergeWaypointsDialog):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.keepServerBtn.animateClick()
 
 
 class Test_Save_Keep_Server_Points(Test_Mscolab_Merge_Waypoints):
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_save_keep_server_points(self, mockbox):
+    def test_save_keep_server_points(self, qtbot):
         self.emailid = "save_keepe@alpha.org"
         self._create_user_data(emailid=self.emailid)
         wp_server_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         self.window.workLocallyCheckbox.setChecked(True)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        wp_local = self.window.mscolab.waypoints_model.waypoint_data(0)
-        assert wp_local.lat == wp_server_before.lat
+
+        def assert_():
+            wp_local = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_local.lat == wp_server_before.lat
+        qtbot.wait_until(assert_)
+
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
+
+        def assert_():
+            wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_server_before.lat != wp_local_before.lat
+        qtbot.wait_until(assert_)
         wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
-        assert wp_server_before.lat != wp_local_before.lat
 
-        # ToDo mock this messagebox
-        def handle_merge_dialog():
-            QtTest.QTest.mouseClick(self.window.mscolab.merge_dialog.keepServerBtn, QtCore.Qt.LeftButton)
-            QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait(100)
-
-        QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(2)
-        QtWidgets.QApplication.processEvents()
-        # get the updated waypoints model from the server
-        # ToDo understand why requesting in follow up test self.window.waypoints_model not working
-        server_xml = self.window.mscolab.request_wps_from_server()
-        server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
-        new_local_wp = server_waypoints_model.waypoint_data(0)
+        with mock.patch("mslib.msui.mscolab.MscolabMergeWaypointsDialog", AutoClickKeepMscolabMergeWaypointsDialog), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.serverOptionsCb.setCurrentIndex(2)
+            m.assert_called_once()
 
-        assert wp_local_before.lat != new_local_wp.lat
-        assert new_local_wp.lat == wp_server_before.lat
+        def assert_():
+            # get the updated waypoints model from the server
+            server_xml = self.window.mscolab.request_wps_from_server()
+            server_waypoints_model = ft.WaypointsTableModel(xml_content=server_xml)
+            new_local_wp = server_waypoints_model.waypoint_data(0)
+            assert wp_local_before.lat != new_local_wp.lat
+            assert new_local_wp.lat == wp_server_before.lat
+        qtbot.wait_until(assert_)
+
         self.window.workLocallyCheckbox.setChecked(False)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
-        new_server_wp = self.window.mscolab.waypoints_model.waypoint_data(0)
-        assert wp_server_before.lat == new_server_wp.lat
+
+        def assert_():
+            new_server_wp = self.window.mscolab.waypoints_model.waypoint_data(0)
+            assert wp_server_before.lat == new_server_wp.lat
+        qtbot.wait_until(assert_)
 
 
 class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_fetch_from_server(self, mockbox):
+    def test_fetch_from_server(self):
         self.emailid = "fetch_from_server@alpha.org"
         self._create_user_data(emailid=self.emailid)
         wp_server_before = self.window.mscolab.waypoints_model.waypoint_data(0)
@@ -213,15 +220,11 @@ class Test_Fetch_From_Server(Test_Mscolab_Merge_Waypoints):
         wp_local_before = self.window.mscolab.waypoints_model.waypoint_data(0)
         assert wp_server_before.lat != wp_local_before.lat
 
-        # ToDo mock this messagebox
-        def handle_merge_dialog():
-            QtTest.QTest.mouseClick(self.window.mscolab.merge_dialog.keepServerBtn, QtCore.Qt.LeftButton)
-            QtWidgets.QApplication.processEvents()
-            QtTest.QTest.qWait(100)
-
-        QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(1)
+        with mock.patch("mslib.msui.mscolab.MscolabMergeWaypointsDialog", AutoClickKeepMscolabMergeWaypointsDialog), \
+                mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.serverOptionsCb.setCurrentIndex(1)
+            m.assert_called_once()
         QtWidgets.QApplication.processEvents()
         # get the updated waypoints model from the server
         # ToDo understand why requesting in follow up test of self.window.waypoints_model not working

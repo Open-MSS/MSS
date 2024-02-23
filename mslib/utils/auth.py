@@ -33,6 +33,17 @@
 import logging
 import keyring
 
+
+try:
+    from jeepney.wrappers import DBusErrorResponse
+except (ImportError, ModuleNotFoundError):
+    class DBusErrorResponse(Exception):
+        """
+        Fallback definition on not DBus systems
+        """
+        def __init__(self, message):
+            super().__init__(message)
+
 from mslib.msui import constants
 
 
@@ -64,8 +75,8 @@ def get_password_from_keyring(service_name=NAME, username=""):
                 return None
             else:
                 return cred.password
-        except keyring.errors.KeyringLocked as ex:
-            logging.warn(ex)
+        except (keyring.errors.KeyringLocked, keyring.errors.InitError, DBusErrorResponse) as ex:
+            logging.warning(ex)
             return None
 
 

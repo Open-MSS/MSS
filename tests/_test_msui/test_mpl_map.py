@@ -24,12 +24,15 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
+
 from matplotlib import pyplot as plt
 from mslib.msui.mpl_map import MapCanvas
 
 
 class Test_MapCanvas:
-    def setup_method(self):
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         kwargs = {'resolution': 'l', 'area_thresh': 1000.0, 'ax': plt.gca(), 'llcrnrlon': -15.0, 'llcrnrlat': 35.0,
                   'urcrnrlon': 30.0, 'urcrnrlat': 65.0, 'epsg': '4326'}
         self.map = MapCanvas(**kwargs)

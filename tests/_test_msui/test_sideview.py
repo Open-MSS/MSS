@@ -30,54 +30,39 @@ import mock
 import os
 import pytest
 import shutil
-import sys
-import multiprocessing
 import tempfile
-from mslib.mswms.mswms import application
 from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 from tests.utils import wait_until_signal
 
-PORTS = list(range(19000, 19500))
 
-
-class Test_MSS_SV_OptionsDialog(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+class Test_MSS_SV_OptionsDialog:
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_show(self, mockcrit):
-        assert mockcrit.critical.call_count == 0
+    def test_show(self):
+        pass
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_get(self, mockcrit):
+    def test_get(self):
         self.window.get_settings()
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_addLevel(self, mockcrit):
+    def test_addLevel(self):
         QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_removeLevel(self, mockcrit):
+    def test_removeLevel(self):
         QtTest.QTest.mouseClick(self.window.btDelete, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockcrit.critical.call_count == 0
 
     def test_getFlightLevels(self):
         levels = self.window.get_flight_levels()
@@ -94,9 +79,9 @@ class Test_MSS_SV_OptionsDialog(object):
         assert mockdlg.call_count == 1
 
 
-class Test_MSSSideViewWindow(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+class Test_MSSSideViewWindow:
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
@@ -108,41 +93,31 @@ class Test_MSSSideViewWindow(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_open_wms(self, mockbox):
+    def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_mouse_over(self, mockbox):
+    def test_mouse_over(self):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(20, 20), -1)
         QtWidgets.QApplication.processEvents()
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
     @mock.patch("mslib.msui.sideview.MSUI_SV_OptionsDialog")
-    def test_options(self, mockdlg, mockbox):
+    def test_options(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.btOptions, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
-        assert mockbox.critical.call_count == 0
         assert mockdlg.call_count == 1
         assert mockdlg.return_value.setModal.call_count == 1
         assert mockdlg.return_value.exec_.call_count == 1
         assert mockdlg.return_value.destroy.call_count == 1
 
-    @pytest.mark.skip("fails with mockbox.critical.call_count in reverse order")
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_insert_point(self, mockbox):
+    def test_insert_point(self):
         """
         Test inserting a point inside and outside the canvas
         """
@@ -160,30 +135,21 @@ class Test_MSSSideViewWindow(object):
         # click again on same position
         QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
-        assert mockbox.critical.call_count == 0
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_y_axes(self, mockbox):
+    def test_y_axes(self):
         self.window.getView().get_settings()["secondary_axis"] = "pressure altitude"
         self.window.getView().set_settings(self.window.getView().get_settings())
         self.window.getView().get_settings()["secondary_axis"] = "flight level"
         self.window.getView().set_settings(self.window.getView().get_settings())
-        assert mockbox.critical.call_count == 0
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_SideViewWMS(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-        self.port = PORTS.pop()
+class Test_SideViewWMS:
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp, mswms_server):
+        self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
-        self.thread = multiprocessing.Process(
-            target=application.run,
-            args=("127.0.0.1", self.port))
-        self.thread.start()
 
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -199,14 +165,10 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
-
-    def teardown_method(self):
+        yield
         self.window.hide()
         QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
-        self.thread.terminate()
 
     def query_server(self, url):
         QtWidgets.QApplication.processEvents()
@@ -216,16 +178,14 @@ class Test_SideViewWMS(object):
         QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_server_getmap(self, mockbox):
+    def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(f"http://127.0.0.1:{self.port}")
-        QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        wait_until_signal(self.wms_control.image_displayed)
+        self.query_server(self.url)
+        with qtbot.wait_signal(self.wms_control.image_displayed):
+            QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().plotter.image is not None
+
         self.window.getView().plotter.clear_figure()
         assert self.window.getView().plotter.image is None
-        assert mockbox.critical.call_count == 0

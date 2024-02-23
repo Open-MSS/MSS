@@ -24,23 +24,14 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import mock
-import pytest
 from tests._test_msui.test_mscolab_merge_waypoints import Test_Mscolab_Merge_Waypoints
 from mslib.msui import flighttrack as ft
 from PyQt5 import QtCore, QtTest, QtWidgets
 
 
-PORTS = list(range(21000, 21500))
-
-
-# ToDo Understand why this needs to be skipped, it runs when direct called
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_save_merge_points(self, mockbox):
+    def test_save_merge_points(self):
         self.emailid = "mergepoints@alpha.org"
         self._create_user_data(emailid=self.emailid)
         self.window.workLocallyCheckbox.setChecked(True)
@@ -58,12 +49,12 @@ class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
             QtWidgets.QApplication.processEvents()
             QtTest.QTest.qWait(100)
 
-        if merge_waypoints_model is None:
-            pytest.skip("merge_waypoints_model undefined")
         QtCore.QTimer.singleShot(3000, handle_merge_dialog)
         # QtTest.QTest.mouseClick(self.window.save_ft, QtCore.Qt.LeftButton, delay=1)
         # trigger save to server action from server options combobox
-        self.window.serverOptionsCb.setCurrentIndex(2)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
+            self.window.serverOptionsCb.setCurrentIndex(2)
+            m.assert_called_once()
         QtWidgets.QApplication.processEvents()
         # get the updated waypoints model from the server
         # ToDo understand why requesting in follow up test of self.window.waypoints_model not working

@@ -507,7 +507,7 @@ At current state we have to use pip to install mod_wsgi into the INSTANCE enviro
 
 Setup a /etc/apache2/mods-available/wsgi_express.conf::
 
-  WSGIPythonHome "/home/mss-demo/mambaforge/envs/demo/"
+  WSGIPythonHome "/home/mss-demo/miniforge/envs/demo/"
 
 
 Setup a /etc/apache2/mods-available/wsgi_express.load::
@@ -522,11 +522,11 @@ Configuration of apache mod_wsgi.conf
 One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
 could add it also to wms.wsgi.
 
-  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/mambaforge/envs/instance/lib/python3.X/site-packages
+  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniforge/envs/instance/lib/python3.X/site-packages
 
 
 By this setting you override the PYTHONPATH environment variable. So you have also to add
-the site-packes directory of your mambaforge installation besides the config file path.
+the site-packes directory of your miniforge installation besides the config file path.
 
 If your server hosts different instances by different users you want to setup this path in mswms_setting.py.
 
@@ -548,7 +548,7 @@ INSTANCE is a placeholder for your service name::
  |   └── wsgi
  |       ├── auth.wsgi
  |       └── wms.wsgi
- ├── mambaforge
+ ├── miniforge
  │   ├── bin
  │   ├── conda-bld
  │   ├── conda-meta

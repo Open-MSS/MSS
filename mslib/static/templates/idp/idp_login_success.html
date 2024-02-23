@@ -1,0 +1,43 @@
+{% extends "theme.html" %} {% block body %}
+  <div class="container">
+    <style>
+        @media (min-width: 1px) {
+          .container {
+            max-width: 90%;
+          }
+        }
+    </style>
+    <div class="col">
+      <br>
+      <p>Congratulations! You have successfully logged in to the mscolab server using Identity Provider.</p>
+      <p>Please proceed to log in using the user interface by bellow token.</p>
+      <p><b>Token</b> : {{token}} 
+        <br>
+        <button onclick="copyToClipboard('{{token}}')">Copy to Clipboard</button>
+      </p>
+
+    </div>
+
+    <script>
+      function copyToClipboard(text) {
+        // Create a temporary input element
+        const tempInput = document.createElement('input');
+        tempInput.value = text;
+
+        // Append the input element to the document
+        document.body.appendChild(tempInput);
+
+        // Select the text within the input element
+        tempInput.select();
+
+        // Copy the selected text to the clipboard
+        document.execCommand('copy');
+
+        // Remove the temporary input element
+        document.body.removeChild(tempInput);
+
+        alert('Token copied to clipboard.');
+      }
+    </script>
+  </div>
+  {% endblock %}

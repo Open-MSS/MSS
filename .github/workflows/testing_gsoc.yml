@@ -1,0 +1,90 @@
+name: test GSOC branches
+
+on:
+  push:
+    branches:
+    - 'GSOC**'
+
+  pull_request:
+    branches:
+    - 'GSOC**'
+
+env:
+  PAT: ${{ secrets.PAT }}
+
+
+jobs:
+  Test-MSS-GSOC:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    container:
+      image: openmss/testing-develop
+
+    strategy:
+      fail-fast: false
+      matrix:
+        order: ["normal", "reverse"]
+
+    steps:
+    - name: Trust My Directory
+      run: git config --global --add safe.directory /__w/MSS/MSS
+
+    - uses: actions/checkout@v4
+
+    - name: Check for changed dependencies
+      run: |
+        cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt \
+        || (echo Dependencies differ \
+            && echo "triggerdockerbuild=yes" >> $GITHUB_ENV )
+
+    - name: Reinstall dependencies if changed
+      if: ${{ success() && env.triggerdockerbuild == 'yes' }}
+      run: |
+        cd $GITHUB_WORKSPACE \
+        && source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mss-develop-env \
+        && mamba deactivate \
+        && cat localbuild/meta.yaml \
+        | sed -n '/^requirements:/,/^test:/p' \
+        | sed -e "s/.*- //" \
+        | sed -e "s/menuinst.*//" \
+        | sed -e "s/.*://" > reqs.txt \
+        && cat requirements.d/development.txt >> reqs.txt \
+        && cat reqs.txt \
+        && mamba env remove -n mss-develop-env \
+        && mamba create -y -n mss-develop-env --file reqs.txt
+
+    - name: Print conda list
+      run: |
+        source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mss-develop-env \
+        && mamba list
+
+    - name: Run tests
+      if: ${{ success() }}
+      timeout-minutes: 10
+      run: |
+        cd $GITHUB_WORKSPACE \
+        && source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mss-develop-env \
+        && xvfb-run pytest -v -n 6 --dist loadfile --max-worker-restart 4 --durations=20 --cov=mslib \
+          ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
+
+    - name: Collect coverage
+      if: ${{ success() }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        cd $GITHUB_WORKSPACE \
+        && source /opt/conda/etc/profile.d/conda.sh \
+        && source /opt/conda/etc/profile.d/mamba.sh \
+        && mamba activate mss-develop-env \
+        && mamba install coveralls \
+        && coveralls --service=github

@@ -26,36 +26,51 @@
 """
 
 import datetime
-import enum
 import logging
 import jwt
 
 from passlib.apps import custom_app_context as pwd_context
-from flask_sqlalchemy import SQLAlchemy
-from mslib.mscolab.app import APP
+import sqlalchemy.types
 
-db = SQLAlchemy(APP)
+from mslib.mscolab.app import db
+from mslib.mscolab.message_type import MessageType
+
+
+class AwareDateTime(sqlalchemy.types.TypeDecorator):
+    impl = sqlalchemy.types.DateTime
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            return value.astimezone(datetime.timezone.utc)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            return value.replace(tzinfo=datetime.timezone.utc)
+        return value
 
 
 class User(db.Model):
 
     __tablename__ = 'users'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255), unique=True)
-    registered_on = db.Column(db.DateTime, nullable=False)
+    registered_on = db.Column(AwareDateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
-    confirmed_on = db.Column(db.DateTime, nullable=True)
+    confirmed_on = db.Column(AwareDateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
+    authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
-    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None):
+    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None, authentication_backend='local'):
         self.username = username
         self.emailid = emailid
         self.hash_password(password)
-        self.registered_on = datetime.datetime.now()
+        self.registered_on = datetime.datetime.now(tz=datetime.timezone.utc)
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on
+        self.authentication_backend = authentication_backend
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -107,7 +122,7 @@ class User(db.Model):
 class Permission(db.Model):
 
     __tablename__ = 'permissions'
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     access_level = db.Column(db.Enum("admin", "collaborator", "viewer", "creator", name="access_level"))
@@ -129,12 +144,12 @@ class Permission(db.Model):
 class Operation(db.Model):
 
     __tablename__ = "operations"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     path = db.Column(db.String(255), unique=True)
     category = db.Column(db.String(255))
     description = db.Column(db.String(255))
     active = db.Column(db.Boolean)
-    last_used = db.Column(db.DateTime)
+    last_used = db.Column(AwareDateTime)
 
     def __init__(self, path, description, last_used=None, category="default", active=True):
         """
@@ -147,7 +162,7 @@ class Operation(db.Model):
         self.category = category
         self.active = active
         if self.last_used is None:
-            self.last_used = datetime.datetime.utcnow()
+            self.last_used = datetime.datetime.now(tz=datetime.timezone.utc)
         else:
             self.last_used = last_used
 
@@ -157,17 +172,10 @@ class Operation(db.Model):
                f'last_used: {self.last_used}> '
 
 
-class MessageType(enum.IntEnum):
-    TEXT = 0
-    SYSTEM_MESSAGE = 1
-    IMAGE = 2
-    DOCUMENT = 3
-
-
 class Message(db.Model):
 
     __tablename__ = "messages"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     text = db.Column(db.Text)
@@ -191,7 +199,7 @@ class Message(db.Model):
 class Change(db.Model):
 
     __tablename__ = "changes"
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     op_id = db.Column(db.Integer, db.ForeignKey('operations.id'))
     u_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     commit_hash = db.Column(db.String(255), default=None)

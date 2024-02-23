@@ -33,27 +33,27 @@ import os
 from matplotlib import patheffects
 
 from mslib.utils.qt import get_open_filenames, get_save_filename
-from mslib.utils.qt import ui_kmloverlay_dockwidget as ui
+from mslib.msui.qt5 import ui_kmloverlay_dockwidget as ui
 from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 from mslib.utils.coordinate import normalize_longitude
 
 
-class KMLPatch(object):
+class KMLPatch:
     """
     Represents a KML overlay.
     """
 
-    def __init__(self, mapcanvas, kml, color="red", linewidth=1):
+    def __init__(self, mapcanvas, kml_data, color="red", linewidth=1):
         self.map = mapcanvas
-        self.kml = kml
+        self.kml = kml_data
         self.patches = []
         self.color = color
         self.linewidth = linewidth
         self.draw()
 
-    def compute_xy(self, geometry):
-        unzipped = list(zip(*geometry.coords))
+    def compute_xy(self, geometry_data):
+        unzipped = list(zip(*geometry_data.coords))
         x, y = self.map.gcpoints_path(unzipped[0], unzipped[1])
         if self.map.projection == "cyl":  # hack for wraparound
             x = normalize_longitude(x, self.map.llcrnrlon, self.map.urcrnrlon)
@@ -100,18 +100,18 @@ class KMLPatch(object):
             x1, y1 = self.compute_xy(interior)
             self.patches.append(self.map.plot(x1, y1, "-", zorder=10, **kwargs))
 
-    def add_multipoint(self, point, style, name):
+    def add_multipoint(self, geoms, style, name):
         """
         Plot KML points in a MultiGeometry
 
         :param point: fastkml object specifying point
         :param name: name of placemark for annotation
         """
-        x, y = self.map(point.x, point.y)
-        self.patches.append(self.map.plot(x, y, "o", zorder=10, color=self.color))
+        xs, ys = self.map([point.x for point in geoms], [point.y for point in geoms])
+        self.patches.append(self.map.plot(xs, ys, "o", zorder=10, color=self.color))
         if name is not None:
             self.patches.append([self.map.ax.annotate(
-                name, xy=(x, y), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
+                name, xy=(xs[0], ys[0]), xycoords="data", xytext=(5, 5), textcoords='offset points', zorder=10,
                 path_effects=[patheffects.withStroke(linewidth=2, foreground='w')])])
 
     def add_multiline(self, line, style, name):
@@ -152,8 +152,7 @@ class KMLPatch(object):
             elif isinstance(placemark.geometry, geometry.Polygon):
                 self.add_polygon(placemark, style, name)
             elif isinstance(placemark.geometry, geometry.MultiPoint):
-                for geom in placemark.geometry.geoms:
-                    self.add_multipoint(geom, style, name)
+                self.add_multipoint(placemark.geometry.geoms, style, name)
             elif isinstance(placemark.geometry, geometry.MultiLineString):
                 for geom in placemark.geometry.geoms:
                     self.add_multiline(geom, style, name)
@@ -163,7 +162,7 @@ class KMLPatch(object):
             elif isinstance(placemark.geometry, geometry.GeometryCollection):
                 for geom in placemark.geometry.geoms:
                     if geom.geom_type == "Point":
-                        self.add_multipoint(geom, style, name)
+                        self.add_multipoint([geom], style, name)
                     elif geom.geom_type == "LineString":
                         self.add_multiline(geom, style, name)
                     elif geom.geom_type == "LinearRing":
@@ -279,7 +278,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
     """
 
     def __init__(self, parent=None, view=None):
-        super(KMLOverlayControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.view = view  # canvas
         self.kml = None

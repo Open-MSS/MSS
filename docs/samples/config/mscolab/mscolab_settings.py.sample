@@ -25,55 +25,80 @@
     limitations under the License.
 """
 import os
-import logging
 
-class mscolab_settings:
-    # Set which origins are allowed to communicate with your server
-    CORS_ORIGINS = ["*"]
+# In the unit days when Operations get archived because not used
+ARCHIVE_THRESHOLD = 30
 
-    # Set base directory where you want to save Mscolab data
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+# To enable logging set to True or pass a logger object to use.
+SOCKETIO_LOGGER = False
 
-    # Directory in which all data related to Mscolab is stored
-    DATA_DIR = os.path.join(BASE_DIR, "colabdata")
+# To enable Engine.IO logging set to True or pass a logger object to use.
+ENGINEIO_LOGGER = False
 
-    # Where mscolab project files are stored on the server
-    MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+# Set which origins are allowed to communicate with your server
+CORS_ORIGINS = ["*"]
 
-    # Directory where uploaded images and documents in the chat are stored
-    UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
+# Set base directory where you want to save Mscolab data
+BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
-    # Max image/document upload size in mscolab chat (default 2MB)
-    MAX_UPLOAD_SIZE = 2 * 1024 * 1024
+# Directory in which all data related to Mscolab is stored
+DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
-    # Set your secret key for token generation
-    SECRET_KEY = 'MySecretKey'
+# Where mscolab project files are stored on the server
+MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
 
-    # looks for a given category for an operation ending with GROUP_POSTFIX
-    # e.g. category = Tex will look for TexGroup
-    # all users in that Group are set to the operations of that category
-    # having the roles in the TexGroup
-    GROUP_POSTFIX = "Group"
+# Directory where uploaded images and documents in the chat are stored
+UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
 
-    # Set the database connection string:
-    # Examples for different DBMS:
-    # MySQL: "mysql+pymysql://<username>:<password>@<host>/<db_name>?charset=utf8mb4"
-    # PostgreSQL: "postgresql://<username>:<password>@<host>/<db_name>"
-    # SQLite: "sqlite:///<path_to_db>"
-    SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+# Max image/document upload size in mscolab chat (default 2MB)
+MAX_UPLOAD_SIZE = 2 * 1024 * 1024
 
-    enable_basic_http_authentication = False
+# Set your secret key for token generation
+SECRET_KEY = 'MySecretKey'
 
-    # text to be written in new mscolab based ftml files.
-    STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-    <FlightTrack version="1.7.6">
-      <ListOfWaypoints>
-        <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-          <Comments></Comments>
-        </Waypoint>
-      </ListOfWaypoints>
-    </FlightTrack>
-    """
+# looks for a given category for an operation ending with GROUP_POSTFIX
+# e.g. category = Tex will look for TexGroup
+# all users in that Group are set to the operations of that category
+# having the roles in the TexGroup
+GROUP_POSTFIX = "Group"
+
+# Set the database connection string:
+# Examples for different DBMS:
+# MySQL: "mysql+pymysql://<username>:<password>@<host>/<db_name>?charset=utf8mb4"
+# PostgreSQL: "postgresql://<username>:<password>@<host>/<db_name>"
+# SQLite: "sqlite:///<path_to_db>"
+SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+
+enable_basic_http_authentication = False
+
+# text to be written in new mscolab based ftml files.
+STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
+<FlightTrack version="1.7.6">
+  <ListOfWaypoints>
+    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
+      <Comments></Comments>
+    </Waypoint>
+    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
+      <Comments></Comments>
+    </Waypoint>
+  </ListOfWaypoints>
+</FlightTrack>
+"""
+
+# accounts on a database on the server
+DIRECT_LOGIN = True
+
+# enable login by identity provider
+USE_SAML2 = False
+
+# looks for a given category forn a operation ending with GROUP_POSTFIX
+# e.g. category = Tex will look for TexGroup
+# all users in that Group are set to the operations of that category
+# having the roles in the TexGroup
+GROUP_POSTFIX = "Group"
+
+# Enable SSL certificate verification during SSO between MSColab and IdP
+ENABLE_SSO_SSL_CERT_VERIFICATION = True
+
+# dir where mscolab single sign process files are stored
+MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')

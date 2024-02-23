@@ -21,14 +21,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import pyautogui as pag
 import os.path
+import pyautogui as pag
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view,
+                             create_tutorial_images, select_listelement, find_and_click_picture, type_and_key, zoom_in)
+from tutorials.utils.platform_keys import platform_keys
 
-from sys import platform
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
-from tutorials.pictures import picture
+
+CTRL, ENTER, WIN, ALT = platform_keys()
+PATH = os.path.normpath(os.getcwd() + os.sep + os.pardir)
+SATELLITE_PATH = os.path.join(PATH, 'docs/samples/satellite_tracks/satellite_predictor.txt')
 
 
 def automate_rs():
@@ -38,106 +40,71 @@ def automate_rs():
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
-
-    ctrl, enter, win, alt = platform_keys()
-
     # Satellite Predictor file path
-    path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    satellite_path = os.path.join(path, 'docs/samples/satellite_tracks/satellite_predictor.txt')
-
-    # Maximizing the window
-    try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
+    msui_full_screen_and_open_first_view()
     pag.sleep(2)
-    pag.hotkey('ctrl', 'h')
-    pag.sleep(3)
+    create_tutorial_images()
 
-    # Opening Satellite Track dockwidget
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'))
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-        pag.press('down', presses=2, interval=1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control\' button/option not found on the screen.")
-        raise
+    find_and_click_picture('topviewwindow-select-to-open-control.png',
+                           'topview window selection of docking widgets not found')
+    select_listelement(2)
+    pag.press(ENTER)
+    pag.sleep(2)
 
-    # Loading the file:
-    try:
-        x, y = pag.locateCenterOnScreen(picture('satellitetrack', 'load.png'))
-        pag.sleep(1)
-        pag.click(x - 150, y, duration=2)
-        pag.sleep(1)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite(satellite_path, interval=0.1)
-        pag.sleep(1)
-        pag.click(x, y, duration=1)
-        pag.press(enter)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Load\' button not found on the screen.")
-        raise
+    # Changing map to Global
+    find_and_click_picture('topviewwindow-01-europe-cyl.png',
+                           "Map change dropdown could not be located on the screen")
+    select_listelement(2)
+
+    # update images
+    create_tutorial_images()
+
+    # Todo find and use QLineEdit leFile instead of Load button
+    # Loading the file
+    find_and_click_picture('topviewwindow-load.png', 'Load button not found', xoffset=-150)
+    type_and_key(SATELLITE_PATH, interval=0.1)
+    find_and_click_picture('topviewwindow-load.png', 'Load button not found')
 
     # Switching between different date and time of satellite overpass.
-    try:
-        x, y = pag.locateCenterOnScreen(picture('satellitetrack', 'predicted_satellite_overpasses.png'))
+    find_and_click_picture('topviewwindow-predicted-satellite-overpasses.png',
+                           'Predicted satellite button not found', xoffset=200)
+    x, y = pag.position()
+
+    pag.click(x + 200, y, duration=1)
+    for _ in range(10):
         pag.click(x + 200, y, duration=1)
-        for _ in range(10):
-            pag.click(x + 200, y, duration=1)
-            pag.sleep(1)
-            pag.press('down')
-            pag.sleep(1)
-            pag.press(enter)
-            pag.sleep(2)
-        pag.click(x + 200, y, duration=1)
-        pag.press('up', presses=3, interval=1)
-        pag.press(enter)
         pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Predicted Satellite Overpass\' dropdown menu not found on the screen.")
-        raise
+        pag.press('down')
+        pag.sleep(1)
+        pag.press(ENTER)
+        pag.sleep(1)
+    pag.click(x + 200, y, duration=1)
+    pag.press('up', presses=3, interval=1)
+    pag.press(ENTER)
+    pag.sleep(1)
 
-    # Changing map to global
-    try:
-        if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            x, y = pag.locateCenterOnScreen(picture('wms', 'europe_cyl.png'))
-            pag.click(x, y, interval=2)
-        pag.press('down', presses=2, interval=0.5)
-        pag.press(enter, interval=1)
-        pag.sleep(5)
-    except ImageNotFoundException:
-        print("\n Exception : Map change dropdown could not be located on the screen")
-        raise
+    # update images
+    create_tutorial_images()
 
-    # Adding waypoints for demonstrating remote sensing
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
-        pag.click(x, y, interval=2)
-        pag.move(111, 153, duration=2)
-        pag.click(duration=2)
-        pag.move(36, 82, duration=2)
-        pag.click(duration=2)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : Add waypoint button in topview not found on the screen.")
-        raise
+    # enable adding waypoints
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Clickable button/option not found.')
+
+    # set waypoints
+    pag.move(111, 153, duration=2)
+    pag.click(interval=2)
+    pag.sleep(1)
+    pag.move(36, 82, duration=2)
+    pag.click(interval=2)
+    pag.sleep(1)
+
+    # update images
+    create_tutorial_images()
+    pag.sleep(1)
 
     # Zooming into the map
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'))
-        pag.click(x, y, interval=2)
-        pag.move(260, 130, duration=1)
-        pag.dragRel(184, 135, duration=2)
-        pag.sleep(5)
-    except ImageNotFoundException:
-        print("\n Exception : Zoom button could not be located on the screen")
-        raise
-    pag.sleep(1)
+    zoom_in('topviewwindow-zoom.png', 'Zoom button could not be located.',
+            move=(260, 130), dragRel=(184, 135))
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()

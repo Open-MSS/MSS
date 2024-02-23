@@ -28,7 +28,6 @@
 import mock
 import os
 import pytest
-import sys
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
@@ -36,10 +35,9 @@ from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
 
 
-class Test_TableView(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-
+class Test_TableView:
+    @pytest.fixture(autouse=True)
+    def setup(self, qapp):
         # Create an initital flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),
                              ft.Waypoint(48.10, 10.27, 200),
@@ -57,11 +55,8 @@ class Test_TableView(object):
         QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
         QtWidgets.QApplication.processEvents()
 
     def test_open_hex(self):
@@ -102,11 +97,10 @@ class Test_TableView(object):
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 5
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     @mock.patch("mslib.msui.performance_settings.get_open_filename",
                 return_value=os.path.join(
                     os.path.dirname(__file__), "..", "data", "performance_simple.json"))
-    def test_performance(self, mockopen, mockcrit):
+    def test_performance(self, mockopen):
         """
         Check effect of performance settings on TableView
         """
@@ -131,7 +125,6 @@ class Test_TableView(object):
         QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
         QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.call_count == 0
 
     def test_insert_point(self):
         """
@@ -229,8 +222,7 @@ class Test_TableView(object):
         wps_after = list(self.window.waypoints_model.waypoints)
         assert wps_before != wps_after, (wps_before, wps_after)
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_roundtrip(self, mockbox):
+    def test_roundtrip(self):
         """
         Test connecting the last and first point
         Test connecting the first point to itself
@@ -256,4 +248,3 @@ class Test_TableView(object):
         # Remove connection
         self.window.waypoints_model.removeRows(count, 1)
         assert len(self.window.waypoints_model.waypoints) == count
-        assert mockbox.critical.call_count == 0

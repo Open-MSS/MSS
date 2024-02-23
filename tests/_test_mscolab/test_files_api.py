@@ -24,49 +24,26 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask_testing import TestCase
-import os
 import fs
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation
-from mslib.mscolab.server import APP
-from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.mscolab import handle_db_reset
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_Files(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
-
-        self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+class Test_Files:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app, mscolab_managers):
+        self.app = mscolab_app
+        _, _, self.fm = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         self.user = get_user(self.userdata[0])
         assert self.user is not None
         assert add_user('UV20@uv20', 'UV20', 'uv20')
         self.user_2 = get_user('UV20@uv20')
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_create_operation(self):
         with self.app.test_client():
@@ -182,12 +159,11 @@ class Test_Files(TestCase):
             operation = Operation.query.filter_by(path=new_flight_path).first()
             assert operation.description == new_description
 
-    def test_delete_file(self):
-        # ToDo rename to operation
+    def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V10")
             assert operation.path == flight_path
-            assert self.fm.delete_file(operation.id, self.user)
+            assert self.fm.delete_operation(operation.id, self.user)
             operation = Operation.query.filter_by(path=flight_path).first()
             assert operation is None
 
@@ -206,9 +182,9 @@ class Test_Files(TestCase):
             assert self.fm.save_file(operation.id, "content2", self.user)
             assert self.fm.save_file(operation.id, "content3", self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
-            previous_change = self.fm.get_change_content(all_changes[2]["id"])
+            previous_change = self.fm.get_change_content(all_changes[2]["id"], self.user)
             assert previous_change == "content1"
-            previous_change = self.fm.get_change_content(all_changes[1]["id"])
+            previous_change = self.fm.get_change_content(all_changes[1]["id"], self.user)
             assert previous_change == "content2"
 
     def test_set_version_name(self):

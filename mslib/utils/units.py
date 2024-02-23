@@ -99,16 +99,16 @@ def convert_to(value, from_unit, to_unit, default=1.):
         value_unit = units.Quantity(value, from_unit)
         result = value_unit.to(to_unit).magnitude
     except pint.UndefinedUnitError:
-        logging.error("Error in unit conversion (undefined) '%s'/'%s'", from_unit, to_unit)
+        logging.warning("Error in unit conversion (undefined) '%s'/'%s'", from_unit, to_unit)
         result = value * default
     except pint.DimensionalityError:
         if units(to_unit).to_base_units().units == units.m:
             try:
                 result = (value_unit / units.Quantity(9.81, "m s^-2")).to(to_unit).magnitude
             except pint.DimensionalityError:
-                logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+                logging.warning("Error in unit conversion (dimensionality) '%s'/'%s'", from_unit, to_unit)
                 result = value * default
         else:
-            logging.error("Error in unit conversion (dimensionality) %s/%s", from_unit, to_unit)
+            logging.warning("Error in unit conversion (dimensionality) '%s'/'%s'", from_unit, to_unit)
             result = value * default
     return result

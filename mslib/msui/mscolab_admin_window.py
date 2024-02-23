@@ -27,7 +27,7 @@
 import json
 
 import requests
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 
 from PyQt5 import QtCore, QtWidgets
 from mslib.utils.verify_user_token import verify_user_token
@@ -47,7 +47,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         op_id: operation id
         conn: connection to send/receive socket messages
         """
-        super(MSColabAdminWindow, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.mscolab_server_url = mscolab_server_url
@@ -175,12 +175,13 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "token": self.token,
             "op_id": self.op_id
         }
-        url = url_join(self.mscolab_server_url, "/creator_of_operation")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        url = urljoin(self.mscolab_server_url, "/creator_of_operation")
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
             creator_name = _json["username"]
-            self.operationNameLabel.setText(f"Operation: {self.operation_name} by User: {creator_name}")
+            self.operationNameLabel.setText(f"Operation: {self.operation_name}")
+            self.creatorNameLabel.setText(f"Creator: {creator_name}")
         self.usernameLabel.setText(f"Logged In: {self.user['username']}")
 
     def load_import_operations(self):
@@ -188,8 +189,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
             "token": self.token,
             "op_id": self.op_id
         }
-        url = url_join(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        url = urljoin(self.mscolab_server_url, "operations")
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
             self.operations = _json["operations"]
@@ -202,8 +203,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "token": self.token,
                 "op_id": self.op_id
             }
-            url = url_join(self.mscolab_server_url, "users_without_permission")
-            res = requests.get(url, data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, "users_without_permission")
+            res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -227,8 +228,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "token": self.token,
                 "op_id": self.op_id
             }
-            url = url_join(self.mscolab_server_url, "users_with_permission")
-            res = requests.get(url, data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, "users_with_permission")
+            res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -259,8 +260,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "selected_userids": json.dumps(selected_userids),
                 "selected_access_level": selected_access_level
             }
-            url = url_join(self.mscolab_server_url, "add_bulk_permissions")
-            res = requests.post(url, data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, "add_bulk_permissions")
+            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -290,8 +291,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "selected_userids": json.dumps(selected_userids),
                 "selected_access_level": selected_access_level
             }
-            url = url_join(self.mscolab_server_url, "modify_bulk_permissions")
-            res = requests.post(url, data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, "modify_bulk_permissions")
+            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -318,8 +319,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "op_id": self.op_id,
                 "selected_userids": json.dumps(selected_userids)
             }
-            url = url_join(self.mscolab_server_url, "delete_bulk_permissions")
-            res = requests.post(url, data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
+            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:
@@ -343,8 +344,8 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
                 "current_op_id": self.op_id,
                 "import_op_id": import_op_id
             }
-            url = url_join(self.mscolab_server_url, 'import_permissions')
-            res = requests.post(url, data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, 'import_permissions')
+            res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if res.text != "False":
                 res = res.json()
                 if res["success"]:

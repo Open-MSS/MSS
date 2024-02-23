@@ -108,8 +108,8 @@ Mscolab Operations in use for more than 30 days, move to an inactive list.
 The initial idea for multiple flightpaths on topview stems from bkirbus.
 GSoC mentors were Reimar Bauer, Jörn Ungermann, Sonja Gisinger
 
-With MSS 8.0.0 we base our installation on mambaforge. This has
-mamba in the base environment.
+With MSS 9.0.0 we base our installation on miniforge. This has
+mamba in the base environment. Mambaforge is discouraged of September 2023.
 
 All changes:
 https://github.com/Open-MSS/MSS/milestone/81?closed=1

@@ -41,7 +41,7 @@ AIRCRAFT_DUMMY = {
 }
 
 
-class SimpleAircraft(object):
+class SimpleAircraft:
     """
     Simple aircraft model that offers methods to estimate fuel and time consumption
     of aircraft for different flight maneuvers.

@@ -6,15 +6,9 @@
 *.swp
 *.patch
 *~
-mslib/mss_config.py
 mslib/performance/data/
-mslib/msui/mss.sideview.cfg
-mslib/msui/mss.topview.cfg
-mslib/msui/msui_settings.py
-mslib/msui/wms_cache/
 mslib/mswms/mswms_settings.py
 mslib/mswms/mswms_auth.py
-mslib/mscolab/colabdata/
 docs/_build
 docs/gallery/plots
 docs/gallery/code
@@ -24,4 +18,3 @@ build/
 mss.egg-info/
 tutorials/recordings
 tutorials/cursor_image.png
-
