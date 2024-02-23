@@ -45,7 +45,7 @@ class Actions:
 
 class Test_MscolabOperation:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mscolab_app, mscolab_server):
+    def setup(self, qtbot, mscolab_app, mscolab_server):
         self.app = mscolab_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -58,7 +58,7 @@ class Test_MscolabOperation:
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
-        self._connect_to_mscolab()
+        self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         # activate operation and open chat window
@@ -133,12 +133,17 @@ class Test_MscolabOperation:
         with self.app.app_context():
             assert Message.query.filter_by(text='test edit').count() == 0
 
-    def _connect_to_mscolab(self):
+    def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
         self.window.mscolab.connect_window = self.connect_window
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
+
+        def assert_():
+            assert not self.connect_window.connectBtn.isVisible()
+            assert self.connect_window.disconnectBtn.isVisible()
+        qtbot.wait_until(assert_)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)

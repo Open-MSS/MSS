@@ -37,7 +37,7 @@ from mslib.utils.config import modify_config_file
 
 class Test_MscolabAdminWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mscolab_server):
+    def setup(self, qtbot, mscolab_server):
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
@@ -62,7 +62,7 @@ class Test_MscolabAdminWindow:
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
-        self._connect_to_mscolab()
+        self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         # activate operation and open chat window
@@ -173,12 +173,17 @@ class Test_MscolabAdminWindow:
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
         assert self.admin_window.modifyUsersTable.rowCount() == 1
 
-    def _connect_to_mscolab(self):
+    def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
         self.window.mscolab.connect_window = self.connect_window
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
+
+        def assert_():
+            assert not self.connect_window.connectBtn.isVisible()
+            assert self.connect_window.disconnectBtn.isVisible()
+        qtbot.wait_until(assert_)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)

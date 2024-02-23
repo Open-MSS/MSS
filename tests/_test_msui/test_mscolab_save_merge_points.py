@@ -31,9 +31,9 @@ from PyQt5 import QtCore, QtTest
 
 
 class Test_Save_Merge_Points(Test_Mscolab_Merge_Waypoints):
-    def test_save_merge_points(self):
+    def test_save_merge_points(self, qtbot):
         self.emailid = "mergepoints@alpha.org"
-        self._create_user_data(emailid=self.emailid)
+        self._create_user_data(qtbot, emailid=self.emailid)
         self.window.workLocallyCheckbox.setChecked(True)
         self.window.mscolab.waypoints_model.invert_direction()
         merge_waypoints_model = None
