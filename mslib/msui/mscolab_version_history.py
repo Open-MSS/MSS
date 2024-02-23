@@ -144,7 +144,7 @@ class MSColabVersionHistory(QtWidgets.QMainWindow, ui.Ui_MscolabVersionHistory):
                 changes = json.loads(r.text)["changes"]
                 self.changes.clear()
                 for change in changes:
-                    created_at = datetime.strptime(change["created_at"], "%Y-%m-%d, %H:%M:%S")
+                    created_at = datetime.strptime(change["created_at"], "%Y-%m-%d, %H:%M:%S %Z")
                     local_time = utc_to_local_datetime(created_at)
                     date = local_time.strftime('%d/%m/%Y')
                     time = local_time.strftime('%I:%M %p')

@@ -26,6 +26,7 @@
 """
 import datetime
 import json
+import pytz
 
 import fs
 import requests
@@ -346,10 +347,11 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
 
     def load_all_messages(self):
         # empty messages and reload from server
+        aware_datetime = datetime.datetime(1970, 1, 1, tzinfo=pytz.utc)
         data = {
             "token": self.token,
             "op_id": self.op_id,
-            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+            "timestamp": aware_datetime.strftime("%Y-%m-%d, %H:%M:%S %Z")
         }
         # returns an array of messages
         url = urljoin(self.mscolab_server_url, "messages")

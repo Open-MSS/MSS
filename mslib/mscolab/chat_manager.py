@@ -64,7 +64,7 @@ class ChatManager:
         if timestamp is None:
             timestamp = datetime.datetime(1970, 1, 1)
         else:
-            timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S")
+            timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S %Z")
         messages = Message.query \
             .filter(Message.op_id == op_id) \
             .filter(Message.reply_id.is_(None)) \
