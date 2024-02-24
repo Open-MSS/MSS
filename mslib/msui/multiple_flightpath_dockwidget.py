@@ -34,6 +34,7 @@ import mslib.msui.msui_mainwindow as msui_mainwindow
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
 from mslib.utils.config import config_loader
+from urllib.parse import urljoin
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
@@ -557,7 +558,8 @@ class MultipleFlightpathOperations:
             "token": self.token,
             "skip_archived": skip_archived
         }
-        r = requests.get(self.mscolab_server_url + "/operations", data=data, timeout=(2, 10))
+        url = urljoin(self.mscolab_server_url, "/operations")
+        r = requests.get(url, data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
@@ -572,7 +574,8 @@ class MultipleFlightpathOperations:
                 "token": self.token,
                 "op_id": op_id
             }
-            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, "/get_operation_by_id")
+            r = requests.get(url, data=data, timeout=(2, 10))
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
                 return xml_content
