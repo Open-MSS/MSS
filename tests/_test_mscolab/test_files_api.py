@@ -182,10 +182,12 @@ class Test_Files:
             assert self.fm.save_file(operation.id, "content2", self.user)
             assert self.fm.save_file(operation.id, "content3", self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
-            previous_change = self.fm.get_change_content(all_changes[2]["id"], self.user)
+            previous_change = self.fm.get_change_content(all_changes[0]["id"], self.user)
             assert previous_change == "content1"
             previous_change = self.fm.get_change_content(all_changes[1]["id"], self.user)
             assert previous_change == "content2"
+            previous_change = self.fm.get_change_content(all_changes[2]["id"], self.user)
+            assert previous_change == "content3"
 
     def test_set_version_name(self):
         with self.app.test_client():
