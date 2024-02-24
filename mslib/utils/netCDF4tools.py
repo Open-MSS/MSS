@@ -37,7 +37,7 @@ VERTICAL_AXIS = {
     "pl": "atmosphere_pressure_coordinate",
     "pv": "atmosphere_ertel_potential_vorticity_coordinate",
     "tl": "atmosphere_potential_temperature_coordinate",
-    "fl": "fligth_level_coordinate",
+    "fl": "flight_level_coordinate",
 }
 
 # NETCDF FILE TOOLS
