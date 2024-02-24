@@ -399,7 +399,7 @@ class FileManager:
             'comment': change.comment,
             'version_name': change.version_name,
             'username': change.user.username,
-            'created_at': change.created_at.strftime("%Y-%m-%d, %H:%M:%S %Z")
+            'created_at': change.created_at.strftime("%Y-%m-%d, %H:%M:%S %z")
         }, changes))
 
     def get_change_content(self, ch_id, user):
