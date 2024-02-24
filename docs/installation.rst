@@ -43,11 +43,11 @@ Mamba based installation
 
 
 
-We strongly recommend to start from `Miniforge <https://github.com/conda-forge/miniforge#install>`_,
+We strongly recommend to start from `Miniforge3 <https://github.com/conda-forge/miniforge#install>`_,
 a community project of the conda-forge community.
 
-As **Beginner** start with an installation of Miniforge
-- Get `miniforge <https://github.com/conda-forge/miniforge#download>`__ for your Operation System
+As **Beginner** start with an installation of Miniforge3
+- Get `Miniforge3 <https://github.com/conda-forge/miniforge#download>`__ for your Operation System
 
 If you use already Mambaforge please read the `FAQ <https://github.com/conda-forge/miniforge#faq>`__
 
@@ -74,7 +74,7 @@ We suggest to create a mss user.
 * login as mss user
 * create a *src* directory in /home/mss
 * cd src
-* get `miniforge <https://github.com/conda-forge/miniforge#download>`__
+* get `Miniforge3 <https://github.com/conda-forge/miniforge#download>`__
 * set execute bit on install script
 * execute script, enable environment in .bashrc
 * login again
