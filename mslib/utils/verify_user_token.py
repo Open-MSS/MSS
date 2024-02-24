@@ -30,6 +30,7 @@ import requests
 from mslib.utils.config import config_loader
 from urllib.parse import urljoin
 
+
 def verify_user_token(mscolab_server_url, token):
 
     if config_loader(dataset="mscolab_skip_verify_user_token"):
