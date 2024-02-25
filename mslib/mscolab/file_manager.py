@@ -391,7 +391,7 @@ class FileManager:
         else:
             changes = Change.query\
                 .filter_by(op_id=op_id)\
-                .order_by(Change.created_at.desc())\
+                .order_by(Change.created_at.desc(), Change.id.desc())\
                 .all()
 
         return list(map(lambda change: {

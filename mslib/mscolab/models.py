@@ -205,7 +205,7 @@ class Change(db.Model):
     commit_hash = db.Column(db.String(255), default=None)
     version_name = db.Column(db.String(255), default=None)
     comment = db.Column(db.String(255), default=None)
-    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow.replace(microsecond=0))
     user = db.relationship('User')
 
     def __init__(self, op_id, u_id, commit_hash, version_name=None, comment=None):
