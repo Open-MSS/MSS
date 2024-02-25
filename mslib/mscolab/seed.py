@@ -220,7 +220,7 @@ def archive_operation(path=None, emailid=None):
                 operation.active = False
                 operation.last_used = (
                     datetime.datetime.now(tz=datetime.timezone.utc) -
-                    dateutil.relativedelta.relativedelta(months=2)
+                    dateutil.relativedelta.relativedelta(days=mscolab_settings.ARCHIVE_THRESHOLD)
                 )
                 db.session.commit()
 
