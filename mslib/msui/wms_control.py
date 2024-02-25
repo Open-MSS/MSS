@@ -476,9 +476,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Initialise date/time fields with current day, 00 UTC.
         # To do Before refactoring to an aware datetime object add a test to verify the WMS part.
         self.dteInitTime.setDateTime(QtCore.QDateTime(
-            datetime.utcnow.replace(hour=0, minute=0, second=0, microsecond=0)))
+            datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
         self.dteValidTime.setDateTime(QtCore.QDateTime(
-            datetime.utcnow.replace(hour=0, minute=0, second=0, microsecond=0)))
+            datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
 
         # Connect slots and signals.
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -841,7 +841,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 if len(list_desc) == 3:
                     time_val = parse_iso_datetime(list_desc[0])
                     if "current" in list_desc[1]:
-                        end_time = datetime.utcnow
+                        end_time = datetime.utcnow()
                     else:
                         end_time = parse_iso_datetime(list_desc[1])
                     delta = parse_iso_duration(list_desc[2])
