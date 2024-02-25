@@ -325,7 +325,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         s = requests.Session()
         s.auth = self.auth
         s.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "/token")
+        url = urljoin(self.mscolab_server_url, "token")
         url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
         try:
             r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
@@ -350,13 +350,13 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def idp_login_handler(self):
         """Handle IDP login Button"""
-        url_idp_login = urljoin(self.mscolab_server_url, "/available_idps")
+        url_idp_login = urljoin(self.mscolab_server_url, "available_idps")
         webbrowser.open(url_idp_login, new=2)
         self.stackedWidget.setCurrentWidget(self.idpAuthPage)
 
     def idp_auth_token_submit_handler(self):
         """Handle IDP authentication token submission"""
-        url_idp_login_auth = urljoin(self.mscolab_server_url, "/idp_login_auth")
+        url_idp_login_auth = urljoin(self.mscolab_server_url, "idp_login_auth")
         user_token = self.idpAuthPasswordLe.text()
 
         try:
@@ -379,7 +379,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 s = requests.Session()
                 s.auth = self.auth
                 s.headers.update({'x-test': 'true'})
-                url = urljoin(self.mscolab_server_url, "/token")
+                url = urljoin(self.mscolab_server_url, "token")
 
                 r = s.post(url, data=data, timeout=(2, 10))
                 if r.status_code == 401:
@@ -428,7 +428,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         s = requests.Session()
         s.auth = self.auth
         s.headers.update({'x-test': 'true'})
-        url = urljoin(self.mscolab_server_url, "/register")
+        url = urljoin(self.mscolab_server_url, "register")
         try:
             r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         except requests.exceptions.RequestException as ex:
@@ -583,7 +583,7 @@ class MSUIMscolab(QtCore.QObject):
             "token": self.token,
             "op_id": self.active_op_id
         }
-        url = urljoin(self.mscolab_server_url, "/creator_of_operation")
+        url = urljoin(self.mscolab_server_url, "creator_of_operation")
         r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         creator_name = "unknown"
         if r.text != "False":
@@ -824,7 +824,7 @@ class MSUIMscolab(QtCore.QObject):
             }
 
             try:
-                url = urljoin(self.mscolab_server_url, "/delete_own_account")
+                url = urljoin(self.mscolab_server_url, "delete_own_account")
                 r = requests.post(url, data=data,
                                   timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.RequestException as e:
@@ -957,7 +957,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "skip_archived": skip_archived
             }
-            url = urljoin(self.mscolab_server_url, "/operations")
+            url = urljoin(self.mscolab_server_url, "operations")
             r = requests.get(url, data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
@@ -1445,7 +1445,7 @@ class MSUIMscolab(QtCore.QObject):
             data = {
                 "token": self.token
             }
-            url = urljoin(self.mscolab_server_url, "/operations")
+            url = urljoin(self.mscolab_server_url, "operations")
             r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
@@ -1486,7 +1486,7 @@ class MSUIMscolab(QtCore.QObject):
         data = {
             'token': self.token
         }
-        url = urljoin(self.mscolab_server_url, "/user")
+        url = urljoin(self.mscolab_server_url, "user")
         r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
@@ -1612,7 +1612,7 @@ class MSUIMscolab(QtCore.QObject):
                 data = {
                     "token": self.token
                 }
-                url = urljoin(self.mscolab_server_url, "/operations")
+                url = urljoin(self.mscolab_server_url, "operations")
                 try:
                     r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 except requests.exceptions.MissingSchema:
@@ -1644,7 +1644,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "skip_archived": skip_archived
             }
-            url = urljoin(self.mscolab_server_url, "/operations")
+            url = urljoin(self.mscolab_server_url, "operations")
             r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
@@ -1890,7 +1890,7 @@ class MSUIMscolab(QtCore.QObject):
                 "token": self.token,
                 "op_id": self.active_op_id
             }
-            url = urljoin(self.mscolab_server_url, "/get_operation_by_id")
+            url = urljoin(self.mscolab_server_url, "get_operation_by_id")
             r = requests.get(url, data=data)
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]

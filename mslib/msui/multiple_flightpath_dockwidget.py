@@ -558,7 +558,7 @@ class MultipleFlightpathOperations:
             "token": self.token,
             "skip_archived": skip_archived
         }
-        url = urljoin(self.mscolab_server_url, "/operations")
+        url = urljoin(self.mscolab_server_url, "operations")
         r = requests.get(url, data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
@@ -574,7 +574,7 @@ class MultipleFlightpathOperations:
                 "token": self.token,
                 "op_id": op_id
             }
-            url = urljoin(self.mscolab_server_url, "/get_operation_by_id")
+            url = urljoin(self.mscolab_server_url, "get_operation_by_id")
             r = requests.get(url, data=data, timeout=(2, 10))
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
