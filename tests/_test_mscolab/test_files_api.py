@@ -25,6 +25,7 @@
     limitations under the License.
 """
 from flask_testing import TestCase
+import time
 import os
 import fs
 import pytest
@@ -195,9 +196,15 @@ class Test_Files(TestCase):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V11")
             assert self.fm.save_file(operation.id, "content1", self.user)
+            # we need to wait to get an updated created_at
+            time.sleep(1)
             assert self.fm.save_file(operation.id, "content2", self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
+            # the newest change is on index 0, because it has a recent created_at time
             assert len(all_changes) == 2
+            assert all_changes[0]["id"] == 2
+            assert all_changes[0]["id"] > all_changes[1]["id"]
+            assert all_changes[0]["created_at"] > all_changes[1]["created_at"]
 
     def test_get_change_content(self):
         with self.app.test_client():
