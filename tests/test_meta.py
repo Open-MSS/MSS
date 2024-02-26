@@ -37,3 +37,19 @@ def test_processEvents_is_not_used_in_tests(request):
         assert (
             "processEvents" not in test_file.read_text()
         ), "processEvents is mentioned in {}".format(test_file.relative_to(request.config.rootdir))
+
+
+def test_qWait_is_not_used_in_tests(request):
+    """Check that no test is calling PyQt5.QtTest.QTest.qWait explicitly."""
+    tests_path = pathlib.Path(request.config.rootdir) / "tests"
+    for test_file in tests_path.rglob("*.py"):
+        if str(test_file) == request.fspath:
+            # Skip the current file
+            continue
+        if str(test_file.relative_to(request.config.rootdir)) == "tests/utils.py":
+            # Skip tests/utils.py
+            # This skip can be removed once wait_until_signal is no longer used
+            continue
+        assert (
+            "qWait(" not in test_file.read_text()
+        ), "qWait is mentioned in {}".format(test_file.relative_to(request.config.rootdir))

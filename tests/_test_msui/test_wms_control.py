@@ -66,7 +66,6 @@ class WMSControlWidgetSetup:
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
             os.mkdir(self.tempdir)
-        QtTest.QTest.qWait(3000)
         if widget_type == "hsec":
             self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         else:
@@ -82,7 +81,6 @@ class WMSControlWidgetSetup:
             server = self.window.multilayers.listLayers.findItems(url, QtCore.Qt.MatchFixedString)[0]
             self.window.multilayers.delete_server(server)
 
-        QtTest.QTest.qWait(2000)
         QtTest.QTest.qWaitForWindowExposed(self.window)
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
 
@@ -94,7 +92,6 @@ class WMSControlWidgetSetup:
         while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
         QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
-        QtTest.QTest.qWait(2000)  # time for the server to start up
         QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         wait_until_signal(self.window.cpdlg.canceled)
 
@@ -171,7 +168,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         self.query_server(self.url)
         QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(20)
         QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         wait_until_signal(self.window.image_displayed)
 
@@ -311,7 +307,6 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.window.multilayers.filter_favourite_toggled()
         assert server.isHidden()
         self.window.multilayers.filter_favourite_toggled()
-        QtTest.QTest.qWait(100)
         QtTest.QTest.mouseMove(self.window.multilayers.listLayers, QtCore.QPoint(icon_start_fav + 3, 0), -1)
         self.window.multilayers.check_icon_clicked(server.child(0))
         self.window.multilayers.filter_favourite_toggled()

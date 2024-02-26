@@ -89,7 +89,6 @@ class Test_KmlOverlayDockWidget:
         assert self.window.listWidget.count() == 0
         for sample in ["folder.kml", "line.kml", "color.kml", "style.kml"]:
             path = self.select_file(sample)
-            QtTest.QTest.qWait(250)
             assert self.window.listWidget.item(index).checkState() == QtCore.Qt.Checked
             index = index + 1
         assert self.window.directory_location == path

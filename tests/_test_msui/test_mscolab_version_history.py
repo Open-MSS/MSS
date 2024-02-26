@@ -37,7 +37,7 @@ from mslib.utils.config import modify_config_file
 
 class Test_MscolabVersionHistory:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mscolab_server):
+    def setup(self, qtbot, mscolab_server):
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
@@ -45,12 +45,11 @@ class Test_MscolabVersionHistory:
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-        QtTest.QTest.qWait(500)
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
-        self._connect_to_mscolab()
+        self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(self.userdata[0], self.userdata[2])
         # activate operation and open chat window
@@ -82,17 +81,14 @@ class Test_MscolabVersionHistory:
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_set_version_name(self, mockbox):
         self._set_version_name()
-        QtTest.QTest.qWait(100)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
         assert self.version_window.changes.count() == 1
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
     def test_version_name_delete(self, mockbox):
         self._set_version_name()
-        QtTest.QTest.qWait(100)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
         QtTest.QTest.mouseClick(self.version_window.deleteVersionNameBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
         assert self.version_window.changes.count() == 1
         assert self.version_window.changes.currentItem().version_name is None
 
@@ -103,7 +99,6 @@ class Test_MscolabVersionHistory:
         # make changes
         for i in range(2):
             self.window.mscolab.waypoints_model.invert_direction()
-            QtTest.QTest.qWait(100)
 
         def assert_():
             self.version_window.load_all_changes()
@@ -112,7 +107,6 @@ class Test_MscolabVersionHistory:
         changes_count = self.version_window.changes.count()
         self._activate_change_at_index(1)
         QtTest.QTest.mouseClick(self.version_window.checkoutBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(200)
         new_changes_count = self.version_window.changes.count()
         assert changes_count + 1 == new_changes_count
 
@@ -120,29 +114,29 @@ class Test_MscolabVersionHistory:
         self._change_version_filter(1)
         changes_count = self.version_window.changes.count()
         self.window.mscolab.waypoints_model.invert_direction()
-        QtTest.QTest.qWait(100)
         self.window.mscolab.waypoints_model.invert_direction()
-        QtTest.QTest.qWait(100)
         QtTest.QTest.mouseClick(self.version_window.refreshBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(100)
         new_changes_count = self.version_window.changes.count()
         assert new_changes_count == changes_count + 2
 
-    def _connect_to_mscolab(self):
+    def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
         self.window.mscolab.connect_window = self.connect_window
         assert self.connect_window is not None
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
+
+        def assert_():
+            assert not self.connect_window.connectBtn.isVisible()
+            assert self.connect_window.disconnectBtn.isVisible()
+        qtbot.wait_until(assert_)
 
     def _login(self, emailid, password):
         assert self.connect_window is not None
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtTest.QTest.qWait(500)
 
     def _activate_operation_at_index(self, index):
         assert index < self.window.listOperationsMSC.count()
@@ -158,20 +152,17 @@ class Test_MscolabVersionHistory:
         point = self.version_window.changes.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.version_window.changes.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtTest.QTest.keyClick(self.version_window.changes.viewport(), QtCore.Qt.Key_Return)
-        QtTest.QTest.qWait(100)
 
     def _change_version_filter(self, index):
         assert self.version_window is not None
         assert index < self.version_window.versionFilterCB.count()
         self.version_window.versionFilterCB.setCurrentIndex(index)
         self.version_window.versionFilterCB.currentIndexChanged.emit(index)
-        QtTest.QTest.qWait(100)
 
     def _set_version_name(self):
         self._change_version_filter(1)
         # make a changes
         self.window.mscolab.waypoints_model.invert_direction()
-        QtTest.QTest.qWait(100)
         self.version_window.load_all_changes()
         self._activate_change_at_index(0)
         QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
