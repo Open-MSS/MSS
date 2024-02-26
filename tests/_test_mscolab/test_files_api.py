@@ -186,7 +186,9 @@ class Test_Files():
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V12", content='initial')
             assert self.fm.save_file(operation.id, "content1", self.user)
+            time.sleep(1)
             assert self.fm.save_file(operation.id, "content2", self.user)
+            time.sleep(1)
             assert self.fm.save_file(operation.id, "content3", self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             previous_change = self.fm.get_change_content(all_changes[2]["id"], self.user)
