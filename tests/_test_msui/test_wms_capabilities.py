@@ -28,7 +28,7 @@
 import mock
 import pytest
 
-from PyQt5 import QtWidgets, QtTest, QtCore
+from PyQt5 import QtTest, QtCore
 import mslib.msui.wms_capabilities as wc
 
 
@@ -48,15 +48,12 @@ class Test_WMSCapabilities:
         self.capabilities.provider.contact.postcode = None
         self.capabilities.provider.contact.city = None
         yield
-        QtWidgets.QApplication.processEvents()
 
     def start_window(self):
         self.window = wc.WMSCapabilitiesBrowser(
             url="http://example.com",
             capabilities=self.capabilities)
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(100)
 
     def test_window_start(self):
         self.start_window()
@@ -68,6 +65,4 @@ class Test_WMSCapabilities:
     def test_switch_view(self):
         self.start_window()
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.cbFullView, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()

@@ -31,7 +31,7 @@ import os
 import pytest
 import shutil
 import tempfile
-from PyQt5 import QtWidgets, QtTest, QtCore, QtGui
+from PyQt5 import QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
@@ -43,12 +43,9 @@ class Test_MSS_SV_OptionsDialog:
     def setup(self, qapp):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_show(self):
         pass
@@ -58,24 +55,20 @@ class Test_MSS_SV_OptionsDialog:
 
     def test_addLevel(self):
         QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
 
     def test_removeLevel(self):
         QtTest.QTest.mouseClick(self.window.btDelete, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
 
     def test_getFlightLevels(self):
         levels = self.window.get_flight_levels()
         assert all(x == y for x, y in zip(levels, [300, 320, 340]))
         QtTest.QTest.mouseClick(self.window.btAdd, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         levels = self.window.get_flight_levels()
         assert all(x == y for x, y in zip(levels, [0, 300, 320, 340]))
 
     @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
     def test_setColour(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.btFillColour, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mockdlg.call_count == 1
 
 
@@ -90,28 +83,21 @@ class Test_MSSSideViewWindow:
 
         self.window = tv.MSUISideViewWindow(model=waypoints_model)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
 
     def test_mouse_over(self):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(20, 20), -1)
-        QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.sideview.MSUI_SV_OptionsDialog")
     def test_options(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.btOptions, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mockdlg.call_count == 1
         assert mockdlg.return_value.setModal.call_count == 1
         assert mockdlg.return_value.exec_.call_count == 1
@@ -122,18 +108,14 @@ class Test_MSSSideViewWindow:
         Test inserting a point inside and outside the canvas
         """
         self.window.mpl.navbar._actions['insert_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
         point = self.window.mpl.canvas.rect().center()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(1, 1))
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         # click again on same position
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
 
     def test_y_axes(self):
@@ -157,25 +139,17 @@ class Test_SideViewWMS:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         self.window = tv.MSUISideViewWindow(model=waypoints_model)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWait(2000)
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
 
     def query_server(self, url):
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
     def test_server_getmap(self, qtbot):

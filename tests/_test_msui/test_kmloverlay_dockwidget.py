@@ -29,7 +29,7 @@ import os
 import fs
 import mock
 import pytest
-from PyQt5 import QtWidgets, QtCore, QtTest, QtGui
+from PyQt5 import QtCore, QtTest, QtGui
 from tests.constants import ROOT_DIR
 import mslib.msui.kmloverlay_dockwidget as kd
 
@@ -50,14 +50,11 @@ class Test_KmlOverlayDockWidget:
 
         self.window = kd.KMLOverlayControlWidget(view=self.view)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         # start load test
         self.window.select_all()
         self.window.remove_file()
-        QtWidgets.QApplication.processEvents()
         yield
-        QtWidgets.QApplication.processEvents()
         self.window.close()
         if os.path.exists(save_kml):
             os.remove(save_kml)
@@ -70,7 +67,6 @@ class Test_KmlOverlayDockWidget:
         filename = (path,)  # converted to tuple
         self.window.select_file(filename)
         self.window.load_file()
-        QtWidgets.QApplication.processEvents()
         return path
 
     def select_files(self):  # Utility function for multiple files
@@ -78,13 +74,11 @@ class Test_KmlOverlayDockWidget:
             path = fs.path.join(sample_path, sample)
             filename = (path,)  # converted to tuple
             self.window.select_file(filename)
-            QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.kmloverlay_dockwidget.get_open_filenames",
                 return_value=[fs.path.join(sample_path, "line.kml")])
     def test_get_file(self, mockopen):  # Tests opening of QFileDialog
         QtTest.QTest.mouseClick(self.window.btSelectFile, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
 
     def test_select_file(self):
@@ -95,7 +89,6 @@ class Test_KmlOverlayDockWidget:
         assert self.window.listWidget.count() == 0
         for sample in ["folder.kml", "line.kml", "color.kml", "style.kml"]:
             path = self.select_file(sample)
-            QtTest.QTest.qWait(250)
             assert self.window.listWidget.item(index).checkState() == QtCore.Qt.Checked
             index = index + 1
         assert self.window.directory_location == path
@@ -117,7 +110,6 @@ class Test_KmlOverlayDockWidget:
             filename = (path,)  # converted to tuple
             self.window.select_file(filename)
             self.window.load_file()
-            QtWidgets.QApplication.processEvents()
             critbox.assert_called_once()
         self.window.listWidget.clear()
         self.window.dict_files = {}
@@ -127,7 +119,6 @@ class Test_KmlOverlayDockWidget:
         Test removing all files except one
         """
         self.select_files()
-        QtWidgets.QApplication.processEvents()
         self.window.listWidget.item(0).setCheckState(QtCore.Qt.Unchecked)
         QtTest.QTest.mouseClick(self.window.pushButton_remove, QtCore.Qt.LeftButton)
         assert self.window.listWidget.count() == 1
@@ -140,10 +131,8 @@ class Test_KmlOverlayDockWidget:
         Test removing all files
         """
         self.select_files()
-        QtWidgets.QApplication.processEvents()
         assert self.window.listWidget.count() == 5
         QtTest.QTest.mouseClick(self.window.pushButton_remove, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert self.window.listWidget.count() == 0  # No items in list
         assert self.window.dict_files == {}  # Dictionary should be empty
         assert self.count_patches() == 0
@@ -154,9 +143,7 @@ class Test_KmlOverlayDockWidget:
         Test merging files into a single file without crashing
         """
         self.select_files()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.pushButton_merge, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mocksave.call_count == 1
         assert os.path.exists(save_kml)
 
@@ -174,11 +161,9 @@ class Test_KmlOverlayDockWidget:
         QtTest.QTest.mouseClick(self.window.listWidget.viewport(),
                                 QtCore.Qt.LeftButton,
                                 pos=rect.center())
-        QtWidgets.QApplication.processEvents()
 
         # Clicking on Push Button Colour
         QtTest.QTest.mouseClick(self.window.pushButton_color, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mock_colour_button.call_count == 1
 
         # Testing the Double Spin Box for linewidth

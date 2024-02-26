@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pytest
-from PyQt5 import QtWidgets, QtTest
+from PyQt5 import QtTest
 from mslib.msui import msui
 from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
 from mslib.msui import flighttrack as ft
@@ -47,12 +47,9 @@ class Test_MultipleFlightpathControlWidget:
 
         self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_initialization(self):
         widget = MultipleFlightpathControlWidget(parent=self.widget,

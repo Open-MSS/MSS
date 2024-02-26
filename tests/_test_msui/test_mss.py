@@ -24,7 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from PyQt5 import QtWidgets, QtTest, QtCore
+from PyQt5 import QtTest, QtCore
 from mslib.msui import mss
 
 
@@ -32,4 +32,3 @@ def test_mss_rename_message(qapp):
     main_window = mss.MSSMainWindow()
     main_window.show()
     QtTest.QTest.mouseClick(main_window.pushButton, QtCore.Qt.LeftButton)
-    QtWidgets.QApplication.processEvents()
