@@ -50,7 +50,6 @@ class Test_Editor:
             if os.path.exists(self.save_file_name):
                 os.remove(self.save_file_name)
             self.window.hide()
-            QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
     def test_file_open(self, mockfile):

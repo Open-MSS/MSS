@@ -69,10 +69,8 @@ class Test_MscolabAdminWindow:
         # activate operation and open chat window
         self._activate_operation_at_index(0)
         self.window.actionManageUsers.trigger()
-        QtWidgets.QApplication.processEvents()
         self.admin_window = self.window.mscolab.admin_window
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.mscolab.logout()
         if self.window.mscolab.admin_window:
@@ -81,19 +79,16 @@ class Test_MscolabAdminWindow:
             self.window.mscolab.conn.disconnect()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window.close()
-        QtWidgets.QApplication.processEvents()
 
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Change filter to viewer
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
-        QtWidgets.QApplication.processEvents()
         # Check how many users are visible
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 1
         # Change it back to all
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("all")
-        QtWidgets.QApplication.processEvents()
         # Check how many rows are visible
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
@@ -103,33 +98,27 @@ class Test_MscolabAdminWindow:
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
         # Text Search in add users Table
         QtTest.QTest.keyClicks(self.admin_window.addUsersSearch, "name1")
-        QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.addUsersTable)
         assert visible_row_count == 1
         self.admin_window.addUsersSearch.setText("")
         QtTest.QTest.keyClicks(self.admin_window.addUsersSearch, "")
-        QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.addUsersTable)
         assert visible_row_count == len_unadded_users
         # Text Search in modify users Table
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "example")
-        QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 1
         self.admin_window.modifyUsersSearch.setText("")
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "")
-        QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == len_added_users
 
     def test_permission_and_text_together(self):
         QtTest.QTest.keyClicks(self.admin_window.modifyUsersSearch, "viewer")
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("viewer")
-        QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 1
         self.admin_window.modifyUsersPermissionFilter.currentTextChanged.emit("admin")
-        QtWidgets.QApplication.processEvents()
         visible_row_count = self._get_visible_row_count(self.admin_window.modifyUsersTable)
         assert visible_row_count == 0
 
@@ -143,7 +132,6 @@ class Test_MscolabAdminWindow:
         if index >= 0:
             self.admin_window.addUsersPermission.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         # Check if they have been added in the modify users table
         self._check_users_present(self.admin_window.modifyUsersTable, users, "admin")
         assert len_unadded_users - 2 == self.admin_window.addUsersTable.rowCount()
@@ -155,14 +143,12 @@ class Test_MscolabAdminWindow:
         # Select users in the add users table
         self._select_users(self.admin_window.addUsersTable, users)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         # Select users in the modify users table
         self._select_users(self.admin_window.modifyUsersTable, users)
         # Update their permission to viewer
         index = self.admin_window.modifyUsersPermission.findText("viewer", QtCore.Qt.MatchFixedString)
         self.admin_window.modifyUsersPermission.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.modifyUsersBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         # Check if the permission has been updated
         self._check_users_present(self.admin_window.modifyUsersTable, users, "viewer")
         QtTest.QTest.qWait(1000)
@@ -172,7 +158,6 @@ class Test_MscolabAdminWindow:
         users = ["name1", "name2"]
         self._select_users(self.admin_window.addUsersTable, users)
         QtTest.QTest.mouseClick(self.admin_window.addUsersBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         len_unadded_users = self.admin_window.addUsersTable.rowCount()
         len_added_users = self.admin_window.modifyUsersTable.rowCount()
 
@@ -180,7 +165,6 @@ class Test_MscolabAdminWindow:
         self._select_users(self.admin_window.modifyUsersTable, users)
         # Click on delete permissions
         QtTest.QTest.mouseClick(self.admin_window.deleteUsersBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         # Check if the deleted users can be found in the add users table
         self._check_users_present(self.admin_window.addUsersTable, users)
         assert len_unadded_users + 2 == self.admin_window.addUsersTable.rowCount()
@@ -191,7 +175,6 @@ class Test_MscolabAdminWindow:
         index = self.admin_window.importPermissionsCB.findText("paris", QtCore.Qt.MatchFixedString)
         self.admin_window.importPermissionsCB.setCurrentIndex(index)
         QtTest.QTest.mouseClick(self.admin_window.importPermissionsBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         assert self.admin_window.modifyUsersTable.rowCount() == 1
 
@@ -201,23 +184,19 @@ class Test_MscolabAdminWindow:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _login(self, emailid, password):
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _activate_operation_at_index(self, index):
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _select_users(self, table, users):
@@ -227,7 +206,6 @@ class Test_MscolabAdminWindow:
             if username in users:
                 point = table.visualItemRect(item).center()
                 QtTest.QTest.mouseClick(table.viewport(), QtCore.Qt.LeftButton, pos=point)
-                QtWidgets.QApplication.processEvents()
         assert len(table.selectionModel().selectedRows()) == 2
 
     def _get_visible_row_count(self, table):

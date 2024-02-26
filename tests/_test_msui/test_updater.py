@@ -75,7 +75,6 @@ class Test_MSS_ShortcutDialog:
         self.updater.on_status_update.connect(status_signal)
         self.updater.on_update_finished.connect(update_finished_signal)
         yield
-        QtWidgets.QApplication.processEvents()
 
     @mock.patch("subprocess.Popen", new=SubprocessDifferentVersionMock)
     @mock.patch("subprocess.run", new=SubprocessDifferentVersionMock)

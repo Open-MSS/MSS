@@ -56,11 +56,9 @@ class Test_MscolabVersionHistory:
         # activate operation and open chat window
         self._activate_operation_at_index(0)
         self.window.actionVersionHistory.trigger()
-        QtWidgets.QApplication.processEvents()
         self.version_window = self.window.mscolab.version_window
         assert self.version_window is not None
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.mscolab.logout()
         if self.window.mscolab.version_window:
@@ -94,7 +92,6 @@ class Test_MscolabVersionHistory:
         QtTest.QTest.qWait(100)
         assert self.version_window.changes.currentItem().version_name == "MyVersionName"
         QtTest.QTest.mouseClick(self.version_window.deleteVersionNameBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
         assert self.version_window.changes.count() == 1
         assert self.version_window.changes.currentItem().version_name is None
@@ -106,18 +103,15 @@ class Test_MscolabVersionHistory:
         # make changes
         for i in range(2):
             self.window.mscolab.waypoints_model.invert_direction()
-            QtWidgets.QApplication.processEvents()
             QtTest.QTest.qWait(100)
 
         def assert_():
             self.version_window.load_all_changes()
             assert self.version_window.changes.count() == 2
         qtbot.wait_until(assert_)
-        QtWidgets.QApplication.processEvents()
         changes_count = self.version_window.changes.count()
         self._activate_change_at_index(1)
         QtTest.QTest.mouseClick(self.version_window.checkoutBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(200)
         new_changes_count = self.version_window.changes.count()
         assert changes_count + 1 == new_changes_count
@@ -126,13 +120,10 @@ class Test_MscolabVersionHistory:
         self._change_version_filter(1)
         changes_count = self.version_window.changes.count()
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         QtTest.QTest.mouseClick(self.version_window.refreshBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         new_changes_count = self.version_window.changes.count()
         assert new_changes_count == changes_count + 2
@@ -144,7 +135,6 @@ class Test_MscolabVersionHistory:
         self.connect_window.urlCb.setEditText(self.url)
         self.connect_window.show()
         QtTest.QTest.mouseClick(self.connect_window.connectBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _login(self, emailid, password):
@@ -152,7 +142,6 @@ class Test_MscolabVersionHistory:
         self.connect_window.loginEmailLe.setText(emailid)
         self.connect_window.loginPasswordLe.setText(password)
         QtTest.QTest.mouseClick(self.connect_window.loginBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(500)
 
     def _activate_operation_at_index(self, index):
@@ -160,9 +149,7 @@ class Test_MscolabVersionHistory:
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
 
     def _activate_change_at_index(self, index):
         assert self.version_window is not None
@@ -170,9 +157,7 @@ class Test_MscolabVersionHistory:
         item = self.version_window.changes.item(index)
         point = self.version_window.changes.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.version_window.changes.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClick(self.version_window.changes.viewport(), QtCore.Qt.Key_Return)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
 
     def _change_version_filter(self, index):
@@ -180,18 +165,13 @@ class Test_MscolabVersionHistory:
         assert index < self.version_window.versionFilterCB.count()
         self.version_window.versionFilterCB.setCurrentIndex(index)
         self.version_window.versionFilterCB.currentIndexChanged.emit(index)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
 
     def _set_version_name(self):
         self._change_version_filter(1)
         # make a changes
         self.window.mscolab.waypoints_model.invert_direction()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(100)
         self.version_window.load_all_changes()
-        QtWidgets.QApplication.processEvents()
         self._activate_change_at_index(0)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()

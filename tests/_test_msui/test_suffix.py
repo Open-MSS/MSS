@@ -28,7 +28,7 @@
 """
 import pytest
 
-from PyQt5 import QtWidgets, QtTest
+from PyQt5 import QtTest
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
@@ -38,16 +38,12 @@ class Test_SuffixChange:
     def setup(self, qapp):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_suffixchange(self):
         suffix = [' hPa', ' km', ' hft']
         for i in range(len(suffix)):
             self.window.cbVerticalAxis.setCurrentIndex(i)
-            QtWidgets.QApplication.processEvents()
             assert self.window.sbPtop.suffix() == suffix[i]

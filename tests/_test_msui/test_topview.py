@@ -43,12 +43,9 @@ class Test_MSS_TV_MapAppearanceDialog:
     def setup(self, qapp):
         self.window = tv.MSUI_TV_MapAppearanceDialog(settings=_DEFAULT_SETTINGS_TOPVIEW)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_show(self):
         pass
@@ -67,71 +64,51 @@ class Test_MSSTopViewWindow:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
 
     def test_open_sat(self):
         self.window.cbTools.currentIndexChanged.emit(2)
-        QtWidgets.QApplication.processEvents()
 
     def test_open_rs(self):
         self.window.cbTools.currentIndexChanged.emit(3)
-        QtWidgets.QApplication.processEvents()
         rsdock = self.window.docks[2].widget()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(rsdock.cbDrawTangents, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         rsdock.dsbTangentHeight.setValue(6)
-        QtWidgets.QApplication.processEvents()
         rsdock.dsbObsAngleAzimuth.setValue(70)
         QtTest.QTest.mouseClick(rsdock.cbDrawTangents, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         rsdock.cbShowSolarAngle.setChecked(True)
 
     def test_open_kml(self):
         self.window.cbTools.currentIndexChanged.emit(4)
-        QtWidgets.QApplication.processEvents()
 
     def test_insert_point(self):
         """
         Test inserting a point inside and outside the canvas
         """
         self.window.mpl.navbar._actions['insert_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=QtCore.QPoint(1, 1))
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
         # click again on same position
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question",
                 return_value=QtWidgets.QMessageBox.Yes)
     def test_remove_point_yes(self, mockbox):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         self.window.mpl.navbar._actions['delete_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
         assert mockbox.call_count == 1
 
@@ -139,42 +116,27 @@ class Test_MSSTopViewWindow:
                 return_value=QtWidgets.QMessageBox.No)
     def test_remove_point_no(self, mockbox):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         self.window.mpl.navbar._actions['delete_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mousePress(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseRelease(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
-        QtWidgets.QApplication.processEvents()
-        QtWidgets.QApplication.processEvents()
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 4
 
     def test_move_point(self):
         self.window.mpl.navbar._actions['insert_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 3
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
         self.window.mpl.navbar._actions['move_wp'].trigger()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mousePress(self.window.mpl.canvas, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         point = QtCore.QPoint((self.window.width() // 3), self.window.height() // 2)
         QtTest.QTest.mouseMove(
             self.window.mpl.canvas, pos=point)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseRelease(
             self.window.mpl.canvas, QtCore.Qt.LeftButton, pos=point)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 4
 
     def test_roundtrip(self):
@@ -206,46 +168,34 @@ class Test_MSSTopViewWindow:
 
     def test_map_options(self):
         self.window.mpl.canvas.map.set_graticule_visible(True)
-        QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.map.set_graticule_visible(False)
-        QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.map.set_fillcontinents_visible(False)
-        QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.map.set_fillcontinents_visible(True)
-        QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.map.set_coastlines_visible(False)
-        QtWidgets.QApplication.processEvents()
         self.window.mpl.canvas.map.set_coastlines_visible(True)
-        QtWidgets.QApplication.processEvents()
 
         with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[{"type": "small_airport", "name": "Test",
                                                                           "latitude_deg": 52, "longitude_deg": 13,
                                                                           "elevation_ft": 0}]):
             self.window.mpl.canvas.map.set_draw_airports(True)
-            QtWidgets.QApplication.processEvents()
         with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[]):
             self.window.mpl.canvas.map.set_draw_airports(True)
-            QtWidgets.QApplication.processEvents()
         with mock.patch("mslib.msui.mpl_map.get_airports", return_value=[{"type": "small_airport", "name": "Test",
                                                                           "latitude_deg": -52, "longitude_deg": -13,
                                                                           "elevation_ft": 0}]):
             self.window.mpl.canvas.map.set_draw_airports(True)
-            QtWidgets.QApplication.processEvents()
 
         with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[{"name": "Test", "top": 1, "bottom": 0,
                                                                            "polygon": [(13, 52), (14, 53), (13, 52)],
                                                                            "country": "DE"}]):
             self.window.mpl.canvas.map.set_draw_airspaces(True)
-            QtWidgets.QApplication.processEvents()
         with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[]):
             self.window.mpl.canvas.map.set_draw_airspaces(True)
-            QtWidgets.QApplication.processEvents()
         with mock.patch("mslib.msui.mpl_map.get_airspaces", return_value=[{"name": "Test", "top": 1, "bottom": 0,
                                                                            "polygon": [(-13, -52), (-14, -53),
                                                                                        (-13, -52)],
                                                                            "country": "DE"}]):
             self.window.mpl.canvas.map.set_draw_airspaces(True)
-            QtWidgets.QApplication.processEvents()
 
 
 class Test_TopViewWMS:
@@ -264,25 +214,18 @@ class Test_TopViewWMS:
         mainwindow = MSUIMainWindow()
         self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
 
     def query_server(self, url):
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
     def test_server_getmap(self):
@@ -291,7 +234,6 @@ class Test_TopViewWMS:
         """
         self.query_server(self.url)
         QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.image_displayed)
         assert self.window.getView().map.image is not None
         self.window.getView().set_settings({})
