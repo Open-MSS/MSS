@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask_testing import TestCase
 import time
 import fs
 import pytest
@@ -33,7 +32,7 @@ from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user
 
 
-class Test_Files(TestCase):
+class Test_Files():
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app

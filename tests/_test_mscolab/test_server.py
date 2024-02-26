@@ -25,7 +25,6 @@
     limitations under the License.
 """
 import time
-from flask_testing import TestCase
 import pytest
 import json
 import io
@@ -37,7 +36,7 @@ from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 
 
-class Test_Server(TestCase):
+class Test_Server():
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
         self.app = mscolab_app
