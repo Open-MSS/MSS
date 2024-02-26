@@ -26,7 +26,7 @@
 """
 import mock
 import pytest
-from PyQt5 import QtWidgets, QtTest
+from PyQt5 import QtWidgets
 
 from mslib.msui.updater import UpdaterUI, Updater
 from mslib.utils.qt import Worker
@@ -131,6 +131,5 @@ class Test_MSS_ShortcutDialog:
     def test_ui(self, mock):
         ui = UpdaterUI()
         ui.updater.on_update_available.emit("", "")
-        QtTest.QTest.qWait(100)
         assert ui.statusLabel.text() == "Update successful. Please restart MSS."
         assert ui.btRestart.isEnabled()

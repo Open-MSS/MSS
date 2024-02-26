@@ -214,7 +214,6 @@ class Test_TopViewWMS:
         mainwindow = MSUIMainWindow()
         self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
         self.window.show()
-        QtTest.QTest.qWait(2000)
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
         self.wms_control = self.window.docks[0].widget()
