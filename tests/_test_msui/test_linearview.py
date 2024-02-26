@@ -30,7 +30,7 @@ import os
 import pytest
 import shutil
 import tempfile
-from PyQt5 import QtWidgets, QtTest, QtCore
+from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
@@ -42,12 +42,9 @@ class Test_MSS_LV_Options_Dialog:
     def setup(self, qapp):
         self.window = tv.MSUI_LV_Options_Dialog(settings=_DEFAULT_SETTINGS_LINEARVIEW)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_show(self):
         pass
@@ -67,28 +64,21 @@ class Test_MSSLinearViewWindow:
 
         self.window = tv.MSUILinearViewWindow(model=waypoints_model)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
 
     def test_mouse_over(self):
         # Test mouse over
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(782, 266), -1)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseMove(self.window.mpl.canvas, QtCore.QPoint(100, 100), -1)
-        QtWidgets.QApplication.processEvents()
 
     @mock.patch("mslib.msui.linearview.MSUI_LV_Options_Dialog")
     def test_options(self, mockdlg):
         QtTest.QTest.mouseClick(self.window.lvoptionbtn, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mockdlg.call_count == 1
         assert mockdlg.return_value.setModal.call_count == 1
         assert mockdlg.return_value.exec_.call_count == 1
@@ -109,25 +99,18 @@ class Test_LinearViewWMS:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         self.window = tv.MSUILinearViewWindow(model=waypoints_model)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWait(2000)
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
         shutil.rmtree(self.tempdir)
 
     def query_server(self, url):
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
     def test_server_getmap(self, qtbot):
