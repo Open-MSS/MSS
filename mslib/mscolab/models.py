@@ -191,6 +191,7 @@ class Message(db.Model):
         self.text = text
         self.message_type = message_type
         self.reply_id = reply_id
+        self.created_at = datetime.datetime.now(tz=datetime.timezone.utc)
 
     def __repr__(self):
         return f'<Message text: {self.text}, u_id: {self.u_id}, op_id: {self.op_id}>, message_type: {self.message_type}'
@@ -214,3 +215,4 @@ class Change(db.Model):
         self.commit_hash = commit_hash
         self.version_name = version_name
         self.comment = comment
+        self.created_at = datetime.datetime.now(tz=datetime.timezone.utc)
