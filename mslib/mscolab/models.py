@@ -181,7 +181,7 @@ class Message(db.Model):
     text = db.Column(db.Text)
     message_type = db.Column(db.Enum(MessageType), default=MessageType.TEXT)
     reply_id = db.Column(db.Integer, db.ForeignKey('messages.id'))
-    created_at = db.Column(AwareDateTime, default=datetime.datetime.now(tz=datetime.timezone.utc))
+    created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     user = db.relationship('User')
     replies = db.relationship('Message', cascade='all,delete,delete-orphan', single_parent=True)
 
@@ -191,7 +191,6 @@ class Message(db.Model):
         self.text = text
         self.message_type = message_type
         self.reply_id = reply_id
-        self.created_at = datetime.datetime.now(tz=datetime.timezone.utc)
 
     def __repr__(self):
         return f'<Message text: {self.text}, u_id: {self.u_id}, op_id: {self.op_id}>, message_type: {self.message_type}'
@@ -206,7 +205,7 @@ class Change(db.Model):
     commit_hash = db.Column(db.String(255), default=None)
     version_name = db.Column(db.String(255), default=None)
     comment = db.Column(db.String(255), default=None)
-    created_at = db.Column(AwareDateTime, default=datetime.datetime.now(tz=datetime.timezone.utc))
+    created_at = db.Column(AwareDateTime, default=lambda: datetime.datetime.now(tz=datetime.timezone.utc))
     user = db.relationship('User')
 
     def __init__(self, op_id, u_id, commit_hash, version_name=None, comment=None):
@@ -215,4 +214,3 @@ class Change(db.Model):
         self.commit_hash = commit_hash
         self.version_name = version_name
         self.comment = comment
-        self.created_at = datetime.datetime.now(tz=datetime.timezone.utc)
