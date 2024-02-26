@@ -90,7 +90,8 @@ def generate_initial_config():
         examples = DataFiles(data_fs=constants.DATA_FS,
                              server_config_fs=constants.SERVER_CONFIG_FS)
         examples.create_server_config(detailed_information=True)
-        examples.create_data()
+        if constants.DATA_FS.isempty("/"):
+            examples.create_data()
 
     if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
         config_string = f'''
@@ -220,9 +221,15 @@ def reset_config():
     """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
     """
     # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is deleted.
+    # Also, on Windows there are issues with files in msui/testdata being held open in another process, so those are
+    # excluded as well. This shouldn't be a problem since they are meant to be static anyway.
     for e in constants.ROOT_FS.walk.files(exclude=["mscolab.db"]):
+        if fs.path.isbase("/msui/testdata", e):
+            continue
         constants.ROOT_FS.remove(e)
     for e in constants.ROOT_FS.walk.dirs(search="depth"):
+        if e == "/msui" or fs.path.isbase("/msui/testdata", e):
+            continue
         constants.ROOT_FS.removedir(e)
 
     generate_initial_config()
