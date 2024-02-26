@@ -26,7 +26,6 @@
 """
 from flask_testing import TestCase
 import time
-import os
 import fs
 import pytest
 
