@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import time
+from flask_testing import TestCase
 import pytest
 import json
 import io
@@ -35,7 +37,7 @@ from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 
 
-class Test_Server:
+class Test_Server(TestCase):
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
         self.app = mscolab_app
@@ -245,14 +247,20 @@ class Test_Server:
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
+            # we need to wait to get an updated created_at
+            time.sleep(1)
             fm.save_file(operation.id, "content2", user)
             all_changes = fm.get_all_changes(operation.id, user)
+            # the newest change is on index 0, because it has a recent created_at time
             response = test_client.get('/get_change_content', data={"token": token,
-                                                                    "ch_id": all_changes[1]["id"]})
+                                                                     "ch_id": all_changes[1]["id"]})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data == {'content': 'content1'}
-
+            assert all_changes[0]["id"] == 2
+            assert all_changes[0]["id"] > all_changes[1]["id"]
+            assert all_changes[0]["created_at"] > all_changes[1]["created_at"]
+ 
     def test_set_version_name(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
