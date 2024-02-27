@@ -36,7 +36,7 @@ from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 
 
-class Test_Server():
+class Test_Server:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
         self.app = mscolab_app
@@ -235,11 +235,15 @@ class Test_Server():
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
             fm.save_file(operation.id, "content2", user)
+            all_changes = fm.get_all_changes(operation.id, user)
             response = test_client.get('/get_all_changes', data={"token": token,
                                                                  "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert len(data["changes"]) == 2
+            assert all_changes[0]["id"] == 2
+            assert all_changes[0]["id"] > all_changes[1]["id"]
+            assert all_changes[0]["created_at"] > all_changes[1]["created_at"]
 
     def test_get_change_content(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -256,9 +260,6 @@ class Test_Server():
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data == {'content': 'content1'}
-            assert all_changes[0]["id"] == 2
-            assert all_changes[0]["id"] > all_changes[1]["id"]
-            assert all_changes[0]["created_at"] > all_changes[1]["created_at"]
 
     def test_set_version_name(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])

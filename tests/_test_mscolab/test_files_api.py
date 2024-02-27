@@ -32,7 +32,7 @@ from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user
 
 
-class Test_Files():
+class Test_Files:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
