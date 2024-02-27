@@ -147,10 +147,13 @@ class Test_SideViewWMS:
         self.window.hide()
         shutil.rmtree(self.tempdir)
 
-    def query_server(self, url):
+    def query_server(self, url, qtbot):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        wait_until_signal(self.wms_control.cpdlg.canceled)
+        with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
+            cancel_button = self.window.cpdlg.findChildren(QtWidgets.QPushButton,
+                                                        "cancelButtonName")  # the actual button will go
+            QtTest.QTest.mouseClick(cancel_button, QtCore.Qt.LeftButton)
 
     def test_server_getmap(self, qtbot):
         """
