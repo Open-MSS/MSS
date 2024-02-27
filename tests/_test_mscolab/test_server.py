@@ -240,6 +240,7 @@ class Test_Server:
                                                                  "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
+            time.sleep(1)
             assert len(data["changes"]) == 2
             assert all_changes[0]["id"] == 2
             assert all_changes[0]["id"] > all_changes[1]["id"]
