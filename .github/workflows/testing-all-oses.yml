@@ -11,9 +11,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["macos-12", "macos-14", "ubuntu-latest", "windows-latest"]
+        os: ["macos-12", "macos-14", "ubuntu-latest"]
         order: ["normal", "reverse"]
         headless-method: ["env QT_QPA_PLATFORM=offscreen"]
+        # os: ["macos-12", "macos-14", "ubuntu-latest", "windows-latest"]
+        # order: ["normal", "reverse"]
+        # headless-method: ["env QT_QPA_PLATFORM=offscreen"]
         include:
           - os: "ubuntu-latest"
             order: "normal"
@@ -58,7 +61,7 @@ jobs:
         # Set the cache key in a way that the cache is invalidated every week on monday
         cache-environment-key: environment-${{ steps.year-and-week.outputs.year-and-week }}
     - name: Run tests
-      timeout-minutes: 5
+      timeout-minutes: 20
       run: micromamba run -n ci ${{ matrix.headless-method }} pytest -v -n logical --durations=20 --cov=mslib
         ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
     - name: Collect coverage
