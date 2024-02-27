@@ -233,8 +233,8 @@ class Test_Server:
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
-            time.sleep(1)
             fm, user = self._save_content(operation, self.userdata)
+            time.sleep(1)
             fm.save_file(operation.id, "content2", user)
             all_changes = fm.get_all_changes(operation.id, user)
             # the newest change is on index 0, because it has a recent created_at time
