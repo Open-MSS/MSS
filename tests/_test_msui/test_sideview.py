@@ -35,7 +35,6 @@ from PyQt5 import QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
-from tests.utils import wait_until_signal
 
 
 class Test_MSS_SV_OptionsDialog:
@@ -149,11 +148,8 @@ class Test_SideViewWMS:
 
     def query_server(self, url, qtbot):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
-            cancel_button = self.window.cpdlg.findChildren(QtWidgets.QPushButton,
-                                                        "cancelButtonName")  # the actual button will go
-            QtTest.QTest.mouseClick(cancel_button, QtCore.Qt.LeftButton)
+            QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
     def test_server_getmap(self, qtbot):
         """

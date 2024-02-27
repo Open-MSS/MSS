@@ -107,10 +107,10 @@ class Test_LinearViewWMS:
         self.window.hide()
         shutil.rmtree(self.tempdir)
 
-    def query_server(self, url):
+    def query_server(self, url, qtbot):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        wait_until_signal(self.wms_control.cpdlg.canceled)
+        with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
+            QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
     def test_server_getmap(self, qtbot):
         """

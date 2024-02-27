@@ -88,13 +88,12 @@ class WMSControlWidgetSetup:
         self.window.hide()
         shutil.rmtree(self.tempdir)
 
-    def query_server(self, url):
+    def query_server(self, url, qtbot):
         while len(self.window.multilayers.cbWMS_URL.currentText()) > 0:
             QtTest.QTest.keyClick(self.window.multilayers.cbWMS_URL, QtCore.Qt.Key_Backspace)
         QtTest.QTest.keyClicks(self.window.multilayers.cbWMS_URL, url)
-        QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        wait_until_signal(self.window.cpdlg.canceled)
-
+        with qtbot.wait_signal(self.window.cpdlg.canceled):
+            QtTest.QTest.mouseClick(self.window.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
@@ -162,15 +161,14 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
             pass
 
     @pytest.mark.skip("Has a race condition where the abort might not happen fast enough")
-    def test_server_abort_getmap(self):
+    def test_server_abort_getmap(self, qtbot):
         """
         assert that an aborted getmap call does not change the displayed image
         """
         self.query_server(self.url)
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
-        wait_until_signal(self.window.image_displayed)
-
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
@@ -204,8 +202,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         self.view.reset_mock()
 
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -239,7 +237,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    def test_multilayer_handling(self):
+    def test_multilayer_handling(self, qtbot):
         """
         assert that multilayers get created, handled and drawn properly
         """
@@ -273,8 +271,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.multilayers.listLayers.itemWidget(server.child(0), 2).currentText() == "1"
 
         # Check drawing not causing errors
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -321,7 +319,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert len(self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                                 QtCore.Qt.MatchFixedString)) == 0
 
-    def test_singlelayer_handling(self):
+    def test_singlelayer_handling(self, qtbot):
         """
         assert that singlelayer mode behaves as expected
         """
@@ -348,8 +346,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.window.lLayerName.text().endswith(server.child(1).text(0))
 
         # Check drawing not causing errors
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         assert self.view.draw_image.call_count == 1
         assert self.view.draw_legend.call_count == 1
@@ -386,7 +384,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert layer_a.get_itime() == layer_a.get_itimes()[-1]
 
     @mock.patch("mslib.msui.wms_control.WMSMapFetcher.moveToThread")
-    def test_server_no_thread(self, mockthread):
+    def test_server_no_thread(self, mockthread, qtbot):
         self.query_server(self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
@@ -396,8 +394,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         server.child(0).setCheckState(0, 2)
         server.child(1).setCheckState(0, 2)
 
-        QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
-        wait_until_signal(self.window.image_displayed)
+        with qtbot.wait_signal(self.window.image_displayed):
+            QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
 
         urlstr = f"{self.url}/mss/logo.png"
         md5_filname = os.path.join(self.window.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ".png")
@@ -428,16 +426,15 @@ class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
         assert self.view.draw_legend.call_count == 1
         assert self.view.draw_metadata.call_count == 1
 
-    def test_multilayer_drawing(self):
+    def test_multilayer_drawing(self, qtbot):
         """
         assert that drawing a layer through code doesn't fail for vsec
         """
         self.query_server(self.url)
         server = self.window.multilayers.listLayers.findItems(f"{self.url}/",
                                                               QtCore.Qt.MatchFixedString)[0]
-        server.child(0).draw()
-        wait_until_signal(self.window.image_displayed)
-
+        with qtbot.wait_signal(self.window.image_displayed):
+            server.child(0).draw()
 
 class TestWMSControlWidgetSetupSimple:
     xml = """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
