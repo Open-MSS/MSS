@@ -34,7 +34,6 @@ from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
-from tests.utils import wait_until_signal
 
 
 class Test_MSS_LV_Options_Dialog:

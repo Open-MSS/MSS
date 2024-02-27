@@ -35,7 +35,6 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
-from tests.utils import wait_until_signal
 
 
 class Test_MSS_TV_MapAppearanceDialog:

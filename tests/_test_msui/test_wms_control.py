@@ -35,7 +35,6 @@ import urllib
 from PyQt5 import QtCore, QtTest
 from mslib.msui import flighttrack as ft
 import mslib.msui.wms_control as wc
-from tests.utils import wait_until_signal
 
 
 class HSecViewMockup(mock.Mock):
