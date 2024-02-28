@@ -191,11 +191,11 @@ class Test_Socket_Manager:
             assert messages[0]["text"] == "message from 1"
             assert len(messages) == 2
             assert messages[0]["u_id"] == self.user.id
-            timestamp = datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+            timestamp = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc).strftime("%Y-%m-%d, %H:%M:%S %z")
             messages = self.cm.get_messages(1, timestamp)
             assert len(messages) == 2
             assert messages[0]["u_id"] == self.user.id
-            timestamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d, %H:%M:%S")
+            timestamp = datetime.datetime.now(tz=datetime.timezone.utc).strftime("%Y-%m-%d, %H:%M:%S %z")
             messages = self.cm.get_messages(1, timestamp)
             assert len(messages) == 0
 
@@ -221,7 +221,7 @@ class Test_Socket_Manager:
         data = {
             "token": token,
             "op_id": self.operation.id,
-            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+            "timestamp": datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc).strftime("%Y-%m-%d, %H:%M:%S %z")
         }
         # returns an array of messages
         url = urljoin(self.url, 'messages')
@@ -257,7 +257,7 @@ class Test_Socket_Manager:
         data = {
             "token": token,
             "op_id": self.operation.id,
-            "timestamp": datetime.datetime(1970, 1, 1).strftime("%Y-%m-%d, %H:%M:%S")
+            "timestamp": datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc).strftime("%Y-%m-%d, %H:%M:%S %z")
         }
         # returns an array of messages
         url = urljoin(self.url, 'messages')

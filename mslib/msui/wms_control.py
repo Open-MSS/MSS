@@ -474,6 +474,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.wms_cache = None
 
         # Initialise date/time fields with current day, 00 UTC.
+        # Todo Before refactoring to an aware datetime object add a test to verify the WMS part.
         self.dteInitTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
         self.dteValidTime.setDateTime(QtCore.QDateTime(
