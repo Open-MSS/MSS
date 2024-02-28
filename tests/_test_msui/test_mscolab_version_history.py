@@ -78,19 +78,17 @@ class Test_MscolabVersionHistory:
             assert len_prev == (len_after - 2)
         qtbot.wait_until(assert_)
 
-    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
-    def test_set_version_name(self, mockbox):
-        self._set_version_name()
-        assert self.version_window.changes.currentItem().version_name == "MyVersionName"
-        assert self.version_window.changes.count() == 1
+    def test_set_version_name(self, qtbot):
+        self._set_version_name(qtbot)
 
-    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True])
-    def test_version_name_delete(self, mockbox):
-        self._set_version_name()
-        assert self.version_window.changes.currentItem().version_name == "MyVersionName"
+    def test_version_name_delete(self, qtbot):
+        self._set_version_name(qtbot)
         QtTest.QTest.mouseClick(self.version_window.deleteVersionNameBtn, QtCore.Qt.LeftButton)
-        assert self.version_window.changes.count() == 1
-        assert self.version_window.changes.currentItem().version_name is None
+
+        def assert_():
+            assert self.version_window.changes.count() == 1
+            assert self.version_window.changes.currentItem().version_name is None
+        qtbot.wait_until(assert_)
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_undo_changes(self, mockbox, qtbot):
@@ -159,10 +157,23 @@ class Test_MscolabVersionHistory:
         self.version_window.versionFilterCB.setCurrentIndex(index)
         self.version_window.versionFilterCB.currentIndexChanged.emit(index)
 
-    def _set_version_name(self):
+    def _set_version_name(self, qtbot):
         self._change_version_filter(1)
+        num_changes_before = self.version_window.changes.count()
         # make a changes
         self.window.mscolab.waypoints_model.invert_direction()
-        self.version_window.load_all_changes()
+
+        # Ensure that the change is visible
+        def assert_():
+            self.version_window.load_all_changes()
+            assert self.version_window.changes.count() == num_changes_before + 1
+        qtbot.wait_until(assert_)
+
         self._activate_change_at_index(0)
-        QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
+        with mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=["MyVersionName", True]):
+            QtTest.QTest.mouseClick(self.version_window.nameVersionBtn, QtCore.Qt.LeftButton)
+
+        # Ensure that the name change is fully processed
+        def assert_():
+            assert self.version_window.changes.currentItem().version_name == "MyVersionName"
+        qtbot.wait_until(assert_)
