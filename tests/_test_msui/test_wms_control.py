@@ -106,40 +106,45 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
+        mock_url = f"{self.scheme}://{self.host}:{self.port-1}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(f"{self.scheme}://{self.host}:{self.port-1}")
+            self.query_server(mock_url)
             mock_critical.assert_called_once()
 
     def test_no_schema(self):
         """
         assert that a message box informs about server troubles
         """
+        mock_url = f"{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(f"{self.host}:{self.port}")
+            self.query_server(mock_url)
             mock_critical.assert_called_once()
 
     def test_invalid_schema(self):
         """
         assert that a message box informs about server troubles
         """
+        mock_url = f"hppd://{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(f"hppd://{self.host}:{self.port}")
+            self.query_server(mock_url)
             mock_critical.assert_called_once()
 
     def test_invalid_url(self):
         """
         assert that a message box informs about server troubles
         """
+        mock_url = f"{self.scheme}://???{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(f"{self.scheme}://???{self.host}:{self.port}")
+            self.query_server(mock_url)
             mock_critical.assert_called_once()
 
     def test_connection_error(self):
         """
         assert that a message box informs about server troubles
         """
+        mock_url = f"{self.scheme}://.....{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(f"{self.scheme}://.....{self.host}:{self.port}")
+            self.query_server(mock_url)
             mock_critical.assert_called_once()
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
