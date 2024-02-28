@@ -62,9 +62,9 @@ class ChatManager:
         timestamp:  if provided, messages only after this time stamp is provided
         """
         if timestamp is None:
-            timestamp = datetime.datetime(1970, 1, 1)
+            timestamp = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
         else:
-            timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S")
+            timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S %z")
         messages = Message.query \
             .filter(Message.op_id == op_id) \
             .filter(Message.reply_id.is_(None)) \
