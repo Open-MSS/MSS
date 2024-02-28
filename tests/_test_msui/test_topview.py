@@ -227,13 +227,13 @@ class Test_TopViewWMS:
         QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
         wait_until_signal(self.wms_control.cpdlg.canceled)
 
-    def test_server_getmap(self):
+    def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
         self.query_server(self.url)
-        QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
-        wait_until_signal(self.wms_control.image_displayed)
+        with qtbot.wait_signal(self.wms_control.image_displayed):
+            QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().map.image is not None
         self.window.getView().set_settings({})
         self.window.getView().clear_figure()
