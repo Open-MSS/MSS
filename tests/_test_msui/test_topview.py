@@ -221,7 +221,7 @@ class Test_TopViewWMS:
         self.window.hide()
         shutil.rmtree(self.tempdir)
 
-    def query_server(self, url, qtbot):
+    def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
         with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
             QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
@@ -230,7 +230,7 @@ class Test_TopViewWMS:
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(self.url)
+        self.query_server(self.url, qtbot)
         with qtbot.wait_signal(self.wms_control.image_displayed):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().map.image is not None
