@@ -467,6 +467,10 @@ class VerticalSectionDriver(MSSPlotDriver):
         lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
+        # Identify jump in longitudes due to non-global dataset
+        dlon_data = np.diff(lon_data)
+        jump = np.where(dlon_data > 2 * dlon)[0]
+
         lons = ((self.lons - left_longitude) % 360) + left_longitude
 
         for name, var in self.data_vars.items():
@@ -481,6 +485,10 @@ class VerticalSectionDriver(MSSPlotDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
+            if jump:
+                logging.debug("\tsetting jump data to NaN at %s", jump)
+                var_data = var_data.copy()
+                var_data[:, :, jump] = np.nan
             data[name] = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, lons)
             # Free memory.
             del var_data
