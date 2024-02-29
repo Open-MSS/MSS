@@ -183,7 +183,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(self, qtbot, self.url)
+        self.query_server(qtbot, self.url)
 
         with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
@@ -196,7 +196,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(self, qtbot, self.url)
+        self.query_server(qtbot, self.url)
 
         with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
@@ -218,7 +218,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that changing between servers still allows image retrieval
         """
-        self.query_server(self, qtbot, self.url)
+        self.query_server(qtbot, self.url)
 
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as qm_critical:
             with qtbot.wait_signal(self.window.cpdlg.canceled):
