@@ -102,13 +102,13 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         yield
         self._teardown()
 
-    def test_no_server(self):
+    def test_no_server(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
         mock_url = f"{self.scheme}://{self.host}:{self.port-1}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(mock_url)
+            self.query_server(qtbot, mock_url)
             mock_critical.assert_called_once()
 
     def test_no_schema(self):
