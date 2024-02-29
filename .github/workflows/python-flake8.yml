@@ -8,14 +8,12 @@ on:
     branches:
     - develop
     - stable
-    - GSOC2023-NilupulManodya
-    - GSOC2023-ShubhGaur
+    - 'GSOC**'
   pull_request:
     branches:
     - develop
     - stable
-    - GSOC2023-NilupulManodya
-    - GSOC2023-ShubhGaur
+    - 'GSOC**'
 
 jobs:
   lint:
