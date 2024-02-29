@@ -2,36 +2,19 @@ name: Build Gallery
 
 on:
    pull_request:
-     inputs:
-        branch_name:
-          required: true
-          type: string
-        secrets:
-          PAT:
-            required: true
-
-env:
-  PAT: ${{ secrets.PAT }}
 
 jobs:
   Test-MSS-docs:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        shell: bash
-
     container:
       image: openmss/testing-develop
 
     steps:
-    - name: Trust My Directory
-      run: git config --global --add safe.directory /__w/MSS/MSS
     - uses: actions/checkout@v4
 
     - name: Create gallery
-      timeout-minutes: 25
+      timeout-minutes: 5
       run: |
-        source /opt/conda/bin/activate mssenv \
-        && cd $GITHUB_WORKSPACE/docs \
-        && python conf.py
+        cd docs
+        mamba run --no-capture-output -n mssenv python conf.py
