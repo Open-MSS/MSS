@@ -111,40 +111,40 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
             self.query_server(qtbot, mock_url)
             mock_critical.assert_called_once()
 
-    def test_no_schema(self):
+    def test_no_schema(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
         mock_url = f"{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(mock_url)
+            self.query_server(qtbot, mock_url)
             mock_critical.assert_called_once()
 
-    def test_invalid_schema(self):
+    def test_invalid_schema(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
         mock_url = f"hppd://{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(mock_url)
+            self.query_server(qtbot, mock_url)
             mock_critical.assert_called_once()
 
-    def test_invalid_url(self):
+    def test_invalid_url(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
         mock_url = f"{self.scheme}://???{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(mock_url)
+            self.query_server(qtbot, mock_url)
             mock_critical.assert_called_once()
 
-    def test_connection_error(self):
+    def test_connection_error(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
         mock_url = f"{self.scheme}://.....{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(mock_url)
+            self.query_server(qtbot, mock_url)
             mock_critical.assert_called_once()
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
@@ -183,7 +183,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(self.url, qtbot)
+        self.query_server(self, qtbot, self.url)
 
         with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
@@ -196,7 +196,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(self.url, qtbot)
+        self.query_server(self, qtbot, self.url)
 
         with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
@@ -218,7 +218,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that changing between servers still allows image retrieval
         """
-        self.query_server(self.url, qtbot)
+        self.query_server(self, qtbot, self.url)
 
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as qm_critical:
             with qtbot.wait_signal(self.window.cpdlg.canceled):
