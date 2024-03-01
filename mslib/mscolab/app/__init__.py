@@ -33,7 +33,6 @@ import mslib
 from flask import Flask, url_for
 from mslib.mscolab.conf import mscolab_settings
 from flask_sqlalchemy import SQLAlchemy
-from mslib.mswms.gallery_builder import STATIC_LOCATION
 from mslib.utils import prefix_route
 
 
@@ -43,8 +42,7 @@ SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 
 # in memory database for testing
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
-APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'), static_url_path="/static",
-            static_folder=STATIC_LOCATION)
+APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'))
 APP.config.from_object(__name__)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
