@@ -35,7 +35,6 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
-from tests.utils import wait_until_signal
 
 
 class Test_MSS_TV_MapAppearanceDialog:
@@ -222,18 +221,18 @@ class Test_TopViewWMS:
         self.window.hide()
         shutil.rmtree(self.tempdir)
 
-    def query_server(self, url):
+    def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        wait_until_signal(self.wms_control.cpdlg.canceled)
+        with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
+            QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
-    def test_server_getmap(self):
+    def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(self.url)
-        QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
-        wait_until_signal(self.wms_control.image_displayed)
+        self.query_server(qtbot, self.url)
+        with qtbot.wait_signal(self.wms_control.image_displayed):
+            QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
         assert self.window.getView().map.image is not None
         self.window.getView().set_settings({})
         self.window.getView().clear_figure()
