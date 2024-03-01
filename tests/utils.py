@@ -26,10 +26,8 @@
     limitations under the License.
 """
 import requests
-import time
 import fs
 
-from PyQt5 import QtTest
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
@@ -173,29 +171,6 @@ def is_url_response_ok(url):
         return response.status_code == 200
     except:  # noqa: E722
         return False
-
-
-def wait_until_signal(signal, timeout=5):
-    """
-    Blocks the calling thread until the signal emits or the timeout expires.
-    """
-    init_time = time.time()
-    finished = False
-
-    def done(*args):
-        nonlocal finished
-        finished = True
-
-    signal.connect(done)
-    while not finished and time.time() - init_time < timeout:
-        QtTest.QTest.qWait(100)
-
-    try:
-        signal.disconnect(done)
-    except TypeError:
-        pass
-    finally:
-        return finished
 
 
 class ExceptionMock:

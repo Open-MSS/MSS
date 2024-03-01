@@ -46,10 +46,6 @@ def test_qWait_is_not_used_in_tests(request):
         if str(test_file) == request.fspath:
             # Skip the current file
             continue
-        if str(test_file.relative_to(request.config.rootdir)) == "tests/utils.py":
-            # Skip tests/utils.py
-            # This skip can be removed once wait_until_signal is no longer used
-            continue
         assert (
             "qWait(" not in test_file.read_text()
         ), "qWait is mentioned in {}".format(test_file.relative_to(request.config.rootdir))

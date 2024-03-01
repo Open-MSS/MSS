@@ -106,45 +106,40 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         """
         assert that a message box informs about server troubles
         """
-        mock_url = f"{self.scheme}://{self.host}:{self.port-1}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, mock_url)
+            self.query_server(qtbot, f"{self.scheme}://{self.host}:{self.port-1}")
             mock_critical.assert_called_once()
 
     def test_no_schema(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
-        mock_url = f"{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, mock_url)
+            self.query_server(qtbot, f"{self.host}:{self.port}")
             mock_critical.assert_called_once()
 
     def test_invalid_schema(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
-        mock_url = f"hppd://{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, mock_url)
+            self.query_server(qtbot, f"hppd://{self.host}:{self.port}")
             mock_critical.assert_called_once()
 
     def test_invalid_url(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
-        mock_url = f"{self.scheme}://???{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, mock_url)
+            self.query_server(qtbot, f"{self.scheme}://???{self.host}:{self.port}")
             mock_critical.assert_called_once()
 
     def test_connection_error(self, qtbot):
         """
         assert that a message box informs about server troubles
         """
-        mock_url = f"{self.scheme}://.....{self.host}:{self.port}"
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, mock_url)
+            self.query_server(qtbot, f"{self.scheme}://.....{self.host}:{self.port}")
             mock_critical.assert_called_once()
 
     @pytest.mark.skip("Breaks other tests in this class because of a lingering message box, for some reason")
@@ -171,9 +166,9 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that an aborted getmap call does not change the displayed image
         """
         self.query_server(qtbot, self.url)
-        QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         with qtbot.wait_signal(self.window.image_displayed):
             QtTest.QTest.mouseClick(self.window.btGetMap, QtCore.Qt.LeftButton)
+            QtTest.QTest.keyClick(self.window.pdlg, QtCore.Qt.Key_Enter)
         assert self.view.draw_image.call_count == 0
         assert self.view.draw_legend.call_count == 0
         assert self.view.draw_metadata.call_count == 0
