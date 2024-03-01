@@ -34,7 +34,6 @@ from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
-from tests.utils import wait_until_signal
 
 
 class Test_MSS_LV_Options_Dialog:
@@ -107,15 +106,15 @@ class Test_LinearViewWMS:
         self.window.hide()
         shutil.rmtree(self.tempdir)
 
-    def query_server(self, url):
+    def query_server(self, qtbot, url):
         QtTest.QTest.keyClicks(self.wms_control.multilayers.cbWMS_URL, url)
-        QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
-        wait_until_signal(self.wms_control.cpdlg.canceled)
+        with qtbot.wait_signal(self.wms_control.cpdlg.canceled):
+            QtTest.QTest.mouseClick(self.wms_control.multilayers.btGetCapabilities, QtCore.Qt.LeftButton)
 
     def test_server_getmap(self, qtbot):
         """
         assert that a getmap call to a WMS server displays an image
         """
-        self.query_server(self.url)
+        self.query_server(qtbot, self.url)
         with qtbot.wait_signal(self.wms_control.image_displayed):
             QtTest.QTest.mouseClick(self.wms_control.btGetMap, QtCore.Qt.LeftButton)
