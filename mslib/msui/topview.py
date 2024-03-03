@@ -149,7 +149,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         for i in range(self.tov_cbaxessize.count()):
             if self.tov_cbaxessize.itemText(i) == settings["tov_axes_label_size"]:
                 self.tov_cbaxessize.setCurrentIndex(i)
-                
+
         # Create an instance of CustomColorDialog
         self.custom_color_dialog = CustomColorDialog(self)
 
