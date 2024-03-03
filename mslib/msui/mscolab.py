@@ -235,7 +235,7 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.loginPasswordLe.setEnabled(True)
 
                 try:
-                    idp_enabled = json.loads(r.text)["use_saml2 "]
+                    idp_enabled = json.loads(r.text)["use_saml2"]
                 except (json.decoder.JSONDecodeError, KeyError):
                     idp_enabled = False
 
