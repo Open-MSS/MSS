@@ -55,34 +55,35 @@ KMLOVERLAY = 3
 AIRDATA = 4
 MULTIPLEFLIGHTPATH = 5
 
+
 class CustomColorDialog(QtWidgets.QColorDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOptions(QtWidgets.QColorDialog.DontUseNativeDialog)
 
         # 22 Distinct colors
-        self.setStandardColor(0, QtGui.QColor(255, 255, 255)) #White
-        self.setStandardColor(1, QtGui.QColor(128, 0, 0)) #Maroon
-        self.setStandardColor(2, QtGui.QColor(154, 99, 36)) #Brown
-        self.setStandardColor(3, QtGui.QColor(128, 128, 0)) #Olive
-        self.setStandardColor(4, QtGui.QColor(70, 153, 144)) #Teal
-        self.setStandardColor(5, QtGui.QColor(0, 0, 117)) #Navy
-        self.setStandardColor(6, QtGui.QColor(0, 0, 0)) #Black
-        self.setStandardColor(7, QtGui.QColor(230, 25, 75)) #Red
-        self.setStandardColor(8, QtGui.QColor(245, 130, 49)) #Orange
-        self.setStandardColor(9, QtGui.QColor(255, 255, 25)) #Yellow
-        self.setStandardColor(10, QtGui.QColor(191, 239, 69)) #Lime
-        self.setStandardColor(11, QtGui.QColor(60, 180, 75)) #Green
-        self.setStandardColor(12, QtGui.QColor(66, 212, 244)) #Cyan
-        self.setStandardColor(13, QtGui.QColor(67, 99, 216)) #Blue
-        self.setStandardColor(14, QtGui.QColor(145, 30, 180)) #Purple
-        self.setStandardColor(15, QtGui.QColor(240, 50, 230)) #Magenta
-        self.setStandardColor(16, QtGui.QColor(169, 169, 169)) #Grey
-        self.setStandardColor(17, QtGui.QColor(250, 190, 212)) #Pink
-        self.setStandardColor(18, QtGui.QColor(255, 216, 177)) #Apricot
-        self.setStandardColor(19, QtGui.QColor(255, 250, 200)) #Beige
-        self.setStandardColor(20, QtGui.QColor(170, 255, 195)) #Mint
-        self.setStandardColor(21, QtGui.QColor(220, 190, 255)) #Lavender
+        self.setStandardColor(0, QtGui.QColor(255, 255, 255))  # White
+        self.setStandardColor(1, QtGui.QColor(128, 0, 0))  # Maroon
+        self.setStandardColor(2, QtGui.QColor(154, 99, 36))  # Brown
+        self.setStandardColor(3, QtGui.QColor(128, 128, 0))  # Olive
+        self.setStandardColor(4, QtGui.QColor(70, 153, 144))  # Teal
+        self.setStandardColor(5, QtGui.QColor(0, 0, 117))  # Navy
+        self.setStandardColor(6, QtGui.QColor(0, 0, 0))  # Black
+        self.setStandardColor(7, QtGui.QColor(230, 25, 75))  # Red
+        self.setStandardColor(8, QtGui.QColor(245, 130, 49))  # Orange
+        self.setStandardColor(9, QtGui.QColor(255, 255, 25))  # Yellow
+        self.setStandardColor(10, QtGui.QColor(191, 239, 69))  # Lime
+        self.setStandardColor(11, QtGui.QColor(60, 180, 75))  # Green
+        self.setStandardColor(12, QtGui.QColor(66, 212, 244))  # Cyan
+        self.setStandardColor(13, QtGui.QColor(67, 99, 216))  # Blue
+        self.setStandardColor(14, QtGui.QColor(145, 30, 180))  # Purple
+        self.setStandardColor(15, QtGui.QColor(240, 50, 230))  # Magenta
+        self.setStandardColor(16, QtGui.QColor(169, 169, 169))  # Grey
+        self.setStandardColor(17, QtGui.QColor(250, 190, 212))  # Pink
+        self.setStandardColor(18, QtGui.QColor(255, 216, 177))  # Apricot
+        self.setStandardColor(19, QtGui.QColor(255, 250, 200))  # Beige
+        self.setStandardColor(20, QtGui.QColor(170, 255, 195))  # Mint
+        self.setStandardColor(21, QtGui.QColor(220, 190, 255))  # Lavender
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
