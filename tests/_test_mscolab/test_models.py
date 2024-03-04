@@ -25,9 +25,25 @@
     limitations under the License.
 """
 import pytest
+import datetime
 
 from mslib.mscolab.server import register_user
-from mslib.mscolab.models import User
+from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, Change
+
+
+class Test_AwareDateTime:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.aware_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
+
+    def test_aware_datetime_conversion(self):
+        aware_datetime_type = AwareDateTime()
+
+        result_bind = aware_datetime_type.process_bind_param(self.aware_datetime, None)
+        assert result_bind == self.aware_datetime
+
+        result_result = aware_datetime_type.process_result_value(self.aware_datetime, None)
+        assert result_result == self.aware_datetime
 
 
 class Test_User:
@@ -55,3 +71,83 @@ class Test_User:
         user = User(self.userdata[0], self.userdata[1], self.userdata[2])
         assert user.verify_password("fail") is False
         assert user.verify_password(self.userdata[2]) is True
+
+
+class Test_Permission:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.u_id = 1
+        self.op_id = 1
+        self.access_level = "admin"
+
+    def test_permission_creation(self):
+        permission = Permission(self.u_id, self.op_id, self.access_level)
+
+        assert permission.u_id == self.u_id
+        assert permission.op_id == self.op_id
+        assert permission.access_level == self.access_level
+
+
+class Test_Operation:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.path = "/path/to/operation"
+        self.description = "Description of the operation"
+        self.category = "test_category"
+
+    def test_operation_creation(self):
+        operation = Operation(self.path, self.description, category=self.category)
+
+        assert operation.path == self.path
+        assert operation.description == self.description
+        assert operation.category == self.category
+        assert operation.active is True
+
+
+class Test_Message:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.op_id = 1
+        self.u_id = 1
+        self.text = "Hello, this is a test message"
+        self.message_type = "TEXT"
+        self.reply_id = None
+
+    def test_message_creation(self):
+        message = Message(
+            self.op_id,
+            self.u_id,
+            self.text,
+            message_type=self.message_type,
+            reply_id=self.reply_id
+        )
+
+        assert message.op_id == self.op_id
+        assert message.u_id == self.u_id
+        assert message.text == self.text
+        assert message.message_type == self.message_type
+        assert message.reply_id == self.reply_id
+
+
+class Test_Change:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.op_id = 1
+        self.u_id = 1
+        self.commit_hash = "#abcdef123456"
+        self.version_name = "v1.0"
+        self.comment = "Initial commit"
+
+    def test_change_creation(self):
+        change = Change(self.op_id,
+                        self.u_id,
+                        self.commit_hash,
+                        version_name=self.version_name,
+                        comment=self.comment
+                    )
+
+        assert change.op_id == self.op_id
+        assert change.u_id == self.u_id
+        assert change.commit_hash == self.commit_hash
+        assert change.version_name == self.version_name
+        assert change.comment == self.comment
