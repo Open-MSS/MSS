@@ -137,6 +137,12 @@ Identity Provider
 We utilize example files from the pysaml2 library to set up the configuration for our local Identity Provider (IdP).
 Obtained from GitHub (https://github.com/IdentityPython/pysaml2/tree/master/example/idp2) on 13/07/2023
 
+Colors
+------
+
+We utilize custom colors for distinguishing routes using the color palette provided by SashaMaps. 
+Link: https://sashamaps.net/docs/resources/20-colors/
+
 Copyright: 2018 Roland Hedberg
 
 License: https://github.com/IdentityPython/pysaml2/blob/master/LICENSE (Apache License 2.0)
