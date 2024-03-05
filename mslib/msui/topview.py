@@ -60,30 +60,34 @@ class CustomColorDialog(QtWidgets.QColorDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOptions(QtWidgets.QColorDialog.DontUseNativeDialog)
-
+        
         # 22 Distinct colors
-        self.setStandardColor(0, QtGui.QColor(255, 255, 255))  # White
-        self.setStandardColor(1, QtGui.QColor(128, 0, 0))  # Maroon
-        self.setStandardColor(2, QtGui.QColor(154, 99, 36))  # Brown
-        self.setStandardColor(3, QtGui.QColor(128, 128, 0))  # Olive
-        self.setStandardColor(4, QtGui.QColor(70, 153, 144))  # Teal
-        self.setStandardColor(5, QtGui.QColor(0, 0, 117))  # Navy
-        self.setStandardColor(6, QtGui.QColor(0, 0, 0))  # Black
-        self.setStandardColor(7, QtGui.QColor(230, 25, 75))  # Red
-        self.setStandardColor(8, QtGui.QColor(245, 130, 49))  # Orange
-        self.setStandardColor(9, QtGui.QColor(255, 255, 25))  # Yellow
-        self.setStandardColor(10, QtGui.QColor(191, 239, 69))  # Lime
-        self.setStandardColor(11, QtGui.QColor(60, 180, 75))  # Green
-        self.setStandardColor(12, QtGui.QColor(66, 212, 244))  # Cyan
-        self.setStandardColor(13, QtGui.QColor(67, 99, 216))  # Blue
-        self.setStandardColor(14, QtGui.QColor(145, 30, 180))  # Purple
-        self.setStandardColor(15, QtGui.QColor(240, 50, 230))  # Magenta
-        self.setStandardColor(16, QtGui.QColor(169, 169, 169))  # Grey
-        self.setStandardColor(17, QtGui.QColor(250, 190, 212))  # Pink
-        self.setStandardColor(18, QtGui.QColor(255, 216, 177))  # Apricot
-        self.setStandardColor(19, QtGui.QColor(255, 250, 200))  # Beige
-        self.setStandardColor(20, QtGui.QColor(170, 255, 195))  # Mint
-        self.setStandardColor(21, QtGui.QColor(220, 190, 255))  # Lavender
+        self.setStandardColor(0, QtGui.QColor(255, 255, 255)) #White
+        self.setStandardColor(1, QtGui.QColor(194, 30, 89)) #Maroon
+        self.setStandardColor(2, QtGui.QColor(53, 111, 50)) #Olive
+        self.setStandardColor(3, QtGui.QColor(70, 153, 144)) #Teal
+        self.setStandardColor(4, QtGui.QColor(0, 0, 117)) #Navy
+        self.setStandardColor(5, QtGui.QColor(0, 0, 0)) #Black
+        self.setStandardColor(6, QtGui.QColor(245, 150, 86)) #Orange
+        self.setStandardColor(7, QtGui.QColor(252, 228, 67)) #Yellow
+        self.setStandardColor(8, QtGui.QColor(203, 243, 107)) #Lime
+        self.setStandardColor(9, QtGui.QColor(96, 194, 111)) #Green
+        self.setStandardColor(10, QtGui.QColor(165, 70, 191)) #Purple
+        self.setStandardColor(11, QtGui.QColor(241, 91, 235)) #Magenta
+        self.setStandardColor(12, QtGui.QColor(184, 187, 187)) #Grey
+        self.setStandardColor(13, QtGui.QColor(249, 203, 221)) #Pink
+        self.setStandardColor(14, QtGui.QColor(253, 225, 192)) #Apricot
+        self.setStandardColor(15, QtGui.QColor(255, 250, 200)) #Beige
+        self.setStandardColor(16, QtGui.QColor(170, 255, 195)) #Mint
+        self.setStandardColor(17, QtGui.QColor(224, 203, 254)) #Lavender
+        self.setStandardColor(18, QtGui.QColor(153, 255, 255)) #Cyan
+        self.setStandardColor(19, QtGui.QColor(0, 0, 255)) #Blue
+        self.setStandardColor(20, QtGui.QColor(204, 153, 102)) #Brown
+        self.setStandardColor(21, QtGui.QColor(255, 0, 0)) #Red
+        
+    def getColor(self, button):
+        return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button)
+        
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -149,7 +153,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         for i in range(self.tov_cbaxessize.count()):
             if self.tov_cbaxessize.itemText(i) == settings["tov_axes_label_size"]:
                 self.tov_cbaxessize.setCurrentIndex(i)
-
+                
         # Create an instance of CustomColorDialog
         self.custom_color_dialog = CustomColorDialog(self)
 
@@ -186,11 +190,23 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         Slot for the colour buttons: Opens the custom color dialog and sets the
         new button face colour.
         """
-        # Open the custom color dialog
-        if self.custom_color_dialog.exec_():
-            # Custom color dialog will emit currentColorChanged signal
-            # The signal will be caught by onCustomColorChange
-            pass
+        if which in ["ft_waypoints", "ft_vertices"]:
+            button_name = f"bt{which[3:].capitalize()}Colour"
+        else:
+            button_name = f"bt{which.capitalize()}Colour"
+            
+        button = getattr(self, button_name, None)
+
+        if button is not None:
+            self.custom_color_dialog.setCurrentColor(QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button))
+
+            if self.custom_color_dialog.exec_():
+                color = self.custom_color_dialog.currentColor()
+                if color.isValid():
+                    palette = QtGui.QPalette(button.palette())
+                    palette.setColor(QtGui.QPalette.Button, color)
+                    button.setPalette(palette)
+                    self.signal_ft_vertices_color_change.emit(which, color.getRgbF())
 
     def onCustomColorChange(self, color):
         """
@@ -198,17 +214,21 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         """
         if color.isValid():
             which = ""
-            if color == self.custom_color_dialog.currentColor():
-                which = "custom"
+            for button_name in ["Water", "Land", "Waypoints", "Vertices"]:
+                button = getattr(self, f"bt{button_name}Colour", None)
+                if button is not None and color == self.custom_color_dialog.getColor(button):
+                    if button_name == "Waypoints" or button_name == "Vertices":
+                        which = f"ft_{button_name.lower()}"
+                    else:
+                        which = button_name.lower()
+                    break
 
-            if which == "custom":
-                button = self.btWaterColour  # Replace with the appropriate button based on 'which'
+            if which:
                 palette = QtGui.QPalette(button.palette())
                 palette.setColor(QtGui.QPalette.Button, color)
                 button.setPalette(palette)
 
-            self.signal_ft_vertices_color_change.emit(which, color.getRgbF())
-
+                self.signal_ft_vertices_color_change.emit(which, color.getRgbF())
         else:
             # Handle the case where an invalid color is selected
             pass

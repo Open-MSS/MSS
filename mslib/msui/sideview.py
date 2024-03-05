@@ -29,7 +29,7 @@
 import logging
 import functools
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 from mslib.msui.qt5 import ui_sideview_window as ui
 from mslib.msui.qt5 import ui_sideview_options as ui_opt
@@ -44,11 +44,45 @@ from mslib.utils.units import units, convert_to
 WMS = 0
 
 
+class CustomColorDialog(QtWidgets.QColorDialog):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setOptions(QtWidgets.QColorDialog.DontUseNativeDialog)
+        
+        # 22 Distinct colors
+        self.setStandardColor(0, QtGui.QColor(255, 255, 255)) #White
+        self.setStandardColor(1, QtGui.QColor(194, 30, 89)) #Maroon
+        self.setStandardColor(2, QtGui.QColor(53, 111, 50)) #Olive
+        self.setStandardColor(3, QtGui.QColor(70, 153, 144)) #Teal
+        self.setStandardColor(4, QtGui.QColor(0, 0, 117)) #Navy
+        self.setStandardColor(5, QtGui.QColor(0, 0, 0)) #Black
+        self.setStandardColor(6, QtGui.QColor(245, 150, 86)) #Orange
+        self.setStandardColor(7, QtGui.QColor(252, 228, 67)) #Yellow
+        self.setStandardColor(8, QtGui.QColor(203, 243, 107)) #Lime
+        self.setStandardColor(9, QtGui.QColor(96, 194, 111)) #Green
+        self.setStandardColor(10, QtGui.QColor(165, 70, 191)) #Purple
+        self.setStandardColor(11, QtGui.QColor(241, 91, 235)) #Magenta
+        self.setStandardColor(12, QtGui.QColor(184, 187, 187)) #Grey
+        self.setStandardColor(13, QtGui.QColor(249, 203, 221)) #Pink
+        self.setStandardColor(14, QtGui.QColor(253, 225, 192)) #Apricot
+        self.setStandardColor(15, QtGui.QColor(255, 250, 200)) #Beige
+        self.setStandardColor(16, QtGui.QColor(170, 255, 195)) #Mint
+        self.setStandardColor(17, QtGui.QColor(224, 203, 254)) #Lavender
+        self.setStandardColor(18, QtGui.QColor(153, 255, 255)) #Cyan
+        self.setStandardColor(19, QtGui.QColor(0, 0, 255)) #Blue
+        self.setStandardColor(20, QtGui.QColor(204, 153, 102)) #Brown
+        self.setStandardColor(21, QtGui.QColor(255, 0, 0)) #Red
+        
+    def getColor(self, button):
+        return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button)
+
+
 class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     """
     Dialog to specify sideview options. User interface is specified
     in "ui_sideview_options.py".
     """
+    signal_ft_vertices_color_change = QtCore.pyqtSignal(str, tuple)
 
     def __init__(self, parent=None, settings=None):
         """
@@ -119,6 +153,12 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.btDelete.clicked.connect(self.deleteSelected)
 
         self.tableWidget.itemChanged.connect(self.itemChanged)
+        
+        # Create an instance of CustomColorDialog
+        self.custom_color_dialog = CustomColorDialog(self)
+
+        # Connect signals for color changes in the custom color dialog
+        self.custom_color_dialog.currentColorChanged.connect(self.onCustomColorChange)
 
     def setBotTopLimits(self, axis_type):
         bot, top = {
@@ -131,30 +171,78 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             button.setMinimum(bot)
             button.setMaximum(top)
 
+    # def setColour(self, which):
+    #     """
+    #     Slot for the colour buttons: Opens a QColorDialog and sets the
+    #     new button face colour.
+    #     """
+    #     if which == "ft_fill":
+    #         button = self.btFillColour
+    #     elif which == "ft_vertices":
+    #         button = self.btVerticesColour
+    #     elif which == "ft_waypoints":
+    #         button = self.btWaypointsColour
+    #     elif which == "ceiling":
+    #         button = self.btCeilingColour
+
+    #     palette = QtGui.QPalette(button.palette())
+    #     colour = palette.color(QtGui.QPalette.Button)
+    #     colour = QtWidgets.QColorDialog.getColor(colour)
+    #     if colour.isValid():
+    #         if which == "ft_fill":
+    #             # Fill colour is transparent with an alpha value of 0.15. If
+    #             # you like to change this, modify the PathInteractor class.
+    #             colour.setAlphaF(0.15)
+    #         palette.setColor(QtGui.QPalette.Button, colour)
+    #         button.setPalette(palette)
+    
     def setColour(self, which):
         """
-        Slot for the colour buttons: Opens a QColorDialog and sets the
+        Slot for the colour buttons: Opens the custom color dialog and sets the
         new button face colour.
         """
-        if which == "ft_fill":
-            button = self.btFillColour
-        elif which == "ft_vertices":
-            button = self.btVerticesColour
-        elif which == "ft_waypoints":
-            button = self.btWaypointsColour
-        elif which == "ceiling":
-            button = self.btCeilingColour
+        if which in ["ft_waypoints", "ft_vertices", "ft_fill"]:
+            button_name = f"bt{which[3:].capitalize()}Colour"
+        else:
+            button_name = f"bt{which.capitalize()}Colour"
+            
+        button = getattr(self, button_name, None)
 
-        palette = QtGui.QPalette(button.palette())
-        colour = palette.color(QtGui.QPalette.Button)
-        colour = QtWidgets.QColorDialog.getColor(colour)
-        if colour.isValid():
-            if which == "ft_fill":
-                # Fill colour is transparent with an alpha value of 0.15. If
-                # you like to change this, modify the PathInteractor class.
-                colour.setAlphaF(0.15)
-            palette.setColor(QtGui.QPalette.Button, colour)
-            button.setPalette(palette)
+        if button is not None:
+            self.custom_color_dialog.setCurrentColor(QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button))
+
+            if self.custom_color_dialog.exec_():
+                color = self.custom_color_dialog.currentColor()
+                if color.isValid():
+                    palette = QtGui.QPalette(button.palette())
+                    palette.setColor(QtGui.QPalette.Button, color)
+                    button.setPalette(palette)
+                    self.signal_ft_vertices_color_change.emit(which, color.getRgbF())
+
+    def onCustomColorChange(self, color):
+        """
+        Slot to handle custom color change from the custom color dialog.
+        """
+        if color.isValid():
+            which = ""
+            for button_name in ["Ceiling", "Fill", "Waypoints", "Vertices"]:
+                button = getattr(self, f"bt{button_name}Colour", None)
+                if button is not None and color == self.custom_color_dialog.getColor(button):
+                    if button_name in ["Waypoints", "Vertices", "Fill"]:
+                        which = f"ft_{button_name.lower()}"
+                    else:
+                        which = button_name.lower()
+                    break
+
+            if which:
+                palette = QtGui.QPalette(button.palette())
+                palette.setColor(QtGui.QPalette.Button, color)
+                button.setPalette(palette)
+
+                self.signal_ft_vertices_color_change.emit(which, color.getRgbF())
+        else:
+            # Handle the case where an invalid color is selected
+            pass
 
     def addItem(self):
         """
