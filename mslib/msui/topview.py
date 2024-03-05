@@ -60,35 +60,34 @@ class CustomColorDialog(QtWidgets.QColorDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOptions(QtWidgets.QColorDialog.DontUseNativeDialog)
-        
+
         # 22 Distinct colors
-        self.setStandardColor(0, QtGui.QColor(255, 255, 255)) #White
-        self.setStandardColor(1, QtGui.QColor(194, 30, 89)) #Maroon
-        self.setStandardColor(2, QtGui.QColor(53, 111, 50)) #Olive
-        self.setStandardColor(3, QtGui.QColor(70, 153, 144)) #Teal
-        self.setStandardColor(4, QtGui.QColor(0, 0, 117)) #Navy
-        self.setStandardColor(5, QtGui.QColor(0, 0, 0)) #Black
-        self.setStandardColor(6, QtGui.QColor(245, 150, 86)) #Orange
-        self.setStandardColor(7, QtGui.QColor(252, 228, 67)) #Yellow
-        self.setStandardColor(8, QtGui.QColor(203, 243, 107)) #Lime
-        self.setStandardColor(9, QtGui.QColor(96, 194, 111)) #Green
-        self.setStandardColor(10, QtGui.QColor(165, 70, 191)) #Purple
-        self.setStandardColor(11, QtGui.QColor(241, 91, 235)) #Magenta
-        self.setStandardColor(12, QtGui.QColor(184, 187, 187)) #Grey
-        self.setStandardColor(13, QtGui.QColor(249, 203, 221)) #Pink
-        self.setStandardColor(14, QtGui.QColor(253, 225, 192)) #Apricot
-        self.setStandardColor(15, QtGui.QColor(255, 250, 200)) #Beige
-        self.setStandardColor(16, QtGui.QColor(170, 255, 195)) #Mint
-        self.setStandardColor(17, QtGui.QColor(224, 203, 254)) #Lavender
-        self.setStandardColor(18, QtGui.QColor(153, 255, 255)) #Cyan
-        self.setStandardColor(19, QtGui.QColor(0, 0, 255)) #Blue
-        self.setStandardColor(20, QtGui.QColor(204, 153, 102)) #Brown
-        self.setStandardColor(21, QtGui.QColor(255, 0, 0)) #Red
-        
+        self.setStandardColor(0, QtGui.QColor(255, 255, 255))  # White
+        self.setStandardColor(1, QtGui.QColor(194, 30, 89))  # Maroon
+        self.setStandardColor(2, QtGui.QColor(53, 111, 50))  # Olive
+        self.setStandardColor(3, QtGui.QColor(70, 153, 144))  # Teal
+        self.setStandardColor(4, QtGui.QColor(0, 0, 117))  # Navy
+        self.setStandardColor(5, QtGui.QColor(0, 0, 0))  # Black
+        self.setStandardColor(6, QtGui.QColor(245, 150, 86))  # Orange
+        self.setStandardColor(7, QtGui.QColor(252, 228, 67))  # Yellow
+        self.setStandardColor(8, QtGui.QColor(203, 243, 107))  # Lime
+        self.setStandardColor(9, QtGui.QColor(96, 194, 111))  # Green
+        self.setStandardColor(10, QtGui.QColor(165, 70, 191))  # Purple
+        self.setStandardColor(11, QtGui.QColor(241, 91, 235))  # Magenta
+        self.setStandardColor(12, QtGui.QColor(184, 187, 187))  # Grey
+        self.setStandardColor(13, QtGui.QColor(249, 203, 221))  # Pink
+        self.setStandardColor(14, QtGui.QColor(253, 225, 192))  # Apricot
+        self.setStandardColor(15, QtGui.QColor(255, 250, 200))  # Beige
+        self.setStandardColor(16, QtGui.QColor(170, 255, 195))  # Mint
+        self.setStandardColor(17, QtGui.QColor(224, 203, 254))  # Lavender
+        self.setStandardColor(18, QtGui.QColor(153, 255, 255))  # Cyan
+        self.setStandardColor(19, QtGui.QColor(0, 0, 255))  # Blue
+        self.setStandardColor(20, QtGui.QColor(204, 153, 102))  # Brown
+        self.setStandardColor(21, QtGui.QColor(255, 0, 0))  # Red
+
     def getColor(self, button):
         return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button)
         
-
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
     """
@@ -153,7 +152,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         for i in range(self.tov_cbaxessize.count()):
             if self.tov_cbaxessize.itemText(i) == settings["tov_axes_label_size"]:
                 self.tov_cbaxessize.setCurrentIndex(i)
-                
+ 
         # Create an instance of CustomColorDialog
         self.custom_color_dialog = CustomColorDialog(self)
 
@@ -194,7 +193,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             button_name = f"bt{which[3:].capitalize()}Colour"
         else:
             button_name = f"bt{which.capitalize()}Colour"
-            
+
         button = getattr(self, button_name, None)
 
         if button is not None:
