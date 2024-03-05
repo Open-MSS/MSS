@@ -26,6 +26,7 @@
 """
 import pytest
 import datetime
+import textwrap
 
 from mslib.mscolab.server import register_user
 from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, Change
@@ -40,9 +41,11 @@ class Test_AwareDateTime:
         aware_datetime_type = AwareDateTime()
 
         result_bind = aware_datetime_type.process_bind_param(self.aware_datetime, None)
+        assert result_bind is not None
         assert result_bind == self.aware_datetime
 
         result_result = aware_datetime_type.process_result_value(self.aware_datetime, None)
+        assert result_result is not None
         assert result_result == self.aware_datetime
 
 
@@ -73,7 +76,8 @@ class Test_User:
         assert user.verify_password(self.userdata[2]) is True
 
 
-class Test_Permission:
+class TestPermission:
+
     @pytest.fixture(autouse=True)
     def setup(self):
         self.u_id = 1
@@ -86,6 +90,14 @@ class Test_Permission:
         assert permission.u_id == self.u_id
         assert permission.op_id == self.op_id
         assert permission.access_level == self.access_level
+
+    @pytest.mark.parametrize("access_level", ["collaborator", "viewer", "creator"])
+    def test_permission_repr_values(self, access_level):
+        permission = Permission(self.u_id, self.op_id, access_level)
+        expected_repr = textwrap.dedent(f'''\
+            <Permission u_id: {self.u_id}, op_id:{self.op_id}, access_level: {access_level}>''').strip()
+
+        assert repr(permission).strip() == expected_repr
 
 
 class Test_Operation:
@@ -102,6 +114,14 @@ class Test_Operation:
         assert operation.description == self.description
         assert operation.category == self.category
         assert operation.active is True
+
+    def test_repr(self):
+        operation = Operation(self.path, self.description, category=self.category)
+        expected_repr = f'<Operation path: {self.path}, desc: {self.description},' \
+                        f' cat: {self.category}, active: True, ' \
+                        f'last_used: {operation.last_used}> '
+
+        assert repr(operation) == expected_repr
 
 
 class Test_Message:
