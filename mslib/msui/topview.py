@@ -87,7 +87,7 @@ class CustomColorDialog(QtWidgets.QColorDialog):
 
     def getColor(self, button):
         return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button)
- 
+
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
     """
