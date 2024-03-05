@@ -72,7 +72,7 @@ class CustomColorDialog(QtWidgets.QColorDialog):
         self.setStandardColor(19, QtGui.QColor(0, 0, 255))  # Blue
         self.setStandardColor(20, QtGui.QColor(204, 153, 102))  # Brown
         self.setStandardColor(21, QtGui.QColor(255, 0, 0))  # Red
-        
+
     def getColor(self, button):
         return QtGui.QPalette(button.palette()).color(QtGui.QPalette.Button)
 
