@@ -236,13 +236,13 @@ class Test_Server:
             fm, user = self._save_content(operation, self.userdata)
             time.sleep(1)
             fm.save_file(operation.id, "content2", user)
-            all_changes = fm.get_all_changes(operation.id, user)
             # the newest change is on index 0, because it has a recent created_at time
             response = test_client.get('/get_all_changes', data={"token": token,
                                                                  "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
-            assert len(data["changes"]) == 2
+            all_changes = data["changes"]
+            assert len(all_changes) == 2
             assert all_changes[0]["id"] == 2
             assert all_changes[0]["id"] > all_changes[1]["id"]
             assert all_changes[0]["created_at"] > all_changes[1]["created_at"]
