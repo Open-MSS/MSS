@@ -69,7 +69,7 @@ jobs:
         ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
 
     - name: Collect coverage
-      if: ${{ inputs.event_name == 'push' && matrix.order == 'normal' }}
+      if: ${{ (inputs.event_name == 'push' || inputs.event_name == 'pull_request') && matrix.order == 'normal' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
