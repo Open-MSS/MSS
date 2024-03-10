@@ -68,6 +68,8 @@ GROUP_POSTFIX = "Group"
 # PostgreSQL: "postgresql://<username>:<password>@<host>/<db_name>"
 # SQLite: "sqlite:///<path_to_db>"
 SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+# Set to True for testing and False for production
+SQLALCHEMY_ECHO = False 
 
 enable_basic_http_authentication = False
 

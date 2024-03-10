@@ -151,6 +151,9 @@ MAIL_ENABLED = False
 
 SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
 
+# enable SQLALCHEMY_ECHO 
+SQLALCHEMY_ECHO = True
+
 # mscolab file upload settings
 UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
