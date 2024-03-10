@@ -151,7 +151,7 @@ MAIL_ENABLED = False
 
 SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
 
-# enable SQLALCHEMY_ECHO 
+# enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = True
 
 # mscolab file upload settings
