@@ -33,30 +33,6 @@ from mslib.mscolab.server import register_user
 from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, Change
 
 
-class Test_AwareDateTime:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.aware_datetime = datetime.datetime.now(tz=datetime.timezone.utc)
-
-    def test_aware_datetime_conversion(self):
-        aware_datetime_type = AwareDateTime()
-
-        result_bind = aware_datetime_type.process_bind_param(self.aware_datetime, None)
-        assert result_bind is not None
-        assert result_bind == self.aware_datetime
-
-        result_result = aware_datetime_type.process_result_value(self.aware_datetime, None)
-        assert result_result is not None
-        assert result_result == self.aware_datetime
-
-        result_none = aware_datetime_type.process_bind_param(None, None)
-        assert result_none is None
-
-        cet_time = datetime.datetime.now(tz=pytz.timezone("CET"))
-        result_cet = aware_datetime_type.process_bind_param(cet_time, None)
-        assert result_cet is not None
-
-
 class Test_User:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
@@ -83,99 +59,71 @@ class Test_User:
         assert user.verify_password("fail") is False
         assert user.verify_password(self.userdata[2]) is True
 
+    def test_aware_datetime_conversion(self):
+        aware_datetime_type = AwareDateTime()
+        curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
 
-class TestPermission:
+        result_bind = aware_datetime_type.process_bind_param(curr_time, None)
+        assert result_bind is not None
+        assert result_bind == curr_time
 
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.u_id = 1
-        self.op_id = 1
-        self.access_level = "admin"
+        result_result = aware_datetime_type.process_result_value(curr_time, None)
+        assert result_result is not None
+        assert result_result == curr_time
+
+        result_none = aware_datetime_type.process_bind_param(None, None)
+        assert result_none is None
+
+        cet_time = datetime.datetime.now(tz=pytz.timezone("CET"))
+        result_cet = aware_datetime_type.process_bind_param(cet_time, None)
+        assert result_cet == cet_time
+        assert result_cet is not None
 
     def test_permission_creation(self):
-        permission = Permission(self.u_id, self.op_id, self.access_level)
+        permission = Permission(1, 1, "admin")
 
-        assert permission.u_id == self.u_id
-        assert permission.op_id == self.op_id
-        assert permission.access_level == self.access_level
+        assert permission.u_id == 1
+        assert permission.op_id == 1
+        assert permission.access_level == "admin"
 
     @pytest.mark.parametrize("access_level", ["collaborator", "viewer", "creator"])
     def test_permission_repr_values(self, access_level):
-        permission = Permission(self.u_id, self.op_id, access_level)
+        permission = Permission(1, 1, access_level)
         expected_repr = textwrap.dedent(f'''\
-            <Permission u_id: {self.u_id}, op_id:{self.op_id}, access_level: {access_level}>''').strip()
+            <Permission u_id: {1}, op_id:{1}, access_level: {access_level}>''').strip()
 
         assert repr(permission).strip() == expected_repr
 
-
-class Test_Operation:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.path = "/path/to/operation"
-        self.description = "Description of the operation"
-        self.category = "test_category"
-
     def test_operation_creation(self):
-        operation = Operation(self.path, self.description, category=self.category)
+        operation = Operation("/path/to/operation", "Description of the operation", category="test_category")
 
-        assert operation.path == self.path
-        assert operation.description == self.description
-        assert operation.category == self.category
+        assert operation.path == "/path/to/operation"
+        assert operation.description == "Description of the operation"
+        assert operation.category == "test_category"
         assert operation.active is True
 
     def test_repr(self):
-        operation = Operation(self.path, self.description, category=self.category)
-        expected_repr = f'<Operation path: {self.path}, desc: {self.description},' \
-                        f' cat: {self.category}, active: True, ' \
+        operation = Operation("/path/to/operation", "Description of the operation", category="test_category")
+        expected_repr = f'<Operation path: {"/path/to/operation"}, desc: {"Description of the operation"},' \
+                        f' cat: {"test_category"}, active: True, ' \
                         f'last_used: {operation.last_used}> '
 
         assert repr(operation) == expected_repr
 
-
-class Test_Message:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.op_id = 1
-        self.u_id = 1
-        self.text = "Hello, this is a test message"
-        self.message_type = "TEXT"
-        self.reply_id = None
-
     def test_message_creation(self):
-        message = Message(
-            self.op_id,
-            self.u_id,
-            self.text,
-            message_type=self.message_type,
-            reply_id=self.reply_id
-        )
+        message = Message(1, 1, "Hello, this is a test message", "TEXT", None)
 
-        assert message.op_id == self.op_id
-        assert message.u_id == self.u_id
-        assert message.text == self.text
-        assert message.message_type == self.message_type
-        assert message.reply_id == self.reply_id
-
-
-class Test_Change:
-    @pytest.fixture(autouse=True)
-    def setup(self):
-        self.op_id = 1
-        self.u_id = 1
-        self.commit_hash = "#abcdef123456"
-        self.version_name = "v1.0"
-        self.comment = "Initial commit"
+        assert message.op_id == 1
+        assert message.u_id == 1
+        assert message.text == "Hello, this is a test message"
+        assert message.message_type == "TEXT"
+        assert message.reply_id is None
 
     def test_change_creation(self):
-        change = Change(self.op_id,
-                        self.u_id,
-                        self.commit_hash,
-                        version_name=self.version_name,
-                        comment=self.comment
-                    )
+        change = Change(1, 1, "#abcdef123456", "v1.0", "Initial commit")
 
-        assert change.op_id == self.op_id
-        assert change.u_id == self.u_id
-        assert change.commit_hash == self.commit_hash
-        assert change.version_name == self.version_name
-        assert change.comment == self.comment
+        assert change.op_id == 1
+        assert change.u_id == 1
+        assert change.commit_hash == "#abcdef123456"
+        assert change.version_name == "v1.0"
+        assert change.comment == "Initial commit"
