@@ -334,6 +334,59 @@ class Test_Mscolab:
         assert tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
+    def test_multiple_views_and_multiple_flightpath(self, qtbot):
+        """
+        checks that we can have multiple topviews with the multiple flightpath dockingwidget
+        and we are able to cycle a login/logout
+        """
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        # more operations
+        for op_name in ["second", "third"]:
+            assert add_operation(op_name, "description")
+            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        # test after activating operation
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+
+        def assert_active_views():
+            # check 1 view opened
+            assert len(self.window.get_active_views()) == 1
+        qtbot.wait_until(assert_active_views)
+        topview_0 = self.window.listViews.item(0)
+
+        # next topview
+        self.window.actionTopView.trigger()
+        topview_1 = self.window.listViews.item(1)
+
+        def assert_active_views():
+            # check 2 view opened
+            assert len(self.window.get_active_views()) == 2
+        qtbot.wait_until(assert_active_views)
+
+        def select_widget():
+            # open multiple flightpath first window
+            topview_0.window.cbTools.currentIndexChanged.emit(6)
+        qtbot.wait_until(select_widget)
+
+        def select_widget():
+            # open multiple flightpath second window
+            topview_1.window.cbTools.currentIndexChanged.emit(6)
+        qtbot.wait_until(select_widget)
+
+        def assert_label_text():
+            # verify logged in
+            assert self.window.usernameLabel.text() == self.userdata[1]
+        qtbot.wait_until(assert_label_text)
+
+        self.window.mscolab.logout()
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        # verify logged in again
+        qtbot.wait_until(assert_label_text)
+
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
                               "Flight track (*.ftml)"))
