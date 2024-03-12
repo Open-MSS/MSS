@@ -25,7 +25,6 @@
     limitations under the License.
 """
 
-import logging
 import requests
 import json
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -181,7 +180,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # A disconnect can be done only once, regardless of the docking widget usage frequency.
         if self.operations is not None:
             self.operations.logout_mscolab()
-        try:
             self.ui.signal_listFlighttrack_doubleClicked.disconnect()
             self.ui.signal_permission_revoked.disconnect()
             self.ui.signal_render_new_permission.disconnect()
@@ -190,9 +188,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.operation_list = False
             for idx in range(len(self.obb)):
                 del self.obb[idx]
-        except TypeError:
-            logging.info("Already disconnected from the server and switched to Fligh Tracks: %s",
-                         self.flighttrack_list)
 
     @QtCore.pyqtSlot(str, str)
     def login(self, url, token):
