@@ -362,35 +362,39 @@ class Test_Mscolab:
         self.window.actionTopView.trigger()
 
         def assert_active_views():
+            # check 1 view opened
             assert len(self.window.get_active_views()) == 1
         qtbot.wait_until(assert_active_views)
         topview_0 = self.window.listViews.item(0)
 
+        # next topview
         self.window.actionTopView.trigger()
+        topview_1 = self.window.listViews.item(1)
 
         def assert_active_views():
+            # check 2 view opened
             assert len(self.window.get_active_views()) == 2
         qtbot.wait_until(assert_active_views)
 
-        # open multiple flightpath first window
         def select_widget():
+            # open multiple flightpath first window
             topview_0.window.cbTools.currentIndexChanged.emit(6)
         qtbot.wait_until(select_widget)
 
-        topview_1 = self.window.listViews.item(1)
-        # open multiple flightpath second window
-
         def select_widget():
+            # open multiple flightpath second window
             topview_1.window.cbTools.currentIndexChanged.emit(6)
         qtbot.wait_until(select_widget)
 
         def assert_label_text():
+            # verify logged in
             assert self.window.usernameLabel.text() == self.userdata[1]
         qtbot.wait_until(assert_label_text)
 
         self.window.mscolab.logout()
         self._connect_to_mscolab()
         self._login(emailid=self.userdata[0], password=self.userdata[2])
+        # verify logged in again
         qtbot.wait_until(assert_label_text)
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
