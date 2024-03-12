@@ -341,7 +341,7 @@ class Test_Mscolab:
         """
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
-        self._login(emailid=self.userdata[0], password=self.userdata[2])
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         # more operations
         for op_name in ["second", "third"]:
             assert add_operation(op_name, "description")
@@ -383,7 +383,7 @@ class Test_Mscolab:
 
         self.window.mscolab.logout()
         self._connect_to_mscolab(qtbot)
-        self._login(emailid=self.userdata[0], password=self.userdata[2])
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         # verify logged in again
         qtbot.wait_until(assert_label_text)
 
