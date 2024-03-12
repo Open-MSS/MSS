@@ -2,7 +2,7 @@
 ##
 ## This file is part of MSS
 ##
-## copyright: Copyright 2022 by the MSS team, see AUTHORS.
+## copyright: Copyright 2022-2024 by the MSS team, see AUTHORS.
 ## license: APACHE-2.0, see LICENSE for details.
 ##
 ## ./start_tutorial.sh python ./tutorial_hexagoncontrol.py
