@@ -181,17 +181,17 @@ CONFIG = {
             "stderr": {
                 "class": "logging.StreamHandler",
                 "stream": "ext://sys.stderr",
-                "level": "DEBUG",
+                "level": "INFO",
                 "formatter": "simple",
             },
         },
         "loggers": {
             "saml2": {
-                "level": "DEBUG"
+                "level": "INFO"
             },
         },
         "root": {
-            "level": "DEBUG",
+            "level": "INFO",
             "handlers": [
                 "stderr",
             ],
