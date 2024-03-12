@@ -33,38 +33,6 @@ from mslib.mscolab.server import register_user
 from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, Change
 
 
-@pytest.fixture(autouse=True)
-def setup(mscolab_app):
-    userdata = 'UV10@uv10', 'UV10', 'uv10'
-    with mscolab_app.app_context():
-        result = register_user(userdata[0], userdata[1], userdata[2])
-        assert result["success"] is True
-        yield
-
-
-def test_generate_auth_token():
-    userdata = 'UV10@uv10', 'UV10', 'uv10'
-    user = User(userdata[0], userdata[1], userdata[2])
-    token = user.generate_auth_token()
-    assert token is not None
-    assert len(token) > 20
-
-
-def test_verify_auth_token():
-    userdata = 'UV10@uv10', 'UV10', 'uv10'
-    user = User(userdata[0], userdata[1], userdata[2])
-    token = user.generate_auth_token()
-    uid = user.verify_auth_token(token)
-    assert user.id == uid
-
-
-def test_verify_password():
-    userdata = 'UV10@uv10', 'UV10', 'uv10'
-    user = User(userdata[0], userdata[1], userdata[2])
-    assert user.verify_password("fail") is False
-    assert user.verify_password(userdata[2]) is True
-
-
 def test_aware_datetime_conversion():
     aware_datetime_type = AwareDateTime()
     curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
@@ -139,3 +107,30 @@ def test_change_creation():
     assert change.commit_hash == "#abcdef123456"
     assert change.version_name == "v1.0"
     assert change.comment == "Initial commit"
+
+
+class Test_User:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app):
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        with mscolab_app.app_context():
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            assert result["success"] is True
+            yield
+
+    def test_generate_auth_token(self):
+        user = User(self.userdata[0], self.userdata[1], self.userdata[2])
+        token = user.generate_auth_token()
+        assert token is not None
+        assert len(token) > 20
+
+    def test_verify_auth_token(self):
+        user = User(self.userdata[0], self.userdata[1], self.userdata[2])
+        token = user.generate_auth_token()
+        uid = user.verify_auth_token(token)
+        assert user.id == uid
+
+    def test_verify_password(self):
+        user = User(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert user.verify_password("fail") is False
+        assert user.verify_password(self.userdata[2]) is True
