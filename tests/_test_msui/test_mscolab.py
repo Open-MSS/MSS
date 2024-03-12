@@ -349,7 +349,7 @@ class Test_Mscolab:
         checks that we can have multiple topviews with the multiple flightpath dockingwidget
         and we are able to cycle a login/logout
         """
-        self._connect_to_mscolab()
+        self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         # more operations
@@ -392,7 +392,7 @@ class Test_Mscolab:
         qtbot.wait_until(assert_label_text)
 
         self.window.mscolab.logout()
-        self._connect_to_mscolab()
+        self._connect_to_mscolab(qtbot)
         self._login(emailid=self.userdata[0], password=self.userdata[2])
         # verify logged in again
         qtbot.wait_until(assert_label_text)
