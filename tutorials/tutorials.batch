@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
-
+##
+## This file is part of MSS
+##
+## copyright: Copyright 2023-2024 by the MSS team, see AUTHORS.
+## license: APACHE-2.0, see LICENSE for details.
+##
+##
 # ToDO functions and menu
 # also add max time of recording to tutorials
 
