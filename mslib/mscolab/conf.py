@@ -65,7 +65,7 @@ class default_mscolab_settings:
 
     # Set to True for testing and False for production
     SQLALCHEMY_ECHO = False
-    
+
     # mscolab file upload settings
     UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
     MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
