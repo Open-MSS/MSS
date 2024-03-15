@@ -30,12 +30,10 @@ requirements:
     - python
     - setuptools
     - pip
-    - menuinst  # [win]
     - future
   run:
     - python
     - defusedxml
-    - menuinst  # [win]
     - basemap >=1.3.3
     - chameleon
     - execnet
@@ -97,6 +95,8 @@ requirements:
     - flask-login
     - pysaml2
     - libxmlsec1
+run_constrained:
+    - menuinst >=2.0.0
 
 test:
   imports:

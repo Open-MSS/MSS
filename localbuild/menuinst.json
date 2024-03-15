@@ -1,0 +1,20 @@
+{
+    "menu_name": "${DISTRIBUTION_NAME} {PY_VER} ${PLATFORM}",
+    "menu_items": [
+            {
+                "name": "MSUI",
+                "description": "For planning and collaboration on athmosperhic research flights",
+                "commannd": "msui",
+                "icon": "${PYTHON_SCRIPTS}/mss.ico",
+                "activate": true,
+                "platforms": {
+                  "linux": {"Categories":  "Science"},
+                  "osx": {},
+                  "win": {
+                    "desktop": true,
+                    "quicklaunch": true
+                  }
+                }
+            }
+        ]
+}
