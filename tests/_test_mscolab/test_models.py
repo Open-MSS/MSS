@@ -27,7 +27,7 @@
 import pytest
 import datetime
 import textwrap
-import pytz
+from zoneinfo import ZoneInfo
 
 from mslib.mscolab.server import register_user
 from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, Change
@@ -48,7 +48,7 @@ def test_aware_datetime_conversion():
     result_none = aware_datetime_type.process_bind_param(None, None)
     assert result_none is None
 
-    cet_time = datetime.datetime.now(tz=pytz.timezone("CET"))
+    cet_time = datetime.datetime.now(tz=ZoneInfo("CET"))
     result_cet = aware_datetime_type.process_bind_param(cet_time, None)
     assert result_cet == cet_time
     assert result_cet is not None
