@@ -408,7 +408,10 @@ class Test_Mscolab:
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-            m.assert_called_once()
+
+            def assert_():
+                m.assert_called_once()
+            qtbot.wait_until(assert_)
 
         def assert_():
             assert self.window.listOperationsMSC.model().rowCount() == 1
