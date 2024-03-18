@@ -79,7 +79,7 @@ jobs:
 
     - name: Invoke dockertesting image creation
       if: ${{ !cancelled() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
-      uses: benc-uk/workflow-dispatch@v1.2.2
+      uses: benc-uk/workflow-dispatch@v1.2.3
       with:
         workflow: Update Image testing-${{ inputs.branch_name }}
         repo: Open-MSS/dockertesting
