@@ -47,7 +47,6 @@ requirements:
     - netcdf4
     - hdf4
     - pillow
-    - pytz
     - pyqt >=5.15.0
     - qt >=5.15.0
     - requests >=2.31.0
