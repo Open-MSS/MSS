@@ -94,6 +94,9 @@ _DEFAULT_SETTINGS_LINEARVIEW = {
     "plot_title_size": "default",
     "axes_label_size": "default"}
 
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.INFO)
+
 
 class ViewPlotter:
     def __init__(self, fig=None, ax=None, settings_tag=None, settings=None):

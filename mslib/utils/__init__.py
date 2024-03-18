@@ -61,8 +61,8 @@ def setup_logging(args):
     # Console handler (suppress DEBUG by default)
     ch = logging.StreamHandler()
     if args.debug:
-        logger.setLevel(logging.DEBUG)
-        ch.setLevel(logging.DEBUG)
+        logger.setLevel(logging.INFO)
+        ch.setLevel(logging.INFO)
         ch.setFormatter(debug_formatter)
     else:
         logger.setLevel(logging.INFO)
@@ -79,8 +79,8 @@ def setup_logging(args):
         except (OSError, IOError) as ex:
             logger.error("Could not open logfile '%s': %s %s", logfile, type(ex), ex)
         else:
-            logger.setLevel(logging.DEBUG)
-            fh.setLevel(logging.DEBUG)
+            logger.setLevel(logging.INFO)
+            fh.setLevel(logging.INFO)
             fh.setFormatter(debug_formatter)
             logger.addHandler(fh)
 

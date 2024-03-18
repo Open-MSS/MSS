@@ -58,6 +58,9 @@ TEXT_CONFIG = {
     "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"), "fontweight": "bold",
     "zorder": 4, "fontsize": 6, "clip_on": True}
 
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.INFO)
+
 
 def load_from_ftml(filename):
     """Load a flight track from an XML file at <filename>.
