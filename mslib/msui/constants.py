@@ -37,10 +37,8 @@ MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "
 _fs = None
 if '://' in MSUI_CONFIG_PATH:
     try:
-        _fs = fs.open_fs(MSUI_CONFIG_PATH)
         _fs = fs.open_fs(fs.path.dirname(MSUI_CONFIG_PATH))
     except fs.errors.CreateFailed:
-        _fs.makedirs(MSUI_CONFIG_PATH)
         _fs.makedirs(fs.path.basename(MSUI_CONFIG_PATH))
     except fs.opener.errors.UnsupportedProtocol:
         logging.error('FS url "%s" not supported', MSUI_CONFIG_PATH)
