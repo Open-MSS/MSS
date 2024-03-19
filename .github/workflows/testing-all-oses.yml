@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["macos-14", "ubuntu-latest"]
+        os: ["macos-13", "macos-14", "ubuntu-latest"]
         order: ["normal", "reverse"]
     steps:
     - uses: actions/checkout@v4
