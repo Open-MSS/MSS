@@ -776,7 +776,6 @@ class ARS(Service):
         msg = IdpServerSettings_.IDP.create_artifact_response(_req, _req.artifact.text)
 
         hinfo = IdpServerSettings_.IDP.apply_binding(BINDING_SOAP, f"{msg}", "", "", response=True)
-•
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
 
