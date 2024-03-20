@@ -18,9 +18,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["macos-13", "macos-14", "ubuntu-latest"]
+        os: ["macos-13", "macos-14", "ubuntu-latest", "windows-latest"]
         order: ["normal", "reverse"]
     steps:
+    # This workaround is necessary because PyFilesystem2 throws an InvalidCharsInPath error:
+    # fs.errors.InvalidCharsInPath: path 'C:/Users/RUNNER~1/AppData/Local/Temp/tmp4hu4dmfwmsui546ffd7ad0/colabTestData/uploads/1' contains invalid characters
+    # This is caused by the short name conversion ("RUNNER~1").
+    # The workaround is described here: https://github.com/actions/runner-images/issues/712#issuecomment-613004302
+    - name: Workaround for TMP and TEMP path on Windows
+      if: ${{ startsWith(matrix.os, 'windows') }}
+      run: |
+        echo "TMP=$env:USERPROFILE\AppData\Local\Temp" >> $env:GITHUB_ENV
+        echo "TEMP=$env:USERPROFILE\AppData\Local\Temp" >> $env:GITHUB_ENV
     - uses: actions/checkout@v4
     - name: Build requirements.txt file
       run: |
@@ -32,6 +41,9 @@ jobs:
         sed -e '/^$/d' -e '/^#.*$/d' requirements.tmp.txt > requirements.txt
         rm requirements.tmp.txt
         cat requirements.txt
+    - name: Remove unavailable dependencies on Windows
+      if: ${{ startsWith(matrix.os, 'windows') }}
+      run: sed -i -e '/^dbus-python.*$/d' -e '/^libxmlsec1.*$/d' requirements.txt
     - name: Get current year and calendar week
       id: year-and-week
       run: echo "year-and-week=$(date +%Y-%V)" >> "$GITHUB_OUTPUT"
