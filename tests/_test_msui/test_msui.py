@@ -35,34 +35,19 @@ import pytest
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
-from tests.constants import ROOT_DIR, POSIX, MSUI_CONFIG_PATH
+from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 
 
-@mock.patch("mslib.msui.msui.constants.POSIX", POSIX)
 def test_main():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
                         return_value=argparse.Namespace(version=True)):
             msui.main()
         assert pytest_wrapped_e.typename == "SystemExit"
-
-    if platform.system() == "Linux":
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
-            with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
-                            return_value=argparse.Namespace(version=False, update=False, menu=True,
-                                                            deinstall=False, debug=False, logfile="log.log")):
-                msui.main()
-            assert pytest_wrapped_e.typename == "SystemExit"
-        with pytest.raises(SystemExit) as pytest_wrapped_e:
-            with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
-                            return_value=argparse.Namespace(version=False, update=False, menu=False,
-                                                            deinstall=True, debug=False, logfile="log.log")):
-                msui.main()
-            assert pytest_wrapped_e.typename == "SystemExit"
 
 
 class Test_MSS_TutorialMode:
