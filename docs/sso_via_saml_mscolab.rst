@@ -40,12 +40,6 @@ This documentation will explain how to configure MSColab with an existing IdP or
 
 If you are not aware of how the SAML process works in the MSColab server, it is highly recommended to set up msidp and test it with MSColab as an initial step before configuring existing 3rd party IdPs.
 
-.. warning::
-   When running publicly rather than in development, you should not use the built-in development server ( msidp / idp.py ).
-
-   The development server is provided by MSS for convenience, but is not designed to be particularly efficient, stable, or secure.
-
-
 .. note::
     You can find instructions to set up msidp by `conf_sso_test_msscolab.rst`.
 
