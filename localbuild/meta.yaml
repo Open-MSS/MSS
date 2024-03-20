@@ -9,7 +9,7 @@ source:
   path: ../
 
 build:
-  skip: true  # [py<38]
+  skip: true  # [py<310]
   number: 1000
   script: "{{ PYTHON }} -m pip install . --no-deps -vv"  # [not win]
   entry_points:
@@ -19,7 +19,7 @@ build:
     - mswms_demodata = mslib.mswms.demodata:main
     - mscolab = mslib.mscolab.mscolab:main
     - mssautoplot = mslib.utils.mssautoplot:main
-    - msidp = mslib.msidp.idp:main
+    - msidp = mslib.msidp.idp:main  # [not win]
 
 requirements:
   build:
@@ -95,7 +95,7 @@ requirements:
     - python-slugify
     - flask-login
     - pysaml2
-    - libxmlsec1
+    - libxmlsec1  # [not win]
 
 test:
   imports:
@@ -105,7 +105,7 @@ test:
     - mswms_demodata -h
     - msui -h
     - mscolab -h
-    - msidp -h
+    - msidp -h  # [not win]
 
 about:
   summary: 'A web service based tool to plan atmospheric research flights.'
