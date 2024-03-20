@@ -67,4 +67,3 @@ DATA_DIR = DATA_FS.getsyspath("")
 MSCOLAB_URL = "http://localhost:8083"
 # mscolab test server's url
 MSCOLAB_URL_TEST = "http://localhost:8084"
-

@@ -29,7 +29,6 @@
 import mock
 import os
 import fs
-import platform
 import argparse
 import pytest
 from urllib.request import urlopen
