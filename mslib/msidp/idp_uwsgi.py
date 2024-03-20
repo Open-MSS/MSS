@@ -70,8 +70,7 @@ from saml2.profile import ecp
 from saml2.s_utils import PolicyError, UnknownPrincipal, exception_trace, UnsupportedBinding, rndstr
 from saml2.sigver import encrypt_cert_from_item, verify_redirect_signature
 
-from mslib.msidp.idp_user import EXTRA
-from mslib.msidp.idp_user import USERS
+from mslib.msidp.idp_user import EXTRA, USERS, PASSWD
 from mako.lookup import TemplateLookup
 
 
@@ -537,10 +536,6 @@ def do_authentication(environ, start_response, authn_context, key, redirect_uri)
 
 
 # -----------------------------------------------------------------------------
-
-PASSWD = {"daev0001": "qwerty", "haho0032": "qwerty",
-          "roland": "dianakra", "babs": "howes", "upper": "crust"}
-
 
 def username_password_authn(environ, start_response, reference, key, redirect_uri):
     """

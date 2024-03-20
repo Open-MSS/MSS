@@ -39,6 +39,7 @@ import os
 import re
 import time
 import sys
+import warnings
 
 from mslib import msidp
 from http.cookies import SimpleCookie
@@ -80,7 +81,7 @@ from saml2.sigver import encrypt_cert_from_item, verify_redirect_signature
 from werkzeug.serving import run_simple as WSGIServer
 
 from mslib.msidp.idp_user import EXTRA
-from mslib.msidp.idp_user import USERS
+from mslib.msidp.idp_user import USERS, PASSWD
 from mako.lookup import TemplateLookup
 from mslib.mscolab.conf import mscolab_settings
 
@@ -555,17 +556,6 @@ def do_authentication(environ, start_response, authn_context, key, redirect_uri,
 
 # -----------------------------------------------------------------------------
 
-
-PASSWD = {
-    "testuser": "qwerty",
-    "roland": "dianakra",
-    "babs": "howes",
-    "upper": "crust",
-    "testuser2": "abcd1234",
-    "testuser3": "ABCD1234",
-}
-
-
 def username_password_authn(environ, start_response, reference, key, redirect_uri, headers=None):
     """
     Display the login form
@@ -786,7 +776,7 @@ class ARS(Service):
         msg = IdpServerSettings_.IDP.create_artifact_response(_req, _req.artifact.text)
 
         hinfo = IdpServerSettings_.IDP.apply_binding(BINDING_SOAP, f"{msg}", "", "", response=True)
-
+•
         resp = Response(hinfo["data"], headers=hinfo["headers"])
         return resp(self.environ, self.start_response)
 
@@ -1099,6 +1089,7 @@ IdpServerSettings_ = IdpServerSettings()
 
 
 def main():
+    warnings.warn('\033[91mWARNING: msidp is solely for development and testing purposes; do not use in production environments.\033[0m')
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", dest="path", help="Path to configuration file.",
                         default="./idp_conf.py")
