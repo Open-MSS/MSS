@@ -339,13 +339,14 @@ class Test_Mscolab:
         checks that we can have multiple topviews with the multiple flightpath dockingwidget
         and we are able to cycle a login/logout
         """
-        self._connect_to_mscolab(qtbot)
-        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
-        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
-        # more operations
+        # more operations for the user
         for op_name in ["second", "third"]:
             assert add_operation(op_name, "description")
             assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
 
         # test after activating operation
         self._activate_operation_at_index(0)
@@ -369,12 +370,24 @@ class Test_Mscolab:
         def select_widget():
             # open multiple flightpath first window
             topview_0.window.cbTools.currentIndexChanged.emit(6)
+            assert topview_0.window.docks[5] is not None
         qtbot.wait_until(select_widget)
+        # activate all operation, this enables them in the docking widget too
+        self._activate_operation_at_index(1)
+        self._activate_operation_at_index(2)
+        self._activate_operation_at_index(0)
+        # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
 
         def select_widget():
             # open multiple flightpath second window
             topview_1.window.cbTools.currentIndexChanged.emit(6)
+            assert topview_1.window.docks[5] is not None
         qtbot.wait_until(select_widget)
+        # activate all operation, this enables them in the docking widget too
+        self._activate_operation_at_index(1)
+        self._activate_operation_at_index(2)
+        self._activate_operation_at_index(0)
+        # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
 
         def assert_label_text():
             # verify logged in
@@ -386,6 +399,7 @@ class Test_Mscolab:
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         # verify logged in again
         qtbot.wait_until(assert_label_text)
+        # ToDo verify all operations disabled again without a visual check
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
@@ -790,6 +804,9 @@ class Test_Mscolab:
         qtbot.wait_until(assert_operation_is_listed)
 
     def _activate_operation_at_index(self, index):
+        # The main window must be on top
+        QtTest.QTest.keyClick(self.window, QtCore.Qt.Key_Up, QtCore.Qt.ControlModifier)
+        # get the item by its index
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
