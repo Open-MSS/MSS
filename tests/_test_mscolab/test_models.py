@@ -25,9 +25,88 @@
     limitations under the License.
 """
 import pytest
+import datetime
+import textwrap
+from zoneinfo import ZoneInfo
 
 from mslib.mscolab.server import register_user
-from mslib.mscolab.models import User
+from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, Change
+
+
+def test_aware_datetime_conversion():
+    aware_datetime_type = AwareDateTime()
+    curr_time = datetime.datetime.now(tz=datetime.timezone.utc)
+
+    result_bind = aware_datetime_type.process_bind_param(curr_time, None)
+    assert result_bind is not None
+    assert result_bind == curr_time
+
+    result_result = aware_datetime_type.process_result_value(curr_time, None)
+    assert result_result is not None
+    assert result_result == curr_time
+
+    result_none = aware_datetime_type.process_bind_param(None, None)
+    assert result_none is None
+
+    cet_time = datetime.datetime.now(tz=ZoneInfo("CET"))
+    result_cet = aware_datetime_type.process_bind_param(cet_time, None)
+    assert result_cet == cet_time
+    assert result_cet is not None
+
+
+def test_permission_creation():
+    permission = Permission(1, 1, "admin")
+
+    assert permission.u_id == 1
+    assert permission.op_id == 1
+    assert permission.access_level == "admin"
+
+
+@pytest.mark.parametrize("access_level", ["collaborator", "viewer", "creator"])
+def test_permission_repr_values(access_level):
+    permission = Permission(1, 1, access_level)
+    expected_repr = textwrap.dedent(f'''\
+        <Permission u_id: {1}, op_id:{1}, access_level: {access_level}>''').strip()
+
+    assert repr(permission).strip() == expected_repr
+
+
+def test_operation_creation():
+    operation = Operation("/path/to/operation", "Description of the operation", category="test_category")
+
+    assert operation.path == "/path/to/operation"
+    assert operation.description == "Description of the operation"
+    assert operation.category == "test_category"
+    assert operation.active is True
+
+
+def test_operation_repr():
+    operation = Operation("/path/to/operation", "Description of the operation", category="test_category")
+    expected_repr = f'<Operation path: {"/path/to/operation"}, desc: {"Description of the operation"},' \
+                    f' cat: {"test_category"}, active: True, ' \
+                    f'last_used: {operation.last_used}> '
+
+    assert repr(operation) == expected_repr
+
+
+def test_message_creation():
+    message = Message(1, 1, "Hello, this is a test message", "TEXT", None)
+
+    assert message.op_id == 1
+    assert message.u_id == 1
+    assert message.text == "Hello, this is a test message"
+    assert message.message_type == "TEXT"
+    assert message.reply_id is None
+
+
+def test_change_creation():
+    change = Change(1, 1, "#abcdef123456", "v1.0", "Initial commit")
+
+    assert change.op_id == 1
+    assert change.u_id == 1
+    assert change.commit_hash == "#abcdef123456"
+    assert change.version_name == "v1.0"
+    assert change.comment == "Initial commit"
 
 
 class Test_User:

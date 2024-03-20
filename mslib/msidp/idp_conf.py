@@ -25,7 +25,7 @@
 """
 
 # Parts of the code
-
+import logging
 import os.path
 
 from saml2 import BINDING_HTTP_ARTIFACT
@@ -38,6 +38,8 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 
 XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
+if not os.path.exists(XMLSEC_PATH):
+    logging.warning("%s not found", XMLSEC_PATH)
 
 # CRTs and metadata files can be generated through the mscolab server.
 # if configured that way CRTs DIRs should be same in both IDP and mscolab server.
