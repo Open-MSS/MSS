@@ -2,6 +2,14 @@ Configuration MSS Colab Server with Testing IdP for SSO
 =======================================================
 Testing IDP (`mslib/msidp`) is specifically designed for testing the Single Sign-On (SSO) process with the mscolab server using PySAML2.
 
+.. warning::
+   When running publicly rather than in development, you should not use the built-in development server ( msidp / idp.py ).
+
+   The development server is provided by MSS for convenience, but is not designed to be particularly efficient, stable, or secure.
+
+.. note::
+   The important module `xmlsec1 <https://github.com/Open-MSS/MSS/issues/2128#issuecomment-2009075861>`_ is not provided for windows operations systems. Therefore this feature is not available on windows.
+
 Here is documentation that explains the configuration of the MSS Colab Server with the testing IdP.
 
 Getting started

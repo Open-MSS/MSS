@@ -1038,6 +1038,11 @@ def application(environ, start_response):
     :return: The response as a list of lines
     """
 
+    print("""
+    When running publicly rather than in development, you should not use the built-in development server ( msidp / idp.py ).
+    The development server is provided by MSS for convenience, but is not designed to be particularly efficient, stable, or secure.
+    """)
+
     path = environ.get("PATH_INFO", "").lstrip("/")
 
     if path == "idp.xml":
