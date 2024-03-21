@@ -371,20 +371,11 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
-                widget.signal_parent_closes.connect(self.closed)
             else:
                 raise IndexError("invalid control index")
 
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
-
-    def closed(self):
-        self.mainwindow_signal_login_mscolab.disconnect()
-        self.mainwindow_signal_logout_mscolab.disconnect()
-        self.mainwindow_signal_listFlighttrack_doubleClicked.disconnect()
-        self.mainwindow_signal_activate_operation.disconnect()
-        self.mainwindow_signal_permission_revoked.disconnect()
-        self.mainwindow_signal_render_new_permission.disconnect()
 
     @QtCore.pyqtSlot()
     def disable_cbs(self):
