@@ -25,6 +25,7 @@ requirements:
     - python
     - pip
     - setuptools
+    - menuinst >=2.0.0
   host:
     - python
     - setuptools
