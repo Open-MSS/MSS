@@ -367,22 +367,26 @@ class Test_Mscolab:
             assert len(self.window.get_active_views()) == 2
         qtbot.wait_until(assert_active_views)
 
-        def select_widget():
-            # open multiple flightpath first window
-            topview_0.window.cbTools.currentIndexChanged.emit(6)
+        # open multiple flightpath first window
+        topview_0.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
             assert topview_0.window.docks[5] is not None
-        qtbot.wait_until(select_widget)
+        qtbot.wait_until(assert_dock_loaded)
+
         # activate all operation, this enables them in the docking widget too
         self._activate_operation_at_index(1)
         self._activate_operation_at_index(2)
         self._activate_operation_at_index(0)
         # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
 
-        def select_widget():
-            # open multiple flightpath second window
-            topview_1.window.cbTools.currentIndexChanged.emit(6)
+        # open multiple flightpath second window
+        topview_1.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
             assert topview_1.window.docks[5] is not None
-        qtbot.wait_until(select_widget)
+        qtbot.wait_until(assert_dock_loaded)
+
         # activate all operation, this enables them in the docking widget too
         self._activate_operation_at_index(1)
         self._activate_operation_at_index(2)
@@ -395,6 +399,11 @@ class Test_Mscolab:
         qtbot.wait_until(assert_label_text)
 
         self.window.mscolab.logout()
+
+        def assert_logout_text():
+            assert self.window.usernameLabel.text() == "User"
+        qtbot.wait_until(assert_logout_text)
+
         self._connect_to_mscolab(qtbot)
         self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
         # verify logged in again
@@ -805,7 +814,7 @@ class Test_Mscolab:
 
     def _activate_operation_at_index(self, index):
         # The main window must be on top
-        QtTest.QTest.keyClick(self.window, QtCore.Qt.Key_Up, QtCore.Qt.ControlModifier)
+        self.window.activateWindow()
         # get the item by its index
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
