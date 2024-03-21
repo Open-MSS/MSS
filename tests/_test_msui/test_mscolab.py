@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import sys
 import fs
 import fs.errors
 import fs.opener.errors
@@ -350,6 +351,10 @@ class Test_Mscolab:
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin",
+        reason="This test is flaky on macOS because of some cleanup error in temporary files.",
+    )
     @pytest.mark.parametrize("name", [("example.ftml", "actionImportFlightTrackFTML", 5),
                                       ("example.csv", "actionImportFlightTrackCSV", 5),
                                       ("example.txt", "actionImportFlightTrackTXT", 5),
@@ -403,7 +408,10 @@ class Test_Mscolab:
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-            m.assert_called_once()
+
+            def assert_():
+                m.assert_called_once()
+            qtbot.wait_until(assert_)
 
         def assert_():
             assert self.window.listOperationsMSC.model().rowCount() == 1
