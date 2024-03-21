@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,7 @@ VERTICAL_AXIS = {
     "pl": "atmosphere_pressure_coordinate",
     "pv": "atmosphere_ertel_potential_vorticity_coordinate",
     "tl": "atmosphere_potential_temperature_coordinate",
-    "fl": "fligth_level_coordinate",
+    "fl": "flight_level_coordinate",
 }
 
 # NETCDF FILE TOOLS

@@ -237,7 +237,7 @@ p, li { white-space: pre-wrap; }
        <property name="text">
         <string>Copyright 2008-2014: Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
 Copyright 2011-2014: Marc Rautenhaus
-Copyright 2016-2023: by the MSS team, see AUTHORS</string>
+Copyright 2016-2024: by the MSS team, see AUTHORS</string>
        </property>
       </widget>
      </item>

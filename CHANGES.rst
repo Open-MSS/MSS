@@ -1,7 +1,13 @@
 Changelog
 =========
 
+Version 8.3.4
+~~~~~~~~~~~~~
 
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/102?closed=1
 
 Version 8.3.3
 ~~~~~~~~~~~~~
@@ -12,6 +18,7 @@ All changes:
 https://github.com/Open-MSS/MSS/milestone/101?closed=1
 
 Fixes for msmws and mscolab:
+details: https://www.cve.org/CVERecord?id=CVE-2024-25123
 - security: fix potential path manipulation in the server sources
 
 
