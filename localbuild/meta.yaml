@@ -9,7 +9,7 @@ source:
 
 build:
   skip: true  # [py<310]
-  number: 0
+  number: 1000
   entry_points:
     - msui = mslib.msui.msui:main
     - mss = mslib.msui.mss:main
@@ -27,6 +27,7 @@ requirements:
     - numpy >=1.21                        # [build_platform != target_platform]
     - pip
     - setuptools
+    - future
     - menuinst >=2.0.0
   host:
     - python
@@ -35,6 +36,7 @@ requirements:
     - future
   run:
     - python
+    - future
     - defusedxml
     - basemap >=1.3.3
     - chameleon
