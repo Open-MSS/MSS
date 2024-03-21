@@ -25,7 +25,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
+import sys
 import os
 from shutil import move
 
@@ -388,6 +388,13 @@ class Test_WMS:
         assert mslib.mswms.wms.mswms_settings.__file__ is not None
         assert mslib.mswms.wms.mswms_auth.__file__ is not None
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin",
+        reason="""\
+There is a race condition between modifying with ncap2 and asserting that the file changed where the server might not
+see the change before the request is made, which leads to a failure of the following assert.
+""".strip(),
+    )
     def test_files_changed(self):
         def do_test():
             environ = {
@@ -429,6 +436,14 @@ class Test_WMS:
             "data_access", new=watch_access):
             do_test()
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin",
+        reason="""\
+This test changes global variables (e.g. DOCS_LOCATION) which can affect other tests depending on test order
+(e.g. tests/_test_mswms/test_mss_plot_driver.py::Test_VSec::test_VS_gallery_template fails consistently in reverse order
+on macOS 14).
+""".strip(),
+    )
     def test_gallery(self, tmpdir):
         tempdir = tmpdir.mkdir("static")
         docsdir = tmpdir.mkdir("docs")
