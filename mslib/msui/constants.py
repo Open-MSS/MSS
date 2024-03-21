@@ -11,7 +11,7 @@
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr), Tongxi Lou (tl)
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,15 +38,29 @@ _fs = None
 if '://' in MSUI_CONFIG_PATH:
     try:
         _fs = fs.open_fs(fs.path.dirname(MSUI_CONFIG_PATH))
-        _fs.makedirs(fs.path.basename(MSUI_CONFIG_PATH))
     except fs.opener.errors.UnsupportedProtocol:
         logging.error('FS url "%s" not supported', MSUI_CONFIG_PATH)
+    except fs.errors.DirectoryExists:
+        logging.warning('Directory "%s" already exists', MSUI_CONFIG_PATH)
     except fs.errors.CreateFailed:
-        logging.error('"%s" can''t be created', MSUI_CONFIG_PATH)
+        try:
+            _fs = fs.open_fs(fs.path.dirname(MSUI_CONFIG_PATH))
+            _fs.makedirs(fs.path.basename(MSUI_CONFIG_PATH))
+        except fs.errors.DirectoryExists:
+            logging.warning('Directory "%s" already exists', MSUI_CONFIG_PATH)
+        except fs.opener.errors.UnsupportedProtocol:
+            logging.error('FS url "%s" not supported', MSUI_CONFIG_PATH)
+        except Exception as e:
+            logging.error('Failed to create directory "%s": %s', MSUI_CONFIG_PATH, e)
 else:
     _dir = os.path.expanduser(MSUI_CONFIG_PATH)
     if not os.path.exists(_dir):
-        os.makedirs(_dir)
+        try:
+            os.makedirs(_dir)
+        except FileExistsError:
+            logging.warning('Directory "%s" already exists', MSUI_CONFIG_PATH)
+        except Exception as e:
+            logging.error('Failed to create directory "%s": %s', MSUI_CONFIG_PATH, e)
 
 GRAVATAR_DIR_PATH = fs.path.join(MSUI_CONFIG_PATH, "gravatars")
 
