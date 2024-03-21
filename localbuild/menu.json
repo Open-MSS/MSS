@@ -5,11 +5,15 @@
   "menu_items": [
     {
       "name": "MSUI",
+      "description": "Mission Support System UI",
       "activate": true,
       "command": ["{{ PREFIX }}/bin/msui.py"],
       "icon": "{{ MENU_DIR }}/msui.{{ ICON_EXT }}",
       "platforms": {
         "linux": {
+          "Categories": ["Science", "Education"],
+          "Keywords": ["documentation", "information"],
+          "StartupNotify": true,
           "command": ["{{ PREFIX }}/bin/msui.py"],
           "MimeType": ["application/x-menuinst"],
           "glob_patterns": {
