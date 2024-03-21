@@ -1,6 +1,5 @@
 {% set version = "alpha" %}
 
-
 package:
   name: mss
   version: {{ version }}
@@ -10,7 +9,7 @@ source:
 
 build:
   skip: true  # [py<310]
-  number: 1000
+  number: 0
   entry_points:
     - msui = mslib.msui.msui:main
     - mss = mslib.msui.mss:main
@@ -22,7 +21,10 @@ build:
 
 requirements:
   build:
-    - python
+    - python                              # [build_platform != target_platform]
+    - cross-python_{{ target_platform }}  # [build_platform != target_platform]
+    - cython >=0.29,<3.1                  # [build_platform != target_platform]
+    - numpy >=1.21                        # [build_platform != target_platform]
     - pip
     - setuptools
     - menuinst >=2.0.0
@@ -94,7 +96,7 @@ requirements:
     - flask-login
     - pysaml2
     - libxmlsec1  # [not win]
-run_constrained:
+  run_constrained:
     - menuinst >=2.0.0
 
 test:
@@ -105,10 +107,11 @@ test:
     - mswms_demodata -h
     - msui -h
     - mscolab -h
+    - mssautoplot --help
     - msidp -h  # [not win]
 
 about:
-  summary: 'A web service based tool to plan atmospheric research flights.'
+  summary: 'A client/server application developed in the community to collaboratively create flight plans based on model data.'
   home: https://github.com/Open-MSS/MSS
   license: "Apache-2.0"
   license_family: "APACHE"
@@ -116,7 +119,10 @@ about:
   description: |
     MSS - Mission Support System
 
-    http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
+    Documentation:
+    * https://mss.rtfd.io
+    * https://gmd.copernicus.org/articles/15/8983/2022/gmd-15-8983-2022.pdf
+    * http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
 
     Software for planning research Aircraft Missions.
     For discussion of the possibilites of the research flights,
