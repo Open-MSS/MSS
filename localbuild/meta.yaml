@@ -27,7 +27,7 @@ requirements:
     - pip
     - setuptools
     - future
-    - menuinst >=2.0.0
+    - menuinst >=2.0.2
   host:
     - python
     - setuptools
@@ -98,7 +98,7 @@ requirements:
     - pysaml2
     - libxmlsec1  # [not win]
   run_constrained:
-    - menuinst >=2.0.0
+    - menuinst >=2.0.2
 
 test:
   imports:
