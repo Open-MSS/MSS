@@ -334,7 +334,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                     self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked):
                 wp_model = self.list_flighttrack.currentItem().flighttrack_model
                 if wp_model == self.active_flight_track:
-                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog = QtWidgets.QErrorMessage(self)
                     self.error_dialog.showMessage('Use "options" to change color of an activated flighttrack.')
                 else:
                     color = QtWidgets.QColorDialog.getColor()
@@ -735,7 +735,7 @@ class MultipleFlightpathOperations:
                     self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
                 op_id = self.list_operation_track.currentItem().op_id
                 if self.list_operation_track.currentItem().op_id == self.active_op_id:
-                    self.error_dialog = QtWidgets.QErrorMessage()
+                    self.error_dialog = QtWidgets.QErrorMessage(self)
                     self.error_dialog.showMessage('Use "options" to change color of an activated operation.')
                 else:
                     color = QtWidgets.QColorDialog.getColor()

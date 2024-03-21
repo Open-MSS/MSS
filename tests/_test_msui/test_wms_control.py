@@ -56,7 +56,7 @@ class WMSControlWidgetSetup:
         parsed_url = urllib.parse.urlparse(self.url)
         self.scheme, self.host, self.port = parsed_url.scheme, parsed_url.hostname, parsed_url.port
 
-    def _setup(self, widget_type):
+    def _setup(self, widget_type, qtbot):
         wc.WMS_SERVICE_CACHE = {}
         if widget_type == "hsec":
             self.view = HSecViewMockup()
@@ -73,6 +73,7 @@ class WMSControlWidgetSetup:
             waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
             self.window = wc.VSecWMSControlWidget(
                 view=self.view, wms_cache=self.tempdir, waypoints_model=waypoints_model)
+        qtbot.add_widget(self.window)
         self.window.show()
 
         # Remove all previous cached URLs
@@ -84,7 +85,6 @@ class WMSControlWidgetSetup:
         QtTest.QTest.mouseClick(self.window.cbCacheEnabled, QtCore.Qt.LeftButton)
 
     def _teardown(self):
-        self.window.hide()
         shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
@@ -97,8 +97,8 @@ class WMSControlWidgetSetup:
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        self._setup("hsec")
+    def setup(self, qtbot):
+        self._setup("hsec", qtbot)
         yield
         self._teardown()
 
@@ -409,8 +409,8 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        self._setup("vsec")
+    def setup(self, qtbot):
+        self._setup("vsec", qtbot)
         yield
         self._teardown()
 
@@ -495,18 +495,16 @@ class TestWMSControlWidgetSetupSimple:
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
+        qtbot.add_widget(self.window)
         self.window.show()
 
         # Remove all previous cached URLs
         for url in self.window.multilayers.layers.copy():
             server = self.window.multilayers.listLayers.findItems(url, QtCore.Qt.MatchFixedString)[0]
             self.window.multilayers.delete_server(server)
-
-        yield
-        self.window.hide()
 
     def test_xml(self):
         testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)

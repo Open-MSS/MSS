@@ -519,7 +519,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.serverOptionsCb.currentIndexChanged.connect(self.server_options_handler)
 
         # set up user menu and add to toolbutton
-        self.user_menu = QtWidgets.QMenu()
+        self.user_menu = QtWidgets.QMenu(self.ui)
         self.profile_action = self.user_menu.addAction("Profile", self.open_profile_window)
         self.user_menu.addSeparator()
         self.logout_action = self.user_menu.addAction("Logout", self.logout)
@@ -790,7 +790,7 @@ class MSUIMscolab(QtCore.QObject):
         def on_context_menu(point):
             self.gravatar_menu.exec_(self.profile_dialog.gravatarLabel.mapToGlobal(point))
 
-        self.prof_diag = QtWidgets.QDialog()
+        self.prof_diag = QtWidgets.QDialog(self.ui)
         self.profile_dialog = ui_profile.Ui_ProfileWindow()
         self.profile_dialog.setupUi(self.prof_diag)
         self.profile_dialog.buttonBox.accepted.connect(lambda: self.prof_diag.close())
@@ -800,7 +800,7 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
 
         # add context menu for right click on image
-        self.gravatar_menu = QtWidgets.QMenu()
+        self.gravatar_menu = QtWidgets.QMenu(self.ui)
         self.gravatar_menu.addAction('Fetch Gravatar', lambda: self.fetch_gravatar(refresh=True))
         self.gravatar_menu.addAction('Remove Gravatar', lambda: self.remove_gravatar())
         self.profile_dialog.gravatarLabel.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
@@ -812,7 +812,7 @@ class MSUIMscolab(QtCore.QObject):
     def delete_account(self):
         # ToDo rename to delete_own_account
         if verify_user_token(self.mscolab_server_url, self.token):
-            w = QtWidgets.QWidget()
+            w = QtWidgets.QWidget(self.ui)
             qm = QtWidgets.QMessageBox
             reply = qm.question(w, self.tr('Continue?'),
                                 self.tr("You're about to delete your account. You cannot undo this operation!"),
@@ -870,7 +870,7 @@ class MSUIMscolab(QtCore.QObject):
                     self.add_proj_dialog.f_content = file_content
                     self.add_proj_dialog.selectedFile.setText(file_name)
 
-            self.proj_diag = QtWidgets.QDialog()
+            self.proj_diag = QtWidgets.QDialog(self.ui)
             self.add_proj_dialog = add_operation_ui.Ui_addOperationDialog()
             self.add_proj_dialog.setupUi(self.proj_diag)
             self.add_proj_dialog.f_content = None
@@ -897,21 +897,21 @@ class MSUIMscolab(QtCore.QObject):
         description = self.add_proj_dialog.description.toPlainText()
         category = self.add_proj_dialog.category.text()
         if not path:
-            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog = QtWidgets.QErrorMessage(self.ui)
             self.error_dialog.showMessage('Path can\'t be empty')
             return
         elif not description:
-            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog = QtWidgets.QErrorMessage(self.ui)
             self.error_dialog.showMessage('Description can\'t be empty')
             return
         # same regex as for path validation
         elif not re.match("^[a-zA-Z0-9_-]*$", category):
-            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog = QtWidgets.QErrorMessage(self.ui)
             self.error_dialog.showMessage('Category can\'t contain spaces or special characters')
             return
         # regex checks if the whole path from beginning to end only contains alphanumerical characters or _ and -
         elif not re.match("^[a-zA-Z0-9_-]*$", path):
-            self.error_dialog = QtWidgets.QErrorMessage()
+            self.error_dialog = QtWidgets.QErrorMessage(self.ui)
             self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
 
@@ -943,7 +943,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.conn.handle_new_operation(op_id)
                 self.signal_operation_added.emit(op_id, path)
             else:
-                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog = QtWidgets.QErrorMessage(self.ui)
                 self.error_dialog.showMessage('The path already exists')
 
     def get_recent_op_id(self):
@@ -1134,7 +1134,7 @@ class MSUIMscolab(QtCore.QObject):
 
     def handle_leave_operation(self):
         logging.debug("handle_leave_operation")
-        w = QtWidgets.QWidget()
+        w = QtWidgets.QWidget(self.ui)
         qm = QtWidgets.QMessageBox
         reply = qm.question(w, self.tr('Mission Support System'),
                             self.tr("Do you want to leave this operation?"),

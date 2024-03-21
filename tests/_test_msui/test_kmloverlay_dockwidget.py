@@ -42,20 +42,20 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 class Test_KmlOverlayDockWidget:
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])
         self.view.map.gcpoints_path = mock.Mock(side_effect=lambda x, y: (x, y))
 
         self.window = kd.KMLOverlayControlWidget(view=self.view)
+        qtbot.add_widget(self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         # start load test
         self.window.select_all()
         self.window.remove_file()
         yield
-        self.window.close()
         if os.path.exists(save_kml):
             os.remove(save_kml)
 

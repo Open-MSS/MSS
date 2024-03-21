@@ -35,12 +35,11 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
 class Test_SuffixChange:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
+        qtbot.add_widget(self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_suffixchange(self):
         suffix = [' hPa', ' km', ' hft']

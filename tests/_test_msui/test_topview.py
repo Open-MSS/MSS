@@ -35,16 +35,16 @@ from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
+from tests.utils import set_force_close
 
 
 class Test_MSS_TV_MapAppearanceDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = tv.MSUI_TV_MapAppearanceDialog(settings=_DEFAULT_SETTINGS_TOPVIEW)
+        qtbot.add_widget(self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_show(self):
         pass
@@ -55,17 +55,17 @@ class Test_MSS_TV_MapAppearanceDialog:
 
 class Test_MSSTopViewWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         mainwindow = MSUIMainWindow()
+        qtbot.add_widget(mainwindow, before_close_func=set_force_close)
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
@@ -199,7 +199,7 @@ class Test_MSSTopViewWindow:
 
 class Test_TopViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mswms_server):
+    def setup(self, qtbot, mswms_server):
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -211,14 +211,15 @@ class Test_TopViewWMS:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         mainwindow = MSUIMainWindow()
+        qtbot.add_widget(mainwindow, before_close_func=set_force_close)
         self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
-        self.window.hide()
         shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):
@@ -241,16 +242,14 @@ class Test_TopViewWMS:
 
 
 class Test_MSUITopViewWindow:
-    @pytest.fixture(autouse=True)
-    def setup(self, qapp):
-        pass
-
-    def test_kwargs_update_does_not_harm(self):
+    def test_kwargs_update_does_not_harm(self, qtbot):
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         mainwindow = MSUIMainWindow()
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        qtbot.add_widget(mainwindow, before_close_func=set_force_close)
+        window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        qtbot.add_widget(window, before_close_func=set_force_close)
 
         # user_options is a global var
         from mslib.utils.config import user_options

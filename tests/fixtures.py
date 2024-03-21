@@ -32,7 +32,6 @@ import mslib.mswms.mswms
 import eventlet
 import eventlet.wsgi
 
-from PyQt5 import QtWidgets
 from contextlib import contextmanager
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, initialize_managers
@@ -41,8 +40,8 @@ from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
 
 
-@pytest.fixture
-def fail_if_open_message_boxes_left():
+@contextmanager
+def _fail_if_open_message_boxes_left():
     # Mock every MessageBox widget in the test suite to avoid unwanted freezes on unhandled error popups etc.
     with mock.patch("PyQt5.QtWidgets.QMessageBox.question") as q, \
             mock.patch("PyQt5.QtWidgets.QMessageBox.information") as i, \
@@ -57,21 +56,38 @@ def fail_if_open_message_boxes_left():
             pytest.fail(f"An unhandled message box popped up during your test!\n{summary}")
 
 
-@pytest.fixture
-def close_remaining_widgets():
+@contextmanager
+def _fail_if_any_widgets_left_open(qapp, qtbot):
     yield
-    # Try to close all remaining widgets after each test
-    for qobject in set(QtWidgets.QApplication.topLevelWindows() + QtWidgets.QApplication.topLevelWidgets()):
-        try:
-            qobject.destroy()
-        # Some objects deny permission, pass in that case
-        except RuntimeError:
-            pass
+
+    def assert_no_widgets_left_open():
+        widgets = set(qapp.topLevelWindows() + qapp.topLevelWidgets())
+        assert len(widgets) == 0, f"There are Qt widgets left open at the end of the test!\n{widgets=}"
+    qtbot.wait_until(assert_no_widgets_left_open)
+
+
+@contextmanager
+def _close_remaining_widgets(qapp, qtbot):
+    yield
+    for widget in set(qapp.topLevelWindows() + qapp.topLevelWidgets()):
+        widget.close()
+        widget.deleteLater()
+    qtbot.wait_until(lambda: len(qapp.topLevelWidgets()) == 0)
 
 
 @pytest.fixture
-def qapp(qapp, fail_if_open_message_boxes_left, close_remaining_widgets):
-    yield qapp
+def qtbot(qapp, qtbot):
+    """Override of the qtbot fixture from pytest-qt.
+
+    This fixture makes sure that every test using it will fail if there are either any
+    message boxes left open at the end or if any Qt widgets were not properly closed.
+    Afterwards it will destroy all remaining top-level widgets to make sure that they do
+    not affect the following tests.
+    """
+    with _close_remaining_widgets(qapp, qtbot), \
+        _fail_if_any_widgets_left_open(qapp, qtbot), \
+        _fail_if_open_message_boxes_left():
+        yield qtbot
 
 
 @pytest.fixture(scope="session")

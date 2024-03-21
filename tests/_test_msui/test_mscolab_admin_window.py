@@ -24,11 +24,11 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import mock
 import pytest
 
 from mslib.mscolab.conf import mscolab_settings
-from PyQt5 import QtCore, QtTest, QtWidgets
+from PyQt5 import QtCore, QtTest
+from tests.utils import set_force_close
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
@@ -59,6 +59,7 @@ class Test_MscolabAdminWindow:
         assert add_user_to_operation(path="tokyo", emailid=self.userdata[0], access_level="creator")
 
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
@@ -72,12 +73,8 @@ class Test_MscolabAdminWindow:
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield
         self.window.mscolab.logout()
-        if self.window.mscolab.admin_window:
-            self.window.mscolab.admin_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
-            self.window.close()
 
     def test_permission_filter(self):
         len_added_users = self.admin_window.modifyUsersTable.rowCount()

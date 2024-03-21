@@ -35,16 +35,16 @@ from PyQt5 import QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
+from tests.utils import set_force_close
 
 
 class Test_MSS_SV_OptionsDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
+        qtbot.add_widget(self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_show(self):
         pass
@@ -73,7 +73,7 @@ class Test_MSS_SV_OptionsDialog:
 
 class Test_MSSSideViewWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
@@ -81,10 +81,9 @@ class Test_MSSSideViewWindow:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         self.window = tv.MSUISideViewWindow(model=waypoints_model)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_open_wms(self):
         self.window.cbTools.currentIndexChanged.emit(1)
@@ -126,7 +125,7 @@ class Test_MSSSideViewWindow:
 
 class Test_SideViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mswms_server):
+    def setup(self, qtbot, mswms_server):
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -137,13 +136,13 @@ class Test_SideViewWMS:
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         self.window = tv.MSUISideViewWindow(model=waypoints_model)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
         self.wms_control = self.window.docks[0].widget()
         self.wms_control.multilayers.cbWMS_URL.setEditText("")
         yield
-        self.window.hide()
         shutil.rmtree(self.tempdir)
 
     def query_server(self, qtbot, url):

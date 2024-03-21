@@ -32,12 +32,13 @@ import pytest
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
 from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
+from tests.utils import set_force_close
 import mslib.msui.tableview as tv
 
 
 class Test_TableView:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         # Create an initital flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),
                              ft.Waypoint(48.10, 10.27, 200),
@@ -50,11 +51,10 @@ class Test_TableView:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         self.window = tv.MSUITableViewWindow(model=waypoints_model)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.show()
 
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_open_hex(self):
         """

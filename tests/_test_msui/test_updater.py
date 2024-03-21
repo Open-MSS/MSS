@@ -56,7 +56,7 @@ class SubprocessSameMock:
 @mock.patch("mslib.utils.qt.Worker.start", Worker.run)
 class Test_MSS_ShortcutDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.updater = Updater()
         self.status = ""
         self.update_available = False
@@ -128,8 +128,9 @@ class Test_MSS_ShortcutDialog:
     @mock.patch("subprocess.Popen", new=SubprocessSameMock)
     @mock.patch("subprocess.run", new=SubprocessSameMock)
     @mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Yes)
-    def test_ui(self, mock):
+    def test_ui(self, mock, qtbot):
         ui = UpdaterUI()
+        qtbot.add_widget(ui)
         ui.updater.on_update_available.emit("", "")
         assert ui.statusLabel.text() == "Update successful. Please restart MSS."
         assert ui.btRestart.isEnabled()

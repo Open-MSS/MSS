@@ -38,7 +38,7 @@ from mslib import __version__
 from tests.constants import ROOT_DIR, POSIX, MSUI_CONFIG_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
-from tests.utils import ExceptionMock
+from tests.utils import ExceptionMock, set_force_close
 from mslib.utils.config import read_config_file
 
 
@@ -67,17 +67,18 @@ def test_main():
 
 class Test_MSS_TutorialMode:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qapp, qtbot):
         qapp.setApplicationDisplayName("MSUI")
         self.main_window = msui_mw.MSUIMainWindow(tutorial_mode=True)
+        qtbot.add_widget(self.main_window, before_close_func=set_force_close)
+        with qtbot.wait_active(self.main_window):
+            self.main_window.show()
+            self.main_window.activateWindow()
         self.main_window.create_new_flight_track()
-        self.main_window.show()
         self.main_window.shortcuts_dlg = msui_mw.MSUI_ShortcutsDialog(
             tutorial_mode=True)
         self.main_window.show_shortcuts(search_mode=True)
         self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
-        yield
-        self.main_window.hide()
 
     def test_tutorial_dir(self):
         dir_name, name = fs.path.split(self.tutorial_dir)
@@ -95,10 +96,9 @@ class Test_MSS_TutorialMode:
 
 class Test_MSS_AboutDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = msui_mw.MSUI_AboutDialog()
-        yield
-        self.window.hide()
+        qtbot.add_widget(self.window)
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
@@ -109,13 +109,13 @@ class Test_MSS_AboutDialog:
 
 class Test_MSS_ShortcutDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.main_window = msui_mw.MSUIMainWindow()
-        self.main_window.show()
+        qtbot.add_widget(self.main_window, before_close_func=set_force_close)
+        with qtbot.wait_active(self.main_window):
+            self.main_window.show()
+            self.main_window.activateWindow()
         self.shortcuts = msui_mw.MSUI_ShortcutsDialog()
-        yield
-        self.shortcuts.hide()
-        self.main_window.hide()
 
     def test_shortcuts_present(self):
         # Assert list gets filled properly
@@ -169,13 +169,14 @@ class Test_MSSSideViewWindow:
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.sample_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '../',
             'data/')
 
         self.window = msui.MSUIMainWindow()
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.create_new_flight_track()
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -185,9 +186,6 @@ class Test_MSSSideViewWindow:
             'empty_msui_settings.json',
         )
         read_config_file(path=config_file)
-        for i in range(self.window.listViews.count()):
-            self.window.listViews.item(i).window.hide()
-        self.window.hide()
 
     def test_no_updater(self):
         assert not hasattr(self.window, "updater")

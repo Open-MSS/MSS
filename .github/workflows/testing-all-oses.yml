@@ -19,7 +19,6 @@ jobs:
       fail-fast: false
       matrix:
         os: ["macos-13", "macos-14", "ubuntu-latest"]
-        order: ["normal", "reverse"]
     steps:
     - uses: actions/checkout@v4
     - name: Build requirements.txt file
@@ -29,6 +28,7 @@ jobs:
           sed -e "s/menuinst.*//" |
           sed -e "s/.*://" > requirements.tmp.txt
         cat requirements.d/development.txt >> requirements.tmp.txt
+        echo "pytest-randomly" >> requirements.tmp.txt
         sed -e '/^$/d' -e '/^#.*$/d' requirements.tmp.txt > requirements.txt
         rm requirements.tmp.txt
         cat requirements.txt
@@ -50,4 +50,4 @@ jobs:
       # TODO: fix those tests and drop the ignores
       run: micromamba run -n ci env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib
         --ignore=tests/_test_msui/test_sideview.py --ignore=tests/_test_msui/test_topview.py --ignore=tests/_test_msui/test_wms_control.py
-        ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
+        tests

@@ -41,7 +41,7 @@ class Test_Editor:
     save_file_name = fs.path.join(ROOT_DIR, "testeditor_save.json")
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             self.window = editor.EditorMainWindow()
             self.save_file_name = self.save_file_name
@@ -49,7 +49,6 @@ class Test_Editor:
             yield
             if os.path.exists(self.save_file_name):
                 os.remove(self.save_file_name)
-            self.window.hide()
 
     @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
     def test_file_open(self, mockfile):
