@@ -7,44 +7,17 @@
       "name": "MSUI",
       "description": "Mission Support System UI",
       "activate": true,
-      "command": ["{{ PREFIX }}/bin/msui.py"],
       "icon": "{{ MENU_DIR }}/msui.{{ ICON_EXT }}",
+      "command": ["{{ PREFIX }}/bin/msui.py"],
       "platforms": {
         "linux": {
-          "Categories": ["Science", "Education"],
+          "Categories": ["Internet", "Science"],
           "Keywords": ["documentation", "information"],
           "StartupNotify": true,
-          "command": ["{{ PREFIX }}/bin/msui.py"],
           "MimeType": ["application/x-menuinst"],
           "glob_patterns": {
-            "application/x-menuinst": ["*.menuinst"]
+            "application/x-menuinst": "*.menuinst"
           }
-        },
-        "osx": {
-          "CFBundleDocumentTypes": [
-            {
-              "CFBundleTypeName": "org.conda.menuinst.opener",
-              "CFBundleTypeRole": "Viewer",
-              "LSItemContentTypes": ["org.conda.menuinst.main-file-uti"],
-              "LSHandlerRank": "Default"
-            }
-          ],
-          "UTExportedTypeDeclarations": [
-            {
-              "UTTypeConformsTo": ["public.data", "public.content"],
-              "UTTypeIdentifier": "org.conda.menuinst.main-file-uti",
-              "UTTypeTagSpecification": [
-                {
-                  "public.filename-extension": ["menuinst"]
-                }
-              ]
-            }
-          ]
-        },
-        "windows": {
-          "command": ["{{ SCRIPTS_DIR }}/msui.py"],
-          "desktop": true,
-          "quicklaunch": true
         }
       }
     }
