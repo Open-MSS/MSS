@@ -17,7 +17,7 @@ class JsonView(QtWidgets.QTreeView):
 
     def _menu(self, position):
         """Show the actions of the DataType (if any)."""
-        menu = QtWidgets.QMenu()
+        menu = QtWidgets.QMenu(self)
         index = self.indexAt(position)
         data = index.data(TypeRole)
         if data is None:

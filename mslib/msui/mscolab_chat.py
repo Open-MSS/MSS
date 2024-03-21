@@ -460,7 +460,7 @@ class MessageItem(QtWidgets.QWidget):
         else:
             self.attachment_path = message["text"]
         self.context_menu = QtWidgets.QMenu(self)
-        self.textArea = QtWidgets.QWidget()
+        self.textArea = QtWidgets.QWidget(self)
         self.replyArea = None
         self.replyScroll = QtWidgets.QScrollArea()
         self.setup_message_box()
