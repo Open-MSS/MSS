@@ -30,11 +30,9 @@
 """
 
 import argparse
-import hashlib
 import logging
 import os
 import platform
-import shutil
 import sys
 import fs
 
@@ -53,22 +51,17 @@ sys.path.append(constants.MSUI_CONFIG_PATH)
 
 
 def main(tutorial_mode=False):
-    try:
-        prefix = os.environ["CONDA_DEFAULT_ENV"]
-    except KeyError:
-        prefix = ""
-    app_prefix = prefix
-    if prefix:
-        app_prefix = f"-{prefix}"
-    icon_hash = hashlib.md5('.'.join([__version__, app_prefix]).encode('utf-8')).hexdigest()
+    """
+        Entry point of the msui program.
 
+        @param tutorial_mode: Specifies whether the program should run in tutorial mode or not.
+
+      """
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
                         default=os.path.join(constants.MSUI_CONFIG_PATH, "msui.log"))
-    parser.add_argument("-m", "--menu", help="adds msui to menu", action="store_true", default=False)
-    parser.add_argument("-d", "--deinstall", help="removes msui from menu", action="store_true", default=False)
     parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     args = parser.parse_args()
@@ -92,41 +85,6 @@ def main(tutorial_mode=False):
         sys.exit()
 
     setup_logging(args)
-
-    if args.menu:
-        # Experimental feature to get msui into application menu
-        if platform.system() == "Linux":
-            icon_size = '48x48'
-            src_icon_path = icons(icon_size)
-            icon_destination = constants.POSIX["icon_destination"].format(icon_size, icon_hash)
-            dirname = os.path.dirname(icon_destination)
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
-            shutil.copyfile(src_icon_path, icon_destination)
-            desktop = constants.POSIX["desktop"]
-            application_destination = constants.POSIX["application_destination"].format(app_prefix)
-            dirname = os.path.dirname(application_destination)
-            if not os.path.exists(dirname):
-                os.makedirs(dirname)
-            if prefix:
-                prefix = f"({prefix})"
-            desktop = desktop.format(prefix,
-                                     os.path.join(sys.prefix, "bin", "msui"),
-                                     icon_destination)
-            with open(application_destination, 'w') as f:
-                f.write(desktop)
-            logging.info("menu entry created")
-        sys.exit()
-    if args.deinstall:
-        application_destination = constants.POSIX["application_destination"].format(app_prefix)
-        if os.path.exists(application_destination):
-            os.remove(application_destination)
-        icon_size = '48x48'
-        icon_destination = constants.POSIX["icon_destination"].format(icon_size, icon_hash)
-        if os.path.exists(icon_destination):
-            os.remove(icon_destination)
-        logging.info("menu entry removed")
-        sys.exit()
 
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
