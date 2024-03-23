@@ -55,7 +55,7 @@ EXTRA = {
     "roland": {
         "eduPersonEntitlement": "urn:mace:swamid.se:foo:bar",
         "schacGender": "male",
-        "schacUserPresenceID": "skype:pepe.perez",
+        "schacUserPresenceID": "sky:pepe.perez",
     }
 }
 
