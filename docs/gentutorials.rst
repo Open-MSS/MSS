@@ -60,10 +60,8 @@ Getting Started
 On the terminal, type the following ::
 
  cd ..../MSS/$
- $ export PYTHONPATH=.../MSS        # Path of MSS
  $ export MSUI_CONFIG_PATH=/tmp/msui_tutorials   # Path where msui_settings.json gets created and all heler images
- $ mamba activate mssdev
- (mssdev)$ mamba install --file requirements.d/tutorials.txt
+ $ pixi shell -e tutorials
 
 This will install all the dependencies required for running of the tutorials.
 
@@ -80,8 +78,7 @@ Now, just go into the **../MSS/tutorials/** directory ::
 
 **Note**
 
-You must go into the tutorials directcory and then run the .py files. And always remember to add the PYTHONPATH to
-........../MSS/ directory.
+You must go into the tutorials directcory and then run the .py files.
 You have also to set the MSUI_CONFIG_PATH to a tmp directory. The comparison images are created below this directory.
 The user's msui_settings.conf is not changed.
 

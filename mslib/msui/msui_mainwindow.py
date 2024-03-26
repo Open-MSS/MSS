@@ -605,7 +605,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             except Exception as ex:
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
-                    self.tr(f"ERROR: Configuration\n\n{plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
             try:
                 self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Import")
@@ -633,7 +633,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error export plugins"),
-                    self.tr(f"ERROR: Configuration\n\n{plugins,}\n\nthrows {type(ex)} error:\n{ex}"))
+                    self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
             try:
                 self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Export")

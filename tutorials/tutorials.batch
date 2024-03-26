@@ -17,7 +17,7 @@ export XDG_CACHE_HOME=$(mktemp -d)
 
 ##########################################################################
 # wms tutorial
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_wms.py
+python tutorial_wms.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -34,7 +34,7 @@ cd ..
 # kml tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_kml.py
+python tutorial_kml.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -52,7 +52,7 @@ cd ..
 # hexagoncontrol tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_hexagoncontrol.py
+python tutorial_hexagoncontrol.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -70,7 +70,7 @@ cd ..
 # performancesettings tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_performancesettings.py
+python tutorial_performancesettings.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -90,7 +90,7 @@ cd ..
 
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_remotesensing.py
+python tutorial_remotesensing.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -108,7 +108,7 @@ cd ..
 # satellitetrack tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_satellitetrack.py
+python tutorial_satellitetrack.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -126,7 +126,7 @@ cd ..
 ##################################################
 # tutorial waypoints
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_waypoints.py
+python tutorial_waypoints.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -144,7 +144,7 @@ cd ..
 ################################################################
 # views tutorial, 4K
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_views.py
+python tutorial_views.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -166,12 +166,12 @@ cd ..
 
 # start a mscolab server on standard port after you have it seeded
 # we should have a seed for tutorials
-$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py db --seed
+python ../mslib/mscolab/mscolab.py db --seed
 
-$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py start &
+python ../mslib/mscolab/mscolab.py start &
 
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/Miniforge/envs/mssdev/bin/python tutorial_mscolab.py
+python tutorial_mscolab.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*

@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools >= 40.8.0", "future"]
+build-backend = "setuptools.build_meta:__legacy__"
+
 [tool.codespell]
 exclude-file = "codespell-ignored-lines.txt"
 ignore-words-list = [
