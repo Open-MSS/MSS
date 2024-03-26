@@ -57,7 +57,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)  # noqa: A003
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
-    password = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255))
     registered_on = db.Column(AwareDateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(AwareDateTime, nullable=True)
