@@ -1,27 +1,20 @@
 name: Pytest MSS
 
 on:
-  workflow_call:
-    inputs:
-      branch_name:
-        required: true
-        type: string
-      event_name:
-        required: true
-        type: string
-    secrets:
-      PAT:
-        required: true
-
-env:
-  mamba-env: mss-${{ inputs.branch_name }}-env
+  push:
+    branches:
+      - develop
+      - stable
+      - 'GSOC**'
+  pull_request:
+    branches:
+      - develop
+      - stable
+      - 'GSOC**'
 
 jobs:
   Test-MSS:
     runs-on: ubuntu-latest
-
-    container:
-      image: openmss/testing-${{ inputs.branch_name }}
 
     strategy:
       fail-fast: false
@@ -31,57 +24,20 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Check for changed dependencies
-      run: cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt ||
-        (echo Dependencies differ && echo "triggerdockerbuild=yes" >> $GITHUB_ENV )
-
-    - name: Install pyvirtualdisplay if on stable
-      if: ${{ inputs.branch_name == 'stable' }}
-      run: |
-        source /opt/conda/etc/profile.d/conda.sh
-        source /opt/conda/etc/profile.d/mamba.sh
-        mamba install -n mss-${{ inputs.branch_name }}-env pyvirtualdisplay
-
-    - name: Always rebuild dependencies for scheduled builds
-      if: ${{ inputs.event_name == 'schedule' && inputs.branch_name == 'stable' && env.triggerdockerbuild != 'yes' }}
-      run: echo "triggerdockerbuild=yes" >> $GITHUB_ENV
-
-    - name: Reinstall dependencies if changed
-      if: ${{ env.triggerdockerbuild == 'yes' }}
-      run: |
-        cat localbuild/meta.yaml |
-          sed -n '/^requirements:/,/^test:/p' |
-          sed -e "s/.*- //" |
-          sed -e "s/menuinst.*//" |
-          sed -e "s/.*://" > reqs.txt
-        cat requirements.d/development.txt >> reqs.txt
-        cat reqs.txt
-        mamba env remove -n ${{ env.mamba-env }}
-        mamba create -y -n ${{ env.mamba-env }} --file reqs.txt
-
-    - name: Print conda list
-      run: mamba run --no-capture-output -n ${{ env.mamba-env }} mamba list
+    - uses: prefix-dev/setup-pixi@v0.5.1
+      with:
+        pixi-version: latest
+        cache: true
+        environments: dev
 
     - name: Run tests
       timeout-minutes: 10
-      run: mamba run --no-capture-output -n ${{ env.mamba-env }} xvfb-run pytest
+      run: pixi run -e dev xvfb-run pytest
         -v -n 6 --dist loadfile --max-worker-restart 4 --durations=20 --cov=mslib
         ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
 
     - name: Collect coverage
-      if: ${{ (inputs.event_name == 'push' || inputs.event_name == 'pull_request') && matrix.order == 'normal' }}
+      if: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && matrix.order == 'normal' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git config --global --add safe.directory /__w/MSS/MSS
-        mamba install -n ${{ env.mamba-env }} coveralls
-        mamba run --no-capture-output -n ${{ env.mamba-env }} coveralls --service=github
-
-    - name: Invoke dockertesting image creation
-      if: ${{ !cancelled() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
-      uses: benc-uk/workflow-dispatch@v1.2.2
-      with:
-        workflow: Update Image testing-${{ inputs.branch_name }}
-        repo: Open-MSS/dockertesting
-        ref: main
-        token: ${{ secrets.PAT }}
+      run: pixi run -e dev coveralls --service=github
