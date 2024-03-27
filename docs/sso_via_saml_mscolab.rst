@@ -38,7 +38,7 @@ In this documentation, you will go through the following topics.
 ***************
 This documentation will explain how to configure MSColab with an existing IdP or multiple IdPs, along with examples of implementation.
 
-If you are not aware of how the SAML process works in the MSColab server, it is highly recommended to set up msidp and test it with MSColab as an initial step before configuring existing 3rd party IdPs.
+If you are not aware of how the SAML process works in the MSColab server, it is highly recommended to set up msidp and test it with MSColab as an initial step before configuring existing 3rd party IdPs (msidp is solely for development and testing purposes, do not use in production environments).
 
 .. note::
     You can find instructions to set up msidp by `conf_sso_test_msscolab.rst`.
