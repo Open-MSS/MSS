@@ -37,7 +37,7 @@ from mslib.mscolab.message_type import MessageType
 
 
 class AwareDateTime(sqlalchemy.types.TypeDecorator):
-    impl = sqlalchemy.types.DateTime
+    impl = sqlalchemy.types.TIMESTAMP
     cache_ok = True
 
     def process_bind_param(self, value, dialect):

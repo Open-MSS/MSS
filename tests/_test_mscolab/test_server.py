@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import time
 import pytest
 import json
 import io
@@ -234,7 +233,6 @@ class Test_Server:
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
-            time.sleep(1)
             fm.save_file(operation.id, "content2", user)
             # the newest change is on index 0, because it has a recent created_at time
             response = test_client.get('/get_all_changes', data={"token": token,
@@ -252,8 +250,6 @@ class Test_Server:
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
-            # we need to wait to get an updated created_at
-            time.sleep(1)
             fm.save_file(operation.id, "content2", user)
             all_changes = fm.get_all_changes(operation.id, user)
             response = test_client.get('/get_change_content', data={"token": token,
