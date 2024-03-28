@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import time
 import fs
 import pytest
 
@@ -172,8 +171,6 @@ class Test_Files:
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V11")
             assert self.fm.save_file(operation.id, "content1", self.user)
-            # we need to wait to get an updated created_at
-            time.sleep(1)
             assert self.fm.save_file(operation.id, "content2", self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             # the newest change is on index 0, because it has a recent created_at time
@@ -186,9 +183,7 @@ class Test_Files:
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V12", content='initial')
             assert self.fm.save_file(operation.id, "content1", self.user)
-            time.sleep(1)
             assert self.fm.save_file(operation.id, "content2", self.user)
-            time.sleep(1)
             assert self.fm.save_file(operation.id, "content3", self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             previous_change = self.fm.get_change_content(all_changes[2]["id"], self.user)

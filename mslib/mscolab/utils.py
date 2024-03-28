@@ -55,7 +55,7 @@ def get_message_dict(message):
         "message_type": message.message_type,
         "reply_id": message.reply_id,
         "replies": [],
-        "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S %z")
+        "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S.%f %z")
     }
 
 
