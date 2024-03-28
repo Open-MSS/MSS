@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import time
 import os
 import sys
 import fs
@@ -452,7 +451,6 @@ class Test_Mscolab:
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             topview_0.window.close()
 
-        time.sleep(1)
         self._activate_flight_track_at_index(0)
 
         def assert_label_text():
@@ -460,7 +458,6 @@ class Test_Mscolab:
             assert self.window.usernameLabel.text() == self.userdata[1]
         qtbot.wait_until(assert_label_text)
 
-        time.sleep(2)
         self.window.mscolab.logout()
 
         def assert_logout_text():
