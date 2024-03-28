@@ -369,7 +369,7 @@ def messages():
     user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
     if fm.is_member(user.id, op_id):
-        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00.000 +00:00"))
+        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00.000000 +00:00"))
         chat_messages = cm.get_messages(op_id, timestamp)
         return jsonify({"messages": chat_messages})
     return "False"
