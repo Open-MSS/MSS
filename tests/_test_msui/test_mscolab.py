@@ -448,10 +448,9 @@ class Test_Mscolab:
         self._activate_operation_at_index(0)
         # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
 
+        self._activate_flight_track_at_index(0)
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             topview_0.window.close()
-
-        self._activate_flight_track_at_index(0)
 
         def assert_label_text():
             # verify logged in
