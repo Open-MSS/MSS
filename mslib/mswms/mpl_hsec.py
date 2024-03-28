@@ -49,6 +49,8 @@ from mslib.mswms.utils import make_cbar_labels_readable
 
 BASEMAP_CACHE = {}
 BASEMAP_REQUESTS = []
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.INFO)
 
 
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):

@@ -212,6 +212,9 @@ for standard_name in _TARGETS:
     elif standard_name not in _TITLES:
         _TITLES[standard_name] = standard_name.replace("_", " ")
 
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.INFO)
+
 
 def get_standard_names():
     return _TARGETS

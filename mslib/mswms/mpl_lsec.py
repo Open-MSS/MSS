@@ -36,6 +36,8 @@ from mslib.utils.units import convert_to
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.INFO)
 
 
 class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):

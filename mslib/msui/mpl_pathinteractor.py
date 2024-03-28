@@ -57,6 +57,10 @@ from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
 
 
+mpl_logger = logging.getLogger('matplotlib')
+mpl_logger.setLevel(logging.INFO)
+
+
 def distance_point_linesegment(p, l1, l2):
     """Computes the distance between a point p and a line segment given by its
        endpoints l1 and l2.
