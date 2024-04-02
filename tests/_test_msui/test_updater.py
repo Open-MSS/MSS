@@ -56,7 +56,7 @@ class SubprocessSameMock:
 @mock.patch("mslib.utils.qt.Worker.start", Worker.run)
 class Test_MSS_ShortcutDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.updater = Updater()
         self.status = ""
         self.update_available = False

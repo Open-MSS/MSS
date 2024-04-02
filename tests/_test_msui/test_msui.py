@@ -67,7 +67,7 @@ def test_main():
 
 class Test_MSS_TutorialMode:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot, qapp):
         qapp.setApplicationDisplayName("MSUI")
         self.main_window = msui_mw.MSUIMainWindow(tutorial_mode=True)
         self.main_window.create_new_flight_track()
@@ -95,7 +95,7 @@ class Test_MSS_TutorialMode:
 
 class Test_MSS_AboutDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = msui_mw.MSUI_AboutDialog()
         yield
         self.window.hide()
@@ -109,7 +109,7 @@ class Test_MSS_AboutDialog:
 
 class Test_MSS_ShortcutDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.main_window = msui_mw.MSUIMainWindow()
         self.main_window.show()
         self.shortcuts = msui_mw.MSUI_ShortcutsDialog()
@@ -169,7 +169,7 @@ class Test_MSSSideViewWindow:
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.sample_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
             '../',

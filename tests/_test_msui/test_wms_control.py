@@ -97,7 +97,7 @@ class WMSControlWidgetSetup:
 
 class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self._setup("hsec")
         yield
         self._teardown()
@@ -409,7 +409,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
 
 class Test_VSecWMSControlWidget(WMSControlWidgetSetup):
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self._setup("vsec")
         yield
         self._teardown()
@@ -495,7 +495,7 @@ class TestWMSControlWidgetSetupSimple:
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.view = HSecViewMockup()
         self.window = wc.HSecWMSControlWidget(view=self.view)
         self.window.show()

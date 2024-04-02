@@ -70,8 +70,15 @@ def close_remaining_widgets():
 
 
 @pytest.fixture
-def qapp(qapp, fail_if_open_message_boxes_left, close_remaining_widgets):
-    yield qapp
+def qtbot(qtbot, fail_if_open_message_boxes_left, close_remaining_widgets):
+    yield qtbot
+    # Wait for a while after the requesting test has finished. At time of writing this
+    # is required to (mostly) stabilize the coverage reports, because tests don't
+    # properly close their Qt-related stuff and therefore there is no guarantee about
+    # what the Qt event loop has or hasn't done yet. Waiting just gives it a bit more
+    # time to converge on the same result every time the tests are executed. This is a
+    # band-aid fix, the proper fix is to make sure each test cleans up after itself.
+    qtbot.wait(5000)
 
 
 @pytest.fixture(scope="session")

@@ -42,7 +42,7 @@ save_kml = os.path.join(ROOT_DIR, "merged_file123.kml")
 class Test_KmlOverlayDockWidget:
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.view = mock.Mock()
         self.view.map = mock.Mock(side_effect=lambda x, y: (x, y))
         self.view.map.plot = mock.Mock(return_value=[mock.Mock()])
