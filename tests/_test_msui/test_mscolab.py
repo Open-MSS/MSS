@@ -32,6 +32,7 @@ import fs.opener.errors
 import requests.exceptions
 import mock
 import pytest
+import weakref
 
 import mslib.utils.auth
 from mslib.mscolab.conf import mscolab_settings
@@ -411,7 +412,7 @@ class Test_Mscolab:
         qtbot.wait_until(assert_label_text)
         # ToDo verify all operations disabled again without a visual check
 
-    def test_multiple_flightpath_switching_to_flighttrack_snd_logout(self, qtbot):
+    def test_multiple_flightpath_switching_to_flighttrack_and_logout(self, qtbot):
         """
         checks that we can switch in topviews with the multiple flightpath dockingwidget
         between local flight track and operations, and we are able to cycle a login/logout
@@ -434,6 +435,11 @@ class Test_Mscolab:
             assert len(self.window.get_active_views()) == 1
         qtbot.wait_until(assert_active_views)
         topview_0 = self.window.listViews.item(0)
+        topview_0.window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+        def assert_attribute():
+            assert topview_0.window.testAttribute(QtCore.Qt.WA_DeleteOnClose)
+        qtbot.wait_until(assert_attribute)
 
         # open multiple flightpath first window
         topview_0.window.cbTools.currentIndexChanged.emit(6)
@@ -451,6 +457,11 @@ class Test_Mscolab:
         self._activate_flight_track_at_index(0)
         with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
             topview_0.window.close()
+
+        def assert_window_closed():
+            ref = weakref.ref(topview_0.window)
+            assert ref() is None
+        qtbot.wait_until(assert_window_closed)
 
         def assert_label_text():
             # verify logged in
