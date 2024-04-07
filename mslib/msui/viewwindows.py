@@ -76,6 +76,11 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
         Overloads QtGui.QMainWindow.closeEvent(). This method is called if
         Qt receives a window close request for our application window.
         """
+        if self.mainwindow_signal_logout_mscolab is not None:
+            # we need to disconnect the mainwindow_signal_logout when the topview is closed
+            # the next topview will connect one again
+            self.mainwindow_signal_logout_mscolab.disconnect()
+
         if self.force_close:
             ret = QtWidgets.QMessageBox.Yes
         else:
