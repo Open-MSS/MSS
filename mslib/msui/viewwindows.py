@@ -81,6 +81,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
             # we need to disconnect the mainwindow_signal_logout when the topview is closed
             # the next topview will connect one again
             self.mainwindow_signal_logout_mscolab.disconnect()
+            self.docks[5] = None
 
         if self.force_close:
             ret = QtWidgets.QMessageBox.Yes
