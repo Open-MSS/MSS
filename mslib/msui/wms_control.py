@@ -52,7 +52,7 @@ from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
-from mslib.utils.time import parse_iso_datetime, parse_iso_duration
+from mslib.utils.time_handling import parse_iso_datetime, parse_iso_duration
 from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
 from mslib.utils.config import modify_config_file
 

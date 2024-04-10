@@ -62,7 +62,7 @@ from flask_httpauth import HTTPBasicAuth
 from multidict import CIMultiDict
 from mslib.utils import conditional_decorator
 from mslib.utils.get_content import get_content
-from mslib.utils.time import parse_iso_datetime
+from mslib.utils.time_handling import parse_iso_datetime
 from mslib.index import create_app
 from mslib.mswms.gallery_builder import add_image, write_html, add_levels, add_times, \
     write_doc_index, write_code_pages, STATIC_LOCATION, DOCS_LOCATION

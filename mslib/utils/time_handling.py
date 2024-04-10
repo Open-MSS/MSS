@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.time
-    ~~~~~~~~~~~~~~~~
+    mslib.utils.time_handling
+    ~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Collection of functions all around time handling.
 
