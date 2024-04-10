@@ -32,7 +32,6 @@ import fs.opener.errors
 import requests.exceptions
 import mock
 import pytest
-import weakref
 
 import mslib.utils.auth
 from mslib.mscolab.conf import mscolab_settings
@@ -435,6 +434,7 @@ class Test_Mscolab:
             assert len(self.window.get_active_views()) == 1
         qtbot.wait_until(assert_active_views)
         topview_0 = self.window.listViews.item(0)
+        assert topview_0.window.tv_window_exists is True
         topview_0.window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         def assert_attribute():
@@ -459,8 +459,7 @@ class Test_Mscolab:
             topview_0.window.close()
 
         def assert_window_closed():
-            ref = weakref.ref(topview_0.window)
-            assert ref() is None
+            assert topview_0.window.tv_window_exists is False
         qtbot.wait_until(assert_window_closed)
 
         def assert_label_text():

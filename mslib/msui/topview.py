@@ -359,7 +359,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
 
-                self.mainwindow_signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
+                self.mainwindow_signal_logout_mscolab.connect(self.signal_logout_mscolab.emit)
                 self.mainwindow_signal_listFlighttrack_doubleClicked.connect(
                     lambda: self.signal_listFlighttrack_doubleClicked.emit())
                 self.mainwindow_signal_permission_revoked.connect(
