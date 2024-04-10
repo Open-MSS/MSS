@@ -52,6 +52,13 @@ setup(
     zip_safe=False,
     install_requires=[],  # we use conda build recipe
     entry_points=dict(
-        console_scripts=['msui = mslib.msui.msui:main'],
+        console_scripts=[
+            "mscolab = mslib.mscolab.mscolab:main",
+            "mss = mslib.msui.mss:main",
+            "mssautoplot = mslib.utils.mssautoplot:main",
+            "msui = mslib.msui.msui:main",
+            "mswms = mslib.mswms.mswms:main",
+            "mswms_demodata = mslib.mswms.demodata:main",
+        ],
     ),
 )
