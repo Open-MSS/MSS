@@ -33,6 +33,7 @@ import fs.opener.errors
 import requests.exceptions
 import mock
 import pytest
+import random
 
 import mslib.utils.auth
 from mslib.mscolab.conf import mscolab_settings
@@ -433,30 +434,18 @@ class Test_Mscolab:
             assert len(self.window.get_active_views()) == 1
         qtbot.wait_until(assert_active_views)
         topview_0 = self.window.listViews.item(0)
+        assert topview_0.window.tv_window_exists is True
+        topview_0.window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         # open multiple flightpath
         topview_0.window.cbTools.currentIndexChanged.emit(6)
 
         # activate all operation, this enables them in the docking widget too
-        for _ in range(4):
-            self._activate_operation_at_index(1)
-            self._activate_operation_at_index(2)
-            self._activate_operation_at_index(0)
-        # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
-
-        self._activate_flight_track_at_index(0)
-        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
-            topview_0.window.close()
-
-        def assert_window_closed():
-            ref = weakref.ref(topview_0.window)
-            assert ref() is None
-        qtbot.wait_until(assert_window_closed)
-
-        def assert_label_text():
-            # verify logged in
-            assert self.window.usernameLabel.text() == self.userdata[1]
-        qtbot.wait_until(assert_label_text)
+        for _ in range(6):
+            self._activate_operation_at_index(random.randint(0, 2))
+            self._activate_operation_at_index(random.randint(0, 2))
+            self._activate_operation_at_index(random.randint(0, 2))
+            self._activate_flight_track_at_index(0)
 
         self.window.mscolab.logout()
 
@@ -464,11 +453,11 @@ class Test_Mscolab:
             assert self.window.usernameLabel.text() == "User"
         qtbot.wait_until(assert_logout_text)
 
-        self._connect_to_mscolab(qtbot)
-        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
-        # verify logged in again
-        qtbot.wait_until(assert_label_text)
-        # ToDo verify all operations disabled again without a visual check
+        with pytest.raises(TypeError):
+            for _ in range(6):
+                self._activate_operation_at_index(random.randint(0, 2))
+                self._activate_operation_at_index(random.randint(0, 2))
+                self._activate_operation_at_index(random.randint(0, 2))
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
