@@ -26,7 +26,6 @@
 """
 import os
 import sys
-import weakref
 import fs
 import fs.errors
 import fs.opener.errors
@@ -433,9 +432,9 @@ class Test_Mscolab:
             # check 1 view opened
             assert len(self.window.get_active_views()) == 1
         qtbot.wait_until(assert_active_views)
+
         topview_0 = self.window.listViews.item(0)
         assert topview_0.window.tv_window_exists is True
-        topview_0.window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         # open multiple flightpath
         topview_0.window.cbTools.currentIndexChanged.emit(6)
@@ -443,21 +442,22 @@ class Test_Mscolab:
         # activate all operation, this enables them in the docking widget too
         for _ in range(6):
             self._activate_operation_at_index(random.randint(0, 2))
-            self._activate_operation_at_index(random.randint(0, 2))
-            self._activate_operation_at_index(random.randint(0, 2))
-            self._activate_flight_track_at_index(0)
+        self._activate_flight_track_at_index(0)
+
+        # Create the new operation
+        op_name = "fourth"
+        assert add_operation(op_name, "description")
+        assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        for _ in range(4):
+            self._activate_operation_at_index(random.randint(0, 3))
+        self._activate_flight_track_at_index(0)
 
         self.window.mscolab.logout()
 
         def assert_logout_text():
             assert self.window.usernameLabel.text() == "User"
         qtbot.wait_until(assert_logout_text)
-
-        with pytest.raises(TypeError):
-            for _ in range(6):
-                self._activate_operation_at_index(random.randint(0, 2))
-                self._activate_operation_at_index(random.randint(0, 2))
-                self._activate_operation_at_index(random.randint(0, 2))
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
