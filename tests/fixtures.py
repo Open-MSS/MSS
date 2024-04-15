@@ -71,6 +71,7 @@ def close_remaining_widgets():
 
 @pytest.fixture
 def qtbot(qtbot, fail_if_open_message_boxes_left, close_remaining_widgets):
+    """Fixture that re-defines the qtbot fixture from pytest-qt with additional checks."""
     yield qtbot
     # Wait for a while after the requesting test has finished. At time of writing this
     # is required to (mostly) stabilize the coverage reports, because tests don't
