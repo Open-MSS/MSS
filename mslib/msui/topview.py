@@ -201,9 +201,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mainwindow_signal_permission_revoked = mainwindow.signal_permission_revoked
         self.mainwindow_signal_render_new_permission = mainwindow.signal_render_new_permission
         self.mainwindow_signal_activate_flighttrack = mainwindow.signal_activate_flighttrack
-        self.mainwindow_signal_activate_operation = mainwindow.signal_activate_operation
-        self.mainwindow_signal_login_mscolab = mainwindow.signal_login_mscolab
-        self.mainwindow_signal_logout_mscolab = mainwindow.signal_logout_mscolab
         self.mainwindow_listFlightTracks = mainwindow.listFlightTracks
         self.mainwindow_filterCategoryCb = mainwindow.filterCategoryCb
         self.mainwindow_listOperationsMSC = mainwindow.listOperationsMSC
@@ -362,7 +359,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
 
-                self.mainwindow_signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
+                self.mainwindow_signal_logout_mscolab.connect(self.signal_logout_mscolab.emit)
                 self.mainwindow_signal_listFlighttrack_doubleClicked.connect(
                     lambda: self.signal_listFlighttrack_doubleClicked.emit())
                 self.mainwindow_signal_permission_revoked.connect(
