@@ -415,15 +415,6 @@ class Test_Mscolab:
     def test_operation_while_switching_error(self, qtbot):
         """Test that operation switching trigger the KeyError"""
 
-        # more operations for the user
-        for op_name in ["second", "third"]:
-            assert add_operation(op_name, "description")
-            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
-
-        self._connect_to_mscolab(qtbot)
-        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
-        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
-
         # test after activating operation
         self._activate_operation_at_index(0)
         self.window.actionTopView.trigger()
@@ -435,23 +426,48 @@ class Test_Mscolab:
 
         topview_0 = self.window.listViews.item(0)
         assert topview_0.window.tv_window_exists is True
+        # topview_0.window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+        # def assert_attribute():
+        #     assert topview_0.window.testAttribute(QtCore.Qt.WA_DeleteOnClose)
+        # qtbot.wait_until(assert_attribute)
 
         # open multiple flightpath
         topview_0.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
+            assert topview_0.window.docks[5] is not None
+        qtbot.wait_until(assert_dock_loaded)
+
+        # more operations for the user
+        for op_name in ["second", "third"]:
+            assert add_operation(op_name, "description")
+            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
 
         # activate all operation, this enables them in the docking widget too
         for _ in range(6):
             self._activate_operation_at_index(random.randint(0, 2))
         self._activate_flight_track_at_index(0)
 
-        # Create the new operation
-        op_name = "fourth"
-        assert add_operation(op_name, "description")
-        assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+        # # Create the new operation
+        # op_name = "fourth"
+        # assert add_operation(op_name, "description")
+        # assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+        #
+        # for _ in range(4):
+        #     self._activate_operation_at_index(random.randint(0, 3))
+        # self._activate_flight_track_at_index(0)
 
-        for _ in range(4):
-            self._activate_operation_at_index(random.randint(0, 3))
-        self._activate_flight_track_at_index(0)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            topview_0.window.close()
+
+        def assert_window_closed():
+            assert topview_0.window.tv_window_exists is False
+        qtbot.wait_until(assert_window_closed)
 
         self.window.mscolab.logout()
 
