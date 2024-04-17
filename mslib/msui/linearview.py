@@ -93,6 +93,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         self.cbTools.clear()
         self.cbTools.addItems(["(select to open control)", "Linear Section WMS"])
         self.docks = [None]
+        self.widgets = [None]
 
         self.setFlightTrackModel(model)
 
