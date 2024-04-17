@@ -411,6 +411,77 @@ class Test_Mscolab:
         qtbot.wait_until(assert_label_text)
         # ToDo verify all operations disabled again without a visual check
 
+    def test_marked_bold_only_in_multiple_flight_path_operations_for_active_operation(self, qtbot):
+        """
+        checks that when we use operations only the operations is bold marked not the flighttrack too
+        """
+        # more operations for the user
+        for op_name in ["second", "third"]:
+            assert add_operation(op_name, "description")
+            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+
+        # test after activating operation
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+
+        def assert_active_views():
+            # check 1 view opened
+            assert len(self.window.get_active_views()) == 1
+        qtbot.wait_until(assert_active_views)
+
+        topview_0 = self.window.listViews.item(0)
+        assert topview_0.window.tv_window_exists is True
+        # open multiple flightpath first window
+        topview_0.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
+            assert topview_0.window.docks[5] is not None
+        qtbot.wait_until(assert_dock_loaded)
+        assert topview_0.window.active_op_id is not None
+
+        list_flighttrack = topview_0.window.widgets[5].list_flighttrack
+        list_operation_track = topview_0.window.widgets[5].list_operation_track
+
+        for i in range(list_operation_track.count()):
+            listItem = list_operation_track.item(i)
+            if self.window.mscolab.active_op_id == listItem.op_id:
+                assert listItem.font().bold() is True
+        for i in range(list_flighttrack.count()):
+            listItem = list_flighttrack.item(i)
+            assert listItem.font().bold() is False
+
+    def test_correct_active_op_id_in_topview(self, qtbot):
+        """
+        checks that active_op_id is set
+        """
+        # more operations for the user
+        for op_name in ["second", "third"]:
+            assert add_operation(op_name, "description")
+            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+
+        assert self.window.mscolab.active_op_id is None
+        # test after activating operation
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        selected_op_id = self.window.mscolab.active_op_id
+        self.window.actionTopView.trigger()
+
+        def assert_active_views():
+            # check 1 view opened
+            assert len(self.window.get_active_views()) == 1
+        qtbot.wait_until(assert_active_views)
+        topview_0 = self.window.listViews.item(0)
+        assert topview_0.window.active_op_id is not None
+        assert topview_0.window.active_op_id == selected_op_id
+
     def test_multiple_flightpath_switching_to_flighttrack_and_logout(self, qtbot):
         """
         checks that we can switch in topviews with the multiple flightpath dockingwidget
