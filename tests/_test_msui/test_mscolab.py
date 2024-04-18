@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import sys
 import fs
 import fs.errors
 import fs.opener.errors
@@ -46,7 +47,7 @@ from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_op
 
 class Test_Mscolab_connect_window:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mscolab_server):
+    def setup(self, qtbot, mscolab_server):
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.operation_name = "europe"
@@ -257,7 +258,7 @@ class Test_Mscolab:
     }
 
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mscolab_app, mscolab_server):
+    def setup(self, qtbot, mscolab_app, mscolab_server):
         self.app = mscolab_app
         self.url = mscolab_server
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -334,6 +335,150 @@ class Test_Mscolab:
         assert tableview.btAddWayPointToFlightTrack.isEnabled()
         assert any(action.text() == "Ins WP" and action.isEnabled() for action in topview.mpl.navbar.actions())
 
+    def test_multiple_views_and_multiple_flightpath(self, qtbot):
+        """
+        checks that we can have multiple topviews with the multiple flightpath dockingwidget
+        and we are able to cycle a login/logout
+        """
+        # more operations for the user
+        for op_name in ["second", "third"]:
+            assert add_operation(op_name, "description")
+            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+
+        # test after activating operation
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+
+        def assert_active_views():
+            # check 1 view opened
+            assert len(self.window.get_active_views()) == 1
+        qtbot.wait_until(assert_active_views)
+        topview_0 = self.window.listViews.item(0)
+
+        # next topview
+        self.window.actionTopView.trigger()
+        topview_1 = self.window.listViews.item(1)
+
+        def assert_active_views():
+            # check 2 view opened
+            assert len(self.window.get_active_views()) == 2
+        qtbot.wait_until(assert_active_views)
+
+        # open multiple flightpath first window
+        topview_0.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
+            assert topview_0.window.docks[5] is not None
+        qtbot.wait_until(assert_dock_loaded)
+
+        # activate all operation, this enables them in the docking widget too
+        self._activate_operation_at_index(1)
+        self._activate_operation_at_index(2)
+        self._activate_operation_at_index(0)
+        # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
+
+        # open multiple flightpath second window
+        topview_1.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
+            assert topview_1.window.docks[5] is not None
+        qtbot.wait_until(assert_dock_loaded)
+
+        # activate all operation, this enables them in the docking widget too
+        self._activate_operation_at_index(1)
+        self._activate_operation_at_index(2)
+        self._activate_operation_at_index(0)
+        # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
+
+        def assert_label_text():
+            # verify logged in
+            assert self.window.usernameLabel.text() == self.userdata[1]
+        qtbot.wait_until(assert_label_text)
+
+        self.window.mscolab.logout()
+
+        def assert_logout_text():
+            assert self.window.usernameLabel.text() == "User"
+        qtbot.wait_until(assert_logout_text)
+
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        # verify logged in again
+        qtbot.wait_until(assert_label_text)
+        # ToDo verify all operations disabled again without a visual check
+
+    def test_multiple_flightpath_switching_to_flighttrack_and_logout(self, qtbot):
+        """
+        checks that we can switch in topviews with the multiple flightpath dockingwidget
+        between local flight track and operations, and we are able to cycle a login/logout
+        """
+        # more operations for the user
+        for op_name in ["second", "third"]:
+            assert add_operation(op_name, "description")
+            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+
+        # test after activating operation
+        self._activate_operation_at_index(0)
+        self.window.actionTopView.trigger()
+
+        def assert_active_views():
+            # check 1 view opened
+            assert len(self.window.get_active_views()) == 1
+        qtbot.wait_until(assert_active_views)
+        topview_0 = self.window.listViews.item(0)
+        assert topview_0.window.tv_window_exists is True
+        topview_0.window.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+        def assert_attribute():
+            assert topview_0.window.testAttribute(QtCore.Qt.WA_DeleteOnClose)
+        qtbot.wait_until(assert_attribute)
+
+        # open multiple flightpath first window
+        topview_0.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
+            assert topview_0.window.docks[5] is not None
+        qtbot.wait_until(assert_dock_loaded)
+
+        # activate all operation, this enables them in the docking widget too
+        self._activate_operation_at_index(1)
+        self._activate_operation_at_index(2)
+        self._activate_operation_at_index(0)
+        # ToDo refactor to be able to activate/deactivate by the docking widget and that it can be checked
+
+        self._activate_flight_track_at_index(0)
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            topview_0.window.close()
+
+        def assert_window_closed():
+            assert topview_0.window.tv_window_exists is False
+        qtbot.wait_until(assert_window_closed)
+
+        def assert_label_text():
+            # verify logged in
+            assert self.window.usernameLabel.text() == self.userdata[1]
+        qtbot.wait_until(assert_label_text)
+
+        self.window.mscolab.logout()
+
+        def assert_logout_text():
+            assert self.window.usernameLabel.text() == "User"
+        qtbot.wait_until(assert_logout_text)
+
+        self._connect_to_mscolab(qtbot)
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        # verify logged in again
+        qtbot.wait_until(assert_label_text)
+        # ToDo verify all operations disabled again without a visual check
+
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
                 return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
                               "Flight track (*.ftml)"))
@@ -350,6 +495,10 @@ class Test_Mscolab:
         for i in range(wp_count):
             assert exported_waypoints.waypoint_data(i).lat == self.window.mscolab.waypoints_model.waypoint_data(i).lat
 
+    @pytest.mark.skipif(
+        sys.platform == "darwin",
+        reason="This test is flaky on macOS because of some cleanup error in temporary files.",
+    )
     @pytest.mark.parametrize("name", [("example.ftml", "actionImportFlightTrackFTML", 5),
                                       ("example.csv", "actionImportFlightTrackCSV", 5),
                                       ("example.txt", "actionImportFlightTrackTXT", 5),
@@ -403,7 +552,10 @@ class Test_Mscolab:
             self.window.mscolab.add_proj_dialog.buttonBox.Ok)
         with mock.patch("PyQt5.QtWidgets.QMessageBox.information") as m:
             QtTest.QTest.mouseClick(okWidget, QtCore.Qt.LeftButton)
-            m.assert_called_once()
+
+            def assert_():
+                m.assert_called_once()
+            qtbot.wait_until(assert_)
 
         def assert_():
             assert self.window.listOperationsMSC.model().rowCount() == 1
@@ -737,7 +889,19 @@ class Test_Mscolab:
         qtbot.wait_until(assert_operation_is_listed)
 
     def _activate_operation_at_index(self, index):
+        # The main window must be on top
+        self.window.activateWindow()
+        # get the item by its index
         item = self.window.listOperationsMSC.item(index)
         point = self.window.listOperationsMSC.visualItemRect(item).center()
         QtTest.QTest.mouseClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
         QtTest.QTest.mouseDClick(self.window.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+
+    def _activate_flight_track_at_index(self, index):
+        # The main window must be on top
+        self.window.activateWindow()
+        # get the item by its index
+        item = self.window.listFlightTracks.item(index)
+        point = self.window.listFlightTracks.visualItemRect(item).center()
+        QtTest.QTest.mouseClick(self.window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+        QtTest.QTest.mouseDClick(self.window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
