@@ -145,3 +145,4 @@ class Ui_AboutMSUIDialog(object):
 "Copyright 2016-2024: by the MSS team, see AUTHORS"))
         self.lblLinks.setText(_translate("AboutMSUIDialog", "<html><head/><body><p>See <a href=\"http://mss.rtfd.io\"><span style=\" text-decoration: underline; color:#0000ff;\">http://mss.rtfd.io</span></a> for detailed information and documentation.<br>Report bugs or feature requests at <a href=\"https://github.com/Open-MSS/MSS\"><span style=\" text-decoration: underline; color:#0000ff;\">https://github.com/Open-MSS/MSS</span></a>.</p></body></html>"))
         self.btOK.setText(_translate("AboutMSUIDialog", "Ok"))
+
