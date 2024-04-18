@@ -4,7 +4,7 @@
   "menu_name": "Mission Support System",
   "menu_items": [
     {
-      "name": "MSUI",
+      "name": "MSUI ({{ ENV_NAME }})",
       "description": "Mission Support System MSUI",
       "activate": true,
       "icon": "{{ MENU_DIR }}/msui.{{ ICON_EXT }}",
