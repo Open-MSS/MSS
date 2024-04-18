@@ -79,4 +79,3 @@ Store this mss_autoplot.json in a path, e.g. “$HOME/.config/msui”
 **/$HOME/.config/msui/mssautoplot.json**
 
 .. literalinclude:: samples/config/msui/mssautoplot.json.sample
-
