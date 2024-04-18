@@ -5,21 +5,50 @@
   "menu_items": [
     {
       "name": "MSUI",
-      "description": "Mission Support System UI",
+      "description": "Mission Support System MSUI",
       "activate": true,
       "icon": "{{ MENU_DIR }}/msui.{{ ICON_EXT }}",
-      "command": ["{{ PREFIX }}/bin/msui.py"],
+      "command": [
+        "{{ PYTHON }}",
+        "{{ PREFIX }}/bin/msui"
+      ],
       "platforms": {
-        "linux": {
-          "Categories": ["Internet", "Science"],
-          "Keywords": ["documentation", "information"],
-          "StartupNotify": true,
-          "MimeType": ["application/x-menuinst"],
-          "glob_patterns": {
-            "application/x-menuinst": "*.menuinst"
-          }
+                "win": {
+                    "command": [
+                        "{{ PYTHON }}",
+                        "{{ SCRIPTS_DIR }}/msui"
+                    ],
+                    "file_extensions": [".menuinst"]
+                },
+                "linux": {
+                    "Categories": ["Internet", "Science"],
+                    "Keywords": ["documentation", "information"],
+                    "StartupNotify": true,
+                    "MimeType": ["application/x-menuinst"],
+                    "glob_patterns": {
+                        "application/x-menuinst": "*.menuinst"
+                    }
+                },
+                "osx": {
+                    "CFBundleDocumentTypes": [
+                        {
+                            "CFBundleTypeName": "org.conda.menuinst.msui",
+                            "CFBundleTypeRole": "Viewer",
+                            "LSItemContentTypes": ["org.conda.menuinst.main-file-uti"],
+                            "LSHandlerRank": "Default"
+                        }
+                    ],
+                    "UTExportedTypeDeclarations": [
+                        {
+                            "UTTypeConformsTo": ["public.data", "public.content"],
+                            "UTTypeIdentifier": "org.conda.menuinst.main-file-uti",
+                            "UTTypeTagSpecification": {
+                                "public.filename-extension": ["menuinst"]
+                            }
+                        }
+                    ]
+                }
+            }
         }
-      }
-    }
-  ]
+    ]
 }
