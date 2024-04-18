@@ -39,7 +39,7 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_TOPVIEW
 
 class Test_MSS_TV_MapAppearanceDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = tv.MSUI_TV_MapAppearanceDialog(settings=_DEFAULT_SETTINGS_TOPVIEW)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -55,7 +55,7 @@ class Test_MSS_TV_MapAppearanceDialog:
 
 class Test_MSSTopViewWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         mainwindow = MSUIMainWindow()
         initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
         waypoints_model = ft.WaypointsTableModel("")
@@ -199,7 +199,7 @@ class Test_MSSTopViewWindow:
 
 class Test_TopViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mswms_server):
+    def setup(self, qtbot, mswms_server):
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -242,7 +242,7 @@ class Test_TopViewWMS:
 
 class Test_MSUITopViewWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         pass
 
     def test_kwargs_update_does_not_harm(self):
