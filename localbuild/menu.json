@@ -17,7 +17,7 @@
                     "command": [
                         "{{ PYTHON }}",
                         "{{ SCRIPTS_DIR }}/msui-script.py"
-                    ],
+                    ]
                 },
                 "linux": {
                     "Categories": ["Internet", "Science"],
