@@ -92,7 +92,7 @@ requirements:
     - flask-wtf
     - email_validator
     - keyring
-    - dbus-python
+    - dbus-python  # [not win]
     - python-slugify
     - flask-login
     - pysaml2
