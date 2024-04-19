@@ -16,7 +16,7 @@
                 "win": {
                     "command": [
                         "{{ PYTHON }}",
-                        "{{ SCRIPTS_DIR }}/msui"
+                        "{{ SCRIPTS_DIR }}/msui-script.py"
                     ],
                     "file_extensions": [".menuinst"]
                 },
