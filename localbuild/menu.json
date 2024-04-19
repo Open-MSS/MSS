@@ -18,7 +18,6 @@
                         "{{ PYTHON }}",
                         "{{ SCRIPTS_DIR }}/msui-script.py"
                     ],
-                    "file_extensions": [".menuinst"]
                 },
                 "linux": {
                     "Categories": ["Internet", "Science"],
