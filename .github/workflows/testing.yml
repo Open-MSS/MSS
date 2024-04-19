@@ -42,9 +42,21 @@ jobs:
         source /opt/conda/etc/profile.d/mamba.sh
         mamba install -n mss-${{ inputs.branch_name }}-env pyvirtualdisplay
 
-    - name: Always rebuild dependencies for scheduled builds
-      if: ${{ inputs.event_name == 'schedule' && inputs.branch_name == 'stable' && env.triggerdockerbuild != 'yes' }}
+    - name: Always rebuild dependencies for scheduled builds (started from testing-scheduled.yml)
+      if: ${{ inputs.event_name == 'workflow_dispatch' }}
       run: echo "triggerdockerbuild=yes" >> $GITHUB_ENV
+
+    - name: Invoke dockertesting image creation
+      # The image creation is intentionally only triggered for push events because
+      # scheduled tests should just check that new dependency versions do not break the
+      # tests, but should not update the image.
+      if: ${{ inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
+      uses: benc-uk/workflow-dispatch@v1.2.2
+      with:
+        workflow: Update Image testing-${{ inputs.branch_name }}
+        repo: Open-MSS/dockertesting
+        ref: main
+        token: ${{ secrets.PAT }}
 
     - name: Reinstall dependencies if changed
       if: ${{ env.triggerdockerbuild == 'yes' }}
@@ -76,12 +88,3 @@ jobs:
         git config --global --add safe.directory /__w/MSS/MSS
         mamba install -n ${{ env.mamba-env }} coveralls
         mamba run --no-capture-output -n ${{ env.mamba-env }} coveralls --service=github
-
-    - name: Invoke dockertesting image creation
-      if: ${{ !cancelled() && inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
-      uses: benc-uk/workflow-dispatch@v1.2.2
-      with:
-        workflow: Update Image testing-${{ inputs.branch_name }}
-        repo: Open-MSS/dockertesting
-        ref: main
-        token: ${{ secrets.PAT }}

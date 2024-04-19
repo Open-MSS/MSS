@@ -1,0 +1,53 @@
+name: Test MSS
+
+on:
+  push:
+    branches:
+      - develop
+      - stable
+      - 'GSOC**'
+  pull_request:
+    branches:
+      - develop
+      - stable
+      - 'GSOC**'
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["macos-13", "macos-14", "ubuntu-latest"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build requirements.txt file
+      run: |
+        sed -n '/^requirements:/,/^test:/p' localbuild/meta.yaml |
+          sed -e "s/.*- //" |
+          sed -e "s/menuinst.*//" |
+          sed -e "s/.*://" > requirements.tmp.txt
+        cat requirements.d/development.txt >> requirements.tmp.txt
+        echo "pytest-randomly" >> requirements.tmp.txt
+        sed -e '/^$/d' -e '/^#.*$/d' requirements.tmp.txt > requirements.txt
+        rm requirements.tmp.txt
+        cat requirements.txt
+    - name: Get current year and calendar week
+      id: year-and-week
+      run: echo "year-and-week=$(date +%Y-%V)" >> "$GITHUB_OUTPUT"
+    - uses: mamba-org/setup-micromamba@v1
+      with:
+        environment-file: requirements.txt
+        environment-name: ci
+        cache-environment: true
+        # Set the cache key in a way that the cache is invalidated every week on monday
+        cache-environment-key: environment-${{ steps.year-and-week.outputs.year-and-week }}
+    - name: Run tests
+      timeout-minutes: 20
+      # The ignored files can somehow cause the test suite to timeout.
+      # I have no idea yet on why this happens and how to fix it.
+      # Even a module level skip is not enough, they need to be completely ignored.
+      # TODO: fix those tests and drop the ignores
+      run: micromamba run -n ci env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib
+        --ignore=tests/_test_msui/test_sideview.py --ignore=tests/_test_msui/test_topview.py --ignore=tests/_test_msui/test_wms_control.py
+        tests

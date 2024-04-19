@@ -154,7 +154,8 @@ def check_login(emailid, password):
 
 
 def register_user(email, password, username):
-    user = User(email, username, password)
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
+        return {"success": False, "message": "Your username or email cannot be empty"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
@@ -167,6 +168,7 @@ def register_user(email, password, username):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
+    user = User(email, username, password)
     result = fm.modify_user(user, action="create")
     return {"success": result}
 
@@ -367,7 +369,7 @@ def messages():
     user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
     if fm.is_member(user.id, op_id):
-        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00 +00:00"))
+        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00.000000 +00:00"))
         chat_messages = cm.get_messages(op_id, timestamp)
         return jsonify({"messages": chat_messages})
     return "False"

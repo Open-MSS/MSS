@@ -39,7 +39,7 @@ from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
 class Test_MSS_SV_OptionsDialog:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
@@ -73,7 +73,7 @@ class Test_MSS_SV_OptionsDialog:
 
 class Test_MSSSideViewWindow:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp):
+    def setup(self, qtbot):
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
@@ -126,7 +126,7 @@ class Test_MSSSideViewWindow:
 
 class Test_SideViewWMS:
     @pytest.fixture(autouse=True)
-    def setup(self, qapp, mswms_server):
+    def setup(self, qtbot, mswms_server):
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):

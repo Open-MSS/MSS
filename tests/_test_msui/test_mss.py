@@ -28,7 +28,7 @@ from PyQt5 import QtTest, QtCore
 from mslib.msui import mss
 
 
-def test_mss_rename_message(qapp):
+def test_mss_rename_message(qtbot):
     main_window = mss.MSSMainWindow()
     main_window.show()
     QtTest.QTest.mouseClick(main_window.pushButton, QtCore.Qt.LeftButton)
