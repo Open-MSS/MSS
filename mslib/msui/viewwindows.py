@@ -56,8 +56,6 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
         # in proper size in derived classes!
         self.docks = []
 
-        self.widgets = []
-
         # # emit _id if not none
         # logging.debug(_id)
         # self._id = _id
@@ -142,8 +140,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
         # setWidget transfers the widget's ownership to Qt -- no setParent()
         # call is necessary:
         self.docks[index].setWidget(widget)
-        # store data of widget
-        self.widgets[index] = widget
+
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.docks[index])
 
         # Check if another dock widget occupies the dock area. If yes,

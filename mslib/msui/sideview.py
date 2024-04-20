@@ -264,7 +264,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         self.cbTools.clear()
         self.cbTools.addItems(["(select to open control)", "Vertical Section WMS"])
         self.docks = [None]
-        self.widgets = [None]
 
         self.setFlightTrackModel(model)
 

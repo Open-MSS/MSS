@@ -211,9 +211,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay, Multiple Flightpath]:
         self.docks = [None, None, None, None, None, None]
 
-        # Corresponding widget objects
-        self.widgets = [None, None, None, None, None, None]
-
         # Initialise the GUI elements (map view, items of combo boxes etc.).
         self.setup_top_view()
 

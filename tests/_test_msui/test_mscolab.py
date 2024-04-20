@@ -443,8 +443,8 @@ class Test_Mscolab:
         qtbot.wait_until(assert_dock_loaded)
         assert topview_0.window.active_op_id is not None
 
-        list_flighttrack = topview_0.window.widgets[5].list_flighttrack
-        list_operation_track = topview_0.window.widgets[5].list_operation_track
+        list_flighttrack = topview_0.window.docks[5].widget().list_flighttrack
+        list_operation_track = topview_0.window.docks[5].widget().list_operation_track
 
         for i in range(list_operation_track.count()):
             listItem = list_operation_track.item(i)

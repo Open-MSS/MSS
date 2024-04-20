@@ -77,7 +77,6 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
 
         # Dock windows [Hexagon].
         self.docks = [None, None]
-        self.widgets = [None, None]
 
         # Connect slots and signals.
         self.btAddWayPointToFlightTrack.clicked.connect(self.addWayPoint)
