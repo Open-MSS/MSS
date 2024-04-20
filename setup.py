@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -52,6 +52,13 @@ setup(
     zip_safe=False,
     install_requires=[],  # we use conda build recipe
     entry_points=dict(
-        console_scripts=['msui = mslib.msui.msui:main'],
+        console_scripts=[
+            "mscolab = mslib.mscolab.mscolab:main",
+            "mss = mslib.msui.mss:main",
+            "mssautoplot = mslib.utils.mssautoplot:main",
+            "msui = mslib.msui.msui:main",
+            "mswms = mslib.mswms.mswms:main",
+            "mswms_demodata = mslib.mswms.demodata:main",
+        ],
     ),
 )
