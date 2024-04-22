@@ -1246,4 +1246,3 @@ Other Changes:
  - Documentation on http://mss.rtfd.io
  - Installation recipes based on conda
  - First public release on June 28, 2016
-

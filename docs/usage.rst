@@ -322,4 +322,3 @@ Some examples for publicly accessible WMS Servers
  * http://eumetview.eumetsat.int/geoserver/wms
  * https://apps.ecmwf.int/wms/?token=public
  * https://maps.dwd.de/geoserver/wms
-

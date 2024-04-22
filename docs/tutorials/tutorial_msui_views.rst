@@ -4,4 +4,3 @@ Using the different views of the MSUI with a fictitious flight path and demo dat
 
 
  .. image:: /videos/gif/tutorial_views.gif
-

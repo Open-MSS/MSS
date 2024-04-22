@@ -35,4 +35,3 @@ Installation
 1. Add additional modules to your mssenv by ::
 
    (mssenv): mamba install geomag geopy geographiclib
-

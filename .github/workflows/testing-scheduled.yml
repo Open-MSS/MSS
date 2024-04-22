@@ -25,6 +25,3 @@ jobs:
       event_name: ${{ github.event_name }}
     secrets:
       PAT: ${{ secrets.PAT }}
-
-
-
