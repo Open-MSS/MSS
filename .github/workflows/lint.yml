@@ -1,7 +1,4 @@
-# This workflow will install Python dependencies, lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: flake8
+name: lint
 
 on:
   push:
@@ -14,7 +11,7 @@ on:
     - stable
 
 jobs:
-  lint:
+  flake8:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
