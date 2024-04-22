@@ -25,3 +25,14 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
         flake8 --count --statistics mslib tests
+
+  no-crlf-in-git:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check for CRLF in the repository
+      run: |
+        files_with_crlf="$(git ls-files --eol | awk '$1 ~ "crlf"')"
+        echo "$files_with_crlf"
+        [ "$files_with_crlf" == "" ] || exit 1
