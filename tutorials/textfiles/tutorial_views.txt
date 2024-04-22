@@ -17,7 +17,7 @@ Basically, the different views are just different ways to showcase the same data
 
 Flight moves from Nagpur to Delhi to waypoint number 2 to waypoint number 3 and so on.
 
- 
+
 Then look at the web map service to check whether the way points chosen are correct. We are going to improvise the flight track with wms.
 
 

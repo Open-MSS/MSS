@@ -9,9 +9,9 @@ on:
     - stable
   workflow_dispatch:
 
-jobs:     
+jobs:
   test-stable:
-    uses: 
+    uses:
       ./.github/workflows/testing.yml
     with:
       xdist: no
@@ -21,7 +21,7 @@ jobs:
       PAT: ${{ secrets.PAT }}
 
   test-stable-xdist:
-    uses: 
+    uses:
       ./.github/workflows/testing.yml
     with:
       xdist: yes

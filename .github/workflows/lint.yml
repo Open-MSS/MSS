@@ -43,4 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Check for whitespace issues in the repository
+      # The two example.txt files need to be excluded because whitespace at EOL is part
+      # of their format and they fail to parse otherwise.
       run: git diff --check $(git hash-object -t tree /dev/null) HEAD
+        :^tests/data/example.txt :^docs/samples/flight-tracks/example.txt

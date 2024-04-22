@@ -26,9 +26,9 @@ if [[ ! "$WORK_DIR" || ! -d "$WORK_DIR" ]]; then
 fi
 
 # deletes the temp directory
-function cleanup {      
+function cleanup {
   killall highlight-pointer
-  killall mscolab.py 
+  killall mscolab.py
   rm -rf "$WORK_DIR"
   echo "Deleted temp working directory $WORK_DIR"
 }

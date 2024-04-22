@@ -1,7 +1,7 @@
 [run]
-omit = 
+omit =
      _tests/*
-     */_tests/* 
+     */_tests/*
      mslib/msui/qt5/*
      docs/*
      /tmp/*

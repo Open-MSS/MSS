@@ -157,8 +157,8 @@ the UI settings file:
 
 
 More details about Plugins on :ref:`msuiplugins`.
-    
-    
+
+
 Web Proxy
 .........
 

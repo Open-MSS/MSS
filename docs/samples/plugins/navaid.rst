@@ -22,7 +22,7 @@ table containing a column of the so-determined waypoint names. For locations
 ouside the given set of NAVAID points , e.g. over the oceans, the naming
 convention switches to coordinate based name like xxyyNwwwzzW for
 latitude xx°yy'N and longitude www°zz'W. This is done if the closest NAVAID
-waypoint is more than 500 nm. 
+waypoint is more than 500 nm.
 
 Installation
 ~~~~~~~~~~~~
@@ -35,4 +35,4 @@ Installation
 1. Add additional modules to your mssenv by ::
 
    (mssenv): mamba install geomag geopy geographiclib
-   
+
