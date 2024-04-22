@@ -45,5 +45,13 @@ jobs:
     - name: Check for whitespace issues in the repository
       # The two example.txt files need to be excluded because whitespace at EOL is part
       # of their format and they fail to parse otherwise.
-      run: git diff --check $(git hash-object -t tree /dev/null) HEAD
-        :^tests/data/example.txt :^docs/samples/flight-tracks/example.txt
+      # The leftover conflict marker warning is ignored for all rst files because
+      # section headings consisting of 7 "=" characters are mistaken to be part of a
+      # conflict marker.
+      run: |
+        issues="$(
+          git diff --check $(git hash-object -t tree /dev/null) HEAD :^tests/data/example.txt :^docs/samples/flight-tracks/example.txt |
+            { grep -v '^.*\.rst:.*leftover conflict marker$' || true; }
+        )"
+        echo "$issues"
+        [ "$issues" == "" ] || exit 1
