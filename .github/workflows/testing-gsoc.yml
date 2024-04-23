@@ -1,19 +1,16 @@
-name: test develop
+name: test GSoC
 
 on:
   push:
     branches:
-    - develop
+    - 'GSOC**'
   pull_request:
     branches:
-    - develop
-  workflow_dispatch:
+    - 'GSOC**'
 
 jobs:
-  test-develop:
+  test-gsoc:
     uses:
       ./.github/workflows/testing.yml
     with:
       image_suffix: develop
-    secrets:
-      PAT: ${{ secrets.PAT }}

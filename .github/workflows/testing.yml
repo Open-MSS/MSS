@@ -3,25 +3,21 @@ name: Pytest MSS
 on:
   workflow_call:
     inputs:
-      branch_name:
-        required: true
-        type: string
-      event_name:
+      image_suffix:
         required: true
         type: string
     secrets:
       PAT:
-        required: true
 
 env:
-  mamba-env: mss-${{ inputs.branch_name }}-env
+  mamba-env: mss-${{ inputs.image_suffix }}-env
 
 jobs:
   Test-MSS:
     runs-on: ubuntu-latest
 
     container:
-      image: openmss/testing-${{ inputs.branch_name }}
+      image: openmss/testing-${{ inputs.image_suffix }}
 
     strategy:
       fail-fast: false
@@ -36,24 +32,24 @@ jobs:
         (echo Dependencies differ && echo "triggerdockerbuild=yes" >> $GITHUB_ENV )
 
     - name: Install pyvirtualdisplay if on stable
-      if: ${{ inputs.branch_name == 'stable' }}
+      if: ${{ inputs.image_suffix == 'stable' }}
       run: |
         source /opt/conda/etc/profile.d/conda.sh
         source /opt/conda/etc/profile.d/mamba.sh
-        mamba install -n mss-${{ inputs.branch_name }}-env pyvirtualdisplay
+        mamba install -n mss-${{ inputs.image_suffix }}-env pyvirtualdisplay
 
     - name: Always rebuild dependencies for scheduled builds (started from testing-scheduled.yml)
-      if: ${{ inputs.event_name == 'workflow_dispatch' }}
+      if: ${{ github.event_name == 'workflow_dispatch' }}
       run: echo "triggerdockerbuild=yes" >> $GITHUB_ENV
 
     - name: Invoke dockertesting image creation
       # The image creation is intentionally only triggered for push events because
       # scheduled tests should just check that new dependency versions do not break the
       # tests, but should not update the image.
-      if: ${{ inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
+      if: ${{ (github.ref_name == 'stable' || github.ref_name == 'develop') && github.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
       uses: benc-uk/workflow-dispatch@v1.2.2
       with:
-        workflow: Update Image testing-${{ inputs.branch_name }}
+        workflow: Update Image testing-${{ inputs.image_suffix }}
         repo: Open-MSS/dockertesting
         ref: main
         token: ${{ secrets.PAT }}
@@ -81,7 +77,7 @@ jobs:
         ${{ (matrix.order == 'normal' && ' ') || (matrix.order == 'reverse' && '--reverse') }} tests
 
     - name: Collect coverage
-      if: ${{ (inputs.event_name == 'push' || inputs.event_name == 'pull_request') && matrix.order == 'normal' }}
+      if: ${{ (github.event_name == 'push' || github.event_name == 'pull_request') && matrix.order == 'normal' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
