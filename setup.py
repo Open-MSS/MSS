@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,10 +27,21 @@
 
 # The README.txt file should be written in reST so that PyPI can use
 # it to generate your project's PyPI page.
+import os
 from past.builtins import execfile
 from setuptools import setup, find_packages
 long_description = open('README.md').read()
 execfile('mslib/version.py')
+
+console_scripts = [
+    "mscolab = mslib.mscolab.mscolab:main",
+    "mss = mslib.msui.mss:main",
+    "mssautoplot = mslib.utils.mssautoplot:main",
+    "msui = mslib.msui.msui:main",
+    "mswms = mslib.mswms.mswms:main",
+    "mswms_demodata = mslib.mswms.demodata:main"]
+if os.name != 'nt':
+    console_scripts.append('msidp = mslib.msidp.idp:main')
 
 setup(
     name="mss",
@@ -52,6 +63,6 @@ setup(
     zip_safe=False,
     install_requires=[],  # we use conda build recipe
     entry_points=dict(
-        console_scripts=['msui = mslib.msui.msui:main'],
+        console_scripts=console_scripts,
     ),
 )
