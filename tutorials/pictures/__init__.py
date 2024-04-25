@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.icons
-    ~~~~~~~~~~~~~~~~
+    mslib.tutorials.pictures
+    ~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides functions to process ECMWF forecast data.
+    This module provides functions to read images for the different tutorials for comparison
 
     This file is part of MSS.
 
@@ -24,23 +24,23 @@
     limitations under the License.
 """
 import os
+import sys
+
+use_platform = sys.platform
+if sys.platform in ('linux', 'linux2', 'darwin'):
+    use_platform = 'linux'
+
+TUTORIALS = ["hexagoncontrol",
+             "kml",
+             "mscolab",
+             "performancesettings",
+             "remotesensing",
+             "satellitetrack",
+             "views",
+             "waypoints",
+             "wms"]
 
 
-ICONSIZE = [
-    "128x128",
-    "16x16",
-    "256x256",
-    "32x32",
-    "48x48",
-    "64x64",
-    "config_editor"
-]
-
-
-def icons(icon_size, name="mss-logo.png"):
-    if icon_size in ICONSIZE:
-        return os.path.join(os.path.abspath(os.path.normpath(os.path.dirname(__file__))), icon_size, name)
-
-
-def python_powered():
-    return os.path.join(os.path.abspath(os.path.normpath(os.path.dirname(__file__))), "python-powered-w-100x40.png")
+def picture(tutorial="wms", name="layers.png"):
+    if tutorial in TUTORIALS:
+        return os.path.join(os.path.abspath(os.path.normpath(os.path.dirname(__file__))), tutorial, use_platform, name)
