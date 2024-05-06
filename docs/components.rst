@@ -10,5 +10,3 @@ Components
    mscolab
    gentutorials
    mssautoplot
-
-

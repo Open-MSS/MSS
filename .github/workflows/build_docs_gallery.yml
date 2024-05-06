@@ -1,6 +1,6 @@
 name: Build Gallery
 
-on: 
+on:
    pull_request:
      inputs:
         branch_name:

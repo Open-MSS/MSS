@@ -39,11 +39,11 @@ Package for working with OGC map, feature, and coverage services.
 Obtained from SVN (http://svn.gispython.org/svn/gispy/OWSLib/trunk),
 revision 1672, on 2010/08/11.
 
-NOTE: The file "wms.py" has been modified for the MSS. Changes are marked 
+NOTE: The file "wms.py" has been modified for the MSS. Changes are marked
 with "(mss)". We renamed it to "ogcwms.py" (2017-04-28)
 
 We also did a PEP8 review of the ogcwms.py and adopted it to the recent 0.14 version
-https://pypi.python.org/pypi/OWSLib/0.14.0 
+https://pypi.python.org/pypi/OWSLib/0.14.0
 
 
 NETCDF4-PYTHON
@@ -62,7 +62,7 @@ https://code.google.com/p/netcdf4-python/
 KML Examples
 -------------
 
-Below are links from where certain KML Files have been obtained, which are used 
+Below are links from where certain KML Files have been obtained, which are used
 as Test Samples in MSS (mss/docs/samples/kml/):
 
 World_Map.kml (mss/docs/samples/kml/World_Map.kml)

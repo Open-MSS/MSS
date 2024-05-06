@@ -628,5 +628,3 @@ and if you need authentication then use a Location based AuthType Basic
 
 For further information on apache2 server setup read
 `<https://httpd.apache.org/docs/2.4/howto/>`_
-
-

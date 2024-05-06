@@ -112,7 +112,7 @@ parameters of `flask-mail` ::
 
 A new user gets an email with an url including a token to become verified on the mscolab server. After the verification
 she can login.
-If an existing user does not remember the password, she can reset the password by sending an email to the user's email 
+If an existing user does not remember the password, she can reset the password by sending an email to the user's email
 address and using the token that the system sent along with the email.
 
 Instructions to use mscolab wsgi
@@ -271,7 +271,3 @@ Once you're done with all your local work and think you're ready to push your ch
 This would prompt you with a dialog where you can compare your local flight track and the common flight track on the server and select what you would like to keep.
 You can also fetch the common flight track to your local file at any time using the `Fetch from Server` button which prompts you with a similar dialog.
 You can turn the `Work Locally` toggle off at any points and work on the common shared file on the server. All your local changes are saved and you can return to them at any point by toggling the checkbox back on.
-
-
-
-

@@ -10,7 +10,7 @@ Our main objective here is to find out the disturbance in visibility due to ligh
 
 The solar angle colour in dark to light is 0 to 15 for RED and 15 to 45 for violet and 45 to 180 for green.
 
-We can show angles relative to SUN, VENUS, and MOON. 
+We can show angles relative to SUN, VENUS, and MOON.
 
 TOTAL HORIZON  is the light of the surroundings of the flight.
 
@@ -18,11 +18,11 @@ We will add some WAY POINTS numbered as 2,3,4,5.
 
 After clicking on SHOW ANGLES, the flight track's colour has changed to green or light green.
 
-The flight is at 90° from azimuth and -1 shows that flight is descended down from azimuth by one degree. 
+The flight is at 90° from azimuth and -1 shows that flight is descended down from azimuth by one degree.
 
 Showing the colours in the flight path connecting waypoints, green colour here shows that our solar angle is in range from 45 to 180 degree.
 
-We will now look for MOON. There is no significant change. 
+We will now look for MOON. There is no significant change.
 
 And for VENUS, the colour of way point changed to light green.
 
@@ -34,7 +34,7 @@ Now for VENUS, after changing the angle from 90 to 45 degree, the color changed 
 
 Changing ELEVATION from -1 to -2 or -3 degree doesn't bring any significant change in colour of the way point.
 
-We will now look for DRAW TANGENT POINTS. We can choose colors for the TANGENT POINTS. 
+We will now look for DRAW TANGENT POINTS. We can choose colors for the TANGENT POINTS.
 
 We keep it red for clear vision.
 

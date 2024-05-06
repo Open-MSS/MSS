@@ -120,4 +120,3 @@ class Ui_MergeWaypointsDialog(object):
         self.label_3.setText(_translate("MergeWaypointsDialog", "New Waypoints"))
         self.saveBtn.setToolTip(_translate("MergeWaypointsDialog", "Save the new merged waypoints to the server"))
         self.saveBtn.setText(_translate("MergeWaypointsDialog", "Save new waypoints on server"))
-

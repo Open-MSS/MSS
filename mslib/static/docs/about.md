@@ -61,4 +61,3 @@ and the German research institutions DLR, KIT, and Forschungszentrum
 Jülich. Improving the software will improve the quality of the research
 flights and will also enable its use for other scientific areas, e.g.
 planning of ship routes.
-

@@ -49,4 +49,3 @@ class Ui_CustomizeKMLDialog(object):
         self.label.setText(_translate("CustomizeKMLDialog", "Placemark Colour"))
         self.pushButton_colour.setText(_translate("CustomizeKMLDialog", "Change Colour"))
         self.label_2.setText(_translate("CustomizeKMLDialog", "LineWidth "))
-

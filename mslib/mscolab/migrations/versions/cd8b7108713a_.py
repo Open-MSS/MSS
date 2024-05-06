@@ -3,7 +3,7 @@
 DB setup until v6.x
 
 Revision ID: cd8b7108713a
-Revises: 
+Revises:
 Create Date: 2021-10-04 09:10:35.606793
 
 """

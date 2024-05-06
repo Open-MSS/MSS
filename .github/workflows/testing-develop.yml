@@ -9,19 +9,19 @@ on:
     branches:
     - develop
 
-jobs:     
+jobs:
   test-develop:
-    uses: 
+    uses:
       ./.github/workflows/testing.yml
     with:
       xdist: no
       branch_name: develop
       event_name: ${{ github.event_name }}
-    secrets: 
+    secrets:
       PAT: ${{ secrets.PAT }}
 
   test-develop-xdist:
-    uses: 
+    uses:
       ./.github/workflows/testing.yml
     with:
       xdist: yes
@@ -29,4 +29,3 @@ jobs:
       event_name: ${{ github.event_name }}
     secrets:
       PAT: ${{ secrets.PAT }}
-

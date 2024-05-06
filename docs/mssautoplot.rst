@@ -2,7 +2,7 @@ mssautoplot - A CLI tool for automation
 =======================================
 
 A CLI tool which enables users to download a set of plots according to the given configuration. The configuration for downloading the plots is located in "mssautoplot.json". In this file you can specify the default settings.
- 
+
 How to use
 ----------
 
@@ -15,11 +15,11 @@ The CLI tool has the following parameters:
 +--------------+-------+----------------------------------------------------------------------+
 | ``--ftrack`` | TEXT  |   Flight track.                                                      |
 +--------------+-------+----------------------------------------------------------------------+
-| ``--itime``  | TEXT  |   Initial time.                                                      |   
+| ``--itime``  | TEXT  |   Initial time.                                                      |
 +--------------+-------+----------------------------------------------------------------------+
-| ``--vtime``  | TEXT  |   Valid time.                                                        |   
+| ``--vtime``  | TEXT  |   Valid time.                                                        |
 +--------------+-------+----------------------------------------------------------------------+
-| ``--intv``   |INTEGER|   Time interval in hours.                                            |  
+| ``--intv``   |INTEGER|   Time interval in hours.                                            |
 +--------------+-------+----------------------------------------------------------------------+
 | ``--stime``  | TEXT  |   Starting time for downloading multiple plots with a fixed interval.|
 +--------------+-------+----------------------------------------------------------------------+
@@ -28,7 +28,7 @@ The CLI tool has the following parameters:
 
 A short description of how to start the program is given by the ``--help`` option.
 
-Examples 
+Examples
 ~~~~~~~~
 
 Here are a few examples on how to use this tool,

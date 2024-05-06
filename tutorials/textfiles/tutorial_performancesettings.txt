@@ -1,9 +1,9 @@
 This is the Performance Settings dockwidget opened in the Table view of the MSS software where by putting and changing some parameters, we can evaluate the performance of the aircraft.
 
 
- Parameters like Flight Altitude, Aviation fuel, Aircraft weight, Maximum take off weight from one point to other in flight planning, etcetera, can be evaluated. 
- 
-Click on select to open control to open the performance settings dockwidget. 
+ Parameters like Flight Altitude, Aviation fuel, Aircraft weight, Maximum take off weight from one point to other in flight planning, etcetera, can be evaluated.
+
+Click on select to open control to open the performance settings dockwidget.
 
 
 There will be different attributes in the table view which will be used to evaluate the performance data of the dummy aircraft from this performance settings.
@@ -11,14 +11,14 @@ There will be different attributes in the table view which will be used to evalu
 As we open the performance settings dockwidget, the panel for the settings opens up.
 
 
-As we don’t have a real aircraft, we’ll take a dummy aircraft. 
+As we don’t have a real aircraft, we’ll take a dummy aircraft.
 
 
 Now we’ll have to select a file called dot json file stored in the MSS database in the syntax of dot json.
 
 The information related to the performance data of the aircraft are stored here.
 
-Click on the "select" option to select the Json file from the MSS docs database as an example. 
+Click on the "select" option to select the Json file from the MSS docs database as an example.
 
 
 Click on show performance for the related data to be shown.

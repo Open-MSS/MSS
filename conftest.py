@@ -145,7 +145,7 @@ class mscolab_settings(object):
 
     # used to generate the password token
     SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
-    
+
     # looks for a given category for an operation ending with GROUP_POSTFIX
     # e.g. category = Tex will look for TexGroup
     # all users in that Group are set to the operations of that category

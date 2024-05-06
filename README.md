@@ -26,7 +26,7 @@ Automatically
 Manually
 --------
 
-As **Beginner** start with an installation of Mambaforge 
+As **Beginner** start with an installation of Mambaforge
 Get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) for your Operation System
 
 
@@ -42,7 +42,7 @@ to leave out the 'source' here and below).
 For updating an existing MSS installation to the current version, it is
 best to install it into a new environment. If an existing environment
 shall be updated, it is important to update all packages in this
-environment. 
+environment.
 
 ```
   $ mamba activate mssenv
@@ -74,7 +74,7 @@ Current release info
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6572620.svg)](https://doi.org/10.5281/zenodo.6572620)
 [![Conda Platforms](https://img.shields.io/conda/pn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss)
 [![DOCS](https://img.shields.io/badge/%F0%9F%95%AE-docs-green.svg)](http://mss.rtd.io)
-[![Conda Recipe](https://img.shields.io/badge/recipe-mss-green.svg)](https://anaconda.org/conda-forge/mss) 
+[![Conda Recipe](https://img.shields.io/badge/recipe-mss-green.svg)](https://anaconda.org/conda-forge/mss)
 [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/mss.svg)](https://anaconda.org/conda-forge/mss)
 [![Coverage Status](https://coveralls.io/repos/github/Open-MSS/MSS/badge.svg?branch=develop)](https://coveralls.io/github/Open-MSS/MSS?branch=develop)
 
@@ -100,11 +100,8 @@ application. The documents are available at:
 
 For copyright information, please see the files NOTICE and LICENSE, located
 in the same directory as this README file.
-   
+
 
    When using this software, please be so kind and acknowledge its use by
    citing the above mentioned reference documentation in publications,
    presentations, reports, etc. that you create. Thank you very much.
-
-
-
