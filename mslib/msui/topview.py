@@ -221,7 +221,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.active_flighttrack = active_flighttrack
 
         # Stores active mscolab operation id
-        self.active_op_id = None
+        self.active_op_id = mainwindow.mscolab.active_op_id
 
         # Mscolab Server Url and token
         self.mscolab_server_url = mscolab_server_url
@@ -356,6 +356,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             listOperationsMSC=self.mainwindow_listOperationsMSC,
                                                             category=self.mainwindow_filterCategoryCb,
                                                             activeFlightTrack=self.active_flighttrack,
+                                                            active_op_id=self.active_op_id,
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
 

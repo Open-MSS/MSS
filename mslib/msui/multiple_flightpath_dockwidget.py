@@ -115,7 +115,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     signal_parent_closes = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
-                 listOperationsMSC=None, category=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
+                 listOperationsMSC=None, category=None, activeFlightTrack=None, active_op_id=None,
+                 mscolab_server_url=None, token=None):
         super().__init__(parent)
         # ToDO: Remove all patches, on closing dockwidget.
         self.ui = parent
@@ -124,6 +125,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.flight_path = None  # flightpath object
         self.dict_flighttrack = {}  # Dictionary of flighttrack data: patch,color,wp_model
         self.active_flight_track = activeFlightTrack
+        self.active_op_id = active_op_id
         self.msc_category = category  # object of active category
         self.listOperationsMSC = listOperationsMSC
         self.listFlightTracks = listFlightTracks
@@ -196,8 +198,11 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.connect_mscolab_server()
 
     def connect_mscolab_server(self):
+        if self.active_op_id is not None:
+            self.deactivate_all_flighttracks()
         self.operations = MultipleFlightpathOperations(self, self.mscolab_server_url, self.token,
                                                        self.list_operation_track,
+                                                       self.active_op_id,
                                                        self.listOperationsMSC, self.view)
         self.obb.append(self.operations)
 
@@ -510,10 +515,10 @@ class MultipleFlightpathOperations:
     on the TopView canvas.
     """
 
-    def __init__(self, parent, mscolab_server_url, token, list_operation_track, listOperationsMSC, view):
+    def __init__(self, parent, mscolab_server_url, token, list_operation_track, active_op_id, listOperationsMSC, view):
         # Variables related to Mscolab Operations
         self.parent = parent
-        self.active_op_id = None
+        self.active_op_id = active_op_id
         self.mscolab_server_url = mscolab_server_url
         self.token = token
         self.view = view

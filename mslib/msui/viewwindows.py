@@ -140,6 +140,7 @@ class MSUIViewWindow(QtWidgets.QMainWindow):
         # setWidget transfers the widget's ownership to Qt -- no setParent()
         # call is necessary:
         self.docks[index].setWidget(widget)
+
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.docks[index])
 
         # Check if another dock widget occupies the dock area. If yes,
