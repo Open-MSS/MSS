@@ -8,9 +8,7 @@ source:
   path: ../
 
 build:
-  skip: true  # [py<310]
   number: 1000
-  script: "{{ PYTHON }} -m pip install . --no-deps -vv"  # [not win]
 
 requirements:
   build:
