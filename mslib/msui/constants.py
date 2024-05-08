@@ -34,17 +34,8 @@ import logging
 # ToDo refactor to generic functions, keep only constants
 HOME = os.path.expanduser(f"~{os.path.sep}")
 MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui"))
-if '://' in MSUI_CONFIG_PATH:
-    try:
-        _fs = fs.open_fs(MSUI_CONFIG_PATH)
-    except fs.errors.CreateFailed:
-        _fs.makedirs(MSUI_CONFIG_PATH)
-    except fs.opener.errors.UnsupportedProtocol:
-        logging.error('FS url "%s" not supported', MSUI_CONFIG_PATH)
-else:
-    _dir = os.path.expanduser(MSUI_CONFIG_PATH)
-    if not os.path.exists(_dir):
-        os.makedirs(_dir)
+# Make sure that MSUI_CONFIG_PATH exists
+_ = fs.open_fs(MSUI_CONFIG_PATH, create=True)
 
 GRAVATAR_DIR_PATH = fs.path.join(MSUI_CONFIG_PATH, "gravatars")
 
