@@ -68,4 +68,3 @@ class Ui_WMSAuthenticationDialog(object):
         self.label.setText(_translate("WMSAuthenticationDialog", "The server you are trying to connect requires a username and a password:"))
         self.label_2.setText(_translate("WMSAuthenticationDialog", "User name:"))
         self.label_3.setText(_translate("WMSAuthenticationDialog", "Password:"))
-

@@ -3,7 +3,7 @@ Mission Support Collaboration
 MSColab stores data in an online server, and can be used to access the data remotely as also working in a team where everyone contributes his part. It is used for collaborating with the users as a team together and working on a shared MScolab operation.
 
 
-to start with, click on Connect to MSColab, 
+to start with, click on Connect to MSColab,
 
 in the window opened, enter MSColab url and click on connect.
 
@@ -42,7 +42,7 @@ Add operation by clicking OK.
 
 "your operation was successfully created"
 
- 
+
 Double click on the shared operation name to activate it.
 
 

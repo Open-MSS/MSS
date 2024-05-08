@@ -253,7 +253,7 @@ Version 6.2.0
 
 This release includes the use of the new basemap-1.3.3 release and enables packaging for python 3.10.x.
 We added the possibility of flight level as vertical coordinate.
-A user can now leave on his own an operation. 
+A user can now leave on his own an operation.
 
 
 All changes:
@@ -804,7 +804,7 @@ Bug Fixes:
   - mswms crashes on a wms server when the request object is None, #339, #342
   - data_dir not used for default filepicker, #337
   - post_link.sh update on conda-forge, #334
- 
+
 
 Version 1.7.2
 -------------
@@ -1126,7 +1126,7 @@ New Features:
  - Suggest standard name for saving plots, #13
  - KML Overlay introduced for overplot of flight region borders, #61, #97
  - implemented demodata for standalone server and py.test, #80
- - simplified server setup, added demodata. 
+ - simplified server setup, added demodata.
  - Always provide simplified aircraft range estimates in TableView. #85
  - server data needs standard_name in data, #87
  - plugin infrastructure introduced for supporting file formats for flight track saving/loading, #69, #88
@@ -1176,7 +1176,7 @@ Other Changes:
 
 
 
-Version 1.2.2 
+Version 1.2.2
 -------------
 
 Bug Fixes:
@@ -1190,7 +1190,7 @@ New Features:
 Other Changes:
  - installation with conda-forge described#63
 
-Version 1.2.1 
+Version 1.2.1
 -------------
 
 Bug Fixes:
@@ -1223,17 +1223,17 @@ Other Changes:
  - improved documentations
 
 
-Version 1.1.0 
+Version 1.1.0
 -------------
 
 New Features:
  - Vertical section styles supported in standalone server, #10
  - More formats for exchanging flight paths implemented, #7
- - Reverse flight path, #11 
+ - Reverse flight path, #11
  - Displaying model data from CLaMS, #4
  - Visualisation of gravity wave forecasts, #14
  - Improved labels in plots, #8
-   
+
 Bug Fixes:
  - Improved debugging in standalone server, #9
  - Fix for Labels accumulate in plots upon saving, #5
@@ -1243,7 +1243,6 @@ Bug Fixes:
 Other Changes:
  - Namespace refactored, all modules dependend to mslib #24
  - Sphinx documentation introduced, #25, #26
- - Documentation on http://mss.rtfd.io 
- - Installation recipes based on conda  
+ - Documentation on http://mss.rtfd.io
+ - Installation recipes based on conda
  - First public release on June 28, 2016
-

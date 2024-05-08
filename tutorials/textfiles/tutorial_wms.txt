@@ -1,4 +1,4 @@
-Hello folks! Today we will learn what is WMS or web map service. 
+Hello folks! Today we will learn what is WMS or web map service.
 
 
 Suppose we are planning our flight track, so to determine the suitable flight path there are various parameters and one such indispensable parameter is wms that shows weather reports or various meteorological data in the entire map.
@@ -45,7 +45,7 @@ Suppose we are using any layer frequently, we can just star it and find it easil
 Now coming to vertical velocity, we can check the map at various atmospheric pressures such as at 150 hPa or 200 hPa or 500 hPa.
 
 
-Initialisation shows the date and time from which the data is available. Here it is 17/10/12. 
+Initialisation shows the date and time from which the data is available. Here it is 17/10/12.
 Valid shows the date and time till the data available is valid.
 
 
