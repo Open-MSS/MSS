@@ -49,6 +49,8 @@ ROOT_FS = TempFS(identifier=f"msui{SHA}")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
 
 ROOT_DIR = ROOT_FS.getsyspath("")
+# using pytest we skip using this conf store
+MSUI_CORE = os.path.join(ROOT_DIR, "msui-core.conf")
 
 if not ROOT_FS.exists("msui/testdata"):
     ROOT_FS.makedirs("msui/testdata")
