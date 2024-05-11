@@ -113,6 +113,7 @@ def _cleanup_test_files():
 
 def test_download_progress():
     file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airdata")
+    os.makedirs(os.path.dirname(file_path))
     download_progress(file_path, 'http://speedtest.ftp.otenet.gr/files/test100k.db')
     assert os.path.exists(file_path)
 

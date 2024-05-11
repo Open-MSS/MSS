@@ -218,14 +218,13 @@ def reset_config():
     """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) before every test
     """
     # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is deleted.
-    # We have between the workers a shared constants.ROOT_DIR this needs to become variable
-    # ToDo improve worker based dirs and config
-    # shutil.rmtree(constants.ROOT_DIR, ignore_errors=True)
+    # We have between the workers a shared constants.ROOT_DIR
     for e in constants.ROOT_FS.walk.files(exclude=["mscolab.db"]):
         constants.ROOT_FS.remove(e)
-
-    # for e in constants.ROOT_FS.walk.dirs(search="depth"):
-    #     constants.ROOT_FS.removedir(e)
+    # mscolab_settings, mswms_settings, testdata is not changed so we can keep it
+    for e in constants.ROOT_FS.walk.dirs(search="depth"):
+        if not e in ("/mscolab", '/mswms', '/mswms/testdata'):
+            constants.ROOT_FS.removedir(e)
     generate_initial_config()
     create_msui_settings_file("{}")
     read_config_file()
