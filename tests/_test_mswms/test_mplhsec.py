@@ -29,12 +29,12 @@
 import importlib
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from tests.constants import SERVER_CONFIG_FILE
+from tests.constants import MSWMS_SERVER_CONFIG_FILE
 
 
 class TestMPLBasemapHorizontalSectionStyle:
     def setup_method(self):
-        self.mswms_settings = importlib.import_module("mswms_settings", SERVER_CONFIG_FILE)
+        self.mswms_settings = importlib.import_module("mswms_settings", MSWMS_SERVER_CONFIG_FILE)
 
     def test_supported_epsg_codes(self):
         assert list(self.mswms_settings.epsg_to_mpl_basemap_table.keys()) == [4326]

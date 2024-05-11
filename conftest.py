@@ -32,7 +32,6 @@ import sys
 sys.dont_write_bytecode = True
 
 import pytest
-import fs
 import shutil
 import keyring
 from mslib.mswms.demodata import DataFiles
@@ -77,22 +76,23 @@ def keyring_reset():
 def generate_initial_config():
     """Generate an initial state for the configuration directory in tests.constants.ROOT_FS
     """
-    if not constants.ROOT_FS.exists("msui/testdata"):
-        constants.ROOT_FS.makedirs("msui/testdata")
+    _path = os.path.join(constants.ROOT_DIR, "msui", "testdata")
+    if not os.path.exists(_path):
+        os.makedirs(_path)
 
     # make a copy for mscolab test, so that we read different pathes during parallel tests.
     sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
     shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
-    if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
+    if not constants.MSWMS_SERVER_CONFIG_FS.exists(constants.MSWMS_SERVER_CONFIG_FILE):
         print('\n configure testdata')
         # ToDo check pytest tmpdir_factory
         examples = DataFiles(data_fs=constants.DATA_FS,
-                             server_config_fs=constants.SERVER_CONFIG_FS)
+                             server_config_fs=constants.MSWMS_SERVER_CONFIG_FS)
         examples.create_server_config(detailed_information=True)
         examples.create_data()
 
-    if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
+    if not constants.MSWMS_SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
         config_string = f'''
 # SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
@@ -103,9 +103,9 @@ from urllib.parse import urljoin
 
 ROOT_DIR = '{constants.ROOT_DIR}'
 # directory where mss output files are stored
-root_fs = fs.open_fs(ROOT_DIR)
-if not root_fs.exists('colabTestData'):
-    root_fs.makedir('colabTestData')
+with fs.open_fs(ROOT_DIR) as root_fs:
+    if not root_fs.exists('colabTestData'):
+        root_fs.makedir('colabTestData')
 BASE_DIR = ROOT_DIR
 DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory
@@ -176,16 +176,14 @@ enable_basic_http_authentication = False
 # enable login by identity provider
 USE_SAML2 = False
 '''
-        ROOT_FS = fs.open_fs(constants.ROOT_DIR)
-        if not ROOT_FS.exists('mscolab'):
-            ROOT_FS.makedir('mscolab')
-        with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
+        if not os.path.exists(constants.MSCOLAB_CONFIG_PATH):
+            os.makedirs(constants.MSCOLAB_CONFIG_PATH)
+        with open(constants.MSCOLAB_CONFIG_FILE_PATH, 'w') as _f:
             # windows needs \\ or / but mixed is terrible. *nix needs /
-            mscolab_fs.writetext(constants.MSCOLAB_CONFIG_FILE, config_string.replace('\\', '/'))
-        path = fs.path.join(constants.ROOT_DIR, 'mscolab', constants.MSCOLAB_CONFIG_FILE)
-        parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
+            _f.write(config_string.replace('\\', '/'))
 
-    if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_AUTH_FILE):
+    mscolab_auth_path_file = os.path.join(constants.MSCOLAB_CONFIG_PATH, constants.MSCOLAB_AUTH_FILE)
+    if not os.path.exists(mscolab_auth_path_file):
         config_string = '''
 import hashlib
 
@@ -193,12 +191,9 @@ class mscolab_auth:
      password = "testvaluepassword"
      allowed_users = [("user", hashlib.md5(password.encode('utf-8')).hexdigest())]
 '''
-        ROOT_FS = fs.open_fs(constants.ROOT_DIR)
-        if not ROOT_FS.exists('mscolab'):
-            ROOT_FS.makedir('mscolab')
-        with fs.open_fs(fs.path.join(constants.ROOT_DIR, "mscolab")) as mscolab_fs:
+        with open(mscolab_auth_path_file, 'w') as _f:
             # windows needs \\ or / but mixed is terrible. *nix needs /
-            mscolab_fs.writetext(constants.MSCOLAB_AUTH_FILE, config_string.replace('\\', '/'))
+            _f.write(config_string.replace('\\', '/'))
 
     def _load_module(module_name, path):
         spec = importlib.util.spec_from_file_location(module_name, path)
@@ -207,8 +202,8 @@ class mscolab_auth:
         spec.loader.exec_module(module)
 
 
-    _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
-    _load_module("mscolab_settings", path)
+    _load_module("mswms_settings", constants.MSWMS_CONFIG_FILE_PATH)
+    _load_module("mscolab_settings", constants.MSCOLAB_CONFIG_FILE_PATH)
 
 
 generate_initial_config()
@@ -220,14 +215,17 @@ from tests.utils import create_msui_settings_file
 
 @pytest.fixture(autouse=True)
 def reset_config():
-    """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
+    """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) before every test
     """
     # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is deleted.
+    # We have between the workers a shared constants.ROOT_DIR this needs to become variable
+    # ToDo improve worker based dirs and config
+    # shutil.rmtree(constants.ROOT_DIR, ignore_errors=True)
     for e in constants.ROOT_FS.walk.files(exclude=["mscolab.db"]):
         constants.ROOT_FS.remove(e)
-    for e in constants.ROOT_FS.walk.dirs(search="depth"):
-        constants.ROOT_FS.removedir(e)
 
+    # for e in constants.ROOT_FS.walk.dirs(search="depth"):
+    #     constants.ROOT_FS.removedir(e)
     generate_initial_config()
     create_msui_settings_file("{}")
     read_config_file()

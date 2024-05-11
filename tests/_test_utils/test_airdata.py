@@ -25,6 +25,8 @@
     limitations under the License.
 """
 import os
+import shutil
+
 import mock
 from PyQt5 import QtWidgets
 from mslib.utils.airdata import download_progress, get_airports, \
@@ -102,19 +104,15 @@ def _download_incomplete_airspace(path, url):
 
 
 def _cleanup_test_files():
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "bg_asp.xml")
+    # This should be  also cleaned by conftest
+    file_path = os.path.join(ROOT_DIR, "downloads", "aip")
     if "tmp" in file_path:
         if os.path.exists(file_path):
-            os.remove(file_path)
-    file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airports.csv")
-    if "tmp" in file_path:
-        if os.path.exists(file_path):
-            os.remove(file_path)
+            shutil.rmtree(file_path)
 
 
 def test_download_progress():
     file_path = os.path.join(ROOT_DIR, "downloads", "aip", "airdata")
-    os.makedirs(os.path.dirname(file_path))
     download_progress(file_path, 'http://speedtest.ftp.otenet.gr/files/test100k.db')
     assert os.path.exists(file_path)
 

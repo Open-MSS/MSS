@@ -42,28 +42,30 @@ else:
         SHA = ""
 
 CACHED_CONFIG_FILE = None
-SERVER_CONFIG_FILE = "mswms_settings.py"
+MSWMS_SERVER_CONFIG_FILE = "mswms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 MSCOLAB_AUTH_FILE = "mscolab_auth.py"
-ROOT_FS = TempFS(identifier=f"msui{SHA}")
+ROOT_FS = TempFS(identifier=f"mss{SHA}")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
+MSUI_CONFIG_PATH = OSFS_URL
+os.environ["MSUI_CONFIG_PATH"] = MSUI_CONFIG_PATH
 
 ROOT_DIR = ROOT_FS.getsyspath("")
 # using pytest we skip using this conf store
 MSUI_CORE = os.path.join(ROOT_DIR, "msui-core.conf")
 
-if not ROOT_FS.exists("msui/testdata"):
-    ROOT_FS.makedirs("msui/testdata")
-SERVER_CONFIG_FS = fs.open_fs(fs.path.join(ROOT_DIR, "msui"))
-DATA_FS = fs.open_fs(fs.path.join(ROOT_DIR, "msui/testdata"))
-
-MSUI_CONFIG_PATH = OSFS_URL
-# MSUI_CONFIG_PATH = SERVER_CONFIG_FS.getsyspath("") would use a none osfs path
-os.environ["MSUI_CONFIG_PATH"] = MSUI_CONFIG_PATH
-SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.getsyspath(""), SERVER_CONFIG_FILE)
-
+if not ROOT_FS.exists("mswms/testdata"):
+    ROOT_FS.makedirs("mswms/testdata")
+MSWMS_SERVER_CONFIG_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mswms"))
+DATA_FS = fs.open_fs(fs.path.join(ROOT_DIR, "mswms/testdata"))
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
 DATA_DIR = DATA_FS.getsyspath("")
+
+MSWMS_CONFIG_PATH = os.path.join(ROOT_DIR, 'mswms')
+MSWMS_CONFIG_FILE_PATH = os.path.join(MSWMS_CONFIG_PATH, 'mswms_settings.py')
+
+MSCOLAB_CONFIG_PATH = os.path.join(ROOT_DIR, 'mscolab')
+MSCOLAB_CONFIG_FILE_PATH = os.path.join(MSCOLAB_CONFIG_PATH, 'mscolab_settings.py')
 
 # deployed mscolab url
 MSCOLAB_URL = "http://localhost:8083"

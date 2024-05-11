@@ -67,9 +67,9 @@ if os.environ.get("GALLERY", "True") != "False":
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     from mslib.mswms.demodata import DataFiles
 
-    root_fs = fs.open_fs("~/")
-    if not root_fs.exists("mss/testdata"):
-        root_fs.makedirs("mss/testdata")
+    with fs.open_fs("~/") as root_fs:
+        if not root_fs.exists("mss/testdata"):
+            root_fs.makedirs("mss/testdata")
 
     examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
                          server_config_fs=fs.open_fs("~/mss"))
