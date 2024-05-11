@@ -52,7 +52,7 @@ os.environ["MSUI_CONFIG_PATH"] = MSUI_CONFIG_PATH
 
 ROOT_DIR = ROOT_FS.getsyspath("")
 # using pytest we skip using this conf store
-MSUI_CORE = os.path.join(ROOT_DIR, "msui-core.conf")
+MSUI_CORE_FILE_PATH = os.path.join(ROOT_DIR, "msui-core.conf")
 
 if not ROOT_FS.exists("mswms/testdata"):
     ROOT_FS.makedirs("mswms/testdata")

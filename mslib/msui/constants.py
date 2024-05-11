@@ -37,7 +37,7 @@ HOME = os.path.expanduser(f"~{os.path.sep}")
 MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui"))
 ROOT_FS = open_fs(MSUI_CONFIG_PATH)
 ROOT_DIR = ROOT_FS.getsyspath("")
-MSUI_CORE = os.path.join(ROOT_DIR, "msui-core.conf")
+MSUI_CORE_FILE_PATH = os.path.join(ROOT_DIR, "msui-core.conf")
 
 if '://' in MSUI_CONFIG_PATH:
     try:
