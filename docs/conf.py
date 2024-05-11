@@ -70,6 +70,8 @@ if os.environ.get("GALLERY", "True") != "False":
     with fs.open_fs("~/") as root_fs:
         if not root_fs.exists("mss/testdata"):
             root_fs.makedirs("mss/testdata")
+        if not root_fs.exists(".config/msui"):
+            root_fs.makedirs(".config/msui")
 
     examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
                          server_config_fs=fs.open_fs("~/mss"))
