@@ -44,14 +44,12 @@
             display: flex;
             justify-content: center;
             align-items: center;
-        
         }
     </style>
     <div class="col">
       <h1 id="title">Choose Identity Provider</h1>
       <form id="identityForm" method="post" action="/idp_login">
           <ul id="ulButtons">
-              
             {% for idp in configured_idps %}
               <li>
                 <button id="idpButton" type="button" onclick="selectIdentityProvider('{{ idp['idp_identity_name']|safe }}')">{{ idp['idp_data']['idp_name'] }}</button>
@@ -69,6 +67,5 @@
           }
       </script>
     </div>
-      
   </div>
   {% endblock %}

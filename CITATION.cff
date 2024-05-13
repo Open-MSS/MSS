@@ -1,5 +1,5 @@
 cff-version: "1.2.0"
-contact: 
+contact:
     - website: https://github.com/Open-MSS/MSS/wiki/Contact
       name: "MSS community"
 license: "Apache-2.0"
@@ -19,7 +19,7 @@ authors:
     email: "j.ungermann@fz-juelich.de"
     orcid:  "https://orcid.org/0000-0001-9095-8332"
   - affiliation: "Forschungszentrum Jülich GmbH"
-    family-names: "Grooß" 
+    family-names: "Grooß"
     given-names: "Jens-Uwe"
     email: "j.-u.grooss@fz-juelich.de"
     orcid: "https://orcid.org/0000-0002-9485-866X"

@@ -1,4 +1,4 @@
-The MSS software will be maximised automatically and TOP VIEW will be opened. 
+The MSS software will be maximised automatically and TOP VIEW will be opened.
 
 After clicking on SELECT TO OPEN CONTROL, click on KML OVERLAY. The UI will look as shown.
 
@@ -20,7 +20,7 @@ Now, we will add KML files by clicking on ADD KML FILES. The dialogue will be op
 
 When we add a KML file, the default colour is Black and the default linewidth is 5 units.
 
-Now, let's change colour and line width of the KML files. Before that, we add another KML file. Both the KML files will be opened when we will open the GLOBAL map. 
+Now, let's change colour and line width of the KML files. Before that, we add another KML file. Both the KML files will be opened when we will open the GLOBAL map.
 
 Both the files are in black colour.
 
@@ -35,13 +35,13 @@ We change it to different values to obtain different linewidths.
 
 After entering in GLOBAL MAP, we can see COLOR dot KML file which is in black colour.
 
-We change its colour by clicking on CHANGE COLOR option button. 
+We change its colour by clicking on CHANGE COLOR option button.
 
-We change it to Red. 
+We change it to Red.
 
-It's default line width is 5. 
+It's default line width is 5.
 
-We again change its colour to Maroon. 
+We again change its colour to Maroon.
 
 We type the line width to 6.53 and then 3.45.
 

@@ -21,4 +21,3 @@ Some videos about the Mission Support System (MSS)
    tutorials/tutorial_hexagoncontrol
    tutorials/tutorial_performance_settings
    tutorials/tutorial_archive
-

@@ -31,7 +31,7 @@ You can install it either automatically with the help of a script or manually.
 
 ### Manually
 
-As **Beginner** start with an installation of Mambaforge 
+As **Beginner** start with an installation of Mambaforge
 Get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) for your Operation System
 
 
@@ -47,7 +47,7 @@ to leave out the 'source' here and below).
 For updating an existing MSS installation to the current version, it is
 best to install it into a new environment. If an existing environment
 shall be updated, it is important to update all packages in this
-environment. 
+environment.
 
 ```
   $ mamba activate mssenv
@@ -84,7 +84,7 @@ For a simple test you could start the builtin standalone *mswms* and
 
 Point a browser for the verification of both servers installed on
 
-  - <http://127.0.0.1:8083/status> 
+  - <http://127.0.0.1:8083/status>
   - <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>
 
 Further details in the components section on <http://mss.rtfd.io>

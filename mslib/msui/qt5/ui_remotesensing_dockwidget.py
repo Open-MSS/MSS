@@ -123,4 +123,3 @@ class Ui_RemoteSensingDockWidget(object):
         self.cbSolarBody.setItemText(2, _translate("RemoteSensingDockWidget", "azimuth"))
         self.cbSolarBody.setItemText(3, _translate("RemoteSensingDockWidget", "elevation"))
         self.lbSolarCmap.setText(_translate("RemoteSensingDockWidget", "fill me"))
-

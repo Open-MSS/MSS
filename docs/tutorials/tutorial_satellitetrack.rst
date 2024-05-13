@@ -5,4 +5,3 @@ To combine a flight path with a satellite overflight, the remotesensing widget i
 
 
  .. image:: /videos/gif/tutorial_satellitetrack.gif
-

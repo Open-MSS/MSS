@@ -4,31 +4,31 @@ SSO via SAML Integration Guide for MSColab Server
 In this documentation, you will go through the following topics.
 
     1. Introduction
-    
+
     2. Configuring an existing IdP
-    
+
         * Private key and certificate
-        
+
         * Configuring MSColab settings
-        
+
             * MSColab configurations
             * Establish pysaml2, Saml2Client for the MSColab server
-            
+
         * Configuration `mss_saml2_backend.yaml` file
-        
+
         * Access SAML2Client metadata of MSColab
-        
+
         * Guide to IDP Configuration
 
     3. Configuration example through Keycloak 13.0.1
-    
+
         * Setting Up Keycloak
-        
+
             * Installation and run Keycloak
             * Setup Keycloak IdP
-            
+
         * Configure MSColab server
-        
+
             * Configuration in MSColab settings for Keycloak
             * Configuration `mss_saml2_backend.yaml` file
 
@@ -53,11 +53,11 @@ Furthermore, you will need to configure saml2 setup in your `setup_saml2_backend
 
 .. note::
     When you want to set a parameter or change a default add it to that file,
-    
+
     eg:-
 
         $ more mscolab_settings.py
-        
+
         USE_SAML2 = True
 
 Also, you should be careful to return the attributes `username` and `email` address accordingly from the IdP along with the SAML response.
@@ -78,7 +78,7 @@ MSColab configurations
 
 This section provides a guide for implementing MSColab with a single IdP. You can make the necessary changes in your `mscolab_settings.py` or `conf.py` file and your `setup_saml2_backend.py`.
 
-.. note:: 
+.. note::
 	Sensible defaults of MSColab are opinionated. All these are defined in conf.py and those which you want to change you can add to a mscolab_settings.py in your search path.
 
 Before running the MSColab server, ensure `USE_SAML` is set to `True` in your `mscolab_settings.py`.
@@ -86,7 +86,7 @@ Before running the MSColab server, ensure `USE_SAML` is set to `True` in your `m
 .. code:: text
 
 	# enable login by identity provider
-    	USE_SAML2 = True
+    USE_SAML2 = True
 
 To enabling login via the Identity Provider; need to implement `mss_saml2_backend.yaml` with paths for .crt and .key files, configure mscolab_settings.py, and configure `setup_saml2_backend.py`
 
@@ -111,7 +111,7 @@ In this implementation, as we are enabling only one IdP, there is no need to con
     Please refer to the sample template `setup_saml2_backend.py.sample` located in the `docs/samples/config/mscolab` directory.
 
 	Idp_identity_name refers to the specific name used to identify the particular Identity Provider within the MSColab server. This name should be used in the `mss_saml2_backend.yaml` file when configuring your IdP, as well as in the MSColab server configurations. It's important to note that this name is not visible to end users
-    
+
     Remember to use underscore for the blanks in your `idp_identity_name`.
 
 	Idp_name refers to the name of the Identity Provider that will be displayed in the MSColab server web interface for end users to select when configuring SSO.
@@ -128,10 +128,10 @@ You should do implementation by your `setup_saml2_backend.py` file.
 
     # if multiple 3rd party exists, development should need to implement accordingly below
     """
-    	if 'idp_2'== configured_idp['idp_identity_name']:
-    	# rest of code
-    	# set CRTs and metadata paths for the idp_2
-    	# configuration idp_2 Saml2Client
+    if 'idp_2'== configured_idp['idp_identity_name']:
+        # rest of code
+        # set CRTs and metadata paths for the idp_2
+        # configuration idp_2 Saml2Client
     """
 
 After completing these steps, you can proceed to configure the `mss_saml2_backend.yaml` file.
@@ -152,11 +152,11 @@ Please refer the yaml file template (`mss_saml2_backend.yaml.samlple`) in the di
      key_file: mslib/mscolab/app/key_sp.key
      cert_file: mslib/mscolab/app/crt_sp.crt
      organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
-     
+
      contact_person:
-     	- {contact_type: technical, email_address: technical@example.com, given_name: Technical}
-     	- {contact_type: support, email_address: support@example.com, given_name: Support}
-        
+       - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
+       - {contact_type: support, email_address: support@example.com, given_name: Support}
+
      metadata:
        local: [mslib/mscolab/app/idp.xml]
      entityid: http://localhost:5000/proxy_saml2_backend.xml
@@ -200,12 +200,12 @@ Please refer the yaml file template (`mss_saml2_backend.yaml.samlple`) in the di
          name_id_format_allow_create: true
 
 .. note::
-    Make sure to update 
-    entityid : 'idp_identity_name' 
+    Make sure to update
+    entityid : 'idp_identity_name'
     Assertion_consumer_service : with the urls of assertion consumer services functionalities URL that going to implement next step, may be better to explain here
 
     Key_file : if need can be update through the server
-    Cert_file : if need can be update through the server 
+    Cert_file : if need can be update through the server
     Metadata.local : if need can be update through the server
 
 
@@ -263,7 +263,7 @@ Via Docker (requires Docker installed)
     .. note::
 
         You can define KEYCLOAK_USER and KEYCLOAK_PASSWORD as you wish. Recommends using tools like pwgen to generate strong and random passwords.
-    
+
     * Open your terminal and run
 
     .. code:: text
@@ -289,7 +289,7 @@ Access Keycloak
 
 Login as an admin
     You can go to the admin console and  login as an admin by providing the above provided credentials.
-    
+
         .. image:: images/sso_via_saml_conf/ss_admin_login.png
             :width: 400
 
@@ -312,7 +312,7 @@ Create a client specifically for SAML
 
         .. image:: images/sso_via_saml_conf/ss_left_nav_client.png
             :width: 200
-    
+
     In the client section you can see `create` button in the top right corner.
 
     Create a new client by clicking `create` button in the top right corner.
@@ -323,7 +323,7 @@ Create a client specifically for SAML
         .. note::
             When creating client ID, it should be same as the issuer ID of the MSColab server.
             In here, the MSColab server used different issuer IDs for the particular idp_iedentity_name, and issued it by url bellow
-	            
+
                 http://127.0.0.1:8083/metadata/idp_identityname/
 
 
@@ -335,28 +335,28 @@ Create a client specifically for SAML
 
         Eg:-
             http://127.0.0.1:8083/*
-            
+
             http://localhost:8083/*
 
-    
+
     Generate keys and certificates
 
         To generate keys and certificates first navigate into saml keys tab and click `Generate new keys` button.
             .. image:: images/sso_via_saml_conf/ss_gen_keys_crts.png
                 :width: 800
-        
+
         You can copy generated keys and certificates by clicking top of the key and certificate. After clicked you should need to create .crt and .key file accordingly.
 
         .. note::
             In here when you creating .key and .crt make sure to begin creating file structure accordingly.
 
-                Eg:-	
+                Eg:-
                     .key file
 
                     ----BEGIN RSA PRIVATE KEY-----
 
                     Key key key key key key key
-                    
+
                     -----END RSA PRIVATE KEY-----
 
                 |
@@ -394,7 +394,7 @@ Create a client specifically for SAML
         eg:-
 
             clients>yourcreatedCliet>Mappers>Add Builtin Protocol Mapper enable email
-        
+
         First navigate into client section through left navigation.
 
             .. image:: images/sso_via_saml_conf/ss_left_nav_client.png
@@ -415,7 +415,7 @@ Create a client specifically for SAML
             .. image:: images/sso_via_saml_conf/ss_enable_mappers.png
                     :width: 800
 
-        Then you can see Added mappers in your interface 
+        Then you can see Added mappers in your interface
 
             .. image:: images/sso_via_saml_conf/ss_view_mappers.png
                     :width: 800
@@ -548,7 +548,7 @@ Configuration mss_saml2_backend.yaml file
         .. note::
             may be can be occured invalid redirect url problem, since we defined localhost in keycloak admin, and using 127.0..... be careful to set it correctly.
 
-            eg:- 
+            eg:-
                 assertion_consumer_service:
                         - [http://localhost:8083/localhost_test_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
                         - [http://localhost:8083/localhost_test_idp/acs/redirect,]

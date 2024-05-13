@@ -64,4 +64,3 @@ class Ui_WMSCapabilitiesBrowser(object):
         self.lblURL.setText(_translate("WMSCapabilitiesBrowser", "<URL>"))
         self.cbFullView.setText(_translate("WMSCapabilitiesBrowser", "show full XML document"))
         self.btClose.setText(_translate("WMSCapabilitiesBrowser", "close"))
-

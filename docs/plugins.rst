@@ -53,8 +53,8 @@ and will be overwritten after reading back the file.
         "KML": ["kml", "mslib.plugins.io.kml", "save_to_kml"],
         "GPX": ["gpx", "mslib.plugins.io.gpx", "save_to_gpx"]
     },
-    
-    
+
+
 User contributed Plugins
 ------------------------
 

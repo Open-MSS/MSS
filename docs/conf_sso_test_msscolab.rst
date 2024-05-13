@@ -35,7 +35,7 @@ Before getting started, you should correctly activate the environments, set the 
 2. Generate Keys, Certificates, and backend_saml files
 ------------------------------------------------------
 
-This involves generating both `.key` files and `.crt` files for both the Identity provider and mscolab server and `backend_saml.yaml` file. 
+This involves generating both `.key` files and `.crt` files for both the Identity provider and mscolab server and `backend_saml.yaml` file.
 
 Before running the command make sure to set `USE_SAML2 = False` in your `mscolab_settings.py` file,  You can accomplish this by following these steps:
 
@@ -58,7 +58,7 @@ If everything is correctly set, you can generate keys and certificates simply by
 3. Enable USE_SAML2
 -------------------
 
-To enable SAML2-based login (identity provider-based login), 
+To enable SAML2-based login (identity provider-based login),
 
 - To start the process update `USE_SAML2 = True` in your `mscolab_settings.py` file.
 
