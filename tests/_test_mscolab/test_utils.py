@@ -48,7 +48,7 @@ class Message:
     replies = []
 
     class created_at:
-        def isoformat():
+        def isoformat(self):
             pass
 
 
