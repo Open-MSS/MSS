@@ -62,10 +62,7 @@ def get_message_dict(message):
 def created_at_isoformat(created_at):
     if created_at is None:
         return None
-    time_zone = created_at.strftime("%z")
-    formatted_tz = time_zone[:3] + ':' + time_zone[3:]
-    iso_format = created_at.strftime("%Y-%m-%dT%H:%M:%S.%f")
-    return f"{iso_format}{formatted_tz}"
+    return created_at.isoformat()
 
 
 def os_fs_create_dir(directory_path):
