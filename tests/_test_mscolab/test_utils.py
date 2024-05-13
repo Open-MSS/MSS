@@ -26,12 +26,15 @@
 import os
 import pytest
 import json
+import datetime
 
 from fs.tempfs import TempFS
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, MessageType
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.utils import get_recent_op_id, get_session_id, get_message_dict, create_files, os_fs_create_dir
+from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
+                                 get_message_dict, created_at_isoformat, create_files,
+                                 os_fs_create_dir)
 
 
 class Message:
@@ -79,6 +82,10 @@ class Test_Utils:
     def test_get_message_dict(self):
         result = get_message_dict(Message())
         assert result["message_type"] == MessageType.TEXT
+
+    def test_created_at_isoformat(self):
+        now = datetime.datetime.now(datetime.timezone.utc)
+        assert now.isoformat() == created_at_isoformat(now)
 
     def test_os_fs_create_dir(self):
         _fs = TempFS(identifier="msui")

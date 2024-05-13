@@ -55,8 +55,17 @@ def get_message_dict(message):
         "message_type": message.message_type,
         "reply_id": message.reply_id,
         "replies": [],
-        "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S.%f %z")
+        "time": created_at_isoformat(message.created_at)
     }
+
+
+def created_at_isoformat(created_at):
+    if created_at is None:
+        return None
+    time_zone = created_at.strftime("%z")
+    formatted_tz = time_zone[:3] + ':' + time_zone[3:]
+    iso_format = created_at.strftime("%Y-%m-%dT%H:%M:%S.%f")
+    return f"{iso_format}{formatted_tz}"
 
 
 def os_fs_create_dir(directory_path):
