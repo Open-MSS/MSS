@@ -57,6 +57,8 @@ OPENAIP_NOTICE = "Airspace data used comes from openAIP.\n" \
 OURAIRPORTS_NOTICE = "Airports provided by OurAirports."
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.INFO)
+mslib_logger = logging.getLogger('mslib')
+mslib_logger.setLevel(logging.DEBUG)
 
 
 class MapCanvas(basemap.Basemap):

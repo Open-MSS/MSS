@@ -59,6 +59,8 @@ from mslib.msui import flighttrack as ft
 
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.INFO)
+mslib_logger = logging.getLogger('mslib')
+mslib_logger.setLevel(logging.DEBUG)
 
 
 def distance_point_linesegment(p, l1, l2):

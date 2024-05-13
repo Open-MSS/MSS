@@ -214,6 +214,8 @@ for standard_name in _TARGETS:
 
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.INFO)
+mslib_logger = logging.getLogger('mslib')
+mslib_logger.setLevel(logging.DEBUG)
 
 
 def get_standard_names():

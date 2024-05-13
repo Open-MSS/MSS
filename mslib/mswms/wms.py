@@ -146,7 +146,7 @@ from mslib.mswms import mss_plot_driver
 from mslib.utils.coordinate import get_projection_params
 
 # Logging the Standard Output, which will be added to the Apache Log Files
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s %(funcName)19s || %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S")
 

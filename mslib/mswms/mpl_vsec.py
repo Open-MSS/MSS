@@ -47,6 +47,8 @@ mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
 mpl_logger = logging.getLogger('matplotlib')
 mpl_logger.setLevel(logging.INFO)
+mslib_logger = logging.getLogger('mslib')
+mslib_logger.setLevel(logging.DEBUG)
 
 
 class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
