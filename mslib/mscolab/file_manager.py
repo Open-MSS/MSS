@@ -31,7 +31,6 @@ import logging
 import git
 import threading
 from sqlalchemy.exc import IntegrityError
-from mslib.mscolab.utils import created_at_isoformat
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
@@ -400,7 +399,7 @@ class FileManager:
             'comment': change.comment,
             'version_name': change.version_name,
             'username': change.user.username,
-            'created_at': created_at_isoformat(change.created_at)
+            'created_at': change.created_at.isoformat()
         }, changes))
 
     def get_change_content(self, ch_id, user):

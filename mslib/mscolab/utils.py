@@ -55,14 +55,8 @@ def get_message_dict(message):
         "message_type": message.message_type,
         "reply_id": message.reply_id,
         "replies": [],
-        "time": created_at_isoformat(message.created_at)
+        "time": message.created_at.isoformat()
     }
-
-
-def created_at_isoformat(created_at):
-    if created_at is None:
-        return None
-    return created_at.isoformat()
 
 
 def os_fs_create_dir(directory_path):
