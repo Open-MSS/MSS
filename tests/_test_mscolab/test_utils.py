@@ -82,7 +82,6 @@ class Test_Utils:
         result = get_message_dict(Message())
         assert result["message_type"] == MessageType.TEXT
 
-
     def test_os_fs_create_dir(self):
         _fs = TempFS(identifier="msui")
         _dir = _fs.getsyspath("")
