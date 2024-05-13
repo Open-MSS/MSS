@@ -51,6 +51,8 @@ As **Beginner** start with an installation of Miniforge3
 
 If you use already Mambaforge please read the `FAQ <https://github.com/conda-forge/miniforge#faq>`__
 
+
+
 Install MSS
 ~~~~~~~~~~~
 
@@ -62,6 +64,16 @@ versions for dependencies. ::
     (mssenv) $ mamba install mss=$mss_version python
     (mssenv) $ msui
 
+
+.. hint::
+   For installing MSS on the ARM-MAC Apple devices because not all dependencies
+   are crosscompiled you need to set an additional subdir. ::
+
+       $ mamba create -n mssenv
+       $ mamba activate mssenv
+       (mssenv) $ mamba config --env --set subdir osx-64
+       (mssenv) $ mamba install mss=$mss_version python
+       (mssenv) $ msui
 
 
 Mamba Server based installation example
