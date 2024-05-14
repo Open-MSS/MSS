@@ -1,9 +1,7 @@
-set MENU_DIR=%PREFIX%\Menu
-if not exist %MENU_DIR% mkdir %MENU_DIR%
-if errorlevel 1 exit 1
-copy %SRC_DIR%\Menu\msui_shortcut.json %MENU_DIR%\msui_shortcut.json
-if errorlevel 1 exit 1
-copy %SRC_DIR%\Menu\mss.ico %MENU_DIR%\mss.ico
-if errorlevel 1 exit 1
+mkdir "%PREFIX%\Menu"
+copy /Y "%RECIPE_DIR%\menu.json" "%PREFIX%\Menu\%PKG_NAME%_menu.json"
+copy /Y "%RECIPE_DIR%\msui.ico" "%PREFIX%\Menu\msui.ico"
+
+; conda-build issue 5311, currently we can't build for windows with pip install
 %PYTHON% setup.py install --single-version-externally-managed --record record.txt
 if errorlevel 1 exit 1
