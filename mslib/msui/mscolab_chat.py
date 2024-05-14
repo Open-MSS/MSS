@@ -350,7 +350,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             "token": self.token,
             "op_id": self.op_id,
             "timestamp": datetime.datetime(1970, 1, 1,
-                                           tzinfo=datetime.timezone.utc).strftime("%Y-%m-%d, %H:%M:%S.%f %z")
+                                           tzinfo=datetime.timezone.utc).isoformat()
         }
         # returns an array of messages
         url = urljoin(self.mscolab_server_url, "messages")
