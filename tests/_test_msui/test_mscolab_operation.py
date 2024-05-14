@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import pytest
+import datetime
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, MessageType
@@ -83,6 +84,7 @@ class Test_MscolabOperation:
             message = Message.query.filter_by(text='**test message**').first()
             result = get_message_dict(message)
             assert result["message_type"] == MessageType.TEXT
+            assert datetime.datetime.fromisoformat(result["time"]).year == datetime.datetime.now().year
 
     def test_search_message(self, qtbot):
         self._send_message(qtbot, "**test message**")
