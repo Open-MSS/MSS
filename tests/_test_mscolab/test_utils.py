@@ -23,34 +23,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import datetime
 import os
 import pytest
 import json
 
 from fs.tempfs import TempFS
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation, MessageType
+from mslib.mscolab.models import Operation, Message, MessageType, User
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
                                  get_message_dict, create_files,
                                  os_fs_create_dir)
-
-
-class Message:
-    id = 1  # noqa: A003
-    u_id = 2
-
-    class user:
-        username = "name"
-    text = "Moin"
-    message_type = MessageType.TEXT
-    reply_id = 0
-    replies = []
-
-    class created_at:
-        @staticmethod
-        def isoformat():
-            pass
 
 
 class Test_Utils:
@@ -80,7 +64,10 @@ class Test_Utils:
         assert get_session_id(sockets, 5) == 100
 
     def test_get_message_dict(self):
-        result = get_message_dict(Message())
+        message = Message(0, 0, "Moin")
+        message.user = User(*self.userdata)
+        message.created_at = datetime.datetime.now(tz=datetime.timezone.utc)
+        result = get_message_dict(message)
         assert result["message_type"] == MessageType.TEXT
 
     def test_os_fs_create_dir(self):
