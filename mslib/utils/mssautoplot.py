@@ -61,6 +61,7 @@ TEXT_CONFIG = {
 
 mpl_logger = configure_mpl_logger()
 
+
 def load_from_ftml(filename):
     """Load a flight track from an XML file at <filename>.
     """
