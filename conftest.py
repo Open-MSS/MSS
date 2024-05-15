@@ -39,11 +39,9 @@ import shutil
 import keyring
 from mslib.mswms.demodata import DataFiles
 import tests.constants as constants
+from mslib.utils.loggerdef import configure_mpl_logger
 
-matplotlib_logger = logging.getLogger('matplotlib')
-matplotlib_logger.setLevel(logging.INFO)
-mslib_logger = logging.getLogger('mslib')
-mslib_logger.setLevel(logging.DEBUG)
+matplotlib_logger = configure_mpl_logger()
 
 # This import must come after importing tests.constants due to MSUI_CONFIG_PATH being set there
 from mslib.utils.config import read_config_file

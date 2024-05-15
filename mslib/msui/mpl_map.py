@@ -50,15 +50,13 @@ except ImportError:
 
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.utils.airdata import get_airports, get_airspaces
+from mslib.utils.loggerdef import configure_mpl_logger
 
 
 OPENAIP_NOTICE = "Airspace data used comes from openAIP.\n" \
                  "Visit openAIP.net and contribute to better aviation data, free for everyone to use and share."
 OURAIRPORTS_NOTICE = "Airports provided by OurAirports."
-mpl_logger = logging.getLogger('matplotlib')
-mpl_logger.setLevel(logging.INFO)
-mslib_logger = logging.getLogger('mslib')
-mslib_logger.setLevel(logging.DEBUG)
+mpl_logger = configure_mpl_logger()
 
 
 class MapCanvas(basemap.Basemap):

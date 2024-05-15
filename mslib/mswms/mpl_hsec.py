@@ -45,14 +45,12 @@ from mslib.mswms import mss_2D_sections
 from mslib.utils.coordinate import get_projection_params
 from mslib.utils.units import convert_to
 from mslib.mswms.utils import make_cbar_labels_readable
+from mslib.utils.loggerdef import configure_mpl_logger
 
 
 BASEMAP_CACHE = {}
 BASEMAP_REQUESTS = []
-mpl_logger = logging.getLogger('matplotlib')
-mpl_logger.setLevel(logging.INFO)
-mslib_logger = logging.getLogger('mslib')
-mslib_logger.setLevel(logging.DEBUG)
+mpl_logger = configure_mpl_logger()
 
 
 class AbstractHorizontalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):

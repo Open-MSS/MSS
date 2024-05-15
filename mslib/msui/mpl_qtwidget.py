@@ -50,6 +50,7 @@ from mslib.utils.units import units
 from mslib.msui import mpl_pathinteractor as mpl_pi
 from mslib.msui import mpl_map
 from mslib.msui.icons import icons
+from mslib.utils.loggerdef import configure_mpl_logger
 
 PIL_IMAGE_ORIGIN = "upper"
 LAST_SAVE_DIRECTORY = config_loader(dataset="data_dir")
@@ -94,10 +95,7 @@ _DEFAULT_SETTINGS_LINEARVIEW = {
     "plot_title_size": "default",
     "axes_label_size": "default"}
 
-mpl_logger = logging.getLogger('matplotlib')
-mpl_logger.setLevel(logging.INFO)
-mslib_logger = logging.getLogger('mslib')
-mslib_logger.setLevel(logging.DEBUG)
+mpl_logger = configure_mpl_logger()
 
 
 class ViewPlotter:

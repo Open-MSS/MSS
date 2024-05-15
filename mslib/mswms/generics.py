@@ -29,6 +29,7 @@ import numpy as np
 import matplotlib
 
 from mslib.utils.units import convert_to
+from mslib.utils.loggerdef import configure_mpl_logger
 
 """
 Number of levels in discrete colourmaps
@@ -212,10 +213,7 @@ for standard_name in _TARGETS:
     elif standard_name not in _TITLES:
         _TITLES[standard_name] = standard_name.replace("_", " ")
 
-mpl_logger = logging.getLogger('matplotlib')
-mpl_logger.setLevel(logging.INFO)
-mslib_logger = logging.getLogger('mslib')
-mslib_logger.setLevel(logging.DEBUG)
+mpl_logger = configure_mpl_logger()
 
 
 def get_standard_names():

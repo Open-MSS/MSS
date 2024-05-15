@@ -55,12 +55,10 @@ from mslib.utils.coordinate import get_distance, find_location, latlon_points, p
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft
+from mslib.utils.loggerdef import configure_mpl_logger
 
 
-mpl_logger = logging.getLogger('matplotlib')
-mpl_logger.setLevel(logging.INFO)
-mslib_logger = logging.getLogger('mslib')
-mslib_logger.setLevel(logging.DEBUG)
+mpl_logger = configure_mpl_logger()
 
 
 def distance_point_linesegment(p, l1, l2):
