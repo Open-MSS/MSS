@@ -30,12 +30,17 @@
 import fs
 import os
 import logging
+import platformdirs
 
 # ToDo refactor to generic functions, keep only constants
 HOME = os.path.expanduser(f"~{os.path.sep}")
 MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui"))
 # Make sure that MSUI_CONFIG_PATH exists
-_ = fs.open_fs(MSUI_CONFIG_PATH, create=True)
+_fs = fs.open_fs(MSUI_CONFIG_PATH, create=True)
+# MSUI does not actually support any PyFilesystem2 fs that is not available as a local path
+MSUI_CONFIG_SYSPATH = _fs.getsyspath("")
+
+MSUI_CACHE_PATH = platformdirs.user_cache_path("msui", "mss")
 
 GRAVATAR_DIR_PATH = fs.path.join(MSUI_CONFIG_PATH, "gravatars")
 

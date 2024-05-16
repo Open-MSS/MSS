@@ -49,12 +49,12 @@ class TestSettingsSave:
 
     def test_save_settings(self):
         settings = {'foo': 'bar'}
-        config.save_settings_qsettings(self.tag, settings, ignore_test=True)
+        config.save_settings_qsettings(self.tag, settings)
 
     def test_load_settings(self):
         settings = {'foo': 'bar'}
-        config.save_settings_qsettings(self.tag, settings, ignore_test=True)
-        settings = config.load_settings_qsettings(self.tag, ignore_test=True)
+        config.save_settings_qsettings(self.tag, settings)
+        settings = config.load_settings_qsettings(self.tag)
         assert isinstance(settings, dict)
         assert settings["foo"] == "bar"
 

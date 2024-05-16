@@ -27,6 +27,7 @@
 
 import os
 import fs
+import tempfile
 from fs.tempfs import TempFS
 
 try:
@@ -59,6 +60,9 @@ MSUI_CONFIG_PATH = OSFS_URL
 # MSUI_CONFIG_PATH = SERVER_CONFIG_FS.getsyspath("") would use a none osfs path
 os.environ["MSUI_CONFIG_PATH"] = MSUI_CONFIG_PATH
 SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.getsyspath(""), SERVER_CONFIG_FILE)
+
+_xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory()
+os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
 
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
 DATA_DIR = DATA_FS.getsyspath("")
