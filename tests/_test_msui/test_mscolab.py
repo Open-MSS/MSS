@@ -456,7 +456,8 @@ class Test_Mscolab:
 
     def test_multiple_flight_path_operations_gets_updates_of_new_operations(self, qtbot):
         """
-        checks that when we use operations only the operations is bold marked not the flighttrack too
+        checks start with flightpathes and the multiple flightpath dockingwidget and updates the mscolab list
+        in the widget after a login by adding new operations
         """
         self.window.actionTopView.trigger()
 
