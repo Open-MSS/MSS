@@ -25,14 +25,16 @@
     limitations under the License.
 """
 import pytest
+import datetime
 
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Message
+from mslib.mscolab.models import Message, MessageType
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 from mslib.utils.config import modify_config_file
+from mslib.mscolab.utils import get_message_dict
 
 
 class Actions:
@@ -79,6 +81,10 @@ class Test_MscolabOperation:
         self._send_message(qtbot, "**test message**")
         with self.app.app_context():
             assert Message.query.filter_by(text='**test message**').count() == 2
+            message = Message.query.filter_by(text='**test message**').first()
+            result = get_message_dict(message)
+            assert result["message_type"] == MessageType.TEXT
+            assert datetime.datetime.fromisoformat(result["time"]) == message.created_at
 
     def test_search_message(self, qtbot):
         self._send_message(qtbot, "**test message**")
