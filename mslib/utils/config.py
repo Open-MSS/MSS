@@ -25,8 +25,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import sys
 from PyQt5 import QtCore
 
 import copy
@@ -457,7 +455,7 @@ def config_loader(dataset=None, default=False):
         return user_options
 
 
-def save_settings_qsettings(tag, settings, ignore_test=False):
+def save_settings_qsettings(tag, settings):
     """
     Saves a dictionary settings to disk.
 
@@ -467,10 +465,8 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     """
     assert isinstance(tag, str)
     assert isinstance(settings, dict)
-    if not ignore_test and ("pytest" in sys.modules):
-        return settings
     # ToDo we have to verify if we can all switch to this definition, not having 3 different
-    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_PATH, "msui-core.conf"),
+    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_SYSPATH, "msui-core.conf"),
                                   QtCore.QSettings.IniFormat)
 
     file_path = q_settings.fileName()
@@ -482,7 +478,7 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     return settings
 
 
-def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
+def load_settings_qsettings(tag, default_settings=None):
     """
     Loads a dictionary of settings from disk. May supply a dictionary of default settings
     to return in case the settings file is not present or damaged. The default_settings one will
@@ -496,12 +492,10 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
-    if not ignore_test and "pytest" in sys.modules:
-        return default_settings
 
     settings = {}
 
-    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_PATH, "msui-core.conf"),
+    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_SYSPATH, "msui-core.conf"),
                                   QtCore.QSettings.IniFormat)
     file_path = q_settings.fileName()
     logging.debug("loading settings for %s from %s", tag, file_path)
