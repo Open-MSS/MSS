@@ -454,6 +454,53 @@ class Test_Mscolab:
             listItem = list_flighttrack.item(i)
             assert listItem.font().bold() is False
 
+    def test_multiple_flight_path_operations_gets_updates_of_new_operations(self, qtbot):
+        """
+        checks that when we use operations only the operations is bold marked not the flighttrack too
+        """
+        self.window.actionTopView.trigger()
+
+        def assert_active_views():
+            # check 1 view opened
+            assert len(self.window.get_active_views()) == 1
+        qtbot.wait_until(assert_active_views)
+
+        topview_0 = self.window.listViews.item(0)
+        assert topview_0.window.tv_window_exists is True
+        # open multiple flightpath first window
+        topview_0.window.cbTools.currentIndexChanged.emit(6)
+
+        def assert_dock_loaded():
+            assert topview_0.window.docks[5] is not None
+        qtbot.wait_until(assert_dock_loaded)
+        # we don't have an operation loaded
+        assert topview_0.window.active_op_id is None
+
+        list_flighttrack = topview_0.window.docks[5].widget().list_flighttrack
+        assert list_flighttrack.item(0).font().bold() is True
+        list_operation_track = topview_0.window.docks[5].widget().list_operation_track
+        assert list_operation_track.item(0) is None
+
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        # test after activating operation
+        self._activate_operation_at_index(0)
+        list_operation_track = topview_0.window.docks[5].widget().list_operation_track
+        assert list_operation_track.count() == 1
+        # more operations for the user
+        for op_name in ["second", "third"]:
+            assert add_operation(op_name, "description")
+            assert add_user_to_operation(path=op_name, emailid=self.userdata[0])
+        # add_operation is working on the database, we need manually reload users operations
+        self.window.mscolab.reload_operations()
+        assert self.window.listOperationsMSC.model().rowCount() == 3
+        list_operation_track = topview_0.window.docks[5].widget().list_operation_track
+        # This is for now the description of the problem
+        assert list_operation_track.count() == 3
+
     def test_correct_active_op_id_in_topview(self, qtbot):
         """
         checks that active_op_id is set
