@@ -950,6 +950,8 @@ class Test_Mscolab:
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
 
     def _connect_to_mscolab(self, qtbot):
+        # The main window must be on top
+        self.window.activateWindow()
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
         self.window.mscolab.connect_window = self.connect_window
         self.connect_window.urlCb.setEditText(self.url)
