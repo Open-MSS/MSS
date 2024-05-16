@@ -32,7 +32,6 @@ import json
 import logging
 import fs
 import os
-import tempfile
 
 from mslib.utils import FatalUserError
 from mslib.msui import constants
@@ -149,8 +148,7 @@ class MSUIDefaultConfig:
     WMS_preload = []
 
     # WMS image cache settings:
-    # this changes on any start of msui, use ths msui_settings.json when you want a persistent path
-    wms_cache = os.path.join(tempfile.TemporaryDirectory().name, "msui_wms_cache")
+    wms_cache = str(constants.MSUI_CACHE_PATH / "wms_cache")
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
