@@ -29,7 +29,7 @@
 # it to generate your project's PyPI page.
 import os
 from past.builtins import execfile
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 long_description = open('README.md').read()
 execfile('mslib/version.py')
 
@@ -57,7 +57,7 @@ setup(
     license="Apache-2.0",
     url="https://github.com/Open-MSS/MSS",
     platforms="any",
-    packages=find_packages(exclude=['tests*', 'tutorials*']),
+    packages=find_namespace_packages(include=["mslib", "mslib.*"]),
     namespace_packages=[],
     include_package_data=True,
     zip_safe=False,
