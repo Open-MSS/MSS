@@ -59,7 +59,7 @@ jobs:
       # scheduled tests should just check that new dependency versions do not break the
       # tests, but should not update the image.
       if: ${{ inputs.event_name == 'push' && env.triggerdockerbuild == 'yes' && inputs.xdist == 'no' }}
-      uses: benc-uk/workflow-dispatch@v1.2.2
+      uses: benc-uk/workflow-dispatch@v1.2.3
       with:
         workflow: Update Image testing-${{ inputs.branch_name }}
         repo: Open-MSS/dockertesting
