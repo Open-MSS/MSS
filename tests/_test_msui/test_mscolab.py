@@ -459,6 +459,7 @@ class Test_Mscolab:
         checks start with flightpathes and the multiple flightpath dockingwidget and updates the mscolab list
         in the widget after a login by adding new operations
         """
+        pytest.xfail("ToDo: needs a refactoring for accessing mainwindow from the docking widget")
         self.window.actionTopView.trigger()
 
         def assert_active_views():

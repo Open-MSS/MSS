@@ -424,6 +424,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_activate_operation = QtCore.pyqtSignal(int, name="signal_activate_operation")
     signal_operation_added = QtCore.pyqtSignal(int, str, name="signal_operation_added")
     signal_operation_removed = QtCore.pyqtSignal(int, name="signal_operation_removed")
+    signal_reload_operation = QtCore.pyqtSignal(name="signal_reload_operation")
     signal_login_mscolab = QtCore.pyqtSignal(str, str, name="signal_login_mscolab")
     signal_logout_mscolab = QtCore.pyqtSignal(name="signal_logout_mscolab")
     signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
@@ -524,6 +525,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.signal_unarchive_operation.connect(self.activate_operation_slot)
         self.mscolab.signal_operation_added.connect(self.add_operation_slot)
         self.mscolab.signal_operation_removed.connect(self.remove_operation_slot)
+        self.mscolab.signal_reload_operation.connect(self.reload_operation_slot)
         self.mscolab.signal_login_mscolab.connect(lambda d, t: self.signal_login_mscolab.emit(d, t))
         self.mscolab.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
         self.mscolab.signal_listFlighttrack_doubleClicked.connect(
@@ -571,6 +573,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     @QtCore.pyqtSlot(int)
     def remove_operation_slot(self, op_id):
         self.signal_operation_removed.emit(op_id)
+
+    @QtCore.pyqtSlot()
+    def reload_operation_slot(self):
+        self.signal_reload_operation.emit()
 
     def add_plugin_submenu(self, name, extension, function, pickertype, plugin_type="Import"):
         if plugin_type == "Import":

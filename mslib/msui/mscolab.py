@@ -472,6 +472,7 @@ class MSUIMscolab(QtCore.QObject):
     signal_operation_removed = QtCore.pyqtSignal(int, name="signal_operation_removed")
     signal_login_mscolab = QtCore.pyqtSignal(str, str, name="signal_login_mscolab")
     signal_logout_mscolab = QtCore.pyqtSignal(name="signal_logout_mscolab")
+    signal_reload_operation = QtCore.pyqtSignal(name="signal_reload_operation")
     signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
@@ -1917,6 +1918,7 @@ class MSUIMscolab(QtCore.QObject):
         index = self.ui.filterCategoryCb.findText(selected_category, QtCore.Qt.MatchFixedString)
         if index >= 0:
             self.ui.filterCategoryCb.setCurrentIndex(index)
+        self.signal_reload_operation.emit()
 
     def reload_wps_from_server(self):
         if self.active_op_id is None:
