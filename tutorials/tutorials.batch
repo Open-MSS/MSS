@@ -16,7 +16,7 @@ export MSUI_CONFIG_PATH=/tmp/msui_tutorials
 
 ##########################################################################
 # wms tutorial
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_wms.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_wms.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -40,7 +40,7 @@ cd ..
 # kml tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_kml.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_kml.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -64,7 +64,7 @@ cd ..
 # hexagoncontrol tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_hexagoncontrol.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_hexagoncontrol.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -88,7 +88,7 @@ cd ..
 # performancesettings tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_performancesettings.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_performancesettings.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -114,7 +114,7 @@ cd ..
 
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_remotesensing.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_remotesensing.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -138,7 +138,7 @@ cd ..
 # satellitetrack tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_satellitetrack.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_satellitetrack.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -162,7 +162,7 @@ cd ..
 ##################################################
 # tutorial waypoints
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_waypoints.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_waypoints.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -186,7 +186,7 @@ cd ..
 ################################################################
 # views tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_views.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_views.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -212,12 +212,12 @@ cd ..
 
 # start a mscolab server on standard port after you have it seeded
 # we should have a seed for tutorials
-$HOME/mambaforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py db --seed
+$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py db --seed
 
-$HOME/mambaforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py start &
+$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py start &
 
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/mambaforge/envs/mssdev/bin/python tutorial_mscolab.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_mscolab.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
