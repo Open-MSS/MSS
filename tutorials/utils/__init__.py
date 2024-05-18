@@ -242,7 +242,7 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
     :param duration: Optional. The duration of the click in seconds. Defaults to 2.
     :param xoffset: Optional. The x-axis offset for the click position. Defaults to 0.
     :param yoffset: Optional. The y-axis offset for the click position. Defaults to 0.
-    :param bounding_box: Optional. The bounding box for the search area. Defaults to None.
+    :param bounding_box: Optional. The bounding box of the image. The image is cropped to. Defaults to None.
     :param region: Optional. The region in which to search for the picture. Defaults to None.
     :param click: Optional. Indicates whether to perform the click action. Defaults to True.
 

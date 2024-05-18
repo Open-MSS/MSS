@@ -81,6 +81,7 @@ def automate_hexagoncontrol():
     find_and_click_picture('tableviewwindow-200-00-km.png', '200 km not found',
                            region=tableview["os_screen_region"])
     type_and_key('500.00')
+    create_tutorial_images()
     find_and_click_picture('tableviewwindow-remove-hexagon.png',
                            "'Remove Hexagon' button not found on the screen.",
                            region=tableview["os_screen_region"])

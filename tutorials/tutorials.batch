@@ -13,6 +13,7 @@
 ~/bin/highlight-pointer -r 10 --key-quit q &
 mkdir /tmp/msui_tutorials
 export MSUI_CONFIG_PATH=/tmp/msui_tutorials
+export XDG_CONFIG_PATH=/tmp/msui_tutorials
 
 ##########################################################################
 # wms tutorial
@@ -24,15 +25,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:04:30 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:03:26 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_wms.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_wms.mp4
 
 # get back to tutorials dir
 cd ..
@@ -48,15 +45,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:03:30 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:01:55 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_kml.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_kml.mp4
 
 # get back to tutorials dir
 cd ..
@@ -72,15 +65,12 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:40 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:25 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_hexagoncontrol.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_hexagoncontrol.mp4
+
 
 # get back to tutorials dir
 cd ..
@@ -96,15 +86,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:01:54 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:01:50 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_performancesettings.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_performancesettings.mp4
 
 # get back to tutorials dir
 cd ..
@@ -123,14 +109,10 @@ rm -r /tmp/msui_tutorials/*
 cd recordings
 # slice (start and ending)
 ffmpeg -y -i last_recording.mp4 -ss 00:00:18 -to 00:03:12 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_remotesensing.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_remotesensing.mp4
 
 # get back to tutorials dir
 cd ..
@@ -146,15 +128,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:18 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:36 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_satellitetrack.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_satellitetrack.mp4
 
 # get back to tutorials dir
 cd ..
@@ -170,15 +148,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:24 -to 00:02:31 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:24 -to 00:02:35 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_waypoints.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2  tutorial_waypoints.mp4
 
 # get back to tutorials dir
 cd ..
@@ -194,15 +168,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:09:14 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:11:04 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_views.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_views.mp4
 
 # get back to tutorials dir
 cd ..
@@ -225,15 +195,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:10:28 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:10:48 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_mscolab.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_mscolab.mp4
 
 # get back to tutorials dir
 cd ..

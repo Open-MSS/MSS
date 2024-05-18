@@ -271,14 +271,11 @@ def automate_views():
     move_and_setup_layerchooser(linearview["os_screen_region"], -171, -390, 900, 100)
 
     create_tutorial_images()
-    linearview = load_settings_qsettings('linearview', {"os_screen_region": (0, 0, 0, 0)})
+
     # Selecting Some Layers in Linear wms section
     gap = 32
-    lvll_region = list(linearview["os_screen_region"])
-    lvll_region[0] = lvll_region[0] - 900 - 171
-    find_and_click_picture('multilayersdialog-multilayering.png',
-                           ' Multilayer not found',
-                           region=tuple(lvll_region))
+    find_and_click_picture('multilayersdialog-multilayering.png', 'Multilayer not found',
+                           bounding_box=(18, 0, 95, 20))
     x, y = pag.position()
     # unselect multilayer
     pag.click(x, y)
@@ -545,8 +542,8 @@ def _sv_adjust_altitude(os_screen_region):
     Returns: None
     """
     # smaller region, seems the widget covers a bit the content
-    pic_name = ('sideviewwindow-cloud-cover-0-1-vertical-section-valid-'
-                '2012-10-17t12-00-00z-initialisation-2012-10-17t12-00-00z.png')
+    pic_name = ('sideviewwindow-cloud-cover-0-1-vertical-section-valid-2012-10-18t06-00-00z-'
+                'initialisation-2012-10-17t12-00-00z.png')
     # pic = picture(pic_name, bounding_box=(20, 20, 60, 300))
     find_and_click_picture('sideviewwindow-mv-wp.png',
                            'Sideview move wp not found',

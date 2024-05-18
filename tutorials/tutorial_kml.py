@@ -67,6 +67,9 @@ def _load_kml_files(kml_folder_path):
     select_listelement(4)
     create_tutorial_images()
     _load_individual_kml_file('folder.kml', kml_folder_path)
+    # cursor is on center of the button, moving it so it can be found on screen
+    pag.move(100,100)
+    create_tutorial_images()
     _load_individual_kml_file('color.kml', kml_folder_path)
     pag.sleep(1)
     create_tutorial_images()

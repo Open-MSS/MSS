@@ -103,10 +103,12 @@ def automate_performance():
     create_tutorial_images()
 
     # Showing and hiding the performance settings
-    for _ in range(3):
+    for _ in range(2):
         find_and_click_picture('tableviewwindow-show-performance.png',
                                'show performance button not found',
                                bounding_box=(0, 0, 140, 23))
+        # move the mouse pointer to a different location, so that the image can be found
+        pag.move(50, 50)
         # update tutorial images
         create_tutorial_images()
 
