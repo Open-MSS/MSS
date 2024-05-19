@@ -179,7 +179,7 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:10:48 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:10:30 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
 # resize to HD
 ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
