@@ -305,7 +305,7 @@ def automate_views():
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 
     # Close Everything!
-    finish()
+    finish(close_widgets=4)
 
 
 def _sv_layers(os_screen_region, tvll_region):

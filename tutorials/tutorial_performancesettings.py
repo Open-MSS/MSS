@@ -57,10 +57,6 @@ def automate_performance():
     pag.press(ENTER)
     x, y = pag.position()
 
-    pag.moveTo(x + 250, y - 462, duration=1)
-    pag.dragRel(400, 387, duration=2)
-    pag.sleep(1)
-
     # updating tutorial images
     create_tutorial_images()
 
@@ -113,7 +109,7 @@ def automate_performance():
         create_tutorial_images()
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
 
 
 if __name__ == '__main__':

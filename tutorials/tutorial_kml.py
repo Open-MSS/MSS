@@ -42,7 +42,7 @@ def automate_kml():
     _create_and_load_kml_files()
     _change_color_and_linewidth()
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
 
 
 def _switch_to_europe_map():
@@ -106,4 +106,4 @@ def _change_linewidth(img_name, actions):
 
 
 if __name__ == '__main__':
-    start(target=automate_kml, duration=220)
+    start(target=automate_kml, duration=130)
