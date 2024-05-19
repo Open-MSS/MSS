@@ -6,7 +6,7 @@ During GSOC 2021 a bunch of new tutorials were programmed by Hrithik Kumar Verma
 a `public share <https://fz-juelich.sciebo.de/s/IzNGi24Ki68iV7t#pdfviewer>`_
 
 
-Some videos about the Mission Support System (MSS)
+Some videos about the Mission Support System (MSS).
 
 .. toctree::
    :maxdepth: 4

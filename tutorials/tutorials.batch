@@ -25,7 +25,7 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:03:40 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:03:40 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
 # crop action
 ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:1300:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_wms.mp4
 # get back to tutorials dir
@@ -42,7 +42,7 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:01:55 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:01:55 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
 # crop action
 ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:900:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_kml.mp4
 
@@ -60,7 +60,7 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:25 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:02:25 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
 # crop action
 ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1600:1400:1300:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_hexagoncontrol.mp4
 
@@ -116,7 +116,7 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:36 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:02:36 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
 # crop action
 ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:900:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_satellitetrack.mp4
 
