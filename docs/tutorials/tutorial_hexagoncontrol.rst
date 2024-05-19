@@ -14,4 +14,3 @@ For tomographic imaging, a hexagonal flight pattern can be integrated by a docki
            This screen can be  used to place the latitude and longitude of center, and radius of hexagon.
            We can see the changes in the Top View.
            Angle of first point can also be changed, which is by default set at 0.
-

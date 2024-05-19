@@ -93,4 +93,3 @@ shown on a MSColab server and the possibilities of interactions.
            Now, we log the user out.
            We close the MSColab window and it asks for confirmation.
            This is all about MSColab.
-

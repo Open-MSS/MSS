@@ -18,4 +18,3 @@ To combine a flight path with a satellite overflight, the remotesensing widget i
            We traverse through the various options of date and time inside the overpass selector for a while.
            After selecting the Time Frame, Zoom in the map to see the Satellite Tracks.
            Select the Starting way point and the ending way point in parallel to the flight as shown by the satellite overpasses path.
-

@@ -29,4 +29,3 @@ The range-specific data of an aircraft can be taken into account in Tableview fo
            Next, we close the MSS main window.
           It asks for confirmation whether to close it or not, again.
           We then give the response as a yes, and thus the window closes!
-

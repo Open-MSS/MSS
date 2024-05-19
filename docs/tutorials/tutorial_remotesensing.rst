@@ -28,4 +28,3 @@ In order to be able to take into account the viewing angle and solar level for m
            KILOMETERS can also be changed to know the distance of tangent point.
            We zoom it for for more understanding. The flight patch is able to view a distance of 20 km from the help of TANGENT POINT.
            The tangent lines changes its direction on changing angle to 120° as it changes clockwise on increasing the angles or 75° as it changes anticlockwise on decreasing the angles.
-
