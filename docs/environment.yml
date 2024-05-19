@@ -15,6 +15,7 @@ dependencies:
       - xstatic
       - defusedxml
       - sphinx_rtd_theme
+      - sphinxcontrib-video
       - sphinx
       - fs
       - netCDF4

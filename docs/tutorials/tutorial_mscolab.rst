@@ -4,4 +4,4 @@ Using the different views of the MSUI with a fictitious flight path and demo dat
 In comparison to the standalone mode of the MSUI an example setup of users is
 shown on a MSColab server and the possibilities of interactions.
 
- .. image:: /videos/mp4/tutorial_mscolab.mp4
+  .. video:: ../_static/mp4/tutorial_mscolab.mp4
