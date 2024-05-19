@@ -12,7 +12,7 @@ pytest-cov
 pytest-timeout
 sphinx
 sphinx_rtd_theme
-sphinxcontrib-video
+# sphinxcontrib-video
 gitpython
 pynco
 conda-verify

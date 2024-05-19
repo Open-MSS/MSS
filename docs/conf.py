@@ -41,7 +41,7 @@ def get_tutorial_images():
                 with source, target:
                     shutil.copyfileobj(source, target)
         # remove zip archive
-        #os.remove(TUTORIAL_ARCHIVE)
+        os.remove(TUTORIAL_ARCHIVE)
 
 
 get_tutorial_images()
