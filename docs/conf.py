@@ -41,7 +41,7 @@ def get_tutorial_images():
                 with source, target:
                     shutil.copyfileobj(source, target)
         # remove zip archive
-        os.remove(TUTORIAL_ARCHIVE)
+        #os.remove(TUTORIAL_ARCHIVE)
 
 
 get_tutorial_images()
@@ -262,7 +262,9 @@ html_logo = "mss-logo.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['mss_theme', 'gallery/plots']
+
+# videos is secondary source for sphinxcontrib-videos, everything below gets into _build/html/_static
+html_static_path = ['mss_theme', 'gallery/plots', 'videos']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
