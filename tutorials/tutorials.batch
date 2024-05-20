@@ -13,7 +13,7 @@
 ~/bin/highlight-pointer -r 10 --key-quit q &
 mkdir /tmp/msui_tutorials
 export MSUI_CONFIG_PATH=/tmp/msui_tutorials
-export XDG_CONFIG_PATH=/tmp/msui_tutorials
+export XDG_CACHE_HOME=$(mktemp -d)
 
 ##########################################################################
 # wms tutorial
