@@ -21,6 +21,7 @@ dependencies:
       - netCDF4
       - PyQt5
       - owslib
+      - future
   - basemap >=1.3.3
   - pint
   - python <3.12
