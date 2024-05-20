@@ -23,7 +23,7 @@ import shutil
 from string import Template
 
 def get_tutorial_images():
-    TUTORIAL_URL = ("https://fz-juelich.sciebo.de/s/KcF29hPNRzkxN6q/download")
+    TUTORIAL_URL = "https://fz-juelich.sciebo.de/s/KcF29hPNRzkxN6q/download"
     TUTORIAL_DIR = 'videos/mp4'
     if not os.path.exists(TUTORIAL_DIR):
         os.makedirs(TUTORIAL_DIR)
