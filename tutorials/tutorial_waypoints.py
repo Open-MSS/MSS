@@ -118,7 +118,7 @@ def automate_waypoints():
 
     # Resetting the map to the original size
     find_and_click_picture('topviewwindow-home.png', 'home button could not be located.')
-    pag.sleep(5)
+    pag.sleep(3)
 
     # Saving the figure
     find_and_click_picture('topviewwindow-save.png', 'save button could not be located.')
@@ -127,9 +127,9 @@ def automate_waypoints():
     # This can happen sometimes. At that time, you just need to uncomment it.
     pag.write(f'Fig_{current_time}.png', interval=0.25)
     pag.press(ENTER)
-
+    pag.sleep(2)
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
 
 
 if __name__ == '__main__':

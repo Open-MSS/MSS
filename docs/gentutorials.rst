@@ -203,4 +203,4 @@ batch scripts
 
 Two batch scripts can be used to create tutorials.
 `start_tutorial.sh` is to create one tutorial and `tutorials.batch`
-is used to create all tutorials compressed to gifcycles.
+is used to create all tutorials.

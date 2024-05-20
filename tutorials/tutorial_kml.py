@@ -42,7 +42,7 @@ def automate_kml():
     _create_and_load_kml_files()
     _change_color_and_linewidth()
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
 
 
 def _switch_to_europe_map():
@@ -67,6 +67,9 @@ def _load_kml_files(kml_folder_path):
     select_listelement(4)
     create_tutorial_images()
     _load_individual_kml_file('folder.kml', kml_folder_path)
+    # cursor is on center of the button, moving it so it can be found on screen
+    pag.move(100, 100)
+    create_tutorial_images()
     _load_individual_kml_file('color.kml', kml_folder_path)
     pag.sleep(1)
     create_tutorial_images()
@@ -103,4 +106,4 @@ def _change_linewidth(img_name, actions):
 
 
 if __name__ == '__main__':
-    start(target=automate_kml, duration=220)
+    start(target=automate_kml, duration=130)

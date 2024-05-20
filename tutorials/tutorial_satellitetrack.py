@@ -107,8 +107,8 @@ def automate_rs():
             move=(260, 130), dragRel=(184, 135))
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
 
 
 if __name__ == '__main__':
-    start(target=automate_rs, duration=148)
+    start(target=automate_rs, duration=170)

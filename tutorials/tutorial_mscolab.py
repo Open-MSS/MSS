@@ -38,8 +38,8 @@ EMAIL = 'johndoe@gmail.com'
 PASSWORD = 'johndoe'
 OPERATION_NAME = 'operation_of_john_doe'
 OPERATION_DESCRIPTION = """This is John Doe's operation. He wants his collegues and friends \
-                         to collaborate on this operation with him in the network. Mscolab, here, \
-                         will be very helpful for Joe with various features to use!"""
+to collaborate on this operation with him in the network. Mscolab, here, \
+will be very helpful for Joe with various features to use!"""
 PATH = os.path.normpath(os.getcwd() + os.sep + os.pardir)
 EXMPLE_IMAGE_PATH = os.path.join(os.path.join(PATH, 'docs', 'mss-logo.png'))
 MSCOLAB_URL = 'http://localhost:8083/'
@@ -73,7 +73,10 @@ def automate_mscolab():
     _toggle_between_local_and_mscolab(open_operations_x, open_operations_y)
     _delete_operation()
     create_tutorial_images()
-    _delete_account()
+    # pyatogui click or mousedown does not show on the profile button (in this sequence) the menu, manually it does
+    # also _create_user(), _login_user_after_creation(), _delete_account() succeeds
+    # ToDo find a solution for the sequence used here to delete at the end the account
+    # _delete_account()
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
     finish()
 
@@ -331,7 +334,6 @@ def _adminwindow():
             pag.press('down')
             pag.sleep(1)
             pag.press(ENTER)
-            pag.sleep(1)
         pag.sleep(1)
     else:
         print('Image Not Found: Select All button has previously not found on the screen')
@@ -551,4 +553,4 @@ def _connect_to_mscolab_url():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab, duration=638)
+    start(target=automate_mscolab, duration=640)

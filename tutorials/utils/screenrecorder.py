@@ -66,9 +66,9 @@ class ScreenRecorder:
         current_time = datetime.datetime.now().strftime('%d-%m-%Y_%H-%M-%S')
         self.file_name = f'REC_{current_time}.mp4'
         parent_dir = os.getcwd()
-        dir = "recordings"
+        directory = "recordings"
         try:
-            path = os.path.join(parent_dir, dir)
+            path = os.path.join(parent_dir, directory)
             os.makedirs(path, exist_ok=True)
             final_path = os.path.join(path, self.file_name)
         except OSError:

@@ -59,7 +59,7 @@ def automate_rs():
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
 
-    finish()
+    finish(close_widgets=2)
 
 
 def _open_remote_sensing_widget(os_screen_region):

@@ -57,10 +57,6 @@ def automate_performance():
     pag.press(ENTER)
     x, y = pag.position()
 
-    pag.moveTo(x + 250, y - 462, duration=1)
-    pag.dragRel(400, 387, duration=2)
-    pag.sleep(1)
-
     # updating tutorial images
     create_tutorial_images()
 
@@ -103,15 +99,17 @@ def automate_performance():
     create_tutorial_images()
 
     # Showing and hiding the performance settings
-    for _ in range(3):
+    for _ in range(2):
         find_and_click_picture('tableviewwindow-show-performance.png',
                                'show performance button not found',
                                bounding_box=(0, 0, 140, 23))
+        # move the mouse pointer to a different location, so that the image can be found
+        pag.move(50, 50)
         # update tutorial images
         create_tutorial_images()
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
 
 
 if __name__ == '__main__':

@@ -82,7 +82,7 @@ def call_msui():
     msui.main(tutorial_mode=True)
 
 
-def finish():
+def finish(close_widgets=3):
     """
     Closes all open windows and exits the application.
 
@@ -92,7 +92,7 @@ def finish():
     # clean up and close all
     try:
         if sys.platform == 'linux' or sys.platform == 'linux2':
-            for _ in range(3):
+            for _ in range(close_widgets):
                 pag.hotkey('altleft', 'f4')
                 pag.sleep(3)
                 pag.press('left')
@@ -105,7 +105,7 @@ def finish():
             pag.keyUp('altleft')
             pag.press('q')
         if sys.platform == 'win32':
-            for _ in range(3):
+            for _ in range(close_widgets):
                 pag.hotkey('alt', 'f4')
                 pag.sleep(3)
                 pag.press('left')
@@ -115,7 +115,7 @@ def finish():
             pag.hotkey('alt', 'tab')
             pag.press('q')
         elif sys.platform == 'darwin':
-            for _ in range(3):
+            for _ in range(close_widgets):
                 pag.hotkey('command', 'w')
                 pag.sleep(3)
                 pag.press('left')
@@ -242,7 +242,7 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
     :param duration: Optional. The duration of the click in seconds. Defaults to 2.
     :param xoffset: Optional. The x-axis offset for the click position. Defaults to 0.
     :param yoffset: Optional. The y-axis offset for the click position. Defaults to 0.
-    :param bounding_box: Optional. The bounding box for the search area. Defaults to None.
+    :param bounding_box: Optional. The bounding box of the image. The image is cropped to. Defaults to None.
     :param region: Optional. The region in which to search for the picture. Defaults to None.
     :param click: Optional. Indicates whether to perform the click action. Defaults to True.
 
