@@ -8,17 +8,15 @@ shown on a MSColab server and the possibilities of interactions.
   .. video:: ../_static/mp4/tutorial_mscolab.mp4
      :alt: MSColab stores data in an online server, and can be used to access the data remotely as also working in a
            team where everyone contributes his part. It is used for collaborating with the users as a team together
-           and working on a shared MScolab operation.
+           and working on a shared MSColab operation.
            In the window opened, enter MSColab url and click on connect.
            "successfully connected to the MSColab server"
            we can enter Email id and Password for an existing user, else we can click on Add user to register a new user.
-           Filling new user Details, and clicking OK.
-           As, the user exists, we go back to cancel and enter the login page again!
-           logging into my profile by entering my user name and password.
-           Then clicking on the login button.
-           Now the user John Doe is logged in to MScolab.
+           Filling new user details, and clicking OK.
+           As, the user exists, we are logged in.
+           Now the user John Doe is logged in to MSColab.
            He can now start working on shared operation.
-           Go to File  and then  New  and then MSColab Operation option.
+           Go to File  and then New and then MSColab Operation option.
            Add MSColab operation
            MSS operation window opens
            name the path, give the Description of the operation.
