@@ -2,14 +2,13 @@
 """
 
     mslib.utils.loggerdef
-    ~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~
 
-    This module sets the logging level of matplotlib to INFO.
+    This module sets the logging level and prevent code repetition.
 
     This file is part of MSS.
 
-    :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
-    :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
+    :copyright: Copyright 2017 Main Contributor
     :copyright: Copyright 2016-2023 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
