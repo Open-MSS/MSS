@@ -9,8 +9,10 @@ MSColab can now be configured with an existing IdP or multiple IdPs.
 In this way, a user can authenticate themselves in one system and gain access to another system
 by providing proof of authentication. In our documentation in the Components section you find a detailed description.
 
-Matthias Riße refactored the testing frame work and optimized and accelerated our tests for parallel testing.
-Various fixtures are used in the process.
+Matthias Riße refactored the test suite and optimized and accelerated our CI test runs.
+All tests run in parallel now and are not retried upon failure, and most tests are also executed in a randomized order, instilling more confidence in the results.
+Quite a bit of duplicated code was unified, mostly using pytest fixtures.
+Additionally, CI test runs now also happen on x86_64- and ARM-based macOS.
 
 Jörn Ungermann refactored various parts of MSColab for faster processing with fewer requests.
 
