@@ -41,10 +41,12 @@ import mpl_toolkits.axes_grid1
 from mslib.mswms import mss_2D_sections
 from mslib.utils.units import convert_to, units
 from mslib.mswms.utils import make_cbar_labels_readable
+from mslib.utils.loggerdef import configure_mpl_logger
 
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
+mpl_logger = configure_mpl_logger()
 
 
 class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):

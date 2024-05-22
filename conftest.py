@@ -28,6 +28,8 @@
 import importlib.util
 import os
 import sys
+import logging
+import matplotlib
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -37,6 +39,9 @@ import shutil
 import keyring
 from mslib.mswms.demodata import DataFiles
 import tests.constants as constants
+from mslib.utils.loggerdef import configure_mpl_logger
+
+matplotlib_logger = configure_mpl_logger()
 
 # This import must come after importing tests.constants due to MSUI_CONFIG_PATH being set there
 from mslib.utils.config import read_config_file

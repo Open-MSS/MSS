@@ -65,8 +65,8 @@ def setup_logging(args):
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(debug_formatter)
     else:
-        logger.setLevel(logging.INFO)
-        ch.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
         ch.setFormatter(default_formatter)
     logger.addHandler(ch)
     # File handler (always on DEBUG level)
