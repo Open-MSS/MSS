@@ -35,7 +35,7 @@ from mslib.mswms.dataaccess import DefaultDataAccess, CachedDataAccess
 from tests.constants import DATA_DIR
 
 
-class Test_DefaultDataAccess(object):
+class Test_DefaultDataAccess:
     def setup_method(self):
         self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015")
         self.dut.setup()
@@ -134,7 +134,7 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
         assert "nothere" not in self.dut._file_cache
 
 
-class Test_DefaultDataAccessNoInit(object):
+class Test_DefaultDataAccessNoInit:
     def setup_method(self):
         self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015", uses_init_time=False)
         self.dut.setup()

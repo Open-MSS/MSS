@@ -10,3 +10,5 @@ Components
    mscolab
    gentutorials
    mssautoplot
+   conf_sso_test_msscolab
+   sso_via_saml_mscolab

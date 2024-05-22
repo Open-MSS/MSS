@@ -24,19 +24,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import sys
-from PyQt5 import QtWidgets, QtTest
+import pytest
+from PyQt5 import QtTest
 from mslib.msui import msui
 from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
 from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 
 
-class Test_MultipleFlightpathControlWidget():
-
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-
+class Test_MultipleFlightpathControlWidget:
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot):
         self.window = msui.MSUIMainWindow()
         self.window.create_new_flight_track()
 
@@ -46,18 +44,14 @@ class Test_MultipleFlightpathControlWidget():
         self.waypoints_model = ft.WaypointsTableModel("myname")
         self.waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.widget = tv.MSUITopViewWindow(parent=self.window, model=self.waypoints_model)
-        self.window.show()
-        QtWidgets.QApplication.processEvents()
-        QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
 
-    def teardown_method(self):
+        self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window)
+        self.window.show()
+        QtTest.QTest.qWaitForWindowExposed(self.window)
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     def test_initialization(self):
-        widget = MultipleFlightpathControlWidget(parent=self.widget, listFlightTracks=self.widget.ui.listFlightTracks)
+        widget = MultipleFlightpathControlWidget(parent=self.widget,
+                                                 listFlightTracks=self.window.listFlightTracks)
         assert widget.color == (0, 0, 1, 1)

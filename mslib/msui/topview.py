@@ -30,11 +30,12 @@
 
 import functools
 import logging
+
 from mslib.utils.config import config_loader
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
-from mslib.utils.qt import ui_topview_window as ui
-from mslib.utils.qt import ui_topview_mapappearance as ui_ma
+from mslib.msui.qt5 import ui_topview_window as ui
+from mslib.msui.qt5 import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wc
 from mslib.msui import satellite_dockwidget as sat
@@ -60,7 +61,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
     Dialog to set map appearance parameters. User interface is
     defined in "ui_topview_mapappearance.py".
     """
-    signal_ft_vertices_color_change = QtCore.Signal(str, tuple)
+    signal_ft_vertices_color_change = QtCore.pyqtSignal(str, tuple)
 
     def __init__(self, parent=None, settings=None, wms_connected=False):
         """
@@ -68,7 +69,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         parent -- Qt widget that is parent to this widget.
         settings -- dictionary containing topview options.
         """
-        super(MSUI_TV_MapAppearanceDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         assert settings is not None
@@ -174,24 +175,36 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     """
     name = "Top View"
 
-    signal_activate_flighttrack1 = QtCore.Signal(ft.WaypointsTableModel)
-    signal_activate_operation = QtCore.Signal(int)
-    signal_ft_vertices_color_change = QtCore.Signal(tuple)
-    signal_operation_added = QtCore.Signal(int, str)
-    signal_operation_removed = QtCore.Signal(int)
-    signal_login_mscolab = QtCore.Signal(str, str)
-    signal_logout_mscolab = QtCore.Signal()
-    signal_listFlighttrack_doubleClicked = QtCore.Signal()
-    signal_permission_revoked = QtCore.Signal(int)
-    signal_render_new_permission = QtCore.Signal(int, str)
+    signal_activate_flighttrack1 = QtCore.pyqtSignal(ft.WaypointsTableModel)
+    signal_activate_operation = QtCore.pyqtSignal(int)
+    signal_ft_vertices_color_change = QtCore.pyqtSignal(tuple)
+    signal_operation_added = QtCore.pyqtSignal(int, str)
+    signal_operation_removed = QtCore.pyqtSignal(int)
+    signal_login_mscolab = QtCore.pyqtSignal(str, str)
+    signal_logout_mscolab = QtCore.pyqtSignal()
+    signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
+    signal_permission_revoked = QtCore.pyqtSignal(int)
+    signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
-    def __init__(self, parent=None, model=None, _id=None, active_flighttrack=None, mscolab_server_url=None, token=None):
+    def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
+                 active_flighttrack=None, mscolab_server_url=None, token=None):
         """
         Set up user interface, connect signal/slots.
         """
-        super(MSUITopViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
         logging.debug(_id)
-        self.ui = parent
+        self.settings_tag = "topview"
+        self.mainwindow_signal_login_mscolab = mainwindow.signal_login_mscolab
+        self.mainwindow_signal_logout_mscolab = mainwindow.signal_logout_mscolab
+        self.mainwindow_signal_listFlighttrack_doubleClicked = mainwindow.signal_listFlighttrack_doubleClicked
+        self.mainwindow_signal_activate_operation = mainwindow.signal_activate_operation
+        self.mainwindow_signal_permission_revoked = mainwindow.signal_permission_revoked
+        self.mainwindow_signal_render_new_permission = mainwindow.signal_render_new_permission
+        self.mainwindow_signal_activate_flighttrack = mainwindow.signal_activate_flighttrack
+        self.mainwindow_listFlightTracks = mainwindow.listFlightTracks
+        self.mainwindow_filterCategoryCb = mainwindow.filterCategoryCb
+        self.mainwindow_listOperationsMSC = mainwindow.listOperationsMSC
+
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
@@ -208,7 +221,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.active_flighttrack = active_flighttrack
 
         # Stores active mscolab operation id
-        self.active_op_id = None
+        self.active_op_id = mainwindow.mscolab.active_op_id
 
         # Mscolab Server Url and token
         self.mscolab_server_url = mscolab_server_url
@@ -230,20 +243,20 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(self.openTool)
 
-        if parent is not None:
+        if mainwindow is not None:
             # Update flighttrack
-            self.ui.signal_activate_flighttrack.connect(self.update_active_flighttrack)
-            self.ui.signal_activate_operation.connect(self.update_active_operation)
+            self.mainwindow_signal_activate_flighttrack.connect(self.update_active_flighttrack)
+            self.mainwindow_signal_activate_operation.connect(self.update_active_operation)
 
-            self.ui.signal_operation_added.connect(self.add_operation_slot)
-            self.ui.signal_operation_removed.connect(self.remove_operation_slot)
+            self.signal_operation_added.connect(self.add_operation_slot)
+            self.signal_operation_removed.connect(self.remove_operation_slot)
 
-            self.ui.signal_login_mscolab.connect(self.login)
+            self.mainwindow_signal_login_mscolab.connect(self.login)
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
 
-    @QtCore.Slot(ft.WaypointsTableModel)
+    @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def update_active_flighttrack(self, active_flighttrack):
         """
         Slot that handles update of active flighttrack variable.
@@ -251,20 +264,20 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.active_flighttrack = active_flighttrack
         self.signal_activate_flighttrack1.emit(active_flighttrack)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def update_active_operation(self, active_op_id):
         self.active_op_id = active_op_id
         self.signal_activate_operation.emit(self.active_op_id)
 
-    @QtCore.Slot(int, str)
+    @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):
         self.signal_operation_added.emit(op_id, path)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def remove_operation_slot(self, op_id):
         self.signal_operation_removed.emit(op_id)
 
-    @QtCore.Slot(str, str)
+    @QtCore.pyqtSlot(str, str)
     def login(self, mscolab_server_url, token):
         self.mscolab_server_url = mscolab_server_url
         self.token = token
@@ -339,40 +352,34 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             elif index == MULTIPLEFLIGHTPATH:
                 title = "Multiple Flightpath"
                 widget = mf.MultipleFlightpathControlWidget(parent=self, view=self.mpl.canvas,
-                                                            listFlightTracks=self.ui.listFlightTracks,
-                                                            listOperationsMSC=self.ui.listOperationsMSC,
+                                                            listFlightTracks=self.mainwindow_listFlightTracks,
+                                                            listOperationsMSC=self.mainwindow_listOperationsMSC,
+                                                            category=self.mainwindow_filterCategoryCb,
                                                             activeFlightTrack=self.active_flighttrack,
+                                                            active_op_id=self.active_op_id,
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
 
-                self.ui.signal_logout_mscolab.connect(lambda: self.signal_logout_mscolab.emit())
-                self.ui.signal_listFlighttrack_doubleClicked.connect(
+                self.mainwindow_signal_logout_mscolab.connect(self.signal_logout_mscolab.emit)
+                self.mainwindow_signal_listFlighttrack_doubleClicked.connect(
                     lambda: self.signal_listFlighttrack_doubleClicked.emit())
-                self.ui.signal_permission_revoked.connect(lambda op_id: self.signal_permission_revoked.emit(op_id))
-                self.ui.signal_render_new_permission.connect(
+                self.mainwindow_signal_permission_revoked.connect(
+                    lambda op_id: self.signal_permission_revoked.emit(op_id))
+                self.mainwindow_signal_render_new_permission.connect(
                     lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
-                widget.signal_parent_closes.connect(self.closed)
             else:
                 raise IndexError("invalid control index")
 
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
 
-    def closed(self):
-        self.ui.signal_login_mscolab.disconnect()
-        self.ui.signal_logout_mscolab.disconnect()
-        self.ui.signal_listFlighttrack_doubleClicked.disconnect()
-        self.ui.signal_activate_operation.disconnect()
-        self.ui.signal_permission_revoked.disconnect()
-        self.ui.signal_render_new_permission.disconnect()
-
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def disable_cbs(self):
         self.wms_connected = True
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def enable_cbs(self):
         self.wms_connected = False
 
@@ -404,7 +411,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
-        super(MSUITopViewWindow, self).setIdentifier(identifier)
+        super().setIdentifier(identifier)
         self.mpl.canvas.map.set_identifier(identifier)
 
     def open_settings_dialog(self):
@@ -420,7 +427,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
 
-    @QtCore.Slot(str, tuple)
+    @QtCore.pyqtSlot(str, tuple)
     def set_ft_vertices_color(self, which, color):
         if which == "ft_vertices":
             self.signal_ft_vertices_color_change.emit(color)

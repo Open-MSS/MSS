@@ -52,11 +52,14 @@ from mslib.msui import mpl_pathinteractor as mpath
 from mslib.msui import flighttrack as ft
 from mslib.utils import config as conf
 from mslib.utils.auth import get_auth_from_url_and_name
+from mslib.utils.loggerdef import configure_mpl_logger
 
 
 TEXT_CONFIG = {
     "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"), "fontweight": "bold",
     "zorder": 4, "fontsize": 6, "clip_on": True}
+
+mpl_logger = configure_mpl_logger()
 
 
 def load_from_ftml(filename):

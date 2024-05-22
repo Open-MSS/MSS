@@ -128,7 +128,7 @@ class Waypoint:
     properties. Used internally by WaypointsTableModel.
     """
 
-    def __init__(self, lat=0, lon=0, flightlevel=0, location="", comments=""):
+    def __init__(self, lat=0., lon=0., flightlevel=0., location="", comments=""):
         self.location = location
         locations = config_loader(dataset='locations')
         if location in locations:
@@ -179,7 +179,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
     def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
                  xml_content=None):
-        super(WaypointsTableModel, self).__init__()
+        super().__init__()
         self.name = name  # a name for this flight track
         self.filename = filename  # filename for store/load
         self.data_dir = data_dir
@@ -669,7 +669,7 @@ class WaypointDelegate(QtWidgets.QItemDelegate):
     """
 
     def __init__(self, parent=None):
-        super(WaypointDelegate, self).__init__(parent)
+        super().__init__(parent)
 
     def paint(self, painter, option, index):
         """

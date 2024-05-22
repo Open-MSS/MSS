@@ -29,7 +29,7 @@
 import collections
 
 from PyQt5 import QtWidgets
-from mslib.utils.qt import ui_wms_capabilities as ui
+from mslib.msui.qt5 import ui_wms_capabilities as ui
 
 
 class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
@@ -42,7 +42,7 @@ class WMSCapabilitiesBrowser(QtWidgets.QDialog, ui.Ui_WMSCapabilitiesBrowser):
         parent -- Qt widget that is parent to this widget.
         capabilities_xml -- .
         """
-        super(WMSCapabilitiesBrowser, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         if url is None:

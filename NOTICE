@@ -107,8 +107,8 @@ Icons
 We use icons in mslib.mui.editor from the tango-icon-library
 Author: Jakub Steiner jimmac@gmail.com
 
-License: https://github.com/freedesktop/tango-icon-library/blob/master/COPYING.PublicDomain
-Further Information: http://tango.freedesktop.org
+License: https://gitlab.freedesktop.org/tango/tango-icon-library/-/blob/master/COPYING.PublicDomain
+Further Information: https://gitlab.freedesktop.org/tango/tango-icon-library
 
 Airports Data
 -------------
@@ -130,3 +130,14 @@ License: https://github.com/PaulSchweizer/qt-json-view/blob/master/LICENSE (MIT 
 
 Package for working with JSON files in PyQt5.
 Obtained from Github (https://github.com/PaulSchweizer/qt-json-view), on 23/7/2021.
+
+Identity Provider
+-----------------
+
+We utilize example files from the pysaml2 library to set up the configuration for our local Identity Provider (IdP).
+Obtained from GitHub (https://github.com/IdentityPython/pysaml2/tree/master/example/idp2) on 13/07/2023
+
+Copyright: 2018 Roland Hedberg
+
+License: https://github.com/IdentityPython/pysaml2/blob/master/LICENSE (Apache License 2.0)
+Further Information: https://pysaml2.readthedocs.io/en/

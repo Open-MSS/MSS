@@ -26,21 +26,12 @@
     limitations under the License.
 """
 import requests
-import time
 import fs
-import socket
-import multiprocessing
 
-from flask_testing import LiveServerTestCase
-
-from PyQt5 import QtTest
-from werkzeug.urls import url_join
+from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers, start_server
-from mslib.mscolab.mscolab import handle_db_init
 
 
 def callback_ok_image(status, response_headers):
@@ -75,7 +66,7 @@ def mscolab_register_user(app, msc_url, email, password, username):
         'password': password,
         'username': username
     }
-    url = url_join(msc_url, 'register')
+    url = urljoin(msc_url, 'register')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -86,7 +77,7 @@ def mscolab_register_and_login(app, msc_url, email, password, username):
         'email': email,
         'password': password
     }
-    url = url_join(msc_url, 'token')
+    url = urljoin(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -96,7 +87,7 @@ def mscolab_login(app, msc_url, email='a', password='a'):
         'email': email,
         'password': password
     }
-    url = url_join(msc_url, 'token')
+    url = urljoin(msc_url, 'token')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -106,7 +97,7 @@ def mscolab_delete_user(app, msc_url, email, password):
         response = mscolab_login(app, msc_url, email, password)
         if response.status == '200 OK':
             data = json.loads(response.get_data(as_text=True))
-            url = url_join(msc_url, 'delete_user')
+            url = urljoin(msc_url, 'delete_own_account')
             response = app.test_client().post(url, data=data)
             if response.status == '200 OK':
                 data = json.loads(response.get_data(as_text=True))
@@ -132,7 +123,7 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
     data["path"] = path_name
     data['description'] = path_name
     data['content'] = content
-    url = url_join(msc_url, 'create_operation')
+    url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return response
 
@@ -140,12 +131,12 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
 def mscolab_delete_all_operations(app, msc_url, email, password, username):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'operations')
+    url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
     for p in response['operations']:
         data['op_id'] = p['op_id']
-        url = url_join(msc_url, 'delete_operation')
+        url = urljoin(msc_url, 'delete_operation')
         response = app.test_client().post(url, data=data)
 
 
@@ -153,7 +144,7 @@ def mscolab_create_operation(app, msc_url, response, path='f', description='desc
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
-    url = url_join(msc_url, 'create_operation')
+    url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return data, response
 
@@ -161,7 +152,7 @@ def mscolab_create_operation(app, msc_url, response, path='f', description='desc
 def mscolab_get_operation_id(app, msc_url, email, password, username, path):
     response = mscolab_register_and_login(app, msc_url, email, password, username)
     data = json.loads(response.get_data(as_text=True))
-    url = url_join(msc_url, 'operations')
+    url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
     response = json.loads(response.get_data(as_text=True))
     for p in response['operations']:
@@ -169,91 +160,17 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, path):
             return p['op_id']
 
 
-def mscolab_check_free_port(all_ports, port):
-    _s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        _s.bind(("127.0.0.1", port))
-    except (socket.error, IOError):
-        port = all_ports.pop()
-        port = mscolab_check_free_port(all_ports, port)
-    else:
-        _s.close()
-    return port
-
-
-def mscolab_ping_server(port):
-    url = f"http://127.0.0.1:{port}/status"
-    try:
-        r = requests.get(url, timeout=(2, 10))
-        if r.text == "Mscolab server":
-            return True
-    except requests.exceptions.ConnectionError:
-        return False
-    return False
-
-
-def mscolab_start_server(all_ports, mscolab_settings=mscolab_settings, timeout=10):
-    handle_db_init()
-    port = mscolab_check_free_port(all_ports, all_ports.pop())
-
-    url = f"http://localhost:{port}"
-
-    _app = APP
-    _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-    _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    _app.config['URL'] = url
-
-    _app, sockio, cm, fm = initialize_managers(_app)
-
-    # ToDo refactoring for spawn needed, fork is not implemented on windows, spawn is default on MAC and Windows
-    if multiprocessing.get_start_method(allow_none=True) != 'fork':
-        multiprocessing.set_start_method("fork")
-    process = multiprocessing.Process(
-        target=start_server,
-        args=(_app, sockio, cm, fm,),
-        kwargs={'port': port})
-    process.start()
-    start_time = time.time()
-    while True:
-        elapsed_time = (time.time() - start_time)
-        if elapsed_time > timeout:
-            raise RuntimeError(
-                "Failed to start the server after %d seconds. " % timeout
-            )
-
-        if mscolab_ping_server(port):
-            break
-
-    return process, url, _app, sockio, cm, fm
-
-
 def create_msui_settings_file(content):
     with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
         file_dir.writetext("msui_settings.json", content)
 
 
-def wait_until_signal(signal, timeout=5):
-    """
-    Blocks the calling thread until the signal emits or the timeout expires.
-    """
-    init_time = time.time()
-    finished = False
-
-    def done(*args):
-        nonlocal finished
-        finished = True
-
-    signal.connect(done)
-    while not finished and time.time() - init_time < timeout:
-        QtTest.QTest.qWait(100)
-
+def is_url_response_ok(url):
     try:
-        signal.disconnect(done)
-    except TypeError:
-        pass
-    finally:
-        return finished
+        response = requests.get(url)
+        return response.status_code == 200
+    except:  # noqa: E722
+        return False
 
 
 class ExceptionMock:
@@ -268,32 +185,3 @@ class ExceptionMock:
 
     def raise_exc(self, *args, **kwargs):
         raise self.exc
-
-
-class LiveSocketTestCase(LiveServerTestCase):
-
-    def _spawn_live_server(self):
-        self._process = None
-        port_value = self._port_value
-        app, sockio, cm, fm = initialize_managers(self.app)
-        self._process = multiprocessing.Process(
-            target=start_server,
-            args=(app, sockio, cm, fm,),
-            kwargs={'port': port_value.value})
-
-        self._process.start()
-
-        # We must wait for the server to start listening, but give up
-        # after a specified maximum timeout
-        timeout = self.app.config.get('LIVESERVER_TIMEOUT', 5)
-        start_time = time.time()
-
-        while True:
-            elapsed_time = (time.time() - start_time)
-            if elapsed_time > timeout:
-                raise RuntimeError(
-                    "Failed to start the server after %d seconds. " % timeout
-                )
-
-            if self._can_ping_server():
-                break

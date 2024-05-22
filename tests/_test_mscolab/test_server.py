@@ -24,43 +24,24 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-from flask_testing import TestCase
-import os
 import pytest
 import json
 import io
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.server import initialize_managers, check_login, register_user, APP
+from mslib.mscolab.server import initialize_managers, check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_Server(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
+class Test_Server:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app):
+        self.app = mscolab_app
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_initialize_managers(self):
         app, sockio, cm, fm = initialize_managers(self.app)
@@ -79,8 +60,9 @@ class Test_Server(TestCase):
     def test_hello(self):
         with self.app.test_client() as test_client:
             response = test_client.get('/status')
-            assert response.status_code == 200
-            assert b"Mscolab server" in response.data
+            data = json.loads(response.text)
+            assert "Mscolab server" in data['message']
+            assert True or False in data['use_saml2 ']
 
     def test_register_user(self):
         with self.app.test_client():
@@ -88,13 +70,13 @@ class Test_Server(TestCase):
             assert result["success"] is True
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
             assert result["success"] is False
-            assert result["message"] == "Oh no, this email ID is already taken!"
+            assert result["message"] == "This email ID is already taken!"
             result = register_user("UV", self.userdata[1], self.userdata[2])
             assert result["success"] is False
-            assert result["message"] == "Oh no, your email ID is not valid!"
+            assert result["message"] == "Your email ID is not valid!"
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[0])
             assert result["success"] is False
-            assert result["message"] == "Oh no, your username cannot contain @ symbol!"
+            assert result["message"] == "Your username cannot contain @ symbol!"
 
     def test_check_login(self):
         with self.app.test_client():
@@ -149,11 +131,11 @@ class Test_Server(TestCase):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             token = self._get_token(test_client, self.userdata)
-            response = test_client.post('/delete_user', data={"token": token})
+            response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data["success"] is True
-            response = test_client.post('/delete_user', data={"token": "dsdsds"})
+            response = test_client.post('/delete_own_account', data={"token": "dsdsds"})
             assert response.status_code == 200
             assert response.data.decode('utf-8') == "False"
 
@@ -204,6 +186,12 @@ class Test_Server(TestCase):
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             assert operation is not None
+            assert operation.active is True
+            assert token is not None
+            operation, token = self._create_operation(test_client,
+                                                      self.userdata, path="archived_operation", active=False)
+            assert operation is not None
+            assert operation.active is False
             assert token is not None
 
     def test_get_operation_by_id(self):
@@ -227,17 +215,35 @@ class Test_Server(TestCase):
             assert data["operations"][0]["path"] == "firstflightpath1"
             assert data["operations"][1]["path"] == "firstflightpath2"
 
+    def test_get_operations_skip_archived(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            self._create_operation(test_client, self.userdata, path="firstflightpath1")
+            operation, token = self._create_operation(test_client, self.userdata, path="firstflightpath2", active=False)
+            response = test_client.get('/operations', data={"token": token,
+                                                            "skip_archived": "True"})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert len(data["operations"]) == 1
+            assert data["operations"][0]["path"] == "firstflightpath1"
+            assert "firstflightpath2" not in data["operations"]
+
     def test_get_all_changes(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
             fm.save_file(operation.id, "content2", user)
+            # the newest change is on index 0, because it has a recent created_at time
             response = test_client.get('/get_all_changes', data={"token": token,
                                                                  "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
-            assert len(data["changes"]) == 2
+            all_changes = data["changes"]
+            assert len(all_changes) == 2
+            assert all_changes[0]["id"] == 2
+            assert all_changes[0]["id"] > all_changes[1]["id"]
+            assert all_changes[0]["created_at"] > all_changes[1]["created_at"]
 
     def test_get_change_content(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -329,15 +335,6 @@ class Test_Server(TestCase):
             data = json.loads(response.data.decode('utf-8'))
             assert data["success"] is True
 
-    def test_update_last_used(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        with self.app.test_client() as test_client:
-            operation, token = self._create_operation(test_client, self.userdata)
-            response = test_client.post('/update_last_used', data={"token": token})
-            assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["success"] is True
-
     def test_get_users_without_permission(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         unprevileged_user = 'UV20@uv20', 'UV20', 'uv20'
@@ -383,7 +380,7 @@ class Test_Server(TestCase):
             # creator is not listed
             assert data["success"] is True
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test"):
+    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", active=True):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
@@ -391,7 +388,8 @@ class Test_Server(TestCase):
         token = data["token"]
         response = test_client.post('/create_operation', data={"token": token,
                                                                "path": path,
-                                                               "description": description})
+                                                               "description": description,
+                                                               "active": str(active)})
         assert response.status_code == 200
         assert response.data.decode('utf-8') == "True"
         operation = Operation.query.filter_by(path=path).first()

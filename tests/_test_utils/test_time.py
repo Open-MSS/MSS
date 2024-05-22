@@ -31,7 +31,7 @@ import mslib.utils.time as time
 LOGGER = logging.getLogger(__name__)
 
 
-class TestParseTime(object):
+class TestParseTime:
     def test_parse_iso_datetime(self):
         assert time.parse_iso_datetime("2009-05-28T16:15:00") == datetime.datetime(2009, 5, 28, 16, 15)
 
@@ -39,7 +39,7 @@ class TestParseTime(object):
         assert time.parse_iso_duration('P01W') == datetime.timedelta(days=7)
 
 
-class TestTimes(object):
+class TestTimes:
     """
     tests about times
     """

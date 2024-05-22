@@ -24,196 +24,86 @@
     limitations under the License.
 """
 
+import os
 import pyautogui as pag
-import os.path
+from tutorials.utils import (start, finish,
+                             change_color, create_tutorial_images, find_and_click_picture,
+                             load_kml_file, select_listelement, type_and_key, msui_full_screen_and_open_first_view
+                             )
+from tutorials.utils.platform_keys import platform_keys
 
-from sys import platform
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
-from tutorials.pictures import picture
+CTRL, ENTER, WIN, ALT = platform_keys()
 
 
 def automate_kml():
-    """
-    This is the main automating script of the MSS remote sensing tutorial which will be recorded and saved
-    to a file having dateframe nomenclature with a .mp4 extension(codec).
-    """
-    # Giving time for loading of the MSS GUI.
     pag.sleep(5)
-    ctrl, enter, win, alt = platform_keys()
-
-    # Satellite Predictor file path
-    path = os.path.normpath(os.getcwd() + os.sep + os.pardir)
-    kml_file_path1 = os.path.join(path, 'docs/samples/kml/folder.kml')
-    kml_file_path2 = os.path.join(path, 'docs/samples/kml/color.kml')
-
-    # Maximizing the window
-    try:
-        pag.hotkey('ctrl', 'command', 'f') if platform == 'darwin' else pag.hotkey(win, 'up')
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-    pag.sleep(2)
-    pag.hotkey('ctrl', 'h')
-    pag.sleep(3)
-
-    # Opening KML overlay dockwidget
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'selecttoopencontrol.png'))
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-        pag.press('down', presses=4, interval=1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'select to open control\' button/option not found on the screen.")
-
-    # Adding the KML files and loading them
-    try:
-        x, y = pag.locateCenterOnScreen(picture('kml', 'add_kml_files.png'))
-        pag.click(x, y, duration=2)
-        pag.sleep(1)
-        pag.typewrite(kml_file_path1, interval=0.1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-
-        pag.click(x, y, duration=2)
-        pag.sleep(1)
-        pag.typewrite(kml_file_path2, interval=0.1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Add KML Files\' button not found on the screen.")
-        raise
-
-    # Unselecting and Selecting Files to demonstrate visibility on the map.
-    try:
-        x1, y1 = pag.locateCenterOnScreen(picture('kml', 'unselect_all_files.png'))
-        pag.click(x1, y1, duration=2)
-        pag.sleep(2)
-        try:
-            x1, y1 = pag.locateCenterOnScreen(picture('kml', 'select_all_files.png'))
-            pag.click(x1, y1, duration=2)
-            pag.sleep(2)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Select All Files(Unselecting & Selecting)\' button not found on the screen.")
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Select All Files(Unselecting & Selecting)\' button not found on the screen.")
-        raise
-
-    # Selecting and Customizing the Folder.kml file
-    try:
-        x, y = pag.locateCenterOnScreen(picture('kml', 'colored_line.png'))
-        pag.click(x + 100, y, duration=2)
-        pag.sleep(4)
-        try:
-            # Changing color of folder.kml file
-            x1, y1 = pag.locateCenterOnScreen(picture('kml', 'changecolor.png'))
-            pag.click(x1, y1, duration=2)
-            pag.sleep(4)
-            x2, y2 = pag.locateCenterOnScreen(picture('kml', 'pick_screen_color.png'))
-            pag.click(x2, y2 - 30, duration=1)
-            pag.sleep(3)
-            pag.press(enter)
-            pag.sleep(4)
-
-            pag.click(x1, y1, duration=2)
-            pag.sleep(4)
-            x2, y2 = pag.locateCenterOnScreen(picture('kml', 'pick_screen_color.png'))
-            pag.click(x2 + 20, y2 - 50, duration=1)
-            pag.sleep(3)
-            pag.press(enter)
-            pag.sleep(4)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Change Color (folder.kml)\' button not found on the screen.")
-            raise
-        try:
-            # Changing Linewidth of folder.kml file
-            x1, y1 = pag.locateCenterOnScreen(picture('kml', 'changecolor.png'))
-            pag.click(x1 + 12, y1 + 50, duration=2)
-            pag.sleep(2)
-            pag.hotkey(ctrl, 'a')
-            for _ in range(8):
-                pag.press('down')
-                pag.sleep(3)
-            pag.hotkey(ctrl, 'a')
-            pag.typewrite('6.50', interval=1)
-            pag.press(enter)
-            pag.sleep(3)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Change Color(folder.kml again)\' button not found on the screen.")
-            raise
-        # Selecting and Customizing the color.kml file
-        pag.click(x + 100, y + 38, duration=2)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'KML Overlay\' fixed text not found on the screen.")
-        raise
-
-    # Changing map to Global
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'europe_cyl.png'))
-        pag.click(x, y, interval=2)
-        pag.press('down', presses=2, interval=0.5)
-        pag.press(enter, interval=1)
-        pag.sleep(5)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\n Exception : Map change dropdown could not be located on the screen")
-        raise
-
-    # select the black line
-    try:
-        x, y = pag.locateCenterOnScreen(picture('kml', 'colored_line.png'))
-        pag.click(x + 100, y, duration=2)
-        pag.sleep(4)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'KML Overlay\' fixed text not found on the screen.")
-        raise
-
-    try:
-        # Changing color of color.kml file
-        x1, y1 = pag.locateCenterOnScreen(picture('kml', 'changecolor.png'))
-        pag.click(x1, y1, duration=2)
-        pag.sleep(4)
-        x2, y2 = pag.locateCenterOnScreen(picture('kml', 'pick_screen_color.png'))
-        pag.click(x2 - 20, y2 - 50, duration=1)
-        pag.sleep(3)
-        pag.press(enter)
-        pag.sleep(3)
-
-        pag.click(x1, y1, duration=2)
-        pag.sleep(4)
-        x2, y2 = pag.locateCenterOnScreen(picture('kml', 'pick_screen_color.png'))
-        pag.click(x2 - 5, y2 - 120, duration=1)
-        pag.sleep(3)
-        pag.press(enter)
-        pag.sleep(4)
-
-        # Changing Linewidth of color.kml file
-        pag.click(x1 + 12, y1 + 50, duration=2)
-        pag.sleep(4)
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('6.53', interval=1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(3)
-
-        pag.hotkey(ctrl, 'a')
-        pag.sleep(1)
-        pag.typewrite('3.45', interval=1)
-        pag.sleep(1)
-        pag.press(enter)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Change Color(Color.kml file)\' button not found on the screen.")
-        raise
-
+    msui_full_screen_and_open_first_view()
+    _switch_to_europe_map()
+    _create_and_load_kml_files()
+    _change_color_and_linewidth()
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
+
+
+def _switch_to_europe_map():
+    find_and_click_picture('topviewwindow-01-europe-cyl.png', "Map change dropdown could not be located on the screen.")
+    select_listelement(2)
+    pag.sleep(1)
+    create_tutorial_images()
+
+
+def _create_and_load_kml_files():
+    parent_path = os.path.normpath(os.path.join(os.getcwd(), os.pardir))
+    kml_folder_path = os.path.join(parent_path, 'docs/samples/kml')
+    _load_kml_files(kml_folder_path)
+    pag.sleep(1)
+    create_tutorial_images()
+
+
+def _load_kml_files(kml_folder_path):
+    create_tutorial_images()
+    find_and_click_picture('topviewwindow-select-to-open-control.png',
+                           "'select to open control' button/option not found on the screen.")
+    select_listelement(4)
+    create_tutorial_images()
+    _load_individual_kml_file('folder.kml', kml_folder_path)
+    # cursor is on center of the button, moving it so it can be found on screen
+    pag.move(100, 100)
+    create_tutorial_images()
+    _load_individual_kml_file('color.kml', kml_folder_path)
+    pag.sleep(1)
+    create_tutorial_images()
+
+
+def _load_individual_kml_file(kml_filename, kml_folder_path):
+    kml_file_path = os.path.join(kml_folder_path, f'{kml_filename}')
+    load_kml_file('topviewwindow-add-kml-files.png', kml_file_path, "'Add KML Files' button not found on the screen.")
+    pag.sleep(1)
+    create_tutorial_images()
+
+
+def _change_color_and_linewidth():
+    find_and_click_picture('topviewwindow-select-all-files.png',
+                           "'Select All Files(Unselecting & Selecting)' button not found on the screen.")
+    create_tutorial_images()
+    pag.move(-200, 0, duration=1)
+    pag.click(interval=2)
+    _change_color('topviewwindow-change-color.png',
+                  lambda: (pag.move(-220, -300, duration=1), pag.click(interval=2), pag.press(ENTER)))
+    create_tutorial_images()
+    _change_linewidth('topviewwindow-2-00.png', lambda: (pag.hotkey(CTRL, 'a'),
+                                                         [pag.press('down') for _ in range(8)],
+                                                         type_and_key('2.50'), pag.sleep(1),
+                                                         type_and_key('5.50')))
+
+
+def _change_color(img_name, actions):
+    change_color(img_name, "'Change Color' button not found on the screen.", actions, interval=2)
+
+
+def _change_linewidth(img_name, actions):
+    change_color(img_name, "'Change Linewidth' button not found on the screen.", actions, interval=2)
 
 
 if __name__ == '__main__':
-    start(target=automate_kml, duration=220)
+    start(target=automate_kml, duration=130)

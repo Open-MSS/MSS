@@ -65,8 +65,8 @@ def setup_logging(args):
         ch.setLevel(logging.DEBUG)
         ch.setFormatter(debug_formatter)
     else:
-        logger.setLevel(logging.INFO)
-        ch.setLevel(logging.INFO)
+        logger.setLevel(logging.DEBUG)
+        ch.setLevel(logging.DEBUG)
         ch.setFormatter(default_formatter)
     logger.addHandler(ch)
     # File handler (always on DEBUG level)
@@ -128,13 +128,13 @@ def conditional_decorator(dec, condition):
 
 
 def prefix_route(route_function, prefix='', mask='{0}{1}'):
-    '''
+    """
     https://stackoverflow.com/questions/18967441/add-a-prefix-to-all-flask-routes/18969161#18969161
     Defines a new route function with a prefix.
     The mask argument is a `format string` formatted with, in that order:
       prefix, route
-    '''
+    """
     def newroute(route, *args, **kwargs):
-        ''' prefix route '''
+        """ prefix route """
         return route_function(mask.format(prefix, route), *args, **kwargs)
     return newroute

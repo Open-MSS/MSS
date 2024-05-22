@@ -35,17 +35,17 @@ from mslib.utils.verify_user_token import verify_user_token
 
 class ConnectionManager(QtCore.QObject):
 
-    signal_reload = QtCore.Signal(int, name="reload_wps")
-    signal_message_receive = QtCore.Signal(str, name="message rcv")
-    signal_message_reply_receive = QtCore.Signal(str, name="message reply")
-    signal_message_edited = QtCore.Signal(str, name="message editted")
-    signal_message_deleted = QtCore.Signal(str, name="message deleted")
-    signal_new_permission = QtCore.Signal(int, int, name="new permission")
-    signal_update_permission = QtCore.Signal(int, int, str, name="update permission")
-    signal_revoke_permission = QtCore.Signal(int, int, name="revoke permission")
-    signal_operation_permissions_updated = QtCore.Signal(int, name="operation permissions updated")
-    signal_operation_list_updated = QtCore.Signal(name="operation list updated")
-    signal_operation_deleted = QtCore.Signal(int, name="operation deleted")
+    signal_reload = QtCore.pyqtSignal(int, name="reload_wps")
+    signal_message_receive = QtCore.pyqtSignal(str, name="message rcv")
+    signal_message_reply_receive = QtCore.pyqtSignal(str, name="message reply")
+    signal_message_edited = QtCore.pyqtSignal(str, name="message editted")
+    signal_message_deleted = QtCore.pyqtSignal(str, name="message deleted")
+    signal_new_permission = QtCore.pyqtSignal(int, int, name="new permission")
+    signal_update_permission = QtCore.pyqtSignal(int, int, str, name="update permission")
+    signal_revoke_permission = QtCore.pyqtSignal(int, int, name="revoke permission")
+    signal_operation_permissions_updated = QtCore.pyqtSignal(int, name="operation permissions updated")
+    signal_operation_list_updated = QtCore.pyqtSignal(name="operation list updated")
+    signal_operation_deleted = QtCore.pyqtSignal(int, name="operation deleted")
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -195,4 +195,24 @@ class ConnectionManager(QtCore.QObject):
             self.signal_reload.emit(op_id)
 
     def disconnect(self):
+        # Get all pyqtSignals defined in this class and disconnect them from all slots
+        allSignals = {
+            attr
+            for attr in dir(self.__class__)
+            if isinstance(getattr(self.__class__, attr), QtCore.pyqtSignal)
+        }
+        inheritedSignals = {
+            attr
+            for base_class in self.__class__.__bases__
+            for attr in dir(base_class)
+            if isinstance(getattr(base_class, attr), QtCore.pyqtSignal)
+        }
+        signals = {getattr(self, signal) for signal in allSignals - inheritedSignals}
+        for signal in signals:
+            try:
+                signal.disconnect()
+            except TypeError:
+                # The disconnect call can fail if there are no connected slots, so catch that error here
+                pass
+
         self.sio.disconnect()

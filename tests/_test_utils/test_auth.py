@@ -33,23 +33,31 @@ from mslib.msui import constants
 
 def test_keyring():
     username = "something@something.org"
-    password = "x-*\\M#.U<Ik<g}YYGZb}>6R(HPNW2}"
+    password = "abcdef"
     auth.save_password_to_keyring(service_name="MSCOLAB", username=username, password=password)
-    assert auth.get_password_from_keyring(service_name="MSCOLAB",
-                                          username=username) == "password from TestKeyring"
+    assert auth.get_password_from_keyring(
+        service_name="MSCOLAB", username=username) == password
+    password = "123456"
+    auth.save_password_to_keyring(service_name="MSCOLAB", username=username, password=password)
+    assert auth.get_password_from_keyring(
+        service_name="MSCOLAB", username=username) == "123456"
     auth.del_password_from_keyring(service_name="MSCOLAB", username=username)
     # the testsetu returns the same string per definition
-    assert auth.get_password_from_keyring(service_name="MSCOLAB",
-                                          username=username) == "password from TestKeyring"
+    assert auth.get_password_from_keyring(
+        service_name="MSCOLAB", username=username) == "password from TestKeyring"
 
 
 def test_get_auth_from_url_and_name():
+    # set start condition to prevent definitions from a test earlier
+    constants.AUTH_LOGIN_CACHE = {}
     # empty http_auth definition
     server_url = "http://example.com"
     http_auth = config_loader(dataset="MSS_auth")
     assert http_auth == {}
     data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=False)
     assert data == (None, None)
+    # checking if the test setup changes this
+    assert constants.AUTH_LOGIN_CACHE == {}
     # auth username and url defined
     auth_username = 'mss'
     create_msui_settings_file(f'{{"MSS_auth": {{"http://example.com": "{auth_username}"}}}}')
@@ -59,18 +67,20 @@ def test_get_auth_from_url_and_name():
     data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=False)
     # no password yet
     assert data == (auth_username, None)
+    # checking if the test setup changes this
+    assert constants.AUTH_LOGIN_CACHE == {}
     # store a password
     auth.save_password_to_keyring(server_url, auth_username, "password")
     # return the test password
-    assert auth.get_password_from_keyring(server_url, auth_username) == 'password from TestKeyring'
+    assert auth.get_password_from_keyring(server_url, auth_username) == "password"
     assert constants.AUTH_LOGIN_CACHE == {}
     auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=False)
     # password is set but doesn't go into the login cache
     assert constants.AUTH_LOGIN_CACHE == {}
     # now we overwrite_login_cache=True
     data = auth.get_auth_from_url_and_name(server_url, http_auth, overwrite_login_cache=True)
-    assert data == (auth_username, 'password from TestKeyring')
-    assert constants.AUTH_LOGIN_CACHE[server_url] == (auth_username, 'password from TestKeyring')
+    assert data == (auth_username, 'password')
+    assert constants.AUTH_LOGIN_CACHE[server_url] == (auth_username, 'password')
     # restart and use a different url
     create_msui_settings_file(f'{{"MSS_auth": {{"http://example.com": "{auth_username}"}}}}')
     read_config_file()
@@ -78,4 +88,4 @@ def test_get_auth_from_url_and_name():
     assert data == (None, None)
     # check storage of MSCOLAB password
     auth.save_password_to_keyring('MSCOLAB', auth_username, "password")
-    assert auth.get_password_from_keyring("MSCOLAB", auth_username) == 'password from TestKeyring'
+    assert auth.get_password_from_keyring("MSCOLAB", auth_username) == 'password'

@@ -23,346 +23,207 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import pyautogui as pag
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, create_tutorial_images,
+                             find_and_click_picture, move_and_setup_layerchooser, get_region,
+                             select_listelement)
+from tutorials.utils.platform_keys import platform_keys
+from mslib.utils.config import load_settings_qsettings
 
-from sys import platform
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
-from tutorials.pictures import picture
+CTRL, ENTER, WIN, ALT = platform_keys()
 
 
-def automate_waypoints():
+def automate_wms():
     """
     This is the main automating script of the MSS web map service tutorial which will be recorded and saved
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
     pag.sleep(5)
-    ctrl, enter, win, alt = platform_keys()
+    msui_full_screen_and_open_first_view()
+    topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
 
-    # Maximizing the window
-    try:
-        if platform == 'linux' or platform == 'linux2':
-            pag.hotkey('winleft', 'up')
-        elif platform == 'darwin':
-            pag.hotkey('ctrl', 'command', 'f')
-        elif platform == 'win32':
-            pag.hotkey('win', 'up')
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-        raise
-    pag.sleep(2)
-    pag.hotkey('ctrl', 'h')
+    pag.sleep(1)
+    # Locating Server Layer
+    find_and_click_picture('topviewwindow-server-layer.png',
+                           'Topview Server Layer not found',
+                           region=topview["os_screen_region"])
+    create_tutorial_images()
+    move_and_setup_layerchooser(topview["os_screen_region"], -171, -390, 10, 675)
+    tvll_region = list(topview["os_screen_region"])
+    tvll_region[3] = tvll_region[3] + 675
+
+    # Selecting some layers in topview layerlist
+    # lookup layer entry from the multilayering checkbox
+    x, y = find_and_click_picture('multilayersdialog-multilayering.png',
+                                  'Multilayering selection not found',
+                                  region=tuple(tvll_region))
+    pag.click()
+    # Divergence and Geopotential
+    pag.click(x, y + 70, interval=2)
+    pag.sleep(1)
+    # Relative Huminidity
+    pag.click(x, y + 110, interval=2)
     pag.sleep(1)
 
-    # Locating Server Layer
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'layers.png'))
-        pag.click(x, y, interval=2)
-        if platform == 'win32':
-            pag.move(35, -485, duration=1)
-            pag.dragRel(-800, -60, duration=2)
-        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.move(35, -522, duration=1)
-            pag.dragRel(950, -30, duration=2)
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Server\\Layers\' button/option not found on the screen.")
-        raise
-
-    # Entering wms URL
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'wms_url.png'))
-        pag.click(x + 220, y, interval=2)
-        pag.hotkey('ctrl', 'a', interval=1)
-        pag.write('http://open-mss.org/', interval=0.25)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'WMS URL\' editbox button/option not found on the screen.")
-        raise
-
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'get_capabilities.png'))
-        pag.click(x, y, interval=2)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Get capabilities\' button/option not found on the screen.")
-        raise
-
-    # Selecting some layers
-    if platform == 'win32':
-        gap = 22
-    elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-        gap = 18
-
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'equivalent_layer.png'))
-        pag.click(x, y, interval=2)
-        x, y = pag.locateCenterOnScreen(picture('wms', 'divergence_layer.png'))
-        temp1, temp2 = x, y
-        pag.click(x, y, interval=2)
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Divergence Layer\' option not found on the screen.")
-        raise
+    # let's create our helper images
+    create_tutorial_images()
 
     # Filter layer
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'layer_filter.png'))
-        pag.click(x + 150, y, interval=2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Layer filter editbox\' button/option not found on the screen.")
-        raise
+    find_and_click_picture('multilayersdialog-layer-filter.png',
+                           'multilayers layer filter not found',
+                           region=tuple(tvll_region), xoffset=150)
+    pag.write('temperature', interval=0.25)
+    pag.click(interval=2)
+    pag.sleep(1)
 
-    if x is not None and y is not None:
-        pag.write('temperature', interval=0.25)
-        pag.moveTo(temp1, temp2, duration=1)
-        pag.click(interval=2)
-        pag.sleep(1)
+    # let's create our helper images
+    create_tutorial_images()
+    # clear by clicking on the red X
+    find_and_click_picture('multilayersdialog-temperature.png',
+                           'multilayersdialog temperature not found',
+                           bounding_box=(627, 0, 657, 20), region=tuple(tvll_region))
 
-        # Clearing filter
-        pag.moveTo(x + 150, y, duration=1)
-        pag.click(interval=1)
-        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-            pag.press('backspace', presses=11, interval=0.25)
-        elif platform == 'darwin':
-            pag.press('delete', presses=11, interval=0.25)
-        pag.sleep(1)
+    # let's create our helper images
+    create_tutorial_images()
+    # star two layers
+    xm, ym = find_and_click_picture('multilayersdialog-multilayering.png',
+                                    'Multilayering selection not found',
+                                    region=tuple(tvll_region))
 
-    # Multilayering
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'multilayering.png'))
-        pag.moveTo(x, y, duration=2)
-        # pag.move(-48, None)
-        pag.click()
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
-        raise
+    pag.click()
 
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'checkbox_unselected_divergence.png'))
-        if platform == 'win32':
-            pag.moveTo(x - 268, y, duration=2)
-        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.moveTo(x - 55, y, duration=2)
-        pag.click(interval=1)
-        pag.moveTo(x - 55, y + 30, duration=2)
-        pag.click(interval=1)
-        pag.sleep(2)
-
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Divergence layer multilayering checkbox\' option not found on the screen.")
-        raise
-
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'multilayering.png'))
-        pag.moveTo(x, y, duration=2)
-        # pag.move(-48, None)
-        pag.click()
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Multilayering Checkbox\' button/option not found on the screen.")
-        raise
-
-    # Starring the layers
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'equivalent_layer.png'))
-        pag.moveTo(x, y, duration=2)
-        pag.click(interval=1)
-        x, y = pag.locateCenterOnScreen(picture('wms', 'divergence_layer.png'))
-        if platform == 'win32':
-            pag.moveTo(x - 255, y, duration=2)
-        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.moveTo(x - 100, y, duration=2)
-        pag.click(interval=1)
-        pag.sleep(1)
-
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Divergence layer star\' button/option not found on the screen.")
-        raise
+    # unstar Relative Huminidity
+    pag.click(xm, ym + 110, interval=2)
+    pag.sleep(1)
 
     # Filtering starred layers.
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'star_filter.png'))
-        pag.click(x, y, interval=2)
-        pag.click(temp1, temp2, duration=1)
-        pag.sleep(1)
+    x, y = find_and_click_picture('multilayersdialog-temperature.png',
+                                  'multilayersdialog temperature not found',
+                                  bounding_box=(658, 2, 677, 18), region=tuple(tvll_region))
+    pag.sleep(2)
+    # removing starred selection showing full list
+    pag.click(x, y, interval=2)
+    pag.sleep(1)
 
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Starred filter\' button/option not found on the screen.")
-        raise
-
-    # removind Filtering starred layers
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'unstar_filter.png'))
-        pag.moveTo(x, y, duration=2)
-        pag.click(x, y, interval=1)
-
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Unstarred filter\' button/option not found on the screen.")
-        raise
+    # Load some data
+    pag.click(xm + 200, ym + 70, interval=2)
+    create_tutorial_images()
+    pag.sleep(2)
 
     # Setting different levels and valid time
-    if temp1 is not None and temp2 is not None:
-        pag.click(temp1, temp2 + (gap * 4), interval=2)
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'level.png'))
-        pag.click(x + 200, y, interval=2)
-        pag.click(interval=1)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Pressure level\' button/option not found on the screen.")
-        raise
+    region = get_region('topviewwindow-30-0-hpa.png', region=topview["os_screen_region"])
+    find_and_click_picture('topviewwindow-30-0-hpa.png',
+                           '30 hPa not found',
+                           region=topview["os_screen_region"])
+    for _ in range(5):
+        select_listelement(1)
+        pag.click()
 
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'initialization.png'))
-        initx, inity = x, y
-        pag.click(x + 200, y, interval=1)
-        pag.sleep(1)
-        pag.click(x + 200, y, interval=1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Initialization\' button/option not found on the screen.")
-        raise
+    # changing level using the > and < right side
+    a = region.left + region.width + 45
+    b = region.top + region.height / 2
 
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'valid.png'))
-        validx, validy = x, y
-        pag.click(x + 200, y, interval=2)
-        pag.click(interval=1)
-        pag.sleep(3)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException : \'Valid till\' button/option not found on the screen.")
-        raise
+    for _ in range(3):
+        pag.click(a, b)
 
-    # Time gap for initialization and valid
-    if initx is not None and inity is not None and validx is not None and validy is not None:
-        pag.click(initx + 818, inity, interval=2)
-        pag.press('up', presses=5, interval=0.25)
-        pag.press('down', presses=3, interval=0.25)
-        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-            pag.press('enter')
-        elif platform == 'darwin':
-            pag.press('return')
+    a = region.left + region.width + 20
+    b = region.top + region.height / 2
 
-        pag.click(validx + 833, validy, interval=2)
-        pag.press('up', presses=5, interval=0.20)
-        pag.press('down', presses=6, interval=0.20)
-        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-            pag.press('enter')
-        elif platform == 'darwin':
-            pag.press('return')
+    for _ in range(5):
+        pag.click(a, b)
 
-        # Previous and Next of Initial(Initialization) values
-        pag.click(initx + 733, inity, clicks=2, interval=2)
-        pag.click(initx + 892, inity, clicks=2, interval=2)
+    region = get_region('topviewwindow-2012-10-17t12-00-00z.png',
+                        region=topview["os_screen_region"])
 
-        # Previous and Next of Valid values
-        pag.click(validx + 743, validy, clicks=4, interval=4)
-        pag.click(validx + 902, validy, clicks=4, interval=4)
+    find_and_click_picture('topviewwindow-2012-10-17t12-00-00z.png',
+                           '2012-10-17t12-00-00z not found',
+                           region=topview["os_screen_region"], yoffset=30)
+
+    for _ in range(2):
+        select_listelement(1)
+        pag.click()
+
+    # changing valid time using the > and < right side
+    a = region.left + region.width + 45
+    b = region.top + region.height / 2
+
+    for _ in range(3):
+        pag.click(a, b)
+
+    a = region.left + region.width + 20
+    b = region.top + region.height / 2
+
+    for _ in range(5):
+        pag.click(a, b)
 
     # Auto-update feature of wms
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'auto_update.png'))
-        pag.click(x - 53, y, interval=2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\' auto update checkbox\' button/option not found on the screen.")
-        raise
+    x, y = find_and_click_picture('topviewwindow-auto-update.png',
+                                  'autoupdate not found',
+                                  region=topview["os_screen_region"]
+                                  )
 
-    if temp1 is not None and temp2 is not None:
-        pag.click(temp1, temp2, interval=1)
-        try:
-            retx, rety = pag.locateCenterOnScreen(picture('wms', 'retrieve.png'))
-            pag.click(retx, rety, interval=2)
-            pag.sleep(3)
-            pag.click(temp1, temp2 + (gap * 4), interval=2)
-            pag.click(retx, rety, interval=2)
-            pag.sleep(3)
-            pag.click(x - 53, y, interval=2)
-            pag.click(temp1, temp2, interval=2)
-            pag.sleep(2)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\' retrieve\' button/option not found on the screen.")
-            raise
+    retx, rety = find_and_click_picture('topviewwindow-retrieve.png',
+                                        'retrieve not found',
+                                        region=topview["os_screen_region"])
+    pag.click(retx, rety, interval=2)
+    pag.sleep(3)
+    pag.click(x, y, interval=2)
+    pag.sleep(2)
 
     # Using and not using Cache
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'use_cache.png'))
-        pag.click(x - 46, y, interval=2)
-        pag.click(temp1, temp2, interval=2)
-        pag.sleep(4)
-        pag.click(temp1, temp2 + (gap * 4), interval=2)
-        pag.sleep(4)
-        pag.click(x - 46, y, interval=2)
-        pag.click(temp1, temp2 + (gap * 2), interval=2)
-        pag.sleep(2)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Use Cache checkbox\' button/option not found on the screen.")
-        raise
+    find_and_click_picture('topviewwindow-use-cache.png',
+                           'use cache not found',
+                           region=topview["os_screen_region"])
+
+    # select a layer
+    pag.click(xm + 200, ym + 140, interval=2)
+    pag.sleep(1)
+    pag.click()
 
     # Clearing cache. The layers load slower
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'clear_cache.png'))
-        pag.click(x, y, interval=2)
-        if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-            pag.press('enter', interval=1)
-        elif platform == 'darwin':
-            pag.press('return', interval=1)
-        pag.click(temp1, temp2, interval=2)
-        pag.sleep(4)
-        pag.click(temp1, temp2 + (gap * 4), interval=2)
-        pag.sleep(4)
-        pag.click(temp1, temp2 + (gap * 2), interval=2)
-        pag.sleep(4)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Clear cache\' button/option not found on the screen.")
-        raise
+    find_and_click_picture('topviewwindow-clear-cache.png',
+                           'Clear cache not found',
+                           region=topview["os_screen_region"])
+    pag.press(ENTER)
+    # select a layer
+    pag.click(xm + 200, ym + 110, interval=2)
+    pag.sleep(1)
+    pag.click()
 
-    # rent layer
-    if temp1 is not None and temp2 is not None:
-        pag.click(temp1, temp2, interval=2)
-        pag.sleep(1)
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'transparent.png'))
-        pag.click(x - 53, y, interval=2)
-        if retx is not None and rety is not None:
-            pag.click(retx, rety, interval=2)
-            pag.sleep(1)
-            pag.click(x - 53, y, interval=2)
-            pag.click(temp1, temp2, interval=2)
-            pag.click(retx, rety, interval=2)
-            pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Transparent Checkbox\' button/option not found on the screen.")
-        raise
+    # transparent layer
+    x, y = find_and_click_picture('topviewwindow-transparent.png',
+                                  'Transparent not found',
+                                  region=topview["os_screen_region"],
+                                  )
+    pag.click(retx, rety, interval=2)
+    pag.sleep(1)
+    pag.click(x, y, interval=2)
+    pag.click(retx, rety, interval=2)
+    pag.sleep(1)
 
     # Removing a Layer from the map
-    if temp1 is not None and temp2 is not None:
-        try:
-            x, y = pag.locateCenterOnScreen(picture('wms', 'remove.png'))
-            pag.click(x, y, interval=2)
-            pag.sleep(1)
-            pag.click(temp1, temp2 + (gap * 4), interval=2)
-            pag.click(x, y, interval=2)
-            pag.sleep(1)
-        except (ImageNotFoundException, OSError, Exception):
-            print("\nException :\'Transparent Checkbox\' button/option not found on the screen.")
-            raise
+    x, y = find_and_click_picture('topviewwindow-remove.png',
+                                  'remove not found',
+                                  region=topview["os_screen_region"])
+
+    pag.sleep(1)
+    pag.click(x, y, interval=2)
+
     # Deleting All layers
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'delete_layers.png'))
-        if platform == 'win32':
-            pag.click(x - 74, y, interval=2)
-        elif platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            pag.click(x - 70, y, interval=2)
-        pag.sleep(1)
-    except (ImageNotFoundException, OSError, Exception):
-        print("\nException :\'Deleting all layers bin\' button/option not found on the screen.")
-        raise
+    find_and_click_picture('topviewwindow-server-layer.png',
+                           'Server layer not found',
+                           region=topview["os_screen_region"])
+
+    find_and_click_picture('multilayersdialog-multilayering.png',
+                           'multilayering not found',
+                           xoffset=-16, yoffset=50)
 
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
+
+    # Close Everything!
     finish()
 
 
 if __name__ == '__main__':
-    start(target=automate_waypoints, duration=280)
+    start(target=automate_wms, duration=280)

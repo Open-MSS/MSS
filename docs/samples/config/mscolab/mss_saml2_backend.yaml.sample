@@ -1,0 +1,116 @@
+name: Saml2
+config:
+  entityid_endpoint: true
+  mirror_force_authn: no
+  memorize_idp: no
+  use_memorized_idp_when_force_authn: no
+  send_requester_id: no
+  enable_metadata_reload: no
+
+  # SP Configuration for localhost_test_idp
+  localhost_test_idp:
+    name: "MSS Colab Server - Testing IDP(localhost)"
+    description: "MSS Collaboration Server with Testing IDP(localhost)"
+    key_file: path/to/key_sp.key # Will be set from the mscolab server
+    cert_file: path/to/crt_sp.crt # Will be set from the mscolab server
+    verify_ssl_cert: true # Specifies if the SSL certificates should be verified.
+    organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
+    contact_person:
+    - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
+    - {contact_type: support, email_address: support@example.com, given_name: Support}
+
+    metadata:
+      local: [path/to/idp.xml] # Will be set from the mscolab server
+
+    entityid: http://localhost:5000/proxy_saml2_backend.xml
+    accepted_time_diff: 60
+    service:
+      sp:
+        ui_info:
+          display_name:
+            - lang: en
+              text: "Open MSS"
+          description:
+            - lang: en
+              text: "Mission Support System"
+          information_url:
+            - lang: en
+              text: "https://open-mss.github.io/about/"
+          privacy_statement_url:
+            - lang: en
+              text: "https://open-mss.github.io/about/"
+          keywords:
+            - lang: en
+              text: ["MSS"]
+            - lang: en
+              text: ["OpenMSS"]
+          logo:
+            text: "https://open-mss.github.io/assets/logo.png"
+            width: "100"
+            height: "100"
+        authn_requests_signed: true
+        want_response_signed: true
+        want_assertion_signed: true
+        allow_unknown_attributes: true
+        allow_unsolicited: true
+        endpoints:
+          assertion_consumer_service:
+            - [http://localhost:8083/localhost_test_idp/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
+          discovery_response:
+          - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
+        name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
+        name_id_format_allow_create: true
+
+
+  # # SP Configuration for IDP 2
+  # sp_config_idp_2:
+  #   name: "MSS Colab Server - Testing IDP(localhost)"
+  #   description: "MSS Collaboration Server with Testing IDP(localhost)"
+  #   key_file: mslib/mscolab/app/key_sp.key
+  #   cert_file: mslib/mscolab/app/crt_sp.crt
+  #   organization: {display_name: Open-MSS, name: Mission Support System, url: 'https://open-mss.github.io/about/'}
+  #   contact_person:
+  #   - {contact_type: technical, email_address: technical@example.com, given_name: Technical}
+  #   - {contact_type: support, email_address: support@example.com, given_name: Support}
+
+  #   metadata:
+  #     local: [mslib/mscolab/app/idp.xml]
+
+  #   entityid: http://localhost:5000/proxy_saml2_backend.xml
+  #   accepted_time_diff: 60
+  #   service:
+  #     sp:
+  #       ui_info:
+  #         display_name:
+  #           - lang: en
+  #             text: "Open MSS"
+  #         description:
+  #           - lang: en
+  #             text: "Mission Support System"
+  #         information_url:
+  #           - lang: en
+  #             text: "https://open-mss.github.io/about/"
+  #         privacy_statement_url:
+  #           - lang: en
+  #             text: "https://open-mss.github.io/about/"
+  #         keywords:
+  #           - lang: en
+  #             text: ["MSS"]
+  #           - lang: en
+  #             text: ["OpenMSS"]
+  #         logo:
+  #           text: "https://open-mss.github.io/assets/logo.png"
+  #           width: "100"
+  #           height: "100"
+  #       authn_requests_signed: true
+  #       want_response_signed: true
+  #       want_assertion_signed: true
+  #       allow_unknown_attributes: true
+  #       allow_unsolicited: true
+  #       endpoints:
+  #         assertion_consumer_service:
+  #           - [http://localhost:8083/idp2/acs/post, 'urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST']
+  #         discovery_response:
+  #         - [<base_url>/<name>/disco, 'urn:oasis:names:tc:SAML:profiles:SSO:idp-discovery-protocol']
+  #       name_id_format: 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient'
+  #       name_id_format_allow_create: true

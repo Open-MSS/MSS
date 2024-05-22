@@ -56,7 +56,7 @@ def is_image_transparent(img):
         return False
 
 
-class Test_VSec(object):
+class Test_VSec:
     def setup_method(self):
         p1 = [45.00, 8.]
         p2 = [50.00, 12.]
@@ -186,7 +186,6 @@ class Test_VSec(object):
         assert noframe != img
 
     def test_VS_LagrantoTrajStyle_PL_01(self):
-        pytest.skip("data not available")
         img = self.plot(mpl_vsec_styles.VS_LagrantoTrajStyle_PL_01(driver=self.vsec))
         assert img is not None
         noframe = self.plot(mpl_vsec_styles.VS_LagrantoTrajStyle_PL_01(driver=self.vsec), noframe=True)
@@ -199,7 +198,6 @@ class Test_VSec(object):
         assert noframe != img
 
     def test_VS_gallery_template(self):
-        pytest.skip('Test can be biased. In pytest-reverse when there is not a plot_examples it can''t import')
         # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)
@@ -209,7 +207,7 @@ class Test_VSec(object):
         assert img is not None
 
 
-class Test_LSec(object):
+class Test_LSec:
     def setup_method(self):
         p1 = [45.00, 8., 25000]
         p2 = [50.00, 12., 25000]
@@ -278,7 +276,7 @@ class Test_LSec(object):
             self.plot(mpl_lsec_styles.LS_RelativeHumdityStyle_01(driver=self.lsec), mime_type="image/png")
 
 
-class Test_HSec(object):
+class Test_HSec:
     def setup_method(self):
         data = mswms_settings.data["ecmwf_EUR_LL015"]
         data.setup()
@@ -504,7 +502,6 @@ class Test_HSec(object):
         assert noframe != img
 
     def test_HS_gallery_template(self):
-        pytest.skip('Test can be biased. In pytest-reverse when there is not a plot_examples it can''t import')
         # ToDo Test Data have to be written to a random tmp dir and that may become purged afterwards
         templates_location = os.path.join(mslib.mswms.gallery_builder.DOCS_LOCATION, "plot_examples")
         sys.path.append(templates_location)

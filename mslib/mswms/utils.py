@@ -28,24 +28,6 @@
 import matplotlib
 
 
-def get_cbar_label_format(style, maxvalue):
-    format = "%.3g"
-    if style != "log":
-        if 100 <= maxvalue < 10000.:
-            format = "%4i"
-        elif 10 <= maxvalue < 100.:
-            format = "%.1f"
-        elif 1 <= maxvalue < 10.:
-            format = "%.2f"
-        elif 0.1 <= maxvalue < 1.:
-            format = "%.3f"
-        elif 0.01 <= maxvalue < 0.1:
-            format = "%.4f"
-    if style == 'log_ice_cloud':
-        format = "%.0E"
-    return format
-
-
 def make_cbar_labels_readable(fig, axs):
     """
     Adjust font size of the colorbar labels and put a white background behind them

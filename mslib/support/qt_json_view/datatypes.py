@@ -9,7 +9,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 TypeRole = QtCore.Qt.UserRole + 1
 
 
-class DataType(object):
+class DataType:
     """Base class for data types."""
 
     # (mss)
@@ -19,7 +19,7 @@ class DataType(object):
         """Logic to define whether the given data matches this type."""
         raise NotImplementedError
 
-    def next(self, model, data, parent):
+    def next(self, model, data, parent):  # noqa: A003
         """Implement if this data type has to add child items to itself."""
         pass
 
@@ -162,7 +162,7 @@ class ListType(DataType):
     def matches(self, data):
         return isinstance(data, list)
 
-    def next(self, model, data, parent):
+    def next(self, model, data, parent):  # noqa: A003
         for i, value in enumerate(data):
             type_ = match_type(value)
             key_item = self.key_item(
@@ -200,7 +200,7 @@ class DictType(DataType):
     def matches(self, data):
         return isinstance(data, dict)
 
-    def next(self, model, data, parent):
+    def next(self, model, data, parent):  # noqa: A003
         for key, value in data.items():
             type_ = match_type(value)
             key_item = self.key_item(key, datatype=type_, model=model)
@@ -259,7 +259,7 @@ class RangeType(DataType):
         metrics = painter.fontMetrics()
         spinbox_option = QtWidgets.QStyleOptionSpinBox()
         start_rect = QtCore.QRect(option.rect)
-        start_rect.setWidth(start_rect.width() / 3.0)
+        start_rect.setWidth(int(start_rect.width() / 3.0))
         spinbox_option.rect = start_rect
         spinbox_option.frame = True
         spinbox_option.state = option.state

@@ -24,34 +24,18 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask_testing import TestCase
+import pytest
 
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.mscolab import handle_db_reset
-from mslib.mscolab.server import APP
-from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import (add_user, get_user, add_operation, add_user_to_operation,
                                 delete_user, delete_operation, add_all_users_default_operation)
 
 
-class Test_Seed(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
-        self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+class Test_Seed:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app, mscolab_managers):
+        self.app = mscolab_app
+        _, _, self.fm = mscolab_managers
         self.operation_name = "XYZ"
         self.description = "Template"
         self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0'
@@ -62,9 +46,8 @@ class Test_Seed(TestCase):
         assert add_operation(self.operation_name, self.description)
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata_0[0])
         self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
-
-    def tearDown(self):
-        pass
+        with self.app.app_context():
+            yield
 
     def test_add_operation(self):
         with self.app.test_client():

@@ -47,8 +47,8 @@ from PIL import Image, ImageOps
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
 from mslib.msui import constants, wms_capabilities
-from mslib.utils.qt import ui_wms_dockwidget as ui
-from mslib.utils.qt import ui_wms_password_dialog as ui_pw
+from mslib.msui.qt5 import ui_wms_dockwidget as ui
+from mslib.msui.qt5 import ui_wms_password_dialog as ui_pw
 from mslib.utils.qt import Worker
 from mslib.msui.multilayers import Multilayers, Layer
 import mslib.utils.ogcwms as ogcwms
@@ -79,7 +79,8 @@ class MSUIWebMapService(ogcwms.WebMapService):
     """
 
     def getmap(self, layers=None, styles=None, srs=None, bbox=None,
-               format=None, size=None, time=None, init_time=None,
+               format=None,  # noqa: A002
+               size=None, time=None, init_time=None,
                path_str=None, level=None, transparent=False, bgcolor='#FFFFFF',
                time_name="time", init_time_name="init_time",
                exceptions='XML', method='Get',
@@ -238,7 +239,7 @@ class MSS_WMS_AuthenticationDialog(QtWidgets.QDialog, ui_pw.Ui_WMSAuthentication
         Arguments:
         parent -- Qt widget that is parent to this widget.
         """
-        super(MSS_WMS_AuthenticationDialog, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
     def getAuthInfo(self):
@@ -266,7 +267,7 @@ class WMSMapFetcher(QtCore.QObject):
     started_request = QtCore.pyqtSignal()
 
     def __init__(self, wms_cache, parent=None):
-        super(WMSMapFetcher, self).__init__(parent)
+        super().__init__(parent)
         self.wms_cache = wms_cache
         self.maps = []
         self.map_imgs = []
@@ -400,8 +401,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     prefetch = QtCore.pyqtSignal([list], name="prefetch")
     fetch = QtCore.pyqtSignal([list], name="fetch")
-    signal_disable_cbs = QtCore.Signal(name="disable_cbs")
-    signal_enable_cbs = QtCore.Signal(name="enable_cbs")
+    signal_disable_cbs = QtCore.pyqtSignal(name="disable_cbs")
+    signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
@@ -411,7 +412,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         default_WMS -- list of strings that specify WMS URLs that will be
                        displayed in the URL combobox as default values.
         """
-        super(WMSControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.view = view
@@ -473,6 +474,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.wms_cache = None
 
         # Initialise date/time fields with current day, 00 UTC.
+        # Todo Before refactoring to an aware datetime object add a test to verify the WMS part.
         self.dteInitTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
         self.dteValidTime.setDateTime(QtCore.QDateTime(
@@ -1241,7 +1243,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return os.path.join(self.wms_cache, hashlib.md5(urlstr.encode('utf-8')).hexdigest() + ending)
 
     def retrieve_image(self, layers=None, crs="EPSG:4326", bbox=None, path_string=None,
-                       width=800, height=400, transparent=False, format="image/png"):
+                       width=800, height=400, transparent=False,
+                       format="image/png",  # noqa: A002
+                       ):
         """Retrieve an image of the layer currently selected in the
            GUI elements from the current WMS provider. If caching is
            enabled, first check the cache for the requested image. If
@@ -1494,12 +1498,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 result.thumbnail((result.width, max_height), Image.ANTIALIAS)
             return result
 
-        ################################################################################
-
-#
-# CLASS VSecWMSControlWidget
-#
-
 
 class VSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
@@ -1508,7 +1506,7 @@ class VSecWMSControlWidget(WMSControlWidget):
 
     def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
-        super(VSecWMSControlWidget, self).__init__(
+        super().__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
@@ -1525,7 +1523,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         """
         self.waypoints_model = model
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def call_get_vsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
@@ -1579,10 +1577,6 @@ class VSecWMSControlWidget(WMSControlWidget):
         crss = getattr(layer, "crsOptions", None)
         return crss is not None and any(crs.startswith("VERT") for crs in crss)
 
-#
-# CLASS HSecWMSControlWidget
-#
-
 
 class HSecWMSControlWidget(WMSControlWidget):
     """Subclass of WMSControlWidget that extends the WMS client to
@@ -1590,7 +1584,7 @@ class HSecWMSControlWidget(WMSControlWidget):
     """
 
     def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
-        super(HSecWMSControlWidget, self).__init__(
+        super().__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.btGetMap.clicked.connect(self.get_all_maps)
 
@@ -1652,7 +1646,7 @@ class LSecWMSControlWidget(WMSControlWidget):
 
     def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
-        super(LSecWMSControlWidget, self).__init__(
+        super().__init__(
             parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
         self.btGetMap.clicked.connect(self.get_all_maps)
@@ -1669,7 +1663,7 @@ class LSecWMSControlWidget(WMSControlWidget):
         """
         self.waypoints_model = model
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def call_get_lsec(self):
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()

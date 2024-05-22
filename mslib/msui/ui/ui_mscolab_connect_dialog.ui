@@ -7,29 +7,14 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>255</height>
+    <height>271</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Connect to MSColab</string>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
-   <property name="spacing">
-    <number>5</number>
-   </property>
-   <property name="leftMargin">
-    <number>12</number>
-   </property>
-   <property name="topMargin">
-    <number>10</number>
-   </property>
-   <property name="rightMargin">
-    <number>10</number>
-   </property>
-   <property name="bottomMargin">
-    <number>10</number>
-   </property>
-   <item>
+  <layout class="QGridLayout" name="gridLayout_4">
+   <item row="0" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0">
      <item>
       <widget class="QLabel" name="urlLabel">
@@ -56,24 +41,34 @@
        <property name="text">
         <string>Connect</string>
        </property>
+       <property name="shortcut">
+        <string>Return</string>
+       </property>
        <property name="autoDefault">
-        <bool>false</bool>
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="disconnectBtn">
+       <property name="text">
+        <string>Disconnect</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
-   <item>
+   <item row="1" column="0">
     <widget class="Line" name="line">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item>
+   <item row="2" column="0">
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>0</number>
+      <number>3</number>
      </property>
      <widget class="QWidget" name="loginPage">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -89,6 +84,22 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
+       <item row="3" column="0" colspan="2">
+        <widget class="QPushButton" name="loginBtn">
+         <property name="toolTip">
+          <string>Login using entered credentials</string>
+         </property>
+         <property name="text">
+          <string>Login</string>
+         </property>
+         <property name="shortcut">
+          <string>Return</string>
+         </property>
+         <property name="autoDefault">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
        <item row="4" column="1">
         <widget class="QPushButton" name="addUserBtn">
          <property name="toolTip">
@@ -102,33 +113,15 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0" colspan="2">
-        <widget class="QPushButton" name="loginBtn">
-         <property name="toolTip">
-          <string>Login using entered credentials</string>
+       <item row="0" column="0" colspan="2" alignment="Qt::AlignHCenter">
+        <widget class="QLabel" name="loginTopicLabel">
+         <property name="font">
+          <font>
+           <pointsize>16</pointsize>
+          </font>
          </property>
          <property name="text">
-          <string>Login</string>
-         </property>
-         <property name="autoDefault">
-          <bool>false</bool>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" colspan="2">
-        <widget class="QLineEdit" name="loginPasswordLe">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
-         <property name="placeholderText">
-          <string>Password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0" colspan="2">
-        <widget class="QLineEdit" name="loginEmailLe">
-         <property name="placeholderText">
-          <string>Email ID</string>
+          <string>Login Details:</string>
          </property>
         </widget>
        </item>
@@ -139,15 +132,27 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="2" alignment="Qt::AlignHCenter">
-        <widget class="QLabel" name="loginTopicLabel">
-         <property name="font">
-          <font>
-           <pointsize>16</pointsize>
-          </font>
-         </property>
+       <item row="5" column="0" colspan="2">
+        <widget class="QPushButton" name="loginWithIDPBtn">
          <property name="text">
-          <string>Login Details:</string>
+          <string>Login by Identity Provider</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
+        <widget class="QLineEdit" name="loginEmailLe">
+         <property name="placeholderText">
+          <string>Email ID</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0" colspan="2">
+        <widget class="QLineEdit" name="loginPasswordLe">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+         <property name="placeholderText">
+          <string>Password</string>
          </property>
         </widget>
        </item>
@@ -272,28 +277,29 @@
        </property>
        <item>
         <widget class="QLabel" name="httpTopicLabel">
+         <property name="enabled">
+          <bool>true</bool>
+         </property>
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="text">
           <string>HTTP Server Authentication</string>
          </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="httpInfoLabel">
-         <property name="text">
-          <string>The server you are trying to connect requires a username and a password:</string>
+         <property name="alignment">
+          <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
          </property>
         </widget>
        </item>
        <item>
         <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="httpUsernameLabel">
-           <property name="text">
-            <string>Username:</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
+         <property name="sizeConstraint">
+          <enum>QLayout::SetDefaultConstraint</enum>
+         </property>
+         <item row="0" column="1">
           <widget class="QLineEdit" name="httpPasswordLe">
            <property name="echoMode">
             <enum>QLineEdit::Password</enum>
@@ -303,41 +309,125 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="0">
+         <item row="0" column="0">
           <widget class="QLabel" name="httpPasswordLabel">
            <property name="text">
             <string>Password:</string>
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QLineEdit" name="httpUsernameLe">
-           <property name="placeholderText">
-            <string>Server Auth Username</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>
-        <widget class="QDialogButtonBox" name="httpBb">
-         <property name="standardButtons">
-          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
          </property>
-        </widget>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>40</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>
+     <widget class="QWidget" name="idpAuthPage">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="layoutWidget">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>20</y>
+         <width>451</width>
+         <height>141</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="idpAuthGridLayout">
+        <property name="sizeConstraint">
+         <enum>QLayout::SetDefaultConstraint</enum>
+        </property>
+        <item row="0" column="0">
+         <widget class="QLabel" name="idpAuthTokenLabel">
+          <property name="text">
+           <string>Token</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="idpAuthPasswordLe">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="echoMode">
+           <enum>QLineEdit::Normal</enum>
+          </property>
+          <property name="placeholderText">
+           <string>Identity Provider Auth Token</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QPushButton" name="idpAuthTokenSubmitBtn">
+          <property name="text">
+           <string>Submit</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="0" colspan="2">
+         <spacer name="IdpAuthVerticalSpacer">
+          <property name="orientation">
+           <enum>Qt::Vertical</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>20</width>
+            <height>40</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QLabel" name="idpAuthTopicLabel">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>456</width>
+         <height>15</height>
+        </rect>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Identity Provider Authentication</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+       </property>
+      </widget>
+     </widget>
     </widget>
    </item>
-   <item>
+   <item row="3" column="0">
     <widget class="Line" name="line_2">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>
-   <item>
+   <item row="4" column="0">
     <layout class="QHBoxLayout" name="statusHL" stretch="1">
      <property name="topMargin">
       <number>0</number>
@@ -367,7 +457,6 @@
   <tabstop>newEmailLe</tabstop>
   <tabstop>newPasswordLe</tabstop>
   <tabstop>newConfirmPasswordLe</tabstop>
-  <tabstop>httpUsernameLe</tabstop>
   <tabstop>httpPasswordLe</tabstop>
  </tabstops>
  <resources/>

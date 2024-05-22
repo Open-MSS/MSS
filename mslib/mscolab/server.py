@@ -27,27 +27,25 @@
 import functools
 import json
 import logging
-import time
 import datetime
 import secrets
-import fs
-import os
 import socketio
 import sqlalchemy.exc
 import werkzeug
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask import g, jsonify, request, render_template, flash
-from flask import send_from_directory, abort, url_for
+from flask import send_from_directory, abort, url_for, redirect
 from flask_mail import Mail, Message
 from flask_cors import CORS
-from flask_migrate import Migrate
 from flask_httpauth import HTTPBasicAuth
 from validate_email import validate_email
-from werkzeug.utils import secure_filename
+from saml2.metadata import create_metadata_string
+from saml2 import BINDING_HTTP_REDIRECT, BINDING_HTTP_POST
+from flask.wrappers import Response
 
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Change, MessageType, User, Operation, db
+from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
+from mslib.mscolab.models import Change, MessageType, User
 from mslib.mscolab.sockets_manager import setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
@@ -55,18 +53,18 @@ from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 
 
-APP = create_app(__name__)
+APP = create_app(__name__, imprint=mscolab_settings.IMPRINT, gdpr=mscolab_settings.GDPR)
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
-migrate = Migrate(APP, db, render_as_batch=True)
 auth = HTTPBasicAuth()
+
 
 try:
     from mscolab_auth import mscolab_auth
 except ImportError as ex:
     logging.warning("Couldn't import mscolab_auth (ImportError:'{%s), creating dummy config.", ex)
 
-    class mscolab_auth(object):
+    class mscolab_auth:
         allowed_users = [("mscolab", "add_md5_digest_of_PASSWORD_here"),
                          ("add_new_user_here", "add_md5_digest_of_PASSWORD_here")]
         __file__ = None
@@ -155,24 +153,24 @@ def check_login(emailid, password):
     return False
 
 
-@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def register_user(email, password, username):
-    user = User(email, username, password)
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
+        return {"success": False, "message": "Your username or email cannot be empty"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
-        return {"success": False, "message": "Oh no, your email ID is not valid!"}
+        return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
-        return {"success": False, "message": "Oh no, your username cannot contain @ symbol!"}
+        return {"success": False, "message": "Your username cannot contain @ symbol!"}
     user_exists = User.query.filter_by(emailid=str(email)).first()
     if user_exists:
-        return {"success": False, "message": "Oh no, this email ID is already taken!"}
+        return {"success": False, "message": "This email ID is already taken!"}
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
-        return {"success": False, "message": "Oh no, this username is already registered"}
-    db.session.add(user)
-    db.session.commit()
-    return {"success": True}
+        return {"success": False, "message": "This username is already registered"}
+    user = User(email, username, password)
+    result = fm.modify_user(user, action="create")
+    return {"success": result}
 
 
 def verify_user(func):
@@ -199,21 +197,70 @@ def verify_user(func):
     return wrapper
 
 
+def get_idp_entity_id(selected_idp):
+    """
+    Finds the entity_id from the configured IDPs
+    :return: the entity_id of the idp or None
+    """
+    for config in setup_saml2_backend.CONFIGURED_IDPS:
+        if selected_idp == config['idp_identity_name']:
+            idps = config['idp_data']['saml2client'].metadata.identity_providers()
+            only_idp = idps[0]
+            entity_id = only_idp
+            return entity_id
+    return None
+
+
+def create_or_update_idp_user(email, username, token, authentication_backend):
+    """
+    Creates or updates an idp user in the system based on the provided email,
+     username, token, and authentication backend.
+    :param email: idp users email
+    :param username: idp users username
+    :param token: authentication token
+    :param authentication_backend: authenticated identity providers name
+    :return: bool : query success or not
+    """
+    user = User.query.filter_by(emailid=email).first()
+    if not user:
+        # using an IDP for a new account/profile, e-mail is already verified by the IDP
+        confirm_time = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(seconds=1)
+        user = User(email, username, password=token, confirmed=True, confirmed_on=confirm_time,
+                    authentication_backend=authentication_backend)
+        result = fm.modify_user(user, action="create")
+    else:
+        user.authentication_backend = authentication_backend
+        user.hash_password(token)
+        result = fm.modify_user(user, action="update_idp_user")
+    return result
+
+
 @APP.route('/')
 def home():
     return render_template("/index.html")
 
 
-# ToDo setup codes in return statements
 @APP.route("/status")
 def hello():
     if request.authorization is not None:
         if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
             auth.login_required()
-            return "Mscolab server"
-        return "Mscolab server"
+            return json.dumps({
+                'message': "Mscolab server",
+                'use_saml2': mscolab_settings.USE_SAML2,
+                'direct_login': mscolab_settings.DIRECT_LOGIN
+            })
+        return json.dumps({
+            'message': "Mscolab server",
+            'use_saml2': mscolab_settings.USE_SAML2,
+            'direct_login': mscolab_settings.DIRECT_LOGIN
+        })
     else:
-        return "Mscolab server"
+        return json.dumps({
+            'message': "Mscolab server",
+            'use_saml2': mscolab_settings.USE_SAML2,
+            'direct_login': mscolab_settings.DIRECT_LOGIN
+        })
 
 
 @APP.route('/token', methods=["POST"])
@@ -222,7 +269,7 @@ def get_auth_token():
     emailid = request.form['email']
     password = request.form['password']
     user = check_login(emailid, password)
-    if user:
+    if user is not False:
         if mscolab_settings.MAIL_ENABLED:
             if user.confirmed:
                 token = user.generate_auth_token()
@@ -258,6 +305,7 @@ def authorized():
 
 
 @APP.route("/register", methods=["POST"])
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def user_register_handler():
     email = request.form['email']
     password = request.form['password']
@@ -292,10 +340,8 @@ def confirm_email(token):
         if user.confirmed:
             return render_template('user/confirmed.html', username=user.username)
         else:
-            user.confirmed = True
-            user.confirmed_on = datetime.datetime.now()
-            db.session.add(user)
-            db.session.commit()
+            fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
+            fm.modify_user(user, attribute="confirmed", value=True)
             return render_template('user/confirmed.html', username=user.username)
 
 
@@ -305,28 +351,25 @@ def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
-@APP.route("/delete_user", methods=["POST"])
+@APP.route("/delete_own_account", methods=["POST"])
 @verify_user
-def delete_user():
+def delete_own_account():
     """
     delete own account
     """
-    # ToDo rename to delete_own_account
     user = g.user
-    db.session.delete(user)
-    db.session.commit()
-    return jsonify({"success": True}), 200
+    result = fm.modify_user(user, action="delete")
+    return jsonify({"success": result}), 200
 
 
 # Chat related routes
 @APP.route("/messages", methods=["GET"])
 @verify_user
 def messages():
-    # ToDo maybe move is_member part to file_manager
     user = g.user
     op_id = request.args.get("op_id", request.form.get("op_id", None))
     if fm.is_member(user.id, op_id):
-        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01, 00:00:00"))
+        timestamp = request.args.get("timestamp", request.form.get("timestamp", "1970-01-01T00:00:00+00:00"))
         chat_messages = cm.get_messages(op_id, timestamp)
         return jsonify({"messages": chat_messages})
     return "False"
@@ -342,32 +385,18 @@ def message_attachment():
         file = request.files['file']
         message_type = MessageType(int(request.form.get("message_type")))
         user = g.user
-        # ToDo review
         users = fm.fetch_users_without_permission(int(op_id), user.id)
         if users is False:
             return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
         if file is not None:
-            with fs.open_fs('/') as home_fs:
-                file_dir = fs.path.join(APP.config['UPLOAD_FOLDER'], op_id)
-                if '\\' not in file_dir:
-                    if not home_fs.exists(file_dir):
-                        home_fs.makedirs(file_dir)
-                else:
-                    file_dir = file_dir.replace('\\', '/')
-                    if not os.path.exists(file_dir):
-                        os.makedirs(file_dir)
-                file_name, file_ext = file.filename.rsplit('.', 1)
-                file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
-                file_name = secure_filename(file_name)
-                file_path = fs.path.join(file_dir, file_name)
-                file.save(file_path)
-                static_dir = fs.path.basename(APP.config['UPLOAD_FOLDER'])
-                static_dir = static_dir.replace('\\', '/')
-                static_file_path = os.path.join(static_dir, op_id, file_name)
-            new_message = cm.add_message(user, static_file_path, op_id, message_type)
-            new_message_dict = get_message_dict(new_message)
-            sockio.emit('chat-message-client', json.dumps(new_message_dict))
-            return jsonify({"success": True, "path": static_file_path})
+            static_file_path = cm.add_attachment(op_id, APP.config['UPLOAD_FOLDER'], file, file_token)
+            if static_file_path is not None:
+                new_message = cm.add_message(user, static_file_path, op_id, message_type)
+                new_message_dict = get_message_dict(new_message)
+                sockio.emit('chat-message-client', json.dumps(new_message_dict))
+                return jsonify({"success": True, "path": static_file_path})
+            else:
+                return "False"
         return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
     # normal use case never gets to this
     return "False"
@@ -398,9 +427,11 @@ def create_operation():
     content = request.form.get('content', None)
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
-    last_used = datetime.datetime.utcnow()
+    active = (request.form.get('active', "True") == "True")
+    last_used = datetime.datetime.now(tz=datetime.timezone.utc)
     user = g.user
-    r = str(fm.create_operation(path, description, user, last_used, content=content, category=category))
+    r = str(fm.create_operation(path, description, user, last_used,
+                                content=content, category=category, active=active))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
@@ -423,7 +454,7 @@ def get_operation_by_id():
 @verify_user
 def get_all_changes():
     op_id = request.args.get('op_id', request.form.get('op_id', None))
-    named_version = request.args.get('named_version')
+    named_version = request.args.get('named_version') == "True"
     user = g.user
     result = fm.get_all_changes(int(op_id), user, named_version)
     if result is False:
@@ -434,9 +465,9 @@ def get_all_changes():
 @APP.route('/get_change_content', methods=['GET'])
 @verify_user
 def get_change_content():
-    # ToDo refactor see fm.get_change_content(
     ch_id = int(request.args.get('ch_id', request.form.get('ch_id', 0)))
-    result = fm.get_change_content(ch_id)
+    user = g.user
+    result = fm.get_change_content(ch_id, user)
     if result is False:
         return "False"
     return jsonify({"content": result})
@@ -466,8 +497,9 @@ def authorized_users():
 @APP.route('/operations', methods=['GET'])
 @verify_user
 def get_operations():
+    skip_archived = (request.args.get('skip_archived', request.form.get('skip_archived', "False")) == "True")
     user = g.user
-    return json.dumps({"operations": fm.list_operations(user)})
+    return json.dumps({"operations": fm.list_operations(user, skip_archived=skip_archived)})
 
 
 @APP.route('/delete_operation', methods=["POST"])
@@ -475,7 +507,7 @@ def get_operations():
 def delete_operation():
     op_id = int(request.form.get('op_id', 0))
     user = g.user
-    success = fm.delete_file(op_id, user)
+    success = fm.delete_operation(op_id, user)
     if success is False:
         return jsonify({"success": False, "message": "You don't have access for this operation!"})
 
@@ -512,44 +544,29 @@ def get_operation_details():
 @APP.route('/set_last_used', methods=["POST"])
 @verify_user
 def set_last_used():
-    # ToDo refactor move to file_manager
     op_id = request.form.get('op_id', None)
-    operation = Operation.query.filter_by(id=int(op_id)).first()
-    operation.last_used = datetime.datetime.utcnow()
-    temp_operation_active = operation.active
-    operation.active = True
-    db.session.commit()
-    # Reload Operation List
-    if not temp_operation_active:
+    user = g.user
+    days_ago = int(request.form.get('days', 0))
+    fm.update_operation(int(op_id), 'last_used',
+                        datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
+                        user)
+    if days_ago > mscolab_settings.ARCHIVE_THRESHOLD:
+        fm.update_operation(int(op_id), "active", False, user)
+    else:
+        fm.update_operation(int(op_id), "active", True, user)
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
     return jsonify({"success": True}), 200
 
 
-@APP.route('/update_last_used', methods=["POST"])
+@APP.route('/undo_changes', methods=["POST"])
 @verify_user
-def update_last_used():
-    # ToDo refactor move to file_manager
-    operations = Operation.query.filter().all()
-    for operation in operations:
-        if operation.last_used is not None and \
-                (datetime.datetime.utcnow() - operation.last_used).days > 30:
-            operation.active = False
-        else:
-            operation.active = True
-    db.session.commit()
-    return jsonify({"success": True}), 200
-
-
-@APP.route('/undo', methods=["POST"])
-@verify_user
-def undo_ftml():
-    # ToDo rename to undo_changes
+def undo_changes():
     ch_id = request.form.get('ch_id', -1)
     ch_id = int(ch_id)
     user = g.user
-    result = fm.undo(ch_id, user)
+    result = fm.undo_changes(ch_id, user)
     # get op_id from change
     ch = Change.query.filter_by(id=ch_id).first()
     if result is True:
@@ -685,8 +702,7 @@ def reset_password(token):
     if form.validate_on_submit():
         try:
             user.hash_password(form.confirm_password.data)
-            user.confirmed = True
-            db.session.commit()
+            fm.modify_user(user, "confirmed", True)
             flash('Password reset Success. Please login by the user interface.', 'category_success')
             return render_template('user/status.html')
         except IOError:
@@ -722,6 +738,145 @@ def reset_request():
     else:
         logging.warning("To send emails, the value of `MAIL_ENABLED` in `conf.py` should be set to True.")
         return render_template('errors/403.html'), 403
+
+
+if mscolab_settings.USE_SAML2:
+    # setup idp login config
+    setup_saml2_backend()
+
+    # set routes for SSO
+    @APP.route('/available_idps/', methods=['GET'])
+    def available_idps():
+        """
+        This function checks if IDP (Identity Provider) is enabled in the mscolab_settings module.
+        If IDP is enabled, it retrieves the configured IDPs from setup_saml2_backend.CONFIGURED_IDPS
+        and renders the 'idp/available_idps.html' template with the list of configured IDPs.
+        """
+        configured_idps = setup_saml2_backend.CONFIGURED_IDPS
+        return render_template('idp/available_idps.html', configured_idps=configured_idps), 200
+
+    @APP.route("/idp_login/", methods=['POST'])
+    def idp_login():
+        """Handle the login process for the user by selected IDP"""
+        selected_idp = request.form.get('selectedIdentityProvider')
+        sp_config = None
+        for config in setup_saml2_backend.CONFIGURED_IDPS:
+            if selected_idp == config['idp_identity_name']:
+                sp_config = config['idp_data']['saml2client']
+                break
+
+        try:
+            _, response_binding = sp_config.config.getattr("endpoints", "sp")[
+                "assertion_consumer_service"
+            ][0]
+            entity_id = get_idp_entity_id(selected_idp)
+            _, binding, http_args = sp_config.prepare_for_negotiated_authenticate(
+                entityid=entity_id,
+                response_binding=response_binding,
+            )
+            if binding == BINDING_HTTP_REDIRECT:
+                headers = dict(http_args["headers"])
+                return redirect(str(headers["Location"]), code=303)
+            return Response(http_args["data"], headers=http_args["headers"])
+        except (NameError, AttributeError):
+            return render_template('errors/403.html'), 403
+
+    def create_acs_post_handler(config):
+        """
+        Create acs_post_handler function for the given idp_config.
+        """
+        def acs_post_handler():
+            """
+            Function to handle SAML authentication response.
+            """
+            try:
+                outstanding_queries = {}
+                binding = BINDING_HTTP_POST
+                authn_response = config['idp_data']['saml2client'].parse_authn_request_response(
+                    request.form["SAMLResponse"], binding, outstanding=outstanding_queries
+                )
+                email = None
+                username = None
+
+                try:
+                    email = authn_response.ava["email"][0]
+                    username = authn_response.ava["givenName"][0]
+                    token = generate_confirmation_token(email)
+                except (NameError, AttributeError, KeyError):
+                    try:
+                        # Initialize an empty dictionary to store attribute values
+                        attributes = {}
+
+                        # Loop through attribute statements
+                        for attribute_statement in authn_response.assertion.attribute_statement:
+                            for attribute in attribute_statement.attribute:
+                                attribute_name = attribute.name
+                                attribute_value = \
+                                    attribute.attribute_value[0].text if attribute.attribute_value else None
+                                attributes[attribute_name] = attribute_value
+
+                        # Extract the email and givenname attributes
+                        email = attributes["email"]
+                        username = attributes["givenName"]
+                        token = generate_confirmation_token(email)
+                    except (NameError, AttributeError, KeyError):
+                        return render_template('errors/403.html'), 403
+
+                if email is not None and username is not None:
+                    idp_user_db_state = create_or_update_idp_user(email,
+                                                                  username, token, idp_config['idp_identity_name'])
+                    if idp_user_db_state:
+                        return render_template('idp/idp_login_success.html', token=token), 200
+                    return render_template('errors/500.html'), 500
+                return render_template('errors/500.html'), 500
+            except (NameError, AttributeError, KeyError):
+                return render_template('errors/403.html'), 403
+        return acs_post_handler
+
+    # Implementation for handling configured SAML assertion consumer endpoints
+    for idp_config in setup_saml2_backend.CONFIGURED_IDPS:
+        try:
+            for assertion_consumer_endpoint in idp_config['idp_data']['assertion_consumer_endpoints']:
+                # Dynamically add the route for the current endpoint
+                APP.add_url_rule(f'/{assertion_consumer_endpoint}/', assertion_consumer_endpoint,
+                                 create_acs_post_handler(idp_config), methods=['POST'])
+        except (NameError, AttributeError, KeyError) as ex:
+            logging.warning("USE_SAML2 is %s, Failure is: %s", mscolab_settings.USE_SAML2, ex)
+
+    @APP.route('/idp_login_auth/', methods=['POST'])
+    def idp_login_auth():
+        """Handle the SAML authentication validation of client application."""
+        try:
+            data = request.get_json()
+            token = data.get('token')
+            email = confirm_token(token, expiration=1200)
+            if email:
+                user = check_login(email, token)
+                if user:
+                    random_token = secrets.token_hex(16)
+                    user.hash_password(random_token)
+                    fm.modify_user(user, action="update_idp_user")
+                    return json.dumps({
+                        "success": True,
+                        'token': random_token,
+                        'user': {'username': user.username, 'id': user.id, 'emailid': user.emailid}
+                    })
+                return jsonify({"success": False}), 401
+            return jsonify({"success": False}), 401
+        except TypeError:
+            return jsonify({"success": False}), 401
+
+    @APP.route("/metadata/<idp_identity_name>", methods=['GET'])
+    def metadata(idp_identity_name):
+        """Return the SAML metadata XML for the requested IDP"""
+        for config in setup_saml2_backend.CONFIGURED_IDPS:
+            if idp_identity_name == config['idp_identity_name']:
+                sp_config = config['idp_data']['saml2client']
+                metadata_string = create_metadata_string(
+                    None, sp_config.config, 4, None, None, None, None, None
+                ).decode("utf-8")
+                return Response(metadata_string, mimetype="text/xml")
+        return render_template('errors/404.html'), 404
 
 
 def start_server(app, sockio, cm, fm, port=8083):

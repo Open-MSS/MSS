@@ -33,9 +33,11 @@ from pint import Quantity
 
 from mslib.mswms import mss_2D_sections
 from mslib.utils.units import convert_to
+from mslib.utils.loggerdef import configure_mpl_logger
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
+mpl_logger = configure_mpl_logger()
 
 
 class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
@@ -48,7 +50,7 @@ class AbstractLinearSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         Constructor.
         """
-        super(AbstractLinearSectionStyle, self).__init__(driver=driver)
+        super().__init__(driver=driver)
         self.variable = ""
         self.unit = ""
         self.y_values = []

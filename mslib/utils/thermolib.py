@@ -27,15 +27,10 @@
 """
 
 import numpy as np
-
-from mslib.utils.units import units, check_units
-
-from metpy.package_tools import Exporter
 from metpy.constants import Rd, g
 from metpy.xarray import preprocess_and_wrap
-import metpy.calc as mpcalc
 
-exporter = Exporter(globals())
+from mslib.utils.units import units, check_units
 
 
 def rel_hum(p, t, q):
@@ -85,6 +80,7 @@ def pot_temp(p, t):
 
     Returns: potential temperature in [K].
     """
+    import metpy.calc as mpcalc
     return mpcalc.potential_temperature(
         units.Pa * p, units.K * t).to("K").m
 
@@ -104,6 +100,7 @@ def eqpt_approx(p, t, q):
     Returns: equivalent potential temperature in [K].
     """
 
+    import metpy.calc as mpcalc
     return mpcalc.equivalent_potential_temperature(
         units.Pa * p, units.K * t,
         mpcalc.dewpoint_from_specific_humidity(units.Pa * p, units.K * t, q)).to("K").m
@@ -122,6 +119,7 @@ def omega_to_w(omega, p, t):
 
     Returns the vertical velocity in geometric coordinates, [m/s].
     """
+    import metpy.calc as mpcalc
     return mpcalc.vertical_velocity(
         units("Pa/s") * omega, units.Pa * p, units.K * t).to("m/s").m
 
@@ -140,7 +138,6 @@ _STANDARD_ATMOSPHERE = [
 _HEIGHT, _TEMPERATURE, _PRESSURE, _TEMPERATURE_GRADIENT = 0, 1, 2, 3
 
 
-@exporter.export
 @preprocess_and_wrap(wrap_like='height')
 @check_units('[length]')
 def flightlevel2pressure(height):
@@ -192,7 +189,6 @@ def flightlevel2pressure(height):
     return p if is_array else p[0]
 
 
-@exporter.export
 @preprocess_and_wrap(wrap_like='pressure')
 @check_units('[pressure]')
 def pressure2flightlevel(pressure):
@@ -245,7 +241,6 @@ def pressure2flightlevel(pressure):
     return z if is_array else z[0]
 
 
-@exporter.export
 @preprocess_and_wrap(wrap_like='height')
 @check_units('[length]')
 def isa_temperature(height):

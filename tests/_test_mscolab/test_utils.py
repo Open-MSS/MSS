@@ -23,64 +23,30 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask_testing import TestCase
+import datetime
 import os
 import pytest
 import json
 
 from fs.tempfs import TempFS
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation, MessageType
-from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
-from mslib.mscolab.server import APP
+from mslib.mscolab.models import Operation, Message, MessageType, User
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.utils import get_recent_op_id, get_session_id, get_message_dict, create_files, os_fs_create_dir
-from mslib.mscolab.sockets_manager import setup_managers
+from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
+                                 get_message_dict, create_files,
+                                 os_fs_create_dir)
 
 
-class Message():
-    id = 1
-    u_id = 2
-
-    class user():
-        username = "name"
-    text = "Moin"
-    message_type = MessageType.TEXT
-    reply_id = 0
-    replies = []
-
-    class created_at():
-        def strftime(value):
-            pass
-
-
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_Utils(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_init()
+class Test_Utils:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app, mscolab_managers):
+        self.app = mscolab_app
+        _, _, self.fm = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
-        socketio, cm, self.fm = setup_managers(self.app)
+        with self.app.app_context():
+            yield
 
-    def tearDown(self):
-        handle_db_reset()
-
-    @pytest.mark.skipif(os.name == "nt",
-                        reason="multiprocessing needs currently start_method fork")
     def test_get_recent_oid(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
@@ -98,7 +64,10 @@ class Test_Utils(TestCase):
         assert get_session_id(sockets, 5) == 100
 
     def test_get_message_dict(self):
-        result = get_message_dict(Message())
+        message = Message(0, 0, "Moin")
+        message.user = User(*self.userdata)
+        message.created_at = datetime.datetime.now(tz=datetime.timezone.utc)
+        result = get_message_dict(message)
         assert result["message_type"] == MessageType.TEXT
 
     def test_os_fs_create_dir(self):

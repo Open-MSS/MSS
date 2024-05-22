@@ -30,26 +30,28 @@ import json
 from PyQt5 import QtWidgets, QtGui, QtCore
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
-from mslib.msui import msui
+import mslib.msui.msui_mainwindow as msui_mainwindow
 from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.qt import Worker
+from mslib.utils.config import config_loader
+from urllib.parse import urljoin
 
 
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
     """
     """
 
-    def __init__(self, flighttrack_model, op_id: int, parent=None, type=QtWidgets.QListWidgetItem.UserType):
+    def __init__(self, flighttrack_model, op_id: int, parent=None, user_type=QtWidgets.QListWidgetItem.UserType):
         view_name = flighttrack_model.name
-        super(QMscolabOperationsListWidgetItem, self).__init__(
-            view_name, parent, type
+        super().__init__(
+            view_name, parent, user_type
         )
         self.parent = parent
         self.flighttrack_model = flighttrack_model
         self.op_id = op_id
 
 
-class MultipleFlightpath(object):
+class MultipleFlightpath:
     """
     Represent a Multiple FLightpath
     """
@@ -110,11 +112,12 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     # ToDO: Make a new parent class with all the functions in this class and inherit them
     #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
 
-    signal_parent_closes = QtCore.Signal()
+    signal_parent_closes = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
-                 listOperationsMSC=None, activeFlightTrack=None, mscolab_server_url=None, token=None):
-        super(MultipleFlightpathControlWidget, self).__init__(parent)
+                 listOperationsMSC=None, category=None, activeFlightTrack=None, active_op_id=None,
+                 mscolab_server_url=None, token=None):
+        super().__init__(parent)
         # ToDO: Remove all patches, on closing dockwidget.
         self.ui = parent
         self.setupUi(self)
@@ -122,6 +125,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.flight_path = None  # flightpath object
         self.dict_flighttrack = {}  # Dictionary of flighttrack data: patch,color,wp_model
         self.active_flight_track = activeFlightTrack
+        self.active_op_id = active_op_id
+        self.msc_category = category  # object of active category
         self.listOperationsMSC = listOperationsMSC
         self.listFlightTracks = listFlightTracks
         self.mscolab_server_url = mscolab_server_url
@@ -173,27 +178,31 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.activate_flighttrack()
         self.multipleflightrack_worker = Worker(None)
 
-    @QtCore.Slot()
+    @QtCore.pyqtSlot()
     def logout(self):
-        self.operations.logout_mscolab()
-        self.ui.signal_listFlighttrack_doubleClicked.disconnect()
-        self.ui.signal_permission_revoked.disconnect()
-        self.ui.signal_render_new_permission.disconnect()
-        self.operations = None
-        self.flighttrack_list = True
-        self.operation_list = False
-        for idx in range(len(self.obb)):
-            del self.obb[idx]
+        if self.operations is not None:
+            self.operations.logout_mscolab()
+            self.ui.signal_listFlighttrack_doubleClicked.disconnect()
+            self.ui.signal_permission_revoked.disconnect()
+            self.ui.signal_render_new_permission.disconnect()
+            self.operations = None
+            self.flighttrack_list = True
+            self.operation_list = False
+            for idx in range(len(self.obb)):
+                del self.obb[idx]
 
-    @QtCore.Slot(str, str)
+    @QtCore.pyqtSlot(str, str)
     def login(self, url, token):
         self.mscolab_server_url = url
         self.token = token
         self.connect_mscolab_server()
 
     def connect_mscolab_server(self):
+        if self.active_op_id is not None:
+            self.deactivate_all_flighttracks()
         self.operations = MultipleFlightpathOperations(self, self.mscolab_server_url, self.token,
                                                        self.list_operation_track,
+                                                       self.active_op_id,
                                                        self.listOperationsMSC, self.view)
         self.obb.append(self.operations)
 
@@ -250,7 +259,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.operations.deactivate_all_operations()
         self.activate_flighttrack()
 
-    @QtCore.Slot(tuple)
+    @QtCore.pyqtSlot(tuple)
     def ft_vertices_color(self, color):
         self.color = color
         self.colorPixmap.setPixmap(self.show_color_pixmap(color))
@@ -265,19 +274,19 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         elif self.operation_list:
             self.operations.ft_color_update(color)
 
-    @QtCore.Slot(int, str)
+    @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):
         self.operations.operationsAdded(op_id, path)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def remove_operation_slot(self, op_id):
         self.operations.operationRemoved(op_id)
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def update_op_id(self, op_id):
         self.operations.get_op_id(op_id)
 
-    @QtCore.Slot(ft.WaypointsTableModel)
+    @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def get_active(self, active_flighttrack):
         self.update_last_flighttrack()
         self.active_flight_track = active_flighttrack
@@ -303,7 +312,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         self.save_waypoint_model_data(wp_model, self.list_flighttrack)
 
-        listItem = msui.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
+        listItem = msui_mainwindow.QFlightTrackListWidgetItem(wp_model, self.list_flighttrack)
         listItem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable)
         if not self.flighttrack_added:
             self.flighttrack_added = True
@@ -506,10 +515,10 @@ class MultipleFlightpathOperations:
     on the TopView canvas.
     """
 
-    def __init__(self, parent, mscolab_server_url, token, list_operation_track, listOperationsMSC, view):
+    def __init__(self, parent, mscolab_server_url, token, list_operation_track, active_op_id, listOperationsMSC, view):
         # Variables related to Mscolab Operations
         self.parent = parent
-        self.active_op_id = None
+        self.active_op_id = active_op_id
         self.mscolab_server_url = mscolab_server_url
         self.token = token
         self.view = view
@@ -522,9 +531,6 @@ class MultipleFlightpathOperations:
         self.operation_activated = False
         self.color_change = False
 
-        # Connect signals and slots
-        self.list_operation_track.itemChanged.connect(self.set_flag)
-
         # Load operations from wps server
         server_operations = self.get_wps_from_server()
         sorted_server_operations = sorted(server_operations, key=lambda d: d["path"])
@@ -535,6 +541,10 @@ class MultipleFlightpathOperations:
             wp_model = ft.WaypointsTableModel(xml_content=xml_content)
             wp_model.name = operations["path"]
             self.create_operation(op_id, wp_model)
+
+        # This needs to be done after operations are loaded
+        # Connect signals and slots
+        self.list_operation_track.itemChanged.connect(self.set_flag)
 
     def set_flag(self):
         if self.operation_added:
@@ -548,13 +558,19 @@ class MultipleFlightpathOperations:
 
     def get_wps_from_server(self):
         operations = {}
+        skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
         data = {
-            "token": self.token
+            "token": self.token,
+            "skip_archived": skip_archived
         }
-        r = requests.get(self.mscolab_server_url + "/operations", data=data, timeout=(2, 10))
+        url = urljoin(self.mscolab_server_url, "operations")
+        r = requests.get(url, data=data, timeout=(2, 10))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
+        selected_category = self.parent.msc_category.currentText()
+        if selected_category != "*ANY*":
+            operations = [op for op in operations if op['category'] == selected_category]
         return operations
 
     def request_wps_from_server(self, op_id):
@@ -563,7 +579,8 @@ class MultipleFlightpathOperations:
                 "token": self.token,
                 "op_id": op_id
             }
-            r = requests.get(self.mscolab_server_url + '/get_operation_by_id', data=data, timeout=(2, 10))
+            url = urljoin(self.mscolab_server_url, "get_operation_by_id")
+            r = requests.get(url, data=data, timeout=(2, 10))
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
                 return xml_content
@@ -609,6 +626,8 @@ class MultipleFlightpathOperations:
         """
         Activate Mscolab Operation
         """
+        # disconnect itemChanged during activation loop
+        self.list_operation_track.itemChanged.disconnect(self.set_flag)
         font = QtGui.QFont()
         for i in range(self.list_operation_track.count()):
             listItem = self.list_operation_track.item(i)
@@ -627,6 +646,8 @@ class MultipleFlightpathOperations:
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
             self.set_activate_flag()
             listItem.setFont(font)
+        # connect itemChanged after everything setup, otherwise it will be triggered on each entry
+        self.list_operation_track.itemChanged.connect(self.set_flag)
 
     def save_last_used_operation(self, op_id):
         if self.active_op_id is not None:
@@ -673,6 +694,7 @@ class MultipleFlightpathOperations:
         """
         Slot to remove operation.
         """
+        self.list_operation_track.itemChanged.disconnect(self.set_flag)
         self.operation_removed = True
         for index in range(self.list_operation_track.count()):
             if self.list_operation_track.item(index).op_id == op_id:
@@ -683,6 +705,7 @@ class MultipleFlightpathOperations:
                 self.list_operation_track.takeItem(index)
                 self.active_op_id = None
                 break
+        self.list_operation_track.itemChanged.connect(self.set_flag)
 
     def set_activate_flag(self):
         if not self.operation_activated:
@@ -768,11 +791,11 @@ class MultipleFlightpathOperations:
         self.token = None
         self.dict_operations = {}
 
-    @QtCore.Slot(int)
+    @QtCore.pyqtSlot(int)
     def permission_revoked(self, op_id):
         self.operationRemoved(op_id)
 
-    @QtCore.Slot(int, str)
+    @QtCore.pyqtSlot(int, str)
     def render_permission(self, op_id, path):
         self.operationsAdded(op_id, path)
 

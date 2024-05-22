@@ -33,7 +33,7 @@ from skyfield.api import Loader, Topos, utc
 import skyfield_data
 
 from PyQt5 import QtGui, QtWidgets
-from mslib.utils.qt import ui_remotesensing_dockwidget as ui
+from mslib.msui.qt5 import ui_remotesensing_dockwidget as ui
 from mslib.utils.time import jsec_to_datetime, datetime_to_jsec
 from mslib.utils.coordinate import get_distance, rotate_point, fix_angle, normalize_longitude
 
@@ -51,7 +51,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         parent -- Qt widget that is parent to this widget.
         view -- reference to mpl canvas class
         """
-        super(RemoteSensingControlWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
 
         self.view = view

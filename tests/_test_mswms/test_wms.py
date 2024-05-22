@@ -25,7 +25,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
 import os
 from shutil import move
 
@@ -35,20 +34,23 @@ import pytest
 
 import mslib.mswms.wms
 import mslib.mswms.gallery_builder
-import mslib.mswms.mswms as mswms
 from importlib import reload
 from tests.utils import callback_ok_image, callback_ok_xml, callback_ok_html, callback_404_plain
 from tests.constants import DATA_DIR
 
 
-class Test_WMS(object):
+class Test_WMS:
+    @pytest.fixture(autouse=True)
+    def setup(self, mswms_app):
+        self.app = mswms_app
+
     def test_get_query_string_missing_parameters(self):
         environ = {
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING': 'request=GetCapabilities'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
@@ -60,7 +62,7 @@ class Test_WMS(object):
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING': 'request=GetCapabilities&service=WMS&version=1.4.0'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
@@ -102,7 +104,7 @@ class Test_WMS(object):
         )
 
         for tst_case in cases:
-            self.client = mswms.application.test_client()
+            self.client = self.app.test_client()
             result = self.client.get('/?{}'.format(tst_case["QUERY_STRING"]))
             callback_ok_xml(result.status, result.headers)
             assert isinstance(result.data, bytes), result
@@ -112,7 +114,7 @@ class Test_WMS(object):
             'wsgi.url_scheme': 'http',
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING': 'request=getcapabilities&service=wms&version=1.1.1'}
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)
         assert isinstance(result.data, bytes), result
@@ -126,7 +128,7 @@ class Test_WMS(object):
                 'request=GetMap&bgcolor=0xFFFFFF&height=376&dim_init_time=2012-10-17T12%3A00%3A00Z&width=479&'
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_image(result.status, result.headers)
 
@@ -151,7 +153,7 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
         query_string = environ["QUERY_STRING"]
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(query_string))
         callback_ok_image(result.status, result.headers)
         assert result.data.count(b"ServiceExceptionReport") == 0, result
@@ -185,7 +187,7 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=201%2C500.0%2C10%2C100.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_image(result.status, result.headers)
 
@@ -212,7 +214,7 @@ class Test_WMS(object):
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C48.08%2C11.28&transparent=FALSE'}
         query_string = environ["QUERY_STRING"]
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(query_string))
         callback_ok_image(result.status, result.headers)
         assert result.data.count(b"ServiceExceptionReport") == 0, result
@@ -243,7 +245,7 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)
 
@@ -270,7 +272,7 @@ class Test_WMS(object):
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
         query_string = environ["QUERY_STRING"]
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(query_string))
         callback_ok_xml(result.status, result.headers)
         assert result.data.count(b"ServiceExceptionReport") == 0, result
@@ -302,7 +304,7 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         assert isinstance(result.data, bytes), result
 
@@ -316,7 +318,7 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         assert isinstance(result.data, bytes), result
 
@@ -327,7 +329,7 @@ class Test_WMS(object):
             'QUERY_STRING': '',
         }
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_html(result.status, result.headers)
         assert isinstance(result.data, bytes), result
@@ -339,7 +341,7 @@ class Test_WMS(object):
             'REQUEST_METHOD': 'GET', 'PATH_INFO': '/', 'SERVER_PROTOCOL': 'HTTP/1.1', 'HTTP_HOST': 'localhost:8081',
             'QUERY_STRING': 'request=abraham',
         }
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_404_plain(result.status, result.headers)
         assert isinstance(result.data, bytes), result
@@ -356,7 +358,7 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=-50.0%2C20.0%2C20.0%2C75.0&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&transparent=FALSE'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_image(result.status, result.headers)
         assert isinstance(result.data, bytes), result
@@ -371,7 +373,7 @@ class Test_WMS(object):
                 'version=1.1.1&bbox=201&time=2012-10-17T12%3A00%3A00Z&'
                 'exceptions=application%2Fvnd.ogc.se_xml&path=52.78%2C-8.93%2C25000%2C48.08%2C11.28%2C25000'}
 
-        self.client = mswms.application.test_client()
+        self.client = self.app.test_client()
         result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
         callback_ok_xml(result.status, result.headers)
 
@@ -385,6 +387,13 @@ class Test_WMS(object):
         assert mslib.mswms.wms.mswms_settings.__file__ is not None
         assert mslib.mswms.wms.mswms_auth.__file__ is not None
 
+    @pytest.mark.skip("""\
+There is a race condition between modifying with ncap2 and asserting that the file changed where the server might not
+see the change before the request is made, which leads to a failure of the following assert.
+
+This test fails on macOS 14 and can also fail on Linux when the pytest test order is randomized.
+""".strip(),
+    )
     def test_files_changed(self):
         def do_test():
             environ = {
@@ -397,7 +406,7 @@ class Test_WMS(object):
                 'exceptions=XML&transparent=FALSE'}
             pl_file = next(file for file in os.listdir(DATA_DIR) if ".pl" in file)
 
-            self.client = mswms.application.test_client()
+            self.client = self.app.test_client()
             result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
 
             # Assert modified file was reloaded and now looks different
@@ -426,6 +435,12 @@ class Test_WMS(object):
             "data_access", new=watch_access):
             do_test()
 
+    @pytest.mark.skip("""\
+This test changes global variables (e.g. DOCS_LOCATION) which can affect other tests depending on test order
+(e.g. tests/_test_mswms/test_mss_plot_driver.py::Test_VSec::test_VS_gallery_template fails consistently in reverse order
+on macOS 14).
+""".strip(),
+    )
     def test_gallery(self, tmpdir):
         tempdir = tmpdir.mkdir("static")
         docsdir = tmpdir.mkdir("docs")

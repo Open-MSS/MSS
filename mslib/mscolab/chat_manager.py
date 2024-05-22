@@ -25,15 +25,18 @@
     limitations under the License.
 """
 import datetime
+import os
+import time
 
 import fs
+from werkzeug.utils import secure_filename
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, Message, MessageType
 from mslib.mscolab.utils import get_message_dict
 
 
-class ChatManager(object):
+class ChatManager:
     """Class with handler functions for chat related functionalities"""
 
     def __init__(self):
@@ -59,9 +62,9 @@ class ChatManager(object):
         timestamp:  if provided, messages only after this time stamp is provided
         """
         if timestamp is None:
-            timestamp = datetime.datetime(1970, 1, 1)
+            timestamp = datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc)
         else:
-            timestamp = datetime.datetime.strptime(timestamp, "%Y-%m-%d, %H:%M:%S")
+            timestamp = datetime.datetime.fromisoformat(timestamp)
         messages = Message.query \
             .filter(Message.op_id == op_id) \
             .filter(Message.reply_id.is_(None)) \
@@ -93,3 +96,24 @@ class ChatManager(object):
                 upload_dir.remove(fs.path.join(str(message.op_id), file_name))
         db.session.delete(message)
         db.session.commit()
+
+    def add_attachment(self, op_id, upload_folder, file, file_token):
+        with fs.open_fs('/') as home_fs:
+            file_dir = fs.path.join(upload_folder, str(op_id))
+            if '\\' not in file_dir:
+                if not home_fs.exists(file_dir):
+                    home_fs.makedirs(file_dir)
+            else:
+                file_dir = file_dir.replace('\\', '/')
+                if not os.path.exists(file_dir):
+                    os.makedirs(file_dir)
+            file_name, file_ext = file.filename.rsplit('.', 1)
+            file_name = f'{file_name}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
+            file_name = secure_filename(file_name)
+            file_path = fs.path.join(file_dir, file_name)
+            file.save(file_path)
+            static_dir = fs.path.basename(upload_folder)
+            static_dir = static_dir.replace('\\', '/')
+            static_file_path = os.path.join(static_dir, str(op_id), file_name)
+        if os.path.exists(file_path):
+            return static_file_path

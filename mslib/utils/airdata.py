@@ -252,7 +252,7 @@ def get_airspaces(countries=None):
                                             for data in airspace_data["polygon"].split(",")]
                 _airspaces.append(airspace_data)
                 _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", file))
-            else:
-                QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", f"{file}")
+        else:
+            QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", f"{file}")
 
     return _airspaces

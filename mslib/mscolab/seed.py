@@ -46,7 +46,6 @@ def add_all_users_to_all_operations(access_level='collaborator'):
         all_path = [operation.path for operation in all_operations]
         db.session.close()
     for path in all_path:
-        access_level = 'collaborator'
         if path == "TEMPLATE":
             access_level = 'admin'
         add_all_users_default_operation(path=path, access_level=access_level)
@@ -117,9 +116,6 @@ def add_user(email, username, password):
     app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    template = f"""
-    "MSCOLAB_mailid": "{email}",
-"""
     with app.app_context():
         user_email_exists = User.query.filter_by(emailid=str(email)).first()
         user_name_exists = User.query.filter_by(username=str(username)).first()
@@ -129,7 +125,6 @@ def add_user(email, username, password):
             db.session.commit()
             db.session.close()
             logging.info("Userdata: %s %s %s", email, username, password)
-            logging.info(template)
             return True
         else:
             logging.info("%s already in db", user_name_exists)
@@ -223,7 +218,10 @@ def archive_operation(path=None, emailid=None):
                 elif perm.access_level != "creator":
                     return False
                 operation.active = False
-                operation.last_used = datetime.datetime.utcnow() - dateutil.relativedelta.relativedelta(months=2)
+                operation.last_used = (
+                    datetime.datetime.now(tz=datetime.timezone.utc) -
+                    dateutil.relativedelta.relativedelta(days=mscolab_settings.ARCHIVE_THRESHOLD)
+                )
                 db.session.commit()
 
 
@@ -236,52 +234,52 @@ def seed_data():
             'username': 'a',
             'id': 8,
             'password': 'a',
-            'emailid': 'a'
+            'emailid': 'a@notexisting.org'
         }, {
             'username': 'b',
             'id': 9,
             'password': 'b',
-            'emailid': 'b'
+            'emailid': 'b@notexisting.org'
         }, {
             'username': 'c',
             'id': 10,
             'password': 'c',
-            'emailid': 'c'
+            'emailid': 'c@notexisting.org'
         }, {
             'username': 'd',
             'id': 11,
             'password': 'd',
-            'emailid': 'd'
+            'emailid': 'd@notexisting.org'
         }, {
             'username': 'test1',
             'id': 12,
             'password': 'test1',
-            'emailid': 'test1'
+            'emailid': 'test1@notexisting.org'
         }, {
             'username': 'test2',
             'id': 13,
             'password': 'test2',
-            'emailid': 'test2'
+            'emailid': 'test2@notexisting.org'
         }, {
             'username': 'test3',
             'id': 14,
             'password': 'test3',
-            'emailid': 'test3'
+            'emailid': 'test3@notexisting.org'
         }, {
             'username': 'test4',
             'id': 15,
             'password': 'test4',
-            'emailid': 'test4'
+            'emailid': 'test4@notexisting.org'
         }, {
             'username': 'mscolab_user',
             'id': 16,
             'password': 'password',
-            'emailid': 'mscolab_user'
+            'emailid': 'mscolab_user@notexisting.org'
         }, {
             'username': 'merge_waypoints_user',
             'id': 17,
             'password': 'password',
-            'emailid': 'merge_waypoints_user'
+            'emailid': 'merge_waypoints_user@notexisting.org'
         }]
         for user in users:
             db_user = User(user['emailid'], user['username'], user['password'])

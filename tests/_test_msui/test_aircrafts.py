@@ -42,7 +42,7 @@ AIRCRAFT_DUMMY2 = {
 }
 
 
-class Test_SimpleAircraft(object):
+class Test_SimpleAircraft:
     def setup_method(self):
         self.simple_aircraft = SimpleAircraft(AIRCRAFT_DUMMY)
 
@@ -78,7 +78,7 @@ class Test_SimpleAircraft(object):
         assert self.simple_aircraft.get_ceiling_altitude(85000) == 410
 
 
-class Test_SimpleAircraft2(object):
+class Test_SimpleAircraft2:
     def setup_method(self):
         self.simple_aircraft = SimpleAircraft(AIRCRAFT_DUMMY2)
 

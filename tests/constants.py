@@ -27,6 +27,7 @@
 
 import os
 import fs
+import tempfile
 from fs.tempfs import TempFS
 
 try:
@@ -44,6 +45,7 @@ else:
 CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mswms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
+MSCOLAB_AUTH_FILE = "mscolab_auth.py"
 ROOT_FS = TempFS(identifier=f"msui{SHA}")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
 
@@ -59,6 +61,9 @@ MSUI_CONFIG_PATH = OSFS_URL
 os.environ["MSUI_CONFIG_PATH"] = MSUI_CONFIG_PATH
 SERVER_CONFIG_FILE_PATH = fs.path.join(SERVER_CONFIG_FS.getsyspath(""), SERVER_CONFIG_FILE)
 
+_xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory()
+os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
+
 # we keep DATA_DIR until we move netCDF4 files to pyfilesystem2
 DATA_DIR = DATA_FS.getsyspath("")
 
@@ -66,18 +71,3 @@ DATA_DIR = DATA_FS.getsyspath("")
 MSCOLAB_URL = "http://localhost:8083"
 # mscolab test server's url
 MSCOLAB_URL_TEST = "http://localhost:8084"
-
-POSIX = {"application_destination": os.path.join(ROOT_DIR, ".local/share/applications/msui{}.desktop"),
-         "icon_destination": os.path.join(ROOT_DIR, ".local/share/icons/hicolor/{}/apps/mss-logo{}.png"),
-         "desktop": """[Desktop Entry]
-Name=msui {}
-Comment=A web service based tool to plan atmospheric research flights (mission support system).
-Keywords=documentation;information;
-Exec={}
-Icon={}
-Type=Application
-Categories=Science;Education;
-StartupNotify=true
-X-GNOME-SingleWindow=false
-X-Ubuntu-Gettext-Domain=msui
-"""}

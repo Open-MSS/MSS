@@ -55,20 +55,20 @@ def get_message_dict(message):
         "message_type": message.message_type,
         "reply_id": message.reply_id,
         "replies": [],
-        "time": message.created_at.strftime("%Y-%m-%d, %H:%M:%S")
+        "time": message.created_at.isoformat()
     }
 
 
-def os_fs_create_dir(dir):
-    if '://' in dir:
+def os_fs_create_dir(directory_path):
+    if '://' in directory_path:
         try:
-            _ = fs.open_fs(dir)
+            _ = fs.open_fs(directory_path)
         except fs.errors.CreateFailed:
-            logging.error('Make sure that the FS url "%s" exists', dir)
+            logging.error('Make sure that the FS url "%s" exists', directory_path)
         except fs.opener.errors.UnsupportedProtocol:
-            logging.error('FS url "%s" not supported', dir)
+            logging.error('FS url "%s" not supported', directory_path)
     else:
-        _dir = os.path.expanduser(dir)
+        _dir = os.path.expanduser(directory_path)
         if not os.path.exists(_dir):
             os.makedirs(_dir)
 
@@ -76,3 +76,4 @@ def os_fs_create_dir(dir):
 def create_files():
     os_fs_create_dir(mscolab_settings.MSCOLAB_DATA_DIR)
     os_fs_create_dir(mscolab_settings.UPLOAD_FOLDER)
+    os_fs_create_dir(mscolab_settings.MSCOLAB_SSO_DIR)

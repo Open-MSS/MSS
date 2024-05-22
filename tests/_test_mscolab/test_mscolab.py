@@ -28,12 +28,10 @@ import os
 import pytest
 import mock
 import argparse
-from flask_testing import TestCase
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, User, Permission
 from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed, confirm_action, main
-from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_operation
 
 
@@ -62,20 +60,13 @@ def test_main():
         # currently only checking precedence of all args
 
 
-class Test_Mscolab(TestCase):
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
+class Test_Mscolab:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app):
+        with mscolab_app.app_context():
+            yield
 
-    def setUp(self):
-        handle_db_reset()
+    def test_initial_state(self):
         assert Operation.query.all() == []
         assert User.query.all() == []
         assert Permission.query.all() == []

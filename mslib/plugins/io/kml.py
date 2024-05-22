@@ -31,8 +31,7 @@ import codecs
 def save_to_kml(filename, name, waypoints):
     if not filename:
         raise ValueError("filename to save flight track cannot be None")
-    with codecs.open(filename, "w", "utf_8") as out_file:
-        header = f"""<?xml version="1.0" encoding="UTF-8" ?>
+    header = f"""<?xml version="1.0" encoding="UTF-8" ?>
 <kml xmlns="http://earth.google.com/kml/2.2">
 <Document>
 <name>{name}</name>
@@ -42,20 +41,37 @@ def save_to_kml(filename, name, waypoints):
 <LineStyle><color>ff000000</color><width>2</width></LineStyle></Style>
 <Placemark><name>{name}</name>
 <styleUrl>#flighttrack</styleUrl>
-<LineString>
-<tessellate>1</tessellate><altitudeMode>absolute</altitudeMode>
-<coordinates>
 """
-        line = "{lon:.3f},{lat:.3f},{alt:.3f}\n"
-        footer = """</coordinates>
-</LineString></Placemark>
-</Document>
+    path = """<LineString>
+<tessellate>1</tessellate><altitudeMode>absolute</altitudeMode>
+<coordinates>{coordinates}</coordinates>
+</LineString></Placemark>"""
+    line = "{lon:.3f},{lat:.3f},{alt:.3f}\n"
+    waypoint = """<Placemark>
+<name>{name}</name>
+<Point>
+  <coordinates>{lon:.3f},{lat:.3f},{alt:.3f}</coordinates>
+</Point>
+</Placemark>"""
+    footer = """</Document>
 </kml>"""
-        out_file.write(header)
+    with codecs.open(filename, "w", "utf_8") as out_file:
+        line_coords = ""
         for i, wp in enumerate(waypoints):
             lat = wp.lat
             lon = wp.lon
             lvl = wp.flightlevel
             alt = lvl * 100 * 0.3048
-            out_file.write(line.format(lon=lon, lat=lat, alt=alt))
+            line_coords += line.format(lon=lon, lat=lat, alt=alt)
+        out_file.write(header)
+        out_file.write(path.format(coordinates=line_coords))
+        for i, wp in enumerate(waypoints):
+            name = str(wp.location)
+            if not name:
+                name = str(i)
+            lat = wp.lat
+            lon = wp.lon
+            lvl = wp.flightlevel
+            alt = lvl * 100 * 0.3048
+            out_file.write(waypoint.format(name=str(name), lon=lon, lat=lat, alt=alt))
         out_file.write(footer)

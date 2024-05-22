@@ -89,7 +89,7 @@ def test_isa_temperature():
     assert thermolib.isa_temperature(51000 * units.m).magnitude == pytest.approx(270.65)
 
 
-class TestConverter(object):
+class TestConverter:
     def test_convert_pressure_to_vertical_axis_measure(self):
         assert thermolib.convert_pressure_to_vertical_axis_measure('pressure', 10000) == 100
         assert thermolib.convert_pressure_to_vertical_axis_measure('flightlevel', 400) == 400

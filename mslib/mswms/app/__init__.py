@@ -27,7 +27,7 @@
 import os
 import mslib
 
-from flask import Flask
+from flask import Flask, url_for
 from mslib.mswms.gallery_builder import STATIC_LOCATION
 from mslib.utils import prefix_route
 
@@ -42,3 +42,16 @@ APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', '
             static_folder=STATIC_LOCATION)
 APP.config.from_object(__name__)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
+
+
+def get_topmenu():
+    menu = [
+        (url_for('index'), 'Mission Support System',
+         ((url_for('about'), 'About'),
+          (url_for('install'), 'Install'),
+          (url_for("plots"), 'Gallery'),
+          (url_for('help'), 'Help'),
+          )),
+    ]
+
+    return menu

@@ -62,14 +62,8 @@ After executed you get informations to exchange with users.
   y
   Userdata: email suggested_username 30736d0350c9b886
 
-  "MSCOLAB_mailid": "email",
-  "MSCOLAB_password": "30736d0350c9b886",
-
-
   Userdata: email2 suggested_username2 342434de34904303
 
-  "MSCOLAB_mailid": "email2",
-  "MSCOLAB_password": "342434de34904303",
 
 Further options can be listed by `mscolab db -h`
 

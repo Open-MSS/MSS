@@ -831,7 +831,7 @@ def generate_field(coordinate, levels, standard_name, ntimes, nlats, nlons):
     return data, _PROFILES[standard_name]["unit"]
 
 
-class DataFiles(object):
+class DataFiles:
     """
     Routine to write test data files for MSS using extracted
     variable ranges from ECMWF data
@@ -969,6 +969,8 @@ import mslib.mswms
 #service_country = "Germany"
 #service_fees = "none"
 #service_access_constraints = "This service is intended for research purposes only."
+#imprint = ""
+#gdpr = ""
 
 
 #

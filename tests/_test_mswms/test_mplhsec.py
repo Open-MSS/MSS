@@ -32,7 +32,7 @@ from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
 from tests.constants import SERVER_CONFIG_FILE
 
 
-class TestMPLBasemapHorizontalSectionStyle(object):
+class TestMPLBasemapHorizontalSectionStyle:
     def setup_method(self):
         self.mswms_settings = importlib.import_module("mswms_settings", SERVER_CONFIG_FILE)
 

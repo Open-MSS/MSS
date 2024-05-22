@@ -34,10 +34,10 @@
 
 import types
 
-from mslib.msui import hexagon_dockwidget as hex
+from mslib.msui import hexagon_dockwidget as hex_dock
 from mslib.msui import performance_settings as perfset
 from PyQt5 import QtWidgets, QtGui
-from mslib.utils.qt import ui_tableview_window as ui
+from mslib.msui.qt5 import ui_tableview_window as ui
 from mslib.utils.qt import dropEvent, dragEnterEvent
 from mslib.msui import flighttrack as ft
 from mslib.msui.viewwindows import MSUIViewWindow
@@ -60,9 +60,11 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
     def __init__(self, parent=None, model=None, _id=None):
         """
         """
-        super(MSUITableViewWindow, self).__init__(parent, model, _id)
+        super().__init__(parent, model, _id)
+
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
+        self.settings_tag = "tableview"
 
         self.setFlightTrackModel(model)
         self.tableWayPoints.setItemDelegate(ft.WaypointDelegate(self))
@@ -115,7 +117,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         if index >= 0:
             if index == 0:
                 title = "Hexagon Control"
-                widget = hex.HexagonControlWidget(view=self)
+                widget = hex_dock.HexagonControlWidget(view=self)
             elif index == 1:
                 title = "Performance Settings"
                 widget = perfset.MSUI_PerformanceSettingsWidget(
@@ -202,7 +204,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         wps = self.waypoints_model.all_waypoint_data()
         if len(wps) - len(rows) < 2:
             QtWidgets.QMessageBox.warning(
-                None, "Remove waypoint",
+                self.tableWayPoints, "Remove waypoint",
                 "Cannot remove waypoint, the flight track needs to consist of at least two points.")
             return False
         else:
@@ -212,7 +214,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
                     for waypoint in waypoints])
 
             return QtWidgets.QMessageBox.question(
-                None, "Remove waypoint", text,
+                self.tableWayPoints, "Remove waypoint", text,
                 QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                 QtWidgets.QMessageBox.Yes) == QtWidgets.QMessageBox.Yes
 
@@ -271,7 +273,7 @@ class MSUITableViewWindow(MSUIViewWindow, ui.Ui_TableViewWindow):
         """
         Set the QAbstractItemModel instance that the table displays.
         """
-        super(MSUITableViewWindow, self).setFlightTrackModel(model)
+        super().setFlightTrackModel(model)
         self.tableWayPoints.setModel(self.waypoints_model)
 
         # Automatically enable or disable roundtrip when data changes

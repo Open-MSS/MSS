@@ -105,15 +105,15 @@ class Xcursor:
         if not self.display:
             self.display = self.xlib.XOpenDisplay(display)  # (display) or (None)
 
-    def argbdata_to_pixdata(self, data, len):
-        if data is None or len < 1:
+    def argbdata_to_pixdata(self, data, length):
+        if data is None or length < 1:
             return None
 
         # Create byte array
-        b = array.array('b', b'\x00' * 4 * len)
+        b = array.array('b', b'\x00' * 4 * length)
 
         offset, i = 0, 0
-        while i < len:
+        while i < length:
             argb = data[i] & 0xffffffff
             rgba = (argb << 8) | (argb >> 24)
             b1 = (rgba >> 24) & 0xff

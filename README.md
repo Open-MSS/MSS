@@ -26,8 +26,8 @@ Automatically
 Manually
 --------
 
-As **Beginner** start with an installation of Mambaforge
-Get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) for your Operation System
+As **Beginner** start with an installation of Miniforge
+Get [miniforge](https://github.com/conda-forge/miniforge#download) for your Operation System
 
 
 You must install mss into a new environment to ensure the most recent

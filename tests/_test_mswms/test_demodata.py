@@ -31,7 +31,7 @@ from tests.constants import SERVER_CONFIG_FS, DATA_FS, ROOT_FS, SERVER_CONFIG_FI
 import mslib.mswms.demodata as demodata
 
 
-class TestDemodata(object):
+class TestDemodata:
     def test_data_creation(self):
         assert ROOT_FS.exists(u'.')
         assert DATA_FS.exists(u'.')

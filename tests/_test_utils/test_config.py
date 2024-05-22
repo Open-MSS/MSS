@@ -40,7 +40,7 @@ from tests.utils import create_msui_settings_file
 LOGGER = logging.getLogger(__name__)
 
 
-class TestSettingsSave(object):
+class TestSettingsSave:
     """
     tests save_settings_qsettings and load_settings_qsettings from ./utils.py
     # TODO make sure do a clean setup, not inside the 'msui' config file.
@@ -49,17 +49,17 @@ class TestSettingsSave(object):
 
     def test_save_settings(self):
         settings = {'foo': 'bar'}
-        config.save_settings_qsettings(self.tag, settings, ignore_test=True)
+        config.save_settings_qsettings(self.tag, settings)
 
     def test_load_settings(self):
         settings = {'foo': 'bar'}
-        config.save_settings_qsettings(self.tag, settings, ignore_test=True)
-        settings = config.load_settings_qsettings(self.tag, ignore_test=True)
+        config.save_settings_qsettings(self.tag, settings)
+        settings = config.load_settings_qsettings(self.tag)
         assert isinstance(settings, dict)
         assert settings["foo"] == "bar"
 
 
-class TestConfigLoader(object):
+class TestConfigLoader:
     """
     tests config file for client
     """
@@ -121,9 +121,6 @@ class TestConfigLoader(object):
         """
         on a user defined empty msui_settings_json this test should return the default value for num_labels
         """
-        create_msui_settings_file('{ }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert ":" not in file_content
@@ -144,8 +141,6 @@ class TestConfigLoader(object):
         on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
         create_msui_settings_file('{"num_interpolation_points": 20 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" not in file_content
@@ -169,8 +164,6 @@ class TestConfigLoader(object):
         on a user defined msui_settings_json without a defined num_labels this test should return its default value
         """
         create_msui_settings_file('{"num_interpolation_points": 201, "num_labels": 10 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" in file_content
@@ -188,8 +181,6 @@ class TestConfigLoader(object):
         on a user defined msui_settings_json with duplicate and empty keys should raise FatalUserError
         """
         create_msui_settings_file('{"num_interpolation_points": 201, "num_interpolation_points": 10 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_interpolation_points" in file_content
@@ -198,8 +189,6 @@ class TestConfigLoader(object):
             read_config_file(path=config_file)
 
         create_msui_settings_file('{"": 201, "num_labels": 10 }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
             file_content = file_dir.readtext("msui_settings.json")
         assert "num_labels" in file_content
@@ -210,44 +199,36 @@ class TestConfigLoader(object):
         """
         Test to check if modify_config_file properly stores a key-value pair in an empty config file
         """
-        create_msui_settings_file('{ }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
-            "MSCOLAB_mailid": "something@something.org"
+            "num_labels": 20
         }
         modify_config_file(data_to_save_in_config_file)
         config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
-        assert data["MSCOLAB_mailid"] == "something@something.org"
+        assert data["num_labels"] == 20
 
     def test_modify_config_file_with_existing_parameters(self):
         """
         Test to check if modify_config_file properly modifies a key-value pair in the config file
         """
-        create_msui_settings_file('{"MSCOLAB_mailid": "anand@something.org"}')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
+        create_msui_settings_file('{"num_labels": 14}')
         data_to_save_in_config_file = {
-            "MSCOLAB_mailid": "sree@something.org"
+            "num_labels": 20
         }
         modify_config_file(data_to_save_in_config_file)
         config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
         read_config_file(path=config_file)
         data = config_loader()
-        assert data["MSCOLAB_mailid"] == "sree@something.org"
+        assert data["num_labels"] == 20
 
     def test_modify_config_file_with_invalid_parameters(self):
         """
         Test to check if modify_config_file raises a KeyError when a key is empty
         """
-        create_msui_settings_file('{ }')
-        if not fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            pytest.skip('undefined test msui_settings.json')
         data_to_save_in_config_file = {
             "": "sree",
-            "MSCOLAB_mailid": "sree@something.org"
+            "num_labels": "20"
         }
         with pytest.raises(KeyError):
             modify_config_file(data_to_save_in_config_file)

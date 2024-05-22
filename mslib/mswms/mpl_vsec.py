@@ -41,10 +41,12 @@ import mpl_toolkits.axes_grid1
 from mslib.mswms import mss_2D_sections
 from mslib.utils.units import convert_to, units
 from mslib.mswms.utils import make_cbar_labels_readable
+from mslib.utils.loggerdef import configure_mpl_logger
 
 
 mpl.rcParams['xtick.direction'] = 'out'
 mpl.rcParams['ytick.direction'] = 'out'
+mpl_logger = configure_mpl_logger()
 
 
 class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
@@ -60,7 +62,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         """
         Constructor.
         """
-        super(AbstractVerticalSectionStyle, self).__init__(driver=driver)
+        super().__init__(driver=driver)
 
     def add_colorbar(self, contour, label=None, tick_levels=None, width="3%", height="30%", cb_format=None, left=0.08,
                      right=0.95, top=0.9, bottom=0.14, fraction=0.05, pad=0.01, loc=1, tick_position="left"):
@@ -132,7 +134,7 @@ class AbstractVerticalSectionStyle(mss_2D_sections.Abstract2DSectionStyle):
         # Set axis limits and draw grid for major ticks.
         ax.set_xlim(self.lat_inds[0], self.lat_inds[-1])
         ax.set_ylim(self.p_bot, self.p_top)
-        ax.grid(b=True)
+        ax.grid(visible=True)
 
     @abstractmethod
     def _plot_style(self):

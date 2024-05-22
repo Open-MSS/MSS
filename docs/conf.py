@@ -23,11 +23,11 @@ import shutil
 from string import Template
 
 def get_tutorial_images():
-    TUTORIAL_URL = "https://fz-juelich.sciebo.de/s/7DUjGMgP1HFvakG/download"
-    TUTORIAL_DIR = 'videos/gif'
+    TUTORIAL_URL = "https://fz-juelich.sciebo.de/s/KcF29hPNRzkxN6q/download"
+    TUTORIAL_DIR = 'videos/mp4'
     if not os.path.exists(TUTORIAL_DIR):
         os.makedirs(TUTORIAL_DIR)
-    TUTORIAL_ARCHIVE = 'videos/gif/tutorials.zip'
+    TUTORIAL_ARCHIVE = 'videos/mp4/tutorials.zip'
     if not os.path.exists(TUTORIAL_ARCHIVE):
         response = requests.get(TUTORIAL_URL)
         open(TUTORIAL_ARCHIVE, "wb").write(response.content)
@@ -119,7 +119,10 @@ on_rtd = os.environ.get('READTHEDOCS') == 'True'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx_rtd_theme']
+extensions = ['sphinx_rtd_theme', 'sphinxcontrib.video']
+
+# raise a warning when a secondary source is missing.
+video_enforce_extra_source = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -259,6 +262,8 @@ html_logo = "mss-logo.png"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
+
+# videos is secondary source for sphinxcontrib-videos, everything below gets into _build/html/_static
 html_static_path = ['mss_theme', 'gallery/plots', 'videos']
 
 # Add any extra paths that contain custom files (such as robots.txt or

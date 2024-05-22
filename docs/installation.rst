@@ -65,17 +65,6 @@ versions for dependencies. ::
     (mssenv) $ msui
 
 
-.. hint::
-   For installing MSS on the ARM-MAC Apple devices because not all dependencies
-   are crosscompiled you need to set an additional subdir. ::
-
-       $ mamba create -n mssenv
-       $ mamba activate mssenv
-       (mssenv) $ mamba config --env --set subdir osx-64
-       (mssenv) $ mamba install mss=$mss_version python
-       (mssenv) $ msui
-
-
 Mamba Server based installation example
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

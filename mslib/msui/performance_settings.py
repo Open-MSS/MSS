@@ -32,7 +32,7 @@ from PyQt5 import QtCore, QtWidgets
 from mslib.utils import FatalUserError
 from mslib.msui import aircrafts, constants
 from mslib.utils.qt import get_open_filename
-from mslib.utils.qt import ui_performance_dockwidget as ui_dw
+from mslib.msui.qt5 import ui_performance_dockwidget as ui_dw
 
 
 DEFAULT_PERFORMANCE = {
@@ -57,7 +57,7 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         view -- reference to mpl canvas class
         settings_dict -- dictionary containing topview options
         """
-        super(MSUI_PerformanceSettingsWidget, self).__init__(parent)
+        super().__init__(parent)
         self.setupUi(self)
         self.view = view
         self.parent = parent

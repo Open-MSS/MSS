@@ -1,6 +1,36 @@
 Changelog
 =========
 
+Version 9.0.0
+~~~~~~~~~~~~~
+
+Nilupul Manodya implemented SAML 2.0 (Security Assertion Markup Language) Authentication.
+MSColab can now be configured with an existing IdP or multiple IdPs.
+In this way, a user can authenticate themselves in one system and gain access to another system
+by providing proof of authentication. In our documentation in the Components section you find a detailed description.
+
+Matthias Riße refactored the test suite and optimized and accelerated our CI test runs.
+All tests run in parallel now and are not retried upon failure, and most tests are also executed in a randomized order, instilling more confidence in the results.
+Quite a bit of duplicated code was unified, mostly using pytest fixtures.
+Additionally, CI test runs now also happen on x86_64- and ARM-based macOS.
+
+Jörn Ungermann refactored various parts of MSColab for faster processing with fewer requests.
+
+Reimar Bauer refactored the tutorials and the documentation shows now mp4 files embedded in html5.
+
+
+HINT:
+~~~~~
+The syntax of the server configuration of MSColab and MSWMS has changed. We removed the class definition.
+For MSColab we have added new configuration options related to SAML2.
+The change on the MSColab server also required changes on the MSUI handling the MSColab login. These changes are
+not backwards compatible. Server and Client must use versions >=9.0.0.
+We introduced a MSCOLAB_auth_user_name in the users configuration which simplifies the login process.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/93?closed=1
+
+
 Version 8.3.5
 ~~~~~~~~~~~~~
 
@@ -123,8 +153,8 @@ Mscolab Operations in use for more than 30 days, move to an inactive list.
 The initial idea for multiple flightpaths on topview stems from bkirbus.
 GSoC mentors were Reimar Bauer, Jörn Ungermann, Sonja Gisinger
 
-With MSS 8.0.0 we base our installation on mambaforge. This has
-mamba in the base environment.
+With MSS 9.0.0 we base our installation on miniforge. This has
+mamba in the base environment. Mambaforge is discouraged of September 2023.
 
 All changes:
 https://github.com/Open-MSS/MSS/milestone/81?closed=1

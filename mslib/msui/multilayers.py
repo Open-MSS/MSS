@@ -28,7 +28,7 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 import logging
 import mslib.msui.wms_control
 from mslib.msui.icons import icons
-from mslib.utils.qt import ui_wms_multilayers as ui
+from mslib.msui.qt5 import ui_wms_multilayers as ui
 from mslib.utils.config import save_settings_qsettings, load_settings_qsettings
 
 

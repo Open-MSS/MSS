@@ -74,7 +74,7 @@ import mpl_toolkits.basemap
 from matplotlib import patheffects
 
 from mslib.mswms.mpl_hsec import MPLBasemapHorizontalSectionStyle
-from mslib.mswms.utils import get_cbar_label_format, make_cbar_labels_readable
+from mslib.mswms.utils import make_cbar_labels_readable
 import mslib.mswms.generics as generics
 from mslib.utils import thermolib
 from mslib.utils.units import convert_to
@@ -88,6 +88,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
     styles = [
         ("auto", "auto colour scale"),
         ("autolog", "auto logcolour scale"), ]
+    cbar_format = None
 
     def _plot_style(self):
         bm = self.bm
@@ -99,7 +100,10 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
         cmin, cmax, clevs, cmap, norm, ticks = generics.get_style_parameters(
             self.dataname, self.style, cmin, cmax, show_data)
 
-        tc = bm.contourf(self.lonmesh, self.latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
+        if self.use_pcolormesh:
+            tc = bm.pcolormesh(self.lonmesh, self.latmesh, show_data, cmap=cmap, norm=norm)
+        else:
+            tc = bm.contourf(self.lonmesh, self.latmesh, show_data, levels=clevs, cmap=cmap, extend="both", norm=norm)
 
         for cont_data, cont_levels, cont_colour, cont_label_colour, cont_style, cont_lw, pe in self.contours:
             cs_pv = ax.contour(self.lonmesh, self.latmesh, self.data[cont_data], cont_levels,
@@ -120,51 +124,86 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
 
         # Format for colorbar labels
         cbar_label = self.title
-        cbar_format = get_cbar_label_format(self.style, np.median(np.abs(clevs)))
+        if self.cbar_format is None:
+            cbar_format = generics.get_cbar_label_format(self.style, np.median(np.abs(clevs)))
+        else:
+            cbar_format = self.cbar_format
 
         if not self.noframe:
-            cbar = self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
-                                     label=cbar_label, format=cbar_format, ticks=ticks)
-            cbar.set_ticks(clevs)
-            cbar.set_ticklabels(clevs)
+            self.fig.colorbar(tc, fraction=0.05, pad=0.08, shrink=0.7,
+                              label=cbar_label, format=cbar_format, ticks=ticks, extend="both")
         else:
             axins1 = mpl_toolkits.axes_grid1.inset_locator.inset_axes(
                 ax, width="3%", height="40%", loc=cbar_location)
-            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks)
+            self.fig.colorbar(tc, cax=axins1, orientation="vertical", format=cbar_format, ticks=ticks, extend="both")
             axins1.yaxis.set_ticks_position(tick_pos)
             make_cbar_labels_readable(self.fig, axins1)
 
 
 def make_generic_class(name, standard_name, vert, add_data=None, add_contours=None,
-                       fix_styles=None, add_styles=None, add_prepare=None):
+                       fix_styles=None, add_styles=None, add_prepare=None, use_pcolormesh=False):
     """
-    This function instantiates a plotting class and adds it to the global name space
-    of this module.
+    This function instantiates a plotting class and adds it to the global name
+    space of this module.
 
     Args:
         name (str): name of the class, under which it will be added to the module
             name space
+
         standard_name (str): CF standard_name of the main plotting target.
-            This must be registered within the mslib.mswms.generics module.
+            This standard_name must be registered (by default or manually)
+            within the mslib.mswms.generics module.
+
         vert (str): vertical level type, e.g. "pl"
+
         add_data (list, optional): List of tuples adding data to be read in and
-            provide to the plotting class. E.g. [("pl", "ertel_potential_vorticity", "PVU")]
-            for ertel_potential_vorticity on pressure levels in PVU units. The vertical
-            level type must be the one specified by the vert variable or "sfc".
-            By default ertel_potential_vorticity in PVU is provide.
-        add_contours (list, optional): List of tuples specifying contour lines to be
-            plotted. E.g. [("ertel_potential_vorticity", [2, 4, 8, 16], "green", "red", "dashed", 2, True)]
-            cause PV to be plotted for 2, 4, 8, and 16 PVU with dashed green lines,
-            red labels, and line width 2. The last value defines wether a stroke effect
-            shall be applied.
-        fix_styles (list, optional): A list of plotting styles, which must be defined in the
-            mslib.mswms.generics.STYLES dictionary. Defaults to a list of standard styles
-            ("auto", "logauto", "default", "nonlinear") depending on which ranges and thresholds
-            are defined for the main variable in the generics module.
-        add_styles (list, optional): Similar to fix_styles, but *adds* the supplied styles to
-            the list of support styles instead of overwriting them. Defaults to None.
-        add_prepare (function, optional): a function to overwrite the _prepare_datafield method.
+            provide to the plotting class.
+            E.g. [("pl", "ertel_potential_vorticity", "PVU")]
+            for ertel_potential_vorticity on pressure levels in PVU units.
+            The vertical level type must be the one specified by the vert
+            variable or "sfc".
+
+            By default ertel_potential_vorticity in PVU is selected.
+
+        add_contours (list, optional): List of tuples specifying contour lines
+            to be plotted.
+            E.g. [("ertel_potential_vorticity", [2, 4, 8, 16], "green", "red", "dashed", 2, True)]
+            causes PV to be plotted at 2, 4, 8, and 16 PVU with dashed green
+            lines, red labels, and line width of 2. The last value defines
+            whether a stroke effect shall be applied.
+
+        fix_styles (list, optional): A list of plotting styles, which must
+            be defined in the mslib.mswms.generics.STYLES dictionary.
+            Defaults to a list of standard styles
+            ("auto", "logauto", "default", "nonlinear") depending on which
+            ranges and thresholds are defined for the main variable in the
+            generics module. Further styles can be registered to that dict
+            if desired.
+
+        add_styles (list, optional): Similar to fix_styles, but *adds* the
+            supplied styles to the list of support styles instead of
+            overwriting them. If both add_styles and fix_styles are supplied,
+            fix_styles takes precedence. Don't do this.
+
             Defaults to None.
+
+        add_prepare (function, optional): a function to overwrite the
+            _prepare_datafield method. Use this to add derived quantities based
+            on those provided by the modes. For example 'horizontal_wind' could
+            be computed from U and V in here.
+
+            Defaults to None.
+
+        use_pcolormesh (bool, optional): determines whether to use pcolormesh
+            or plotting instead of the default "contourf" method. Use
+            pcolormesh for data that contains a lot of fill values or NaNs,
+            or to show the actual location of data.
+
+            Defaults to False.
+
+    Returns:
+        The generated class. (The class is also placed in this module under the
+        given name).
     """
     if add_data is None:
         add_data = [(vert, "ertel_potential_vorticity", "PVU")]
@@ -186,6 +225,7 @@ def make_generic_class(name, standard_name, vert, add_data=None, add_contours=No
         required_datafields = [(vert, standard_name, units)] + add_data
         contours = add_contours
 
+    fnord.use_pcolormesh = use_pcolormesh
     fnord.__name__ = name
     fnord.styles = list(fnord.styles)
     if generics.get_thresholds(standard_name) is not None:
@@ -202,6 +242,8 @@ def make_generic_class(name, standard_name, vert, add_data=None, add_contours=No
     if add_prepare is not None:
         fnord._prepare_datafields = add_prepare
     globals()[name] = fnord
+
+    return fnord
 
 
 # Generation of HS plotting layers for registered CF standard_names

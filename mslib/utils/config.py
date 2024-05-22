@@ -25,8 +25,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-
-import sys
 from PyQt5 import QtCore
 
 import copy
@@ -34,14 +32,13 @@ import json
 import logging
 import fs
 import os
-import tempfile
 
 from mslib.utils import FatalUserError
 from mslib.msui import constants
 from mslib.support.qt_json_view.datatypes import match_type, UrlType, StrType
 
 
-class MSUIDefaultConfig(object):
+class MSUIDefaultConfig:
     """Central configuration for the Mission Support System User Interface
        Application (msui).
 
@@ -129,11 +126,17 @@ class MSUIDefaultConfig(object):
         "http://localhost:8083",
     ]
 
-    # mail address to sign in
-    MSCOLAB_mailid = ""
+    # Username used for http auth
+    MSCOLAB_auth_user_name = "mscolab"
 
     # category for MSC operations
     MSCOLAB_category = "default"
+
+    # timeout for MSColab in seconds. First value is for connection, second for reply
+    MSCOLAB_timeout = [2, 10]
+
+    # don't query for archived operations
+    MSCOLAB_skip_archived_operations = False
 
     # list of MSC servers {"http://www.your-mscolab-server.de": "authuser",
     # "http://www.your-wms-server.de": "authuser"}
@@ -145,8 +148,7 @@ class MSUIDefaultConfig(object):
     WMS_preload = []
 
     # WMS image cache settings:
-    # this changes on any start of msui, use ths msui_settings.json when you want a persistent path
-    wms_cache = os.path.join(tempfile.TemporaryDirectory().name, "msui_wms_cache")
+    wms_cache = str(constants.MSUI_CACHE_PATH / "wms_cache")
 
     # Maximum size of the cache in bytes.
     wms_cache_max_size_bytes = 20 * 1024 * 1024
@@ -239,9 +241,10 @@ class MSUIDefaultConfig(object):
         'num_labels',
         'num_interpolation_points',
         'new_flighttrack_flightlevel',
-        'MSCOLAB_mailid',
         'MSCOLAB_category',
+        'MSCOLAB_skip_archived_operations',
         'mscolab_server_url',
+        'MSCOLAB_auth_user_name',
         'wms_cache',
         'wms_cache_max_size_bytes',
         'wms_cache_max_age_seconds',
@@ -285,6 +288,7 @@ class MSUIDefaultConfig(object):
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
+        "MSCOLAB_timeout": [[2, 10]],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
@@ -302,7 +306,8 @@ class MSUIDefaultConfig(object):
         "default_LSEC_WMS": "Documentation Required",
         "default_MSCOLAB": "Documentation Required",
         "MSS_auth": "Documentation Required",
-        "MSCOLAB_mailid": "Documentation Required",
+        "MSCOLAB_auth_user_name": "Documentation Required",
+        "MSCOLAB_timeout": "Documentation Required",
         "WMS_request_timeout": "Documentation Required",
         "WMS_preload": "Documentation Required",
         "wms_cache": "Documentation Required",
@@ -448,7 +453,7 @@ def config_loader(dataset=None, default=False):
         return user_options
 
 
-def save_settings_qsettings(tag, settings, ignore_test=False):
+def save_settings_qsettings(tag, settings):
     """
     Saves a dictionary settings to disk.
 
@@ -458,10 +463,10 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     """
     assert isinstance(tag, str)
     assert isinstance(settings, dict)
-    if not ignore_test and ("pytest" in sys.modules or "pyautogui" in sys.modules):
-        return settings
+    # ToDo we have to verify if we can all switch to this definition, not having 3 different
+    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_SYSPATH, "msui-core.conf"),
+                                  QtCore.QSettings.IniFormat)
 
-    q_settings = QtCore.QSettings("msui", "msui-core")
     file_path = q_settings.fileName()
     logging.debug("storing settings for %s to %s", tag, file_path)
     try:
@@ -471,7 +476,7 @@ def save_settings_qsettings(tag, settings, ignore_test=False):
     return settings
 
 
-def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
+def load_settings_qsettings(tag, default_settings=None):
     """
     Loads a dictionary of settings from disk. May supply a dictionary of default settings
     to return in case the settings file is not present or damaged. The default_settings one will
@@ -485,11 +490,11 @@ def load_settings_qsettings(tag, default_settings=None, ignore_test=False):
     if default_settings is None:
         default_settings = {}
     assert isinstance(default_settings, dict)
-    if not ignore_test and ("pytest" in sys.modules or "pyautogui" in sys.modules):
-        return default_settings
 
     settings = {}
-    q_settings = QtCore.QSettings("msui", "msui-core")
+
+    q_settings = QtCore.QSettings(os.path.join(constants.MSUI_CONFIG_SYSPATH, "msui-core.conf"),
+                                  QtCore.QSettings.IniFormat)
     file_path = q_settings.fileName()
     logging.debug("loading settings for %s from %s", tag, file_path)
     try:

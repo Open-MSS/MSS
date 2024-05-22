@@ -13,10 +13,11 @@
 ~/bin/highlight-pointer -r 10 --key-quit q &
 mkdir /tmp/msui_tutorials
 export MSUI_CONFIG_PATH=/tmp/msui_tutorials
+export XDG_CACHE_HOME=$(mktemp -d)
 
 ##########################################################################
 # wms tutorial
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_wms.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_wms.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -24,23 +25,16 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:04:30 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_wms.gif
-
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:03:40 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop action
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:1300:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_wms.mp4
 # get back to tutorials dir
 cd ..
 ################################################################################################
 # kml tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_kml.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_kml.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -48,15 +42,9 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:03:30 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_kml.gif
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:01:55 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop action
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:900:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_kml.mp4
 
 # get back to tutorials dir
 cd ..
@@ -64,7 +52,7 @@ cd ..
 # hexagoncontrol tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_hexagoncontrol.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_hexagoncontrol.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -72,15 +60,9 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:40 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_hexagoncontrol.gif
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:02:25 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop action
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1600:1400:1300:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_hexagoncontrol.mp4
 
 # get back to tutorials dir
 cd ..
@@ -88,7 +70,7 @@ cd ..
 # performancesettings tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_performancesettings.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_performancesettings.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -96,15 +78,9 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:01:54 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_performancesettings.gif
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:01:50 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop action
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1500:700:1200:700[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_performancesettings.mp4
 
 # get back to tutorials dir
 cd ..
@@ -114,7 +90,7 @@ cd ..
 
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_remotesensing.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_remotesensing.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -123,14 +99,8 @@ rm -r /tmp/msui_tutorials/*
 cd recordings
 # slice (start and ending)
 ffmpeg -y -i last_recording.mp4 -ss 00:00:18 -to 00:03:12 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_remotesensing.gif
+# crop action
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:900:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_remotesensing.mp4
 
 # get back to tutorials dir
 cd ..
@@ -138,7 +108,7 @@ cd ..
 # satellitetrack tutorial
 ~/bin/highlight-pointer -r 10 --key-quit q &
 
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_satellitetrack.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_satellitetrack.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -146,15 +116,9 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:02:18 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_satellitetrack.gif
+ffmpeg -y -i last_recording.mp4 -ss 00:00:15 -to 00:02:36 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop action
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:900:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_satellitetrack.mp4
 
 # get back to tutorials dir
 cd ..
@@ -162,7 +126,7 @@ cd ..
 ##################################################
 # tutorial waypoints
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_waypoints.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_waypoints.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -170,23 +134,17 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:24 -to 00:02:31 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_waypoints.gif
+ffmpeg -y -i last_recording.mp4 -ss 00:00:24 -to 00:02:35 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop action
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1100:900:1400:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_waypoints.mp4
 
 # get back to tutorials dir
 cd ..
 
 ################################################################
-# views tutorial
+# views tutorial, 4K
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_views.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_views.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -194,30 +152,26 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:09:14 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
-# crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_views.gif
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:08:22 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# crop action result = 3K
+ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=2560:1440:1200:650[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
+# resize to HD
+ffmpeg -y -i tmp2.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tutorial_views.mp4
 
 # get back to tutorials dir
 cd ..
 
 ####################################################
-# tutorial mscolab
+# tutorial mscolab, 3K, because we need the menu in full screen
 
 # start a mscolab server on standard port after you have it seeded
 # we should have a seed for tutorials
-$HOME/miniconda3/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py db --seed
+$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py db --seed
 
-$HOME/miniconda3/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py start &
+$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py start &
 
 ~/bin/highlight-pointer -r 10 --key-quit q &
-$HOME/miniconda3/envs/mssdev/bin/python tutorial_mscolab.py
+$HOME/Miniforge/envs/mssdev/bin/python tutorial_mscolab.py
 
 # remove config files created for this tutorial
 rm -r /tmp/msui_tutorials/*
@@ -225,15 +179,11 @@ rm -r /tmp/msui_tutorials/*
 # improve recording file using the copy last_recording.mp4
 cd recordings
 # slice (start and ending)
-ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:10:28 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+ffmpeg -y -i last_recording.mp4 -ss 00:00:14 -to 00:10:30 -c:v libx264 -crf 30 -acodec mp2 tmp1.mp4
+# resize to HD
+ffmpeg -y -i tmp1.mp4 -vf scale=1920:1080 -c:v libx264 -crf 30 -acodec mp2 tmp1b.mp4
 # crop
-ffmpeg -y -i tmp1.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tmp2.mp4
-# scale
-# ffmpeg -y -i tmp2.mp4 -vf scale=1280:720 -c:v libx264 -crf 30 -acodec mp2 tmp3.mp4
-# set speed (very fast)
-# ffmpeg -y -i tmp3.mp4 -filter:v "setpts=0.1*PTS" tmp5.mp4
-# makes a gifcycle, based on tmp2.mp4, using max_colors=16[p] gives 3.1MByte gif file
-ffmpeg -y -i tmp2.mp4 -filter_complex "fps=5,scale=854:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=32[p];[s1][p]paletteuse=dither=bayer" tutorial_mscolab.gif
+ffmpeg -y -i tmp1b.mp4 -filter_complex "[0:v]crop=1920:1044:0:0[cropped]" -map "[cropped]" -crf 30 -acodec mp2 tutorial_mscolab.mp4
 
 # get back to tutorials dir
 cd ..

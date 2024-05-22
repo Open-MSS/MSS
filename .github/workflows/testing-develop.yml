@@ -4,28 +4,16 @@ on:
   push:
     branches:
     - develop
-
   pull_request:
     branches:
     - develop
+  workflow_dispatch:
 
 jobs:
   test-develop:
     uses:
       ./.github/workflows/testing.yml
     with:
-      xdist: no
-      branch_name: develop
-      event_name: ${{ github.event_name }}
-    secrets:
-      PAT: ${{ secrets.PAT }}
-
-  test-develop-xdist:
-    uses:
-      ./.github/workflows/testing.yml
-    with:
-      xdist: yes
-      branch_name: develop
-      event_name: ${{ github.event_name }}
+      image_suffix: develop
     secrets:
       PAT: ${{ secrets.PAT }}

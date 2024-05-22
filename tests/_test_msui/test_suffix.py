@@ -26,31 +26,24 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 
-import sys
-from PyQt5 import QtWidgets, QtTest
+from PyQt5 import QtTest
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
 
-class Test_SuffixChange(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
+class Test_SuffixChange:
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot):
         self.window = tv.MSUI_SV_OptionsDialog(settings=_DEFAULT_SETTINGS_SIDEVIEW)
         self.window.show()
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     def test_suffixchange(self):
         suffix = [' hPa', ' km', ' hft']
         for i in range(len(suffix)):
             self.window.cbVerticalAxis.setCurrentIndex(i)
-            QtWidgets.QApplication.processEvents()
             assert self.window.sbPtop.suffix() == suffix[i]

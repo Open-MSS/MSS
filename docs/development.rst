@@ -132,7 +132,7 @@ Requirements
 2. Software requirement
 
   | Python
-  | `Mambaforge <https://mamba.readthedocs.io/en/latest/installation.html>`_
+  | `Miniforge <https://github.com/conda-forge/miniforge#install>`_
   | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
 
 
@@ -145,7 +145,7 @@ Requirements
 Using predefined docker images instead of installing all requirements
 .....................................................................
 
-You can easily use our testing docker images which have all libraries pre installed. These are based on mambaforgen.
+You can easily use our testing docker images which have all libraries pre installed. These are based on miniforge.
 We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have mss-develop-env defined.
 In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these evironments.
 
@@ -171,12 +171,12 @@ Use the docker env on your computer, initial setup
 This example shows by using mss-stable-env how to set it up for testing and development of stable branch. The images gets updates
 when we have to add new dependencies or have do pinning of existing modules. On an updated image you need to redo these steps ::
 
-    rm -rf $HOME/mambaforge/envs/mss-stable-env # cleanup the existing env
-    mkdir $HOME/mambaforge/envs/mss-stable-env  # create the dir to bind to
+    rm -rf $HOME/miniforge/envs/mss-stable-env # cleanup the existing env
+    mkdir $HOME/miniforge/envs/mss-stable-env  # create the dir to bind to
     xhost +local:docker                         # may be needed
-    docker run -it --rm --mount type=volume,dst=/opt/conda/envs/mss-stable-env,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$HOME/mambaforge/envs/mss-stable-env --network host openmss/testing-stable # do the volume bind
+    docker run -it --rm --mount type=volume,dst=/opt/conda/envs/mss-stable-env,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$HOME/miniforge/envs/mss-stable-env --network host openmss/testing-stable # do the volume bind
     exit                                        # we are in the container, escape :)
-    sudo ln -s $HOME/mambaforge/envs/mss-stable-env /opt/conda/envs/mss-stable-env # we need the origin location linked because hashbangs interpreters are with that path. (only once needed)
+    sudo ln -s $HOME/miniforge/envs/mss-stable-env /opt/conda/envs/mss-stable-env # we need the origin location linked because hashbangs interpreters are with that path. (only once needed)
     conda activate mss-stable-env               # activate env
     cd workspace/MSS                            # go to your workspace MSS dir
     export PYTHONPATH=`pwd`                     # add it to the PYTHONPATH
@@ -197,7 +197,7 @@ After the image was configured you can use it like a self installed env ::
 Manual Installing dependencies
 ..............................
 
-MSS is based on the software of the conda-forge channel located. The channel is predefined in Mambaforge.
+MSS is based on the software of the conda-forge channel located. The channel is predefined in Miniforge.
 
 Create an environment and install the dependencies needed for the mss package::
 
@@ -220,23 +220,13 @@ For developers we provide additional packages for running tests, activate your e
 
   $ mamba install --file requirements.d/development.txt
 
-On linux install the `conda-forge package pyvirtualdisplay` and `xvfb` from your linux package manager.
-This is used to run tests on a virtual display.
-If you don't want tests redirected to the xvfb display just setup an environment variable::
+On linux install `xvfb` from your linux package manager.
+This can be used to run tests on an invisible virtual display by prepending the pytest call with `xvfb-run`, e.g.::
 
- $ export TESTS_VISIBLE=TRUE
+  $ xvfb-run pytest ...
 
 We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
 in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
-
-
-Setup msui_settings.json for special tests
-..........................................
-
-On default all tests use default configuration defined in mslib.msui.MissionSupportSystemDefaultConfig.
-If you want to overwrite this setup and try out a special configuration add an msui_settings.json
-file to the testings base dir in your tmp directory. You call it by the custom `--msui_settings` option
-
 
 
 Setup MSWMS server
@@ -343,9 +333,7 @@ Use the -v option to get a verbose result. By the -k option you could select one
 Verify Code Style
 .................
 
-A flake8 only test is done by `py.test --flake8 -m flake8`  or `pytest --flake8 -m flake8`
-
-Instead of running a ibrary module as a script by the -m option you may also use the pytest command.
+A flake8 only test is done with `flake8 mslib tests`.
 
 Coverage
 ........
@@ -392,6 +380,23 @@ example::
       631    0.113    0.000    0.230    0.000 demodata.py:769(_generate_3d_data)
       179    0.077    0.000    0.081    0.000 {method 'createVariable' of 'netCDF4._netCDF4.Dataset' objects}
 
+
+
+Writing Tests
+-------------
+
+Ideally every new feature or bug fix should be accompanied by tests
+that make sure that the feature works as intended or that the bug is indeed fixed
+(and won't turn up again in the future).
+The best way to find out how to write such tests is by taking a look at the existing tests,
+maybe finding one that is similar
+and adapting it to the new test case.
+
+MSS uses pytest as a test runner and therefore their `docs <https://docs.pytest.org/en/latest/contents.html>`_ are relevant here.
+
+Common resources that a test might need,
+like e.g. a running MSColab server or a QApplication instance for GUI tests,
+are collected in :mod:`tests.fixtures` in the form of pytest fixtures that can be requested as needed in tests.
 
 
 Pushing your changes
@@ -449,13 +454,25 @@ As developer you should copy this directory and adjust the source path, build nu
 using a local meta.yaml recipe::
 
   $ cd yourlocalbuild
-  $ conda build .
-  $ conda create -n mssbuildtest mamba
-  $ conda activate mssbuildtest
-  $ mamba install --use-local mss
+  $ mamba build .
+  $ mamba create -n mssbuildtest
+  $ mamba activate mssbuildtest
+  $ mamba install -c local mss
 
 
 Take care on removing alpha builds, or increase the build number for a new version.
+
+
+Alternative local build by boa
+------------------------------
+
+`boa <https://boa-build.readthedocs.io/en/latest/>`_ is a new faster option to build conda packages.
+We need first to convert the existing description to a recipe.yaml::
+
+  $ cd yourlocalbuild
+  $ boa convert meta.yaml > recipe.yaml
+  $ boa build .
+  $ mamba install -c local mss
 
 
 Creating a new release

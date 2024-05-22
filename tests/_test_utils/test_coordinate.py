@@ -35,7 +35,7 @@ import mslib.utils.coordinate as coordinate
 LOGGER = logging.getLogger(__name__)
 
 
-class TestGetDistance(object):
+class TestGetDistance:
     """
     tests for distance based calculations
     """
@@ -52,7 +52,7 @@ class TestGetDistance(object):
         assert coordinate.find_location(50.9200002, 6.36) == ([50.92, 6.36], 'Juelich')
 
 
-class TestProjections(object):
+class TestProjections:
     def test_get_projection_params(self):
         assert coordinate.get_projection_params("epsg:4839") == {'basemap': {'epsg': '4839'}, 'bbox': 'meter(10.5,51)'}
         with pytest.raises(ValueError):
@@ -63,7 +63,7 @@ class TestProjections(object):
             coordinate.get_projection_params('crs:83')
 
 
-class TestAngles(object):
+class TestAngles:
     """
     tests about angles
     """
@@ -84,7 +84,7 @@ class TestAngles(object):
         assert coordinate.rotate_point([100, 90], 90) == (-90, 100)
 
 
-class TestLatLonPoints(object):
+class TestLatLonPoints:
     def test_linear(self):
         ref_lats = [0, 10]
         ref_lons = [0, 0]

@@ -27,10 +27,11 @@
 import pyautogui as pag
 import datetime
 
-from sys import platform
-from pyscreeze import ImageNotFoundException
-from tutorials.utils import platform_keys, start, finish
-from tutorials.pictures import picture
+from tutorials.utils import (start, finish, msui_full_screen_and_open_first_view, select_listelement,
+                             find_and_click_picture, zoom_in, panning)
+from tutorials.utils.platform_keys import platform_keys
+
+CTRL, ENTER, WIN, ALT = platform_keys()
 
 
 def automate_waypoints():
@@ -39,30 +40,15 @@ def automate_waypoints():
     to a file having dateframe nomenclature with a .mp4 extension(codec).
     """
     # Giving time for loading of the MSS GUI.
-    pag.sleep(15)
-    ctrl, enter, win, alt = platform_keys()
-
-    # Maximizing the window
-    try:
-        if platform == 'linux' or platform == 'linux2':
-            pag.hotkey('winleft', 'up')
-        elif platform == 'darwin':
-            pag.hotkey('ctrl', 'command', 'f')
-        elif platform == 'win32':
-            pag.hotkey('win', 'up')
-    except Exception:
-        print("\nException : Enable Shortcuts for your system or try again!")
-    pag.sleep(2)
-    pag.hotkey('ctrl', 'h')
     pag.sleep(5)
 
-    # Adding waypoints
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'add_waypoint.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\nException : Clickable button/option not found on the screen.")
-        raise
+    msui_full_screen_and_open_first_view()
+
+    # enable adding waypoints
+    find_and_click_picture('topviewwindow-ins-wp.png',
+                           'Clickable button/option not found.')
+
+    # set waypoints
     pag.move(-50, 150, duration=1)
     pag.click(interval=2)
     pag.sleep(1)
@@ -79,14 +65,11 @@ def automate_waypoints():
     x2, y2 = pag.position()
     pag.sleep(3)
 
-    # Moving waypoints
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'move_waypoint.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Move Waypoint button could not be located on the screen")
-        raise
+    # enable moving waypoints
+    find_and_click_picture('topviewwindow-mv-wp.png',
+                           ' Move Waypoint button could not be located.')
 
+    # moving waypoints
     pag.moveTo(x2, y2, duration=1)
     pag.click(interval=2)
     pag.dragRel(100, 150, duration=1)
@@ -94,116 +77,59 @@ def automate_waypoints():
     pag.dragRel(35, -50, duration=1)
     x1, y1 = pag.position()
 
-    # Deleting waypoints
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'remove_waypoint.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Remove Waypoint button could not be located on the screen")
-        raise
+    # enable deleting waypoints
+    find_and_click_picture('topviewwindow-del-wp.png',
+                           'Remove Waypoint button could not be located.')
+
+    # delete waypoints
     pag.moveTo(x1, y1, duration=1)
     pag.click(duration=1)
-    pag.press('left')
+    # Yes is default
     pag.sleep(3)
-    if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-        pag.press('enter', interval=1)
-    elif platform == 'darwin':
-        pag.press('return', interval=1)
+    pag.press(ENTER)
     pag.sleep(2)
 
     # Changing map to Global
-    try:
-        if platform == 'linux' or platform == 'linux2' or platform == 'darwin':
-            print(pag.position())
-            x, y = pag.locateCenterOnScreen(picture('waypoints', 'europe_cyl.png'))
-            pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Map change dropdown could not be located on the screen")
-        raise
-    pag.press('down', presses=2, interval=0.5)
-    if platform == 'linux' or platform == 'linux2' or platform == 'win32':
-        pag.press('enter', interval=1)
-    elif platform == 'darwin':
-        pag.press('return', interval=1)
+    find_and_click_picture('topviewwindow-01-europe-cyl.png',
+                           "Map change dropdown could not be located.")
+    select_listelement(2)
     pag.sleep(5)
 
     # Zooming into the map
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'zoom.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Zoom button could not be located on the screen")
-        raise
-    pag.move(150, 200, duration=1)
-    pag.dragRel(400, 250, duration=2)
-    pag.sleep(5)
+    zoom_in('topviewwindow-zoom.png', 'Zoom button could not be located.',
+            move=(150, 200), dragRel=(400, 250))
 
     # Panning into the map
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'pan.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Pan button could not be located on the screen")
-        raise
-    pag.moveRel(400, 400, duration=1)
-    pag.dragRel(-100, -50, duration=2)
-    pag.sleep(5)
+    panning('topviewwindow-pan.png', 'Pan button could not be located.',
+            moveRel=(400, 400), dragRel=(-100, -50))
 
+    # another panning, button is still active
     pag.move(-20, -25, duration=1)
     pag.dragRel(90, 50, duration=2)
     pag.sleep(5)
 
     # Switching to the previous appearance of the map
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'previous.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Previous button could not be located on the screen")
-        raise
+    find_and_click_picture('topviewwindow-back.png', 'back button could not be located.')
     pag.sleep(5)
 
     # Switching to the next appearance of the map
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'next.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Next button could not be located on the screen")
-        raise
+    find_and_click_picture('topviewwindow-forward.png', 'forward button could not be located.')
     pag.sleep(5)
 
     # Resetting the map to the original size
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'home.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Home button could not be located on the screen")
-        raise
-    pag.sleep(5)
+    find_and_click_picture('topviewwindow-home.png', 'home button could not be located.')
+    pag.sleep(3)
 
     # Saving the figure
-    try:
-        x, y = pag.locateCenterOnScreen(picture('wms', 'save.png'))
-        pag.click(x, y, interval=2)
-    except ImageNotFoundException:
-        print("\n Exception : Save button could not be located on the screen")
-        raise
+    find_and_click_picture('topviewwindow-save.png', 'save button could not be located.')
     current_time = datetime.datetime.now().strftime('%d-%m-%Y %H-%M-%S')
-    fig_filename = f'Fig_{current_time}.png'
-    pag.sleep(3)
-    if platform == 'win32':
-        pag.write(fig_filename, interval=0.25)
-        pag.press('enter', interval=1)
-    if platform == 'linux' or platform == 'linux2':
-        pag.hotkey('altleft', 'tab')  # if the save file system window is not in the forefront, use this statement.
-        # This can happen sometimes. At that time, you just need to uncomment it.
-        pag.write(fig_filename, interval=0.25)
-        pag.press('enter', interval=1)
-    elif platform == 'darwin':
-        pag.write(fig_filename, interval=0.25)
-        pag.press('return', interval=1)
-
+    pag.hotkey('altleft', 'tab')  # if the save file system window is not in the forefront, use this statement.
+    # This can happen sometimes. At that time, you just need to uncomment it.
+    pag.write(f'Fig_{current_time}.png', interval=0.25)
+    pag.press(ENTER)
+    pag.sleep(2)
     print("\nAutomation is over for this tutorial. Watch next tutorial for other functions.")
-    finish()
+    finish(close_widgets=2)
 
 
 if __name__ == '__main__':

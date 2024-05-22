@@ -27,10 +27,21 @@
 
 # The README.txt file should be written in reST so that PyPI can use
 # it to generate your project's PyPI page.
+import os
 from past.builtins import execfile
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 long_description = open('README.md').read()
 execfile('mslib/version.py')
+
+console_scripts = [
+    "mscolab = mslib.mscolab.mscolab:main",
+    "mss = mslib.msui.mss:main",
+    "mssautoplot = mslib.utils.mssautoplot:main",
+    "msui = mslib.msui.msui:main",
+    "mswms = mslib.mswms.mswms:main",
+    "mswms_demodata = mslib.mswms.demodata:main"]
+if os.name != 'nt':
+    console_scripts.append('msidp = mslib.msidp.idp:main')
 
 setup(
     name="mss",
@@ -46,19 +57,12 @@ setup(
     license="Apache-2.0",
     url="https://github.com/Open-MSS/MSS",
     platforms="any",
-    packages=find_packages(exclude=['tests*', 'tutorials*']),
+    packages=find_namespace_packages(include=["mslib", "mslib.*"]),
     namespace_packages=[],
     include_package_data=True,
     zip_safe=False,
     install_requires=[],  # we use conda build recipe
     entry_points=dict(
-        console_scripts=[
-            "mscolab = mslib.mscolab.mscolab:main",
-            "mss = mslib.msui.mss:main",
-            "mssautoplot = mslib.utils.mssautoplot:main",
-            "msui = mslib.msui.msui:main",
-            "mswms = mslib.mswms.mswms:main",
-            "mswms_demodata = mslib.mswms.demodata:main",
-        ],
+        console_scripts=console_scripts,
     ),
 )

@@ -24,39 +24,20 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-from flask_testing import TestCase
-import os
+import datetime
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation
-from mslib.mscolab.server import APP
-from mslib.mscolab.file_manager import FileManager
+from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user
-from mslib.mscolab.mscolab import handle_db_reset
 
 
-@pytest.mark.skipif(os.name == "nt",
-                    reason="multiprocessing needs currently start_method fork")
-class Test_FileManager(TestCase):
-    render_templates = False
-
-    def create_app(self):
-        app = APP
-        app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-        app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
-        app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-        app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-        app.config["TESTING"] = True
-        app.config['LIVESERVER_TIMEOUT'] = 10
-        app.config['LIVESERVER_PORT'] = 0
-        return app
-
-    def setUp(self):
-        handle_db_reset()
+class Test_FileManager:
+    @pytest.fixture(autouse=True)
+    def setup(self, mscolab_app, mscolab_managers):
+        self.app = mscolab_app
+        _, _, self.fm = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
-        self.fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
 
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         self.user = get_user(self.userdata[0])
@@ -76,15 +57,58 @@ class Test_FileManager(TestCase):
         assert add_user('UV80@uv80', 'UV80', 'uv80')
         self.adminuser = get_user('UV80@uv80')
         self._example_data()
+        with self.app.app_context():
+            yield
 
-    def tearDown(self):
-        pass
+    def test_modify_user(self):
+        with self.app.test_client():
+            user = User("user@example.com", "user", "password")
+            assert user.id is None
+            assert User.query.filter_by(emailid=user.emailid).first() is None
+            # create the user
+            self.fm.modify_user(user, action="create")
+            user_query = User.query.filter_by(emailid=user.emailid).first()
+            assert user_query.id is not None
+            assert user_query is not None
+            assert user_query.confirmed is False
+            # cannot create a user a second time
+            assert self.fm.modify_user(user, action="create") is False
+            # confirming the user
+            confirm_time = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(days=1)
+            self.fm.modify_user(user_query, attribute="confirmed_on", value=confirm_time)
+            self.fm.modify_user(user_query, attribute="confirmed", value=True)
+            user_query = User.query.filter_by(id=user.id).first()
+            assert user_query.confirmed is True
+            assert user_query.confirmed_on == confirm_time
+            assert user_query.confirmed_on > user_query.registered_on
+            # deleting the user
+            self.fm.modify_user(user_query, action="delete")
+            user_query = User.query.filter_by(id=user_query.id).first()
+            assert user_query is None
+
+    def test_modify_user_special_cases(self):
+        user1 = User("user1@example.com", "user1", "password")
+        user2 = User("user2@example.com", "user2", "password")
+        self.fm.modify_user(user1, action="create")
+        self.fm.modify_user(user2, action="create")
+        user_query1 = User.query.filter_by(emailid=user1.emailid).first()
+        assert self.fm.modify_user(user_query1, "emailid", user2.emailid) is False
 
     def test_fetch_operation_creator(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="more_than_one")
+            self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
+            self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
+            self.fm.add_bulk_permission(operation.id, self.user, [self.adminuser.id], "admin")
+
             assert operation.path == flight_path
             assert self.fm.fetch_operation_creator(operation.id, self.user.id) == self.user.username
+            assert self.fm.fetch_operation_creator(operation.id, self.collaboratoruser.id) == self.user.username
+            assert self.fm.fetch_operation_creator(operation.id, self.vieweruser.id) == self.user.username
+            assert self.fm.fetch_operation_creator(operation.id, self.adminuser.id) == self.user.username
+
+            # this user is not defined in that OP
+            assert self.fm.fetch_operation_creator(operation.id, self.op2user.id) is False
 
     def test_create_operation(self):
         with self.app.test_client():
@@ -119,6 +143,31 @@ class Test_FileManager(TestCase):
                                 'op_id': 2,
                                 'path': 'second'}]
             assert self.fm.list_operations(self.user) == expected_result
+
+    def test_list_operations_skip_archived(self):
+        with self.app.test_client():
+            self.fm.create_operation("first", "info about first", self.user, active=False)
+            self.fm.create_operation("second", "info about second", self.user)
+            expected_result_all = [{'access_level': 'creator',
+                                    'active': False,
+                                    'category': 'default',
+                                    'description': 'info about first',
+                                    'op_id': 1,
+                                    'path': 'first'},
+                                   {'access_level': 'creator',
+                                    'active': True,
+                                    'category': 'default',
+                                    'description': 'info about second',
+                                    'op_id': 2,
+                                    'path': 'second'}]
+            expected_result_skipped_true = [{'access_level': 'creator',
+                                             'active': True,
+                                             'category': 'default',
+                                             'description': 'info about second',
+                                             'op_id': 2,
+                                             'path': 'second'}]
+            assert self.fm.list_operations(self.user, skip_archived=False) == expected_result_all
+            assert self.fm.list_operations(self.user, skip_archived=True) == expected_result_skipped_true
 
     def test_is_creator(self):
         with self.app.test_client():
@@ -178,11 +227,10 @@ class Test_FileManager(TestCase):
             assert ren_operation.id == operation.id
             assert ren_operation.path == rename_to
 
-    def test_delete_file(self):
-        # Todo rename "file" to operation
+    def test_delete_operation(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation4')
-            assert self.fm.delete_file(operation.id, self.user)
+            assert self.fm.delete_operation(operation.id, self.user)
             assert Operation.query.filter_by(path=flight_path).first() is None
 
     def test_get_authorized_users(self):
@@ -219,7 +267,7 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content1, self.user)
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
-            assert self.fm.get_change_content(all_changes[1]["id"]) == self.content1
+            assert self.fm.get_change_content(all_changes[1]["id"], self.user) == self.content1
 
     def test_set_version_name(self):
         with self.app.test_client():
@@ -247,15 +295,15 @@ class Test_FileManager(TestCase):
             assert self.fm.save_file(operation.id, self.content2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             # crestor
-            assert self.fm.undo(all_changes[1]["id"], self.user)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.user)
             # check collaborator
             self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation.id)
-            assert self.fm.undo(all_changes[1]["id"], self.collaboratoruser)
+            assert self.fm.undo_changes(all_changes[1]["id"], self.collaboratoruser)
             # check viewer
             self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
             assert self.fm.is_viewer(self.vieweruser.id, operation.id)
-            assert self.fm.undo(all_changes[1]["id"], self.vieweruser) is False
+            assert self.fm.undo_changes(all_changes[1]["id"], self.vieweruser) is False
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():

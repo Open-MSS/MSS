@@ -28,7 +28,6 @@
 import mock
 import os
 import pytest
-import sys
 
 from PyQt5 import QtWidgets, QtCore, QtTest
 from mslib.msui import flighttrack as ft
@@ -36,10 +35,9 @@ from mslib.msui.performance_settings import DEFAULT_PERFORMANCE
 import mslib.msui.tableview as tv
 
 
-class Test_TableView(object):
-    def setup_method(self):
-        self.application = QtWidgets.QApplication(sys.argv)
-
+class Test_TableView:
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot):
         # Create an initital flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),
                              ft.Waypoint(48.10, 10.27, 200),
@@ -54,22 +52,15 @@ class Test_TableView(object):
         self.window = tv.MSUITableViewWindow(model=waypoints_model)
         self.window.show()
 
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        QtWidgets.QApplication.processEvents()
-
-    def teardown_method(self):
+        yield
         self.window.hide()
-        QtWidgets.QApplication.processEvents()
-        self.application.quit()
-        QtWidgets.QApplication.processEvents()
 
     def test_open_hex(self):
         """
         Tests opening the hexagon dock widget.
         """
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.docks) == 2
         assert self.window.docks[0] is not None
         assert self.window.docks[1] is None
@@ -79,7 +70,6 @@ class Test_TableView(object):
         Tests opening the performance settings dock widget.
         """
         self.window.cbTools.currentIndexChanged.emit(2)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.docks) == 2
         assert self.window.docks[0] is None
         assert self.window.docks[1] is not None
@@ -91,27 +81,22 @@ class Test_TableView(object):
         Test inserting and removing hexagons in TableView using the Hexagon dockwidget
         """
         self.window.cbTools.currentIndexChanged.emit(1)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
         QtTest.QTest.mouseClick(self.window.docks[0].widget().pbAddHexagon, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 12
         assert mockbox.call_count == 0
         QtTest.QTest.mouseClick(self.window.docks[0].widget().pbRemoveHexagon, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 5
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox.critical")
     @mock.patch("mslib.msui.performance_settings.get_open_filename",
                 return_value=os.path.join(
                     os.path.dirname(__file__), "..", "data", "performance_simple.json"))
-    def test_performance(self, mockopen, mockcrit):
+    def test_performance(self, mockopen):
         """
         Check effect of performance settings on TableView
         """
         self.window.cbTools.currentIndexChanged.emit(2)
-        QtWidgets.QApplication.processEvents()
 
         self.window.waypoints_model.performance_settings = DEFAULT_PERFORMANCE
         self.window.waypoints_model.update_distances(0)
@@ -129,9 +114,7 @@ class Test_TableView(object):
         assert self.window.waypoints_model.columnCount() == 15
         # todo this does not check that actually something happens
         QtTest.QTest.mouseClick(self.window.docks[1].widget().pbLoadPerformance, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         assert mockopen.call_count == 1
-        assert mockcrit.call_count == 0
 
     def test_insert_point(self):
         """
@@ -145,7 +128,6 @@ class Test_TableView(object):
         assert len(self.window.waypoints_model.waypoints) == 5
         wps = list(self.window.waypoints_model.waypoints)
         QtTest.QTest.mouseClick(self.window.btAddWayPointToFlightTrack, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wps2 = self.window.waypoints_model.waypoints
         assert len(self.window.waypoints_model.waypoints) == 6
         assert all(_x == _y for _x, _y in zip(wps[:3], wps2[:3])), (wps, wps2)
@@ -163,7 +145,6 @@ class Test_TableView(object):
         assert len(self.window.waypoints_model.waypoints) == 5
         wps = list(self.window.waypoints_model.waypoints)
         QtTest.QTest.mouseClick(self.window.btCloneWaypoint, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wps2 = self.window.waypoints_model.waypoints
         assert len(self.window.waypoints_model.waypoints) == 6
         assert all(_x == _y for _x, _y in zip(wps[:3], wps2[:3])), (wps, wps2)
@@ -183,7 +164,6 @@ class Test_TableView(object):
         assert len(self.window.waypoints_model.waypoints) == 5
         wps = list(self.window.waypoints_model.waypoints)
         QtTest.QTest.mouseClick(self.window.btDeleteWayPoint, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wps2 = self.window.waypoints_model.waypoints
         assert mockbox.call_count == 1
         assert len(self.window.waypoints_model.waypoints) == 4
@@ -196,7 +176,6 @@ class Test_TableView(object):
         """
         wps = list(self.window.waypoints_model.waypoints)
         QtTest.QTest.mouseClick(self.window.btInvertDirection, QtCore.Qt.LeftButton)
-        QtWidgets.QApplication.processEvents()
         wps2 = self.window.waypoints_model.waypoints
         assert all([_x == _y for _x, _y in zip(wps[::-1], wps2)])
 
@@ -216,21 +195,17 @@ class Test_TableView(object):
         QtTest.QTest.mousePress(
             self.window.tableWayPoints.viewport(),
             QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item1.center())
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseMove(
             self.window.tableWayPoints.viewport(),
             item2.center())
-        QtWidgets.QApplication.processEvents()
         QtTest.QTest.mouseRelease(
             self.window.tableWayPoints.viewport(),
             QtCore.Qt.LeftButton, QtCore.Qt.NoModifier, item2.center())
-        QtWidgets.QApplication.processEvents()
         assert len(self.window.waypoints_model.waypoints) == 5
         wps_after = list(self.window.waypoints_model.waypoints)
         assert wps_before != wps_after, (wps_before, wps_after)
 
-    @mock.patch("PyQt5.QtWidgets.QMessageBox")
-    def test_roundtrip(self, mockbox):
+    def test_roundtrip(self):
         """
         Test connecting the last and first point
         Test connecting the first point to itself
@@ -256,4 +231,3 @@ class Test_TableView(object):
         # Remove connection
         self.window.waypoints_model.removeRows(count, 1)
         assert len(self.window.waypoints_model.waypoints) == count
-        assert mockbox.critical.call_count == 0
