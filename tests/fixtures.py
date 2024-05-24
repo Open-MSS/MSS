@@ -32,13 +32,37 @@ import mslib.mswms.mswms
 import eventlet
 import eventlet.wsgi
 
-from PyQt5 import QtWidgets
+try:
+    from PyQt5 import QtWidgets
+except ModuleNotFoundError:
+    QtWidgets = None
 from contextlib import contextmanager
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers
-from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
-from mslib.utils.config import modify_config_file
-from tests.utils import is_url_response_ok
+try:
+    from mslib.mscolab.conf import mscolab_settings
+except ModuleNotFoundError:
+    mscolab_settings = None
+
+try:
+    from mslib.mscolab.server import APP, initialize_managers
+except ModuleNotFoundError:
+    APP = None
+    initialize_managers = None
+
+try:
+    from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
+except ModuleNotFoundError:
+    handle_db_init = None
+    handle_db_reset = None
+
+try:
+    from mslib.utils.config import modify_config_file
+except ModuleNotFoundError:
+    modify_config_file = None
+
+try:
+    from tests.utils import is_url_response_ok
+except ModuleNotFoundError:
+    is_url_response_ok = None
 
 
 @pytest.fixture

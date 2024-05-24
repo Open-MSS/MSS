@@ -36,47 +36,54 @@ sys.dont_write_bytecode = True
 import pytest
 import fs
 import shutil
-import keyring
+try:
+    import keyring
+except ModuleNotFoundError:
+    keyring = None
 from mslib.mswms.demodata import DataFiles
 import tests.constants as constants
 from mslib.utils.loggerdef import configure_mpl_logger
 
 matplotlib_logger = configure_mpl_logger()
 
-# This import must come after importing tests.constants due to MSUI_CONFIG_PATH being set there
-from mslib.utils.config import read_config_file
+try:
+    # This import must come after importing tests.constants due to MSUI_CONFIG_PATH being set there
+    from mslib.utils.config import read_config_file
+except ModuleNotFoundError:
+    read_config_file = None
 
 
-class TestKeyring(keyring.backend.KeyringBackend):
-    """A test keyring which always outputs the same password
-    from Runtime Configuration
-    https://pypi.org/project/keyring/#third-party-backends
-    """
-    priority = 1
+if keyring is not None:
+    class TestKeyring(keyring.backend.KeyringBackend):
+        """A test keyring which always outputs the same password
+        from Runtime Configuration
+        https://pypi.org/project/keyring/#third-party-backends
+        """
+        priority = 1
 
-    passwords = {}
+        passwords = {}
 
-    def reset(self):
-        self.passwords = {}
+        def reset(self):
+            self.passwords = {}
 
-    def set_password(self, servicename, username, password):
-        self.passwords[servicename + username] = password
+        def set_password(self, servicename, username, password):
+            self.passwords[servicename + username] = password
 
-    def get_password(self, servicename, username):
-        return self.passwords.get(servicename + username, "password from TestKeyring")
+        def get_password(self, servicename, username):
+            return self.passwords.get(servicename + username, "password from TestKeyring")
 
-    def delete_password(self, servicename, username):
-        if servicename + username in self.passwords:
-            del self.passwords[servicename + username]
-
-
-# set the keyring for keyring lib
-keyring.set_keyring(TestKeyring())
+        def delete_password(self, servicename, username):
+            if servicename + username in self.passwords:
+                del self.passwords[servicename + username]
 
 
-@pytest.fixture(autouse=True)
-def keyring_reset():
-    keyring.get_keyring().reset()
+    # set the keyring for keyring lib
+    keyring.set_keyring(TestKeyring())
+
+
+    @pytest.fixture(autouse=True)
+    def keyring_reset():
+        keyring.get_keyring().reset()
 
 
 def generate_initial_config():
@@ -218,9 +225,11 @@ class mscolab_auth:
 
 generate_initial_config()
 
-
-# This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
-from tests.utils import create_msui_settings_file
+try:
+    # This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
+    from tests.utils import create_msui_settings_file
+except ModuleNotFoundError:
+    create_msui_settings_file = None
 
 
 @pytest.fixture(autouse=True)
@@ -234,8 +243,10 @@ def reset_config():
         constants.ROOT_FS.removedir(e)
 
     generate_initial_config()
-    create_msui_settings_file("{}")
-    read_config_file()
+    if create_msui_settings_file is not None:
+        create_msui_settings_file("{}")
+    if read_config_file is not None:
+        read_config_file()
 
 
 # Make fixtures available everywhere
