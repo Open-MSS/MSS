@@ -32,7 +32,7 @@ import sys
 from mslib import __version__
 from mslib.utils import setup_logging
 from mslib.mswms.wms import app as application
-q
+
 
 def main():
     parser = argparse.ArgumentParser()
