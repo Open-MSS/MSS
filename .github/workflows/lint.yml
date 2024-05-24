@@ -13,6 +13,21 @@ on:
     - 'GSOC**'
 
 jobs:
+  codespell:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
+    - name: Lint with codespell
+      run: |
+        python -m pip install --upgrade pip
+        pip install codespell
+        git ls-files -z | xargs -0 codespell --check-filenames
+
   flake8:
     runs-on: ubuntu-latest
     timeout-minutes: 10
