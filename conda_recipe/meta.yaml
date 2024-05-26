@@ -12,6 +12,8 @@
 {% set build_deps = project.get('build_dependencies') %}
 {% set host_deps = project.get('host_dependencies') %}
 {% set run_deps = project.get('dependencies') %}
+{% set run_constrained = project.get('run_constrained') %}
+
 
 {% set test_imports = project.get('test_imports') %}
 {% set test_commands = project.get('test_commands') %}
@@ -43,6 +45,11 @@ requirements:
     {% for dep in run_deps %}
     - {{ dep }}
     {% endfor %}
+  run_constrained:
+    {% for dep in run_constrained %}
+    - {{ dep }}
+    {% endfor %}
+  
 test:
   imports:
     {% for imp in test_imports %}
