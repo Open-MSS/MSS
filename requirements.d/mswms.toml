@@ -3,7 +3,7 @@ name = "mswms"
 
 description = 'The WMS server of the Mission Support System (MSS) - developed in the community to collaboratively create flight plans based on model data.'
 readme = "README.md"
-keywords = ["MSS", "WNS", "science", "flight planning"] 
+keywords = ["MSS", "WNS", "science", "flight planning"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Programming Language :: Python",
