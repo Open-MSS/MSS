@@ -53,7 +53,6 @@ dependencies = [
 ]
 
 run_constrained = [
-  'menuinst >=2.0.2'
 ]
 build_dependencies = [
   'python',
