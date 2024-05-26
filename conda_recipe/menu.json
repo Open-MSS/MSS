@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema",
+  "$id": "https://schemas.conda.io/menuinst-1.schema.json",
+  "menu_name": "Mission Support System",
+  "menu_items": [
+    {
+      "name": "MSUI ({{ ENV_NAME }})",
+      "description": "Mission Support System MSUI",
+      "activate": true,
+      "icon": "{{ MENU_DIR }}/msui.{{ ICON_EXT }}",
+      "command": [
+        "{{ PYTHON }}",
+        "{{ PREFIX }}/bin/msui"
+      ],
+      "platforms": {
+                "win": {
+                    "command": [
+                        "{{ PYTHON }}",
+                        "{{ SCRIPTS_DIR }}/msui-script.py"
+                    ],
+		    "file_extensions": [".menuinst"]
+                },
+                "linux": {
+                    "Categories": ["Internet", "Science"],
+                    "Keywords": ["documentation", "information"],
+                    "StartupNotify": true,
+                    "MimeType": ["application/x-menuinst"],
+                    "glob_patterns": {
+                        "application/x-menuinst": "*.menuinst"
+                    }
+                },
+                "osx": {
+                    "CFBundleDocumentTypes": [
+                        {
+                            "CFBundleTypeName": "org.conda.menuinst.msui",
+                            "CFBundleTypeRole": "Viewer",
+                            "LSItemContentTypes": ["org.conda.menuinst.main-file-uti"],
+                            "LSHandlerRank": "Default"
+                        }
+                    ],
+                    "UTExportedTypeDeclarations": [
+                        {
+                            "UTTypeConformsTo": ["public.data", "public.content"],
+                            "UTTypeIdentifier": "org.conda.menuinst.main-file-uti",
+                            "UTTypeTagSpecification": {
+                                "public.filename-extension": ["menuinst"]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}
