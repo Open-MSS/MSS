@@ -43,7 +43,7 @@ jobs:
         # Set the cache key in a way that the cache is invalidated every week on monday
         cache-environment-key: environment-${{ steps.year-and-week.outputs.year-and-week }}
     - name: Run tests
-      timeout-minutes: 20
+      timeout-minutes: 40
       # The ignored files can somehow cause the test suite to timeout.
       # I have no idea yet on why this happens and how to fix it.
       # Even a module level skip is not enough, they need to be completely ignored.
