@@ -561,7 +561,7 @@ class WMSServer:
 
     def get_capabilities(self, query, server_url=None):
         # ToDo find a more elegant method to do the same
-        # Preferable we don't want a seperate data_access module to be configured
+        # Preferable we don't want a separate data_access module to be configured
         data_access_dict = mswms_settings.data
 
         for key in data_access_dict:
@@ -808,7 +808,7 @@ class WMSServer:
                     return self.create_service_exception(text=msg, version=version)
 
             elif mode == "getvsec":
-                # Vertical secton path.
+                # Vertical section path.
                 path = query.get("PATH")
                 if path is None:
                     return self.create_service_exception(text="PATH not specified", version=version)

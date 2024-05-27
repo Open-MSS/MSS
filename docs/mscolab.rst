@@ -54,7 +54,7 @@ Make a text file with the following format to import many users to the mscolab d
 
   $ mscolab db --users_by_file /path/to/file
 
-After executed you get informations to exchange with users.
+After executed you get information to exchange with users.
 
  .. code-block:: text
 
@@ -69,7 +69,7 @@ Further options can be listed by `mscolab db -h`
 
 User Groups for Operations
 ..........................
-When you want to use same set of users for different operations using same catagory
+When you want to use same set of users for different operations using same category
 you can do this by setting up users in a special operation.
 
 On a given category for an operation ending with GROUP_POSTFIX
@@ -139,10 +139,10 @@ If you want to use nginx to proxy this gunicorn server have a look on the exampl
 Backup Data Base
 ................
 
-For backups you can dump by `pg_dump -d mscolab -f outpu.sql` the sqlite database
+For backups you can dump by `pg_dump -d mscolab -f output.sql` the sqlite database
 and restore it by `psql -v ON_ERROR_STOP=1 < new_db.sql`
 
-On a PostgreSQL db you can regulary do backups by creating a dump
+On a PostgreSQL db you can regularly do backups by creating a dump
 by `pg_dump <https://www.postgresql.org/docs/current/app-pgdump.html>`_ using a cron job ::
 
     #!/bin/bash

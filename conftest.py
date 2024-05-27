@@ -85,7 +85,7 @@ def generate_initial_config():
     if not constants.ROOT_FS.exists("msui/testdata"):
         constants.ROOT_FS.makedirs("msui/testdata")
 
-    # make a copy for mscolab test, so that we read different pathes during parallel tests.
+    # make a copy for mscolab test, so that we read different paths during parallel tests.
     sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
     shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 

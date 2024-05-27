@@ -10,7 +10,7 @@ Alternative plugins could be placed into the settings directory.
 
 Details
 ~~~~~~~
-It may be requiered to compute the waypoints in the format WPT012034,
+It may be required to compute the waypoints in the format WPT012034,
 where WPT is the NAVAID ID, 012 is the heading and 034 is the distance
 in nautical miles. This standard is used by several flight authorities.
 Data for the location of the NAVAID waypoints can be obtained as csv from
@@ -19,7 +19,7 @@ The dataset should be named NAVAID_System.csv and placed into the subdir
 plugins of the config dir.
 For a given set of waypoints, the navaid export plugin exports an ASCII
 table containing a column of the so-determined waypoint names. For locations
-ouside the given set of NAVAID points , e.g. over the oceans, the naming
+outside the given set of NAVAID points , e.g. over the oceans, the naming
 convention switches to coordinate based name like xxyyNwwwzzW for
 latitude xx°yy'N and longitude www°zz'W. This is done if the closest NAVAID
 waypoint is more than 500 nm.

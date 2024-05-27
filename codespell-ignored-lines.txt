@@ -1,0 +1,2 @@
+  ssl_ciphers         HIGH:!aNULL:!MD5;
+ - moved of mslib.thirdparty.owslib to mslib.owslib and hardcoded all imports in owslib to mslib.owslib, #1

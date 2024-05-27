@@ -68,7 +68,7 @@ for the users who have access permission to the operation, we can also change th
 
 Here for b, we have changed the permission from collaborator to admin.
 
-we can alo delete a user with a permission by selecting user and clicking on delete button.
+we can also delete a user with a permission by selecting user and clicking on delete button.
 
 
 Changing their access roles....
@@ -107,7 +107,7 @@ we can upload files by clicking on upload and browsing for the file.
 
 Here, we send the mss logo to all the users to see.
 
-we can also search for a meassage by entering a phrase or complete text and then pressing previous or next as we need to find the message.
+we can also search for a message by entering a phrase or complete text and then pressing previous or next as we need to find the message.
 
 
 Next, we close the chat window.
@@ -144,10 +144,10 @@ We then open drop down menu of "save to server."
 
 It will open a window.
 
-We can either click overwite server waypoints with local waypoints or local waypoints with server waypoints.
+We can either click overwrite server waypoints with local waypoints or local waypoints with server waypoints.
 
 
-We click overwite with local waypoints.
+We click overwrite with local waypoints.
 
 The server waypoint changes with the work we have done locally.
 

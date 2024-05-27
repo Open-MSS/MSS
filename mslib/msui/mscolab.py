@@ -456,8 +456,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             try:
                 error_msg = json.loads(r.text)["message"]
             except Exception as e:
-                logging.debug("Unexpected error occured %s", e)
-                error_msg = "Unexpected error occured. Please try again."
+                logging.debug("Unexpected error occurred %s", e)
+                error_msg = "Unexpected error occurred. Please try again."
             self.set_status("Error", error_msg)
 
 

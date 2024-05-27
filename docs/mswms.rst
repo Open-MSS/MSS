@@ -495,7 +495,7 @@ package apache2-dev on your server.
 
 At current state we have to use pip to install mod_wsgi into the INSTANCE environment::
 
-  # Instal `mod_wsgi`
+  # Install `mod_wsgi`
   $ pip install mod_wsgi
 
   # Find the full path to installed `mod_wsgi`
@@ -519,7 +519,7 @@ Enable the new module by a2enmod and reload the apache2 server
 Configuration of apache mod_wsgi.conf
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-One posibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternativly you
+One possibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternatively you
 could add it also to wms.wsgi.
 
   WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniforge/envs/instance/lib/python3.X/site-packages
@@ -616,7 +616,7 @@ Enable it with a2ensite mss.yourserver.de.conf
 Many Instances
 ..............
 
-If you want to setup many instances we suggest to use a similiar proxy based configuration
+If you want to setup many instances we suggest to use a similar proxy based configuration
 
  .. literalinclude:: samples/sites-available/mss_proxy.conf
 
