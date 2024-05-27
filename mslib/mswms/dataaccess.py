@@ -232,7 +232,8 @@ class DefaultDataAccess(NWPDataAccess):
             else:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)
-                raise ValueError(f"variable type {vartype} not available for variable {variable}")
+                raise ValueError(f"Variable '{variable}' not available for type '{vartype}', "
+                                 f"init_time '{init_time}', and valid_time '{valid_time}'")
 
     def is_reload_required(self, filenames):
         return False
