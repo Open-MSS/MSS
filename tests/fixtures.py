@@ -28,7 +28,7 @@ import mock
 import multiprocessing
 import time
 import urllib
-try: # mscolab
+try:  # mscolab
     import mslib.mswms.mswms
 except ModuleNotFoundError:
     pass
@@ -182,7 +182,7 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
     :returns: The URL where the server is running.
     """
     # Update mscolab URL to avoid "Update Server List" message boxes
-    try: # mscolab server tests should not access clients config
+    try:  # mscolab server tests should not access clients config
         modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
     except TypeError:
         pass
