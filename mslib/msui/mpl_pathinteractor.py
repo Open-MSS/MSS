@@ -51,7 +51,8 @@ import matplotlib.path as mpath
 import matplotlib.patches as mpatches
 from PyQt5 import QtCore, QtWidgets
 
-from mslib.utils.coordinate import get_distance, find_location, latlon_points, path_points
+from mslib.utils.coordinate import get_distance, latlon_points, path_points
+from mslib.utils.locations import find_location
 from mslib.utils.units import units
 from mslib.utils.thermolib import pressure2flightlevel
 from mslib.msui import flighttrack as ft

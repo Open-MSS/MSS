@@ -31,7 +31,6 @@ import sys
 
 from mslib import __version__
 from mslib.utils import setup_logging
-from mslib.utils.qt import Updater, Worker
 from mslib.mswms.wms import app as application
 
 
@@ -85,16 +84,6 @@ def main():
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
-        sys.exit()
-
-    updater = Updater()
-    if args.update:
-        updater.on_update_available.connect(lambda old, new: updater.update_mss())
-        updater.on_log_update.connect(lambda s: print(s.replace("\n", "")))
-        updater.on_status_update.connect(lambda s: print(s.replace("\n", "")))
-        updater.run()
-        while Worker.workers:
-            list(Worker.workers)[0].wait()
         sys.exit()
 
     setup_logging(args)

@@ -29,7 +29,10 @@ import requests
 import fs
 
 from urllib.parse import urljoin
-from mslib.mscolab.server import register_user
+try:
+    from mslib.mscolab.server import register_user
+except ModuleNotFoundError:
+    register_user = None
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
 

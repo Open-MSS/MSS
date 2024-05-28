@@ -31,6 +31,7 @@ import numpy as np
 import pytest
 
 import mslib.utils.coordinate as coordinate
+import mslib.utils.locations
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +49,8 @@ class TestGetDistance:
             assert int(coordinate.get_distance(lat0, lon0, lat1, lon1)) == distance
 
     def test_find_location(self):
-        assert coordinate.find_location(50.92, 6.36) == ([50.92, 6.36], 'Juelich')
-        assert coordinate.find_location(50.9200002, 6.36) == ([50.92, 6.36], 'Juelich')
+        assert mslib.utils.locations.find_location(50.92, 6.36) == ([50.92, 6.36], 'Juelich')
+        assert mslib.utils.locations.find_location(50.9200002, 6.36) == ([50.92, 6.36], 'Juelich')
 
 
 class TestProjections:

@@ -1,0 +1,19 @@
+diff --git a/setup.py b/setup.py
+index c0f80484..31408355 100644
+--- a/setup.py
++++ b/setup.py
+@@ -34,14 +34,8 @@ long_description = open('README.md').read()
+ execfile('mslib/version.py')
+
+ console_scripts = [
+-    "mscolab = mslib.mscolab.mscolab:main",
+-    "mss = mslib.msui.mss:main",
+-    "mssautoplot = mslib.utils.mssautoplot:main",
+-    "msui = mslib.msui.msui:main",
+     "mswms = mslib.mswms.mswms:main",
+     "mswms_demodata = mslib.mswms.demodata:main"]
+-if os.name != 'nt':
+-    console_scripts.append('msidp = mslib.msidp.idp:main')
+
+ setup(
+     name="mss",

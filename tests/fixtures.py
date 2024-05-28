@@ -28,17 +28,45 @@ import mock
 import multiprocessing
 import time
 import urllib
-import mslib.mswms.mswms
+try:  # mscolab
+    import mslib.mswms.mswms
+except ModuleNotFoundError:
+    pass
+
 import eventlet
 import eventlet.wsgi
 
-from PyQt5 import QtWidgets
+try:
+    from PyQt5 import QtWidgets
+except ModuleNotFoundError:
+    QtWidgets = None
 from contextlib import contextmanager
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers
-from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
-from mslib.utils.config import modify_config_file
-from tests.utils import is_url_response_ok
+try:
+    from mslib.mscolab.conf import mscolab_settings
+except ModuleNotFoundError:
+    mscolab_settings = None
+
+try:
+    from mslib.mscolab.server import APP, initialize_managers
+except ModuleNotFoundError:
+    APP = None
+    initialize_managers = None
+
+try:
+    from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
+except ModuleNotFoundError:
+    handle_db_init = None
+    handle_db_reset = None
+
+try:
+    from mslib.utils.config import modify_config_file
+except ModuleNotFoundError:
+    modify_config_file = None
+
+try:
+    from tests.utils import is_url_response_ok
+except ModuleNotFoundError:
+    is_url_response_ok = None
 
 
 @pytest.fixture
@@ -154,7 +182,10 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
     :returns: The URL where the server is running.
     """
     # Update mscolab URL to avoid "Update Server List" message boxes
-    modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
+    try:  # mscolab server tests should not access clients config
+        modify_config_file({"default_MSCOLAB": [mscolab_session_server]})
+    except TypeError:
+        pass
     return mscolab_session_server
 
 

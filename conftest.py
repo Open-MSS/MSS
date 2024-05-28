@@ -36,47 +36,57 @@ sys.dont_write_bytecode = True
 import pytest
 import fs
 import shutil
-import keyring
-from mslib.mswms.demodata import DataFiles
+try:
+    import keyring
+except ModuleNotFoundError:
+    keyring = None
+try: # mscolab
+    from mslib.mswms.demodata import DataFiles
+except ModuleNotFoundError:
+    DataFiles = None
 import tests.constants as constants
 from mslib.utils.loggerdef import configure_mpl_logger
 
 matplotlib_logger = configure_mpl_logger()
 
-# This import must come after importing tests.constants due to MSUI_CONFIG_PATH being set there
-from mslib.utils.config import read_config_file
+try:
+    # This import must come after importing tests.constants due to MSUI_CONFIG_PATH being set there
+    from mslib.utils.config import read_config_file
+except ModuleNotFoundError:
+    read_config_file = None
 
 
-class TestKeyring(keyring.backend.KeyringBackend):
-    """A test keyring which always outputs the same password
-    from Runtime Configuration
-    https://pypi.org/project/keyring/#third-party-backends
-    """
-    priority = 1
+if keyring is not None:
+    class TestKeyring(keyring.backend.KeyringBackend):
+        """A test keyring which always outputs the same password
+        from Runtime Configuration
+        https://pypi.org/project/keyring/#third-party-backends
+        """
+        priority = 1
 
-    passwords = {}
+        passwords = {}
 
-    def reset(self):
-        self.passwords = {}
+        def reset(self):
+            self.passwords = {}
 
-    def set_password(self, servicename, username, password):
-        self.passwords[servicename + username] = password
+        def set_password(self, servicename, username, password):
+            self.passwords[servicename + username] = password
 
-    def get_password(self, servicename, username):
-        return self.passwords.get(servicename + username, "password from TestKeyring")
+        def get_password(self, servicename, username):
+            return self.passwords.get(servicename + username, "password from TestKeyring")
 
-    def delete_password(self, servicename, username):
-        if servicename + username in self.passwords:
-            del self.passwords[servicename + username]
-
-
-# set the keyring for keyring lib
-keyring.set_keyring(TestKeyring())
+        def delete_password(self, servicename, username):
+            if servicename + username in self.passwords:
+                del self.passwords[servicename + username]
 
 
-@pytest.fixture(autouse=True)
-def keyring_reset():
-    keyring.get_keyring().reset()
+    # set the keyring for keyring lib
+    keyring.set_keyring(TestKeyring())
+
+
+    @pytest.fixture(autouse=True)
+    def keyring_reset():
+        keyring.get_keyring().reset()
 
 
 def generate_initial_config():
@@ -89,7 +99,7 @@ def generate_initial_config():
     sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
     shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
-    if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
+    if DataFiles is not None and not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
         print('\n configure testdata')
         # ToDo check pytest tmpdir_factory
         examples = DataFiles(data_fs=constants.DATA_FS,
@@ -211,16 +221,20 @@ class mscolab_auth:
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
 
-
-    _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
+    if DataFiles is not None:
+        _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
     _load_module("mscolab_settings", path)
 
+try: # mscolab
+    generate_initial_config()
+except TypeError:
+    pass
 
-generate_initial_config()
-
-
-# This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
-from tests.utils import create_msui_settings_file
+try:
+    # This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
+    from tests.utils import create_msui_settings_file
+except ModuleNotFoundError:
+    create_msui_settings_file = None
 
 
 @pytest.fixture(autouse=True)
@@ -234,8 +248,10 @@ def reset_config():
         constants.ROOT_FS.removedir(e)
 
     generate_initial_config()
-    create_msui_settings_file("{}")
-    read_config_file()
+    if create_msui_settings_file is not None:
+        create_msui_settings_file("{}")
+    if read_config_file is not None:
+        read_config_file()
 
 
 # Make fixtures available everywhere

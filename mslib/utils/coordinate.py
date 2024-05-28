@@ -4,7 +4,7 @@
     mslib.utils.coordinate
     ~~~~~~~~~~~~~~~~
 
-    Collection of functions all around coordinates, locations and positions.
+    Collection of functions all around coordinates and positions.
 
     This file is part of MSS.
 
@@ -33,9 +33,6 @@ from pyproj import Geod
 from scipy.interpolate import interp1d
 from scipy.ndimage import map_coordinates
 
-from mslib.utils.config import config_loader
-
-
 __PR = Geod(ellps='WGS84')
 
 
@@ -52,23 +49,6 @@ def get_distance(lat0, lon0, lat1, lon1):
         length of distance in km
     """
     return __PR.inv(lon0, lat0, lon1, lat1)[-1] / 1000.
-
-
-def find_location(lat, lon, tolerance=5):
-    """
-    Checks if a location is present at given coordinates
-    :param lat: latitude
-    :param lon: longitude
-    :param tolerance: maximum distance between location and coordinates in km
-    :return: None or lat/lon, name
-    """
-    locations = config_loader(dataset='locations')
-    distances = sorted([(get_distance(lat, lon, loc_lat, loc_lon), loc)
-                        for loc, (loc_lat, loc_lon) in locations.items()])
-    if len(distances) > 0 and distances[0][0] <= tolerance:
-        return locations[distances[0][1]], distances[0][1]
-    else:
-        return None
 
 
 def fix_angle(ang):
