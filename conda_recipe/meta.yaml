@@ -1,6 +1,6 @@
 
 {% set module = environ.get('MODULE', 'mss')  %}
-{% set project = load_file_data('requirements.d/mswms.toml', from_recipe_dir=False).get('project') %}
+{% set project = load_file_data('requirements.d/mscolab.toml', from_recipe_dir=False).get('project') %}
 {% set name = project.get('name') %}
 {% set summary = project.get('description') %}
 

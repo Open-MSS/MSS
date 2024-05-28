@@ -1,0 +1,102 @@
+[project]
+name = "mscolab"
+
+description = 'The MSColab server of the Mission Support System (MSS) - developed in the community to collaboratively exchange flight plans based on model data.'
+readme = "README.md"
+keywords = ["MSS", "collaboratively", "science", "flight planning"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Programming Language :: Python",
+  "License :: OSI Approved :: Apache-2.0"
+]
+version = "9.0.0"
+
+source_patches = [
+  'build_mswms_setuppy.patch'
+]
+
+dependencies = [
+  'python',
+  'pyyaml',
+  'future',
+  'defusedxml',
+  'chameleon',
+  'execnet',
+  'isodate',
+  'lxml',
+  'pillow',
+  'requests >=2.31.0',
+  'fs',
+  'cftime >=1.0.1',
+  'pyjwt',
+  'flask >=2.3.2',
+  'flask-httpauth',
+  'flask-mail',
+  'flask-migrate',
+  'werkzeug >=2.2.3, <3.0.0',
+  'flask-socketio >=5.1.0',
+  'flask-sqlalchemy >=3.0.0',
+  'flask-cors',
+  'flask-wtf',
+  'flask-login',
+  'pysaml2',
+  'libxmlsec1  # [not win]',
+  'email_validator',
+  'python-socketio >=5',
+  'python-engineio >=4',
+  'websocket-client',
+  'passlib',
+  'keyring',
+  'dbus-python  # [not win]',
+  'gitpython',
+  'git',
+  'psycopg2',
+  'PyMySQL >=0.9.3',
+  'validate_email',
+  'multidict',
+  'markdown',
+  'xstatic',
+  'xstatic-jquery',
+  'xstatic-bootstrap',
+  'metpy',
+  'libtiff <4.5.0',
+  'python-slugify',
+]
+
+run_constrained = [
+]
+build_dependencies = [
+  'python',
+  'pip',
+  'setuptools',
+  'future',
+]
+
+host_dependencies = [
+  'python',
+  'setuptools',
+  'pip',
+  'future'
+]
+
+authors = ["see AUTHORS"]
+
+maintainers = [
+  {name = "ReimarBauer", email = "rb.proj@gmail.com"}
+]
+
+test_imports = [
+  'mslib'
+]
+test_commands = [
+  'mscolab -h',
+  'msidp -h  # [not win]'
+]
+
+
+[project.urls]
+Homepage = "https://open-mss.github.io/"
+Documentation = "https://mss.rtfd.io"
+Repository = "https://github.com/open-mss/MSS"
+Issues = "https://github.com/Open-MSS/MSS/issues"
+Changelog = "https://github.com/Open-MSS/MSS/blob/stable/CHANGES.rst"

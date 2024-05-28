@@ -40,7 +40,10 @@ try:
     import keyring
 except ModuleNotFoundError:
     keyring = None
-from mslib.mswms.demodata import DataFiles
+try: # mscolab
+    from mslib.mswms.demodata import DataFiles
+except ModuleNotFoundError:
+    DataFiles = None
 import tests.constants as constants
 from mslib.utils.loggerdef import configure_mpl_logger
 
@@ -96,7 +99,7 @@ def generate_initial_config():
     sample_path = os.path.join(os.path.dirname(__file__), "tests", "data")
     shutil.copy(os.path.join(sample_path, "example.ftml"), constants.ROOT_DIR)
 
-    if not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
+    if DataFiles is not None and not constants.SERVER_CONFIG_FS.exists(constants.SERVER_CONFIG_FILE):
         print('\n configure testdata')
         # ToDo check pytest tmpdir_factory
         examples = DataFiles(data_fs=constants.DATA_FS,
@@ -218,12 +221,14 @@ class mscolab_auth:
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
 
-
-    _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
+    if DataFiles is not None:
+        _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
     _load_module("mscolab_settings", path)
 
-
-generate_initial_config()
+try: # mscolab
+    generate_initial_config()
+except TypeError:
+    pass
 
 try:
     # This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
