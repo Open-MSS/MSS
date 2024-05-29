@@ -28,8 +28,6 @@
 import importlib.util
 import os
 import sys
-import logging
-import matplotlib
 # Disable pyc files
 sys.dont_write_bytecode = True
 
@@ -188,7 +186,6 @@ USE_SAML2 = False
             # windows needs \\ or / but mixed is terrible. *nix needs /
             mscolab_fs.writetext(constants.MSCOLAB_CONFIG_FILE, config_string.replace('\\', '/'))
         path = fs.path.join(constants.ROOT_DIR, 'mscolab', constants.MSCOLAB_CONFIG_FILE)
-        parent_path = fs.path.join(constants.ROOT_DIR, 'mscolab')
 
     if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_AUTH_FILE):
         config_string = '''
@@ -211,7 +208,6 @@ class mscolab_auth:
         sys.modules[module_name] = module
         spec.loader.exec_module(module)
 
-
     _load_module("mswms_settings", constants.SERVER_CONFIG_FILE_PATH)
     _load_module("mscolab_settings", path)
 
@@ -227,7 +223,8 @@ from tests.utils import create_msui_settings_file
 def reset_config():
     """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
     """
-    # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is deleted.
+    # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is
+    # deleted.
     for e in constants.ROOT_FS.walk.files(exclude=["mscolab.db"]):
         constants.ROOT_FS.remove(e)
     for e in constants.ROOT_FS.walk.dirs(search="depth"):
@@ -239,4 +236,4 @@ def reset_config():
 
 
 # Make fixtures available everywhere
-from tests.fixtures import *
+from tests.fixtures import *  # noqa: F401, F403
