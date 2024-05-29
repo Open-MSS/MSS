@@ -37,10 +37,9 @@ class Test_SatelliteDockWidget:
     def setup(self, qtbot):
         self.view = mock.Mock()
         self.window = sd.SatelliteControlWidget(view=self.view)
+        qtbot.add_widget(self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
 
     def test_load(self):
         path = os.path.join(os.path.dirname(__file__), "../", "data", "satellite_predictor.txt")

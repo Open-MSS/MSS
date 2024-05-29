@@ -512,13 +512,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Progress dialog to inform the user about image ongoing retrievals.
         self.pdlg = QtWidgets.QProgressDialog(
-            "retrieving image...", "Cancel", 0, 10, parent=self.parent())
+            "retrieving image...", "Cancel", 0, 10, parent=self)
         self.pdlg.close()
 
         # Progress dialog to inform the user about ongoing capability requests.
         self.capabilities_worker = Worker(None)
         self.cpdlg = QtWidgets.QProgressDialog(
-            "retrieving wms capabilities...", "Cancel", 0, 10, parent=self.multilayers)
+            "retrieving wms capabilities...", "Cancel", 0, 10, parent=self)
         self.cpdlg.canceled.connect(self.stop_capabilities_retrieval)
         self.cpdlg.close()
 

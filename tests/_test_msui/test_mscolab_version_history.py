@@ -27,6 +27,7 @@
 import pytest
 import mock
 
+from tests.utils import set_force_close
 from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
@@ -46,6 +47,7 @@ class Test_MscolabVersionHistory:
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
@@ -60,8 +62,6 @@ class Test_MscolabVersionHistory:
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield
         self.window.mscolab.logout()
-        if self.window.mscolab.version_window:
-            self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
 

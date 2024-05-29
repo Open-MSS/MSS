@@ -49,7 +49,6 @@ class Test_Editor:
             yield
             if os.path.exists(self.save_file_name):
                 os.remove(self.save_file_name)
-            self.window.hide()
 
     @mock.patch("mslib.msui.editor.get_open_filename", return_value=sample_file)
     def test_file_open(self, mockfile):

@@ -36,6 +36,7 @@ class Test_MapCanvas:
         kwargs = {'resolution': 'l', 'area_thresh': 1000.0, 'ax': plt.gca(), 'llcrnrlon': -15.0, 'llcrnrlat': 35.0,
                   'urcrnrlon': 30.0, 'urcrnrlat': 65.0, 'epsg': '4326'}
         self.map = MapCanvas(**kwargs)
+        qtbot.add_widget(plt.get_current_fig_manager().window)
 
     def test_no_coastsegs(self):
         """

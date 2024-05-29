@@ -30,6 +30,7 @@ import datetime
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, MessageType
 from PyQt5 import QtCore, QtTest, QtWidgets
+from tests.utils import set_force_close
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
@@ -57,6 +58,7 @@ class Test_MscolabOperation:
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
         self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        qtbot.add_widget(self.window, before_close_func=set_force_close)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab
@@ -70,11 +72,8 @@ class Test_MscolabOperation:
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield
         self.window.mscolab.logout()
-        if self.window.mscolab.chat_window:
-            self.window.mscolab.chat_window.hide()
         if self.window.mscolab.conn:
             self.window.mscolab.conn.disconnect()
-        self.window.hide()
 
     def test_send_message(self, qtbot):
         self._send_message(qtbot, "**test message**")

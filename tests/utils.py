@@ -185,3 +185,7 @@ class ExceptionMock:
 
     def raise_exc(self, *args, **kwargs):
         raise self.exc
+
+
+def set_force_close(widget):
+    widget.force_close = True
