@@ -42,12 +42,33 @@ jobs:
         cache-environment: true
         # Set the cache key in a way that the cache is invalidated every week on monday
         cache-environment-key: environment-${{ steps.year-and-week.outputs.year-and-week }}
+    - if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+    - if: ${{ startsWith(matrix.os, 'macos') }}
+      run: |
+        brew install ffmpeg
     - name: Run tests
       timeout-minutes: 40
       # The ignored files can somehow cause the test suite to timeout.
       # I have no idea yet on why this happens and how to fix it.
       # Even a module level skip is not enough, they need to be completely ignored.
       # TODO: fix those tests and drop the ignores
-      run: micromamba run -n ci env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib
-        --ignore=tests/_test_msui/test_sideview.py --ignore=tests/_test_msui/test_topview.py --ignore=tests/_test_msui/test_wms_control.py
+      run: micromamba run -n ci
+        ${{ (startsWith(matrix.os, 'ubuntu') && 'xvfb-run -n 99') || ' ' }}
+        ./with-recording
+        pytest -v
+        -n logical
+        --durations=20
+        --cov=mslib
+        --ignore=tests/_test_msui/test_sideview.py
+        --ignore=tests/_test_msui/test_topview.py
+        --ignore=tests/_test_msui/test_wms_control.py
         tests
+    - name: Upload recording
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}-recording
+        path: recording.mp4
