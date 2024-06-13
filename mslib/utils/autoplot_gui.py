@@ -1,14 +1,17 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QListWidgetItem, QVBoxLayout, QPushButton, QLabel
-from mslib.msui.qt5.mssautoplot_gui import Ui_Form
+from PyQt5.QtWidgets import (QApplication, QWidget, QFileDialog, QListWidgetItem,
+                             QVBoxLayout, QPushButton, QLabel)
+from mslib.msui.qt5.ui_mss_autoplot import Ui_Form
+from mslib.utils.config import config_loader, read_config_file
+from mslib.utils.mssautoplot import Plotting, load_from_ftml
 
 
 class Layers(QWidget):
     def __init__(self):
         super().__init__()
-        self.init_ui()
+        self.initUI()
 
-    def init_ui(self):
+    def initUI(self):
         self.setWindowTitle('Layers Window')
         self.setGeometry(200, 200, 400, 300)
 
@@ -17,9 +20,9 @@ class Layers(QWidget):
         self.label = QLabel('Select Layers Under development', self)
         layout.addWidget(self.label)
 
-        self.close_button = QPushButton('Close', self)
-        self.close_button.clicked.connect(self.close)
-        layout.addWidget(self.close_button)
+        self.closeButton = QPushButton('Close', self)
+        self.closeButton.clicked.connect(self.close)
+        layout.addWidget(self.closeButton)
 
         self.setLayout(layout)
 
@@ -45,123 +48,159 @@ class Upload(QWidget, Ui_Form):
         self.url = []
 
         # cpath
-        self.pushButton.clicked.connect(self.open_file_dialog)
+        self.cpathButton.clicked.connect(self.openFileDialog)
         # all QcomboBox
-        self.comboBox.currentIndexChanged.connect(lambda: self.combo_box_input(self.comboBox))
-        self.comboBox_2.currentIndexChanged.connect(lambda: self.combo_box_input(self.comboBox_2))
-        self.comboBox_3.currentIndexChanged.connect(lambda: self.combo_box_input(self.comboBox_3))
-        self.comboBox_4.currentIndexChanged.connect(lambda: self.combo_box_input(self.comboBox_4))
-        self.comboBox_5.currentIndexChanged.connect(lambda: self.combo_box_input(self.comboBox_5))
-        self.comboBox_6.currentIndexChanged.connect(lambda: self.combo_box_input(self.comboBox_6))
-        self.comboBox_9.currentIndexChanged.connect(lambda: self.combo_box_input(self.comboBox_9))
+        self.viewComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.viewComboBox))
+        self.sectionsComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.sectionsComboBox))
+        self.resolutionComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.resolutionComboBox))
+        self.itimeComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.itimeComboBox))
+        self.vtimeComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.vtimeComboBox))
+        self.intvComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.intvComboBox))
+        self.levelComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.levelComboBox))
         # all spinBox
-        self.spinBox.valueChanged.connect(lambda value: self.on_spin_box_value_changed(value, self.spinBox))
-        self.spinBox_2.valueChanged.connect(lambda value: self.on_spin_box_value_changed(value, self.spinBox_2))
-        self.spinBox_3.valueChanged.connect(lambda value: self.on_spin_box_value_changed(value, self.spinBox_3))
-        self.spinBox_4.valueChanged.connect(lambda value: self.on_spin_box_value_changed(value, self.spinBox_4))
+        self.numinterSpinBox.valueChanged.connect(
+            lambda value: self.onSpinBoxValueChanged(value, self.numinterSpinBox))
+        self.numlabelsSpinBox.valueChanged.connect(
+            lambda value: self.onSpinBoxValueChanged(value, self.numlabelsSpinBox))
+        self.stimeSpinBox.valueChanged.connect(
+            lambda value: self.onSpinBoxValueChanged(value, self.stimeSpinBox))
+        self.etimeSpinBox.valueChanged.connect(
+            lambda value: self.onSpinBoxValueChanged(value, self.etimeSpinBox))
         # all pushButton
-        self.pushButton_9.clicked.connect(self.add_ftrack)
-        self.pushButton_8.clicked.connect(self.remove_ftrack)
-        self.pushButton_11.clicked.connect(self.add_operation)
-        self.pushButton_10.clicked.connect(self.remove_operation)
-        self.pushButton_5.clicked.connect(self.add_url)
-        self.pushButton_6.clicked.connect(self.remove_url)
-        self.pushButton_4.clicked.connect(self.layers_window)
+        self.addFtrackButton.clicked.connect(self.addftrack)
+        self.removeFtrackButton.clicked.connect(self.removeftrack)
+        self.addOperationsButton.clicked.connect(self.addOperation)
+        self.removeOperationsButton.clicked.connect(self.removeOperation)
+        self.addUrlButton.clicked.connect(self.addURL)
+        self.removeUrlButton.clicked.connect(self.removeURL)
+        self.layersButton.clicked.connect(self.layersWindow)
 
-    def open_file_dialog(self):
+    def openFileDialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        file_name, _ = QFileDialog.getOpenFileName(
+        fileName, _ = QFileDialog.getOpenFileName(
             self, "Select .json Config File", "", "JSON Files (*.json)", options=options)
-        if file_name:
-            self.cpath = file_name
+        if fileName:
+            self.cpath = fileName
+            self.configureFromPath()
 
-    def combo_box_input(self, combo):
-        combo_box_name = combo.objectName()
-        if combo_box_name == "comboBox":
-            self.view = self.comboBox.currentText()
-        elif combo_box_name == "comboBox_2":
-            self.view = self.comboBox_2.currentText()
-        elif combo_box_name == "comboBox_3":
-            self.view = self.comboBox_3.currentText()
-        elif combo_box_name == "comboBox_4":
-            self.view = self.comboBox_4.currentText()
-        elif combo_box_name == "comboBox_5":
-            self.itime = self.comboBox_5.currentText()
-        elif combo_box_name == "comboBox_6":
-            self.vtime = self.comboBox_6.currentText()
-        elif combo_box_name == "comboBox_9":
-            self.intv = self.comboBox_9.currentText()
+    def configureFromPath(self):
+        read_config_file(self.path)
+        self.configure = config_loader()
+        if self.view is None:
+            self.view = self.config["View"]
+        if self.num_interpolation_points is None:
+            self.num_interpolation_points = self.config["num_interpolation_points"]
+        if self.num_labels is None:
+            self.num_labels = self.config["num_labels"]
+        if self.resolution is None:
+            self.resolution = self.config["resolution"]
+        if self.operations is None:
+            self.operations = self.config["MSCOLAB_operations"]
+        self.mscolaburl = self.config["default_MSCOLAB"]
+        if self.view == "top":
+            sec = "automated_plotting_hsecs"
+        if self.view == "side":
+            sec = "automated_plotting_vsecs"
+        if self.url is None:
+            self.url = self.config[sec][0]
+        if self.level is None:
+            self.level = self.config[sec][2]
+        self.styles = self.config[sec][1]
 
-    def on_spin_box_value_changed(self, value, spin_name):
-        spin_box_name = spin_name.objectName()
-        if spin_box_name == "spinBox":
+    def comboBoxInput(self, combo):
+        comboBoxName = combo.objectName()
+        if comboBoxName == "sectionsComboBox":
+            self.sections = self.sectionsComboBox.currentText()
+        if comboBoxName == "viewComboBox":
+            self.view = self.viewComboBox.currentText()
+        if comboBoxName == "resolutionComboBox":
+            self.resolution = self.resolutionComboBox.currentText()
+        if comboBoxName == "levelComboBox":
+            self.level = self.levelComboBox.currentText()
+        if comboBoxName == "itimeComboBox":
+            self.itime = self.itimeComboBox.currentText()
+        if comboBoxName == "vtimeComboBox":
+            self.vtime = self.vtimeComboBox.currentText()
+        if comboBoxName == "intvComboBox":
+            self.intv = self.intvComboBox.currentText()
+
+    def onSpinBoxValueChanged(self, value, spinName):
+        spinBoxName = spinName.objectName()
+        if spinBoxName == "numinterSpinBox":
             self.num_interpolation_points = value
-        elif spin_box_name == "spinBox_2":
+        if spinBoxName == "numlabelsSpinBox":
             self.num_labels = value
-        elif spin_box_name == "spinBox_3":
+        if spinBoxName == "stimeSpinBox":
             self.stime = value
-        elif spin_box_name == "spinBox_4":
+        if spinBoxName == "etimeSpinBox":
             self.etime = value
 
-    def add_ftrack(self):
-        text = self.lineEdit_2.text()
+    def addftrack(self):
+        text = self.flightLineEdit.text()
         if text:
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            file_name, _ = QFileDialog.getOpenFileName(
+            fileName, _ = QFileDialog.getOpenFileName(
                 self, "Select .ftml flights File", "", "ftml Files (*.ftml)", options=options)
-            path = file_name
+            path = fileName
             if path:
                 self.ftrack[text] = path
                 item = QListWidgetItem(text)
-                self.listWidget_2.addItem(item)
-            self.lineEdit_2.clear()
+                self.flightListWidget.addItem(item)
+            self.flightLineEdit.clear()
 
-    def remove_ftrack(self):
-        selected = self.listWidget_2.selectedItems()
+    def removeftrack(self):
+        selected = self.flightListWidget.selectedItems()
         if selected:
             for i in selected:
                 del self.ftrack[i.text()]
-                self.listWidget_2.takeItem(self.listWidget_2.row(i))
+                self.flightListWidget.takeItem(self.flightListWidget.row(i))
 
-    def add_operation(self):
-        text = self.lineEdit_4.text()
+    def addOperation(self):
+        text = self.operationsLineEdit.text()
         if text:
             options = QFileDialog.Options()
             options |= QFileDialog.DontUseNativeDialog
-            file_name, _ = QFileDialog.getOpenFileName(
+            fileName, _ = QFileDialog.getOpenFileName(
                 self, "Select Operations File", "", "JSON Files (*.json)", options=options)
-            path = file_name
+            path = fileName
             if path:
                 self.operations[text] = path
                 item = QListWidgetItem(text)
-                self.listWidget_3.addItem(item)
-            self.lineEdit_4.clear()
+                self.operationsListWidget.addItem(item)
+            self.operationsLineEdit.clear()
 
-    def remove_operation(self):
-        selected = self.listWidget_3.selectedItems()
+    def removeOperation(self):
+        selected = self.operationsListWidget.selectedItems()
         if selected:
             for i in selected:
                 del self.operations[i.text()]
-                self.listWidget_3.takeItem(self.listWidget_3.row(i))
+                self.operationsListWidget.takeItem(self.operationsListWidget.row(i))
 
-    def add_url(self):
-        text = self.lineEdit.text()
+    def addURL(self):
+        text = self.urlLineEdit.text()
         if text:
             item = QListWidgetItem(text)
-            self.listWidget.addItem(item)
-            self.lineEdit.clear()
+            self.urlListWidget.addItem(item)
+            self.urlLineEdit.clear()
             self.url.append(text)
 
-    def remove_url(self):
-        selected = self.listWidget.selectedItems()
+    def removeURL(self):
+        selected = self.urlListWidget.selectedItems()
         if selected:
             for i in selected:
                 self.url.remove(i.text())
-                self.listWidget.takeItem(self.listWidget.row(i))
+                self.urlListWidget.takeItem(self.urlListWidget.row(i))
 
-    def layers_window(self):
+    def layersWindow(self):
         self.layerobj = Layers()
         self.layerobj.show()
 
@@ -171,6 +210,21 @@ def main():
     window = Upload()
     window.show()
     app.exec_()
+    # print(window.cpath)
+    # print(window.view)
+    # print(window.itime)
+    # print(window.vtime)
+    # print(window.level)
+    # print(window.stime)
+    # print(window.etime)
+    # print(window.intv)
+    # print(window.num_interpolation_points)
+    # print(window.num_labels)
+    # print(window.sections)
+    # print(window.resolution)
+    # print(window.ftrack)
+    # print(window.operations)
+    # print(window.url)
 
 
 if __name__ == "__main__":
