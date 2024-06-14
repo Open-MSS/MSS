@@ -250,6 +250,31 @@ class FileManager:
             db.session.commit()
         return True
 
+    def save_user_profile_image(self, user_id, image_data):
+        """
+        Save the user's profile image to the database.
+        """
+        user = User.query.get(user_id)
+        if user:
+            try:
+                user.profile_image = image_data
+                db.session.commit()
+                return True, "Image uploaded successfully"
+            except Exception as e:
+                db.session.rollback()
+                return False, f"An error occurred: {str(e)}"
+        else:
+            return False, "User not found"
+
+    def fetch_user_profile_image(self, user_id):
+        """
+        Fetch the profile image for a user from the database.
+        """
+        user = User.query.get(user_id)
+        if user and user.profile_image:
+            return user.profile_image
+        return None
+
     def update_operation(self, op_id, attribute, value, user):
         """
         op_id: operation id

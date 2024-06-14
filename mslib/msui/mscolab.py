@@ -30,6 +30,7 @@
     limitations under the License.
 """
 import os
+import io
 import sys
 import json
 import hashlib
@@ -51,9 +52,12 @@ from mslib.msui import mscolab_chat as mc
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
+from mslib.mscolab.file_manager import FileManager
 
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtGui import QPixmap
 
 from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
 from mslib.utils.verify_user_token import verify_user_token
@@ -694,6 +698,27 @@ class MSUIMscolab(QtCore.QObject):
             self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
     def fetch_gravatar(self, refresh=False):
+        # Display custom profile picture if exists
+        from mslib.mscolab.server import APP
+        with APP.app_context():
+            fm = FileManager(APP.config["MSCOLAB_DATA_DIR"])    
+            img_data = fm.fetch_user_profile_image(self.user["id"])
+            if img_data:
+                img_byte_arr = io.BytesIO(img_data)
+                pixmap = QPixmap()
+                pixmap.loadFromData(img_byte_arr.getvalue())
+
+                if hasattr(self, 'profile_dialog'):
+                    self.profile_dialog.gravatarLabel.setPixmap(pixmap)
+                
+                # set icon for user options toolbutton
+                icon = QtGui.QIcon()
+                icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)                
+                self.ui.userOptionsTb.setIcon(icon)
+                return
+
+
+        # Display default gravatar if custom pfp is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
         gravatar_img_path = fs.path.join(constants.GRAVATAR_DIR_PATH, f"{email_hash}.png")
@@ -798,6 +823,7 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
+        self.profile_dialog.uploadImageBtn.clicked.connect(self.upload_image)
 
         # add context menu for right click on image
         self.gravatar_menu = QtWidgets.QMenu()
@@ -808,6 +834,39 @@ class MSUIMscolab(QtCore.QObject):
 
         self.prof_diag.show()
         self.fetch_gravatar()
+
+
+    def upload_image(self):
+        file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        if file_name:
+            # Load, resize and display the image
+            image = Image.open(file_name)
+            image = image.resize((64, 64), Image.ANTIALIAS)
+            img_byte_arr = io.BytesIO()
+            image.save(img_byte_arr, format='PNG')
+            img_byte_arr.seek(0)
+
+            # Display image on QLabel
+            pixmap = QPixmap()
+            pixmap.loadFromData(img_byte_arr.getvalue())
+            self.profile_dialog.gravatarLabel.setPixmap(pixmap)
+
+            # Prepare data for upload
+            img_byte_arr.seek(0)  
+            files = {'image': ('profile_image.png', img_byte_arr, 'image/png')}
+            data = {'user_id': str(self.user["id"])}
+            
+            # Sending the request
+            try:
+                url = urljoin(self.mscolab_server_url, 'upload_profile_image')
+                response = requests.post(url, files=files, data=data)   
+                if response.status_code == 200:
+                    QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
+                else:
+                    QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
+            except requests.exceptions.RequestException as e:
+                QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
+
 
     def delete_account(self):
         # ToDo rename to delete_own_account

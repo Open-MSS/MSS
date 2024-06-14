@@ -351,6 +351,21 @@ def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
+@APP.route('/upload_profile_image', methods=["POST"])
+def upload_profile_image():
+    user_id = request.form['user_id']
+    file = request.files['image']
+
+    if file:
+        success, message = fm.save_user_profile_image(user_id, file.read())
+        if success:
+            return jsonify({'message': message}), 200
+        else:
+            return jsonify({'message': message}), 400
+    else:
+        return jsonify({'message': 'No file provided'}), 400
+
+
 @APP.route("/delete_own_account", methods=["POST"])
 @verify_user
 def delete_own_account():
