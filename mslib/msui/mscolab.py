@@ -701,7 +701,7 @@ class MSUIMscolab(QtCore.QObject):
         # Display custom profile picture if exists
         from mslib.mscolab.server import APP
         with APP.app_context():
-            fm = FileManager(APP.config["MSCOLAB_DATA_DIR"])    
+            fm = FileManager(APP.config["MSCOLAB_DATA_DIR"])
             img_data = fm.fetch_user_profile_image(self.user["id"])
             if img_data:
                 img_byte_arr = io.BytesIO(img_data)
@@ -710,13 +710,12 @@ class MSUIMscolab(QtCore.QObject):
 
                 if hasattr(self, 'profile_dialog'):
                     self.profile_dialog.gravatarLabel.setPixmap(pixmap)
-                
+
                 # set icon for user options toolbutton
                 icon = QtGui.QIcon()
-                icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)                
+                icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
                 self.ui.userOptionsTb.setIcon(icon)
                 return
-
 
         # Display default gravatar if custom pfp is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
@@ -835,7 +834,6 @@ class MSUIMscolab(QtCore.QObject):
         self.prof_diag.show()
         self.fetch_gravatar()
 
-
     def upload_image(self):
         file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
         if file_name:
@@ -855,7 +853,7 @@ class MSUIMscolab(QtCore.QObject):
             img_byte_arr.seek(0)
             files = {'image': ('profile_image.png', img_byte_arr, 'image/png')}
             data = {'user_id': str(self.user["id"])}
-            
+
             # Sending the request
             try:
                 url = urljoin(self.mscolab_server_url, 'upload_profile_image')
@@ -866,7 +864,6 @@ class MSUIMscolab(QtCore.QObject):
                     QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
             except requests.exceptions.RequestException as e:
                 QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
-
 
     def delete_account(self):
         # ToDo rename to delete_own_account
