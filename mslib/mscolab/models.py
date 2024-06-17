@@ -66,11 +66,11 @@ class User(db.Model):
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
-    def __init__(self, emailid, username, password, profile_img, confirmed=False, confirmed_on=None, authentication_backend='local'):
+    def __init__(self, emailid, username, password, profile_image=None, confirmed=False, confirmed_on=None, authentication_backend='local'):
         self.username = username
         self.emailid = emailid
         self.hash_password(password)
-        self.profile_image = profile_img
+        self.profile_image = profile_image
         self.registered_on = datetime.datetime.now(tz=datetime.timezone.utc)
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on

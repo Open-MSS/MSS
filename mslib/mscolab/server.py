@@ -355,7 +355,6 @@ def get_user():
 def upload_profile_image():
     user_id = request.form['user_id']
     file = request.files['image']
-
     if file:
         success, message = fm.save_user_profile_image(user_id, file.read())
         if success:

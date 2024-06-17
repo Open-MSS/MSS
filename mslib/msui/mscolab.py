@@ -852,14 +852,14 @@ class MSUIMscolab(QtCore.QObject):
             self.profile_dialog.gravatarLabel.setPixmap(pixmap)
 
             # Prepare data for upload
-            img_byte_arr.seek(0)  
+            img_byte_arr.seek(0)
             files = {'image': ('profile_image.png', img_byte_arr, 'image/png')}
             data = {'user_id': str(self.user["id"])}
             
             # Sending the request
             try:
                 url = urljoin(self.mscolab_server_url, 'upload_profile_image')
-                response = requests.post(url, files=files, data=data)   
+                response = requests.post(url, files=files, data=data)
                 if response.status_code == 200:
                     QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
                 else:
