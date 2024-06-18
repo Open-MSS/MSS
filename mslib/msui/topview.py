@@ -94,6 +94,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         self.cbDrawFlightTrack.setChecked(settings["draw_flighttrack"])
         self.cbDrawMarker.setChecked(settings["draw_marker"])
         self.cbLabelFlightTrack.setChecked(settings["label_flighttrack"])
+        self.sbLineThickness.setValue(settings.get("line_thickness", 1))
 
         for button, ids in [(self.btWaterColour, "colour_water"),
                             (self.btLandColour, "colour_land"),
@@ -133,6 +134,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
             "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
+            "line_thickness": self.sbLineThickness.value(),
 
             "colour_water":
                 QtGui.QPalette(self.btWaterColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
