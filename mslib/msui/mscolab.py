@@ -52,7 +52,6 @@ from mslib.msui import mscolab_chat as mc
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
-from mslib.mscolab.file_manager import FileManager
 
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -699,25 +698,24 @@ class MSUIMscolab(QtCore.QObject):
 
     def fetch_gravatar(self, refresh=False):
         # Display custom profile picture if exists
-        from mslib.mscolab.server import APP
-        with APP.app_context():
-            fm = FileManager(APP.config["MSCOLAB_DATA_DIR"])
-            img_data = fm.fetch_user_profile_image(self.user["id"])
-            if img_data:
-                img_byte_arr = io.BytesIO(img_data)
-                pixmap = QPixmap()
-                pixmap.loadFromData(img_byte_arr.getvalue())
+        url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
+        data = {'user_id': str(self.user["id"])}
+        response = requests.get(url, data=data)
+        if response.status_code == 200:
+            img_data = response.content
+            img_byte_arr = io.BytesIO(img_data)
+            pixmap = QPixmap()
+            pixmap.loadFromData(img_byte_arr.getvalue())
+            if hasattr(self, 'profile_dialog'):
+                self.profile_dialog.gravatarLabel.setPixmap(pixmap)
+            icon = QtGui.QIcon()
+            icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.ui.userOptionsTb.setIcon(icon)
+        else:
+            self.display_default_gravatar(refresh)
 
-                if hasattr(self, 'profile_dialog'):
-                    self.profile_dialog.gravatarLabel.setPixmap(pixmap)
-
-                # set icon for user options toolbutton
-                icon = QtGui.QIcon()
-                icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
-                self.ui.userOptionsTb.setIcon(icon)
-                return
-
-        # Display default gravatar if custom pfp is not set
+    def display_default_gravatar(self, refresh):
+        # Display default gravatar if custom profile image is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
         gravatar_img_path = fs.path.join(constants.GRAVATAR_DIR_PATH, f"{email_hash}.png")
@@ -835,7 +833,7 @@ class MSUIMscolab(QtCore.QObject):
         self.fetch_gravatar()
 
     def upload_image(self):
-        file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.bmp)")
+        file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)")
         if file_name:
             # Load, resize and display the image
             image = Image.open(file_name)
@@ -852,7 +850,10 @@ class MSUIMscolab(QtCore.QObject):
             # Prepare data for upload
             img_byte_arr.seek(0)
             files = {'image': ('profile_image.png', img_byte_arr, 'image/png')}
-            data = {'user_id': str(self.user["id"])}
+            data = {
+                "user_id": str(self.user["id"]),
+                "token": self.token
+            }
 
             # Sending the request
             try:

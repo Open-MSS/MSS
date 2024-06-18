@@ -76,6 +76,12 @@ class default_mscolab_settings:
     # used to generate the password token
     SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
 
+    # Max allowed file size for uploading user profile image
+    MAX_IMAGE_SIZE = 1 * 1024 * 1024  # 1MB
+
+    # Allowed file extensions for uploading user profile image
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
+
     STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
     <FlightTrack version="1.7.6">
       <ListOfWaypoints>

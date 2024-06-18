@@ -197,6 +197,11 @@ def verify_user(func):
     return wrapper
 
 
+def allowed_file(filename):
+    """ Check if the uploaded file is in the allowed set of extensions """
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in mscolab_settings.ALLOWED_EXTENSIONS
+
+
 def get_idp_entity_id(selected_idp):
     """
     Finds the entity_id from the configured IDPs
@@ -352,17 +357,37 @@ def get_user():
 
 
 @APP.route('/upload_profile_image', methods=["POST"])
+@verify_user
 def upload_profile_image():
     user_id = request.form['user_id']
     file = request.files['image']
-    if file:
-        success, message = fm.save_user_profile_image(user_id, file.read())
-        if success:
-            return jsonify({'message': message}), 200
+    if file and allowed_file(file.filename):
+        if file.mimetype.startswith('image/'):
+            try:
+                data = file.read()
+                if len(data) > mscolab_settings.MAX_IMAGE_SIZE:
+                    return jsonify({'message': 'File too large'}), 413
+                success, message = fm.save_user_profile_image(user_id, data)
+                if success:
+                    return jsonify({'message': message}), 200
+                else:
+                    return jsonify({'message': message}), 400
+            except Exception as e:
+                return jsonify({'message': str(e)}), 500
         else:
-            return jsonify({'message': message}), 400
+            return jsonify({'message': 'Invalid file type'}), 400
     else:
-        return jsonify({'message': 'No file provided'}), 400
+        return jsonify({'message': 'No file provided or invalid file type'}), 400
+
+
+@APP.route('/fetch_profile_image', methods=["GET"])
+def fetch_profile_image():
+    user_id = request.form['user_id']
+    image_data = fm.fetch_user_profile_image(user_id)
+    if image_data:
+        return Response(image_data, mimetype='image/png')
+    else:
+        return 404
 
 
 @APP.route("/delete_own_account", methods=["POST"])
