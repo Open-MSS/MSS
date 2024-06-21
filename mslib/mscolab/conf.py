@@ -68,19 +68,13 @@ class default_mscolab_settings:
 
     # mscolab file upload settings
     UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
-    MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
+    MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MiB
 
     # used to generate and parse tokens
     SECRET_KEY = secrets.token_urlsafe(16)
 
     # used to generate the password token
     SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
-
-    # Max allowed file size for uploading user profile image
-    MAX_IMAGE_SIZE = 1 * 1024 * 1024  # 1MB
-
-    # Allowed file extensions for uploading user profile image
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
     STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
     <FlightTrack version="1.7.6">

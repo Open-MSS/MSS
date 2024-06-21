@@ -699,17 +699,22 @@ class MSUIMscolab(QtCore.QObject):
     def fetch_gravatar(self, refresh=False):
         # Display custom profile picture if exists
         url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
-        data = {'user_id': str(self.user["id"])}
+        data = {
+            "user_id": str(self.user["id"]),
+            "token": self.token
+        }
         response = requests.get(url, data=data)
         if response.status_code == 200:
             img_data = response.content
-            img_byte_arr = io.BytesIO(img_data)
             pixmap = QPixmap()
-            pixmap.loadFromData(img_byte_arr.getvalue())
+            pixmap.loadFromData(img_data)
+
+            resized_pixmap = pixmap.scaled(64, 64)
+
             if hasattr(self, 'profile_dialog'):
-                self.profile_dialog.gravatarLabel.setPixmap(pixmap)
+                self.profile_dialog.gravatarLabel.setPixmap(resized_pixmap)
             icon = QtGui.QIcon()
-            icon.addPixmap(pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.ui.userOptionsTb.setIcon(icon)
         else:
             self.display_default_gravatar(refresh)
@@ -835,34 +840,34 @@ class MSUIMscolab(QtCore.QObject):
     def upload_image(self):
         file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)")
         if file_name:
-            # Load, resize and display the image
+            # Resize the image and load it into QPixmap
             image = Image.open(file_name)
             image = image.resize((64, 64), Image.ANTIALIAS)
             img_byte_arr = io.BytesIO()
             image.save(img_byte_arr, format='PNG')
             img_byte_arr.seek(0)
 
-            # Display image on QLabel
             pixmap = QPixmap()
             pixmap.loadFromData(img_byte_arr.getvalue())
-            self.profile_dialog.gravatarLabel.setPixmap(pixmap)
+            self.profile_dialog.gravatarLabel.setPixmap(pixmap.scaled(64, 64))
 
-            # Prepare data for upload
-            img_byte_arr.seek(0)
-            files = {'image': ('profile_image.png', img_byte_arr, 'image/png')}
-            data = {
-                "user_id": str(self.user["id"]),
-                "token": self.token
-            }
-
-            # Sending the request
+            # Prepare the file data for upload
             try:
+                img_byte_arr.seek(0)  # Reset buffer position
+                files = {'image': (os.path.basename(file_name), img_byte_arr, 'image/png')}
+                data = {
+                    "user_id": str(self.user["id"]),
+                    "token": self.token
+                }
                 url = urljoin(self.mscolab_server_url, 'upload_profile_image')
                 response = requests.post(url, files=files, data=data)
+
+                # Check response status
                 if response.status_code == 200:
                     QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
                 else:
                     QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
+
             except requests.exceptions.RequestException as e:
                 QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
 

@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
 import functools
 import json
 import logging
@@ -197,11 +198,6 @@ def verify_user(func):
     return wrapper
 
 
-def allowed_file(filename):
-    """ Check if the uploaded file is in the allowed set of extensions """
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in mscolab_settings.ALLOWED_EXTENSIONS
-
-
 def get_idp_entity_id(selected_idp):
     """
     Finds the entity_id from the configured IDPs
@@ -361,19 +357,15 @@ def get_user():
 def upload_profile_image():
     user_id = request.form['user_id']
     file = request.files['image']
-    if file and allowed_file(file.filename):
+    if file:
         if file.mimetype.startswith('image/'):
-            try:
-                data = file.read()
-                if len(data) > mscolab_settings.MAX_IMAGE_SIZE:
-                    return jsonify({'message': 'File too large'}), 413
-                success, message = fm.save_user_profile_image(user_id, data)
-                if success:
-                    return jsonify({'message': message}), 200
-                else:
-                    return jsonify({'message': message}), 400
-            except Exception as e:
-                return jsonify({'message': str(e)}), 500
+            if file.content_length > mscolab_settings.MAX_UPLOAD_SIZE:
+                return jsonify({'message': 'File too large'}), 413
+            success, message = fm.save_user_profile_image(user_id, file)
+            if success:
+                return jsonify({'message': message}), 200
+            else:
+                return jsonify({'message': message}), 400
         else:
             return jsonify({'message': 'Invalid file type'}), 400
     else:
@@ -381,11 +373,14 @@ def upload_profile_image():
 
 
 @APP.route('/fetch_profile_image', methods=["GET"])
+@verify_user
 def fetch_profile_image():
     user_id = request.form['user_id']
-    image_data = fm.fetch_user_profile_image(user_id)
-    if image_data:
-        return Response(image_data, mimetype='image/png')
+    user = User.query.get(user_id)
+    if user and user.profile_image_path:
+        directory = os.path.dirname(user.profile_image_path)
+        filename = os.path.basename(user.profile_image_path)
+        return send_from_directory(directory, filename)
     else:
         return 404
 

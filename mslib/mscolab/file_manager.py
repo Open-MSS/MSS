@@ -24,12 +24,16 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import os
+import secrets
+import time
 import datetime
 import fs
 import difflib
 import logging
 import git
 import threading
+from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
@@ -250,30 +254,41 @@ class FileManager:
             db.session.commit()
         return True
 
-    def save_user_profile_image(self, user_id, image_data):
+    def save_user_profile_image(self, user_id, image_file):
         """
-        Save the user's profile image to the database.
+        Save the user's profile image path to the database.
         """
-        user = User.query.get(user_id)
-        if user:
-            try:
-                user.profile_image = image_data
+        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        file_token = secrets.token_urlsafe(20)
+
+        with fs.open_fs('/') as home_fs:
+            file_dir = fs.path.join(upload_folder, 'profile')
+            # Checking if directory exists. Create the directory if it does not exist
+            if '\\' not in file_dir:
+                if not home_fs.exists(file_dir):
+                    home_fs.makedirs(file_dir)
+            else:
+                file_dir = file_dir.replace('\\', '/')
+                if not os.path.exists(file_dir):
+                    os.makedirs(file_dir)
+
+            # Creating unique and secure filename
+            file_name, file_ext = image_file.filename.rsplit('.', 1)
+            file_name = f'{user_id}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
+            file_name = secure_filename(file_name)
+
+            # Saving the file to the filepath
+            file_path = fs.path.join(file_dir, file_name)
+            image_file.save(file_path)
+
+            # Storing the file path to database
+            user = User.query.get(user_id)
+            if user:
+                user.profile_image_path = file_path
                 db.session.commit()
                 return True, "Image uploaded successfully"
-            except Exception as e:
-                db.session.rollback()
-                return False, f"An error occurred: {str(e)}"
-        else:
-            return False, "User not found"
-
-    def fetch_user_profile_image(self, user_id):
-        """
-        Fetch the profile image for a user from the database.
-        """
-        user = User.query.get(user_id)
-        if user and user.profile_image:
-            return user.profile_image
-        return None
+            else:
+                return False, "User not found"
 
     def update_operation(self, op_id, attribute, value, user):
         """
