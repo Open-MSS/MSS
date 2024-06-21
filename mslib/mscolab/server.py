@@ -359,7 +359,7 @@ def upload_profile_image():
     file = request.files['image']
     if file:
         if file.mimetype.startswith('image/'):
-            if file.content_length > mscolab_settings.MAX_UPLOAD_SIZE:
+            if file.content_length > mscolab_settings.MAX_IMAGE_SIZE:
                 return jsonify({'message': 'File too large'}), 413
             success, message = fm.save_user_profile_image(user_id, file)
             if success:
