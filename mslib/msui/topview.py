@@ -62,6 +62,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
     defined in "ui_topview_mapappearance.py".
     """
     signal_ft_vertices_color_change = QtCore.pyqtSignal(str, tuple)
+    signal_line_thickness_change = QtCore.pyqtSignal(float)  # New signal
 
     def __init__(self, parent=None, settings=None, wms_connected=False):
         """
@@ -94,7 +95,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         self.cbDrawFlightTrack.setChecked(settings["draw_flighttrack"])
         self.cbDrawMarker.setChecked(settings["draw_marker"])
         self.cbLabelFlightTrack.setChecked(settings["label_flighttrack"])
-        self.sbLineThickness.setValue(settings.get("line_thickness", 1))
+        self.sbLineThickness.setValue(settings.get("line_thickness", 2))
 
         for button, ids in [(self.btWaterColour, "colour_water"),
                             (self.btLandColour, "colour_land"),
@@ -111,6 +112,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         self.btLandColour.clicked.connect(functools.partial(self.setColour, "land"))
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
+        self.sbLineThickness.valueChanged.connect(self.onLineThicknessChanged)  # Connect spinbox change
 
         # Shows previously selected element in the fontsize comboboxes as the current index.
         for i in range(self.tov_cbtitlesize.count()):
@@ -120,6 +122,9 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         for i in range(self.tov_cbaxessize.count()):
             if self.tov_cbaxessize.itemText(i) == settings["tov_axes_label_size"]:
                 self.tov_cbaxessize.setCurrentIndex(i)
+
+    def onLineThicknessChanged(self, value):
+        self.signal_line_thickness_change.emit(value)  # Emit the signal
 
     def get_settings(self):
         """
@@ -135,7 +140,6 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
             "line_thickness": self.sbLineThickness.value(),
-
             "colour_water":
                 QtGui.QPalette(self.btWaterColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_land":
@@ -423,11 +427,17 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         dlg = MSUI_TV_MapAppearanceDialog(parent=self, settings=settings, wms_connected=self.wms_connected)
         dlg.setModal(False)
         dlg.signal_ft_vertices_color_change.connect(self.set_ft_vertices_color)
+        dlg.signal_line_thickness_change.connect(self.set_line_thickness)  # Connect to new signal
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_settings(settings, save=True)
             self.mpl.canvas.waypoints_interactor.redraw_path()
         dlg.destroy()
+
+    def set_line_thickness(self, thickness):
+        """Set the line thickness of the plot."""
+        self.mpl.canvas.waypoints_interactor.set_line_thickness(thickness)
+        self.mpl.canvas.draw()
 
     @QtCore.pyqtSlot(str, tuple)
     def set_ft_vertices_color(self, which, color):
