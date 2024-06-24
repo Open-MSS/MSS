@@ -42,7 +42,7 @@ requirements:
     - requests >=2.31.0
     - scipy
     - skyfield >=1.12
-    - skyfield-data >=5
+    - skyfield-data >=6
     - tk
     - owslib >=0.24
     - unicodecsv
