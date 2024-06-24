@@ -85,7 +85,6 @@ def setup_logging(args):
             logger.addHandler(fh)
 
 
-
 # modified Version from minidom, https://github.com/python/cpython/blob/2.7/Lib/xml/dom/minidom.py
 # MSS needed to change all writings as unicode not str
 from xml.dom.minidom import _write_data, Node
