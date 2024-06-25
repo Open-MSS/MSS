@@ -549,30 +549,30 @@ INSTANCE is a placeholder for your service name::
  │       ├── auth.wsgi
  │       └── wms.wsgi
  ├── miniforge
- │         ├── bin
- │         ├── cmake
- │         ├── compiler_compat
- │         ├── _conda
- │         ├── condabin
- │         ├── conda-bld
- │         ├── conda_build_config.yaml
- │         ├── conda-meta
- │         ├── envs
- │         │    └── mssenv
- │         ├── etc
- │         ├── include
- │         ├── lib
- │         ├── libexec
- │         ├── LICENSE.txt
- │         ├── locks
- │         ├── man
- │         ├── pkgs
- │         ├── sbin
- │         ├── share
- │         ├── shell
- │         ├── ssl
- │         ├── x86_64-conda_cos6-linux-gnu
- │         └── x86_64-conda-linux-gnu
+ │   ├── bin
+ │   ├── cmake
+ │   ├── compiler_compat
+ │   ├── _conda
+ │   ├── condabin
+ │   ├── conda-bld
+ │   ├── conda_build_config.yaml
+ │   ├── conda-meta
+ │   ├── envs
+ │   │    └── mssenv
+ │   ├── etc
+ │   ├── include
+ │   ├── lib
+ │   ├── libexec
+ │   ├── LICENSE.txt
+ │   ├── locks
+ │   ├── man
+ │   ├── pkgs
+ │   ├── sbin
+ │   ├── share
+ │   ├── shell
+ │   ├── ssl
+ │   ├── x86_64-conda_cos6-linux-gnu
+ │   └── x86_64-conda-linux-gnu
 
 
 
