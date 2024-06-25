@@ -451,7 +451,7 @@
      <property name="frameShadow">
       <enum>QFrame::Raised</enum>
      </property>
-     <widget class="QSlider" name="horizontalSlider">
+     <widget class="QSlider" name="hsTransparencyControl">
       <property name="geometry">
        <rect>
         <x>10</x>
@@ -492,7 +492,7 @@
       <property name="title">
        <string>Flight path option</string>
       </property>
-      <widget class="QComboBox" name="comboBox">
+      <widget class="QComboBox" name="cbLineStyle">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -501,26 +501,6 @@
          <height>22</height>
         </rect>
        </property>
-       <item>
-        <property name="text">
-         <string>default (solid line)</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>dashed line</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>dotted</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>dashdot</string>
-        </property>
-       </item>
       </widget>
       <widget class="QLabel" name="label_4">
        <property name="geometry">
@@ -551,7 +531,7 @@
         <set>Qt::AlignBottom|Qt::AlignHCenter</set>
        </property>
       </widget>
-      <widget class="QDoubleSpinBox" name="doubleSpinBox">
+      <widget class="QDoubleSpinBox" name="sbLineThickness">
        <property name="geometry">
         <rect>
          <x>10</x>
@@ -563,7 +543,7 @@
       </widget>
      </widget>
      <zorder>groupBox_2</zorder>
-     <zorder>horizontalSlider</zorder>
+     <zorder>hsTransparencyControl</zorder>
      <zorder>label_3</zorder>
     </widget>
    </item>

@@ -63,6 +63,8 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
     """
     signal_ft_vertices_color_change = QtCore.pyqtSignal(str, tuple)
     signal_line_thickness_change = QtCore.pyqtSignal(float)  # New signal
+    signal_line_style_change = QtCore.pyqtSignal(str)  # New signal
+    signal_transparency_change = QtCore.pyqtSignal(float)  # New signal
 
     def __init__(self, parent=None, settings=None, wms_connected=False):
         """
@@ -96,6 +98,9 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         self.cbDrawMarker.setChecked(settings["draw_marker"])
         self.cbLabelFlightTrack.setChecked(settings["label_flighttrack"])
         self.sbLineThickness.setValue(settings.get("line_thickness", 2))
+        self.cbLineStyle.addItems(["Solid", "Dashed", "Dotted", "Dash-dot"])  # Item added in the list
+        self.cbLineStyle.setCurrentText(settings.get("line_style", "Solid"))
+        self.hsTransparencyControl.setValue(settings.get("transparency", 100))
 
         for button, ids in [(self.btWaterColour, "colour_water"),
                             (self.btLandColour, "colour_land"),
@@ -113,6 +118,8 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
         self.btWaypointsColour.clicked.connect(functools.partial(self.setColour, "ft_waypoints"))
         self.btVerticesColour.clicked.connect(functools.partial(self.setColour, "ft_vertices"))
         self.sbLineThickness.valueChanged.connect(self.onLineThicknessChanged)  # Connect spinbox change
+        self.cbLineStyle.currentTextChanged.connect(self.onLineStyleChanged)
+        self.hsTransparencyControl.valueChanged.connect(self.onTransparencyChanged)  # Connect slider
 
         # Shows previously selected element in the fontsize comboboxes as the current index.
         for i in range(self.tov_cbtitlesize.count()):
@@ -125,6 +132,12 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
 
     def onLineThicknessChanged(self, value):
         self.signal_line_thickness_change.emit(value)  # Emit the signal
+
+    def onLineStyleChanged(self, value):
+        self.signal_line_style_change.emit(value)  # Emit the signal
+
+    def onTransparencyChanged(self, value):
+        self.signal_transparency_change.emit(value / 100.0)  # Emit the signal with normalized value
 
     def get_settings(self):
         """
@@ -140,6 +153,8 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             "tov_plot_title_size": self.tov_cbtitlesize.currentText(),
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
             "line_thickness": self.sbLineThickness.value(),
+            "line_style": self.cbLineStyle.currentText(),
+            "transparency": self.hsTransparencyControl.value(),
             "colour_water":
                 QtGui.QPalette(self.btWaterColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_land":
@@ -428,6 +443,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         dlg.setModal(False)
         dlg.signal_ft_vertices_color_change.connect(self.set_ft_vertices_color)
         dlg.signal_line_thickness_change.connect(self.set_line_thickness)  # Connect to new signal
+        dlg.signal_line_style_change.connect(self.set_line_style)  # Connect to new signal
+        dlg.signal_transparency_change.connect(self.set_line_transparency)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_settings(settings, save=True)
@@ -435,9 +452,18 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         dlg.destroy()
 
     def set_line_thickness(self, thickness):
-        """Set the line thickness of the plot."""
+        """Set the line thickness of the flight track."""
         self.mpl.canvas.waypoints_interactor.set_line_thickness(thickness)
         self.mpl.canvas.draw()
+
+    def set_line_style(self, style):
+        """Set the line style of the flight track"""
+        self.mpl.canvas.waypoints_interactor.set_line_style(style)
+        self.mpl.canvas.draw()
+
+    def set_line_transparency(self, transparency):
+        """Set the line transparency of the flight track"""
+        self.mpl.canvas.waypoints_interactor.set_line_transparency(transparency)
 
     @QtCore.pyqtSlot(str, tuple)
     def set_ft_vertices_color(self, which, color):
