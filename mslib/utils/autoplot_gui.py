@@ -1,4 +1,5 @@
 import sys
+import click
 from PyQt5.QtWidgets import (QApplication, QWidget, QFileDialog, QListWidgetItem,
                              QVBoxLayout, QPushButton, QLabel)
 from mslib.msui.qt5.ui_mss_autoplot import Ui_Form
@@ -129,7 +130,18 @@ class Upload(QWidget, Ui_Form):
 
     
     def storePlots(self):
-        autopl(self.cpath,"top","","","",0,"","")
+        args = [
+        "--cpath", self.cpath,
+        "--view", "",
+        "--ftrack", "",
+        "--itime", "",
+        "--vtime", "",
+        "--intv", 0,
+        "--stime", "",
+        "--etime", ""
+        ]
+        with click.Context(autopl):
+            autopl.main(args=args, prog_name="autoplot_gui")
 
 
         
