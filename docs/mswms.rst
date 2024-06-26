@@ -505,6 +505,13 @@ At current state we have to use pip to install mod_wsgi into the INSTANCE enviro
   $ sudo /full/path/to/installed/mod_wsgi-express install-module
 
 
+This command outputs two lines::
+
+  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so"
+  WSGIPythonHome "/home/mss-demo/miniforge/envs/mssenv"
+
+You have to add the lines into your wsgi_express.conf and wsgi_express.load
+
 Setup a /etc/apache2/mods-available/wsgi_express.conf::
 
   WSGIPythonHome "/home/mss-demo/miniforge/envs/mssenv/"
@@ -512,7 +519,7 @@ Setup a /etc/apache2/mods-available/wsgi_express.conf::
 
 Setup a /etc/apache2/mods-available/wsgi_express.load::
 
-  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py310.cpython-310m-x86_64-linux-gnu.so"
+  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so"
 
 Enable the new module by a2enmod and reload the apache2 server
 
