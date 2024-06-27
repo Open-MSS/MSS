@@ -454,12 +454,10 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def set_line_thickness(self, thickness):
         """Set the line thickness of the flight track."""
         self.mpl.canvas.waypoints_interactor.set_line_thickness(thickness)
-        self.mpl.canvas.draw()
 
     def set_line_style(self, style):
         """Set the line style of the flight track"""
         self.mpl.canvas.waypoints_interactor.set_line_style(style)
-        self.mpl.canvas.draw()
 
     def set_line_transparency(self, transparency):
         """Set the line transparency of the flight track"""
