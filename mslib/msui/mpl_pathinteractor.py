@@ -336,7 +336,7 @@ class PathPlotter:
     def __init__(self, ax, mplpath=None,
                  facecolor='blue', edgecolor='yellow',
                  linecolor='blue', markerfacecolor='red',
-                 marker='o', label_waypoints=True, line_thickness=2, line_style="Solid", transparency=1.0):
+                 marker='o', label_waypoints=True, line_thickness=2, line_style="Solid", line_transparency=1.0):
         """The constructor initializes the path patches, overlying line
            plot and connects matplotlib signals.
 
@@ -380,7 +380,7 @@ class PathPlotter:
         x, y = list(zip(*self.pathpatch.get_path().vertices))
         self.line, = self.ax.plot(x, y, color=linecolor,
                                   marker=marker, linewidth=line_thickness, linestyle=self.line_style_dict[line_style],
-                                  alpha=transparency,
+                                  alpha=line_transparency,
                                   markerfacecolor=markerfacecolor,
                                   animated=True)
 

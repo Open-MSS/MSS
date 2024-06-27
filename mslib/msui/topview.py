@@ -154,7 +154,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
             "tov_axes_label_size": self.tov_cbaxessize.currentText(),
             "line_thickness": self.sbLineThickness.value(),
             "line_style": self.cbLineStyle.currentText(),
-            "transparency": self.hsTransparencyControl.value(),
+            "line_transparency": self.hsTransparencyControl.value() / 100.0,
             "colour_water":
                 QtGui.QPalette(self.btWaterColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_land":
