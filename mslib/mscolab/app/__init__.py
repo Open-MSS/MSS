@@ -25,6 +25,7 @@
 """
 
 import os
+import sqlalchemy
 
 from flask_migrate import Migrate
 
@@ -62,8 +63,23 @@ APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
 APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
 APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
 
-db = SQLAlchemy(APP)
-migrate = Migrate(APP, db, render_as_batch=True)
+db = SQLAlchemy(
+    metadata=sqlalchemy.MetaData(
+        naming_convention={
+            # For reference: https://alembic.sqlalchemy.org/en/latest/naming.html#the-importance-of-naming-constraints
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(column_0_name)s",
+            "ck": "ck_%(table_name)s_`%(constraint_name)s`",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s",
+        },
+    ),
+)
+db.init_app(APP)
+import mslib.mscolab.models
+
+migrate = Migrate(render_as_batch=True, user_module_prefix="cu.")
+migrate.init_app(APP, db)
 
 
 def get_topmenu():
