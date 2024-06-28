@@ -153,6 +153,10 @@ by `pg_dump <https://www.postgresql.org/docs/current/app-pgdump.html>`_ using a 
 Data Base Migration from version 8
 ..................................
 
+.. important::
+   This manual migration on the server side by a user is deprecated and will become removed with version 10.0.0.
+   With version 10.0.0, the initialization of the database will be refactored and migrations will be performed automatically when mscolab is started
+
 For an easy way to update the database scheme we implemented  `flask migrate <https://flask-migrate.readthedocs.io/en/latest/>`_.
 
 You have to create based on your configuration a migration script and call that afterwards. ::
