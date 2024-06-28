@@ -46,9 +46,6 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y ffmpeg
-    - if: ${{ startsWith(matrix.os, 'macos') }}
-      run: |
-        brew install ffmpeg
     - name: Run tests
       timeout-minutes: 40
       # The ignored files can somehow cause the test suite to timeout.
