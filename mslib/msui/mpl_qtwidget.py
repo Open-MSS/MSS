@@ -1303,6 +1303,11 @@ class MplSideViewCanvas(MplCanvas):
                 patch_facecolor=settings["colour_ft_fill"])
             wpi_plotter.set_patch_visible(settings["fill_flighttrack"])
             wpi_plotter.set_labels_visible(settings["label_flighttrack"])
+            wpi_plotter.set_line_thickness(settings["line_thickness"])
+            wpi_plotter.set_line_style(settings["line_style"])
+            wpi_plotter.set_line_transparency(
+                settings["line_transparency"] / 100.0 if settings["line_transparency"] > 1 else settings[
+                    "line_transparency"])  # Normalize the (transparency) value
 
             if self.waypoints_model is not None \
                     and settings["draw_verticals"] != old_vertical_lines:

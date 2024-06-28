@@ -29,7 +29,7 @@
 import logging
 import functools
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 from mslib.msui.qt5 import ui_sideview_window as ui
 from mslib.msui.qt5 import ui_sideview_options as ui_opt
@@ -49,6 +49,9 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     Dialog to specify sideview options. User interface is specified
     in "ui_sideview_options.py".
     """
+    signal_line_thickness_change = QtCore.pyqtSignal(float)
+    signal_line_style_change = QtCore.pyqtSignal(str)
+    signal_transparency_change = QtCore.pyqtSignal(float)
 
     def __init__(self, parent=None, settings=None):
         """
@@ -98,6 +101,11 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.cbVerticalLines.setChecked(settings["draw_verticals"])
         self.cbDrawMarker.setChecked(settings["draw_marker"])
 
+        self.sbLineThickness.setValue(settings.get("line_thickness", 2))
+        self.cbLineStyle.addItems(["Solid", "Dashed", "Dotted", "Dash-dot"])  # Item added in the list
+        self.cbLineStyle.setCurrentText(settings.get("line_style", "Solid"))
+        self.hsTransparencyControl.setValue(int(settings.get("line_transparency", 1.0) * 100))
+
         for button, ids in [(self.btFillColour, "colour_ft_fill"),
                             (self.btWaypointsColour, "colour_ft_waypoints"),
                             (self.btVerticesColour, "colour_ft_vertices"),
@@ -119,6 +127,24 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         self.btDelete.clicked.connect(self.deleteSelected)
 
         self.tableWidget.itemChanged.connect(self.itemChanged)
+
+        # Store values instead of emitting signals immediately
+        self.line_thickness = settings.get("line_thickness", 2)
+        self.line_style = settings.get("line_style", "Solid")
+        self.line_transparency = settings.get("line_transparency", 1.0)
+
+        self.sbLineThickness.valueChanged.connect(self.onLineThicknessChanged)
+        self.cbLineStyle.currentTextChanged.connect(self.onLineStyleChanged)
+        self.hsTransparencyControl.valueChanged.connect(self.onTransparencyChanged)
+
+    def onLineThicknessChanged(self, value):
+        self.line_thickness = value
+
+    def onLineStyleChanged(self, value):
+        self.line_style = value
+
+    def onTransparencyChanged(self, value):
+        self.line_transparency = value / 100
 
     def setBotTopLimits(self, axis_type):
         bot, top = {
@@ -215,6 +241,9 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             "draw_flighttrack": self.cbDrawFlightTrack.isChecked(),
             "fill_flighttrack": self.cbFillFlightTrack.isChecked(),
             "label_flighttrack": self.cbLabelFlightTrack.isChecked(),
+            "line_thickness": self.line_thickness,
+            "line_style": self.line_style,
+            "line_transparency": self.line_transparency,
             "colour_ft_vertices":
                 QtGui.QPalette(self.btVerticesColour.palette()).color(QtGui.QPalette.Button).getRgbF(),
             "colour_ft_waypoints":
@@ -318,7 +347,26 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         settings = self.getView().get_settings()
         dlg = MSUI_SV_OptionsDialog(parent=self, settings=settings)
         dlg.setModal(True)
+        dlg.signal_line_thickness_change.connect(self.set_line_thickness)  # Connect to signal
+        dlg.signal_line_style_change.connect(self.set_line_style)
+        dlg.signal_transparency_change.connect(self.set_line_transparency)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_settings(settings, save=True)
+            self.set_line_thickness(settings["line_thickness"])
+            self.set_line_style(settings["line_style"])
+            self.set_line_transparency(settings["line_transparency"])
+            settings.update(settings)
         dlg.destroy()
+
+    def set_line_thickness(self, thickness):
+        """Set the line thickness of the flight track."""
+        self.mpl.canvas.waypoints_interactor.set_line_thickness(thickness)
+
+    def set_line_style(self, style):
+        """Set the line style of the flight track"""
+        self.mpl.canvas.waypoints_interactor.set_line_style(style)
+
+    def set_line_transparency(self, transparency):
+        """Set the line transparency of the flight track"""
+        self.mpl.canvas.waypoints_interactor.set_line_transparency(transparency)

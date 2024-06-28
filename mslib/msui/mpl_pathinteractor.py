@@ -961,6 +961,23 @@ class VPathInteractor(PathInteractor):
         self.clear_figure = clear_figure
         super().__init__(plotter=plotter, waypoints=waypoints)
 
+    def set_line_thickness(self, thickness):
+        """Set the thickness of the line representing the flight track."""
+        self.plotter.line.set_linewidth(thickness)
+        self.redraw_figure()
+
+    def set_line_style(self, style):
+        """Set the style of the line representing the flight track."""
+        line_style_dict = self.plotter.get_line_style_dict()
+        if style in line_style_dict:
+            self.plotter.set_line_style(style)
+            self.redraw_figure()
+
+    def set_line_transparency(self, transparency):
+        """Set the transparency of the line representing the flight track."""
+        self.plotter.line.set_alpha(transparency)
+        self.redraw_figure()
+
     def redraw_figure(self):
         """For the side view, changes in the horizontal position of a waypoint
            (including moved waypoints, new or deleted waypoints) make a complete
