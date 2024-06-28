@@ -306,7 +306,7 @@ def handle_local_idp_metadata_init(repo_exists):
         with open(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml"),
                   "w", encoding="utf-8") as output_file:
             subprocess.run(cmd, stdout=output_file, check=True)
-        logging.info("idp metadata file generated succesfully")
+        logging.info("idp metadata file generated successfully")
         return True
     except subprocess.CalledProcessError as error:
         # Delete the idp.xml file when the subprocess fails

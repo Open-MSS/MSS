@@ -318,7 +318,7 @@ class MapCanvas(basemap.Basemap):
 
     def set_graticule_visible(self, visible=True):
         """
-        Set the visibily of the graticule.
+        Set the visibility of the graticule.
 
         Removes a currently visible graticule by deleting internally stored
         line and text objects representing graticule lines and labels, then
