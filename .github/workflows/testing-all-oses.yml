@@ -95,16 +95,10 @@ jobs:
       #   --ignore=tests/_test_msui/test_topview.py
       #   --ignore=tests/_test_msui/test_wms_control.py
       #   tests
-      run: /usr/sbin/screencapture -V 30 recording.mov
+      run: /usr/sbin/screencapture -V 30 recording.mp4
     - name: Upload recording
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}-recording-mp4
         path: recording.mp4
-    - name: Upload recording
-      if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.os }}-recording-mov
-        path: recording.mov
