@@ -9,6 +9,6 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     recording_pid=$!
 fi
 
-trap 'kill $recording_pid' EXIT
+trap 'kill -INT $recording_pid' EXIT
 
 "$@"
