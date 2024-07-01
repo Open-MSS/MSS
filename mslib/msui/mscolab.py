@@ -678,7 +678,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.usernameLabel.setText(f"{self.user['username']}")
             self.ui.usernameLabel.show()
             self.ui.userOptionsTb.show()
-            self.fetch_gravatar()
+            self.fetch_profile_image()
             # enable add operation menu action
             self.ui.actionAddOperation.setEnabled(True)
 
@@ -696,7 +696,7 @@ class MSUIMscolab(QtCore.QObject):
 
             self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
-    def fetch_gravatar(self, refresh=False):
+    def fetch_profile_image(self, refresh=False):
         # Display custom profile picture if exists
         url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
         data = {
@@ -717,9 +717,9 @@ class MSUIMscolab(QtCore.QObject):
             icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.ui.userOptionsTb.setIcon(icon)
         else:
-            self.display_default_gravatar(refresh)
+            self.fetch_gravatar(refresh)
 
-    def display_default_gravatar(self, refresh):
+    def fetch_gravatar(self, refresh):
         # Display default gravatar if custom profile image is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
@@ -829,13 +829,13 @@ class MSUIMscolab(QtCore.QObject):
 
         # add context menu for right click on image
         self.gravatar_menu = QtWidgets.QMenu()
-        self.gravatar_menu.addAction('Fetch Gravatar', lambda: self.fetch_gravatar(refresh=True))
+        self.gravatar_menu.addAction('Fetch Gravatar', lambda: self.fetch_profile_image(refresh=True))
         self.gravatar_menu.addAction('Remove Gravatar', lambda: self.remove_gravatar())
         self.profile_dialog.gravatarLabel.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.profile_dialog.gravatarLabel.customContextMenuRequested.connect(on_context_menu)
 
         self.prof_diag.show()
-        self.fetch_gravatar()
+        self.fetch_profile_image()
 
     def upload_image(self):
         file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)")

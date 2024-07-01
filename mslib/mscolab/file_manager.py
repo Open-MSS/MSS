@@ -37,6 +37,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
+from mimetypes import guess_extension
 
 
 class FileManager:
@@ -261,7 +262,6 @@ class FileManager:
         """
         with fs.open_fs('/') as home_fs:
             file_dir = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
-
             if '\\' not in file_dir:
                 if not home_fs.exists(file_dir):
                     home_fs.makedirs(file_dir)
@@ -271,15 +271,16 @@ class FileManager:
                     os.makedirs(file_dir)
 
             # Creating unique and secure filename
-            file_name, file_ext = file.filename.rsplit('.', 1)
+            file_name, _ = file.filename.rsplit('.', 1)
+            file_ext = guess_extension(file.mimetype) or '.unknown'
 
             token = file_token if file_token else secrets.token_urlsafe(32)
             timestamp = time.strftime("%Y%m%dT%H%M%S")
 
             if identifier:
-                file_name = f'{identifier}-{timestamp}-{token}.{file_ext}'
+                file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
             else:
-                file_name = f'{file_name}-{timestamp}-{token}.{file_ext}'
+                file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
             file_name = secure_filename(file_name)
 
             # Saving the file
