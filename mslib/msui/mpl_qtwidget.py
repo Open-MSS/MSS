@@ -1280,6 +1280,17 @@ class MplSideViewCanvas(MplCanvas):
     def set_settings(self, settings, save=False):
         """Apply settings to view.
         """
+        if settings is None:
+            settings = self.plotter.get_settings()
+            settings.setdefault("line_thickness", 2)
+            settings.setdefault("line_style", "Solid")
+            settings.setdefault("line_transparency", 1.0)
+            settings.setdefault("colour_ft_vertices", "blue")
+            settings.setdefault("colour_ft_waypoints", "red")
+            settings.setdefault("draw_marker", True)
+            settings.setdefault("draw_flighttrack", True)
+            settings.setdefault("label_flighttrack", True)
+
         old_vertical_lines = self.plotter.settings["draw_verticals"]
         if settings is not None:
             self.plotter.set_settings(settings, save)
