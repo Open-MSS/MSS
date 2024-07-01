@@ -42,12 +42,63 @@ jobs:
         cache-environment: true
         # Set the cache key in a way that the cache is invalidated every week on monday
         cache-environment-key: environment-${{ steps.year-and-week.outputs.year-and-week }}
+    - if: ${{ startsWith(matrix.os, 'ubuntu') }}
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ffmpeg
+    - name: Fix screen capture permissions
+      if: ${{ startsWith(matrix.os, 'macos') }}
+      run: |
+        # https://apple.stackexchange.com/questions/362865/macos-list-apps-authorized-for-full-disk-access
+
+        # permissions for screen capture
+        values="'kTCCServiceScreenCapture','/opt/off/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159"
+        if [[ "${{ matrix.os }}" == "macos-14" ]]; then
+          # TCC access table in Sonoma has extra 4 columns: pid, pid_version, boot_uuid, last_reminded
+          values="${values},NULL,NULL,'UNUSED',${values##*,}"
+        fi
+
+        # system and user databases
+        dbPaths=(
+          "/Library/Application Support/com.apple.TCC/TCC.db"
+          "$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+        )
+
+        sqlQuery="INSERT OR IGNORE INTO access VALUES($values);"
+
+        for dbPath in "${dbPaths[@]}"; do
+          echo "Column names for $dbPath"
+          echo "-------------------"
+          sudo sqlite3 "$dbPath" "PRAGMA table_info(access);"
+          echo "Current permissions for $dbPath"
+          echo "-------------------"
+          sudo sqlite3 "$dbPath" "SELECT * FROM access WHERE service='kTCCServiceScreenCapture';"
+          sudo sqlite3 "$dbPath" "$sqlQuery"
+          echo "Updated permissions for $dbPath"
+          echo "-------------------"
+          sudo sqlite3 "$dbPath" "SELECT * FROM access WHERE service='kTCCServiceScreenCapture';"
+        done
     - name: Run tests
-      timeout-minutes: 40
+      timeout-minutes: 1
       # The ignored files can somehow cause the test suite to timeout.
       # I have no idea yet on why this happens and how to fix it.
       # Even a module level skip is not enough, they need to be completely ignored.
       # TODO: fix those tests and drop the ignores
-      run: micromamba run -n ci env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib
-        --ignore=tests/_test_msui/test_sideview.py --ignore=tests/_test_msui/test_topview.py --ignore=tests/_test_msui/test_wms_control.py
-        tests
+      # run: micromamba run -n ci
+      #   ${{ (startsWith(matrix.os, 'ubuntu') && 'xvfb-run -n 99') || ' ' }}
+      #   ./with-recording
+      #   pytest -v
+      #   -n logical
+      #   --durations=20
+      #   --cov=mslib
+      #   --ignore=tests/_test_msui/test_sideview.py
+      #   --ignore=tests/_test_msui/test_topview.py
+      #   --ignore=tests/_test_msui/test_wms_control.py
+      #   tests
+      run: ${{ (startsWith(matrix.os, 'ubuntu') && 'xvfb-run -n 99') || ' ' }} ./with-recording sleep 30
+    - name: Upload recording
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}-recording-mp4
+        path: recording.mp4

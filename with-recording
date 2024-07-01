@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euxo pipefail
+
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    ffmpeg -framerate 25 -f x11grab -i :99 recording.mp4 &
+    recording_pid=$!
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    /usr/sbin/screencapture -V 1800 recording.mp4 &
+    recording_pid=$!
+fi
+
+trap 'kill -INT $recording_pid' EXIT
+
+"$@"
