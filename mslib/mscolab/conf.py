@@ -70,6 +70,9 @@ class default_mscolab_settings:
     UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
     MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MiB
 
+    # Sub-folder for storing user profile images
+    PROFILE_IMG_FOLDER = os.path.join(UPLOAD_FOLDER, 'profile')
+
     # used to generate and parse tokens
     SECRET_KEY = secrets.token_urlsafe(16)
 

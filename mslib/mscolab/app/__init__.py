@@ -51,6 +51,7 @@ APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
 APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['SQLALCHEMY_ECHO'] = mscolab_settings.SQLALCHEMY_ECHO
 APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
+APP.config['PROFILE_IMG_FOLDER'] = mscolab_settings.PROFILE_IMG_FOLDER
 APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
 APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
 APP.config['SECURITY_PASSWORD_SALT'] = getattr(mscolab_settings, "SECURITY_PASSWORD_SALT", None)
