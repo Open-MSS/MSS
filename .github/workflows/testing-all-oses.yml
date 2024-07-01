@@ -79,7 +79,7 @@ jobs:
           sudo sqlite3 "$dbPath" "SELECT * FROM access WHERE service='kTCCServiceScreenCapture';"
         done
     - name: Run tests
-      timeout-minutes: 40
+      timeout-minutes: 1
       # The ignored files can somehow cause the test suite to timeout.
       # I have no idea yet on why this happens and how to fix it.
       # Even a module level skip is not enough, they need to be completely ignored.
@@ -95,7 +95,7 @@ jobs:
       #   --ignore=tests/_test_msui/test_topview.py
       #   --ignore=tests/_test_msui/test_wms_control.py
       #   tests
-      run: /usr/sbin/screencapture -V 30 -C -k -T0 -g -m recording.mov
+      run: /usr/sbin/screencapture -V 30 recording.mov
     - name: Upload recording
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
