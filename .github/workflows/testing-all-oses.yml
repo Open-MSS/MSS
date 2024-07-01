@@ -46,6 +46,38 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y ffmpeg
+    - name: Fix screen capture permissions
+      if: ${{ startsWith(matrix.os, 'macos') }}
+      run: |
+        # https://apple.stackexchange.com/questions/362865/macos-list-apps-authorized-for-full-disk-access
+
+        # permissions for screen capture
+        values="'kTCCServiceScreenCapture','/opt/off/opt/runner/provisioner/provisioner',1,2,4,1,NULL,NULL,0,'UNUSED',NULL,0,1687786159"
+        if [[ "${{ matrix.os }}" == "macos-14" ]]; then
+          # TCC access table in Sonoma has extra 4 columns: pid, pid_version, boot_uuid, last_reminded
+          values="${values},NULL,NULL,'UNUSED',${values##*,}"
+        fi
+
+        # system and user databases
+        dbPaths=(
+          "/Library/Application Support/com.apple.TCC/TCC.db"
+          "$HOME/Library/Application Support/com.apple.TCC/TCC.db"
+        )
+
+        sqlQuery="INSERT OR IGNORE INTO access VALUES($values);"
+
+        for dbPath in "${dbPaths[@]}"; do
+          echo "Column names for $dbPath"
+          echo "-------------------"
+          sudo sqlite3 "$dbPath" "PRAGMA table_info(access);"
+          echo "Current permissions for $dbPath"
+          echo "-------------------"
+          sudo sqlite3 "$dbPath" "SELECT * FROM access WHERE service='kTCCServiceScreenCapture';"
+          sudo sqlite3 "$dbPath" "$sqlQuery"
+          echo "Updated permissions for $dbPath"
+          echo "-------------------"
+          sudo sqlite3 "$dbPath" "SELECT * FROM access WHERE service='kTCCServiceScreenCapture';"
+        done
     - name: Run tests
       timeout-minutes: 40
       # The ignored files can somehow cause the test suite to timeout.
