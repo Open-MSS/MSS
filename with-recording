@@ -5,7 +5,9 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     ffmpeg -framerate 25 -f x11grab -i :99 recording.mp4 &
     recording_pid=$!
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-    /usr/sbin/screencapture -v recording.mp4 &
+    mkfifo /tmp/srv-input
+    cat > /tmp/srv-input &
+    cat /tmp/srv-input | /usr/sbin/screencapture -v recording.mp4 &
     recording_pid=$!
 fi
 
