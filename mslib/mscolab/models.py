@@ -58,7 +58,7 @@ class User(db.Model):
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
-    profile_image_path = db.Column(db.String(255), nullable=True)
+    profile_image_path = db.Column(db.String(255), nullable=True)  # relative path
     registered_on = db.Column(AwareDateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(AwareDateTime, nullable=True)

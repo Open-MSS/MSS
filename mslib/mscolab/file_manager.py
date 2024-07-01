@@ -254,16 +254,14 @@ class FileManager:
             db.session.commit()
         return True
 
-    def save_user_profile_image(self, user_id, image_file):
+    def upload_file(self, file, upload_folder, file_token=None, subfolder=None, identifier=None):
         """
-        Save the user's profile image path to the database.
+        Generic function to save files securely in specified directory with unique filename
+        and return the relative file path.
         """
-        upload_folder = mscolab_settings.UPLOAD_FOLDER
-        file_token = secrets.token_urlsafe(20)
-
         with fs.open_fs('/') as home_fs:
-            file_dir = fs.path.join(upload_folder, 'profile')
-            # Checking if directory exists. Create the directory if it does not exist
+            file_dir = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
+
             if '\\' not in file_dir:
                 if not home_fs.exists(file_dir):
                     home_fs.makedirs(file_dir)
@@ -273,22 +271,44 @@ class FileManager:
                     os.makedirs(file_dir)
 
             # Creating unique and secure filename
-            file_name, file_ext = image_file.filename.rsplit('.', 1)
-            file_name = f'{user_id}-{time.strftime("%Y%m%dT%H%M%S")}-{file_token}.{file_ext}'
+            file_name, file_ext = file.filename.rsplit('.', 1)
+
+            token = file_token if file_token else secrets.token_urlsafe(32)
+            timestamp = time.strftime("%Y%m%dT%H%M%S")
+
+            if identifier:
+                file_name = f'{identifier}-{timestamp}-{token}.{file_ext}'
+            else:
+                file_name = f'{file_name}-{timestamp}-{token}.{file_ext}'
             file_name = secure_filename(file_name)
 
-            # Saving the file to the filepath
+            # Saving the file
             file_path = fs.path.join(file_dir, file_name)
-            image_file.save(file_path)
+            file.save(file_path)
 
-            # Storing the file path to database
-            user = User.query.get(user_id)
-            if user:
-                user.profile_image_path = file_path
-                db.session.commit()
-                return True, "Image uploaded successfully"
-            else:
-                return False, "User not found"
+            # Relative File path
+            upload_folder = upload_folder.replace('\\', '/')
+            static_dir = fs.path.basename(upload_folder)
+            static_file_path = os.path.join(static_dir, str(subfolder), file_name)
+            static_file_path = static_file_path.replace('\\', '/')
+            logging.debug(f'Relative Path: {static_file_path}')
+
+            return static_file_path
+
+    def save_user_profile_image(self, user_id, image_file, file_token, upload_folder):
+        """
+        Save the user's profile image path to the database.
+        """
+        relative_file_path = self.upload_file(image_file, upload_folder, file_token,
+                                              subfolder='profile', identifier=user_id)
+
+        user = User.query.get(user_id)
+        if user:
+            user.profile_image_path = relative_file_path
+            db.session.commit()
+            return True, "Image uploaded successfully"
+        else:
+            return False, "User not found"
 
     def update_operation(self, op_id, attribute, value, user):
         """
