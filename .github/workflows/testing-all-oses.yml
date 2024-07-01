@@ -95,7 +95,7 @@ jobs:
       #   --ignore=tests/_test_msui/test_topview.py
       #   --ignore=tests/_test_msui/test_wms_control.py
       #   tests
-      run: ./with-recording sleep 30
+      run: ./with-recording ${{ (startsWith(matrix.os, 'ubuntu') && 'xvfb-run -n 99') || ' ' }} sleep 30
     - name: Upload recording
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v4
