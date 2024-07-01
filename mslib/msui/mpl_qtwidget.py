@@ -1658,6 +1658,18 @@ class MplTopViewCanvas(MplCanvas):
 
         If settings is None, apply default settings.
         """
+        if settings is None:
+            # Default value if not present
+            settings = self.plotter.get_settings()
+            settings.setdefault("line_thickness", 2)
+            settings.setdefault("line_style", "Solid")
+            settings.setdefault("line_transparency", 1.0)
+            settings.setdefault("colour_ft_vertices", "blue")
+            settings.setdefault("colour_ft_waypoints", "red")
+            settings.setdefault("draw_marker", True)
+            settings.setdefault("draw_flighttrack", True)
+            settings.setdefault("label_flighttrack", True)
+
         self.plotter.set_settings(settings, save)
         settings = self.get_settings()
         if self.waypoints_interactor is not None:
