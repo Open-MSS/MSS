@@ -261,7 +261,7 @@ class FileManager:
         Generic function to save files securely in specified directory with unique filename
         and return the relative file path.
         """
-        with fs.open_fs(upload_folder) as home_fs:
+        with fs.open_fs(upload_folder):
             file_dir = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
             if sys.platform.startswith('win'):
                 file_dir = file_dir.replace('\\', '/')
