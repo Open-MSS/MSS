@@ -11,147 +11,14 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>MSS Autoplot GUI</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
     <layout class="QGridLayout" name="gridLayout_2" columnstretch="400,576">
      <item row="0" column="0">
-      <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0" columnstretch="1,0">
-       <item row="2" column="1">
-        <widget class="QPushButton" name="layersButton">
-         <property name="text">
-          <string>Layers</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QPushButton" name="cpathButton">
-         <property name="text">
-          <string>cpath</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <layout class="QVBoxLayout" name="verticalLayout_6">
-         <item>
-          <widget class="QLabel" name="mscolabLabel">
-           <property name="text">
-            <string>mscolab url</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="mscolabLineEdit"/>
-         </item>
-        </layout>
-       </item>
-       <item row="1" column="1">
-        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0">
-         <item>
-          <widget class="QLabel" name="urlLabel">
-           <property name="text">
-            <string>url for wms</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="urlLineEdit"/>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QPushButton" name="addUrlButton">
-             <property name="text">
-              <string>Add</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="removeUrlButton">
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <widget class="QListWidget" name="urlListWidget"/>
-         </item>
-        </layout>
-       </item>
-       <item row="0" column="1">
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <widget class="QLabel" name="viewLabel">
-           <property name="text">
-            <string>View</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="viewComboBox">
-           <item>
-            <property name="text">
-             <string>Views</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Top View</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Side View</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Linear View</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
-       </item>
-       <item row="1" column="0">
-        <layout class="QVBoxLayout" name="verticalLayout_5">
-         <item>
-          <widget class="QLabel" name="flightLabel">
-           <property name="text">
-            <string>Flight</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="flightLineEdit"/>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <widget class="QPushButton" name="addFtrackButton">
-             <property name="text">
-              <string>Add ftrack</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QPushButton" name="removeFtrackButton">
-             <property name="text">
-              <string>Remove</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <widget class="QListWidget" name="flightListWidget"/>
-         </item>
-        </layout>
-       </item>
-       <item row="3" column="0">
+      <layout class="QGridLayout" name="gridLayout_4" rowstretch="0,0,0,0,0" columnstretch="1,0">
+       <item row="4" column="0">
         <layout class="QVBoxLayout" name="verticalLayout_7">
          <item>
           <widget class="QLabel" name="operationsLabel">
@@ -186,7 +53,133 @@
          </item>
         </layout>
        </item>
+       <item row="0" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QLabel" name="viewLabel">
+           <property name="text">
+            <string>View</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="viewComboBox">
+           <item>
+            <property name="text">
+             <string>Views</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>top</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>side</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>linear</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item row="2" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout_5">
+         <item>
+          <widget class="QLabel" name="flightLabel">
+           <property name="text">
+            <string>Flight</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="flightLineEdit"/>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <widget class="QPushButton" name="addFtrackButton">
+             <property name="text">
+              <string>Add ftrack</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="removeFtrackButton">
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QListWidget" name="flightListWidget"/>
+         </item>
+        </layout>
+       </item>
        <item row="3" column="1">
+        <widget class="QPushButton" name="layersButton">
+         <property name="text">
+          <string>Layers</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,0,0">
+         <item>
+          <widget class="QLabel" name="urlLabel">
+           <property name="text">
+            <string>url for wms</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="urlLineEdit"/>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QPushButton" name="addUrlButton">
+             <property name="text">
+              <string>Add</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QPushButton" name="removeUrlButton">
+             <property name="text">
+              <string>Remove</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <widget class="QListWidget" name="urlListWidget"/>
+         </item>
+        </layout>
+       </item>
+       <item row="3" column="0">
+        <layout class="QVBoxLayout" name="verticalLayout_6">
+         <item>
+          <widget class="QLabel" name="mscolabLabel">
+           <property name="text">
+            <string>mscolab url</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLineEdit" name="mscolabLineEdit"/>
+         </item>
+        </layout>
+       </item>
+       <item row="4" column="1">
         <layout class="QVBoxLayout" name="verticalLayout_8">
          <item>
           <widget class="QComboBox" name="sectionsComboBox">
@@ -197,17 +190,32 @@
            </item>
            <item>
             <property name="text">
-             <string>India</string>
+             <string>01 Europe (cyl)</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>Europe</string>
+             <string>02 Germany (cyl)</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string>Global</string>
+             <string>03 Global (cyl)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>04 Shannon (stereo)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>05 Northern Hemisphere (stereo)</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>06 Southern Hemisphere (stereo)</string>
             </property>
            </item>
           </widget>
@@ -294,6 +302,17 @@
          </item>
         </layout>
        </item>
+       <item row="0" column="1">
+        <layout class="QHBoxLayout" name="horizontalLayout_3">
+         <item>
+          <widget class="QPushButton" name="cpathButton">
+           <property name="text">
+            <string>cpath</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
       </layout>
      </item>
      <item row="0" column="1">
@@ -320,7 +339,18 @@
             </widget>
            </item>
            <item>
-            <widget class="QSpinBox" name="etimeSpinBox"/>
+            <widget class="QComboBox" name="etimeComboBox">
+             <item>
+              <property name="text">
+               <string>Select</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>2019-09-02T00:00:00</string>
+              </property>
+             </item>
+            </widget>
            </item>
           </layout>
          </item>
@@ -334,28 +364,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="itimeComboBox">
-             <item>
-              <property name="text">
-               <string>A</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>B</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>C</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>D</string>
-              </property>
-             </item>
-            </widget>
+            <widget class="QComboBox" name="itimeComboBox"/>
            </item>
           </layout>
          </item>
@@ -372,22 +381,12 @@
             <widget class="QComboBox" name="vtimeComboBox">
              <item>
               <property name="text">
-               <string>A</string>
+               <string>Select</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>B</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>C</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>D</string>
+               <string>2019-09-02T00:00:00</string>
               </property>
              </item>
             </widget>
@@ -404,7 +403,18 @@
             </widget>
            </item>
            <item>
-            <widget class="QSpinBox" name="stimeSpinBox"/>
+            <widget class="QComboBox" name="stimeComboBox">
+             <item>
+              <property name="text">
+               <string>Select</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>2019-09-01T00:00:00</string>
+              </property>
+             </item>
+            </widget>
            </item>
           </layout>
          </item>
@@ -421,7 +431,7 @@
             <widget class="QComboBox" name="intvComboBox">
              <item>
               <property name="text">
-               <string>1</string>
+               <string>Select</string>
               </property>
              </item>
              <item>
@@ -431,12 +441,17 @@
              </item>
              <item>
               <property name="text">
-               <string>3</string>
+               <string>6</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>4</string>
+               <string>12</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>24</string>
               </property>
              </item>
             </widget>

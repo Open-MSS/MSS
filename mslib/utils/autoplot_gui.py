@@ -1,14 +1,18 @@
 import sys
 import click
+import requests
+import keyring
 from PyQt5.QtWidgets import (QApplication, QWidget, QFileDialog, QListWidgetItem,
                              QVBoxLayout, QPushButton, QLabel)
 from mslib.msui.qt5.ui_mss_autoplot import Ui_Form
-from mslib.utils.config import config_loader, read_config_file
+from mslib.msui.qt5.ui_wms_login import Ui_Form2
 from mslib.utils import config as conf
-from mslib.utils.mssautoplot import LinearViewPlotting, SideViewPlotting, TopViewPlotting
 from mslib.utils.mssautoplot import main as autopl
+from mslib.msui.mscolab import MSColab_ConnectDialog, MSUIMscolab
+from mslib.utils.auth import save_password_to_keyring
 
-class Layers(QWidget):
+
+class Layers(QWidget, Ui_Form):
     def __init__(self):
         super().__init__()
         self.initUI()
@@ -29,12 +33,26 @@ class Layers(QWidget):
         self.setLayout(layout)
 
 
+class WmsLoginInfo(QWidget, Ui_Form2):
+    def __init__(self, link):
+        super().__init__()
+        self.setupUi(self)
+        self.savePushButton.clicked.connect(lambda: self.funct(link))
+
+    def funct(self, link):
+        wms = link
+        usern = self.userNameLineEdit.text()
+        passw = self.passwordLineEdit.text()
+        save_password_to_keyring(service_name=wms, username=usern, password=passw)
+        self.close()
+
+
 class Upload(QWidget, Ui_Form):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.cpath = None
-        self.view = None
+        self.view = "top"
         self.itime = None
         self.vtime = None
         self.intv = None
@@ -42,22 +60,22 @@ class Upload(QWidget, Ui_Form):
         self.etime = None
         self.ftrack = {}
         self.sections = None
-        self.vertical=None
+        self.vertical = None
 
         self.url = []
-        self.layer=None
-        self.styles=None
+        self.layer = None
+        self.styles = None
         self.level = None
 
         self.num_interpolation_points = None
-        self.num_labels = None     
+        self.num_labels = None
         self.resolution = None
         self.mscolaburl = None
         self.operations = {}
-        
 
         # cpath
         self.cpathButton.clicked.connect(self.openFileDialog)
+
         # all QcomboBox
         self.viewComboBox.currentIndexChanged.connect(
             lambda: self.comboBoxInput(self.viewComboBox))
@@ -73,15 +91,17 @@ class Upload(QWidget, Ui_Form):
             lambda: self.comboBoxInput(self.intvComboBox))
         self.levelComboBox.currentIndexChanged.connect(
             lambda: self.comboBoxInput(self.levelComboBox))
+        self.stimeComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.stimeComboBox))
+        self.etimeComboBox.currentIndexChanged.connect(
+            lambda: self.comboBoxInput(self.etimeComboBox))
+
         # all spinBox
         self.numinterSpinBox.valueChanged.connect(
             lambda value: self.onSpinBoxValueChanged(value, self.numinterSpinBox))
         self.numlabelsSpinBox.valueChanged.connect(
             lambda value: self.onSpinBoxValueChanged(value, self.numlabelsSpinBox))
-        self.stimeSpinBox.valueChanged.connect(
-            lambda value: self.onSpinBoxValueChanged(value, self.stimeSpinBox))
-        self.etimeSpinBox.valueChanged.connect(
-            lambda value: self.onSpinBoxValueChanged(value, self.etimeSpinBox))
+
         # all pushButton
         self.addFtrackButton.clicked.connect(self.addftrack)
         self.removeFtrackButton.clicked.connect(self.removeftrack)
@@ -101,50 +121,42 @@ class Upload(QWidget, Ui_Form):
             self.cpath = fileName
             self.configureFromPath(self.cpath)
 
-    def configureFromPath(self,path):
+    def configureFromPath(self, path):
         conf.read_config_file(path)
         configure = conf.config_loader()
-        if self.view == "Top View":
-            sec = "automated_plotting_hsecs"
-        elif self.view == "Side View":
+        if self.view == "linear":
+            sec = "automated_plotting_lsecs"
+        elif self.view == "side":
             sec = "automated_plotting_vsecs"
         else:
-            sec = "automated_plotting_lsecs"
-        
-        v1=configure["automated_plotting_flights"]
-        v2=configure[sec]
-        print(v1,v2)
+            sec = "automated_plotting_hsecs"
 
-        self.ftrack[v1[0][0]]=v1[0][3]
-        self.flight=v1[0][0]
-        self.fname=v1[0][3]
-        self.sections = v1[0][1]
-        self.vertical=v1[0][2]
-        self.itime = v1[0][4]
-        
-        self.url = v2[0][0]
-        self.layer=v2[0][1]
-        self.styles = v2[0][2]
-        self.level=v2[0][3]
+        self.ftrack[configure["automated_plotting_flights"][0][0]] = configure["automated_plotting_flights"][0][3]
+        self.flight = configure["automated_plotting_flights"][0][0]
+        self.fname = configure["automated_plotting_flights"][0][3]
+        self.sections = configure["automated_plotting_flights"][0][1]
+        self.vertical = configure["automated_plotting_flights"][0][2]
+        self.itime = configure["automated_plotting_flights"][0][4]
 
+        self.url.append(configure[sec][0][0])
+        self.layer = configure[sec][0][1]
+        self.styles = configure[sec][0][2]
+        self.level = configure[sec][0][3]
 
-    
     def storePlots(self):
         args = [
-        "--cpath", self.cpath,
-        "--view", "",
-        "--ftrack", "",
-        "--itime", "",
-        "--vtime", "",
-        "--intv", 0,
-        "--stime", "",
-        "--etime", ""
+            "--cpath", self.cpath,
+            "--view", self.view,
+            "--ftrack", next(iter(self.ftrack.values())),
+            "--itime", self.itime,
+            "--vtime", self.vtime,
+            "--intv", self.intv,
+            "--stime", self.stime,
+            "--etime", self.etime
         ]
         with click.Context(autopl):
             autopl.main(args=args, prog_name="autoplot_gui")
 
-
-        
     def comboBoxInput(self, combo):
         comboBoxName = combo.objectName()
         if comboBoxName == "sectionsComboBox":
@@ -161,6 +173,10 @@ class Upload(QWidget, Ui_Form):
             self.vtime = self.vtimeComboBox.currentText()
         if comboBoxName == "intvComboBox":
             self.intv = self.intvComboBox.currentText()
+        if comboBoxName == "stimeComboBox":
+            self.stime = self.stimeComboBox.currentText()
+        if comboBoxName == "etimeComboBox":
+            self.etime = self.etimeComboBox.currentText()
 
     def onSpinBoxValueChanged(self, value, spinName):
         spinBoxName = spinName.objectName()
@@ -168,10 +184,6 @@ class Upload(QWidget, Ui_Form):
             self.num_interpolation_points = value
         if spinBoxName == "numlabelsSpinBox":
             self.num_labels = value
-        if spinBoxName == "stimeSpinBox":
-            self.stime = value
-        if spinBoxName == "etimeSpinBox":
-            self.etime = value
 
     def addftrack(self):
         text = self.flightLineEdit.text()
@@ -218,10 +230,44 @@ class Upload(QWidget, Ui_Form):
     def addURL(self):
         text = self.urlLineEdit.text()
         if text:
-            item = QListWidgetItem(text)
-            self.urlListWidget.addItem(item)
-            self.urlLineEdit.clear()
-            self.url.append(text)
+            response = requests.get(text)
+            if response.status_code == 401:
+                self.check_url_in_keyring(text)
+            else:
+                self.urlListWidget.addItem(QListWidgetItem(text))
+                self.urlLineEdit.clear()
+                self.url.append(text)
+
+    def check_url_in_keyring(self, link):
+        cred = keyring.get_credential(link, "")
+
+        if cred:
+            check = self.check_website_access(link, cred.username, cred.password)
+            if check == True:
+                self.urlListWidget.addItem(QListWidgetItem(link))
+                self.urlLineEdit.clear()
+                self.url.append(link)
+            else:
+                self.connect_dialog = WmsLoginInfo(link)
+                self.connect_dialog.show()
+
+        else:
+            self.connect_dialog = WmsLoginInfo(link)
+            self.connect_dialog.show()
+
+    def check_website_access(self, link, username, password):
+        try:
+            response = requests.get(link, auth=requests.auth.HTTPBasicAuth(username, password))
+
+            if response.status_code == 200:
+                print("Authentication successful!")
+                return True
+            else:
+                print(f"Failed to authenticate. Status code: {response.status_code}")
+                return False
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error occurred: {e}")
 
     def removeURL(self):
         selected = self.urlListWidget.selectedItems()
@@ -240,21 +286,6 @@ def main():
     window = Upload()
     window.show()
     app.exec_()
-    # print(window.cpath)
-    # print(window.view)
-    # print(window.itime)
-    # print(window.vtime)
-    # print(window.level)
-    # print(window.stime)
-    # print(window.etime)
-    # print(window.intv)
-    # print(window.num_interpolation_points)
-    # print(window.num_labels)
-    # print(window.sections)
-    # print(window.resolution)
-    # print(window.ftrack)
-    # print(window.operations)
-    # print(window.url)
 
 
 if __name__ == "__main__":
