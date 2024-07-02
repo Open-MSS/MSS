@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import sys
 import secrets
 import time
 import datetime
@@ -260,15 +261,12 @@ class FileManager:
         Generic function to save files securely in specified directory with unique filename
         and return the relative file path.
         """
-        with fs.open_fs('/') as home_fs:
+        with fs.open_fs(upload_folder) as home_fs:
             file_dir = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
-            if '\\' not in file_dir:
-                if not home_fs.exists(file_dir):
-                    home_fs.makedirs(file_dir)
-            else:
+            if sys.platform.startswith('win'):
                 file_dir = file_dir.replace('\\', '/')
-                if not os.path.exists(file_dir):
-                    os.makedirs(file_dir)
+            if not os.path.exists(file_dir):
+                os.makedirs(file_dir)
 
             # Creating unique and secure filename
             file_name, _ = file.filename.rsplit('.', 1)
