@@ -364,8 +364,7 @@ def upload_profile_image():
     if file.content_length > mscolab_settings.MAX_UPLOAD_SIZE:
         return jsonify({'message': 'File too large'}), 413
 
-    file_token = secrets.token_urlsafe(20)
-    success, message = fm.save_user_profile_image(user_id, file, file_token, APP.config['UPLOAD_FOLDER'])
+    success, message = fm.save_user_profile_image(user_id, file)
     if success:
         return jsonify({'message': message}), 200
     else:
@@ -378,8 +377,9 @@ def fetch_profile_image():
     user_id = request.form['user_id']
     user = User.query.get(user_id)
     if user and user.profile_image_path:
-        base_directory = mscolab_settings.UPLOAD_FOLDER
-        base_path = os.path.join(base_directory, 'profile')
+        # base_directory = mscolab_settings.UPLOAD_FOLDER
+        # base_path = os.path.join(base_directory, 'profile')
+        base_path = mscolab_settings.PROFILE_IMG_FOLDER
         filename = os.path.basename(user.profile_image_path)
         return send_from_directory(base_path, filename)
     else:
@@ -416,7 +416,6 @@ def message_attachment():
     user = g.user
     op_id = request.form.get("op_id", None)
     if fm.is_member(user.id, op_id):
-        file_token = secrets.token_urlsafe(16)
         file = request.files['file']
         message_type = MessageType(int(request.form.get("message_type")))
         user = g.user
@@ -424,7 +423,7 @@ def message_attachment():
         if users is False:
             return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
         if file is not None:
-            static_file_path = fm.upload_file(file, APP.config['UPLOAD_FOLDER'], file_token, subfolder=str(op_id))
+            static_file_path = fm.upload_file(file, subfolder=str(op_id))
             if static_file_path is not None:
                 new_message = cm.add_message(user, static_file_path, op_id, message_type)
                 new_message_dict = get_message_dict(new_message)

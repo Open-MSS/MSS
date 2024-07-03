@@ -256,11 +256,12 @@ class FileManager:
             db.session.commit()
         return True
 
-    def upload_file(self, file, upload_folder, file_token=None, subfolder=None, identifier=None):
+    def upload_file(self, file, subfolder, identifier=None):
         """
         Generic function to save files securely in specified directory with unique filename
         and return the relative file path.
         """
+        upload_folder = mscolab_settings.UPLOAD_FOLDER
         with fs.open_fs(upload_folder):
             file_dir = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
             if sys.platform.startswith('win'):
@@ -270,15 +271,13 @@ class FileManager:
 
             # Creating unique and secure filename
             file_name, _ = file.filename.rsplit('.', 1)
-            file_ext = guess_extension(file.mimetype) or '.unknown'
-
-            token = file_token if file_token else secrets.token_urlsafe(32)
+            token = secrets.token_urlsafe()
             timestamp = time.strftime("%Y%m%dT%H%M%S")
 
             if identifier:
-                file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
+                file_name = f'{identifier}-{timestamp}-{token}'
             else:
-                file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
+                file_name = f'{file_name}-{timestamp}-{token}'
             file_name = secure_filename(file_name)
 
             # Saving the file
@@ -294,12 +293,11 @@ class FileManager:
 
             return static_file_path
 
-    def save_user_profile_image(self, user_id, image_file, file_token, upload_folder):
+    def save_user_profile_image(self, user_id, image_file):
         """
         Save the user's profile image path to the database.
         """
-        relative_file_path = self.upload_file(image_file, upload_folder, file_token,
-                                              subfolder='profile', identifier=user_id)
+        relative_file_path = self.upload_file(image_file, subfolder='profile', identifier=user_id)
 
         user = User.query.get(user_id)
         if user:
