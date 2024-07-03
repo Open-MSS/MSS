@@ -505,14 +505,21 @@ At current state we have to use pip to install mod_wsgi into the INSTANCE enviro
   $ sudo /full/path/to/installed/mod_wsgi-express install-module
 
 
+This command outputs two lines::
+
+  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so"
+  WSGIPythonHome "/home/mss-demo/miniforge/envs/mssenv"
+
+You have to add the lines into your wsgi_express.conf and wsgi_express.load
+
 Setup a /etc/apache2/mods-available/wsgi_express.conf::
 
-  WSGIPythonHome "/home/mss-demo/miniforge/envs/demo/"
+  WSGIPythonHome "/home/mss-demo/miniforge/envs/mssenv/"
 
 
 Setup a /etc/apache2/mods-available/wsgi_express.load::
 
-  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py37.cpython-37m-x86_64-linux-gnu.so"
+  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so"
 
 Enable the new module by a2enmod and reload the apache2 server
 
@@ -522,7 +529,7 @@ Configuration of apache mod_wsgi.conf
 One possibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternatively you
 could add it also to wms.wsgi.
 
-  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniforge/envs/instance/lib/python3.X/site-packages
+  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniforge/envs/mssenv/lib/python3.X/site-packages
 
 
 By this setting you override the PYTHONPATH environment variable. So you have also to add
@@ -540,28 +547,41 @@ INSTANCE is a placeholder for your service name::
 
  .
  ├── INSTANCE
- |   ├── config
- │   |   └── mswms_settings.py
- |   |   └── mswms_auth.py
- |   ├── log
- │   |   └── mss_error.log
- |   └── wsgi
- |       ├── auth.wsgi
- |       └── wms.wsgi
+ │   ├── config
+ │   │   └── mswms_settings.py
+ │   │   └── mswms_auth.py
+ │   ├── log
+ │   │   └── mss_error.log
+ │   └── wsgi
+ │       ├── auth.wsgi
+ │       └── wms.wsgi
  ├── miniforge
- │   ├── bin
- │   ├── conda-bld
- │   ├── conda-meta
- │   ├── envs
- |   |   └── instance
- │   ├── etc
- │   ├── include
- │   ├── lib
- │   ├── LICENSE.txt
- │   ├── pkgs
- │   ├── share
- │   ├── ssl
- │   └── var
+ │   ├── bin
+ │   ├── cmake
+ │   ├── compiler_compat
+ │   ├── _conda
+ │   ├── condabin
+ │   ├── conda-bld
+ │   ├── conda_build_config.yaml
+ │   ├── conda-meta
+ │   ├── envs
+ │   │    └── mssenv
+ │   ├── etc
+ │   ├── include
+ │   ├── lib
+ │   ├── libexec
+ │   ├── LICENSE.txt
+ │   ├── locks
+ │   ├── man
+ │   ├── pkgs
+ │   ├── sbin
+ │   ├── share
+ │   ├── shell
+ │   ├── ssl
+ │   ├── x86_64-conda_cos6-linux-gnu
+ │   └── x86_64-conda-linux-gnu
+
+
 
 
 
