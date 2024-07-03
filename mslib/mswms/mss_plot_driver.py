@@ -36,6 +36,7 @@ import numpy as np
 
 from mslib.utils import netCDF4tools
 import mslib.utils.coordinate as coordinate
+from mslib.utils.units import convert_to, units
 
 
 class MSSPlotDriver(metaclass=ABCMeta):
@@ -790,8 +791,23 @@ class LinearSectionDriver(VerticalSectionDriver):
         lon_data = ((self.lon_data - left_longitude) % 360) + left_longitude
         lon_indices = lon_data.argsort()
         lon_data = lon_data[lon_indices]
+        # Identify jump in longitudes due to non-global dataset
+        dlon_data = np.diff(lon_data)
+        jump = np.where(dlon_data > 2 * dlon)[0]
+
         lons = ((self.lons - left_longitude) % 360) + left_longitude
         factors = []
+
+        pressures = None
+        if "air_pressure" not in self.data_vars:
+            if units(self.vert_units).check("[pressure]"):
+                pressures = np.log(convert_to(
+                    self.vert_data[::-self.vert_order, np.newaxis],
+                    self.vert_units, "Pa").repeat(len(self.lats), axis=1))
+            else:
+                raise ValueError(
+                    "air_pressure must be available for linear plotting layers "
+                    "with non-pressure axis. Please add to required_datafields.")
 
         # Make sure air_pressure is the first to be evaluated if needed
         variables = list(self.data_vars)
@@ -803,7 +819,7 @@ class LinearSectionDriver(VerticalSectionDriver):
             var = self.data_vars[name]
             data[name] = []
             if len(var.shape) == 4:
-                var_data = var[timestep, ::-self.vert_order, ::self.lat_order, :]
+                var_data = var[:][timestep, ::-self.vert_order, ::self.lat_order, :]
             else:
                 var_data = var[:][timestep, np.newaxis, ::self.lat_order, :]
             logging.debug("\tLoaded %.2f Mbytes from data field <%s> at timestep %s.",
@@ -813,38 +829,38 @@ class LinearSectionDriver(VerticalSectionDriver):
             logging.debug("\tInterpolating to cross-section path.")
             # Re-arange longitude dimension in the data field.
             var_data = var_data[:, :, lon_indices]
+            if jump:
+                logging.debug("\tsetting jump data to NaN at %s", jump)
+                var_data = var_data.copy()
+                var_data[:, :, jump] = np.nan
 
             cross_section = coordinate.interpolate_vertsec(var_data, self.lat_data, lon_data, self.lats, lons)
             # Create vertical interpolation factors and indices for subsequent variables
             # TODO: Improve performance for this interpolation in general
             if len(factors) == 0:
-                for index_lonlat, alt in enumerate(self.alts):
-                    pressures = cross_section[:, index_lonlat] if name == "air_pressure" \
-                        else self.vert_data[::-self.vert_order] * (100 if self.vert_units.lower() == "hpa" else 1)
-                    closest = 0
-                    direction = 1
-                    for index_altitude, pressure in enumerate(pressures):
-                        if abs(pressure - alt) < abs(pressures[closest] - alt):
-                            closest = index_altitude
-                            direction = 1 if pressure - alt > 0 else -1
+                if name == "air_pressure":
+                    pressures = np.log(convert_to(cross_section, self.data_units[name], "Pa"))
+                for index_lonlat, alt in enumerate(np.log(self.alts)):
+                    pressure = pressures[:, index_lonlat]
+                    idx0 = None
+                    for index_altitude in range(len(pressures) - 1):
+                        if (pressure[index_altitude] <= alt <= pressure[index_altitude + 1]) or \
+                           (pressure[index_altitude] >= alt >= pressure[index_altitude + 1]):
+                            idx0 = index_altitude
+                            break
+                    if idx0 is None:
+                        factors.append(((0, np.nan), (0, np.nan)))
+                        continue
 
-                    next_closest = closest + direction
-                    if next_closest >= len(pressures) or next_closest < 0:
-                        next_closest = closest
-
-                    if closest == next_closest:
-                        factors.append([[closest, 0.5], [closest, 0.5]])
-                    else:
-                        distance = abs(pressures[closest] - alt) + abs(pressures[next_closest] - alt)
-                        factors.append(
-                            [[closest, 1 - (abs(pressures[closest] - alt) / distance)],
-                             [next_closest, 1 - (abs(pressures[next_closest] - alt) / distance)]])
+                    idx1 = idx0 + 1
+                    fac1 = (pressure[idx0] - alt) / (pressure[idx0] - pressure[idx1])
+                    fac0 = 1 - fac1
+                    assert 0 <= fac0 <= 1, fac0
+                    factors.append(((idx0, fac0), (idx1, fac1)))
 
             # Interpolate with the previously calculated pressure indices and factors
-            for index in range(len(self.alts)):
-                cur_factor = factors[index]
-                value = cross_section[cur_factor[0][0], index] * cur_factor[0][1] + \
-                    cross_section[cur_factor[1][0], index] * cur_factor[1][1]
+            for index, ((idx0, w0), (idx1, w1)) in enumerate(factors):
+                value = cross_section[idx0, index] * w0 + cross_section[idx1, index] * w1
                 data[name].append(value)
 
             # Free memory.
