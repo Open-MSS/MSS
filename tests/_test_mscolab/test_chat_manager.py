@@ -24,14 +24,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
-import secrets
 import pytest
 
-from werkzeug.datastructures import FileStorage
-
-from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.models import Operation, Message, MessageType
+from mslib.mscolab.models import Message, MessageType
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
 
 
@@ -76,4 +71,3 @@ class Test_Chat_Manager:
             self.cm.delete_message(message.id)
             message = Message.query.filter(Message.id == message.id).first()
             assert message is None
-

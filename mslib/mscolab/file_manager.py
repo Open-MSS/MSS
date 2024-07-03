@@ -38,7 +38,6 @@ from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
-from mimetypes import guess_extension
 
 
 class FileManager:
