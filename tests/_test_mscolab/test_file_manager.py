@@ -31,7 +31,7 @@ import os
 from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.models import Operation, User
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.mscolab.seed import add_user, get_user, add_operation
 
 
 class Test_FileManager:
@@ -41,7 +41,6 @@ class Test_FileManager:
         _, _, self.fm = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
-        self.operation_name = "europe"
 
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         self.user = get_user(self.userdata[0])
@@ -61,8 +60,6 @@ class Test_FileManager:
         assert add_user('UV80@uv80', 'UV80', 'uv80')
         self.adminuser = get_user('UV80@uv80')
         self._example_data()
-        assert add_operation(self.operation_name, "test europe")
-        assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         with self.app.app_context():
             yield
 
@@ -257,11 +254,14 @@ class Test_FileManager:
         Tests the chat feature to upload files.
         i.e. it tests the upload_file method of file manager in case of it being used to upload a chat attachment
         '''
+        operation_name = "europe"
+        assert add_operation(operation_name, "test europe")
+        operation = Operation.query.filter_by(path=operation_name).first()
+
         sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
         filename = "example.csv"
         name, _ = filename.split('.')
         open_csv = os.path.join(sample_path, "example.csv")
-        operation = Operation.query.filter_by(path=self.operation_name).first()
         with open(open_csv, 'rb') as fp:
             file = FileStorage(fp, filename=filename, content_type="text/csv")
             static_path = self.fm.upload_file(file, subfolder=str(operation.id), identifier=None)
