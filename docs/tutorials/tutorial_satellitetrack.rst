@@ -8,7 +8,7 @@ To combine a flight path with a satellite overflight, the remotesensing widget i
      :alt: This is Satellite Tracking Prediction System that can be used to check the accuracy of the path
            travelled by a Satellite by the help of data collected from different space agencies and planning
            a flight accordingly.
-           These flights which can be refered to as the Testing flights are made to travel in
+           These flights which can be referred to as the Testing flights are made to travel in
            the direction of these Satellites by collaborating with these space agencies.
            Open the Top View (CTRL+H) of the MSS software.
            Click on “(select to open control)“ and then click “Satellite Tracks“.

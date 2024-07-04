@@ -752,7 +752,7 @@ def get_profile(coordinate, levels, standard_name):
            (air_pressure, air_potential_temperature, geopotential_height, ertel_potential_vorticity are tested)
     :param levels: Numerical values of coordinate variable to interpolate at
     :param standard_name: CF standard name of entity to interpolate at specified points.
-    :return: two array, one for mean, ond for variance at specified levels.
+    :return: two array, one for mean, one for variance at specified levels.
     """
     assert coordinate in _PROFILES, coordinate
     assert standard_name in _PROFILES, standard_name
@@ -929,7 +929,7 @@ allowed_users = [("mswms", "add_md5_digest_of_PASSWORD_here"),
 import os
 import sys
 
-# on a productions system you may want to limit the amout of tracebacks to 0
+# on a productions system you may want to limit the amount of tracebacks to 0
 # sys.tracebacklimit = 0
 
 # Configuration of Python's code search path

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_msui.test_aircrafts
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_aircraft
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests msui.aircrafts module
+    This module provides pytest functions to test the msui.aircrafts module.
 
     This file is part of MSS.
 

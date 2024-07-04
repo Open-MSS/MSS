@@ -128,7 +128,7 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
 
 
 def make_msschem_hs_class(
-        entity, nam, vert, units, scale, add_data=None, add_contours=None, fix_styles=None,
+        entity, name, vert, units, scale, add_data=None, add_contours=None, fix_styles=None,
         add_styles=None, add_prepare=None):
     if add_data is None:
         add_data = []
@@ -143,7 +143,7 @@ def make_msschem_hs_class(
         dataname = entity
         units = units
         unit_scale = scale
-        _title_tpl = nam + " (" + vert + ")"
+        _title_tpl = name + " (" + vert + ")"
         long_name = entity
         if units:
             _title_tpl += f"({units})"
@@ -151,7 +151,7 @@ def make_msschem_hs_class(
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours
 
-    fnord.__name__ = nam
+    fnord.__name__ = name
     fnord.styles = list(fnord.styles)
 
     return fnord
@@ -285,7 +285,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
 
 
 def make_msschem_vs_class(
-        entity, nam, vert, units, scale, add_data=None,
+        entity, name, vert, units, scale, add_data=None,
         add_contours=None, fix_styles=None, add_styles=None, add_prepare=None):
 
     # This is CTM output, so we cannot expect any additional meteorological
@@ -312,14 +312,14 @@ def make_msschem_vs_class(
         dataname = entity
         units = units
         unit_scale = scale
-        title = nam + " (" + vert + ")"
+        title = name + " (" + vert + ")"
         long_name = entity
         if units:
             title += f"({units})"
         required_datafields = [(vert, entity, None)] + add_data
         contours = add_contours if add_contours else []
 
-    fnord.__name__ = nam
+    fnord.__name__ = name
     fnord.styles = list(fnord.styles)
 
     if add_styles is not None:
