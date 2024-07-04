@@ -504,9 +504,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
 
             if self.list_flighttrack.currentItem().flighttrack_model == self.active_flight_track:
-                self.frame.hide()
+                self.groupBox.hide()
             else:
-                self.frame.show()
+                self.groupBox.show()
 
 
 class MultipleFlightpathOperations:
@@ -804,7 +804,7 @@ class MultipleFlightpathOperations:
                 self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
             op_id = self.list_operation_track.currentItem().op_id
             if op_id != self.active_op_id:
-                self.parent.frame.show()
+                self.parent.groupBox.show()
                 if self.dict_operations[op_id]["linewidth"] != self.parent.dsbx_linewidth.value():
                     self.dict_operations[op_id]["linewidth"] = self.parent.dsbx_linewidth.value()
 
@@ -824,6 +824,6 @@ class MultipleFlightpathOperations:
             self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
 
             if self.list_operation_track.currentItem().op_id == self.active_op_id:
-                self.parent.frame.hide()
+                self.parent.groupBox.hide()
             else:
-                self.parent.frame.show()
+                self.parent.groupBox.show()
