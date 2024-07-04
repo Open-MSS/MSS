@@ -161,6 +161,7 @@ class Test_Server:
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             pfn = data["path"]
+            assert "txt" in pfn
             assert "uploads" in pfn
 
     def test_uploads(self):

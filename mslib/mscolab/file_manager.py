@@ -34,6 +34,7 @@ import difflib
 import logging
 import git
 import threading
+import mimetypes
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
@@ -261,22 +262,23 @@ class FileManager:
         and return the relative file path.
         """
         upload_folder = mscolab_settings.UPLOAD_FOLDER
-        with fs.open_fs(upload_folder):
+        with fs.open_fs(upload_folder) as _fs:
             file_dir = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
             if sys.platform.startswith('win'):
                 file_dir = file_dir.replace('\\', '/')
-            if not os.path.exists(file_dir):
-                os.makedirs(file_dir)
+            _fs.makedirs(str(subfolder) if subfolder else "", recreate=True)
 
             # Creating unique and secure filename
             file_name, _ = file.filename.rsplit('.', 1)
+            mime_type, _ = mimetypes.guess_type(file.filename)
+            file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
             token = secrets.token_urlsafe()
             timestamp = time.strftime("%Y%m%dT%H%M%S")
 
             if identifier:
-                file_name = f'{identifier}-{timestamp}-{token}'
+                file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
             else:
-                file_name = f'{file_name}-{timestamp}-{token}'
+                file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
             file_name = secure_filename(file_name)
 
             # Saving the file

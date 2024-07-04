@@ -305,3 +305,4 @@ class Test_Socket_Manager:
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]
         assert 'mss-logo' in file
+        assert 'png' in file

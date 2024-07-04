@@ -260,13 +260,13 @@ class Test_FileManager:
 
         sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
         filename = "example.csv"
-        name, _ = filename.split('.')
+        name, ext = filename.split('.')
         open_csv = os.path.join(sample_path, "example.csv")
         with open(open_csv, 'rb') as fp:
             file = FileStorage(fp, filename=filename, content_type="text/csv")
             static_path = self.fm.upload_file(file, subfolder=str(operation.id), identifier=None)
             assert name in static_path
-            assert str(operation.id) in static_path
+            assert static_path.endswith(ext)
 
     def test_get_file(self):
         with self.app.test_client():
