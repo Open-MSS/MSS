@@ -1280,6 +1280,17 @@ class MplSideViewCanvas(MplCanvas):
     def set_settings(self, settings, save=False):
         """Apply settings to view.
         """
+        if settings is None:
+            settings = self.plotter.get_settings()
+            settings.setdefault("line_thickness", 2)
+            settings.setdefault("line_style", "Solid")
+            settings.setdefault("line_transparency", 1.0)
+            settings.setdefault("colour_ft_vertices", "blue")
+            settings.setdefault("colour_ft_waypoints", "red")
+            settings.setdefault("draw_marker", True)
+            settings.setdefault("draw_flighttrack", True)
+            settings.setdefault("label_flighttrack", True)
+
         old_vertical_lines = self.plotter.settings["draw_verticals"]
         if settings is not None:
             self.plotter.set_settings(settings, save)
@@ -1303,6 +1314,11 @@ class MplSideViewCanvas(MplCanvas):
                 patch_facecolor=settings["colour_ft_fill"])
             wpi_plotter.set_patch_visible(settings["fill_flighttrack"])
             wpi_plotter.set_labels_visible(settings["label_flighttrack"])
+            wpi_plotter.set_line_thickness(settings["line_thickness"])
+            wpi_plotter.set_line_style(settings["line_style"])
+            wpi_plotter.set_line_transparency(
+                settings["line_transparency"] / 100.0 if settings["line_transparency"] > 1 else settings[
+                    "line_transparency"])  # Normalize the (transparency) value
 
             if self.waypoints_model is not None \
                     and settings["draw_verticals"] != old_vertical_lines:
@@ -1653,6 +1669,18 @@ class MplTopViewCanvas(MplCanvas):
 
         If settings is None, apply default settings.
         """
+        if settings is None:
+            # Default value if not present
+            settings = self.plotter.get_settings()
+            settings.setdefault("line_thickness", 2)
+            settings.setdefault("line_style", "Solid")
+            settings.setdefault("line_transparency", 1.0)
+            settings.setdefault("colour_ft_vertices", "blue")
+            settings.setdefault("colour_ft_waypoints", "red")
+            settings.setdefault("draw_marker", True)
+            settings.setdefault("draw_flighttrack", True)
+            settings.setdefault("label_flighttrack", True)
+
         self.plotter.set_settings(settings, save)
         settings = self.get_settings()
         if self.waypoints_interactor is not None:
@@ -1662,7 +1690,11 @@ class MplTopViewCanvas(MplCanvas):
             wpi_plotter.show_marker = settings["draw_marker"]
             wpi_plotter.set_vertices_visible(settings["draw_flighttrack"])
             wpi_plotter.set_labels_visible(settings["label_flighttrack"])
-
+            wpi_plotter.set_line_thickness(settings["line_thickness"])
+            wpi_plotter.set_line_style(settings["line_style"])
+            wpi_plotter.set_line_transparency(
+                settings["line_transparency"] / 100.0 if settings["line_transparency"] > 1 else settings[
+                    "line_transparency"])  # Normalize the (transparency) value
         self.draw()
 
     def set_remote_sensing_appearance(self, settings):
