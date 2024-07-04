@@ -4,7 +4,7 @@
     mslib.msui.aircrafts
     ~~~~~~~~~~~~~~~~~~~~
 
-    This module provides aircrafts definitions
+    This module provides aircraft definitions
 
     This file is part of MSS.
 

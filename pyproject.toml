@@ -1,0 +1,10 @@
+[tool.codespell]
+exclude-file = "codespell-ignored-lines.txt"
+ignore-words-list = [
+    "PRES",
+    "aircrafts",  # this ignore should be removed as soon as mslib.msui.aircrafts is renamed
+    "degreeE",
+    "doubleClick",
+    "indexIn",
+    "socio-economic",
+]

@@ -1192,7 +1192,7 @@ class HS_PVTropoStyle_PV_01(MPLBasemapHorizontalSectionStyle):
         # Define colourbars and contour levels for the three styles. For
         # pressure and height, a terrain colourmap is used (bluish colours for
         # low altitudes, brownish colours for high altitudes). For potential
-        # temperature, a rainbow colourmap is used (blue=low temps, red=hight
+        # temperature, a rainbow colourmap is used (blue=low temps, red=high
         # temps).
         if self.style == "PRES":
             filled_contours = np.arange(120, 551, 10)
@@ -1284,7 +1284,7 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
         # Define colourbars and contour levels for the three styles. For
         # pressure and height, a terrain colourmap is used (bluish colours for
         # low altitudes, brownish colours for high altitudes). For potential
-        # temperature, a rainbow colourmap is used (blue=low temps, red=hight
+        # temperature, a rainbow colourmap is used (blue=low temps, red=high
         # temps).
         fcmap = plt.cm.terrain
 
@@ -1327,7 +1327,7 @@ class HS_ThermalTropoStyle_SFC_01(MPLBasemapHorizontalSectionStyle):
 class HS_VIProbWCB_Style_01(MPLBasemapHorizontalSectionStyle):
     """
     Surface Field: Probability of WCB
-    Total column probability of WCB trajectory occurence, derived from
+    Total column probability of WCB trajectory occurrence, derived from
     Lagranto trajectories (TNF 2012 product).
     """
     name = "VIProbWCB"

@@ -86,7 +86,7 @@ class Test_Files:
             flight_path, operation = self._create_operation(flight_path="V2")
             assert self.fm.fetch_users_without_permission(operation.id, self.user_2.id) is False
             without_permission = self.fm.fetch_users_without_permission(operation.id, self.user.id)
-            # ToDo after seeding removed use absolut comparison
+            # ToDo after seeding removed use absolute comparison
             assert without_permission[-1] == [self.user_2.username, self.user_2.id]
 
     def test_fetch_users_with_permission(self):

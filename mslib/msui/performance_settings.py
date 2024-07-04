@@ -30,13 +30,13 @@ import json
 from PyQt5 import QtCore, QtWidgets
 
 from mslib.utils import FatalUserError
-from mslib.msui import aircrafts, constants
+from mslib.msui import aircrafts as aircraft, constants
 from mslib.utils.qt import get_open_filename
 from mslib.msui.qt5 import ui_performance_dockwidget as ui_dw
 
 
 DEFAULT_PERFORMANCE = {
-    "aircraft": aircrafts.SimpleAircraft(aircrafts.AIRCRAFT_DUMMY),
+    "aircraft": aircraft.SimpleAircraft(aircraft.AIRCRAFT_DUMMY),
     "visible": False,
     "takeoff_weight": 0,
     "takeoff_time": QtCore.QDateTime.currentDateTimeUtc(),
@@ -84,7 +84,7 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
         Encapsulates GUI selections in a python dictionary.
 
         :return:
-         Dictionary of all setting informations
+         Dictionary of all setting information
         """
         settings_dict = {
             "aircraft": self.aircraft,
@@ -109,7 +109,7 @@ class MSUI_PerformanceSettingsWidget(QtWidgets.QWidget, ui_dw.Ui_PerformanceDock
             try:
                 with open(filename) as tf:
                     performance = json.load(tf)
-                self.aircraft = aircrafts.SimpleAircraft(performance)
+                self.aircraft = aircraft.SimpleAircraft(performance)
                 self.lbAircraftName.setText(self.aircraft.name)
                 self.dsbTakeoffWeight.setValue(self.aircraft.takeoff_weight)
                 if not any(hasattr(self.aircraft, _x) for _x in ("fuel", "empty_weight")):

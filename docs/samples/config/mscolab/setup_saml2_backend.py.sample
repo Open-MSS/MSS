@@ -32,7 +32,7 @@ class setup_saml2_backend:
                 yaml_data["config"]["localhost_test_idp"]["key_file"] = \
                     f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'  # set path to your mscolab key file
                 yaml_data["config"]["localhost_test_idp"]["cert_file"] = \
-                    f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'  # set path to your mscolab certiticate file
+                    f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'  # set path to your mscolab certificate file
                 yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = \
                     f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'  # set path to your idp metadata xml file
 
@@ -41,7 +41,7 @@ class setup_saml2_backend:
                     if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
                         yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
                         warnings.warn("idp.xml file does not exists !\
-                                        Ignore this warning when you initializeing metadata.")
+                                        Ignore this warning when you initialize metadata.")
 
                     localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
                     sp_localhost_test_idp = Saml2Client(localhost_test_idp)

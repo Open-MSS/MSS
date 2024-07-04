@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 9.1.0
+~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We have corrected spelling mistakes
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/105?closed=1
+
 Version 9.0.0
 ~~~~~~~~~~~~~
 
@@ -10,7 +19,8 @@ In this way, a user can authenticate themselves in one system and gain access to
 by providing proof of authentication. In our documentation in the Components section you find a detailed description.
 
 Matthias Riße refactored the test suite and optimized and accelerated our CI test runs.
-All tests run in parallel now and are not retried upon failure, and most tests are also executed in a randomized order, instilling more confidence in the results.
+All tests run in parallel now and are not retried upon failure, and most tests are also executed in a randomized order,
+instilling more confidence in the results.
 Quite a bit of duplicated code was unified, mostly using pytest fixtures.
 Additionally, CI test runs now also happen on x86_64- and ARM-based macOS.
 
@@ -24,7 +34,7 @@ HINT:
 The syntax of the server configuration of MSColab and MSWMS has changed. We removed the class definition.
 For MSColab we have added new configuration options related to SAML2.
 The change on the MSColab server also required changes on the MSUI handling the MSColab login. These changes are
-not backwards compatible. Server and Client must use versions >=9.0.0.
+not backwards compatible. MSColab Server and MSUI Client must use versions >=9.0.0.
 We introduced a MSCOLAB_auth_user_name in the users configuration which simplifies the login process.
 
 All changes:
@@ -80,7 +90,7 @@ https://github.com/Open-MSS/MSS/milestone/99?closed=1
 Version 8.3.0
 ~~~~~~~~~~~~~
 
-Bug fix release and minor enhacements:
+Bug fix release and minor enhancements:
 We improved the KML docking widget feature
 
 All changes:
@@ -89,7 +99,7 @@ https://github.com/Open-MSS/MSS/milestone/98?closed=1
 Version 8.2.0
 ~~~~~~~~~~~~~
 
-Bug fix release and minor enhacements:
+Bug fix release and minor enhancements:
 
 HINT:
 ~~~~~
@@ -148,12 +158,12 @@ Jatin Jain did UI and server improvements in his GSoC project.
 Users can now, compare and plot multiple flightpaths on topview.
 This feature can be used for flightpathes or MSColab operations.
 A fligthpath style width can be changed.
-Timestamps are dislayed below each message in MSColab.
+Timestamps are displayed below each message in MSColab.
 Mscolab Operations in use for more than 30 days, move to an inactive list.
 The initial idea for multiple flightpaths on topview stems from bkirbus.
 GSoC mentors were Reimar Bauer, Jörn Ungermann, Sonja Gisinger
 
-With MSS 9.0.0 we base our installation on miniforge. This has
+With MSS 8.0.0 we base our installation on miniforge. This has
 mamba in the base environment. Mambaforge is discouraged of September 2023.
 
 All changes:
@@ -311,7 +321,7 @@ Version 6.1.0
 ~~~~~~~~~~~~~
 
 This release includes some small improvements of the usablity.
-A few bug fixes, a new plugin for NAVAID waypoints is decribed and
+A few bug fixes, a new plugin for NAVAID waypoints is described and
 mscolab gots few improvements for user creation.
 Wind speed plots can now be created for altitudes > 25km.
 
@@ -474,7 +484,7 @@ HINT:
 ~~~~~
 
 For using the 1-D samples along the flight path you have to add a configuration to your
-mss_wms_settings.py. Similiar as to the other layers add:
+mss_wms_settings.py. Similar as to the other layers add:
 
 .. code-block:: python
 
@@ -634,7 +644,7 @@ Bug Fixes:
   - Error in handling project permission update in mscolab, #539
   - mscolab: Selected Project highlight removed if new project is added, #533
   - GUI tests fail in OSX, #531
-  - developer hint seperate data from source, #529
+  - developer hint separate data from source, #529
   - PyVirtualDisplay Package not found for Windows OS, #527
   - sync our meta.yaml with the one on conda-forge, #526
   - improve "Building a development environment", #524
@@ -657,7 +667,7 @@ Bug Fixes:
   - make rtfd use of Non-ASCII characters, #492
   - mscolab server command crashes, #491
   - MSS doesn't close when "quit"ing while being connected to MSCO server, #490
-  - "Checkout" of older revisions has no effect without double-clicking the revison, #485
+  - "Checkout" of older revisions has no effect without double-clicking the revision, #485
   - Adding unknown user to project throws exception, #483
   - mcso windows cannot be closed by ctrl+w, #473
 
@@ -698,7 +708,7 @@ HINT
 ~~~~
   - We deprecated and disabled the unmaintained feature trajectory and time series view. This will become removed in
     the next major release, #476
-  - We added a new powerfull feature for collaborative editing of flight pathes.
+  - We added a new powerful feature for collaborative editing of flight paths.
     This is a new server and also a new client gui window.
     In a future version the client gui will replace the standard gui.
 
@@ -771,8 +781,8 @@ New Features:
   - Avoid "catch-all" exception handlers, #42
 
 Bug Fixes:
-  - Top View Map Appeareance options not defined with web map services, #401
-  - Image dissappears after insert/delete operation in sideview mode, #399
+  - Top View Map Appearance options not defined with web map services, #401
+  - Image disappears after insert/delete operation in sideview mode, #399
   - sideview options dialog suffix always hPa, #394
   - Msui crashes on selecting Northern Hemisphere (stereo) from drop down menu under Top View section, #388
   - qt widget property issue, #387
@@ -781,7 +791,7 @@ Bug Fixes:
 
 Other Changes:
   - clean up comments, #406
-  - remove superflous pass statements, #405
+  - remove superfluous pass statements, #405
   - Change comments for function "flightlevel2pressure_a", #384
   - Documentation about Reporting Issues, #112
 
@@ -822,7 +832,7 @@ Bug Fixes:
   - Support http://msgcpp-ogc-realtime.knmi.nl/msgrt.cgi WMS Server, #352
   - Support http://geoservices.knmi.nl/cgi-bin/HARM_N25.cgi WMS server, #351
   - Support NASA WMS Server "https://neo.sci.gsfc.nasa.gov/wms/wms", #348
-  - wms server: return only on the getcapability request a capabilty document, #346
+  - wms server: return only on the getcapability request a capability document, #346
   - demodata pressure levels uses inconsistent units, #341
   - waypoint labels (in sideview) not readable, #317
 
@@ -865,7 +875,7 @@ Version 1.7.0
 -------------
 
 New Features:
- - Decrease unit depency of plotting styles, #328
+ - Decrease unit dependency of plotting styles, #328
  - Support basemap 1.1.0, #315, #329
  - zorder of several plot elements in topview is wrong, #314
  - pyfilesystem2 implemented, #313
@@ -933,7 +943,7 @@ Version 1.6.0
 
 New Features:
  - disable traceback for server, #156
- - hybrid sigma coordinate whould work with float values, #203
+ - hybrid sigma coordinate would work with float values, #203
  - WMS data access classes difficult to set up, #210
  - add mss to docker platform, 211
  - loading a flighttrackfile does not set filename, #214
@@ -948,7 +958,7 @@ New Features:
  - Try preloading WMS servers on startup, #250
  - traceback should show version info, #256
  - add version info to output files, #259
- - completly remove vt_cache, #260
+ - completely remove vt_cache, #260
  - update layer list on get_capabilities, #268
 
 Bug Fixes:
@@ -1033,7 +1043,7 @@ Version 1.5.1
 -------------
 
 Bug Fixes:
- - clicks on same position crashs waypoint insert for cyl projection, #197
+ - clicks on same position crashes waypoint insert for cyl projection, #197
  - existing picklefiles of py2 crash on py3 version (vice versa), #198
 
 
@@ -1051,12 +1061,12 @@ New Features:
  - refactored url strings, #150
  - performance data used for time information on vertical plots, #151
  - use a singleton for WMS capability storage, #168
- - ui files, _test folders excluded from conda build pacakages, #169
+ - ui files, _test folders excluded from conda build packages, #169
  - implemented virtualdisplay for linux, #172
  - cache for basemap coastline and country shape data added, #173
- - consistant naming of "as" imports, #175
+ - consistent naming of "as" imports, #175
  - loopview enable/disabled, based on given URL, #183
- - configurable external proxy to cache on low bandwidth transfered images, #188
+ - configurable external proxy to cache on low bandwidth transferred images, #188
 
 
 Bug Fixes:
@@ -1067,7 +1077,7 @@ Bug Fixes:
 
 
 Other Changes:
- - line seperator of source files unified to LF, #92
+ - line separator of source files unified to LF, #92
  - refactored whole codebase for compatibility with python3, #176
  - version number of recent conda package added to documentation, #185
  - split mss_settings.json.sample into snippet parts, and further documentation #194
@@ -1131,7 +1141,7 @@ Version 1.3.3
 
 Bug Fixes:
  - Inserting Waypoint outside of map in TopView crashes MSS, #149
- - Some of the additional tools don't close completly, #139
+ - Some of the additional tools don't close completely, #139
 
 
 Version 1.3.2
@@ -1279,7 +1289,7 @@ Bug Fixes:
 
 
 Other Changes:
- - Namespace refactored, all modules dependend to mslib #24
+ - Namespace refactored, all modules dependent to mslib #24
  - Sphinx documentation introduced, #25, #26
  - Documentation on http://mss.rtfd.io
  - Installation recipes based on conda

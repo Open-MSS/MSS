@@ -313,7 +313,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
     def open_settings_dialog(self):
         """
-        Slot to open a dialog that lets the user specifiy sideview options.
+        Slot to open a dialog that lets the user specify sideview options.
         """
         settings = self.getView().get_settings()
         dlg = MSUI_SV_OptionsDialog(parent=self, settings=settings)
