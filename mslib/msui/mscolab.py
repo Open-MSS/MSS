@@ -707,7 +707,7 @@ class MSUIMscolab(QtCore.QObject):
             icon = QtGui.QIcon()
             icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
             self.ui.userOptionsTb.setIcon(icon)
-    
+
     def fetch_profile_image(self, refresh=False):
         # Display custom profile picture if exists
         url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
@@ -842,10 +842,10 @@ class MSUIMscolab(QtCore.QObject):
     def upload_image(self):
         file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)")
         if file_name:
-           # Determine the image format
+            # Determine the image format
             mime_type, _ = mimetypes.guess_type(file_name)
             file_format = mime_type.split('/')[1].upper()
-            
+
             # Resize the image and set profile image pixmap
             image = Image.open(file_name)
             image = image.resize((64, 64), Image.ANTIALIAS)

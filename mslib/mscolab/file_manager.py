@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import sys
 import secrets
 import time
@@ -256,18 +255,17 @@ class FileManager:
             db.session.commit()
         return True
 
-    def upload_file(self, file, subfolder, identifier=None):
+    def upload_file(self, file, subfolder=None, identifier=None, include_prefix=False):
         """
-        Generic function to save files securely in specified directory with unique filename
+        Generic function to save files securely in any specified directory with unique filename
         and return the relative file path.
         """
         upload_folder = mscolab_settings.UPLOAD_FOLDER
-        with fs.open_fs(upload_folder) as _fs:
-            file_dir = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
-            if sys.platform.startswith('win'):
-                file_dir = file_dir.replace('\\', '/')
-            _fs.makedirs(str(subfolder) if subfolder else "", recreate=True)
+        if sys.platform.startswith('win'):
+            upload_folder = upload_folder.replace('\\', '/')
 
+        subfolder_path = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
+        with fs.open_fs(subfolder_path, create=True) as _fs:
             # Creating unique and secure filename
             file_name, _ = file.filename.rsplit('.', 1)
             mime_type, _ = mimetypes.guess_type(file.filename)
@@ -282,16 +280,17 @@ class FileManager:
             file_name = secure_filename(file_name)
 
             # Saving the file
-            file_path = fs.path.join(file_dir, file_name)
-            file.save(file_path)
+            with _fs.open(file_name, mode="wb") as f:
+                file.save(f)
 
             # Relative File path
-            upload_folder = upload_folder.replace('\\', '/')
-            static_dir = fs.path.basename(upload_folder)
-            static_file_path = os.path.join(static_dir, str(subfolder), file_name)
-            static_file_path = static_file_path.replace('\\', '/')
-            logging.debug(f'Relative Path: {static_file_path}')
+            if include_prefix:
+                static_dir = fs.path.basename(upload_folder)
+                static_file_path = fs.path.join(static_dir, str(subfolder), file_name)
+            else:
+                static_file_path = fs.path.relativefrom(upload_folder, fs.path.join(subfolder_path, file_name))
 
+            logging.debug(f'Relative Path: {static_file_path}')
             return static_file_path
 
     def save_user_profile_image(self, user_id, image_file):

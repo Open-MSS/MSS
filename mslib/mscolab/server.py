@@ -24,7 +24,6 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
 import functools
 import json
 import logging
@@ -377,10 +376,8 @@ def fetch_profile_image():
     user_id = request.form['user_id']
     user = User.query.get(user_id)
     if user and user.profile_image_path:
-        # base_directory = mscolab_settings.UPLOAD_FOLDER
-        # base_path = os.path.join(base_directory, 'profile')
-        base_path = mscolab_settings.PROFILE_IMG_FOLDER
-        filename = os.path.basename(user.profile_image_path)
+        base_path = mscolab_settings.UPLOAD_FOLDER
+        filename = user.profile_image_path
         return send_from_directory(base_path, filename)
     else:
         abort(404)
@@ -423,7 +420,7 @@ def message_attachment():
         if users is False:
             return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
         if file is not None:
-            static_file_path = fm.upload_file(file, subfolder=str(op_id))
+            static_file_path = fm.upload_file(file, subfolder=str(op_id), include_prefix=True)
             if static_file_path is not None:
                 new_message = cm.add_message(user, static_file_path, op_id, message_type)
                 new_message_dict = get_message_dict(new_message)
