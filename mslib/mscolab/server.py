@@ -383,7 +383,7 @@ def fetch_profile_image():
         filename = os.path.basename(user.profile_image_path)
         return send_from_directory(base_path, filename)
     else:
-        return 404
+        abort(404)
 
 
 @APP.route("/delete_own_account", methods=["POST"])

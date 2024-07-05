@@ -40,6 +40,7 @@ import fs
 import requests
 import re
 import webbrowser
+import mimetypes
 import urllib.request
 from urllib.parse import urljoin
 
@@ -696,6 +697,17 @@ class MSUIMscolab(QtCore.QObject):
 
             self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
+    def set_profile_pixmap(self, img_data):
+        pixmap = QPixmap()
+        pixmap.loadFromData(img_data)
+        resized_pixmap = pixmap.scaled(64, 64)
+        if hasattr(self, 'profile_dialog'):
+            self.profile_dialog.gravatarLabel.setPixmap(resized_pixmap)
+        if hasattr(self, 'ui'):
+            icon = QtGui.QIcon()
+            icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+            self.ui.userOptionsTb.setIcon(icon)
+    
     def fetch_profile_image(self, refresh=False):
         # Display custom profile picture if exists
         url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
@@ -705,17 +717,7 @@ class MSUIMscolab(QtCore.QObject):
         }
         response = requests.get(url, data=data)
         if response.status_code == 200:
-            img_data = response.content
-            pixmap = QPixmap()
-            pixmap.loadFromData(img_data)
-
-            resized_pixmap = pixmap.scaled(64, 64)
-
-            if hasattr(self, 'profile_dialog'):
-                self.profile_dialog.gravatarLabel.setPixmap(resized_pixmap)
-            icon = QtGui.QIcon()
-            icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.userOptionsTb.setIcon(icon)
+            self.set_profile_pixmap(response.content)
         else:
             self.fetch_gravatar(refresh)
 
@@ -840,21 +842,22 @@ class MSUIMscolab(QtCore.QObject):
     def upload_image(self):
         file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)")
         if file_name:
-            # Resize the image and load it into QPixmap
+           # Determine the image format
+            mime_type, _ = mimetypes.guess_type(file_name)
+            file_format = mime_type.split('/')[1].upper()
+            
+            # Resize the image and set profile image pixmap
             image = Image.open(file_name)
             image = image.resize((64, 64), Image.ANTIALIAS)
             img_byte_arr = io.BytesIO()
-            image.save(img_byte_arr, format='PNG')
+            image.save(img_byte_arr, format=file_format)
             img_byte_arr.seek(0)
-
-            pixmap = QPixmap()
-            pixmap.loadFromData(img_byte_arr.getvalue())
-            self.profile_dialog.gravatarLabel.setPixmap(pixmap.scaled(64, 64))
+            self.set_profile_pixmap(img_byte_arr.getvalue())
 
             # Prepare the file data for upload
             try:
                 img_byte_arr.seek(0)  # Reset buffer position
-                files = {'image': (os.path.basename(file_name), img_byte_arr, 'image/png')}
+                files = {'image': (os.path.basename(file_name), img_byte_arr, mime_type)}
                 data = {
                     "user_id": str(self.user["id"]),
                     "token": self.token
@@ -865,6 +868,7 @@ class MSUIMscolab(QtCore.QObject):
                 # Check response status
                 if response.status_code == 200:
                     QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
+                    self.fetch_profile_image(refresh=True)
                 else:
                     QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
 
