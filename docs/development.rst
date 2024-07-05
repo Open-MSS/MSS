@@ -349,7 +349,7 @@ This plugin produces a coverage report, example::
     --------------------------------------------------------------------------
     mslib/__init__.py                            2      0      0      0   100%
     mslib/msui/__init__.py                      23      0      0      0   100%
-    mslib/msui/aircrafts.py                     52      1      8      1    97%
+    mslib/msui/aircraft.py                      52      1      8      1    97%
     mslib/msui/constants.py                     12      2      4      2    75%
     mslib/msui/flighttrack.py                  383    117    141     16    66%
 
