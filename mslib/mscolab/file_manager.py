@@ -230,6 +230,9 @@ class FileManager:
         elif action == "delete":
             user_query = User.query.filter_by(id=user.id).first()
             if user_query is not None:
+                # Delete profile image if it exists
+                if user.profile_image_path:
+                    self.delete_user_profile_images(user.profile_image_path)
                 db.session.delete(user)
                 db.session.commit()
             user_query = User.query.filter_by(id=user.id).first()
@@ -254,6 +257,16 @@ class FileManager:
             setattr(user, attribute, value)
             db.session.commit()
         return True
+
+    def delete_user_profile_images(self, image_to_be_deleted):
+        '''
+        This function is called when deleting account or updating the profile picture
+        '''
+        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        with fs.open_fs(upload_folder) as profile_fs:
+            if profile_fs.exists(image_to_be_deleted):
+                profile_fs.remove(image_to_be_deleted)
+                logging.debug(f"Successfully deleted image: {image_to_be_deleted}")
 
     def upload_file(self, file, subfolder=None, identifier=None, include_prefix=False):
         """
@@ -301,6 +314,9 @@ class FileManager:
 
         user = User.query.get(user_id)
         if user:
+            if user.profile_image_path:
+                # Delete the previous image
+                self.delete_user_profile_images(user.profile_image_path)
             user.profile_image_path = relative_file_path
             db.session.commit()
             return True, "Image uploaded successfully"

@@ -45,7 +45,7 @@ import urllib.request
 from urllib.parse import urljoin
 
 from fs import open_fs
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
 from mslib.msui import flighttrack as ft
@@ -845,35 +845,42 @@ class MSUIMscolab(QtCore.QObject):
             # Determine the image format
             mime_type, _ = mimetypes.guess_type(file_name)
             file_format = mime_type.split('/')[1].upper()
-
-            # Resize the image and set profile image pixmap
-            image = Image.open(file_name)
-            image = image.resize((64, 64), Image.ANTIALIAS)
-            img_byte_arr = io.BytesIO()
-            image.save(img_byte_arr, format=file_format)
-            img_byte_arr.seek(0)
-            self.set_profile_pixmap(img_byte_arr.getvalue())
-
-            # Prepare the file data for upload
             try:
-                img_byte_arr.seek(0)  # Reset buffer position
-                files = {'image': (os.path.basename(file_name), img_byte_arr, mime_type)}
-                data = {
-                    "user_id": str(self.user["id"]),
-                    "token": self.token
-                }
-                url = urljoin(self.mscolab_server_url, 'upload_profile_image')
-                response = requests.post(url, files=files, data=data)
+                # Resize the image and set profile image pixmap
+                image = Image.open(file_name)
+                image = image.resize((64, 64), Image.ANTIALIAS)
+                img_byte_arr = io.BytesIO()
+                image.save(img_byte_arr, format=file_format)
+                img_byte_arr.seek(0)
+                self.set_profile_pixmap(img_byte_arr.getvalue())
 
-                # Check response status
-                if response.status_code == 200:
-                    QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
-                    self.fetch_profile_image(refresh=True)
-                else:
-                    QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
+                # Prepare the file data for upload
+                try:
+                    img_byte_arr.seek(0)  # Reset buffer position
+                    files = {'image': (os.path.basename(file_name), img_byte_arr, mime_type)}
+                    data = {
+                        "user_id": str(self.user["id"]),
+                        "token": self.token
+                    }
+                    url = urljoin(self.mscolab_server_url, 'upload_profile_image')
+                    response = requests.post(url, files=files, data=data)
 
-            except requests.exceptions.RequestException as e:
-                QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
+                    # Check response status
+                    if response.status_code == 200:
+                        QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
+                        self.fetch_profile_image(refresh=True)
+                    else:
+                        QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
+
+                except requests.exceptions.RequestException as e:
+                    QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
+
+            except UnidentifiedImageError as e:
+                QMessageBox.critical(self.prof_diag, "Error",
+                                     f'Cannot identify image file. Please check the file format. Error : {e}')
+            except OSError as e:
+                QMessageBox.critical(self.prof_diag, "Error",
+                                     f'Cannot identify image file. Please check the file format. Error: {e}')
 
     def delete_account(self):
         # ToDo rename to delete_own_account
