@@ -701,8 +701,11 @@ class MSUIMscolab(QtCore.QObject):
         pixmap = QPixmap()
         pixmap.loadFromData(img_data)
         resized_pixmap = pixmap.scaled(64, 64)
-        if hasattr(self, 'profile_dialog'):
+
+        if (hasattr(self, 'profile_dialog') and self.profile_dialog is not None and
+                hasattr(self.profile_dialog, 'gravatarLabel') and self.profile_dialog.gravatarLabel is not None):
             self.profile_dialog.gravatarLabel.setPixmap(resized_pixmap)
+
         if hasattr(self, 'ui'):
             icon = QtGui.QIcon()
             icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
@@ -2156,6 +2159,10 @@ class MSUIMscolab(QtCore.QObject):
         self.signal_logout_mscolab.emit()
 
         self.operation_archive_browser.hide()
+
+        if hasattr(self, 'profile_dialog'):
+            del self.profile_dialog
+            self.profile_dialog = None
 
         # activate first local flighttrack after logging out
         self.ui.listFlightTracks.setCurrentRow(0)
