@@ -1,23 +1,53 @@
+# -*- coding: utf-8 -*-
+"""
+
+    mslib.utils.autoplot_gui
+    ~~~~~~~~~~~~~~~~
+
+    Python Scripts file for the GUI to download plots automatically.
+
+    This file is part of MSS.
+
+    :copyright: Copyright 2024 Preetam Sundar Das
+    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
+    :license: APACHE-2.0, see LICENSE for details.
+
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+"""
+
+
 import sys
 import click
 import requests
-import keyring
 from PyQt5.QtWidgets import (QApplication, QWidget, QFileDialog, QListWidgetItem,
-                             QVBoxLayout, QPushButton, QLabel)
-from mslib.msui.qt5.ui_mss_autoplot import Ui_Form
-from mslib.msui.qt5.ui_wms_login import Ui_Form2
+                             QVBoxLayout, QPushButton, QLabel, QTreeWidgetItem)
+from mslib.msui.qt5.ui_mss_autoplot import Uploadui
+from mslib.msui.qt5.ui_wms_login import Loginwms
 from mslib.utils import config as conf
 from mslib.utils.mssautoplot import main as autopl
 from mslib.msui.mscolab import MSColab_ConnectDialog, MSUIMscolab
-from mslib.utils.auth import save_password_to_keyring
+from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name, del_password_from_keyring
+from mslib.mscolab.conf import mscolab_settings
+from mslib.msui import msui
+from mslib.msui import mscolab
 
 
-class Layers(QWidget, Ui_Form):
+class Layers(QWidget):
     def __init__(self):
         super().__init__()
-        self.initUI()
+        self.init()
 
-    def initUI(self):
+    def init(self):
         self.setWindowTitle('Layers Window')
         self.setGeometry(200, 200, 400, 300)
 
@@ -33,7 +63,7 @@ class Layers(QWidget, Ui_Form):
         self.setLayout(layout)
 
 
-class WmsLoginInfo(QWidget, Ui_Form2):
+class WmsLoginInfo(QWidget, Loginwms):
     def __init__(self, link):
         super().__init__()
         self.setupUi(self)
@@ -47,81 +77,96 @@ class WmsLoginInfo(QWidget, Ui_Form2):
         self.close()
 
 
-class Upload(QWidget, Ui_Form):
+class Upload(QWidget, Uploadui):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
         self.cpath = None
         self.view = "top"
         self.itime = None
+        self.vertical = None
+        self.sections = None
+        self.flight = None
+        self.filename = None
+        self.operations = None
         self.vtime = None
         self.intv = None
         self.stime = None
         self.etime = None
-        self.ftrack = {}
-        self.sections = None
-        self.vertical = None
 
-        self.url = []
+        self.url = None
         self.layer = None
         self.styles = None
-        self.level = None
+        self.elevation = None
 
         self.num_interpolation_points = None
         self.num_labels = None
         self.resolution = None
-        self.mscolaburl = None
-        self.operations = {}
+
+        self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.mscolab = mscolab.MSUIMscolab(parent=self.main_window, data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
 
         # cpath
-        self.cpathButton.clicked.connect(self.openFileDialog)
+        self.cpathButton.clicked.connect(self.open_file_dialog)
 
         # all QcomboBox
         self.viewComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.viewComboBox))
-        self.sectionsComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.sectionsComboBox))
-        self.resolutionComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.resolutionComboBox))
+            lambda: self.combo_box_input(self.viewComboBox))
         self.itimeComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.itimeComboBox))
-        self.vtimeComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.vtimeComboBox))
-        self.intvComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.intvComboBox))
-        self.levelComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.levelComboBox))
+            lambda: self.combo_box_input(self.itimeComboBox))
+        self.verticalComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.verticalComboBox))
+        self.sectionsComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.sectionsComboBox))
+
+        self.stylesComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.stylesComboBox))
+        self.elevationComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.elevationComboBox))
+
+        self.resolutionComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.resolutionComboBox))
+
         self.stimeComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.stimeComboBox))
+            lambda: self.combo_box_input(self.stimeComboBox))
         self.etimeComboBox.currentIndexChanged.connect(
-            lambda: self.comboBoxInput(self.etimeComboBox))
+            lambda: self.combo_box_input(self.etimeComboBox))
+        self.vtimeComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.vtimeComboBox))
+        self.intvComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.intvComboBox))
 
         # all spinBox
         self.numinterSpinBox.valueChanged.connect(
-            lambda value: self.onSpinBoxValueChanged(value, self.numinterSpinBox))
+            lambda value: self.on_spin_box_value_changed(value, self.numinterSpinBox))
         self.numlabelsSpinBox.valueChanged.connect(
-            lambda value: self.onSpinBoxValueChanged(value, self.numlabelsSpinBox))
+            lambda value: self.on_spin_box_value_changed(value, self.numlabelsSpinBox))
 
         # all pushButton
-        self.addFtrackButton.clicked.connect(self.addftrack)
-        self.removeFtrackButton.clicked.connect(self.removeftrack)
-        self.addOperationsButton.clicked.connect(self.addOperation)
-        self.removeOperationsButton.clicked.connect(self.removeOperation)
-        self.addUrlButton.clicked.connect(self.addURL)
-        self.removeUrlButton.clicked.connect(self.removeURL)
-        self.layersButton.clicked.connect(self.layersWindow)
-        self.storePlotsButton.clicked.connect(self.storePlots)
+        self.flightAddButton.clicked.connect(self.add_flight)
+        self.flightRemoveButton.clicked.connect(self.remove_flight)
+        self.autoplotAddButton.clicked.connect(lambda: self.add_to_treewidget(self.autoplotTreeWidget))
+        self.autoplotRemoveButton.clicked.connect(lambda: self.remove_from_treewidget(self.autoplotTreeWidget))
+        self.urlAddButton.clicked.connect(self.add_url)
+        self.urlRemoveButton.clicked.connect(self.remove_url)
+        self.autoplotsecsAddButton.clicked.connect(lambda: self.add_to_treewidget(self.autoplotsecsTreeWidget))
+        self.autoplotsecsRemoveButton.clicked.connect(
+            lambda: self.remove_from_treewidget(self.autoplotsecsTreeWidget))
+        self.layersButton.clicked.connect(self.layers_window)
+        self.storePlotsButton.clicked.connect(self.store_plots)
+        self.mscolabLoginButton.clicked.connect(self.mscolab_login_window)
 
-    def openFileDialog(self):
+    def open_file_dialog(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(
             self, "Select .json Config File", "", "JSON Files (*.json)", options=options)
         if fileName:
             self.cpath = fileName
-            self.configureFromPath(self.cpath)
+            self.configure_from_path(self.cpath)
+            self.cpathOutputLabel.setText(self.cpath)
 
-    def configureFromPath(self, path):
+    def configure_from_path(self, path):
         conf.read_config_file(path)
         configure = conf.config_loader()
         if self.view == "linear":
@@ -131,23 +176,29 @@ class Upload(QWidget, Ui_Form):
         else:
             sec = "automated_plotting_hsecs"
 
-        self.ftrack[configure["automated_plotting_flights"][0][0]] = configure["automated_plotting_flights"][0][3]
         self.flight = configure["automated_plotting_flights"][0][0]
-        self.fname = configure["automated_plotting_flights"][0][3]
+        self.filename = configure["automated_plotting_flights"][0][3]
         self.sections = configure["automated_plotting_flights"][0][1]
         self.vertical = configure["automated_plotting_flights"][0][2]
         self.itime = configure["automated_plotting_flights"][0][4]
 
-        self.url.append(configure[sec][0][0])
+        self.url = configure[sec][0][0]
         self.layer = configure[sec][0][1]
         self.styles = configure[sec][0][2]
-        self.level = configure[sec][0][3]
+        self.elevation = configure[sec][0][3]
+        self.resolution = configure["layout"]["topview"]
 
-    def storePlots(self):
+    def mscolab_login_window(self):
+        self.mscolab.open_connect_window()
+        print(self.mscolab.mscolab_server_url,self.mscolab.token)
+        val = self.mscolab.request_wps_from_server()
+        print(val)
+
+    def store_plots(self):
         args = [
             "--cpath", self.cpath,
             "--view", self.view,
-            "--ftrack", next(iter(self.ftrack.values())),
+            "--ftrack", self.filename,
             "--itime", self.itime,
             "--vtime", self.vtime,
             "--intv", self.intv,
@@ -157,35 +208,67 @@ class Upload(QWidget, Ui_Form):
         with click.Context(autopl):
             autopl.main(args=args, prog_name="autoplot_gui")
 
-    def comboBoxInput(self, combo):
-        comboBoxName = combo.objectName()
-        if comboBoxName == "sectionsComboBox":
-            self.sections = self.sectionsComboBox.currentText()
-        if comboBoxName == "viewComboBox":
-            self.view = self.viewComboBox.currentText()
-        if comboBoxName == "resolutionComboBox":
-            self.resolution = self.resolutionComboBox.currentText()
-        if comboBoxName == "levelComboBox":
-            self.level = self.levelComboBox.currentText()
-        if comboBoxName == "itimeComboBox":
-            self.itime = self.itimeComboBox.currentText()
-        if comboBoxName == "vtimeComboBox":
-            self.vtime = self.vtimeComboBox.currentText()
-        if comboBoxName == "intvComboBox":
-            self.intv = self.intvComboBox.currentText()
-        if comboBoxName == "stimeComboBox":
-            self.stime = self.stimeComboBox.currentText()
-        if comboBoxName == "etimeComboBox":
-            self.etime = self.etimeComboBox.currentText()
+    def add_to_treewidget(self, treewidget):
+        if (treewidget.objectName() == "autoplotTreeWidget"):
+            QTreeWidgetItem(self.autoplotTreeWidget, ['', '', '', '', ''])
+        if (treewidget.objectName() == "autoplotsecsTreeWidget"):
+            QTreeWidgetItem(self.autoplotsecsTreeWidget, ['', '', '', ''])
 
-    def onSpinBoxValueChanged(self, value, spinName):
+    def remove_from_treewidget(self, treewidget):
+        selected_item = treewidget.currentItem()
+        treewidget.takeTopelevationItem(self.tree.indexOfTopelevationItem(selected_item))
+
+    def update_selected_row(self, treewidget, column, value):
+        selected_item = treewidget.currentItem()
+        if selected_item:
+            selected_item.setText(column, value)
+
+    def combo_box_input(self, combo):
+        comboBoxName = combo.objectName()
+        currentText = combo.currentText()
+        if comboBoxName == "viewComboBox":
+            self.view = currentText
+            if currentText == "Top View":
+                self.view = "top"
+            if currentText == "Side View":
+                self.view = "side"
+            if currentText == "Linear View":
+                self.view = "linear"
+
+        if comboBoxName == "itimeComboBox":
+            self.itime = currentText
+            self.update_selected_row(self.autoplotTreeWidget, 4, comboBoxName.currentText())
+        if comboBoxName == "verticalComboBox":
+            self.vertical = currentText
+            self.update_selected_row(self.autoplotTreeWidget, 2, comboBoxName.currentText())
+        if comboBoxName == "sectionsComboBox":
+            self.sections = currentText
+            self.update_selected_row(self.autoplotTreeWidget, 1, comboBoxName.currentText())
+        if comboBoxName == "stylesComboBox":
+            self.resolution = currentText
+            self.update_selected_row(self.autoplotsecsTreeWidget, 2, comboBoxName.currentText())
+        if comboBoxName == "elevationComboBox":
+            self.elevation = currentText
+            self.update_selected_row(self.autoplotsecsTreeWidget, 3, comboBoxName.currentText())
+        if comboBoxName == "resolutionComboBox":
+            self.resolution = currentText
+        if comboBoxName == "stimeComboBox":
+            self.stime = currentText
+        if comboBoxName == "etimeComboBox":
+            self.etime = currentText
+        if comboBoxName == "vtimeComboBox":
+            self.vtime = currentText
+        if comboBoxName == "intvComboBox":
+            self.intv = currentText
+
+    def on_spin_box_value_changed(self, value, spinName):
         spinBoxName = spinName.objectName()
         if spinBoxName == "numinterSpinBox":
             self.num_interpolation_points = value
         if spinBoxName == "numlabelsSpinBox":
             self.num_labels = value
 
-    def addftrack(self):
+    def add_flight(self):
         text = self.flightLineEdit.text()
         if text:
             options = QFileDialog.Options()
@@ -194,60 +277,38 @@ class Upload(QWidget, Ui_Form):
                 self, "Select .ftml flights File", "", "ftml Files (*.ftml)", options=options)
             path = fileName
             if path:
-                self.ftrack[text] = path
-                item = QListWidgetItem(text)
-                self.flightListWidget.addItem(item)
+                self.flight = path
+                self.filename = text
+                self.update_selected_row(self.autoplotTreeWidget, 0, self.flight)
+                self.update_selected_row(self.autoplotTreeWidget, 3, self.filename)
             self.flightLineEdit.clear()
 
-    def removeftrack(self):
-        selected = self.flightListWidget.selectedItems()
+    def remove_flight(self):
+        selected = self.autoplotTreeWidget.currentItem()
         if selected:
-            for i in selected:
-                del self.ftrack[i.text()]
-                self.flightListWidget.takeItem(self.flightListWidget.row(i))
+            self.update_selected_row(self.autoplotTreeWidget, 0, "")
+            self.update_selected_row(self.autoplotTreeWidget, 1, "")
 
-    def addOperation(self):
-        text = self.operationsLineEdit.text()
-        if text:
-            options = QFileDialog.Options()
-            options |= QFileDialog.DontUseNativeDialog
-            fileName, _ = QFileDialog.getOpenFileName(
-                self, "Select Operations File", "", "JSON Files (*.json)", options=options)
-            path = fileName
-            if path:
-                self.operations[text] = path
-                item = QListWidgetItem(text)
-                self.operationsListWidget.addItem(item)
-            self.operationsLineEdit.clear()
-
-    def removeOperation(self):
-        selected = self.operationsListWidget.selectedItems()
-        if selected:
-            for i in selected:
-                del self.operations[i.text()]
-                self.operationsListWidget.takeItem(self.operationsListWidget.row(i))
-
-    def addURL(self):
-        text = self.urlLineEdit.text()
-        if text:
-            response = requests.get(text)
+    def add_url(self):
+        link = self.urlLineEdit.text()
+        if link:
+            response = requests.get(link)
             if response.status_code == 401:
-                self.check_url_in_keyring(text)
+                self.check_url_in_keyring(link)
             else:
-                self.urlListWidget.addItem(QListWidgetItem(text))
-                self.urlLineEdit.clear()
-                self.url.append(text)
+                self.update_selected_row(self.autoplotsecsTreeWidget, 0, link)
 
     def check_url_in_keyring(self, link):
-        cred = keyring.get_credential(link, "")
-
-        if cred:
-            check = self.check_website_access(link, cred.username, cred.password)
+        conf.read_config_file(self.cpath)
+        configure = conf.config_loader()
+        username, password = get_auth_from_url_and_name(link, configure["MSS_auth"])
+        print(username, password)
+        if username:
+            check = self.check_website_access(link, username, password)
             if check == True:
-                self.urlListWidget.addItem(QListWidgetItem(link))
-                self.urlLineEdit.clear()
-                self.url.append(link)
+                self.update_selected_row(self.autoplotsecsTreeWidget, 0, link)
             else:
+                del_password_from_keyring(link, username)
                 self.connect_dialog = WmsLoginInfo(link)
                 self.connect_dialog.show()
 
@@ -269,14 +330,12 @@ class Upload(QWidget, Ui_Form):
         except requests.exceptions.RequestException as e:
             print(f"Error occurred: {e}")
 
-    def removeURL(self):
-        selected = self.urlListWidget.selectedItems()
+    def remove_url(self):
+        selected = self.autoplotsecsTreeWidget.currentItem()
         if selected:
-            for i in selected:
-                self.url.remove(i.text())
-                self.urlListWidget.takeItem(self.urlListWidget.row(i))
+            self.update_selected_row(self.autoplotsecsTreeWidget, 0, "")
 
-    def layersWindow(self):
+    def layers_window(self):
         self.layerobj = Layers()
         self.layerobj.show()
 

@@ -339,7 +339,7 @@ def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
                 print("Invalid times and/or levels requested")
             elif "LAYER" in str(e):
                 print("Invalid LAYER '{}' requested".format(layer))
-            elif "404 Client Error" or "NOT FOUND for url" in e:
+            elif "404 Client Error" in e or "NOT FOUND for url" in e:
                 print("Invalid STYLE and/or URL requested")
             else:
                 print(str(e))
