@@ -232,7 +232,7 @@ class FileManager:
             if user_query is not None:
                 # Delete profile image if it exists
                 if user.profile_image_path:
-                    self.delete_user_profile_images(user.profile_image_path)
+                    self.delete_user_profile_image(user.profile_image_path)
                 db.session.delete(user)
                 db.session.commit()
             user_query = User.query.filter_by(id=user.id).first()
@@ -258,7 +258,7 @@ class FileManager:
             db.session.commit()
         return True
 
-    def delete_user_profile_images(self, image_to_be_deleted):
+    def delete_user_profile_image(self, image_to_be_deleted):
         '''
         This function is called when deleting account or updating the profile picture
         '''
@@ -316,7 +316,7 @@ class FileManager:
         if user:
             if user.profile_image_path:
                 # Delete the previous image
-                self.delete_user_profile_images(user.profile_image_path)
+                self.delete_user_profile_image(user.profile_image_path)
             user.profile_image_path = relative_file_path
             db.session.commit()
             return True, "Image uploaded successfully"
