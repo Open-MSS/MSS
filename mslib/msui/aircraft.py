@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.aircrafts
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.msui.aircraft
+    ~~~~~~~~~~~~~~~~~~~
 
     This module provides aircraft definitions
 
