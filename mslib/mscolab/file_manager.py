@@ -297,7 +297,7 @@ class FileManager:
                 file.save(f)
 
             # Relative File path
-            if include_prefix:
+            if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
                 static_dir = fs.path.basename(upload_folder)
                 static_file_path = fs.path.join(static_dir, str(subfolder), file_name)
             else:
