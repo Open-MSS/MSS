@@ -702,14 +702,14 @@ class MSUIMscolab(QtCore.QObject):
         pixmap.loadFromData(img_data)
         resized_pixmap = pixmap.scaled(64, 64)
 
+        # ToDo : verify by a test if the condition can be simplified
         if (hasattr(self, 'profile_dialog') and self.profile_dialog is not None and
                 hasattr(self.profile_dialog, 'gravatarLabel') and self.profile_dialog.gravatarLabel is not None):
             self.profile_dialog.gravatarLabel.setPixmap(resized_pixmap)
 
-        if hasattr(self, 'ui'):
-            icon = QtGui.QIcon()
-            icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
-            self.ui.userOptionsTb.setIcon(icon)
+        icon = QtGui.QIcon()
+        icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ui.userOptionsTb.setIcon(icon)
 
     def fetch_profile_image(self, refresh=False):
         # Display custom profile picture if exists
@@ -843,7 +843,8 @@ class MSUIMscolab(QtCore.QObject):
         self.fetch_profile_image()
 
     def upload_image(self):
-        file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "", "Image Files (*.png *.jpg *.jpeg)")
+        file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "",
+                                                   "Image (*.png *.gif *.jpg *.jpeg *.bpm)")
         if file_name:
             # Determine the image format
             mime_type, _ = mimetypes.guess_type(file_name)

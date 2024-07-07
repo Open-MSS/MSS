@@ -378,7 +378,8 @@ def fetch_profile_image():
     if user and user.profile_image_path:
         base_path = mscolab_settings.UPLOAD_FOLDER
         filename = user.profile_image_path
-        return send_from_directory(base_path, filename)  # todo : Supply os path semantics in this and def uploads()
+        # ToDo: We need to use fs for the path handling and send_directory needs os.path.See discussion on #2103
+        return send_from_directory(base_path, filename)
     else:
         abort(404)
 
