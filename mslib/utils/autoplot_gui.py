@@ -40,6 +40,8 @@ from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_nam
 from mslib.mscolab.conf import mscolab_settings
 from mslib.msui import msui
 from mslib.msui import mscolab
+from mslib.msui.multilayers import Layer, Multilayers
+from mslib.msui.wms_control import WMSControlWidget, HSecWMSControlWidget
 
 
 class Layers(QWidget):
@@ -97,7 +99,7 @@ class Upload(QWidget, Uploadui):
         self.url = None
         self.layer = None
         self.styles = None
-        self.elevation = None
+        self.level = None
 
         self.num_interpolation_points = None
         self.num_labels = None
@@ -105,6 +107,14 @@ class Upload(QWidget, Uploadui):
 
         self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
         self.mscolab = mscolab.MSUIMscolab(parent=self.main_window, data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.wmscon = WMSControlWidget()
+        self.multilayers = Multilayers(self)
+        self.widget = HSecWMSControlWidget(
+            default_WMS=conf.config_loader(dataset="default_WMS"),
+            wms_cache=conf.config_loader(dataset="wms_cache"))
+
+        self.layersButton.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
+        self.multilayers.btGetCapabilities.clicked.connect(self.wmscon.get_capabilities)
 
         # cpath
         self.cpathButton.clicked.connect(self.open_file_dialog)
@@ -121,11 +131,8 @@ class Upload(QWidget, Uploadui):
 
         self.stylesComboBox.currentIndexChanged.connect(
             lambda: self.combo_box_input(self.stylesComboBox))
-        self.elevationComboBox.currentIndexChanged.connect(
-            lambda: self.combo_box_input(self.elevationComboBox))
-
-        self.resolutionComboBox.currentIndexChanged.connect(
-            lambda: self.combo_box_input(self.resolutionComboBox))
+        self.levelComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.levelComboBox))
 
         self.stimeComboBox.currentIndexChanged.connect(
             lambda: self.combo_box_input(self.stimeComboBox))
@@ -135,12 +142,6 @@ class Upload(QWidget, Uploadui):
             lambda: self.combo_box_input(self.vtimeComboBox))
         self.intvComboBox.currentIndexChanged.connect(
             lambda: self.combo_box_input(self.intvComboBox))
-
-        # all spinBox
-        self.numinterSpinBox.valueChanged.connect(
-            lambda value: self.on_spin_box_value_changed(value, self.numinterSpinBox))
-        self.numlabelsSpinBox.valueChanged.connect(
-            lambda value: self.on_spin_box_value_changed(value, self.numlabelsSpinBox))
 
         # all pushButton
         self.flightAddButton.clicked.connect(self.add_flight)
@@ -152,7 +153,7 @@ class Upload(QWidget, Uploadui):
         self.autoplotsecsAddButton.clicked.connect(lambda: self.add_to_treewidget(self.autoplotsecsTreeWidget))
         self.autoplotsecsRemoveButton.clicked.connect(
             lambda: self.remove_from_treewidget(self.autoplotsecsTreeWidget))
-        self.layersButton.clicked.connect(self.layers_window)
+        # self.layersButton.clicked.connect(self.layers_window)
         self.storePlotsButton.clicked.connect(self.store_plots)
         self.mscolabLoginButton.clicked.connect(self.mscolab_login_window)
 
@@ -185,12 +186,11 @@ class Upload(QWidget, Uploadui):
         self.url = configure[sec][0][0]
         self.layer = configure[sec][0][1]
         self.styles = configure[sec][0][2]
-        self.elevation = configure[sec][0][3]
-        self.resolution = configure["layout"]["topview"]
+        self.level = configure[sec][0][3]
 
     def mscolab_login_window(self):
         self.mscolab.open_connect_window()
-        print(self.mscolab.mscolab_server_url,self.mscolab.token)
+        print(self.mscolab.mscolab_server_url, self.mscolab.token)
         val = self.mscolab.request_wps_from_server()
         print(val)
 
@@ -237,19 +237,19 @@ class Upload(QWidget, Uploadui):
 
         if comboBoxName == "itimeComboBox":
             self.itime = currentText
-            self.update_selected_row(self.autoplotTreeWidget, 4, comboBoxName.currentText())
+            # self.update_selected_row(self.autoplotTreeWidget, 4, comboBoxName.currentText())
         if comboBoxName == "verticalComboBox":
             self.vertical = currentText
-            self.update_selected_row(self.autoplotTreeWidget, 2, comboBoxName.currentText())
+            self.update_selected_row(self.autoplotTreeWidget, 2, currentText)
         if comboBoxName == "sectionsComboBox":
             self.sections = currentText
-            self.update_selected_row(self.autoplotTreeWidget, 1, comboBoxName.currentText())
+            self.update_selected_row(self.autoplotTreeWidget, 1, currentText)
         if comboBoxName == "stylesComboBox":
-            self.resolution = currentText
-            self.update_selected_row(self.autoplotsecsTreeWidget, 2, comboBoxName.currentText())
-        if comboBoxName == "elevationComboBox":
-            self.elevation = currentText
-            self.update_selected_row(self.autoplotsecsTreeWidget, 3, comboBoxName.currentText())
+            self.styles = currentText
+            self.update_selected_row(self.autoplotsecsTreeWidget, 2, currentText)
+        if comboBoxName == "levelComboBox":
+            self.level = currentText
+            self.update_selected_row(self.autoplotsecsTreeWidget, 3, currentText)
         if comboBoxName == "resolutionComboBox":
             self.resolution = currentText
         if comboBoxName == "stimeComboBox":

@@ -6,63 +6,186 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1039</width>
-    <height>727</height>
+    <width>651</width>
+    <height>784</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
-   <string>Form</string>
+   <string>MSS Autoplot GUI</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
-   <item row="0" column="1">
-    <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0,0,0">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,0,0,0,0,0,0,0,0,0">
      <property name="sizeConstraint">
       <enum>QLayout::SetMinimumSize</enum>
      </property>
-     <item row="2" column="0" colspan="4">
-      <widget class="QTreeWidget" name="autoplotTreeWidget">
+     <item row="8" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_16">
+       <property name="spacing">
+        <number>6</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="itimeLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Initial Time</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="itimeComboBox">
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="2">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="viewLabel">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Views</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="viewComboBox">
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Top View</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Side View</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Linear View</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="6" column="0">
+      <widget class="QPushButton" name="autoplotsecsAddButton">
        <property name="maximumSize">
         <size>
-         <width>600</width>
-         <height>150</height>
+         <width>150</width>
+         <height>16777215</height>
         </size>
        </property>
-       <property name="allColumnsShowFocus">
-        <bool>false</bool>
+       <property name="text">
+        <string>Add</string>
        </property>
-       <column>
-        <property name="text">
-         <string>flight</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>sections</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>vertical</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>fname</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>itime</string>
-        </property>
-       </column>
-       <item>
-        <property name="text">
-         <string/>
-        </property>
-       </item>
       </widget>
      </item>
-     <item row="4" column="0">
+     <item row="9" column="4">
+      <widget class="QPushButton" name="storePlotsButton">
+       <property name="maximumSize">
+        <size>
+         <width>150</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Store Plots </string>
+       </property>
+      </widget>
+     </item>
+     <item row="9" column="0">
+      <layout class="QVBoxLayout" name="verticalLayout_7">
+       <item>
+        <widget class="QLabel" name="stimeLabel">
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Start time</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="stimeComboBox">
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <item>
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>2019-09-01T00:00:00</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="4" column="0" colspan="3">
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <property name="sizeConstraint">
         <enum>QLayout::SetMinimumSize</enum>
@@ -87,26 +210,26 @@
         </widget>
        </item>
        <item>
-        <widget class="QLineEdit" name="urlLineEdit">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-       <item>
         <layout class="QHBoxLayout" name="horizontalLayout">
          <property name="spacing">
           <number>0</number>
          </property>
+         <item>
+          <widget class="QLineEdit" name="urlLineEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>30</height>
+            </size>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QPushButton" name="urlAddButton">
            <property name="sizePolicy">
@@ -145,30 +268,74 @@
            </property>
           </widget>
          </item>
+         <item>
+          <widget class="QPushButton" name="layersButton">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>100</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Layers</string>
+           </property>
+          </widget>
+         </item>
         </layout>
        </item>
       </layout>
      </item>
-     <item row="8" column="3">
-      <spacer name="horizontalSpacer_4">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
+     <item row="2" column="0" colspan="5">
+      <widget class="QTreeWidget" name="autoplotTreeWidget">
+       <property name="maximumSize">
         <size>
-         <width>120</width>
-         <height>20</height>
+         <width>630</width>
+         <height>150</height>
         </size>
        </property>
-      </spacer>
-     </item>
-     <item row="1" column="2">
-      <layout class="QVBoxLayout" name="verticalLayout_2">
+       <property name="allColumnsShowFocus">
+        <bool>false</bool>
+       </property>
+       <column>
+        <property name="text">
+         <string>Flight</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Sections</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Vertical</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>File name</string>
+        </property>
+       </column>
        <item>
-        <widget class="QLabel" name="sectionsLabel">
+        <property name="text">
+         <string/>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="4" column="4">
+      <layout class="QVBoxLayout" name="verticalLayout_5">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="levelLabel">
          <property name="maximumSize">
           <size>
            <width>150</width>
@@ -176,48 +343,81 @@
           </size>
          </property>
          <property name="text">
-          <string>Sections</string>
+          <string>Level</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="sectionsComboBox">
+        <widget class="QComboBox" name="levelComboBox">
          <property name="maximumSize">
           <size>
            <width>150</width>
            <height>30</height>
           </size>
          </property>
-         <item>
-          <property name="text">
-           <string/>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>India</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Europe</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Germany</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Global</string>
-          </property>
-         </item>
         </widget>
        </item>
       </layout>
      </item>
-     <item row="4" column="2">
+     <item row="3" column="0">
+      <widget class="QPushButton" name="autoplotAddButton">
+       <property name="maximumSize">
+        <size>
+         <width>150</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Add</string>
+       </property>
+      </widget>
+     </item>
+     <item row="5" column="0" colspan="5">
+      <widget class="QTreeWidget" name="autoplotsecsTreeWidget">
+       <property name="maximumSize">
+        <size>
+         <width>630</width>
+         <height>150</height>
+        </size>
+       </property>
+       <column>
+        <property name="text">
+         <string>URL</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Layers</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Styles</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Level</string>
+        </property>
+       </column>
+       <item>
+        <property name="text">
+         <string/>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item row="8" column="4">
+      <widget class="QFrame" name="frame">
+       <property name="frameShape">
+        <enum>QFrame::StyledPanel</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Raised</enum>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3">
       <layout class="QVBoxLayout" name="verticalLayout_6">
        <property name="spacing">
         <number>0</number>
@@ -226,7 +426,7 @@
         <widget class="QLabel" name="stylesLabel">
          <property name="maximumSize">
           <size>
-           <width>120</width>
+           <width>150</width>
            <height>30</height>
           </size>
          </property>
@@ -239,7 +439,7 @@
         <widget class="QComboBox" name="stylesComboBox">
          <property name="maximumSize">
           <size>
-           <width>120</width>
+           <width>150</width>
            <height>30</height>
           </size>
          </property>
@@ -257,51 +457,40 @@
        </item>
       </layout>
      </item>
-     <item row="7" column="6">
-      <widget class="QPushButton" name="storePlotsButton">
-       <property name="text">
-        <string>Store Plots </string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout_12">
+     <item row="0" column="4" rowspan="2">
+      <layout class="QVBoxLayout" name="verticalLayout_11">
        <item>
-        <widget class="QLabel" name="verticalLabel">
+        <widget class="QPushButton" name="mscolabLoginButton">
          <property name="maximumSize">
           <size>
-           <width>120</width>
-           <height>30</height>
+           <width>150</width>
+           <height>16777215</height>
           </size>
          </property>
          <property name="text">
-          <string>Vertical</string>
+          <string>MSCOLAB Login</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="verticalComboBox">
+        <widget class="QListWidget" name="mscolabListWidget">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
          <property name="maximumSize">
           <size>
-           <width>120</width>
-           <height>30</height>
+           <width>150</width>
+           <height>130</height>
           </size>
          </property>
-         <item>
-          <property name="text">
-           <string/>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>default</string>
-          </property>
-         </item>
         </widget>
        </item>
       </layout>
      </item>
-     <item row="5" column="6">
+     <item row="9" column="3">
       <layout class="QVBoxLayout" name="verticalLayout_14">
        <item>
         <widget class="QLabel" name="intvLabel">
@@ -346,31 +535,12 @@
          </item>
         </widget>
        </item>
-       <item>
-        <spacer name="verticalSpacer_3">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>75</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
      </item>
-     <item row="0" column="2">
-      <layout class="QVBoxLayout" name="verticalLayout_16">
-       <property name="spacing">
-        <number>0</number>
-       </property>
+     <item row="1" column="2">
+      <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
-        <widget class="QLabel" name="itimeLabel">
+        <widget class="QLabel" name="sectionsLabel">
          <property name="maximumSize">
           <size>
            <width>150</width>
@@ -378,12 +548,12 @@
           </size>
          </property>
          <property name="text">
-          <string>Initial Time</string>
+          <string>Map Sections</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="itimeComboBox">
+        <widget class="QComboBox" name="sectionsComboBox">
          <property name="maximumSize">
           <size>
            <width>150</width>
@@ -395,78 +565,34 @@
            <string/>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>India</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Europe</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Germany</string>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Global</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
      </item>
-     <item row="5" column="0" colspan="4">
-      <widget class="QTreeWidget" name="autoplotsecsTreeWidget">
-       <property name="maximumSize">
-        <size>
-         <width>600</width>
-         <height>150</height>
-        </size>
-       </property>
-       <column>
-        <property name="text">
-         <string>url</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>layers</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>styles</string>
-        </property>
-       </column>
-       <column>
-        <property name="text">
-         <string>elevation</string>
-        </property>
-       </column>
+     <item row="1" column="3">
+      <layout class="QVBoxLayout" name="verticalLayout_12">
        <item>
-        <property name="text">
-         <string/>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item row="8" column="2">
-      <spacer name="horizontalSpacer_3">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>120</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="0" column="0">
-      <layout class="QVBoxLayout" name="verticalLayout_10">
-       <item>
-        <widget class="QLabel" name="cpathLabel">
-         <property name="text">
-          <string>Config file path</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="cpathButton">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
+        <widget class="QLabel" name="verticalLabel">
          <property name="maximumSize">
           <size>
            <width>150</width>
@@ -474,136 +600,33 @@
           </size>
          </property>
          <property name="text">
-          <string>select config file</string>
+          <string>Vertical</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QLabel" name="cpathOutputLabel">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string/>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="3" column="1">
-      <widget class="QPushButton" name="autoplotRemoveButton">
-       <property name="text">
-        <string>Remove</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="3" rowspan="2">
-      <layout class="QVBoxLayout" name="verticalLayout_11">
-       <item>
-        <widget class="QPushButton" name="mscolabLoginButton">
-         <property name="maximumSize">
-          <size>
-           <width>120</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>MSCOLAB Login</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QListWidget" name="mscolabListWidget">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>120</width>
-           <height>130</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="3" column="0">
-      <widget class="QPushButton" name="autoplotAddButton">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="1">
-      <widget class="QPushButton" name="layersButton">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="maximumSize">
-        <size>
-         <width>120</width>
-         <height>30</height>
-        </size>
-       </property>
-       <property name="text">
-        <string>Layers</string>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="1">
-      <widget class="QPushButton" name="autoplotsecsRemoveButton">
-       <property name="text">
-        <string>Remove</string>
-       </property>
-      </widget>
-     </item>
-     <item row="4" column="3">
-      <layout class="QVBoxLayout" name="verticalLayout_5">
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <item>
-        <widget class="QLabel" name="elevationLabel">
+        <widget class="QComboBox" name="verticalComboBox">
          <property name="maximumSize">
           <size>
            <width>150</width>
            <height>30</height>
           </size>
          </property>
-         <property name="text">
-          <string>Elevation</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="elevationComboBox">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
-         </property>
+         <item>
+          <property name="text">
+           <string/>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>default</string>
+          </property>
+         </item>
         </widget>
        </item>
       </layout>
      </item>
-     <item row="6" column="0">
-      <widget class="QPushButton" name="autoplotsecsAddButton">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
+     <item row="1" column="0" colspan="2">
       <layout class="QVBoxLayout" name="verticalLayout_4">
        <property name="sizeConstraint">
         <enum>QLayout::SetMinimumSize</enum>
@@ -623,28 +646,28 @@
           </size>
          </property>
          <property name="text">
-          <string>flight</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLineEdit" name="flightLineEdit">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
+          <string>Flight</string>
          </property>
         </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_2">
+         <item>
+          <widget class="QLineEdit" name="flightLineEdit">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
+           </property>
+          </widget>
+         </item>
          <item>
           <widget class="QPushButton" name="flightAddButton">
            <property name="sizePolicy">
@@ -687,35 +710,62 @@
        </item>
       </layout>
      </item>
-     <item row="0" column="1">
-      <layout class="QVBoxLayout" name="verticalLayout">
-       <property name="spacing">
-        <number>0</number>
-       </property>
+     <item row="0" column="0" colspan="2">
+      <layout class="QVBoxLayout" name="verticalLayout_10">
        <item>
-        <widget class="QLabel" name="viewLabel">
+        <widget class="QLabel" name="cpathOutputLabel">
+         <property name="maximumSize">
+          <size>
+           <width>250</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="cpathButton">
          <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
          </property>
          <property name="maximumSize">
           <size>
-           <width>120</width>
+           <width>250</width>
            <height>30</height>
           </size>
          </property>
          <property name="text">
-          <string>Views</string>
+          <string>Select Config File</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="9" column="1" colspan="2">
+      <layout class="QVBoxLayout" name="verticalLayout_15">
+       <item>
+        <widget class="QLabel" name="etimeLabel">
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>30</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>End time</string>
          </property>
         </widget>
        </item>
        <item>
-        <widget class="QComboBox" name="viewComboBox">
+        <widget class="QComboBox" name="etimeComboBox">
          <property name="maximumSize">
           <size>
-           <width>120</width>
+           <width>150</width>
            <height>30</height>
           </size>
          </property>
@@ -726,24 +776,14 @@
          </item>
          <item>
           <property name="text">
-           <string>Top View</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Side View</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>Linear View</string>
+           <string>2019-09-02T00:00:00</string>
           </property>
          </item>
         </widget>
        </item>
       </layout>
      </item>
-     <item row="5" column="5">
+     <item row="8" column="1" colspan="2">
       <layout class="QVBoxLayout" name="verticalLayout_17">
        <item>
         <widget class="QLabel" name="vtimeLabel">
@@ -778,213 +818,33 @@
          </item>
         </widget>
        </item>
-       <item>
-        <spacer name="verticalSpacer_4">
-         <property name="orientation">
-          <enum>Qt::Vertical</enum>
-         </property>
-         <property name="sizeType">
-          <enum>QSizePolicy::Fixed</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>20</width>
-           <height>75</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
       </layout>
      </item>
-     <item row="5" column="4">
-      <layout class="QVBoxLayout" name="verticalLayout_7">
-       <item>
-        <widget class="QLabel" name="stimeLabel">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Start time</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="stimeComboBox">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
-         </property>
-         <item>
-          <property name="text">
-           <string/>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2019-09-01T00:00:00</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_15">
-         <item>
-          <widget class="QLabel" name="etimeLabel">
-           <property name="maximumSize">
-            <size>
-             <width>150</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="text">
-            <string>End time</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QComboBox" name="etimeComboBox">
-           <property name="maximumSize">
-            <size>
-             <width>150</width>
-             <height>30</height>
-            </size>
-           </property>
-           <item>
-            <property name="text">
-             <string/>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>2019-09-02T00:00:00</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </item>
-     <item row="8" column="1">
-      <spacer name="horizontalSpacer_2">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
+     <item row="6" column="1" colspan="2">
+      <widget class="QPushButton" name="autoplotsecsRemoveButton">
+       <property name="maximumSize">
         <size>
-         <width>120</width>
-         <height>20</height>
+         <width>150</width>
+         <height>16777215</height>
         </size>
        </property>
-      </spacer>
-     </item>
-     <item row="8" column="0">
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeType">
-        <enum>QSizePolicy::Fixed</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>120</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item row="0" column="4" rowspan="5" colspan="3">
-      <widget class="QLabel" name="label_18">
        <property name="text">
-        <string>TextLabel</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignCenter</set>
+        <string>Remove</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="3">
-      <layout class="QVBoxLayout" name="verticalLayout_8">
-       <item>
-        <widget class="QLabel" name="resolutionLabel">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Resolution</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QComboBox" name="resolutionComboBox">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="7" column="1" colspan="2">
-      <layout class="QVBoxLayout" name="verticalLayout_9">
-       <item>
-        <widget class="QLabel" name="numinterpolationptsLabel">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Num interpolation points</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="numinterSpinBox">
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>16777215</height>
-          </size>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item row="7" column="0">
-      <layout class="QVBoxLayout" name="verticalLayout_13">
-       <item>
-        <widget class="QLabel" name="numlabelsLabel">
-         <property name="maximumSize">
-          <size>
-           <width>120</width>
-           <height>30</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Num labels</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QSpinBox" name="numlabelsSpinBox"/>
-       </item>
-      </layout>
+     <item row="3" column="1" colspan="2">
+      <widget class="QPushButton" name="autoplotRemoveButton">
+       <property name="maximumSize">
+        <size>
+         <width>150</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Remove</string>
+       </property>
+      </widget>
      </item>
     </layout>
    </item>
