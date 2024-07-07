@@ -263,6 +263,9 @@ class FileManager:
         This function is called when deleting account or updating the profile picture
         '''
         upload_folder = mscolab_settings.UPLOAD_FOLDER
+        if sys.platform.startswith('win'):
+            upload_folder = upload_folder.replace('\\', '/')
+
         with fs.open_fs(upload_folder) as profile_fs:
             if profile_fs.exists(image_to_be_deleted):
                 profile_fs.remove(image_to_be_deleted)
