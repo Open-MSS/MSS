@@ -56,18 +56,21 @@ class MultipleFlightpath:
     Represent a Multiple FLightpath
     """
 
-    def __init__(self, mapcanvas, wp, linewidth=2.0, color='blue'):
+    def __init__(self, mapcanvas, wp, linewidth=2.0, color='blue', line_transparency=1.0, line_style="solid"):
         self.map = mapcanvas
         self.flightlevel = None
         self.comments = ''
         self.patches = []
         self.waypoints = wp
         self.linewidth = linewidth
+        self.line_transparency = line_transparency
+        self.line_style = line_style
         self.color = color
         self.draw()
 
     def draw_line(self, x, y):
-        self.patches.append(self.map.plot(x, y, color=self.color, linewidth=self.linewidth))
+        self.patches.append(self.map.plot(x, y, color=self.color, linewidth=self.linewidth,
+                                          alpha=self.line_transparency, linestyle=self.line_style))
 
     def compute_xy(self, lon, lat):
         x, y = self.map.gcpoints_path(lon, lat)
@@ -81,11 +84,15 @@ class MultipleFlightpath:
             lon.append(self.waypoints[i][1])
         return lat, lon
 
-    def update(self, linewidth=None, color=None):
+    def update(self, linewidth=None, color=None, line_transparency=None, line_style=None):
         if linewidth is not None:
             self.linewidth = linewidth
         if color is not None:
             self.color = color
+        if line_transparency is not None:
+            self.line_transparency = line_transparency
+        if line_style is not None:
+            self.line_style = line_style
         self.remove()
         self.draw()
 
@@ -148,6 +155,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.color_change = False
         self.change_linewidth = False
         self.dsbx_linewidth.setValue(2.0)
+        self.hsTransparencyControl.setValue(100)
+        self.cbLineStyle.addItems(["Solid", "Dashed", "Dotted", "Dash-dot"])  # Item added in the list
+        self.cbLineStyle.setCurrentText("Solid")
 
         # Connect Signals and Slots
         self.listFlightTracks.model().rowsInserted.connect(self.wait)
@@ -158,6 +168,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.pushButton_color.clicked.connect(self.select_color)
         self.ui.signal_ft_vertices_color_change.connect(self.ft_vertices_color)
         self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
+        self.hsTransparencyControl.valueChanged.connect(self.set_transparency)
+        self.cbLineStyle.currentTextChanged.connect(self.set_linestyle)
         self.ui.signal_login_mscolab.connect(self.login)
 
         self.colorPixmap.setPixmap(self.show_color_pixmap(self.color))
@@ -397,6 +409,29 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.operations.set_linewidth()
         else:
             self.labelStatus.setText("Status: No flight track selected")
+
+    def set_transparency(self, value):
+        line_transparency = value / 100.0
+        for flighttrack_model in self.dict_flighttrack.keys():
+            flightpath_patch = self.dict_flighttrack[flighttrack_model].get("patch")
+            if flightpath_patch:
+                flightpath_patch.update(line_transparency=line_transparency)
+
+    def set_linestyle(self, style):
+        # Map combo box text to the corresponding line style
+        line_styles = {
+            "Solid": '-',
+            "Dashed": '--',
+            "Dotted": ':',
+            "Dash-dot": '-.'
+        }
+        selected_style = line_styles.get(style, '-')  # Default to 'solid' if the style is not found
+
+        for flighttrack_model in self.dict_flighttrack.keys():
+            flightpath_patch = self.dict_flighttrack[flighttrack_model].get("patch")
+            if flightpath_patch:
+                flightpath_patch.update(line_style=selected_style)
+                flightpath_patch.draw()
 
     def flighttrackRemoved(self, parent, start, end):
         """

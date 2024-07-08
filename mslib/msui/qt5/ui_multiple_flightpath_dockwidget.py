@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file '/home/zandar/Desktop/MSS/mslib/msui/ui/ui_multiple_flightpath_dockwidget.ui'
+# Form implementation generated from reading ui file 'ui_multiple_flightpath_dockwidget.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -160,13 +160,3 @@ class Ui_MultipleViewWidget(object):
         self.label_3.setText(_translate("MultipleViewWidget", "Line style"))
         self.label_2.setText(_translate("MultipleViewWidget", "Transparency"))
         self.labelStatus.setText(_translate("MultipleViewWidget", "Status: "))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MultipleViewWidget = QtWidgets.QWidget()
-    ui = Ui_MultipleViewWidget()
-    ui.setupUi(MultipleViewWidget)
-    MultipleViewWidget.show()
-    sys.exit(app.exec_())
