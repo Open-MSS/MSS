@@ -30,6 +30,7 @@
     limitations under the License.
 """
 import os
+import io
 import sys
 import json
 import hashlib
@@ -39,11 +40,12 @@ import fs
 import requests
 import re
 import webbrowser
+import mimetypes
 import urllib.request
 from urllib.parse import urljoin
 
 from fs import open_fs
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 
 from mslib.msui import flighttrack as ft
@@ -54,6 +56,8 @@ from mslib.msui import socket_control as sc
 
 import PyQt5
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+from PyQt5.QtGui import QPixmap
 
 from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
 from mslib.utils.verify_user_token import verify_user_token
@@ -675,7 +679,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.usernameLabel.setText(f"{self.user['username']}")
             self.ui.usernameLabel.show()
             self.ui.userOptionsTb.show()
-            self.fetch_gravatar()
+            self.fetch_profile_image()
             # enable add operation menu action
             self.ui.actionAddOperation.setEnabled(True)
 
@@ -693,7 +697,35 @@ class MSUIMscolab(QtCore.QObject):
 
             self.signal_login_mscolab.emit(self.mscolab_server_url, self.token)
 
-    def fetch_gravatar(self, refresh=False):
+    def set_profile_pixmap(self, img_data):
+        pixmap = QPixmap()
+        pixmap.loadFromData(img_data)
+        resized_pixmap = pixmap.scaled(64, 64)
+
+        # ToDo : verify by a test if the condition can be simplified
+        if (hasattr(self, 'profile_dialog') and self.profile_dialog is not None and
+                hasattr(self.profile_dialog, 'gravatarLabel') and self.profile_dialog.gravatarLabel is not None):
+            self.profile_dialog.gravatarLabel.setPixmap(resized_pixmap)
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(resized_pixmap, QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.ui.userOptionsTb.setIcon(icon)
+
+    def fetch_profile_image(self, refresh=False):
+        # Display custom profile picture if exists
+        url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
+        data = {
+            "user_id": str(self.user["id"]),
+            "token": self.token
+        }
+        response = requests.get(url, data=data)
+        if response.status_code == 200:
+            self.set_profile_pixmap(response.content)
+        else:
+            self.fetch_gravatar(refresh)
+
+    def fetch_gravatar(self, refresh):
+        # Display default gravatar if custom profile image is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
         gravatar_img_path = fs.path.join(constants.GRAVATAR_DIR_PATH, f"{email_hash}.png")
@@ -798,16 +830,61 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
+        self.profile_dialog.uploadImageBtn.clicked.connect(self.upload_image)
 
         # add context menu for right click on image
         self.gravatar_menu = QtWidgets.QMenu()
-        self.gravatar_menu.addAction('Fetch Gravatar', lambda: self.fetch_gravatar(refresh=True))
+        self.gravatar_menu.addAction('Fetch Gravatar', lambda: self.fetch_profile_image(refresh=True))
         self.gravatar_menu.addAction('Remove Gravatar', lambda: self.remove_gravatar())
         self.profile_dialog.gravatarLabel.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.profile_dialog.gravatarLabel.customContextMenuRequested.connect(on_context_menu)
 
         self.prof_diag.show()
-        self.fetch_gravatar()
+        self.fetch_profile_image()
+
+    def upload_image(self):
+        file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "",
+                                                   "Image (*.png *.gif *.jpg *.jpeg *.bpm)")
+        if file_name:
+            # Determine the image format
+            mime_type, _ = mimetypes.guess_type(file_name)
+            file_format = mime_type.split('/')[1].upper()
+            try:
+                # Resize the image and set profile image pixmap
+                image = Image.open(file_name)
+                image = image.resize((64, 64), Image.ANTIALIAS)
+                img_byte_arr = io.BytesIO()
+                image.save(img_byte_arr, format=file_format)
+                img_byte_arr.seek(0)
+                self.set_profile_pixmap(img_byte_arr.getvalue())
+
+                # Prepare the file data for upload
+                try:
+                    img_byte_arr.seek(0)  # Reset buffer position
+                    files = {'image': (os.path.basename(file_name), img_byte_arr, mime_type)}
+                    data = {
+                        "user_id": str(self.user["id"]),
+                        "token": self.token
+                    }
+                    url = urljoin(self.mscolab_server_url, 'upload_profile_image')
+                    response = requests.post(url, files=files, data=data)
+
+                    # Check response status
+                    if response.status_code == 200:
+                        QMessageBox.information(self.prof_diag, "Success", "Image uploaded successfully")
+                        self.fetch_profile_image(refresh=True)
+                    else:
+                        QMessageBox.critical(self.prof_diag, "Error", f"Failed to upload image: {response.text}")
+
+                except requests.exceptions.RequestException as e:
+                    QMessageBox.critical(self.prof_diag, "Error", f"Error occurred: {e}")
+
+            except UnidentifiedImageError as e:
+                QMessageBox.critical(self.prof_diag, "Error",
+                                     f'Cannot identify image file. Please check the file format. Error : {e}')
+            except OSError as e:
+                QMessageBox.critical(self.prof_diag, "Error",
+                                     f'Cannot identify image file. Please check the file format. Error: {e}')
 
     def delete_account(self):
         # ToDo rename to delete_own_account
@@ -2084,6 +2161,10 @@ class MSUIMscolab(QtCore.QObject):
         self.signal_logout_mscolab.emit()
 
         self.operation_archive_browser.hide()
+
+        if hasattr(self, 'profile_dialog'):
+            del self.profile_dialog
+            self.profile_dialog = None
 
         # activate first local flighttrack after logging out
         self.ui.listFlightTracks.setCurrentRow(0)
