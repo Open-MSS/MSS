@@ -152,7 +152,7 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 MAIL_ENABLED = False
 
 # SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
-SQLALCHEMY_DB_URI = 'postgresql://postgres:postgres@postgres/mscolab_{worker_id}'
+SQLALCHEMY_DB_URI = 'postgresql://postgres:postgres@127.0.0.1/mscolab_{worker_id}'
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = True
