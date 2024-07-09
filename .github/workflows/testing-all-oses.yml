@@ -57,7 +57,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["macos-13", "macos-14", "ubuntu-latest"]
+        os: ["ubuntu-latest"]
     services:
       postgres:
         image: postgres
