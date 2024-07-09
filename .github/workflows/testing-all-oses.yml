@@ -96,15 +96,18 @@ jobs:
     - name: Prepare databases
       # Create a database for each of the pytest-xdist processes.
       # The number of created databases might need to be changed in the future, if GitHub runners change.
-      run: psql -c 'create database mscolab_master;
-        create database mscolab_gw0;
-        create database mscolab_gw1;
-        create database mscolab_gw2;
-        create database mscolab_gw3;
-        create database mscolab_gw4;
-        create database mscolab_gw5;
-        create database mscolab_gw6;
-        create database mscolab_gw7;'
+      run: PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -c
+        '
+          create database mscolab_master;
+          create database mscolab_gw0;
+          create database mscolab_gw1;
+          create database mscolab_gw2;
+          create database mscolab_gw3;
+          create database mscolab_gw4;
+          create database mscolab_gw5;
+          create database mscolab_gw6;
+          create database mscolab_gw7;
+        '
     - name: Run tests
       timeout-minutes: 40
       # The ignored files can somehow cause the test suite to timeout.
