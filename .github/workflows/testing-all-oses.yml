@@ -93,6 +93,18 @@ jobs:
         cache-environment: true
         # Set the cache key in a way that the cache is invalidated every week on monday
         cache-environment-key: environment-${{ steps.year-and-week.outputs.year-and-week }}
+    - name: Prepare databases
+      # Create a database for each of the pytest-xdist processes.
+      # The number of created databases might need to be changed in the future, if GitHub runners change.
+      run: psql -c 'create database mscolab_master;
+        create database mscolab_gw0;
+        create database mscolab_gw1;
+        create database mscolab_gw2;
+        create database mscolab_gw3;
+        create database mscolab_gw4;
+        create database mscolab_gw5;
+        create database mscolab_gw6;
+        create database mscolab_gw7;'
     - name: Run tests
       timeout-minutes: 40
       # The ignored files can somehow cause the test suite to timeout.
