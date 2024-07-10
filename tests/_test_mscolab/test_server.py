@@ -28,6 +28,8 @@ import pytest
 import json
 import io
 
+from PIL import Image
+
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
 from mslib.mscolab.server import initialize_managers, check_login, register_user
@@ -130,7 +132,21 @@ class Test_Server:
     def test_delete_user(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
+            # case when user has no profile image set
             token = self._get_token(test_client, self.userdata)
+            response = test_client.post('/delete_own_account', data={"token": token})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True
+            response = test_client.post('/delete_own_account', data={"token": "dsdsds"})
+            assert response.status_code == 200
+            assert response.data.decode('utf-8') == "False"
+
+            # create user again, this time the user has a profile image set
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            token = self._get_token(test_client, self.userdata)
+            response = self._upload_profile_image(test_client, token, self.userdata[0])
+            assert response.status_code == 200  # this will ensure image was uploaded
             response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
@@ -412,3 +428,21 @@ class Test_Server:
         fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
         fm.save_file(operation.id, "content1", user)
         return fm, user
+
+    def _upload_profile_image(self, test_client, token, email):
+        # Create a dummy image
+        img = Image.new('RGB', (64, 64), color='yellow')
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+
+        filename = "test.jpeg"
+        user = get_user(email)
+
+        data = {
+            "user_id": str(user.id),
+            "token": token,
+            'image': (img_byte_arr, filename, 'image/jpeg')
+        }
+        response = test_client.post('/upload_profile_image', data=data)
+        return response
