@@ -32,6 +32,7 @@ from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
+from mslib.mscolab.conf import mscolab_settings
 
 
 class Test_FileManager:
@@ -267,6 +268,24 @@ class Test_FileManager:
             static_path = self.fm.upload_file(file, subfolder=str(operation.id), identifier=None)
             assert name in static_path
             assert static_path.endswith(ext)
+
+    def test_upload_file(self):
+        sample_file_path = os.path.join(os.path.dirname(__file__), "..", "data")
+        filename = "example.txt"
+        _, ext = filename.split('.')
+
+        open_txt = os.path.join(sample_file_path, "example.txt")
+        with open(open_txt, 'rb') as fp:
+            file = FileStorage(fp, filename=filename, content_type="text/plain")
+
+            subfolder = 'test_subfolder'
+            identifier = 'unique_identifier'
+            relative_path = self.fm.upload_file(file, subfolder=subfolder, identifier=identifier)
+
+            assert os.path.isfile(os.path.join(mscolab_settings.UPLOAD_FOLDER, relative_path))
+            assert identifier in relative_path
+            assert subfolder in relative_path
+            assert relative_path.endswith(ext)
 
     def test_get_file(self):
         with self.app.test_client():
