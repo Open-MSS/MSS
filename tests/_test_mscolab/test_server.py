@@ -151,6 +151,9 @@ class Test_Server:
             # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
             # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
 
+    # ToDo: Add a test for an oversized image/file ( > MAX_UPLOAD_SIZE) for chat attachments and profile image.
+    # Currently, flask is unable to raise exception for an oversized file.
+
     def test_messages(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
