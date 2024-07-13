@@ -28,6 +28,7 @@
 import requests
 import json
 from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import Qt
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
 import mslib.msui.msui_mainwindow as msui_mainwindow
@@ -172,6 +173,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
         self.hsTransparencyControl.valueChanged.connect(self.set_transparency)
         self.cbLineStyle.currentTextChanged.connect(self.set_linestyle)
+        self.cbSlectAll1.stateChanged.connect(self.selectAll)
         self.ui.signal_login_mscolab.connect(self.login)
 
         self.colorPixmap.setPixmap(self.show_color_pixmap(self.color))
@@ -340,6 +342,17 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         listItem.setIcon(self.show_color_icon(self.get_color(wp_model)))
 
         return listItem
+
+    def selectAll(self, state):
+        """
+        select/deselect local operations
+        """
+        for i in range(self.list_flighttrack.count()):
+            item = self.list_flighttrack.item(i)
+            if state == Qt.Checked:
+                item.setCheckState(Qt.Checked)
+            else:
+                item.setCheckState(Qt.Unchecked)
 
     def select_color(self):
         """
@@ -633,6 +646,7 @@ class MultipleFlightpathOperations:
         # This needs to be done after operations are loaded
         # Connect signals and slots
         self.list_operation_track.itemChanged.connect(self.set_flag)
+        self.parent.cbSlectAll2.stateChanged.connect(self.selectAll)
 
     def set_flag(self):
         if self.operation_added:
@@ -820,6 +834,17 @@ class MultipleFlightpathOperations:
             listItem.setFont(font)
 
         self.active_op_id = None
+
+    def selectAll(self, state):
+        """
+        select/deselect mscolab operations
+        """
+        for i in range(self.list_operation_track.count()):
+            item = self.list_operation_track.item(i)
+            if state == Qt.Checked:
+                item.setCheckState(Qt.Checked)
+            else:
+                item.setCheckState(Qt.Unchecked)
 
     def select_color(self):
         """
