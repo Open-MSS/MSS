@@ -30,7 +30,7 @@ import logging
 import functools
 
 from PyQt5 import QtGui, QtWidgets, QtCore
-from PyQt5.QtWidgets import QVBoxLayout, QGridLayout, QDialog
+from PyQt5.QtWidgets import QVBoxLayout, QGridLayout
 from mslib.msui.qt5 import ui_sideview_window as ui
 from mslib.msui.qt5 import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
@@ -42,6 +42,7 @@ from mslib.utils.units import units, convert_to
 
 # Dock window indices.
 WMS = 0
+
 
 class CustomColorDialog(QtWidgets.QDialog):
     """
@@ -93,6 +94,7 @@ class CustomColorDialog(QtWidgets.QDialog):
         if color.isValid():
             self.color_selected.emit(color)
             self.accept()
+
 
 class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
     """
@@ -234,6 +236,7 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
             palette = QtGui.QPalette(button.palette())
             palette.setColor(QtGui.QPalette.Button, color)
             button.setPalette(palette)
+
     def addItem(self):
         """
         Add a new item (i.e. flight level) to the table.
