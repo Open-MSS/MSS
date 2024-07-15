@@ -24,10 +24,13 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import random
 
 import requests
+import functools
 import json
 from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtWidgets import QVBoxLayout, QGridLayout
 from PyQt5.QtCore import Qt
 from mslib.msui.qt5 import ui_multiple_flightpath_dockwidget as ui
 from mslib.msui import flighttrack as ft
@@ -111,6 +114,58 @@ class MultipleFlightpath:
         self.map.ax.figure.canvas.draw()
 
 
+class CustomColorDialog(QtWidgets.QDialog):
+    """
+    Custom Color Dialog to select color from predefined swatches.
+    """
+    color_selected = QtCore.pyqtSignal(QtGui.QColor)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Select Color")
+        self.setFixedSize(350, 300)
+
+        self.colors = [
+            "#800000", "#c31f59", "#f59757", "#fde442", "#0000ff",
+            "#60c36e", "#65d8f2", "#a446be", "#f15aea", "#b9babb",
+            "#e6194B", "#d2cf94", "#356e33", "#f58231", "#2c2c2c",
+            "#000075", "#9A6324", "#808000", "#000000", "#f8cbdc"
+        ]
+
+        layout = QVBoxLayout()
+        # Color swatches layout
+        swatch_layout = QGridLayout()
+        self.color_buttons = []
+
+        for i, color in enumerate(self.colors):
+            button = QtWidgets.QPushButton()
+            button.setFixedSize(50, 50)
+            button.setStyleSheet(f"background-color: {color}")
+            button.clicked.connect(functools.partial(self.on_color_clicked, color))
+            row = i // 5
+            col = i % 5
+            swatch_layout.addWidget(button, row, col)
+
+        # Add "Pick Custom Color" button
+        self.custom_color_button = QtWidgets.QPushButton("Pick Custom Color")
+        self.custom_color_button.clicked.connect(self.on_custom_color_clicked)
+        self.custom_color_button.setFixedSize(325, 30)
+
+        layout.addLayout(swatch_layout)
+        layout.addWidget(self.custom_color_button)
+        self.setLayout(layout)
+
+    def on_color_clicked(self, color):
+        self.color_selected.emit(QtGui.QColor(color))
+        self.accept()
+
+    def on_custom_color_clicked(self):
+        color = QtWidgets.QColorDialog.getColor()
+        if color.isValid():
+            self.color_selected.emit(color)
+            self.accept()
+
+
 class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidget):
     """
     This class provides the interface for plotting Multiple Flighttracks
@@ -121,6 +176,15 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     #  in MultipleFlightpathControlWidget and MultipleFlightpathOperations classes.
 
     signal_parent_closes = QtCore.pyqtSignal()
+
+    custom_colors = [
+        (128, 0, 0), (195, 31, 89), (245, 151, 87), (253, 228, 66), (0, 0, 255),
+        (96, 195, 110), (101, 216, 242), (164, 70, 190), (241, 90, 234), (185, 186, 187),
+        (230, 25, 75), (210, 207, 148), (53, 110, 51), (245, 130, 49), (44, 44, 44),
+        (0, 0, 117), (154, 99, 36), (128, 128, 0), (0, 0, 0)
+        # Add more colors as needed
+    ]
+    used_colors = []
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, category=None, activeFlightTrack=None, active_op_id=None,
@@ -143,7 +207,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             ft_settings_dict = self.ui.getView().get_settings()
             self.color = ft_settings_dict["colour_ft_vertices"]
         else:
-            self.color = (0, 0, 1, 1)
+            self.color = self.get_random_color()
         self.obb = []
 
         self.operation_list = False
@@ -314,6 +378,23 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.create_list_item(wp_model)
         self.dict_flighttrack[wp_model]["wp_data"] = wp_data
 
+    def normalize_rgb(self, rgb):
+        return tuple(channel / 255 for channel in rgb)
+
+    def get_random_color(self):
+        """
+        Get a random color from custom colors ensuring no repeats.
+        """
+        available_colors = [color for color in self.custom_colors if color not in self.used_colors]
+        if not available_colors:
+            # Reset the used colors if all colors have been used
+            self.used_colors = []
+            available_colors = self.custom_colors.copy()
+
+        selected_color = random.choice(available_colors)
+        self.used_colors.append(selected_color)
+        return self.normalize_rgb(selected_color)
+
     def create_list_item(self, wp_model):
         """
         PyQt5 method : Add items in list and add checkbox functionality
@@ -321,7 +402,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         # Create new key in dict
         self.dict_flighttrack[wp_model] = {}
         self.dict_flighttrack[wp_model]["patch"] = None
-        self.dict_flighttrack[wp_model]["color"] = self.color
+        self.dict_flighttrack[wp_model]["color"] = self.get_random_color()
         self.dict_flighttrack[wp_model]["linewidth"] = 2.0
         self.dict_flighttrack[wp_model]["line_transparency"] = 1.0
         self.dict_flighttrack[wp_model]["line_style"] = "solid"
@@ -371,18 +452,24 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                     self.error_dialog = QtWidgets.QErrorMessage()
                     self.error_dialog.showMessage('Use "options" to change color of an activated flighttrack.')
                 else:
-                    color = QtWidgets.QColorDialog.getColor()
-                    if color.isValid():
-                        self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
-                        self.color_change = True
-                        self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
-                        self.dict_flighttrack[wp_model]["patch"].update(color=self.dict_flighttrack[wp_model]["color"])
+                    color_dialog = CustomColorDialog(self)
+                    color_dialog.color_selected.connect(lambda color: self.apply_color(wp_model, color))
+                    color_dialog.exec_()
             else:
                 self.labelStatus.setText("Check Mark the flighttrack to change its color.")
         elif self.list_operation_track.currentItem() is not None:
             self.operations.select_color()
         else:
             self.labelStatus.setText("Status: No flight track selected")
+
+    def apply_color(self, wp_model, color):
+        if color.isValid():
+            self.dict_flighttrack[wp_model]["color"] = color.getRgbF()
+            self.color_change = True
+            self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
+            self.dict_flighttrack[wp_model]["patch"].update(
+                color=self.dict_flighttrack[wp_model]["color"],
+                linewidth=self.dict_flighttrack[wp_model]["linewidth"])
 
     def get_color(self, wp_model):
         """
@@ -594,7 +681,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.flighttrack_list = flighttrack
 
     def get_ft_vertices_color(self):
-        return self.color
+        return self.get_random_color()
 
     def listFlighttrack_itemClicked(self):
         if self.list_operation_track.currentItem() is not None:
@@ -858,16 +945,20 @@ class MultipleFlightpathOperations:
                     self.error_dialog = QtWidgets.QErrorMessage()
                     self.error_dialog.showMessage('Use "options" to change color of an activated operation.')
                 else:
-                    color = QtWidgets.QColorDialog.getColor()
-                    if color.isValid():
-                        self.dict_operations[op_id]["color"] = color.getRgbF()
-                        self.color_change = True
-                        self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(op_id)))
-                        self.dict_operations[op_id]["patch"].update(
-                            color=self.dict_operations[op_id]["color"],
-                            linewidth=self.dict_operations[op_id]["linewidth"])
+                    color_dialog = CustomColorDialog(self.parent)
+                    color_dialog.color_selected.connect(lambda color: self.apply_color(op_id, color))
+                    color_dialog.exec_()
             else:
                 self.parent.labelStatus.setText("Check Mark the Operation to change color.")
+
+    def apply_color(self, op_id, color):
+        if color.isValid():
+            self.dict_operations[op_id]["color"] = color.getRgbF()
+            self.color_change = True
+            self.list_operation_track.currentItem().setIcon(self.show_color_icon(self.get_color(op_id)))
+            self.dict_operations[op_id]["patch"].update(
+                color=self.dict_operations[op_id]["color"],
+                linewidth=self.dict_operations[op_id]["linewidth"])
 
     def get_color(self, op_id):
         """

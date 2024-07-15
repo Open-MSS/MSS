@@ -69,7 +69,7 @@ class CustomColorDialog(QtWidgets.QDialog):
         self.setFixedSize(350, 300)
 
         self.colors = [
-            "#800000", "#c31f59", "#f59757", "#fde442", "#cbf36b",
+            "#800000", "#c31f59", "#f59757", "#fde442", "#0000ff",
             "#60c36e", "#65d8f2", "#a446be", "#f15aea", "#b9babb",
             "#e6194B", "#d2cf94", "#356e33", "#f58231", "#2c2c2c",
             "#000075", "#9A6324", "#808000", "#000000", "#f8cbdc"
