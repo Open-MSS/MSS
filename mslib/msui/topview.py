@@ -34,7 +34,6 @@ import logging
 from mslib.utils.config import config_loader
 from mslib.utils.coordinate import get_projection_params
 from PyQt5 import QtGui, QtWidgets, QtCore
-from PyQt5.QtWidgets import QVBoxLayout, QGridLayout
 from mslib.msui.qt5 import ui_topview_window as ui
 from mslib.msui.qt5 import ui_topview_mapappearance as ui_ma
 from mslib.msui.viewwindows import MSUIMplViewWindow
@@ -47,6 +46,7 @@ from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui import flighttrack as ft
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
+from mslib.utils.colordialog import CustomColorDialog
 
 # Dock window indices.
 WMS = 0
@@ -55,58 +55,6 @@ REMOTESENSING = 2
 KMLOVERLAY = 3
 AIRDATA = 4
 MULTIPLEFLIGHTPATH = 5
-
-
-class CustomColorDialog(QtWidgets.QDialog):
-    """
-    Custom Color Dialog to select color from predefined swatches.
-    """
-    color_selected = QtCore.pyqtSignal(QtGui.QColor)
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setWindowTitle("Select Color")
-        self.setFixedSize(350, 300)
-
-        self.colors = [
-            "#800000", "#c31f59", "#f59757", "#fde442", "#0000ff",
-            "#60c36e", "#65d8f2", "#a446be", "#f15aea", "#b9babb",
-            "#e6194B", "#d2cf94", "#356e33", "#f58231", "#2c2c2c",
-            "#000075", "#9A6324", "#808000", "#000000", "#f8cbdc"
-        ]
-
-        layout = QVBoxLayout()
-        # Color swatches layout
-        swatch_layout = QGridLayout()
-        self.color_buttons = []
-
-        for i, color in enumerate(self.colors):
-            button = QtWidgets.QPushButton()
-            button.setFixedSize(50, 50)
-            button.setStyleSheet(f"background-color: {color}")
-            button.clicked.connect(functools.partial(self.on_color_clicked, color))
-            row = i // 5
-            col = i % 5
-            swatch_layout.addWidget(button, row, col)
-
-        # Add "Pick Custom Color" button
-        self.custom_color_button = QtWidgets.QPushButton("Pick Custom Color")
-        self.custom_color_button.clicked.connect(self.on_custom_color_clicked)
-        self.custom_color_button.setFixedSize(325, 30)
-
-        layout.addLayout(swatch_layout)
-        layout.addWidget(self.custom_color_button)
-        self.setLayout(layout)
-
-    def on_color_clicked(self, color):
-        self.color_selected.emit(QtGui.QColor(color))
-        self.accept()
-
-    def on_custom_color_clicked(self):
-        color = QtWidgets.QColorDialog.getColor()
-        if color.isValid():
-            self.color_selected.emit(color)
-            self.accept()
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
