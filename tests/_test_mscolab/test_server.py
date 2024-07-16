@@ -154,6 +154,24 @@ class Test_Server:
     # ToDo: Add a test for an oversized image/file ( > MAX_UPLOAD_SIZE) for chat attachments and profile image.
     # Currently, flask is unable to raise exception for an oversized file.
 
+    def test_unauthorized_profile_image_upload(self):
+        other_user_data = 'other@ex.com', 'other', 'other'
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(other_user_data[0], other_user_data[1], other_user_data[2])
+        with self.app.test_client() as test_client:
+            # Case 1: Unauthenticated upload attempt
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None
+            self._upload_profile_image(test_client, token="random-string", email=self.userdata[0])
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None   # profile-image-path should remain None after failed upload
+
+            # Case 2: Authenticated as another user trying to upload for main user
+            token_of_other_user = self._get_token(test_client, other_user_data)
+            self._upload_profile_image(test_client, token_of_other_user, self.userdata[0])
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None  # User should not be able to upload an image for another user
+
     def test_messages(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:

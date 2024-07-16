@@ -356,7 +356,7 @@ def get_user():
 @APP.route('/upload_profile_image', methods=["POST"])
 @verify_user
 def upload_profile_image():
-    user_id = request.form['user_id']
+    user_id = g.user.id
     file = request.files['image']
     if not file:
         return jsonify({'message': 'No file provided or invalid file type'}), 400
@@ -375,7 +375,7 @@ def upload_profile_image():
 @APP.route('/fetch_profile_image', methods=["GET"])
 @verify_user
 def fetch_profile_image():
-    user_id = request.form['user_id']
+    user_id = g.user.id
     user = User.query.get(user_id)
     if user and user.profile_image_path:
         base_path = mscolab_settings.UPLOAD_FOLDER
