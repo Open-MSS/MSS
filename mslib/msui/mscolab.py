@@ -668,6 +668,7 @@ class MSUIMscolab(QtCore.QObject):
             self.conn.signal_update_permission.connect(self.handle_update_permission)
             self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
             self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
+            self.conn.signal_active_user_update.connect(self.update_active_user_label)
 
             self.ui.connectBtn.hide()
             self.ui.openOperationsGb.show()
@@ -1676,6 +1677,12 @@ class MSUIMscolab(QtCore.QObject):
             operation_name = old_operation_name
         show_popup(self.ui, "Success", f'Operation "{operation_name}" was deleted!', icon=1)
 
+    @QtCore.pyqtSlot(int, int)
+    def update_active_user_label(self, op_id, count):
+        # Update UI component which displays the number of active users
+        if self.active_op_id == op_id:
+            self.ui.userCountLabel.setText(f"Active Users: {count}")
+
     def show_categories_to_ui(self, ops=None):
         """
         adds the list of operation categories to the UI
@@ -1871,6 +1878,9 @@ class MSUIMscolab(QtCore.QObject):
                     window.enable_navbar_action_buttons()
 
             self.ui.switch_to_mscolab()
+
+            # call select operation method from connection manager to emit signal
+            self.conn.select_operation(item.op_id)
         else:
             if self.mscolab_server_url is not None:
                 show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -2161,9 +2171,13 @@ class MSUIMscolab(QtCore.QObject):
 
         self.operation_archive_browser.hide()
 
+        # reset profile image pixmap
         if hasattr(self, 'profile_dialog'):
             del self.profile_dialog
             self.profile_dialog = None
+
+        # reset the user count label to 0
+        self.ui.userCountLabel.setText("Active Users: 0")
 
         # activate first local flighttrack after logging out
         self.ui.listFlightTracks.setCurrentRow(0)
