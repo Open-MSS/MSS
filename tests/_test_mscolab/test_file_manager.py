@@ -276,16 +276,22 @@ class Test_FileManager:
 
         open_txt = os.path.join(sample_file_path, "example.txt")
         with open(open_txt, 'rb') as fp:
+            file_content = fp.read()
+            fp.seek(0)                  # reset file pointer
             file = FileStorage(fp, filename=filename, content_type="text/plain")
-
             subfolder = 'test_subfolder'
             identifier = 'unique_identifier'
             relative_path = self.fm.upload_file(file, subfolder=subfolder, identifier=identifier)
+            full_path = os.path.join(mscolab_settings.UPLOAD_FOLDER, relative_path)
 
-            assert os.path.isfile(os.path.join(mscolab_settings.UPLOAD_FOLDER, relative_path))
+            assert os.path.isfile(full_path)
             assert identifier in relative_path
             assert subfolder in relative_path
             assert relative_path.endswith(ext)
+            # comparing content of uploaded file with sample file
+            with open(full_path, 'rb') as uploaded_file:
+                uploaded_file_content = uploaded_file.read()
+                assert uploaded_file_content == file_content
 
     def test_get_file(self):
         with self.app.test_client():
