@@ -429,6 +429,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
+    refresh_signal_connect = QtCore.pyqtSignal()
 
     def __init__(self, mscolab_data_dir=None, tutorial_mode=False, *args):
         super().__init__(*args)
@@ -447,7 +448,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.config_editor = None
         self.local_active = True
         self.new_flight_track_counter = 0
-
+        edit = editor.ConfigurationEditorWindow(self)
+        self.config_for_gui = edit.last_saved
+        self.config_for_gui["automated_plotting_flights"].clear()
+        self.config_for_gui["automated_plotting_hsecs"].clear()
+        self.config_for_gui["automated_plotting_vsecs"].clear()
+        self.config_for_gui["automated_plotting_lsecs"].clear()
+        
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
         self.last_save_directory = config_loader(dataset="data_dir")
@@ -910,16 +917,20 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(mainwindow=self, model=model,
+            view_window = topview.MSUITopViewWindow(parent =self,mainwindow=self, model=model,
                                                     active_flighttrack=self.active_flight_track,
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
-                                                    token=self.mscolab.token)
+                                                    token=self.mscolab.token,
+                                                    config_settings=self.config_for_gui)
+            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-            view_window = sideview.MSUISideViewWindow(model=model)
+            view_window = sideview.MSUISideViewWindow(model=model,parent=self,
+                                                      config_settings=self.config_for_gui)
+            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)            
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
@@ -929,7 +940,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSUILinearViewWindow(model=model)
+            view_window = linearview.MSUILinearViewWindow(model=model,parent=self,config_settings=self.config_for_gui)
+            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])

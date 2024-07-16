@@ -55,7 +55,7 @@ import mslib.utils.ogcwms as ogcwms
 from mslib.utils.time import parse_iso_datetime, parse_iso_duration
 from mslib.utils.auth import save_password_to_keyring, get_auth_from_url_and_name
 from mslib.utils.config import modify_config_file
-from mslib.utils.autoplot_gui import Upload
+
 
 WMS_SERVICE_CACHE = {}
 WMS_URL_LIST = QtGui.QStandardItemModel()
@@ -390,7 +390,7 @@ class WMSMapFetcher(QtCore.QObject):
         return legend_img.convert("RGBA")
 
 
-class WMSControlWidget(QtWidgets.QWidget):
+class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     """The base class of the WMS control widget: Provides the GUI
        elements and common functionality to access a WMS. This class
        is not instantiated directly, see HSecWMSControlWidget and
@@ -404,8 +404,15 @@ class WMSControlWidget(QtWidgets.QWidget):
     signal_disable_cbs = QtCore.pyqtSignal(name="disable_cbs")
     signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
+    base_url_changed=QtCore.pyqtSignal(str)
+    layer_changed=QtCore.pyqtSignal(str)
+    on_level_changed=QtCore.pyqtSignal(str)
+    styles_changed=QtCore.pyqtSignal(str)
+    itime_changed=QtCore.pyqtSignal(str)
+    vtime_changed=QtCore.pyqtSignal(str)
+    
 
-    def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None, name=None):
+    def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
         Arguments:
         parent -- Qt widget that is parent to this widget.
@@ -413,20 +420,13 @@ class WMSControlWidget(QtWidgets.QWidget):
                        displayed in the URL combobox as default values.
         """
         super().__init__(parent)
-
-        self.autogui = Upload(name)
-        self.autogui.show()
-
-        self.dock = ui.Ui_WMSDockWidget()
-        self.dock.setupUi(self)
+        self.setupUi(self)
 
         self.view = view
 
         # Multilayering things
         self.multilayers = Multilayers(self)
-        self.dock.pbLayerSelect.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
-        self.autogui.layersButton.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
-
+        self.pbLayerSelect.clicked.connect(lambda: (self.multilayers.hide(), self.multilayers.show()))
         self.multilayers.cbWMS_URL.editTextChanged.connect(
             lambda text: self.multilayers.pbViewCapabilities.setEnabled(text in self.multilayers.layers))
 
@@ -443,30 +443,27 @@ class WMSControlWidget(QtWidgets.QWidget):
         self.save_level = None
 
         # Initialise GUI elements that control WMS parameters.
-        self.dock.cbLevel.clear()
-        self.dock.cbInitTime.clear()
-        self.dock.cbValidTime.clear()
-        self.autogui.levelComboBox.clear()
-        self.autogui.itimeComboBox.clear()
-        self.autogui.vtimeComboBox.clear()
+        self.cbLevel.clear()
+        self.cbInitTime.clear()
+        self.cbValidTime.clear()
 
         self.time_steps = ["1 min", "5 min", "10 min", "15 min", "30 min",
                            "1 hour", "2 hours", "3 hours", "6 hours",
                            "12 hours", "24 hours", "2 days", "7 days"]
-        self.dock.cbInitTime_step.clear()
-        self.dock.cbInitTime_step.addItems(self.time_steps)
-        self.dock.cbInitTime_step.setCurrentIndex(self.dock.cbInitTime_step.findText("12 hours"))
-        self.dock.cbValidTime_step.clear()
-        self.dock.cbValidTime_step.addItems(self.time_steps)
-        self.dock.cbValidTime_step.setCurrentIndex(self.dock.cbInitTime_step.findText("3 hours"))
+        self.cbInitTime_step.clear()
+        self.cbInitTime_step.addItems(self.time_steps)
+        self.cbInitTime_step.setCurrentIndex(self.cbInitTime_step.findText("12 hours"))
+        self.cbValidTime_step.clear()
+        self.cbValidTime_step.addItems(self.time_steps)
+        self.cbValidTime_step.setCurrentIndex(self.cbInitTime_step.findText("3 hours"))
 
         self.enable_level_elements(False)
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
-        self.dock.btGetMap.setEnabled(False)
+        self.btGetMap.setEnabled(False)
         self.multilayers.pbViewCapabilities.setEnabled(False)
 
-        self.dock.cbTransparent.setChecked(False)
+        self.cbTransparent.setChecked(False)
 
         # Check for WMS image cache directory, create if necessary.
         if wms_cache is not None:
@@ -485,9 +482,9 @@ class WMSControlWidget(QtWidgets.QWidget):
 
         # Initialise date/time fields with current day, 00 UTC.
         # Todo Before refactoring to an aware datetime object add a test to verify the WMS part.
-        self.dock.dteInitTime.setDateTime(QtCore.QDateTime(
+        self.dteInitTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
-        self.dock.dteValidTime.setDateTime(QtCore.QDateTime(
+        self.dteValidTime.setDateTime(QtCore.QDateTime(
             datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)))
 
         # Connect slots and signals.
@@ -495,33 +492,27 @@ class WMSControlWidget(QtWidgets.QWidget):
         self.multilayers.btGetCapabilities.clicked.connect(self.get_capabilities)
         self.multilayers.pbViewCapabilities.clicked.connect(self.view_capabilities)
 
-        self.dock.btClearMap.clicked.connect(self.clear_map)
+        self.btClearMap.clicked.connect(self.clear_map)
 
-        self.dock.cbLevel.currentIndexChanged.connect(self.level_changed)
-        self.dock.cbInitTime.currentIndexChanged.connect(self.init_time_changed)
-        self.dock.cbValidTime.currentIndexChanged.connect(self.valid_time_changed)
-        self.autogui.levelComboBox.currentIndexChanged.connect(
-            lambda: self.autogui.combo_box_input(self.autogui.levelComboBox))
-        self.autogui.itimeComboBox.currentIndexChanged.connect(
-            lambda: self.autogui.combo_box_input(self.autogui.itimeComboBox))
-        self.autogui.vtimeComboBox.currentIndexChanged.connect(
-            lambda: self.autogui.combo_box_input(self.autogui.vtimeComboBox))
+        self.cbLevel.currentIndexChanged.connect(self.level_changed)
+        self.cbInitTime.currentIndexChanged.connect(self.init_time_changed)
+        self.cbValidTime.currentIndexChanged.connect(self.valid_time_changed)
         self.multilayers.needs_repopulate.connect(self.populate_ui)
 
-        self.dock.tbInitTime_back.clicked.connect(self.init_time_back_click)
-        self.dock.tbInitTime_fwd.clicked.connect(self.init_time_fwd_click)
-        self.dock.tbInitTime_cbback.clicked.connect(self.cb_init_time_back_click)
-        self.dock.tbInitTime_cbfwd.clicked.connect(self.cb_init_time_fwd_click)
-        self.dock.dteInitTime.dateTimeChanged.connect(self.check_init_time)
-        self.dock.tbValidTime_back.clicked.connect(self.valid_time_back_click)
-        self.dock.tbValidTime_fwd.clicked.connect(self.valid_time_fwd_click)
-        self.dock.tbValidTime_cbback.clicked.connect(self.cb_valid_time_back_click)
-        self.dock.tbValidTime_cbfwd.clicked.connect(self.cb_valid_time_fwd_click)
-        self.dock.dteValidTime.dateTimeChanged.connect(self.check_valid_time)
-        self.dock.tbLevel_back.clicked.connect(self.level_back_click)
-        self.dock.tbLevel_fwd.clicked.connect(self.level_fwd_click)
+        self.tbInitTime_back.clicked.connect(self.init_time_back_click)
+        self.tbInitTime_fwd.clicked.connect(self.init_time_fwd_click)
+        self.tbInitTime_cbback.clicked.connect(self.cb_init_time_back_click)
+        self.tbInitTime_cbfwd.clicked.connect(self.cb_init_time_fwd_click)
+        self.dteInitTime.dateTimeChanged.connect(self.check_init_time)
+        self.tbValidTime_back.clicked.connect(self.valid_time_back_click)
+        self.tbValidTime_fwd.clicked.connect(self.valid_time_fwd_click)
+        self.tbValidTime_cbback.clicked.connect(self.cb_valid_time_back_click)
+        self.tbValidTime_cbfwd.clicked.connect(self.cb_valid_time_fwd_click)
+        self.dteValidTime.dateTimeChanged.connect(self.check_valid_time)
+        self.tbLevel_back.clicked.connect(self.level_back_click)
+        self.tbLevel_fwd.clicked.connect(self.level_fwd_click)
 
-        self.dock.btClearCache.clicked.connect(self.clearCache)
+        self.btClearCache.clicked.connect(self.clearCache)
         self.multilayers.cbWMS_URL.editTextChanged.connect(self.wms_url_changed)
         if view is not None and hasattr(view, "redrawn"):
             self.view.redrawn.connect(self.after_redraw)
@@ -585,7 +576,7 @@ class WMSControlWidget(QtWidgets.QWidget):
 
         (mr, 2011-02-25)
         """
-        # initialize login cache fomr config file, but do not overwrite existing keys
+        # initialize login cache from config file, but do not overwrite existing keys
         http_auth = config_loader(dataset="MSS_auth")
         auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
 
@@ -736,7 +727,8 @@ class WMSControlWidget(QtWidgets.QWidget):
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
         base_url = self.multilayers.cbWMS_URL.currentText()
-        self.url_for_tree = base_url
+        self.base_url_changed.emit(base_url)
+        
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
 
@@ -785,6 +777,7 @@ class WMSControlWidget(QtWidgets.QWidget):
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
         selected = self.multilayers.current_layer.text(0) if self.multilayers.current_layer else None
+        self.selected_layer = selected
         if not cache and wms.url in self.multilayers.layers and \
                 wms.capabilities_document.decode("utf-8") != \
                 self.multilayers.layers[wms.url]["wms"].capabilities_document.decode("utf-8"):
@@ -805,14 +798,14 @@ class WMSControlWidget(QtWidgets.QWidget):
 
         self.prefetcher = WMSMapFetcher(self.wms_cache)
         self.prefetcher.moveToThread(self.thread_prefetch)
-        self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
+        self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitly uses a queued connection
 
         self.fetcher = WMSMapFetcher(self.wms_cache)
         self.fetcher.moveToThread(self.thread_fetch)
-        self.fetch.connect(self.fetcher.fetch_maps)  # implicitely uses a queued connection
-        self.fetcher.finished.connect(self.continue_retrieve_image)  # implicitely uses a queued connection
-        self.fetcher.exception.connect(self.display_exception)  # implicitely uses a queued connection
-        self.fetcher.started_request.connect(self.display_progress_dialog)  # implicitely uses a queued connection
+        self.fetch.connect(self.fetcher.fetch_maps)  # implicitly uses a queued connection
+        self.fetcher.finished.connect(self.continue_retrieve_image)  # implicitly uses a queued connection
+        self.fetcher.exception.connect(self.display_exception)  # implicitly uses a queued connection
+        self.fetcher.started_request.connect(self.display_progress_dialog)  # implicitly uses a queued connection
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
@@ -884,92 +877,71 @@ class WMSControlWidget(QtWidgets.QWidget):
         self.enable_valid_time_elements(False)
         self.enable_init_time_elements(False)
         self.enable_level_elements(False)
-        self.dock.btGetMap.setEnabled(False)
+        self.btGetMap.setEnabled(False)
 
     def populate_ui(self):
         """
         Adds the values of the current layer to the UI comboboxes
         """
         self.layerChangeInProgress = True
-        self.dock.cbLevel.clear()
-        self.dock.cbInitTime.clear()
-        self.dock.cbValidTime.clear()
-        self.autogui.levelComboBox.clear()
-        self.autogui.itimeComboBox.clear()
-        self.autogui.vtimeComboBox.clear()
-        self.autogui.sectionsComboBox.clear()
+        self.cbLevel.clear()
+        self.cbInitTime.clear()
+        self.cbValidTime.clear()
 
         active_layers = self.multilayers.get_active_layers()
         layer = self.multilayers.get_current_layer()
+        self.layer_changed.emit(str(layer))
+        currentstyle = layer.get_style()
+        self.styles_changed.emit(currentstyle)
+        
 
         if not layer:
-            self.dock.lLayerName.setText("No Layer selected")
+            self.lLayerName.setText("No Layer selected")
             self.disable_ui()
             return
 
         else:
-            self.dock.btGetMap.setEnabled(True)
+            self.btGetMap.setEnabled(True)
 
-        self.dock.lLayerName.setText(str(layer))
+        self.lLayerName.setText(str(layer))
 
         tooltip_text = ""
         for active_layer in active_layers if layer.checkState(0) else [layer]:
             tooltip_text += f"{active_layer}\n"
-        self.dock.lLayerName.setToolTip(tooltip_text.strip())
+        self.lLayerName.setToolTip(tooltip_text.strip())
 
         if len(active_layers) > 1 and layer.checkState(0):
-            self.dock.lLayerName.setText(self.dock.lLayerName.text() + f" (and {len(active_layers) - 1} more)")
+            self.lLayerName.setText(self.lLayerName.text() + f" (and {len(active_layers) - 1} more)")
 
         crs = layer.get_allowed_crs()
         levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
         if vtimes and itimes:
             vtimes = vtimes[next((i for i, vtime in enumerate(vtimes) if vtime >= layer.get_itime()), 0):]
-
-        if self.multilayers.cbMultilayering.isChecked():
-            layervals = []
-            layervals = self.multilayers.get_active_layers()
-            for i in layervals:
-                self.autogui.add_to_treewidget(self.autogui.autoplotsecsTreeWidget)
-                self.autogui.update_selected_row(self.autogui.autoplotsecsTreeWidget, 0, self.url_for_tree)
-                self.autogui.update_selected_row(self.autogui.autoplotsecsTreeWidget, 1, str(i))
-                self.autogui.update_selected_row(self.autogui.autoplotsecsTreeWidget, 2, str(i.get_style()))
-        else:
-            self.autogui.update_selected_row(self.autogui.autoplotsecsTreeWidget, 0, self.url_for_tree)
-            self.autogui.update_selected_row(self.autogui.autoplotsecsTreeWidget, 1, str(layer))
-            self.autogui.update_selected_row(self.autogui.autoplotsecsTreeWidget, 2, str(layer.get_style()))
+        
 
         if levels:
-            self.dock.cbLevel.addItems(levels)
-            self.dock.cbLevel.setCurrentIndex(self.dock.cbLevel.findText(layer.get_level()))
-            self.autogui.levelComboBox.addItems(levels)
-            self.autogui.levelComboBox.setCurrentIndex(self.autogui.levelComboBox.findText(layer.get_level()))
+            self.cbLevel.addItems(levels)
+            self.on_level_changed.emit(levels[0])
+            self.cbLevel.setCurrentIndex(self.cbLevel.findText(layer.get_level()))
         self.enable_level_elements(len(levels) > 0)
 
         if itimes:
-            self.dock.cbInitTime.addItems(itimes)
-            self.dock.cbInitTime.setCurrentIndex(self.dock.cbInitTime.findText(layer.get_itime()))
-            self.autogui.itimeComboBox.addItems(itimes)
-            self.autogui.itimeComboBox.setCurrentIndex(self.autogui.itimeComboBox.findText(layer.get_itime()))
+            self.cbInitTime.addItems(itimes)
+            self.cbInitTime.setCurrentIndex(self.cbInitTime.findText(layer.get_itime()))
         self.enable_init_time_elements(len(itimes) > 0)
 
         if vtimes:
-            self.dock.cbValidTime.addItems(vtimes)
-            self.dock.cbValidTime.setCurrentIndex(self.dock.cbValidTime.findText(layer.get_vtime()))
-            self.autogui.vtimeComboBox.addItems(vtimes)
-            self.autogui.vtimeComboBox.setCurrentIndex(self.autogui.vtimeComboBox.findText(layer.get_vtime()))
+            self.cbValidTime.addItems(vtimes)
+            self.cbValidTime.setCurrentIndex(self.cbValidTime.findText(layer.get_vtime()))
         self.enable_valid_time_elements(len(vtimes) > 0)
-
-        if crs:
-            self.autogui.sectionsComboBox.addItems(crs)
-            self.autogui.sectionsComboBox.setCurrentIndex(self.autogui.sectionsComboBox.findText(layer.get_vtime()))
 
         if not self.init_time_changed():
             self.disable_dteInitTime_elements()
         if not self.valid_time_changed():
             self.disable_dteValidTime_elements()
-        if self.dock.cbInitTime.count() == 0:
+        if self.cbInitTime.count() == 0:
             self.disable_cbInitTime_elements()
-        if self.dock.cbValidTime.count() == 0:
+        if self.cbValidTime.count() == 0:
             self.disable_cbValidTime_elements()
 
         if crs and \
@@ -1011,81 +983,81 @@ class WMSControlWidget(QtWidgets.QWidget):
         """Slot for the tbInitTime_back button.
         """
         # Get QDateTime object from QtDateTimeEdit field.
-        d = self.dock.dteInitTime.dateTime()
+        d = self.dteInitTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(self.dock.cbInitTime_step.currentText())
-        self.dock.dteInitTime.setDateTime(d.addSecs(-secs))
+        secs = self.secs_from_timestep(self.cbInitTime_step.currentText())
+        self.dteInitTime.setDateTime(d.addSecs(-secs))
         self.auto_update()
 
     def init_time_fwd_click(self):
         """Slot for the tbInitTime_fwd button.
         """
         # Get QDateTime object from QtDateTimeEdit field.
-        d = self.dock.dteInitTime.dateTime()
+        d = self.dteInitTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(self.dock.cbInitTime_step.currentText())
-        self.dock.dteInitTime.setDateTime(d.addSecs(secs))
+        secs = self.secs_from_timestep(self.cbInitTime_step.currentText())
+        self.dteInitTime.setDateTime(d.addSecs(secs))
         self.auto_update()
 
     def valid_time_back_click(self):
         # Get QDateTime object from QtDateTimeEdit field.
-        d = self.dock.dteValidTime.dateTime()
+        d = self.dteValidTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(self.dock.cbValidTime_step.currentText())
-        self.dock.dteValidTime.setDateTime(d.addSecs(-secs))
+        secs = self.secs_from_timestep(self.cbValidTime_step.currentText())
+        self.dteValidTime.setDateTime(d.addSecs(-secs))
         self.auto_update()
 
     def valid_time_fwd_click(self):
         # Get QDateTime object from QtDateTimeEdit field.
-        d = self.dock.dteValidTime.dateTime()
+        d = self.dteValidTime.dateTime()
         # Add value from cbInitTime_step and set new date.
-        secs = self.secs_from_timestep(self.dock.cbValidTime_step.currentText())
-        self.dock.dteValidTime.setDateTime(d.addSecs(secs))
+        secs = self.secs_from_timestep(self.cbValidTime_step.currentText())
+        self.dteValidTime.setDateTime(d.addSecs(secs))
         self.auto_update()
 
     def level_back_click(self):
-        ci = self.dock.cbLevel.currentIndex()
+        ci = self.cbLevel.currentIndex()
         if ci > 0:
             ci = ci - 1
-        self.dock.cbLevel.setCurrentIndex(ci)
+        self.cbLevel.setCurrentIndex(ci)
 
     def level_fwd_click(self):
-        ci = self.dock.cbLevel.currentIndex()
-        if ci < self.dock.cbLevel.count() - 1:
+        ci = self.cbLevel.currentIndex()
+        if ci < self.cbLevel.count() - 1:
             ci = ci + 1
-        self.dock.cbLevel.setCurrentIndex(ci)
+        self.cbLevel.setCurrentIndex(ci)
 
     def cb_init_time_back_click(self):
-        ci = self.dock.cbInitTime.currentIndex()
+        ci = self.cbInitTime.currentIndex()
         if ci > 0:
             ci = ci - 1
-        self.dock.cbInitTime.setCurrentIndex(ci)
+        self.cbInitTime.setCurrentIndex(ci)
         self.init_time_changed()
 
     def cb_init_time_fwd_click(self):
-        ci = self.dock.cbInitTime.currentIndex()
-        if ci < self.dock.cbInitTime.count() - 1:
+        ci = self.cbInitTime.currentIndex()
+        if ci < self.cbInitTime.count() - 1:
             ci = ci + 1
-        self.dock.cbInitTime.setCurrentIndex(ci)
+        self.cbInitTime.setCurrentIndex(ci)
         self.init_time_changed()
 
     def cb_valid_time_back_click(self):
-        ci = self.dock.cbValidTime.currentIndex()
+        ci = self.cbValidTime.currentIndex()
         if ci > 0:
             ci = ci - 1
-        self.dock.cbValidTime.setCurrentIndex(ci)
+        self.cbValidTime.setCurrentIndex(ci)
         self.valid_time_changed()
 
     def cb_valid_time_fwd_click(self):
-        ci = self.dock.cbValidTime.currentIndex()
-        if ci < self.dock.cbValidTime.count() - 1:
+        ci = self.cbValidTime.currentIndex()
+        if ci < self.cbValidTime.count() - 1:
             ci = ci + 1
-        self.dock.cbValidTime.setCurrentIndex(ci)
+        self.cbValidTime.setCurrentIndex(ci)
         self.valid_time_changed()
 
     def auto_update(self):
         """If the auto update check box is checked, let btGetMap emit a
-           clicked() signal everytime this method is called.
+           clicked() signal every time this method is called.
            autoUpdate() should be called from the slots that handle
            time and level changes.
 
@@ -1093,7 +1065,7 @@ class WMSControlWidget(QtWidgets.QWidget):
         performed (lock mechanism to prevent erroneous requests during
         a layer change).
         """
-        if self.dock.btGetMap.isEnabled() and self.dock.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
 
     def check_init_time(self, dt):
@@ -1104,14 +1076,14 @@ class WMSControlWidget(QtWidgets.QWidget):
         If the time is not contained in the list, the font will be set to
         'strike through' to indicate an invalid time.
         """
-        font = self.dock.dteInitTime.font()
+        font = self.dteInitTime.font()
         pydt = dt.toPyDateTime()
         init_time_available = pydt in self.multilayers.get_current_layer().allowed_init_times
         font.setStrikeOut(not init_time_available)
-        self.dock.dteInitTime.setFont(font)
+        self.dteInitTime.setFont(font)
         if init_time_available:
-            index = self.dock.cbInitTime.findText(pydt.isoformat() + "Z")
-            self.dock.cbInitTime.setCurrentIndex(index)
+            index = self.cbInitTime.findText(pydt.isoformat() + "Z")
+            self.cbInitTime.setCurrentIndex(index)
 
     def check_valid_time(self, dt):
         """Same as check_init_time, but for valid time.
@@ -1120,32 +1092,33 @@ class WMSControlWidget(QtWidgets.QWidget):
         pydt = dt.toPyDateTime()
         if self.multilayers.get_current_layer().allowed_valid_times:
             if pydt in self.multilayers.get_current_layer().allowed_valid_times:
-                index = self.dock.cbValidTime.findText(pydt.isoformat() + "Z")
+                index = self.cbValidTime.findText(pydt.isoformat() + "Z")
                 # setCurrentIndex also sets the date/time edit via signal.
                 if index > -1:
-                    self.dock.cbValidTime.setCurrentIndex(index)
+                    self.cbValidTime.setCurrentIndex(index)
                 else:
                     valid_time_available = False
             else:
                 valid_time_available = False
-        font = self.dock.dteValidTime.font()
+        font = self.dteValidTime.font()
         font.setStrikeOut(not valid_time_available)
-        self.dock.dteValidTime.setFont(font)
+        self.dteValidTime.setFont(font)
 
     def init_time_changed(self):
         """Slot to be called when the current index of the init time
            combo box is changed. The method tries to sync to the
            init time date/time edit.
         """
-        init_time = self.dock.cbInitTime.currentText()
+        init_time = self.cbInitTime.currentText()
+        self.itime_changed.emit(init_time)
         if init_time != "":
             init_time = parse_iso_datetime(init_time)
             if init_time is not None:
-                self.dock.dteInitTime.setDateTime(init_time)
+                self.dteInitTime.setDateTime(init_time)
 
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
-            self.multilayers.get_current_layer().set_itime(self.dock.cbInitTime.currentText())
-            self.multilayers.carry_parameters["itime"] = self.dock.cbInitTime.currentText()
+            self.multilayers.get_current_layer().set_itime(self.cbInitTime.currentText())
+            self.multilayers.carry_parameters["itime"] = self.cbInitTime.currentText()
 
         self.auto_update()
         return init_time == "" or init_time is not None
@@ -1153,90 +1126,93 @@ class WMSControlWidget(QtWidgets.QWidget):
     def valid_time_changed(self):
         """Same as initTimeChanged(), but for the valid time elements.
         """
-        valid_time = self.dock.cbValidTime.currentText()
+        valid_time = self.cbValidTime.currentText()
+        self.vtime_changed.emit(valid_time)
         if valid_time != "":
             valid_time = parse_iso_datetime(valid_time)
             if valid_time is not None:
-                self.dock.dteValidTime.setDateTime(valid_time)
+                self.dteValidTime.setDateTime(valid_time)
 
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
-            self.multilayers.get_current_layer().set_vtime(self.dock.cbValidTime.currentText())
-            self.multilayers.carry_parameters["vtime"] = self.dock.cbValidTime.currentText()
+            self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
+            self.multilayers.carry_parameters["vtime"] = self.cbValidTime.currentText()
 
         self.auto_update()
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
-            self.multilayers.get_current_layer().set_level(self.dock.cbLevel.currentText())
-            self.multilayers.carry_parameters["level"] = self.dock.cbLevel.currentText()
+            self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
+            self.multilayers.carry_parameters["level"] = self.cbLevel.currentText()
+            currentlevel=self.cbLevel.currentText()
+            self.on_level_changed.emit(currentlevel)
         self.auto_update()
 
     def enable_level_elements(self, enable):
         """Enable or disable the GUI elements allowing vertical elevation
            level control.
         """
-        self.dock.cbLevel.setEnabled(enable and self.dock.cbLevel.count() > 1)
-        self.dock.tbLevel_back.setEnabled(enable)
-        self.dock.tbLevel_fwd.setEnabled(enable)
+        self.cbLevel.setEnabled(enable and self.cbLevel.count() > 1)
+        self.tbLevel_back.setEnabled(enable)
+        self.tbLevel_fwd.setEnabled(enable)
 
     def enable_init_time_elements(self, enable):
         """Enables or disables the GUI elements allowing initialisation time
            control.
         """
-        self.dock.cbInitTime.setEnabled(enable)
-        self.dock.dteInitTime.setEnabled(enable)
-        self.dock.tbInitTime_back.setEnabled(enable)
-        self.dock.tbInitTime_fwd.setEnabled(enable)
-        self.dock.tbInitTime_cbback.setEnabled(enable)
-        self.dock.tbInitTime_cbfwd.setEnabled(enable)
-        self.dock.cbInitTime_step.setEnabled(enable)
+        self.cbInitTime.setEnabled(enable)
+        self.dteInitTime.setEnabled(enable)
+        self.tbInitTime_back.setEnabled(enable)
+        self.tbInitTime_fwd.setEnabled(enable)
+        self.tbInitTime_cbback.setEnabled(enable)
+        self.tbInitTime_cbfwd.setEnabled(enable)
+        self.cbInitTime_step.setEnabled(enable)
 
     def enable_valid_time_elements(self, enable):
         """Enables or disables the GUI elements allowing valid time
            control.
         """
-        self.dock.cbValidTime.setEnabled(enable)
-        self.dock.dteValidTime.setEnabled(enable)
-        self.dock.tbValidTime_back.setEnabled(enable)
-        self.dock.tbValidTime_fwd.setEnabled(enable)
-        self.dock.tbValidTime_cbback.setEnabled(enable)
-        self.dock.tbValidTime_cbfwd.setEnabled(enable)
-        self.dock.cbValidTime_step.setEnabled(enable)
+        self.cbValidTime.setEnabled(enable)
+        self.dteValidTime.setEnabled(enable)
+        self.tbValidTime_back.setEnabled(enable)
+        self.tbValidTime_fwd.setEnabled(enable)
+        self.tbValidTime_cbback.setEnabled(enable)
+        self.tbValidTime_cbfwd.setEnabled(enable)
+        self.cbValidTime_step.setEnabled(enable)
 
     def disable_dteInitTime_elements(self):
         """Disables init time date/time edit elements.
         """
         enable = False
-        self.dock.dteInitTime.setEnabled(enable)
-        self.dock.tbInitTime_back.setEnabled(enable)
-        self.dock.tbInitTime_fwd.setEnabled(enable)
-        self.dock.cbInitTime_step.setEnabled(enable)
+        self.dteInitTime.setEnabled(enable)
+        self.tbInitTime_back.setEnabled(enable)
+        self.tbInitTime_fwd.setEnabled(enable)
+        self.cbInitTime_step.setEnabled(enable)
 
     def disable_dteValidTime_elements(self):
         """Disables valid time date/time edit elements.
         """
         enable = False
-        self.dock.dteValidTime.setEnabled(enable)
-        self.dock.tbValidTime_back.setEnabled(enable)
-        self.dock.tbValidTime_fwd.setEnabled(enable)
-        self.dock.cbValidTime_step.setEnabled(enable)
+        self.dteValidTime.setEnabled(enable)
+        self.tbValidTime_back.setEnabled(enable)
+        self.tbValidTime_fwd.setEnabled(enable)
+        self.cbValidTime_step.setEnabled(enable)
 
     def disable_cbInitTime_elements(self):
         """Disables init time combobox elements.
         """
         enable = False
-        self.dock.cbInitTime.setEnabled(enable)
-        self.dock.tbInitTime_cbback.setEnabled(enable)
-        self.dock.tbInitTime_cbfwd.setEnabled(enable)
+        self.cbInitTime.setEnabled(enable)
+        self.tbInitTime_cbback.setEnabled(enable)
+        self.tbInitTime_cbfwd.setEnabled(enable)
 
     def disable_cbValidTime_elements(self):
         """Disables valid time combobox elements.
         """
         enable = False
-        self.dock.cbValidTime.setEnabled(enable)
-        self.dock.tbValidTime_cbback.setEnabled(enable)
-        self.dock.tbValidTime_cbfwd.setEnabled(enable)
+        self.cbValidTime.setEnabled(enable)
+        self.tbValidTime_cbback.setEnabled(enable)
+        self.tbValidTime_cbfwd.setEnabled(enable)
 
     def get_layer(self):
         return self.multilayers.get_current_layer().get_layer()
@@ -1256,8 +1232,8 @@ class WMSControlWidget(QtWidgets.QWidget):
         string that is selected in the init time combobox.
         """
         if self.cbInitialisationOn.isChecked():
-            if self.dock.dteInitTime.isEnabled():
-                return self.dock.dteInitTime.dateTime().toPyDateTime()
+            if self.dteInitTime.isEnabled():
+                return self.dteInitTime.dateTime().toPyDateTime()
             else:
                 itime_str = self.multilayers.get_current_layer().get_itime()
                 return itime_str
@@ -1268,8 +1244,8 @@ class WMSControlWidget(QtWidgets.QWidget):
         """The same as getInitTime(), but for the valid time.
         """
         if self.cbValidOn.isChecked():
-            if self.dock.dteValidTime.isEnabled():
-                return self.dock.dteValidTime.dateTime().toPyDateTime()
+            if self.dteValidTime.isEnabled():
+                return self.dteValidTime.dateTime().toPyDateTime()
             else:
                 vtime_str = self.multilayers.get_current_layer().get_vtime()
                 return vtime_str
@@ -1279,7 +1255,7 @@ class WMSControlWidget(QtWidgets.QWidget):
     def caching_enabled(self):
         """Returns if the image cache is enabled.
         """
-        return self.wms_cache is not None and self.dock.cbCacheEnabled.isChecked()
+        return self.wms_cache is not None and self.cbCacheEnabled.isChecked()
 
     def get_md5_filename(self, layer, kwargs):
         urlstr = layer.get_wms().getmap(return_only_url=True, **kwargs)
@@ -1394,15 +1370,15 @@ class WMSControlWidget(QtWidgets.QWidget):
                 fetch_nr = sum([prefetch_config[_x] for _x in prefetch_entries])
                 if fetch_nr > 0:
                     pre_tfwd, pre_tbck, pre_lfwd, pre_lbck = [prefetch_config[_x] for _x in prefetch_entries]
-                    ci_time, ci_level = self.dock.cbValidTime.currentIndex(), self.dock.cbLevel.currentIndex()
+                    ci_time, ci_level = self.cbValidTime.currentIndex(), self.cbLevel.currentIndex()
                     prefetch_key_values = \
-                        [("time", self.dock.cbValidTime.itemText(ci_p))
+                        [("time", self.cbValidTime.itemText(ci_p))
                          for ci_p in list(range(ci_time + 1, ci_time + 1 + pre_tfwd)) +
                             list(range(ci_time - pre_tbck, ci_time))
-                         if 0 <= ci_p < self.dock.cbValidTime.count()] + \
-                        [("level", self.dock.cbLevel.itemText(ci_p).split(" (")[0])
+                         if 0 <= ci_p < self.cbValidTime.count()] + \
+                        [("level", self.cbLevel.itemText(ci_p).split(" (")[0])
                          for ci_p in range(ci_level - pre_lbck, ci_level + 1 + pre_lfwd)
-                         if ci_p != ci_level and 0 <= ci_p < self.dock.cbLevel.count()]
+                         if ci_p != ci_level and 0 <= ci_p < self.cbLevel.count()]
                     prefetch_maps = []
                     for key, value in prefetch_key_values:
                         kwargs_new = kwargs.copy()
@@ -1426,7 +1402,7 @@ class WMSControlWidget(QtWidgets.QWidget):
         if img is None:
             return
 
-        complete_level = self.dock.cbLevel.currentText()
+        complete_level = self.cbLevel.currentText()
         complete_level = complete_level if complete_level != "" else None
         self.display_retrieved_image(img, legend_img, layer, style, init_time, valid_time, complete_level)
         # this is for cases where 'remove' button is clicked, then 'retrieve' is clicked
@@ -1526,7 +1502,7 @@ class WMSControlWidget(QtWidgets.QWidget):
         """
         images = [x for x in imgs if x]
         if images:
-            # Add border around seperate legends
+            # Add border around separate legends
             if len(images) > 1:
                 images = [ImageOps.expand(x, border=1, fill="black") for x in images]
             max_height = int((self.view.plotter.fig.get_size_inches() * self.view.plotter.fig.get_dpi())[1] * 0.99)
@@ -1551,9 +1527,9 @@ class VSecWMSControlWidget(WMSControlWidget):
     def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
         super().__init__(
-            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view,name="Side View")
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
-        self.dock.btGetMap.clicked.connect(self.get_all_maps)
+        self.btGetMap.clicked.connect(self.get_all_maps)
 
     def get_all_maps(self):
         if self.multilayers.cbMultilayering.isChecked():
@@ -1569,7 +1545,7 @@ class VSecWMSControlWidget(WMSControlWidget):
 
     @QtCore.pyqtSlot()
     def call_get_vsec(self):
-        if self.dock.btGetMap.isEnabled() and self.dock.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
         else:
             self.view.plotter.clear_figure()
@@ -1583,8 +1559,7 @@ class VSecWMSControlWidget(WMSControlWidget):
         # a vertical section. The vertical extent of the plot is specified
         # via the bounding box.
         crs = "VERT:LOGP"
-        if self.view is not None:
-            bbox = self.view.getBBOX()
+        bbox = self.view.getBBOX()
 
         # Get lat/lon coordinates of flight track and convert to string for URL.
         path_string = ""
@@ -1630,13 +1605,12 @@ class HSecWMSControlWidget(WMSControlWidget):
 
     def __init__(self, parent=None, default_WMS=None, view=None, wms_cache=None):
         super().__init__(
-            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view, name="Top View")
-        self.dock.btGetMap.clicked.connect(self.get_all_maps)
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
+        self.btGetMap.clicked.connect(self.get_all_maps)
 
     def level_changed(self):
         super().level_changed()
-        if self.view is not None:
-            self.view.waypoints_interactor.update()
+        self.view.waypoints_interactor.update()
 
     def get_map(self, layers=None):
         """Slot that retrieves the map and passes the image
@@ -1644,8 +1618,6 @@ class HSecWMSControlWidget(WMSControlWidget):
         """
         # Get coordinate reference system and bounding box from the map
         # object in the view.
-        if self.view is None:
-            return
         crs = self.view.get_crs()
         bbox = self.view.getBBOX()
 
@@ -1660,7 +1632,7 @@ class HSecWMSControlWidget(WMSControlWidget):
 
         args = []
         for i, layer in enumerate(layers):
-            transparent = self.dock.cbTransparent.isChecked() if i == 0 else True
+            transparent = self.cbTransparent.isChecked() if i == 0 else True
             bbox_tmp = tuple(bbox)
             wms = self.multilayers.layers[layer.wms_name]["wms"]
             if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
@@ -1695,9 +1667,9 @@ class LSecWMSControlWidget(WMSControlWidget):
     def __init__(self, parent=None, default_WMS=None, waypoints_model=None,
                  view=None, wms_cache=None):
         super().__init__(
-            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view, name="Linear View")
+            parent=parent, default_WMS=default_WMS, wms_cache=wms_cache, view=view)
         self.waypoints_model = waypoints_model
-        self.dock.btGetMap.clicked.connect(self.get_all_maps)
+        self.btGetMap.clicked.connect(self.get_all_maps)
 
     def get_all_maps(self):
         if self.multilayers.cbMultilayering.isChecked():
@@ -1713,7 +1685,7 @@ class LSecWMSControlWidget(WMSControlWidget):
 
     @QtCore.pyqtSlot()
     def call_get_lsec(self):
-        if self.dock.btGetMap.isEnabled() and self.dock.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+        if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
             self.get_all_maps()
 
     def get_lsec(self, layers=None):
