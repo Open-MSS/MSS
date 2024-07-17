@@ -27,6 +27,7 @@
 
 import sys
 import os
+from pathlib import Path
 import requests
 import json
 from datetime import datetime, timezone
@@ -138,12 +139,20 @@ class AutoplotDockWidget(QWidget, Ui_Form):
     def configure_from_path(self, parent, config_settings):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
+    
+        home_directory = str(Path.home())
+
+        default_path = os.path.join(home_directory, ".config", "msui", "combined_data.json")
+
         fileName, _ = QFileDialog.getOpenFileName(
-            self, "Select .json Config File", "", "JSON Files (*.json)", options=options)
+            self, "Select .json Config File", default_path, "JSON Files (*.json)", options=options)
+
         if fileName:
-            path = fileName
-            conf.read_config_file(path)
-            configure = conf.config_loader()
+            with open(fileName, 'r') as file:
+                configure = json.load(file)
+
+            print("config print   ", configure)
+
             autoplot_flights = configure["automated_plotting_flights"]
             autoplot_hsecs = configure["automated_plotting_hsecs"]
             autoplot_vsecs = configure["automated_plotting_vsecs"]
@@ -273,7 +282,21 @@ class AutoplotDockWidget(QWidget, Ui_Form):
         self.etime = self.etimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
 
     def update_config_file(self, config_settings):
-        with open("combined_data.json", "w") as file:
-            json.dump(config_settings, file, indent=4)
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
 
-        print("CONFIG FILE STORED......")
+        # Get the user's home directory
+        home_directory = str(Path.home())
+
+        # Set the default path
+        default_path = os.path.join(home_directory, ".config", "msui", "combined_data.json")
+
+        filePath, _ = QFileDialog.getOpenFileName(
+            self, "Select .json Config File", default_path, "JSON Files (*.json)", options=options)
+
+        if filePath:
+            # Use the selected file path directly without appending
+            with open(filePath, "w") as file:
+                json.dump(config_settings, file, indent=4)
+
+            print("CONFIG FILE STORED......")

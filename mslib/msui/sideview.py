@@ -333,7 +333,9 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
     @QtCore.pyqtSlot()
     def layer_val_changed(self, strr):
-        self.currlayer = strr
+        second_colon_index = strr.find(':', strr.find(':') + 1)
+        self.currurl = strr[:second_colon_index].strip() if second_colon_index != -1 else strr.strip()
+        self.currlayer = strr.split('|')[1].strip() if '|' in strr else None
 
     @QtCore.pyqtSlot()
     def level_val_changed(self, strr):
