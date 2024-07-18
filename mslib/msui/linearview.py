@@ -32,11 +32,11 @@ from mslib.msui.qt5 import ui_linearview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
-from mslib.msui import autoplot_gui as gui
+from mslib.msui import autoplot_dockwidget as dock
 
 # Dock window indices.
 WMS = 0
-MSSAUTOPLOT = 1
+AUTOPLOT = 1
 
 
 class MSUI_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog):
@@ -96,7 +96,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         # Dock windows [WMS]:
         self.cbTools.clear()
-        self.cbTools.addItems(["(select to open control)", "Linear Section WMS", "MSS AUTOPLOT"])
+        self.cbTools.addItems(["(select to open control)", "Linear Section WMS", "Autoplot"])
         self.docks = [None, None]
 
         self.setFlightTrackModel(model)
@@ -146,9 +146,9 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
                 self.mpl.canvas.waypoints_interactor.signal_get_lsec.connect(widget.call_get_lsec)
-            elif index == MSSAUTOPLOT:
-                title = "MSS AUTOPLOT"
-                widget = gui.AutoplotDockWidget(parent=self, view="Linear View", config_settings=config_settings)
+            elif index == AUTOPLOT:
+                title = "Autoplot (Linear View)"
+                widget = dock.AutoplotDockWidget(parent=self, view="Linear View", config_settings=config_settings)
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.

@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2024 Preetam Sundar Das
-    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2024 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,24 +25,11 @@
     limitations under the License.
 """
 
-import sys
 import os
 from pathlib import Path
-import requests
 import json
-from datetime import datetime, timezone
-from PyQt5.QtWidgets import (
-    QApplication, QWidget, QFileDialog, QListWidgetItem,
-    QVBoxLayout, QComboBox, QPushButton, QLabel, QTreeWidgetItem
-)
-from PyQt5 import QtCore
+from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
 from mslib.msui.qt5.ui_mss_autoplot import Ui_Form
-from mslib.utils import config as conf
-from mslib.utils.auth import (
-    save_password_to_keyring, get_auth_from_url_and_name, del_password_from_keyring
-)
-from mslib.msui import wms_control as wc
-from mslib.msui.multilayers import Multilayers
 
 
 class AutoplotDockWidget(QWidget, Ui_Form):
@@ -150,9 +137,6 @@ class AutoplotDockWidget(QWidget, Ui_Form):
         if fileName:
             with open(fileName, 'r') as file:
                 configure = json.load(file)
-
-            print("config print   ", configure)
-
             autoplot_flights = configure["automated_plotting_flights"]
             autoplot_hsecs = configure["automated_plotting_hsecs"]
             autoplot_vsecs = configure["automated_plotting_vsecs"]

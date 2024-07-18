@@ -404,13 +404,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     signal_disable_cbs = QtCore.pyqtSignal(name="disable_cbs")
     signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
-    base_url_changed=QtCore.pyqtSignal(str)
-    layer_changed=QtCore.pyqtSignal(str)
-    on_level_changed=QtCore.pyqtSignal(str)
-    styles_changed=QtCore.pyqtSignal(str)
-    itime_changed=QtCore.pyqtSignal(str)
-    vtime_changed=QtCore.pyqtSignal(str)
-    
+    base_url_changed = QtCore.pyqtSignal(str)
+    layer_changed = QtCore.pyqtSignal(str)
+    on_level_changed = QtCore.pyqtSignal(str)
+    styles_changed = QtCore.pyqtSignal(str)
+    itime_changed = QtCore.pyqtSignal(str)
+    vtime_changed = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -728,7 +727,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # the CRS that match the filter of this module.
         base_url = self.multilayers.cbWMS_URL.currentText()
         self.base_url_changed.emit(base_url)
-        
+
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
 
@@ -893,13 +892,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.layer_changed.emit(str(layer))
         currentstyle = layer.get_style()
         self.styles_changed.emit(currentstyle)
-        
 
         if not layer:
             self.lLayerName.setText("No Layer selected")
             self.disable_ui()
             return
-
         else:
             self.btGetMap.setEnabled(True)
 
@@ -917,7 +914,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         levels, itimes, vtimes = layer.get_levels(), layer.get_itimes(), layer.get_vtimes()
         if vtimes and itimes:
             vtimes = vtimes[next((i for i, vtime in enumerate(vtimes) if vtime >= layer.get_itime()), 0):]
-        
 
         if levels:
             self.cbLevel.addItems(levels)
@@ -1144,7 +1140,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
             self.multilayers.carry_parameters["level"] = self.cbLevel.currentText()
-            currentlevel=self.cbLevel.currentText()
+            currentlevel = self.cbLevel.currentText()
             self.on_level_changed.emit(currentlevel)
         self.auto_update()
 

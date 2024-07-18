@@ -44,7 +44,7 @@ from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import airdata_dockwidget as ad
 from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui import flighttrack as ft
-from mslib.msui import autoplot_gui as gui
+from mslib.msui import autoplot_dockwidget as dock
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -55,7 +55,7 @@ REMOTESENSING = 2
 KMLOVERLAY = 3
 AIRDATA = 4
 MULTIPLEFLIGHTPATH = 5
-MSSAUTOPLOT = 6
+AUTOPLOT = 6
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -241,7 +241,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.curritime = None
         self.currvtime = None
 
-
         # Connect slots and signals.
         # ==========================
 
@@ -306,7 +305,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         are connected).
         """
         toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing",
-                     "KML Overlay", "Airports/Airspaces", "Multiple Flightpath", "MSS AUTOPLOT"]
+                     "KML Overlay", "Airports/Airspaces", "Multiple Flightpath", "Autoplot"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
@@ -382,7 +381,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             active_op_id=self.active_op_id,
                                                             mscolab_server_url=self.mscolab_server_url,
                                                             token=self.token)
-                widget.flight_selected.connect(lambda flight: self.flight_val_changed(flight))
                 self.mainwindow_signal_logout_mscolab.connect(self.signal_logout_mscolab.emit)
                 self.mainwindow_signal_listFlighttrack_doubleClicked.connect(
                     lambda: self.signal_listFlighttrack_doubleClicked.emit())
@@ -392,9 +390,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
-            elif index == MSSAUTOPLOT:
-                title = "MSS AUTOPLOT"
-                widget = gui.AutoplotDockWidget(parent=self, view="Top View", config_settings=config_settings)
+            elif index == AUTOPLOT:
+                title = "Autoplot (Top View)"
+                widget = dock.AutoplotDockWidget(parent=self, view="Top View", config_settings=config_settings)
             else:
                 raise IndexError("invalid control index")
 

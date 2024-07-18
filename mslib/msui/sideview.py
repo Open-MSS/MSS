@@ -39,11 +39,11 @@ from mslib.msui.icons import icons
 from mslib.utils import thermolib
 from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
-from mslib.msui import autoplot_gui as gui
+from mslib.msui import autoplot_dockwidget as dock
 
 # Dock window indices.
 WMS = 0
-MSSAUTOPLOT = 1
+AUTOPLOT = 1
 
 
 class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
@@ -267,7 +267,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         self.settings_tag = "sideview"
         # Dock windows [WMS]:
         self.cbTools.clear()
-        self.cbTools.addItems(["(select to open control)", "Vertical Section WMS", "MSS AUTOPLOT"])
+        self.cbTools.addItems(["(select to open control)", "Vertical Section WMS", "Autoplot"])
         self.docks = [None, None]
 
         self.setFlightTrackModel(model)
@@ -319,9 +319,9 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
-            elif index == 1:
-                title = "MSS AUTOPLOT"
-                widget = gui.AutoplotDockWidget(parent=self, view="Side View", config_settings=config_settings)
+            elif index == AUTOPLOT:
+                title = "Autoplot (Side View)"
+                widget = dock.AutoplotDockWidget(parent=self, view="Side View", config_settings=config_settings)
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.
@@ -348,7 +348,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     @QtCore.pyqtSlot()
     def vtime_val_changed(self, strr):
         self.currvtime = strr
-    
+
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):
         self.curritime = strr
