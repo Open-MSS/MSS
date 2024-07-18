@@ -34,6 +34,7 @@ import tempfile
 from PyQt5 import QtTest, QtCore, QtGui
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
+from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
 
 
@@ -74,13 +75,14 @@ class Test_MSS_SV_OptionsDialog:
 class Test_MSSSideViewWindow:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
+        mainwindow = MSUIMainWindow()
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSUISideViewWindow(model=waypoints_model)
+        self.window = tv.MSUISideViewWindow(model=waypoints_model, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield

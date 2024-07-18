@@ -61,7 +61,7 @@ class Test_MSSTopViewWindow:
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield

@@ -25,11 +25,11 @@
     limitations under the License.
 """
 
-import os
-from pathlib import Path
+import logging
 import json
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
 from mslib.msui.qt5.ui_mss_autoplot import Ui_Form
+from mslib.msui import constants as const
 
 
 class AutoplotDockWidget(QWidget, Ui_Form):
@@ -121,18 +121,15 @@ class AutoplotDockWidget(QWidget, Ui_Form):
         self.etimeSpinBox.dateTimeChanged.connect(self.updateDateTimeValue)
 
         # time interval combobox
-        self.timeIntervalComboBox.currentIndexChanged.connect(lambda: self.combo_box_input(self.timeIntervalComboBox))
+        self.timeIntervalComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.timeIntervalComboBox))
 
     def configure_from_path(self, parent, config_settings):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-    
-        home_directory = str(Path.home())
-
-        default_path = os.path.join(home_directory, ".config", "msui", "combined_data.json")
 
         fileName, _ = QFileDialog.getOpenFileName(
-            self, "Select .json Config File", default_path, "JSON Files (*.json)", options=options)
+            self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
         if fileName:
             with open(fileName, 'r') as file:
@@ -269,18 +266,10 @@ class AutoplotDockWidget(QWidget, Ui_Form):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
-        # Get the user's home directory
-        home_directory = str(Path.home())
-
-        # Set the default path
-        default_path = os.path.join(home_directory, ".config", "msui", "combined_data.json")
-
         filePath, _ = QFileDialog.getOpenFileName(
-            self, "Select .json Config File", default_path, "JSON Files (*.json)", options=options)
+            self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
         if filePath:
-            # Use the selected file path directly without appending
             with open(filePath, "w") as file:
                 json.dump(config_settings, file, indent=4)
-
-            print("CONFIG FILE STORED......")
+            logging.debug("config updated")
