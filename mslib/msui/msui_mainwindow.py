@@ -917,10 +917,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(parent=self, mainwindow=self, model=model, 
-                                                    active_flighttrack=self.active_flight_track, 
-                                                    mscolab_server_url=self.mscolab.mscolab_server_url, 
-                                                    token=self.mscolab.token, 
+            view_window = topview.MSUITopViewWindow(parent=self, mainwindow=self, model=model,
+                                                    active_flighttrack=self.active_flight_track,
+                                                    mscolab_server_url=self.mscolab.mscolab_server_url,
+                                                    token=self.mscolab.token,
                                                     config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
@@ -928,9 +928,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-            view_window = sideview.MSUISideViewWindow(model=model,parent=self, 
+            view_window = sideview.MSUISideViewWindow(model=model, parent=self,
                                                       config_settings=self.config_for_gui)
-            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)         
+            view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
@@ -940,7 +940,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSUILinearViewWindow(model=model, 
+            view_window = linearview.MSUILinearViewWindow(model=model,
                                                           parent=self, config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
