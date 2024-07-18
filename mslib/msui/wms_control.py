@@ -890,8 +890,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         active_layers = self.multilayers.get_active_layers()
         layer = self.multilayers.get_current_layer()
         self.layer_changed.emit(str(layer))
-        currentstyle = layer.get_style()
-        self.styles_changed.emit(currentstyle)
+        if layer is not None:
+            currentstyle = layer.get_style()
+            self.styles_changed.emit(currentstyle)
 
         if not layer:
             self.lLayerName.setText("No Layer selected")
