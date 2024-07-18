@@ -129,6 +129,7 @@ class Test_MSSSideViewWindow:
 class Test_SideViewWMS:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mswms_server):
+        mainwindow = MSUIMainWindow()
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -138,7 +139,7 @@ class Test_SideViewWMS:
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUISideViewWindow(model=waypoints_model)
+        self.window = tv.MSUISideViewWindow(model=waypoints_model, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)

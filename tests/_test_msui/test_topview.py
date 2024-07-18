@@ -211,7 +211,7 @@ class Test_TopViewWMS:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         mainwindow = MSUIMainWindow()
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
@@ -250,7 +250,7 @@ class Test_MSUITopViewWindow:
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         mainwindow = MSUIMainWindow()
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow, parent=mainwindow)
 
         # user_options is a global var
         from mslib.utils.config import user_options

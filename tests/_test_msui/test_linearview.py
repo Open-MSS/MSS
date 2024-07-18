@@ -89,6 +89,7 @@ class Test_MSSLinearViewWindow:
 class Test_LinearViewWMS:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mswms_server):
+        mainwindow = MSUIMainWindow()
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -98,7 +99,7 @@ class Test_LinearViewWMS:
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUILinearViewWindow(model=waypoints_model)
+        self.window = tv.MSUILinearViewWindow(model=waypoints_model, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
