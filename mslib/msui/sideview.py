@@ -272,14 +272,15 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
         self.setFlightTrackModel(model)
 
-        self.currurl = None
-        self.currlayer = None
+        self.currurl = ""
+        self.currlayer = ""
         self.currlevel = self.getView().get_settings()["vertical_axis"]
-        self.currstyles = None
-        self.currflights = None
+        self.currstyles = ""
+        self.currflights = ""
         self.currvertical = ', '.join(map(str, self.getView().get_settings()["vertical_extent"]))
-        self.currvtime = None
-        self.curritime = None
+        self.currvtime = ""
+        self.curritime = ""
+        self.currlayerobj = None
 
         # Connect slots and signals.
         # ==========================

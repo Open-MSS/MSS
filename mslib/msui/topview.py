@@ -232,14 +232,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mscolab_server_url = mscolab_server_url
         self.token = token
 
-        self.currurl = None
-        self.currlayer = None
-        self.currlevel = None
-        self.currstyles = None
-        self.currsections = None
-        self.currflights = None
-        self.curritime = None
-        self.currvtime = None
+        self.currurl = ""
+        self.currlayer = ""
+        self.currlevel = ""
+        self.currstyles = ""
+        self.currsections = ""
+        self.currflights = ""
+        self.curritime = ""
+        self.currvtime = ""
         self.currlayerobj = None
 
         # Connect slots and signals.

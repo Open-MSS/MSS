@@ -40,18 +40,18 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.setupUi(self)
 
         self.view = view
-        self.url = None
-        self.layer = None
-        self.styles = None
-        self.level = None
-        self.flight = None
-        self.sections = None
-        self.vertical = None
-        self.filename = None
-        self.itime = None
-        self.stime = None
-        self.etime = None
-        self.intv = None
+        self.url = ""
+        self.layer = ""
+        self.styles = ""
+        self.level = ""
+        self.flight = ""
+        self.sections = ""
+        self.vertical = ""
+        self.filename = ""
+        self.itime = ""
+        self.stime = ""
+        self.etime = ""
+        self.intv = ""
 
         self.refresh_sig(config_settings)
 
@@ -61,23 +61,23 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if self.view == "Top View":
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
                 parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
-                parent.cbChangeMapSection.currentText(), None, parent.waypoints_model.name, parent.curritime,
-                parent.currvtime, None, None, None, None
+                parent.cbChangeMapSection.currentText(), self.vertical, parent.waypoints_model.name, parent.curritime,
+                parent.currvtime, "", "", "", ""
             ))
         elif self.view == "Side View":
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, None,
-                parent.currvertical, parent.waypoints_model.name, parent.curritime, parent.currvtime, None, None,
-                None, None
+                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
+                parent.currvertical, parent.waypoints_model.name, parent.curritime, parent.currvtime, "", "",
+                "", ""
             ))
         else:
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, None, None,
-                parent.waypoints_model.name, None, parent.currvtime, None, None, None, None
+                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
+                parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
 
         self.addToAutoplotSecsButton.clicked.connect(lambda: self.add_to_treewidget(
-            parent, config_settings, self.autoplotSecsTreeWidget, None, None, None, None, None, None,
+            parent, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
             parent.currurl, parent.currlayer, str(parent.currstyles).strip(), parent.currlevel
         ))
 
@@ -91,22 +91,22 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if self.view == "Top View":
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
                 parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
-                parent.cbChangeMapSection.currentText(), None, parent.waypoints_model.name, parent.curritime,
-                parent.currvtime, None, None, None, None
+                parent.cbChangeMapSection.currentText(), "", parent.waypoints_model.name, parent.curritime,
+                parent.currvtime, "", "", "", ""
             ))
         elif self.view == "Side View":
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, None,
-                parent.currvertical, parent.waypoints_model.name, None, parent.currvtime, None, None, None, None
+                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
+                parent.currvertical, parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
         else:
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, None, None,
-                parent.waypoints_model.name, None, parent.currvtime, None, None, None, None
+                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
+                parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
 
         self.UploadAutoplotSecsButton.clicked.connect(lambda: self.update_treewidget(
-            parent, config_settings, self.autoplotSecsTreeWidget, None, None, None, None, None, None,
+            parent, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
             parent.currurl, parent.currlayer, str(parent.currstyles).strip(), parent.currlevel
         ))
 
@@ -129,7 +129,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         fileName, _ = QFileDialog.getOpenFileName(
             self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
-        if fileName is not None:
+        if fileName is not "":
             with open(fileName, 'r') as file:
                 configure = json.load(file)
             autoplot_flights = configure["automated_plotting_flights"]
@@ -165,8 +165,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             else:
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
         self.resize_treewidgets()
-        self.stime = None
-        self.etime = None
+        self.stime = ""
+        self.etime = ""
 
     def update_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
@@ -214,8 +214,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 if index != -1:
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
         self.resize_treewidgets()
-        self.stime = None
-        self.etime = None
+        self.stime = ""
+        self.etime = ""
 
     def refresh_sig(self, config_settings):
         autoplot_flights = config_settings["automated_plotting_flights"]
@@ -257,8 +257,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     parent.takeChild(parent.indexOfChild(selected_item))
         parent.refresh_signal_emit.emit()
         self.resize_treewidgets()
-        self.stime = None
-        self.etime = None
+        self.stime = ""
+        self.etime = ""
 
     def combo_box_input(self, combo):
         comboBoxName = combo.objectName()

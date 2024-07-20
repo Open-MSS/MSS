@@ -101,13 +101,13 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         self.setFlightTrackModel(model)
 
-        self.currurl = None
-        self.currlayer = None
-        self.currlevel = None
-        self.currstyles = None
-        self.currflights = None
-        self.currvertical = None
-        self.currvtime = None
+        self.currurl = ""
+        self.currlayer = ""
+        self.currlevel = ""
+        self.currstyles = ""
+        self.currflights = ""
+        self.currvertical = ""
+        self.currvtime = ""
 
         # Connect slots and signals.
         # ==========================
