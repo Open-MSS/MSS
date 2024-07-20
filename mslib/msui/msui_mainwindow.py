@@ -540,7 +540,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         }
 
         self.config_for_gui["predefined_map_sections"].update(new_map_sections)
-        
         print(self.config_for_gui)
 
         # Reference to the flight track that is currently displayed in the views.

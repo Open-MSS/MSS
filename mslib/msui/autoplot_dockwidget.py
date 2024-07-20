@@ -129,7 +129,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         fileName, _ = QFileDialog.getOpenFileName(
             self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
-        if fileName is not "":
+        if fileName != "":
             with open(fileName, 'r') as file:
                 configure = json.load(file)
             autoplot_flights = configure["automated_plotting_flights"]
