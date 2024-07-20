@@ -143,6 +143,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             config_settings["automated_plotting_lsecs"] = autoplot_lsecs
 
             parent.refresh_signal_emit.emit()
+            self.resize_treewidgets()
 
     def add_to_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
@@ -164,6 +165,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             else:
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
         self.resize_treewidgets()
+        self.stime = None
+        self.etime = None
 
     def update_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
@@ -211,6 +214,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 if index != -1:
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
         self.resize_treewidgets()
+        self.stime = None
+        self.etime = None
 
     def refresh_sig(self, config_settings):
         autoplot_flights = config_settings["automated_plotting_flights"]
@@ -252,6 +257,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     parent.takeChild(parent.indexOfChild(selected_item))
         parent.refresh_signal_emit.emit()
         self.resize_treewidgets()
+        self.stime = None
+        self.etime = None
 
     def combo_box_input(self, combo):
         comboBoxName = combo.objectName()
@@ -267,7 +274,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         for i in range(6):
             self.autoplotTreeWidget.resizeColumnToContents(i)
         for i in range(7):
-            self.autoplotSecsTreeWidget.resizeColumnToContents(i)  
+            self.autoplotSecsTreeWidget.resizeColumnToContents(i)
 
     def update_config_file(self, config_settings):
         options = QFileDialog.Options()
