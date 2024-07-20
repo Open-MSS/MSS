@@ -27,7 +27,6 @@
     limitations under the License.
 """
 
-import logging
 import json
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
@@ -263,13 +262,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     def updateDateTimeValue(self):
         self.stime = self.stimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
         self.etime = self.etimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
-    
+
     def resize_treewidgets(self):
         for i in range(6):
             self.autoplotTreeWidget.resizeColumnToContents(i)
         for i in range(7):
             self.autoplotSecsTreeWidget.resizeColumnToContents(i)  
-        
 
     def update_config_file(self, config_settings):
         options = QFileDialog.Options()
