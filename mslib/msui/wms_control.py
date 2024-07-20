@@ -405,7 +405,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
     base_url_changed = QtCore.pyqtSignal(str)
-    layer_changed = QtCore.pyqtSignal(str)
+    layer_changed = QtCore.pyqtSignal(Layer)
     on_level_changed = QtCore.pyqtSignal(str)
     styles_changed = QtCore.pyqtSignal(str)
     itime_changed = QtCore.pyqtSignal(str)
@@ -889,7 +889,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         active_layers = self.multilayers.get_active_layers()
         layer = self.multilayers.get_current_layer()
-        self.layer_changed.emit(str(layer))
+        self.layer_changed.emit(layer)
         if layer is not None:
             currentstyle = layer.get_style()
             self.styles_changed.emit(currentstyle)

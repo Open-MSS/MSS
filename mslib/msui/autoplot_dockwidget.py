@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.autoplot_gui
+    mslib.utils.autoplot_dockingwidget
     ~~~~~~~~~~~~~~~~
 
-    Python Scripts file for the GUI to download plots automatically.
+    This is a docking widget that allows the user to create the
+    json file or edit the json file which can be used by the CLI for
+    automatically downloading the plots.
 
     This file is part of MSS.
 
@@ -28,11 +30,11 @@
 import logging
 import json
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
-from mslib.msui.qt5.ui_mss_autoplot import Ui_Form
+from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui import constants as const
 
 
-class AutoplotDockWidget(QWidget, Ui_Form):
+class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
     def __init__(self, parent=None, view=None, config_settings=None):
         super().__init__()
@@ -53,9 +55,6 @@ class AutoplotDockWidget(QWidget, Ui_Form):
         self.intv = None
 
         self.refresh_sig(config_settings)
-
-        self.stime = self.stimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
-        self.etime = self.etimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
 
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
 
@@ -131,7 +130,7 @@ class AutoplotDockWidget(QWidget, Ui_Form):
         fileName, _ = QFileDialog.getOpenFileName(
             self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
-        if fileName:
+        if fileName is not None:
             with open(fileName, 'r') as file:
                 configure = json.load(file)
             autoplot_flights = configure["automated_plotting_flights"]
@@ -165,6 +164,7 @@ class AutoplotDockWidget(QWidget, Ui_Form):
                 config_settings["automated_plotting_vsecs"].append([url, layer, styles, level])
             else:
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
+        self.resize_treewidgets()
 
     def update_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
@@ -211,6 +211,7 @@ class AutoplotDockWidget(QWidget, Ui_Form):
             else:
                 if index != -1:
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
+        self.resize_treewidgets()
 
     def refresh_sig(self, config_settings):
         autoplot_flights = config_settings["automated_plotting_flights"]
@@ -251,6 +252,7 @@ class AutoplotDockWidget(QWidget, Ui_Form):
                 if parent:
                     parent.takeChild(parent.indexOfChild(selected_item))
         parent.refresh_signal_emit.emit()
+        self.resize_treewidgets()
 
     def combo_box_input(self, combo):
         comboBoxName = combo.objectName()
@@ -261,15 +263,26 @@ class AutoplotDockWidget(QWidget, Ui_Form):
     def updateDateTimeValue(self):
         self.stime = self.stimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
         self.etime = self.etimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
+    
+    def resize_treewidgets(self):
+        for i in range(6):
+            self.autoplotTreeWidget.resizeColumnToContents(i)
+        for i in range(7):
+            self.autoplotSecsTreeWidget.resizeColumnToContents(i)  
+        
 
     def update_config_file(self, config_settings):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
 
-        filePath, _ = QFileDialog.getOpenFileName(
-            self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Save JSON File",
+            const.MSUI_CONFIG_PATH,
+            "JSON Files (*.json);;All Files (*)",
+            options=options
+        )
 
-        if filePath:
-            with open(filePath, "w") as file:
+        if file_path:
+            with open(file_path, 'w') as file:
                 json.dump(config_settings, file, indent=4)
-            logging.debug("config updated")
