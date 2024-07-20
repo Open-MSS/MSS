@@ -160,9 +160,11 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
     @QtCore.pyqtSlot()
     def layer_val_changed(self, strr):
-        second_colon_index = strr.find(':', strr.find(':') + 1)
-        self.currurl = strr[:second_colon_index].strip() if second_colon_index != -1 else strr.strip()
-        self.currlayer = strr.split('|')[1].strip() if '|' in strr else None
+        self.currlayerobj = strr
+        layerstring = str(strr)
+        second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
+        self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
+        self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
 
     @QtCore.pyqtSlot()
     def level_val_changed(self, strr):
@@ -170,7 +172,10 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
     @QtCore.pyqtSlot()
     def styles_val_changed(self, strr):
-        self.currstyles = strr
+        if strr is None:
+            self.currstyles = ""
+        else:
+            self.currstyles = strr
 
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):
