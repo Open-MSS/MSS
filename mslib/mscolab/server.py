@@ -688,14 +688,18 @@ def delete_bulk_permissions():
     success = fm.delete_bulk_permission(op_id, user, u_ids)
     if success:
         for u_id in u_ids:
-            logging.info(f"going to update count of active users for user id : {u_id}")
-            sockio.sm.update_active_users(u_id)
-            logging.info(f"came back after updating active users for user id : {u_id}")
+            # sockio.sm.update_active_users(i_id)
             sockio.sm.emit_revoke_permission(u_id, op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify({"success": True, "message": "User permissions successfully deleted!"})
 
     return jsonify({"success": False, "message": "Some error occurred. Please try again."})
+
+    # ToDo: Resolve architectural inconsistency with SocketsManager instances.
+    # Currently, SocketsManager instances in mslib/mscolab/server.py and mslib/mscolab/socket_manager.py
+    # are different and hence do not share the same state or attributes.
+    # This leads to discrepancies in user state management and affects real-time updates
+    # such as updating active users's label when users' permissions are revoked from operations.
 
 
 @APP.route('/import_permissions', methods=['POST'])

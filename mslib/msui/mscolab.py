@@ -1879,6 +1879,9 @@ class MSUIMscolab(QtCore.QObject):
 
             self.ui.switch_to_mscolab()
 
+            # Enable the active user count label
+            self.ui.userCountLabel.show()
+
             # call select operation method from connection manager to emit signal
             self.conn.select_operation(item.op_id)
         else:
