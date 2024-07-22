@@ -46,6 +46,14 @@ def get_session_id(sockets, u_id):
     return s_id
 
 
+def get_user_id(sockets, s_id):
+    u_id = None
+    for ss in sockets:
+        if ss["s_id"] == s_id:
+            u_id = ss["u_id"]
+    return u_id
+
+
 def get_message_dict(message):
     return {
         "id": message.id,

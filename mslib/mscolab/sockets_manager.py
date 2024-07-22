@@ -33,7 +33,7 @@ from mslib.mscolab.chat_manager import ChatManager
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
-from mslib.mscolab.utils import get_session_id
+from mslib.mscolab.utils import get_session_id, get_user_id
 from mslib.mscolab.conf import mscolab_settings
 
 socketio = SocketIO(logger=mscolab_settings.SOCKETIO_LOGGER, engineio_logger=mscolab_settings.ENGINEIO_LOGGER,
@@ -51,7 +51,7 @@ class SocketsManager:
         """
         super(SocketsManager, self).__init__()
         self.sockets = []
-        self.active_sessions_per_operation = {}
+        self.active_users_per_operation = {}
         self.cm = chat_manager
         self.fm = file_manager
 
@@ -59,24 +59,23 @@ class SocketsManager:
         logging.debug(request.sid)
 
     def handle_operation_selected(self, json_config):
-        logging.info("Operation selected: {}".format(json_config))
+        logging.debug("Operation selected: {}".format(json_config))
         token = json_config['token']
         op_id = json_config['op_id']
         user = User.verify_auth_token(token)
         if not user:
             return
 
-        session_id = request.sid
-        # Remove the user's active session from any other operations first
-        self.update_user_sessions(session_id)
+        # Remove the active user_id from any other operations first
+        self.update_active_users(user.id)
 
         # Add the user to the new operation
-        if op_id not in self.active_sessions_per_operation:
-            self.active_sessions_per_operation[op_id] = set()
-        self.active_sessions_per_operation[op_id].add(session_id)
-        active_count = len(self.active_sessions_per_operation[op_id])
+        if op_id not in self.active_users_per_operation:
+            self.active_users_per_operation[op_id] = set()
+        self.active_users_per_operation[op_id].add(user.id)
 
         # Emit the updated count to all users
+        active_count = len(self.active_users_per_operation[op_id])
         socketio.emit('active-user-update', {'op_id': op_id, 'count': active_count})
 
     def update_operation_list(self, json_config):
@@ -154,31 +153,33 @@ class SocketsManager:
         self.sockets.append(socket_storage)
 
     def handle_disconnect(self):
-        logging.info("Handling disconnect.")
-        session_id = request.sid
-        # remove the user from any active operations
-        self.update_user_sessions(session_id)
-        logging.info(f"Disconnected: {session_id}")
-        # remove socket from socket_storage
-        self.sockets[:] = [d for d in self.sockets if d['s_id'] != session_id]
+        logging.debug("Handling disconnect.")
 
-    def update_user_sessions(self, session_id):
+        # remove the user from any active operations
+        user_id = get_user_id(self.sockets, request.sid)
+        if user_id:
+            self.update_active_users(user_id)
+
+        logging.debug(f"Disconnected: {request.sid}")
+        # remove socket from socket_storage
+        self.sockets[:] = [d for d in self.sockets if d['s_id'] != request.sid]
+
+    def update_active_users(self, user_id):
         """
-        Remove the given session_id from all operations and emit updates for active user counts.
+        Remove the given user_id from all operations and emit updates for active user counts.
         """
-        logging.info(f"Updating sessions for {session_id}")
-        for op_id, sessions in list(self.active_sessions_per_operation.items()):
-            if session_id in sessions:
-                sessions.remove(session_id)
-                active_count = len(sessions)
-                logging.info(f"Updated {op_id}: {active_count} active users")
-                if sessions:
+        for op_id, user_ids in list(self.active_users_per_operation.items()):
+            if user_id in user_ids:
+                user_ids.remove(user_id)
+                active_count = len(user_ids)
+                logging.debug(f"Updated {op_id}: {active_count} active users")
+                if user_ids:
                     # Emit update if there are still active users
                     socketio.emit('active-user-update', {'op_id': op_id, 'count': active_count})
-
                 else:
                     # If no users left, delete the operation key
-                    del self.active_sessions_per_operation[op_id]
+                    del self.active_users_per_operation[op_id]
+                    socketio.emit('active-user-update', {'op_id': op_id, 'count': 0})
 
     def handle_message(self, _json):
         """
@@ -326,7 +327,8 @@ def setup_managers(app):
     socketio.on_event('file-save', sm.handle_file_save)
     socketio.on_event('add-user-to-operation', sm.join_creator_to_operation)
     socketio.on_event('update-operation-list', sm.update_operation_list)
-    socketio.on_event('operation-selected', sm.handle_operation_selected)  # Register new event
+    # Register the 'operation-selected' event to update active user tracking when an operation is selected
+    socketio.on_event('operation-selected', sm.handle_operation_selected)
 
     socketio.sm = sm
     return socketio, cm, fm

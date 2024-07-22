@@ -193,7 +193,7 @@ class ConnectionManager(QtCore.QObject):
             self.signal_reload.emit(op_id)
 
     def select_operation(self, op_id):
-        """Emit an event to notify the server of the operation selection."""
+        # Emit an event to notify the server of the operation selection.
         self.sio.emit('operation-selected', {'token': self.token, 'op_id': op_id})
 
     def save_file(self, token, op_id, content, comment=None):

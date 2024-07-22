@@ -688,6 +688,9 @@ def delete_bulk_permissions():
     success = fm.delete_bulk_permission(op_id, user, u_ids)
     if success:
         for u_id in u_ids:
+            logging.info(f"going to update count of active users for user id : {u_id}")
+            sockio.sm.update_active_users(u_id)
+            logging.info(f"came back after updating active users for user id : {u_id}")
             sockio.sm.emit_revoke_permission(u_id, op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify({"success": True, "message": "User permissions successfully deleted!"})
