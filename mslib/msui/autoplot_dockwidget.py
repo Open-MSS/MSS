@@ -148,6 +148,10 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     def add_to_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
         if treewidget.objectName() == "autoplotTreeWidget":
+            if flight.startswith("new flight track"):
+                filename = ""
+            else:
+                filename += ".ftml"
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
@@ -170,6 +174,10 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
     def update_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
+        if flight.startswith("new flight track"):
+            filename = ""
+        else:
+            filename += ".ftml"
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)
