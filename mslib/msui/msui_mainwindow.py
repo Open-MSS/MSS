@@ -454,7 +454,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.config_for_gui["automated_plotting_hsecs"].clear()
         self.config_for_gui["automated_plotting_vsecs"].clear()
         self.config_for_gui["automated_plotting_lsecs"].clear()
-        new_map_sections = {
+        map_sections = {
             "00 global (cyl)": {
                 "CRS": "EPSG:4326",
                 "map": {
@@ -500,25 +500,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     "urcrnrlat": 0.0
                 }
             },
-            "05 Europe (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": -15.0,
-                    "llcrnrlat": 35.0,
-                    "urcrnrlon": 30.0,
-                    "urcrnrlat": 65.0
-                }
-            },
-            "06 Germany (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": 5.0,
-                    "llcrnrlat": 45.0,
-                    "urcrnrlon": 15.0,
-                    "urcrnrlat": 57.0
-                }
-            },
-            "07 EDMO-SAL (cyl)": {
+            "05 EDMO-SAL (cyl)": {
                 "CRS": "EPSG:4326",
                 "map": {
                     "llcrnrlon": -40,
@@ -527,7 +509,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     "urcrnrlat": 60
                 }
             },
-            "08 SAL-BA (cyl)": {
+            "06 SAL-BA (cyl)": {
                 "CRS": "EPSG:4326",
                 "map": {
                     "llcrnrlon": -80,
@@ -535,12 +517,37 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     "urcrnrlon": -10,
                     "urcrnrlat": 30
                 }
+            },
+            "07 Europe (cyl)": {
+                "CRS": "EPSG:4326",
+                "map": {
+                    "llcrnrlon": -15.0,
+                    "llcrnrlat": 35.0,
+                    "urcrnrlon": 30.0,
+                    "urcrnrlat": 65.0
+                }
+            },
+            "08 Germany (cyl)": {
+                "CRS": "EPSG:4326",
+                "map": {
+                    "llcrnrlon": 5.0,
+                    "llcrnrlat": 45.0,
+                    "urcrnrlon": 15.0,
+                    "urcrnrlat": 57.0
+                }
+            },
+            "09 Northern Hemisphere (stereo)": {
+                "CRS": "MSS:stere,0,90,90",
+                "map": {
+                    "llcrnrlon": -45.0,
+                    "llcrnrlat": 0.0,
+                    "urcrnrlon": 135.0,
+                    "urcrnrlat": 0.0
+                }
             }
-
         }
 
-        self.config_for_gui["predefined_map_sections"].update(new_map_sections)
-        print(self.config_for_gui)
+        self.config_for_gui["predefined_map_sections"].update(map_sections)
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None

@@ -150,6 +150,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if treewidget.objectName() == "autoplotTreeWidget":
             if flight.startswith("new flight track"):
                 filename = ""
+                flight = ""
             else:
                 filename += ".ftml"
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
@@ -176,6 +177,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                           vtime, url, layer, styles, level):
         if flight.startswith("new flight track"):
             filename = ""
+            flight = ""
         else:
             filename += ".ftml"
         if treewidget.objectName() == "autoplotTreeWidget":
