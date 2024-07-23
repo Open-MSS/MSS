@@ -38,7 +38,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     def __init__(self, parent=None, view=None, config_settings=None):
         super().__init__()
         self.setupUi(self)
-        
+
         self.UploadAutoplotButton.setVisible(False)
         self.UploadAutoplotSecsButton.setVisible(False)
         self.view = view
@@ -123,7 +123,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         # time interval combobox
         self.timeIntervalComboBox.currentIndexChanged.connect(
             lambda: self.combo_box_input(self.timeIntervalComboBox))
-        
+
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed)
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
 
