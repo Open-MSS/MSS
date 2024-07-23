@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.utils.autoplot_dockingwidget
+    mslib.utils.autoplot_dockwidget
     ~~~~~~~~~~~~~~~~
 
     This is a docking widget that allows the user to create the
@@ -38,7 +38,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     def __init__(self, parent=None, view=None, config_settings=None):
         super().__init__()
         self.setupUi(self)
-
+        
+        self.UploadAutoplotButton.setVisible(False)
+        self.UploadAutoplotSecsButton.setVisible(False)
         self.view = view
         self.url = ""
         self.layer = ""
@@ -121,6 +123,23 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         # time interval combobox
         self.timeIntervalComboBox.currentIndexChanged.connect(
             lambda: self.combo_box_input(self.timeIntervalComboBox))
+        
+        self.autoplotTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed)
+        self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
+
+    def on_item_selection_changed(self):
+        selected_item = self.autoplotTreeWidget.selectedItems()
+        if selected_item:
+            self.UploadAutoplotButton.setVisible(True)
+        else:
+            self.UploadAutoplotButton.setVisible(False)
+
+    def on_item_selection_changed_secs(self):
+        selected_item = self.autoplotSecsTreeWidget.selectedItems()
+        if selected_item:
+            self.UploadAutoplotSecsButton.setVisible(True)
+        else:
+            self.UploadAutoplotSecsButton.setVisible(False)
 
     def configure_from_path(self, parent, config_settings):
         options = QFileDialog.Options()
@@ -152,7 +171,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 filename = ""
                 flight = ""
             else:
-                filename += ".ftml"
+                filename += "ftml"
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
@@ -179,7 +198,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             filename = ""
             flight = ""
         else:
-            filename += ".ftml"
+            filename += "ftml"
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)

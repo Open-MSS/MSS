@@ -74,70 +74,7 @@ class MSUIDefaultConfig:
 
     # Predefined map regions to be listed in the corresponding topview combobox
     predefined_map_sections = {
-        "00 global (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -180.0,
-                "llcrnrlat": -90.0,
-                "urcrnrlon": 180.0,
-                "urcrnrlat": 90.0
-            }
-        },
-        "01 SADPAP (stereo)": {
-            "CRS": "EPSG:77890290",
-            "map": {
-                "llcrnrlon": -150.0,
-                "llcrnrlat": -45.0,
-                "urcrnrlon": -25.0,
-                "urcrnrlat": -20.0
-            }
-        },
-        "02 SADPAP zoom (stereo)": {
-            "CRS": "EPSG:77890290",
-            "map": {
-                "llcrnrlon": -120.0,
-                "llcrnrlat": -65.0,
-                "urcrnrlon": -45.0,
-                "urcrnrlat": -28.0
-            }
-        },
-        "03 SADPAP (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -100.0,
-                "llcrnrlat": -75.0,
-                "urcrnrlon": -30.0,
-                "urcrnrlat": -30.0
-            }
-        },
-        "04 Southern Hemisphere (stereo)": {
-            "CRS": "EPSG:77889270",
-            "map": {
-                "llcrnrlon": 135.0,
-                "llcrnrlat": 0.0,
-                "urcrnrlon": -45.0,
-                "urcrnrlat": 0.0
-            }
-        },
-        "05 EDMO-SAL (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -40,
-                "llcrnrlat": 10,
-                "urcrnrlon": 30,
-                "urcrnrlat": 60
-            }
-        },
-        "06 SAL-BA (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -80,
-                "llcrnrlat": -40,
-                "urcrnrlon": -10,
-                "urcrnrlat": 30
-            }
-        },
-        "07 Europe (cyl)": {
+        "01 Europe (cyl)": {
             "CRS": "EPSG:4326",
             "map": {
                 "llcrnrlon": -15.0,
@@ -146,7 +83,7 @@ class MSUIDefaultConfig:
                 "urcrnrlat": 65.0
             }
         },
-        "08 Germany (cyl)": {
+        "02 Germany (cyl)": {
             "CRS": "EPSG:4326",
             "map": {
                 "llcrnrlon": 5.0,
@@ -155,13 +92,76 @@ class MSUIDefaultConfig:
                 "urcrnrlat": 57.0
             }
         },
-        "09 Northern Hemisphere (stereo)": {
+        "03 global (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -180.0,
+                "llcrnrlat": -90.0,
+                "urcrnrlon": 180.0,
+                "urcrnrlat": 90.0
+            }
+        },
+        "04 Northern Hemisphere (stereo)": {
             "CRS": "MSS:stere,0,90,90",
             "map": {
                 "llcrnrlon": -45.0,
                 "llcrnrlat": 0.0,
                 "urcrnrlon": 135.0,
                 "urcrnrlat": 0.0
+            }
+        },
+        "05 SADPAP (stereo)": {
+            "CRS": "EPSG:77890290",
+            "map": {
+                "llcrnrlon": -150.0,
+                "llcrnrlat": -45.0,
+                "urcrnrlon": -25.0,
+                "urcrnrlat": -20.0
+            }
+        },
+        "06 SADPAP zoom (stereo)": {
+            "CRS": "EPSG:77890290",
+            "map": {
+                "llcrnrlon": -120.0,
+                "llcrnrlat": -65.0,
+                "urcrnrlon": -45.0,
+                "urcrnrlat": -28.0
+            }
+        },
+        "07 SADPAP (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -100.0,
+                "llcrnrlat": -75.0,
+                "urcrnrlon": -30.0,
+                "urcrnrlat": -30.0
+            }
+        },
+        "08 Southern Hemisphere (stereo)": {
+            "CRS": "EPSG:77889270",
+            "map": {
+                "llcrnrlon": 135.0,
+                "llcrnrlat": 0.0,
+                "urcrnrlon": -45.0,
+                "urcrnrlat": 0.0
+            }
+        },
+        "09 EDMO-SAL (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -40,
+                "llcrnrlat": 10,
+                "urcrnrlon": 30,
+                "urcrnrlat": 60
+            }
+        },
+        "10 SAL-BA (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -80,
+                "llcrnrlat": -40,
+                "urcrnrlon": -10,
+                "urcrnrlat": 30
             }
         }
     }
