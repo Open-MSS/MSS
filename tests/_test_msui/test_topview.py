@@ -255,7 +255,7 @@ class Test_MSUITopViewWindow:
         # user_options is a global var
         from mslib.utils.config import user_options
 
-        assert user_options['predefined_map_sections']['01 Europe (cyl)']['map'] == {'llcrnrlat': 35.0,
+        assert user_options['predefined_map_sections']['07 Europe (cyl)']['map'] == {'llcrnrlat': 35.0,
                                                                                      'llcrnrlon': -15.0,
                                                                                      'urcrnrlat': 65.0,
                                                                                      'urcrnrlon': 30.0}
