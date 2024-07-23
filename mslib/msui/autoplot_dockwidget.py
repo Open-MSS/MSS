@@ -2,7 +2,7 @@
 """
 
     mslib.utils.autoplot_dockwidget
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This is a docking widget that allows the user to create the
     json file or edit the json file which can be used by the CLI for

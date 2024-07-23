@@ -74,25 +74,7 @@ class MSUIDefaultConfig:
 
     # Predefined map regions to be listed in the corresponding topview combobox
     predefined_map_sections = {
-        "01 Europe (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": -15.0,
-                "llcrnrlat": 35.0,
-                "urcrnrlon": 30.0,
-                "urcrnrlat": 65.0
-            }
-        },
-        "02 Germany (cyl)": {
-            "CRS": "EPSG:4326",
-            "map": {
-                "llcrnrlon": 5.0,
-                "llcrnrlat": 45.0,
-                "urcrnrlon": 15.0,
-                "urcrnrlat": 57.0
-            }
-        },
-        "03 global (cyl)": {
+        "00 global (cyl)": {
             "CRS": "EPSG:4326",
             "map": {
                 "llcrnrlon": -180.0,
@@ -101,16 +83,7 @@ class MSUIDefaultConfig:
                 "urcrnrlat": 90.0
             }
         },
-        "04 Northern Hemisphere (stereo)": {
-            "CRS": "MSS:stere,0,90,90",
-            "map": {
-                "llcrnrlon": -45.0,
-                "llcrnrlat": 0.0,
-                "urcrnrlon": 135.0,
-                "urcrnrlat": 0.0
-            }
-        },
-        "05 SADPAP (stereo)": {
+        "01 SADPAP (stereo)": {
             "CRS": "EPSG:77890290",
             "map": {
                 "llcrnrlon": -150.0,
@@ -119,7 +92,7 @@ class MSUIDefaultConfig:
                 "urcrnrlat": -20.0
             }
         },
-        "06 SADPAP zoom (stereo)": {
+        "02 SADPAP zoom (stereo)": {
             "CRS": "EPSG:77890290",
             "map": {
                 "llcrnrlon": -120.0,
@@ -128,7 +101,7 @@ class MSUIDefaultConfig:
                 "urcrnrlat": -28.0
             }
         },
-        "07 SADPAP (cyl)": {
+        "03 SADPAP (cyl)": {
             "CRS": "EPSG:4326",
             "map": {
                 "llcrnrlon": -100.0,
@@ -137,7 +110,7 @@ class MSUIDefaultConfig:
                 "urcrnrlat": -30.0
             }
         },
-        "08 Southern Hemisphere (stereo)": {
+        "04 Southern Hemisphere (stereo)": {
             "CRS": "EPSG:77889270",
             "map": {
                 "llcrnrlon": 135.0,
@@ -146,7 +119,7 @@ class MSUIDefaultConfig:
                 "urcrnrlat": 0.0
             }
         },
-        "09 EDMO-SAL (cyl)": {
+        "05 EDMO-SAL (cyl)": {
             "CRS": "EPSG:4326",
             "map": {
                 "llcrnrlon": -40,
@@ -155,13 +128,40 @@ class MSUIDefaultConfig:
                 "urcrnrlat": 60
             }
         },
-        "10 SAL-BA (cyl)": {
+        "06 SAL-BA (cyl)": {
             "CRS": "EPSG:4326",
             "map": {
                 "llcrnrlon": -80,
                 "llcrnrlat": -40,
                 "urcrnrlon": -10,
                 "urcrnrlat": 30
+            }
+        },
+        "07 Europe (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -15.0,
+                "llcrnrlat": 35.0,
+                "urcrnrlon": 30.0,
+                "urcrnrlat": 65.0
+            }
+        },
+        "08 Germany (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": 5.0,
+                "llcrnrlat": 45.0,
+                "urcrnrlon": 15.0,
+                "urcrnrlat": 57.0
+            }
+        },
+        "09 Northern Hemisphere (stereo)": {
+            "CRS": "MSS:stere,0,90,90",
+            "map": {
+                "llcrnrlon": -45.0,
+                "llcrnrlat": 0.0,
+                "urcrnrlon": 135.0,
+                "urcrnrlat": 0.0
             }
         }
     }
