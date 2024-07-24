@@ -171,7 +171,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 filename = ""
                 flight = ""
             else:
-                filename += "ftml"
+                filename += ".ftml"
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
@@ -198,7 +198,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             filename = ""
             flight = ""
         else:
-            filename += "ftml"
+            filename += ".ftml"
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)
