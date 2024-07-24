@@ -71,7 +71,7 @@ class JsonConversion:
             modify_config_file(data_to_save_in_config_file)
             # read new file
             read_config_file()
-            # Todo move this to a seperate function to utils
+            # Todo move this to a separate function to utils
             # get all defaults
             default_options = config_loader(default=True)
             # get the data from the local file

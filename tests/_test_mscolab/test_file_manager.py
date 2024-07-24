@@ -26,9 +26,12 @@
 """
 import datetime
 import pytest
+import os
+
+from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.models import Operation, User
-from mslib.mscolab.seed import add_user, get_user
+from mslib.mscolab.seed import add_user, get_user, add_operation
 
 
 class Test_FileManager:
@@ -246,6 +249,25 @@ class Test_FileManager:
             assert self.fm.save_file(operation.id, self.content1, self.user) is False
             assert self.fm.save_file(operation.id, self.content2, self.user)
 
+    def test_upload_chat_attachment(self):
+        '''
+        Tests the chat feature to upload files.
+        i.e. it tests the upload_file method of file manager in case of it being used to upload a chat attachment
+        '''
+        operation_name = "europe"
+        assert add_operation(operation_name, "test europe")
+        operation = Operation.query.filter_by(path=operation_name).first()
+
+        sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
+        filename = "example.csv"
+        name, ext = filename.split('.')
+        open_csv = os.path.join(sample_path, "example.csv")
+        with open(open_csv, 'rb') as fp:
+            file = FileStorage(fp, filename=filename, content_type="text/csv")
+            static_path = self.fm.upload_file(file, subfolder=str(operation.id), identifier=None)
+            assert name in static_path
+            assert static_path.endswith(ext)
+
     def test_get_file(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7")
@@ -401,7 +423,7 @@ class Test_FileManager:
             self.fm.add_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "collaborator")
             assert self.fm.is_member(self.collaboratoruser.id, operation_no_1.id) is True
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation_no_1.id)
-            # check that not other catergories get changed
+            # check that not other categories get changed
             assert self.fm.is_member(self.collaboratoruser.id, operation_oslo.id) is False
             self.fm.modify_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "viewer")
             assert self.fm.is_viewer(self.collaboratoruser.id, operation_no_1.id)

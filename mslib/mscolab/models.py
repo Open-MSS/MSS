@@ -58,16 +58,19 @@ class User(db.Model):
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
+    profile_image_path = db.Column(db.String(255), nullable=True)  # relative path
     registered_on = db.Column(AwareDateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(AwareDateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
-    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None, authentication_backend='local'):
+    def __init__(self, emailid, username, password, profile_image_path=None, confirmed=False,
+                 confirmed_on=None, authentication_backend='local'):
         self.username = username
         self.emailid = emailid
         self.hash_password(password)
+        self.profile_image_path = profile_image_path
         self.registered_on = datetime.datetime.now(tz=datetime.timezone.utc)
         self.confirmed = confirmed
         self.confirmed_on = confirmed_on

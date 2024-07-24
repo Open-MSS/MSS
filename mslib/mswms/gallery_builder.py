@@ -482,7 +482,7 @@ def import_instructions(plot_object, l_type, layer, native_import=None, dataset=
             inspect.getsource(plot_object._prepare_datafields):
         style = "hsec" if isinstance(plot_object, HS_GenericStyle) else "vsec"
 
-        # Convert range to list, since numpy arrays string representation is unparseable
+        # Convert range to list, since numpy arrays string representation is unparsable
         if plot_object.contours:
             for i in range(len(plot_object.contours)):
                 temp = list(plot_object.contours[i])
@@ -540,7 +540,7 @@ def source_and_import(plot_object, l_type, layer, dataset=""):
         parent = "HS_GenericStyle" if isinstance(plot_object, HS_GenericStyle) else "VS_GenericStyle"
         style = "hsec" if isinstance(plot_object, HS_GenericStyle) else "vsec"
 
-        # Convert range to list, since numpy arrays string representation is unparseable
+        # Convert range to list, since numpy arrays string representation is unparsable
         if plot_object.contours:
             for i in range(len(plot_object.contours)):
                 temp = list(plot_object.contours[i])

@@ -57,7 +57,7 @@ class Test_Server_Auth_Not_Valid:
 
     def test_verify_pw(self):
         assert verify_pw("user", "testvaluepassword")
-        assert verify_pw("unknown", "unknow") is False
+        assert verify_pw("unknown", "unknown") is False
         assert verify_pw("user", "wrong") is False
 
     def test_register_user(self):

@@ -481,7 +481,7 @@ def _tab_add_data():
     # marks word
     pag.doubleClick()
     type_and_key('Location')
-    # annother waypoint name
+    # another waypoint name
     pag.click(x + xoffset, y - 263, duration=1)
     pag.sleep(1)
     pag.doubleClick()

@@ -375,7 +375,7 @@ class PathPlotter:
                                   markerfacecolor=markerfacecolor,
                                   animated=True)
 
-        # List to accomodate waypoint labels.
+        # List to accommodate waypoint labels.
         self.wp_labels = []
         self.label_waypoints = label_waypoints
 
@@ -507,7 +507,7 @@ class PathH_Plotter(PathPlotter):
             x, y = self.map.gcpoints_path(lons, lats)
             vertices = list(zip(x, y))
 
-        # Set the line to disply great circle points, remove existing
+        # Set the line to display great circle points, remove existing
         # waypoints scatter instance and draw a new one. This is
         # necessary as scatter() does not provide a set_data method.
         self.line.set_data(list(zip(*vertices)))
