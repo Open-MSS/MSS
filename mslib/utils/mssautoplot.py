@@ -95,7 +95,7 @@ class Plotting:
             sys.exit("Invalid SECTION and/or CRS")
         self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
         self.bbox_units = self.params["bbox"]
-        if filename is not None:
+        if filename != "":
             self.read_ftml(filename)
 
     def read_ftml(self, filename):
@@ -135,7 +135,7 @@ class TopViewPlotting(Plotting):
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename is not None:
+        if filename != "":
             self.update_path(filename)
 
         width, height = self.myfig.get_plot_size_in_px()
@@ -208,7 +208,7 @@ class SideViewPlotting(Plotting):
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        if filename is not None:
+        if filename != "":
             self.update_path(filename)
         width, height = self.myfig.get_plot_size_in_px()
         p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
