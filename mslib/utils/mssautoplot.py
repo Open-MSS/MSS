@@ -87,15 +87,17 @@ class Plotting:
         self.bbox = None
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
-        try:
-            self.params = mslib.utils.coordinate.get_projection_params(
-                self.config["predefined_map_sections"][section]["CRS"].lower())
-        except KeyError as e:
-            print(e)
-            sys.exit("Invalid SECTION and/or CRS")
-        self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
-        self.bbox_units = self.params["bbox"]
-        self.read_ftml(filename)
+        if self.__class__.__name__ == "TopViewPlotting":
+            try:
+                self.params = mslib.utils.coordinate.get_projection_params(
+                    self.config["predefined_map_sections"][section]["CRS"].lower())
+            except KeyError as e:
+                print(e)
+                sys.exit("Invalid SECTION and/or CRS")
+            self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
+            self.bbox_units = self.params["bbox"]
+        if filename != "":
+            self.read_ftml(filename)
 
     def read_ftml(self, filename):
         dirpath = "./"
@@ -127,14 +129,15 @@ class TopViewPlotting(Plotting):
 
     def update_path(self, filename=None):
         # plot path and label
-        if filename is not None:
+        if filename != "":
             self.read_ftml(filename)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        self.update_path(filename)
+        if filename != "":
+            self.update_path(filename)
 
         width, height = self.myfig.get_plot_size_in_px()
         self.bbox = self.params['basemap']
@@ -206,7 +209,11 @@ class SideViewPlotting(Plotting):
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        self.update_path(filename)
+        try:
+            self.update_path(filename)
+        except AttributeError as e:
+            logging.debug(e)
+            sys.exit("No FLIGHT Selected")
         width, height = self.myfig.get_plot_size_in_px()
         p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
         self.bbox = tuple([x for x in (self.num_interpolation_points,
@@ -339,7 +346,7 @@ def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
                 print("Invalid times and/or levels requested")
             elif "LAYER" in str(e):
                 print("Invalid LAYER '{}' requested".format(layer))
-            elif "404 Client Error" or "NOT FOUND for url" in e:
+            elif "404 Client Error" in e or "NOT FOUND for url" in e:
                 print("Invalid STYLE and/or URL requested")
             else:
                 print(str(e))

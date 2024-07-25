@@ -315,7 +315,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
         self.updateText()
 
     def timerEvent(self, event):
-        # After timeout, kill timer, and reenable click on line edit
+        # After timeout, kill timer, and re-enable click on line edit
         self.killTimer(event.timerId())
         self.closeOnLineEditClick = False
 
@@ -391,7 +391,7 @@ class Worker(QtCore.QThread):
     def run(self):
         try:
             result = self.function()
-            # ToDo the capbilities worker member needs the possibility to terminate itselfs.
+            # ToDo the capbilities worker member needs the possibility to terminate itself.
             # ToDo refactoring needed
             if "MSUIWebMapService" in repr(result) and not result.contents:
                 raise NoLayersError

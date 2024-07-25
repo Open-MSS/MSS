@@ -52,7 +52,7 @@ def automate_rs():
     pag.sleep(2)
 
     # Changing map to Global
-    find_and_click_picture('topviewwindow-01-europe-cyl.png',
+    find_and_click_picture('topviewwindow-00-global-cyl.png',
                            "Map change dropdown could not be located on the screen")
     select_listelement(2)
 

@@ -260,7 +260,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
         # Create the following:
         #   cdf       list of Dataset instances
-        #   cdfVar    dictionnary indexed by the variable names
+        #   cdfVar    dictionary indexed by the variable names
         cdf = [cdfm]
         self._cdf = cdf  # Store this now, because dim() method needs it
         cdfVar = {}

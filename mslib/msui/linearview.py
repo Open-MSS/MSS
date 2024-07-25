@@ -26,15 +26,17 @@
 """
 
 from mslib.utils.config import config_loader
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 from mslib.msui.qt5 import ui_linearview_window as ui
 from mslib.msui.qt5 import ui_linearview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
+from mslib.msui import autoplot_dockwidget as dock
 
 # Dock window indices.
 WMS = 0
+AUTOPLOT = 1
 
 
 class MSUI_LV_Options_Dialog(QtWidgets.QDialog, ui_opt.Ui_LinearViewOptionsDialog):
@@ -79,7 +81,10 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     """
     name = "Linear View"
 
-    def __init__(self, parent=None, model=None, _id=None):
+    refresh_signal_send = QtCore.pyqtSignal()
+    refresh_signal_emit = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None, model=None, _id=None, config_settings=None):
         """
         Set up user interface, connect signal/slots.
         """
@@ -91,16 +96,26 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         # Dock windows [WMS]:
         self.cbTools.clear()
-        self.cbTools.addItems(["(select to open control)", "Linear Section WMS"])
-        self.docks = [None]
+        self.cbTools.addItems(["(select to open control)", "Linear Section WMS", "Autoplot"])
+        self.docks = [None, None]
 
         self.setFlightTrackModel(model)
+
+        self.currurl = ""
+        self.currlayer = ""
+        self.currlevel = ""
+        self.currstyles = ""
+        self.currflights = ""
+        self.currvertical = ""
+        self.currvtime = ""
 
         # Connect slots and signals.
         # ==========================
 
+        parent.refresh_signal_connect.connect(self.refresh_signal_send.emit)
+
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(self.openTool)
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(ind, config_settings))
         self.lvoptionbtn.clicked.connect(self.open_settings_dialog)
 
         self.openTool(WMS + 1)
@@ -111,7 +126,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     def update_predefined_maps(self, extra):
         pass
 
-    def openTool(self, index):
+    def openTool(self, index, config_settings=None):
         """
         Slot that handles requests to open tool windows.
         """
@@ -125,11 +140,54 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
+                widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
+                widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
+                widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
+                widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
                 self.mpl.canvas.waypoints_interactor.signal_get_lsec.connect(widget.call_get_lsec)
+            elif index == AUTOPLOT:
+                title = "Autoplot (Linear View)"
+                widget = dock.AutoplotDockWidget(parent=self, view="Linear View", config_settings=config_settings)
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
+
+    @QtCore.pyqtSlot()
+    def url_val_changed(self, strr):
+        self.currurl = strr
+
+    @QtCore.pyqtSlot()
+    def layer_val_changed(self, strr):
+        self.currlayerobj = strr
+        layerstring = str(strr)
+        second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
+        self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
+        self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
+
+    @QtCore.pyqtSlot()
+    def level_val_changed(self, strr):
+        self.currlevel = strr
+
+    @QtCore.pyqtSlot()
+    def styles_val_changed(self, strr):
+        if strr is None:
+            self.currstyles = ""
+        else:
+            self.currstyles = strr
+
+    @QtCore.pyqtSlot()
+    def itime_val_changed(self, strr):
+        self.curritime = strr
+
+    @QtCore.pyqtSlot()
+    def vtime_val_changed(self, strr):
+        self.currvtime = strr
+
+    @QtCore.pyqtSlot()
+    def vertical_val_changed(self, strr):
+        self.currvertical = strr
 
     def setFlightTrackModel(self, model):
         """

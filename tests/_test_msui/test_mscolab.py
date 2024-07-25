@@ -897,7 +897,7 @@ class Test_Mscolab:
         assert self.window.mscolab.prof_diag is not None
         # case: trying to fetch non-existing gravatar
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
-            self.window.mscolab.fetch_gravatar(refresh=True)
+            self.window.mscolab.fetch_profile_image(refresh=True)
             critbox.assert_called_once()
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
 

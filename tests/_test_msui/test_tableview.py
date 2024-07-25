@@ -38,7 +38,7 @@ import mslib.msui.tableview as tv
 class Test_TableView:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
-        # Create an initital flight track.
+        # Create an initial flight track.
         initial_waypoints = [ft.Waypoint(flightlevel=0, location="EDMO", comments="take off OP"),
                              ft.Waypoint(48.10, 10.27, 200),
                              ft.Waypoint(52.32, 09.21, 200),

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    tests._test_msui.test_aircrafts
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    tests._test_msui.test_aircraft
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides pytest functions to tests msui.aircrafts module
+    This module provides pytest functions to test the msui.aircraft module.
 
     This file is part of MSS.
 
@@ -27,7 +27,7 @@
 
 import pytest
 
-from mslib.msui.aircrafts import SimpleAircraft, AIRCRAFT_DUMMY
+from mslib.msui.aircraft import SimpleAircraft, AIRCRAFT_DUMMY
 
 AIRCRAFT_DUMMY2 = {
     "name": "DUMMY2",

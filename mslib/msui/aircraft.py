@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.msui.aircrafts
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.msui.aircraft
+    ~~~~~~~~~~~~~~~~~~~
 
-    This module provides aircrafts definitions
+    This module provides aircraft definitions
 
     This file is part of MSS.
 
