@@ -33,6 +33,7 @@ import tempfile
 from PyQt5 import QtTest, QtCore
 from mslib.msui import flighttrack as ft
 import mslib.msui.linearview as tv
+from mslib.msui.msui import MSUIMainWindow
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_LINEARVIEW
 
 
@@ -55,13 +56,14 @@ class Test_MSS_LV_Options_Dialog:
 class Test_MSSLinearViewWindow:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
+        mainwindow = MSUIMainWindow()
         initial_waypoints = [ft.Waypoint(40., 25., 300), ft.Waypoint(60., -10., 400), ft.Waypoint(40., 10, 300)]
 
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.window = tv.MSUILinearViewWindow(model=waypoints_model)
+        self.window = tv.MSUILinearViewWindow(model=waypoints_model, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield
@@ -87,6 +89,7 @@ class Test_MSSLinearViewWindow:
 class Test_LinearViewWMS:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mswms_server):
+        mainwindow = MSUIMainWindow()
         self.url = mswms_server
         self.tempdir = tempfile.mkdtemp()
         if not os.path.exists(self.tempdir):
@@ -96,7 +99,7 @@ class Test_LinearViewWMS:
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUILinearViewWindow(model=waypoints_model)
+        self.window = tv.MSUILinearViewWindow(model=waypoints_model, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)

@@ -29,7 +29,7 @@
 import logging
 import functools
 
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtGui, QtWidgets, QtCore
 
 from mslib.msui.qt5 import ui_sideview_window as ui
 from mslib.msui.qt5 import ui_sideview_options as ui_opt
@@ -39,9 +39,11 @@ from mslib.msui.icons import icons
 from mslib.utils import thermolib
 from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
+from mslib.msui import autoplot_dockwidget as dock
 
 # Dock window indices.
 WMS = 0
+AUTOPLOT = 1
 
 
 class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
@@ -252,7 +254,10 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     """
     name = "Side View"
 
-    def __init__(self, parent=None, model=None, _id=None, tutorial_mode=False):
+    refresh_signal_send = QtCore.pyqtSignal()
+    refresh_signal_emit = QtCore.pyqtSignal()
+
+    def __init__(self, parent=None, model=None, _id=None, config_settings=None, tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """
@@ -263,19 +268,31 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         self.settings_tag = "sideview"
         # Dock windows [WMS]:
         self.cbTools.clear()
-        self.cbTools.addItems(["(select to open control)", "Vertical Section WMS"])
-        self.docks = [None]
+        self.cbTools.addItems(["(select to open control)", "Vertical Section WMS", "Autoplot"])
+        self.docks = [None, None]
 
         self.setFlightTrackModel(model)
 
+        self.currurl = ""
+        self.currlayer = ""
+        self.currlevel = self.getView().get_settings()["vertical_axis"]
+        self.currstyles = ""
+        self.currflights = ""
+        self.currvertical = ', '.join(map(str, self.getView().get_settings()["vertical_extent"]))
+        self.currvtime = ""
+        self.curritime = ""
+        self.currlayerobj = None
+
         # Connect slots and signals.
         # ==========================
+
+        parent.refresh_signal_connect.connect(self.refresh_signal_send.emit)
 
         # Buttons to set sideview options.
         self.btOptions.clicked.connect(self.open_settings_dialog)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(self.openTool)
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, config_settings=config_settings))
         self.openTool(WMS + 1)
 
     def __del__(self):
@@ -284,7 +301,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     def update_predefined_maps(self, extra):
         pass
 
-    def openTool(self, index):
+    def openTool(self, index=None, config_settings=None):
         """
         Slot that handles requests to open tool windows.
         """
@@ -298,11 +315,50 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
+                widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
+                widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
+                widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
+                widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
+            elif index == AUTOPLOT:
+                title = "Autoplot (Side View)"
+                widget = dock.AutoplotDockWidget(parent=self, view="Side View", config_settings=config_settings)
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.
             self.createDockWidget(index, title, widget)
+
+    @QtCore.pyqtSlot()
+    def url_val_changed(self, strr):
+        self.currurl = strr
+
+    @QtCore.pyqtSlot()
+    def layer_val_changed(self, strr):
+        self.currlayerobj = strr
+        layerstring = str(strr)
+        second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
+        self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
+        self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
+
+    @QtCore.pyqtSlot()
+    def level_val_changed(self, strr):
+        self.currlevel = strr
+
+    @QtCore.pyqtSlot()
+    def styles_val_changed(self, strr):
+        if strr is None:
+            self.currstyles = ""
+        else:
+            self.currstyles = strr
+
+    @QtCore.pyqtSlot()
+    def vtime_val_changed(self, strr):
+        self.currvtime = strr
+
+    @QtCore.pyqtSlot()
+    def itime_val_changed(self, strr):
+        self.curritime = strr
 
     def setFlightTrackModel(self, model):
         """
@@ -317,6 +373,8 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         Slot to open a dialog that lets the user specify sideview options.
         """
         settings = self.getView().get_settings()
+        self.currvertical = ', '.join(map(str, settings["vertical_extent"]))
+        self.currlevel = settings["vertical_axis"]
         dlg = MSUI_SV_OptionsDialog(parent=self, settings=settings)
         dlg.setModal(True)
         if dlg.exec_() == QtWidgets.QDialog.Accepted:

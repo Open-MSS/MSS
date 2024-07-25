@@ -45,7 +45,7 @@ class Test_MultipleFlightpathControlWidget:
         self.waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
-        self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window)
+        self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window, parent=self.window)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield

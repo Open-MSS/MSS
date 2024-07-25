@@ -77,16 +77,16 @@ class MSUIDefaultConfig:
 
     # Predefined map regions to be listed in the corresponding topview combobox
     predefined_map_sections = {
-        "01 Europe (cyl)": {"CRS": "EPSG:4326",
+        "07 Europe (cyl)": {"CRS": "EPSG:4326",
                             "map": {"llcrnrlon": -15.0, "llcrnrlat": 35.0,
                                     "urcrnrlon": 30.0, "urcrnrlat": 65.0}},
-        "02 Germany (cyl)": {"CRS": "EPSG:4326",
+        "08 Germany (cyl)": {"CRS": "EPSG:4326",
                              "map": {"llcrnrlon": 5.0, "llcrnrlat": 45.0,
                                      "urcrnrlon": 15.0, "urcrnrlat": 57.0}},
-        "03 Global (cyl)": {"CRS": "EPSG:4326",
+        "00 Global (cyl)": {"CRS": "EPSG:4326",
                             "map": {"llcrnrlon": -180.0, "llcrnrlat": -90.0,
                                     "urcrnrlon": 180.0, "urcrnrlat": 90.0}},
-        "04 Northern Hemisphere (stereo)": {"CRS": "MSS:stere,0,90,90",
+        "09 Northern Hemisphere (stereo)": {"CRS": "MSS:stere,0,90,90",
                                             "map": {"llcrnrlon": -45.0, "llcrnrlat": 0.0,
                                                     "urcrnrlon": 135.0, "urcrnrlat": 0.0}}
     }

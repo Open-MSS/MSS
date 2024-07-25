@@ -404,6 +404,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     signal_disable_cbs = QtCore.pyqtSignal(name="disable_cbs")
     signal_enable_cbs = QtCore.pyqtSignal(name="enable_cbs")
     image_displayed = QtCore.pyqtSignal()
+    base_url_changed = QtCore.pyqtSignal(str)
+    layer_changed = QtCore.pyqtSignal(Layer)
+    on_level_changed = QtCore.pyqtSignal(str)
+    styles_changed = QtCore.pyqtSignal(str)
+    itime_changed = QtCore.pyqtSignal(str)
+    vtime_changed = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -720,6 +726,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
         base_url = self.multilayers.cbWMS_URL.currentText()
+        self.base_url_changed.emit(base_url)
+
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
 
@@ -768,6 +776,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       len(filtered_layers))
         filtered_layers = sorted(filtered_layers)
         selected = self.multilayers.current_layer.text(0) if self.multilayers.current_layer else None
+        self.selected_layer = selected
         if not cache and wms.url in self.multilayers.layers and \
                 wms.capabilities_document.decode("utf-8") != \
                 self.multilayers.layers[wms.url]["wms"].capabilities_document.decode("utf-8"):
@@ -880,12 +889,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         active_layers = self.multilayers.get_active_layers()
         layer = self.multilayers.get_current_layer()
+        if layer is not None:
+            self.layer_changed.emit(layer)
+            currentstyle = layer.get_style()
+            self.styles_changed.emit(currentstyle)
 
         if not layer:
             self.lLayerName.setText("No Layer selected")
             self.disable_ui()
             return
-
         else:
             self.btGetMap.setEnabled(True)
 
@@ -906,6 +918,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         if levels:
             self.cbLevel.addItems(levels)
+            self.on_level_changed.emit(levels[0])
             self.cbLevel.setCurrentIndex(self.cbLevel.findText(layer.get_level()))
         self.enable_level_elements(len(levels) > 0)
 
@@ -1094,6 +1107,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
            init time date/time edit.
         """
         init_time = self.cbInitTime.currentText()
+        self.itime_changed.emit(init_time)
         if init_time != "":
             init_time = parse_iso_datetime(init_time)
             if init_time is not None:
@@ -1110,6 +1124,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """Same as initTimeChanged(), but for the valid time elements.
         """
         valid_time = self.cbValidTime.currentText()
+        self.vtime_changed.emit(valid_time)
         if valid_time != "":
             valid_time = parse_iso_datetime(valid_time)
             if valid_time is not None:
@@ -1126,6 +1141,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
             self.multilayers.carry_parameters["level"] = self.cbLevel.currentText()
+            currentlevel = self.cbLevel.currentText()
+            self.on_level_changed.emit(currentlevel)
         self.auto_update()
 
     def enable_level_elements(self, enable):

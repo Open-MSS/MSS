@@ -44,6 +44,7 @@ from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import airdata_dockwidget as ad
 from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui import flighttrack as ft
+from mslib.msui import autoplot_dockwidget as dock
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -54,6 +55,7 @@ REMOTESENSING = 2
 KMLOVERLAY = 3
 AIRDATA = 4
 MULTIPLEFLIGHTPATH = 5
+AUTOPLOT = 6
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -185,9 +187,13 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
+    sections_changed = QtCore.pyqtSignal(str)
+    refresh_signal_emit = QtCore.pyqtSignal()
+    refresh_signal_send = QtCore.pyqtSignal()
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
-                 active_flighttrack=None, mscolab_server_url=None, token=None, tutorial_mode=False):
+                 active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None,
+                 tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """
@@ -210,7 +216,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay, Multiple Flightpath]:
-        self.docks = [None, None, None, None, None, None]
+        self.docks = [None, None, None, None, None, None, None]
 
         # Initialise the GUI elements (map view, items of combo boxes etc.).
         self.setup_top_view()
@@ -228,8 +234,20 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mscolab_server_url = mscolab_server_url
         self.token = token
 
+        self.currurl = ""
+        self.currlayer = ""
+        self.currlevel = ""
+        self.currstyles = ""
+        self.currsections = ""
+        self.currflights = ""
+        self.curritime = ""
+        self.currvtime = ""
+        self.currlayerobj = None
+
         # Connect slots and signals.
         # ==========================
+
+        parent.refresh_signal_connect.connect(self.refresh_signal_send.emit)
 
         # Map controls.
         self.btMapRedraw.clicked.connect(self.mpl.canvas.redraw_map)
@@ -242,7 +260,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(self.openTool)
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, config_settings=config_settings))
 
         if mainwindow is not None:
             # Update flighttrack
@@ -289,8 +307,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         Initialise GUI elements. (This method is called before signals/slots
         are connected).
         """
-        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
-                     "Airports/Airspaces", "Multiple Flightpath"]
+        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing",
+                     "KML Overlay", "Airports/Airspaces", "Multiple Flightpath", "Autoplot"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
@@ -323,7 +341,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         if current_map_key in predefined_map_sections.keys():
             self.cbChangeMapSection.setCurrentText(current_map_key)
 
-    def openTool(self, index):
+    def openTool(self, index, config_settings=None):
         """
         Slot that handles requests to open control windows.
         """
@@ -336,6 +354,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     default_WMS=config_loader(dataset="default_WMS"),
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
+                widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
+                widget.on_level_changed.connect(lambda level: self.level_val_changed(level))
+                widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
+                widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
+                widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
             elif index == SATELLITE:
@@ -370,6 +394,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
+            elif index == AUTOPLOT:
+                title = "Autoplot (Top View)"
+                widget = dock.AutoplotDockWidget(parent=self, view="Top View", config_settings=config_settings)
             else:
                 raise IndexError("invalid control index")
 
@@ -383,6 +410,37 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.pyqtSlot()
     def enable_cbs(self):
         self.wms_connected = False
+
+    @QtCore.pyqtSlot()
+    def url_val_changed(self, strr):
+        self.currurl = strr
+
+    @QtCore.pyqtSlot()
+    def layer_val_changed(self, strr):
+        self.currlayerobj = strr
+        layerstring = str(strr)
+        second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
+        self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
+        self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
+
+    @QtCore.pyqtSlot()
+    def level_val_changed(self, strr):
+        self.currlevel = strr.split(' ')[0]
+
+    @QtCore.pyqtSlot()
+    def styles_val_changed(self, strr):
+        if strr is None:
+            self.currstyles = ""
+        else:
+            self.currstyles = strr
+
+    @QtCore.pyqtSlot()
+    def itime_val_changed(self, strr):
+        self.curritime = strr
+
+    @QtCore.pyqtSlot()
+    def vtime_val_changed(self, strr):
+        self.currvtime = strr
 
     def changeMapSection(self, index=0, only_kwargs=False):
         """
