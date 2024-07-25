@@ -212,6 +212,7 @@ class SideViewPlotting(Plotting):
         try:
             self.update_path(filename)
         except AttributeError as e:
+            logging.debug(e)
             sys.exit("No FLIGHT Selected")
         width, height = self.myfig.get_plot_size_in_px()
         p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
