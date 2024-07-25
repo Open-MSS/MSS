@@ -211,8 +211,8 @@ class SideViewPlotting(Plotting):
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
         try:
             self.update_path(filename)
-        except:
-            sys.exit("No FLIGHT found")
+        except TypeError as e:
+            sys.exit("No FLIGHT Selected")
         width, height = self.myfig.get_plot_size_in_px()
         p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
         self.bbox = tuple([x for x in (self.num_interpolation_points,
