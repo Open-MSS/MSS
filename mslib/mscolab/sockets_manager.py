@@ -306,7 +306,7 @@ class SocketsManager:
         socketio.emit("operation-deleted", json.dumps({"op_id": op_id}))
 
 
-def setup_managers(app):
+def _setup_managers(app):
     """
     takes app as parameter to extract config data,
     initializes ChatManager, FileManager, SocketManager and return them

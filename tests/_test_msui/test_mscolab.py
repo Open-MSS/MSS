@@ -901,6 +901,29 @@ class Test_Mscolab:
             critbox.assert_called_once()
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
 
+    def test_activate_operation_updates_active_users(self, qtbot):
+        """
+        Test that selecting an operation updates the active users label correctly.
+        """
+        # Login and activate an operation
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_name == self.operation_name
+
+        # Testing that the label is updated after an operation is selected
+        def assert_active_users_label_updated():
+            assert self.window.mscolab.ui.userCountLabel.text() == "Active Users: 1"
+        qtbot.wait_until(assert_active_users_label_updated)
+
+        # Testing that the label is indeed hidden after we select a flight track and vice versa
+        self._activate_flight_track_at_index(0)
+        assert not self.window.mscolab.ui.userCountLabel.isVisible()
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.ui.userCountLabel.isVisible()
+
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
         self.window.mscolab.connect_window = self.connect_window

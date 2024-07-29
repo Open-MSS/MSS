@@ -35,7 +35,7 @@ import eventlet.wsgi
 from PyQt5 import QtWidgets
 from contextlib import contextmanager
 from mslib.mscolab.conf import mscolab_settings
-from mslib.mscolab.server import APP, initialize_managers
+from mslib.mscolab.server import APP, sockio, cm, fm
 from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
@@ -104,7 +104,7 @@ def mscolab_session_managers(mscolab_session_app):
     This fixture should not be used in tests. Instead use :func:`mscolab_managers`,
     which handles per-test cleanup as well.
     """
-    return initialize_managers(mscolab_session_app)[1:]
+    return sockio, cm, fm
 
 
 @pytest.fixture(scope="session")
@@ -141,8 +141,7 @@ def mscolab_app(mscolab_session_app, reset_mscolab):
 def mscolab_managers(mscolab_session_managers, reset_mscolab):
     """Fixture that provides the MSColab managers and does cleanup actions.
 
-    :returns: A tuple (SocketIO, ChatManager, FileManager) as returned by
-        initialize_managers.
+    :returns: A tuple (SocketIO, ChatManager, FileManager).
     """
     return mscolab_session_managers
 

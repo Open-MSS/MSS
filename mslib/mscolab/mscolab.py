@@ -45,15 +45,16 @@ from mslib.utils.qt import Worker, Updater
 
 
 def handle_start(args):
-    from mslib.mscolab.server import APP, initialize_managers, start_server
+    # from mslib.mscolab.server import APP, initialize_managers, start_server
+    from mslib.mscolab.server import APP, sockio, cm, fm, start_server
     setup_logging(args)
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.info("Launching MSColab Server")
 
-    app, sockio, cm, fm = initialize_managers(APP)
-    start_server(app, sockio, cm, fm)
+    # app, sockio, cm, fm = initialize_managers(APP)
+    start_server(APP, sockio, cm, fm)
 
 
 def confirm_action(confirmation_prompt):

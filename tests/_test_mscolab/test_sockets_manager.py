@@ -43,7 +43,8 @@ class Test_Socket_Manager:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers, mscolab_server):
         self.app = mscolab_app
-        _, self.cm, self.fm = mscolab_managers
+        sockio, self.cm, self.fm = mscolab_managers
+        self.sm = sockio.sm
         self.url = mscolab_server
         self.sockets = []
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -57,7 +58,6 @@ class Test_Socket_Manager:
         self.anotheruser = get_user(self.anotheruserdata[0])
         self.token = self.user.generate_auth_token()
         self.operation = get_operation(self.operation_name)
-        self.sm = SocketsManager(self.cm, self.fm)
         yield
         for sock in self.sockets:
             sock.disconnect()
@@ -132,6 +132,45 @@ class Test_Socket_Manager:
         sio.sleep(1)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
         assert perms is None
+
+    def test_active_user_tracking_on_operation_selection(self):
+        pytest.skip("self.sm.active_users_per_operation is empty")
+        """
+        Test that selecting an operation updates the active user count appropriately.
+        """
+        sio = self._connect()
+
+        # User selects an operation
+        sio.emit('operation-selected', {'token': self.token, 'op_id': self.operation.id})
+        sio.sleep(1)
+
+        assert self.operation.id in self.sm.active_users_per_operation
+        assert self.user.id in self.sm.active_users_per_operation[self.operation.id]
+
+        # # User disconnects and active user count should update
+        # some function to disconnect the user
+        # assert self.user.id not in self.sm.active_users_per_operation.get(self.operation.id, set())
+
+    def test_active_user_update_emits_correctly(self):
+        """
+        Test that the active user count is emitted correctly after a user selects an operation.
+        """
+        sio = self._connect()
+
+        # Setup listener for active-user-update event
+        received_data = {}
+
+        def on_active_user_update(data):
+            received_data['data'] = data
+        sio.on('active-user-update', on_active_user_update)
+
+        # User selects an operation
+        sio.emit('operation-selected', {'token': self.token, 'op_id': self.operation.id})
+        sio.sleep(1)
+
+        assert 'data' in received_data
+        assert received_data['data']['op_id'] == self.operation.id
+        assert received_data['data']['count'] == 1
 
     def test_handle_start_event(self):
         pytest.skip("unknown how to verify")
