@@ -26,11 +26,7 @@
 """
 import os
 import pytest
-import socket
-import socketio
 import datetime
-import requests
-from urllib.parse import urljoin, urlparse
 
 from mslib.msui.icons import icons
 from mslib.mscolab.conf import mscolab_settings
@@ -41,11 +37,10 @@ from mslib.mscolab.models import Permission, User, Message, MessageType
 
 class Test_Socket_Manager:
     @pytest.fixture(autouse=True)
-    def setup(self, mscolab_app, mscolab_managers, mscolab_server):
+    def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
-        sockio, self.cm, self.fm = mscolab_managers
-        self.sm = sockio.sm
-        self.url = mscolab_server
+        self.sockio, self.cm, self.fm = mscolab_managers
+        self.sm = self.sockio.sm
         self.sockets = []
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
@@ -62,23 +57,9 @@ class Test_Socket_Manager:
         for sock in self.sockets:
             sock.disconnect()
 
-    def _can_ping_server(self):
-        parsed_url = urlparse(self.url)
-        host, port = parsed_url.hostname, parsed_url.port
-        try:
-            sock = socket.create_connection((host, port))
-            success = True
-        except socket.error:
-            success = False
-        finally:
-            sock.close()
-        return success
-
     def _connect(self):
-        sio = socketio.Client(reconnection_attempts=5)
+        sio = self.sockio.test_client(self.app)
         self.sockets.append(sio)
-        assert self._can_ping_server()
-        sio.connect(self.url, transports='polling')
         sio.emit('connect')
         return sio
 
@@ -88,13 +69,8 @@ class Test_Socket_Manager:
         return operation
 
     def test_handle_connect(self):
-        sio = socketio.Client()
-        assert sio.sid is None
-        self.sockets.append(sio)
-        assert self._can_ping_server()
-        sio.connect(self.url, transports='polling')
-        sio.emit('connect')
-        assert len(sio.sid) > 5
+        sio = self._connect()
+        assert len(sio.eio_sid) > 5
 
     def test_join_creator_to_operatiom(self):
         sio = self._connect()
@@ -122,27 +98,23 @@ class Test_Socket_Manager:
 
     def test_remove_collaborator_from_operation(self):
         pytest.skip("get_session_id has None result")
-        sio = self._connect()
         operation = self._new_operation('new_operation', "example decription")
         sm = SocketsManager(self.cm, self.fm)
         sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
         assert perms is not None
         sm.remove_collaborator_from_operation(self.anotheruser.id, operation.id)
-        sio.sleep(1)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
         assert perms is None
 
     def test_active_user_tracking_on_operation_selection(self):
-        pytest.skip("self.sm.active_users_per_operation is empty")
         """
         Test that selecting an operation updates the active user count appropriately.
         """
         sio = self._connect()
 
         # User selects an operation
-        sio.emit('operation-selected', {'token': self.token, 'op_id': self.operation.id})
-        sio.sleep(1)
+        sio.emit("operation-selected", {"token": self.token, "op_id": self.operation.id})
 
         assert self.operation.id in self.sm.active_users_per_operation
         assert self.user.id in self.sm.active_users_per_operation[self.operation.id]
@@ -157,20 +129,14 @@ class Test_Socket_Manager:
         """
         sio = self._connect()
 
-        # Setup listener for active-user-update event
-        received_data = {}
-
-        def on_active_user_update(data):
-            received_data['data'] = data
-        sio.on('active-user-update', on_active_user_update)
-
         # User selects an operation
-        sio.emit('operation-selected', {'token': self.token, 'op_id': self.operation.id})
-        sio.sleep(1)
+        sio.emit("operation-selected", {"token": self.token, "op_id": self.operation.id})
 
-        assert 'data' in received_data
-        assert received_data['data']['op_id'] == self.operation.id
-        assert received_data['data']['count'] == 1
+        received_messages = sio.get_received()
+        assert len(received_messages) == 1
+        received_message_args = received_messages[0]["args"][0]
+        assert received_message_args["op_id"] == self.operation.id
+        assert received_message_args["count"] == 1
 
     def test_handle_start_event(self):
         pytest.skip("unknown how to verify")
@@ -197,7 +163,6 @@ class Test_Socket_Manager:
             "message_text": "® non ascii",
             "reply_id": -1
         })
-        sio.sleep(1)
 
         with self.app.app_context():
             message = Message.query.filter_by(text="message from 1").first()
@@ -224,7 +189,6 @@ class Test_Socket_Manager:
             "message_text": "message from 1",
             "reply_id": -1
         })
-        sio.sleep(5)
         with self.app.app_context():
             messages = self.cm.get_messages(1)
             assert messages[0]["text"] == "message from 1"
@@ -255,7 +219,6 @@ class Test_Socket_Manager:
             "message_text": "message from 1",
             "reply_id": -1
         })
-        sio.sleep(1)
 
         token = self.token
         data = {
@@ -263,15 +226,14 @@ class Test_Socket_Manager:
             "op_id": self.operation.id,
             "timestamp": datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
         }
-        # returns an array of messages
-        url = urljoin(self.url, 'messages')
-        res = requests.get(url, data=data, timeout=(2, 10)).json()
-        assert len(res["messages"]) == 2
+        with self.app.test_client() as c:
+            res = c.get("/messages", data=data)
+            assert len(res.json["messages"]) == 2
 
-        data["token"] = "dummy"
-        # returns False due to bad authorization
-        r = requests.get(url, data=data, timeout=(2, 10))
-        assert r.text == "False"
+            data["token"] = "dummy"
+            # returns False due to bad authorization
+            r = c.get("/messages", data=data)
+            assert r.text == "False"
 
     def test_edit_message(self):
         sio = self._connect()
@@ -283,7 +245,6 @@ class Test_Socket_Manager:
             "message_text": "Edit this message",
             "reply_id": -1
         })
-        sio.sleep(1)
         with self.app.app_context():
             message = Message.query.filter_by(text="Edit this message").first()
         sio.emit('edit-message', {
@@ -292,16 +253,14 @@ class Test_Socket_Manager:
             "op_id": message.op_id,
             "token": self.token
         })
-        sio.sleep(1)
         token = self.token
         data = {
             "token": token,
             "op_id": self.operation.id,
             "timestamp": datetime.datetime(1970, 1, 1, tzinfo=datetime.timezone.utc).isoformat()
         }
-        # returns an array of messages
-        url = urljoin(self.url, 'messages')
-        res = requests.get(url, data=data, timeout=(2, 10)).json()
+        with self.app.test_client() as c:
+            res = c.get("messages", data=data).json
         assert len(res["messages"]) == 1
         messages = res["messages"][0]
         assert messages["text"] == "I have updated the message"
@@ -316,7 +275,7 @@ class Test_Socket_Manager:
             "message_text": "delete this message",
             "reply_id": -1
         })
-        sio.sleep(1)
+
         with self.app.app_context():
             message = Message.query.filter_by(text="delete this message").first()
         sio.emit('delete-message', {
@@ -324,7 +283,6 @@ class Test_Socket_Manager:
             'op_id': self.operation.id,
             'token': self.token
         })
-        sio.sleep(1)
 
         with self.app.app_context():
             assert Message.query.filter_by(text="delete this message").count() == 0
@@ -332,14 +290,14 @@ class Test_Socket_Manager:
     def test_upload_file(self):
         sio = self._connect()
         sio.emit('start', {'token': self.token})
-        files = {'file': open(icons('16x16'), 'rb')}
         data = {
             "token": self.token,
             "op_id": self.operation.id,
-            "message_type": int(MessageType.IMAGE)
+            "message_type": int(MessageType.IMAGE),
+            "file": open(icons('16x16'), 'rb'),
         }
-        url = urljoin(self.url, 'message_attachment')
-        requests.post(url, data=data, files=files, timeout=(2, 10))
+        with self.app.test_client() as c:
+            c.post("message_attachment", data=data, content_type="multipart/form-data")
         upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, str(self.user.id))
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]
