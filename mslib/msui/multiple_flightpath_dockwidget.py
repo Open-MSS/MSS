@@ -498,7 +498,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 wp_model = self.list_flighttrack.currentItem().flighttrack_model
                 if wp_model != self.active_flight_track:
                     selected_style = self.cbLineStyle.currentText()
-                    new_linestyle = self.line_styles.get(selected_style, '-')  # Default to 'solid' if the style is not found
+                    new_linestyle = self.line_styles.get(selected_style, '-')  # Default to 'solid'
 
                     if self.dict_flighttrack[wp_model]["line_style"] != new_linestyle:
                         self.dict_flighttrack[wp_model]["line_style"] = new_linestyle
@@ -514,7 +514,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def update_flighttrack_patch(self, wp_model):
         """
-        Update the flight track patch with the latest attributes.
+        Update the flighttrack patch with the latest attributes.
         """
         self.dict_flighttrack[wp_model]["patch"].remove()
         self.dict_flighttrack[wp_model]["patch"] = MultipleFlightpath(
@@ -563,15 +563,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 if self.dict_flighttrack[wp_model]["patch"] is not None:
                     self.dict_flighttrack[wp_model]["patch"].remove()
 
-                self.dict_flighttrack[wp_model]["patch"] = MultipleFlightpath(
-                    self.view.map,
-                    self.dict_flighttrack[wp_model]["wp_data"],
-                    color=self.dict_flighttrack[wp_model]["color"],
-                    linewidth=self.dict_flighttrack[wp_model]["linewidth"],
-                    line_transparency=self.dict_flighttrack[wp_model]["line_transparency"],
-                    line_style=self.dict_flighttrack[wp_model]["line_style"]
-                )
-
                 if listItem.checkState() == QtCore.Qt.Unchecked:
                     listItem.setCheckState(QtCore.Qt.Checked)
                     self.set_activate_flag()
@@ -587,14 +578,13 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def update_ui_elements(self):
         """
-        Update the UI elements (line width, transparency, line style) to reflect the current active flight track's properties.
+        Update the UI elements (line width, transparency, line style) to reflect the current active flighttrack
         """
         if self.active_flight_track is not None:
-            self.dsbx_linewidth.setValue(self.dict_flighttrack[self.active_flight_track]["linewidth"])
-            self.hsTransparencyControl.setValue(
-                int(self.dict_flighttrack[self.active_flight_track]["line_transparency"] * 100))
-            current_style = self.dict_flighttrack[self.active_flight_track]["line_style"]
-            self.cbLineStyle.setCurrentText(self.line_styles.get(current_style, 'Solid'))
+            flighttrack_data = self.dict_flighttrack[self.active_flight_track]
+            self.dsbx_linewidth.setValue(flighttrack_data["linewidth"])
+            self.hsTransparencyControl.setValue(int(flighttrack_data["line_transparency"] * 100))
+            self.cbLineStyle.setCurrentText(flighttrack_data["line_style"])
 
     def drawInactiveFlighttracks(self, list_widget):
         """
