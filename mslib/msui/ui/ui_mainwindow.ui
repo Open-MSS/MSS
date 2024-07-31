@@ -289,6 +289,12 @@ Double click a operation to activate and view its description.</string>
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="activeOperationDesc">
+             <property name="maximumSize">
+              <size>
+               <width>300</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="lineWidth">
               <number>1</number>
              </property>

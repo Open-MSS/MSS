@@ -135,6 +135,7 @@ class Ui_MSUIMainWindow(object):
         self.listOperationsMSC.setObjectName("listOperationsMSC")
         self.gridLayout_3.addWidget(self.listOperationsMSC, 4, 0, 1, 2)
         self.activeOperationDesc = QtWidgets.QLabel(self.openOperationsGb)
+        self.activeOperationDesc.setMaximumSize(QtCore.QSize(300, 16777215))
         self.activeOperationDesc.setLineWidth(1)
         self.activeOperationDesc.setObjectName("activeOperationDesc")
         self.gridLayout_3.addWidget(self.activeOperationDesc, 1, 0, 1, 1)
