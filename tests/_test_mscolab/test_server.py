@@ -27,6 +27,7 @@
 import pytest
 import json
 import io
+import os
 
 from PIL import Image
 
@@ -145,9 +146,14 @@ class Test_Server:
             token = self._get_token(test_client, self.userdata)
             response = self._upload_profile_image(test_client, token, self.userdata[0])
             assert response.status_code == 200  # this will ensure image was uploaded
+
+            user = get_user(self.userdata[0])
+            relative_image_path = user.profile_image_path  # Capture the path before deletion
+            full_image_path = os.path.join(mscolab_settings.UPLOAD_FOLDER, relative_image_path)
             response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
             assert response.get_json()["success"] is True
+            assert not os.path.exists(full_image_path)
             # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
             # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
 

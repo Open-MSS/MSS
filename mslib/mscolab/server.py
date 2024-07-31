@@ -375,7 +375,7 @@ def upload_profile_image():
 @APP.route('/fetch_profile_image', methods=["GET"])
 @verify_user
 def fetch_profile_image():
-    user_id = g.user.id
+    user_id = request.form['user_id']
     user = User.query.get(user_id)
     if user and user.profile_image_path:
         base_path = mscolab_settings.UPLOAD_FOLDER
