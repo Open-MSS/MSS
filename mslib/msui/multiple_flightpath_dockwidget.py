@@ -498,7 +498,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 wp_model = self.list_flighttrack.currentItem().flighttrack_model
                 if wp_model != self.active_flight_track:
                     selected_style = self.cbLineStyle.currentText()
-                    new_linestyle = self.line_styles.get(selected_style, '-')  # Default to 'solid'
+                    new_linestyle = self.line_styles.get(selected_style, '-')  # Default to 'solid' if none
 
                     if self.dict_flighttrack[wp_model]["line_style"] != new_linestyle:
                         self.dict_flighttrack[wp_model]["line_style"] = new_linestyle
