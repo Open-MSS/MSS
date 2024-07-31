@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import io
 import sys
 import fs
 import fs.errors
@@ -32,6 +33,8 @@ import fs.opener.errors
 import requests.exceptions
 import mock
 import pytest
+
+from PIL import Image
 
 import mslib.utils.auth
 from mslib.mscolab.conf import mscolab_settings
@@ -900,6 +903,41 @@ class Test_Mscolab:
             self.window.mscolab.fetch_profile_image(refresh=True)
             critbox.assert_called_once()
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
+
+    def test_upload_and_fetch_profile_image(self, qtbot, tmp_path):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, self.userdata[0], self.userdata[2])
+        self.window.mscolab.profile_action.trigger()
+        initial_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+
+        # Creating a new image and storing it at a temporary path
+        new_image = Image.new('RGB', (64, 64), color='cyan')
+        img_byte_arr = io.BytesIO()
+        new_image.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        temp_image_path = tmp_path / 'new_profile_image.jpg'
+        with open(temp_image_path, 'wb') as f:
+            f.write(img_byte_arr.getvalue())
+
+        # Mocking the QFileDialog to select the image
+        with mock.patch('PyQt5.QtWidgets.QFileDialog.getOpenFileName',
+                        return_value=(str(temp_image_path), 'Image (*.jpg)')):
+            with mock.patch.object(QtWidgets.QMessageBox, 'information'):
+                self.window.mscolab.upload_image()
+
+        def pixmap_updated():
+            updated_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+            assert initial_pixmap != updated_pixmap
+        qtbot.wait_until(pixmap_updated)
+        uploaded_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+
+        self.window.mscolab.fetch_profile_image(refresh=True)
+        qtbot.wait_until(pixmap_updated)
+        fetched_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+
+        assert initial_pixmap != fetched_pixmap
+        assert uploaded_pixmap == fetched_pixmap
 
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)
