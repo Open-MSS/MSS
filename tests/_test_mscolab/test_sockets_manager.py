@@ -43,7 +43,8 @@ class Test_Socket_Manager:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app, mscolab_managers, mscolab_server):
         self.app = mscolab_app
-        _, self.cm, self.fm = mscolab_managers
+        sockio, self.cm, self.fm = mscolab_managers
+        self.sm = sockio.sm
         self.url = mscolab_server
         self.sockets = []
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
@@ -57,7 +58,6 @@ class Test_Socket_Manager:
         self.anotheruser = get_user(self.anotheruserdata[0])
         self.token = self.user.generate_auth_token()
         self.operation = get_operation(self.operation_name)
-        self.sm = SocketsManager(self.cm, self.fm)
         yield
         for sock in self.sockets:
             sock.disconnect()
