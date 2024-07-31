@@ -239,6 +239,74 @@ Save a flight track to name it.</string>
            <property name="bottomMargin">
             <number>8</number>
            </property>
+           <item row="11" column="0" colspan="2">
+            <widget class="QPushButton" name="pbOpenOperationArchive">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Operation Archive</string>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0" colspan="2">
+            <widget class="QLabel" name="workingStatusLabel">
+             <property name="text">
+              <string>No operations selected</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0">
+            <widget class="QLabel" name="categoryLabel">
+             <property name="text">
+              <string>Category:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="10" column="0">
+            <widget class="QCheckBox" name="workLocallyCheckbox">
+             <property name="toolTip">
+              <string>Check to work asynchronously from the server</string>
+             </property>
+             <property name="text">
+              <string>Work Asynchronously</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0" colspan="2">
+            <widget class="QListWidget" name="listOperationsMSC">
+             <property name="toolTip">
+              <string>List of mscolab operations.
+Double click a operation to activate and view its description.</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="activeOperationDesc">
+             <property name="lineWidth">
+              <number>1</number>
+             </property>
+             <property name="text">
+              <string>Select Operation to View Description</string>
+             </property>
+             <property name="margin">
+              <number>1</number>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="QLabel" name="activeOperationsLabel">
+             <property name="text">
+              <string>Operations</string>
+             </property>
+            </widget>
+           </item>
            <item row="9" column="1">
             <widget class="QComboBox" name="filterCategoryCb">
              <property name="whatsThis">
@@ -263,36 +331,6 @@ Save a flight track to name it.</string>
              </item>
             </widget>
            </item>
-           <item row="10" column="0">
-            <widget class="QCheckBox" name="workLocallyCheckbox">
-             <property name="toolTip">
-              <string>Check to work asynchronously from the server</string>
-             </property>
-             <property name="text">
-              <string>Work Asynchronously</string>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="0" colspan="2">
-            <widget class="QPushButton" name="pbOpenOperationArchive">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Operation Archive</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="activeOperationsLabel">
-             <property name="text">
-              <string>Operations</string>
-             </property>
-            </widget>
-           </item>
            <item row="10" column="1">
             <widget class="QComboBox" name="serverOptionsCb">
              <property name="toolTip">
@@ -315,48 +353,31 @@ Save a flight track to name it.</string>
              </item>
             </widget>
            </item>
-           <item row="6" column="0" colspan="2">
-            <widget class="QLabel" name="workingStatusLabel">
-             <property name="text">
-              <string>No operations selected</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="0">
-            <widget class="QLabel" name="categoryLabel">
-             <property name="text">
-              <string>Category:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="activeOperationDesc">
-             <property name="text">
-              <string>Select Operation to View Description</string>
-             </property>
-             <property name="margin">
-              <number>1</number>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QListWidget" name="listOperationsMSC">
-             <property name="toolTip">
-              <string>List of mscolab operations.
-Double click a operation to activate and view its description.</string>
-             </property>
-            </widget>
-           </item>
            <item row="1" column="1">
             <widget class="QLabel" name="userCountLabel">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>120</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>120</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="layoutDirection">
+              <enum>Qt::LeftToRight</enum>
+             </property>
+             <property name="autoFillBackground">
+              <bool>false</bool>
              </property>
              <property name="frameShape">
               <enum>QFrame::StyledPanel</enum>
