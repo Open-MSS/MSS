@@ -1654,8 +1654,11 @@ class MSUIMscolab(QtCore.QObject):
     @QtCore.pyqtSlot(int, int)
     def handle_revoke_permission(self, op_id, u_id):
         if u_id == self.user["id"]:
+            revoked_operation_currently_active = True if self.active_op_id == op_id else False
             operation_name = self.delete_operation_from_list(op_id)
             if operation_name is not None:
+                if revoked_operation_currently_active:
+                    self.ui.userCountLabel.hide()
                 show_popup(self.ui, "Permission Revoked",
                            f'Your access to operation - "{operation_name}" was revoked!', icon=1)
                 # on import permissions revoked name can not taken from the operation list,
