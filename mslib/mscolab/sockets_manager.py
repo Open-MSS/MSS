@@ -63,7 +63,7 @@ class SocketsManager:
         token = json_config['token']
         op_id = json_config['op_id']
         user = User.verify_auth_token(token)
-        if not user:
+        if user is None:
             return
 
         # Remove the active user_id from any other operations first
@@ -85,7 +85,7 @@ class SocketsManager:
         """
         token = json_config["token"]
         user = User.verify_auth_token(token)
-        if not user:
+        if user is None:
             return
         socketio.emit('operation-list-update')
 
@@ -97,7 +97,7 @@ class SocketsManager:
         """
         token = json_config['token']
         user = User.verify_auth_token(token)
-        if not user:
+        if user is None:
             return
         op_id = json_config['op_id']
         join_room(str(op_id))
@@ -125,7 +125,7 @@ class SocketsManager:
         # authenticate socket
         token = json_config['token']
         user = User.verify_auth_token(token)
-        if not user:
+        if user is None:
             return
 
         # fetch operations
