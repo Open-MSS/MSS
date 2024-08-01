@@ -181,6 +181,24 @@ class SocketsManager:
                     del self.active_users_per_operation[op_id]
                     socketio.emit('active-user-update', {'op_id': op_id, 'count': 0})
 
+    def remove_active_user_id_from_specific_operation(self, user_id, op_id):
+        """
+        Remove the given user_id from a specific operation in active_users_per_operation
+        and emit updates for active user counts.
+        """
+        if op_id in self.active_users_per_operation:
+            if user_id in self.active_users_per_operation[op_id]:
+                self.active_users_per_operation[op_id].remove(user_id)
+                active_count = len(self.active_users_per_operation[op_id])
+
+                if self.active_users_per_operation[op_id]:
+                    # Emit update if there are still active users
+                    socketio.emit('active-user-update', {'op_id': op_id, 'count': active_count})
+                else:
+                    # If no users left, delete the operation key
+                    del self.active_users_per_operation[op_id]
+                    socketio.emit('active-user-update', {'op_id': op_id, 'count': 0})
+
     def handle_message(self, _json):
         """
         json is a dictionary version of data sent to back-end
