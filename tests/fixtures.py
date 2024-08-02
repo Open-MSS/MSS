@@ -28,6 +28,7 @@ import mock
 import multiprocessing
 import time
 import urllib
+import socketio
 import mslib.mswms.mswms
 import eventlet
 import eventlet.wsgi
@@ -107,7 +108,14 @@ def mscolab_session_managers(mscolab_session_app):
     return sockio, cm, fm
 
 
-@pytest.fixture(scope="session")
+# TODO: Having this fixture be autouse is a crutch. It seems like if it is not autouse some tests can bring the pytest
+# processes objects into a state in which the MSColab server will have trouble starting the Flask-SocketIO server once
+# it is forked. With autouse the fork happens first, before any test runs. After that, the pytest process can no longer
+# affect the now-running server, thus mitigating the issue. This is my understanding at time of writing.
+#
+# This issue would also be avoided if the background server process wasn't started with multiprocessing and a fork, but
+# with a real subprocess, which would solve some other issues (e.g. testing on Windows) as well.
+@pytest.fixture(scope="session", autouse=True)
 def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     """Session-scoped fixture that provides a running MSColab server.
 
@@ -115,6 +123,11 @@ def mscolab_session_server(mscolab_session_app, mscolab_session_managers):
     handles per-test cleanup as well.
     """
     with _running_eventlet_server(mscolab_session_app) as url:
+        # Wait until the Flask-SocketIO server is ready for connections
+        sio = socketio.Client()
+        sio.connect(url, retry=True)
+        sio.disconnect()
+        del sio
         yield url
 
 
