@@ -95,8 +95,15 @@ class MultipleFlightpath:
             self.line_transparency = line_transparency
         if line_style is not None:
             self.line_style = line_style
-        self.remove()
-        self.draw()
+
+        for patch in self.patches:  # allows dynamic updating of the flight path's appearance without needing to
+            # remove and redraw the entire path
+            for elem in patch:
+                elem.set_linewidth(self.linewidth)
+                elem.set_color(self.color)
+                elem.set_alpha(self.line_transparency)
+                elem.set_linestyle(self.line_style)
+        self.map.ax.figure.canvas.draw()
 
     def draw(self):
         lat, lon = self.get_lonlat()
@@ -139,6 +146,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         "Dotted": ':',
         "Dash-dot": '-.'
     }
+
+    # Reverse dictionary
+    line_styles_reverse = {v: k for k, v in line_styles.items()}
 
     def __init__(self, parent=None, view=None, listFlightTracks=None,
                  listOperationsMSC=None, category=None, activeFlightTrack=None, active_op_id=None,
@@ -504,7 +514,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                         self.dict_flighttrack[wp_model]["line_style"] = new_linestyle
                         self.update_flighttrack_patch(wp_model)
                         self.change_line_style = True
-                        self.cbLineStyle.setCurrentText(selected_style)
+                        self.cbLineStyle.setCurrentText(self.dict_flighttrack[wp_model]["line_style"])
             else:
                 self.labelStatus.setText("Status: No flight track selected")
         elif self.list_operation_track.currentItem() is not None:
@@ -574,18 +584,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.set_activate_flag()
             listItem.setFont(font)
 
-        self.update_ui_elements()
-
-    def update_ui_elements(self):
-        """
-        Update the UI elements (line width, transparency, line style) to reflect the current active flighttrack
-        """
-        if self.active_flight_track is not None:
-            flighttrack_data = self.dict_flighttrack[self.active_flight_track]
-            self.dsbx_linewidth.setValue(flighttrack_data["linewidth"])
-            self.hsTransparencyControl.setValue(int(flighttrack_data["line_transparency"] * 100))
-            self.cbLineStyle.setCurrentText(flighttrack_data["line_style"])
-
     def drawInactiveFlighttracks(self, list_widget):
         """
         Draw inactive flighttracks
@@ -602,7 +600,12 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_flighttrack[listItem.flighttrack_model][
                                                    "wp_data"],
-                                               color=self.dict_flighttrack[listItem.flighttrack_model]['color'])
+                                               color=self.dict_flighttrack[listItem.flighttrack_model]['color'],
+                                               linewidth=self.dict_flighttrack[listItem.flighttrack_model]['linewidth'],
+                                               line_transparency=self.dict_flighttrack[listItem.flighttrack_model][
+                                                   "line_transparency"],
+                                               line_style=self.dict_flighttrack[listItem.flighttrack_model][
+                                                   "line_style"])
 
                     self.dict_flighttrack[listItem.flighttrack_model]["patch"] = patch
                     self.dict_flighttrack[listItem.flighttrack_model]["checkState"] = True
@@ -641,12 +644,27 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         return self.get_random_color()
 
     def listFlighttrack_itemClicked(self):
+        """
+        reflect the linewidth, transparency, line_style of the selected flight track
+        and toggles the visibility of the groupBox.
+        """
         if self.list_operation_track.currentItem() is not None:
             self.list_operation_track.setCurrentItem(None)
 
         if self.list_flighttrack.currentItem() is not None:
             wp_model = self.list_flighttrack.currentItem().flighttrack_model
-            self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
+
+            linewidth = self.dict_flighttrack[wp_model]["linewidth"]
+            line_transparency = self.dict_flighttrack[wp_model]["line_transparency"]
+            line_style = self.dict_flighttrack[wp_model]["line_style"]
+
+            self.dsbx_linewidth.setValue(linewidth)
+            self.hsTransparencyControl.setValue(int(line_transparency * 100))
+            # Use the reverse dictionary to set the current text of the combo box
+            if line_style in self.line_styles_reverse:
+                self.cbLineStyle.setCurrentText(self.line_styles_reverse[line_style])
+            else:
+                self.cbLineStyle.setCurrentText("Solid")
 
             if self.list_flighttrack.currentItem().flighttrack_model == self.active_flight_track:
                 self.groupBox.hide()
@@ -819,7 +837,12 @@ class MultipleFlightpathOperations:
                                                self.dict_operations[listItem.op_id][
                                                    "wp_data"],
                                                color=self.dict_operations[listItem.op_id]["color"],
-                                               linewidth=self.dict_operations[listItem.op_id]["linewidth"])
+                                               linewidth=self.dict_operations[listItem.op_id]["linewidth"],
+                                               line_transparency=self.dict_operations[listItem.op_id][
+                                                   "line_transparency"],
+                                               line_style=self.dict_operations[listItem.op_id][
+                                                   "line_style"]
+                                               )
 
                     self.dict_operations[listItem.op_id]["patch"] = patch
 
@@ -973,14 +996,7 @@ class MultipleFlightpathOperations:
                 self.parent.groupBox.show()
                 if self.dict_operations[op_id]["linewidth"] != self.parent.dsbx_linewidth.value():
                     self.dict_operations[op_id]["linewidth"] = self.parent.dsbx_linewidth.value()
-
-                    self.dict_operations[op_id]["patch"].remove()
-                    self.dict_operations[op_id]["patch"].update(
-                        linewidth=self.dict_operations[op_id]["linewidth"],
-                        line_transparency=self.dict_operations[op_id]["line_transparency"],
-                        line_style=self.dict_operations[op_id]["line_style"],
-                        color=self.dict_operations[op_id]["color"],
-                    )
+                    self.update_flighttrack_patch(op_id)
                     self.parent.change_linewidth = True
                     self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
 
@@ -996,14 +1012,7 @@ class MultipleFlightpathOperations:
                 new_transparency = self.parent.hsTransparencyControl.value() / 100.0
                 if self.dict_operations[op_id]["line_transparency"] != new_transparency:
                     self.dict_operations[op_id]["line_transparency"] = new_transparency
-
-                    self.dict_operations[op_id]["patch"].remove()
-                    self.dict_operations[op_id]["patch"].update(
-                        line_transparency=self.dict_operations[op_id]["line_transparency"],
-                        line_style=self.dict_operations[op_id]["line_style"],
-                        color=self.dict_operations[op_id]["color"],
-                        linewidth=self.dict_operations[op_id]["linewidth"]
-                    )
+                    self.update_flighttrack_patch(op_id)
                     self.parent.change_line_transparency = True
                     self.parent.hsTransparencyControl.setValue(
                         int(self.dict_operations[op_id]["line_transparency"] * 100))
@@ -1012,42 +1021,56 @@ class MultipleFlightpathOperations:
         """
         Change the line style of the selected operation track.
         """
-        # Define the mapping from combo box text to line style codes
-        line_styles = {
-            "Solid": '-',
-            "Dashed": '--',
-            "Dotted": ':',
-            "Dash-dot": '-.'
-        }
-
         if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
                 self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
             op_id = self.list_operation_track.currentItem().op_id
             if op_id != self.active_op_id:
                 self.parent.groupBox.show()
             selected_style = self.parent.cbLineStyle.currentText()
-            new_linestyle = line_styles.get(selected_style, '-')  # Default to 'solid' if the style is not found
+            new_linestyle = self.parent.line_styles.get(selected_style, '-')  # Default to 'solid'
 
             if self.dict_operations[op_id]["line_style"] != new_linestyle:
                 self.dict_operations[op_id]["line_style"] = new_linestyle
-
-                self.dict_operations[op_id]["patch"].remove()
-                self.dict_operations[op_id]["patch"].update(
-                    line_style=self.dict_operations[op_id]["line_style"],
-                    line_transparency=self.dict_operations[op_id]["line_transparency"],
-                    color=self.dict_operations[op_id]["color"],
-                    linewidth=self.dict_operations[op_id]["linewidth"]
-                )
+                self.update_flighttrack_patch(op_id)
                 self.parent.change_line_style = True
                 self.parent.cbLineStyle.setCurrentText(self.dict_operations[op_id]["line_style"])
 
+    def update_flighttrack_patch(self, op_id):
+        """
+        Update the flighttrack patch with the latest attributes.
+        """
+        self.dict_operations[op_id]["patch"].remove()
+        self.dict_operations[op_id]["patch"] = MultipleFlightpath(
+            self.view.map,
+            self.dict_operations[op_id]["wp_data"],
+            color=self.dict_operations[op_id]["color"],
+            linewidth=self.dict_operations[op_id]["linewidth"],
+            line_transparency=self.dict_operations[op_id]["line_transparency"],
+            line_style=self.dict_operations[op_id]["line_style"]
+        )
+
     def listOperations_itemClicked(self):
+        """
+        reflect the linewidth, transparency, line_style of the selected flight track
+        and toggles the visibility of the groupBox.
+        """
         if self.parent.list_flighttrack.currentItem() is not None:
             self.parent.list_flighttrack.setCurrentItem(None)
 
         if self.list_operation_track.currentItem() is not None:
             op_id = self.list_operation_track.currentItem().op_id
-            self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
+
+            linewidth = self.dict_operations[op_id]["linewidth"]
+            line_transparency = self.dict_operations[op_id]["line_transparency"]
+            line_style = self.dict_operations[op_id]["line_style"]
+
+            self.parent.dsbx_linewidth.setValue(linewidth)
+            self.parent.hsTransparencyControl.setValue(int(line_transparency * 100))
+            # Use the reverse dictionary to set the current text of the combo box
+            if line_style in self.parent.line_styles_reverse:
+                self.parent.cbLineStyle.setCurrentText(self.parent.line_styles_reverse[line_style])
+            else:
+                self.parent.cbLineStyle.setCurrentText("Solid")
 
             if self.list_operation_track.currentItem().op_id == self.active_op_id:
                 self.parent.groupBox.hide()
