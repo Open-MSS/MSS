@@ -77,7 +77,7 @@ def keyring_reset():
     keyring.get_keyring().reset()
 
 
-def generate_initial_config():
+def generate_initial_config(worker_id):
     """Generate an initial state for the configuration directory in tests.constants.ROOT_FS
     """
     if not constants.ROOT_FS.exists("msui/testdata"):
@@ -97,7 +97,6 @@ def generate_initial_config():
 
     if not constants.SERVER_CONFIG_FS.exists(constants.MSCOLAB_CONFIG_FILE):
         config_string = f'''
-# SQLALCHEMY_DB_URI = 'mysql://user:pass@127.0.0.1/mscolab'
 import os
 import logging
 import fs
@@ -152,7 +151,8 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 # enable verification by Mail
 MAIL_ENABLED = False
 
-SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
+# SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
+SQLALCHEMY_DB_URI = 'postgresql://postgres:postgres@127.0.0.1/mscolab_{worker_id}'
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = True
@@ -212,7 +212,7 @@ class mscolab_auth:
     _load_module("mscolab_settings", path)
 
 
-generate_initial_config()
+generate_initial_config("master")
 
 
 # This import must come after the call to generate_initial_config, otherwise SQLAlchemy will have a wrong database path
@@ -220,7 +220,7 @@ from tests.utils import create_msui_settings_file
 
 
 @pytest.fixture(autouse=True)
-def reset_config():
+def reset_config(worker_id):
     """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
     """
     # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is
@@ -230,7 +230,7 @@ def reset_config():
     for e in constants.ROOT_FS.walk.dirs(search="depth"):
         constants.ROOT_FS.removedir(e)
 
-    generate_initial_config()
+    generate_initial_config(worker_id)
     create_msui_settings_file("{}")
     read_config_file()
 
