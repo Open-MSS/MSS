@@ -51,7 +51,6 @@ def handle_start(args):
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.info("Launching MSColab Server")
-
     start_server(APP, sockio, cm, fm)
 
 
