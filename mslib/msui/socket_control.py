@@ -46,6 +46,7 @@ class ConnectionManager(QtCore.QObject):
     signal_operation_permissions_updated = QtCore.pyqtSignal(int, name="operation permissions updated")
     signal_operation_list_updated = QtCore.pyqtSignal(name="operation list updated")
     signal_operation_deleted = QtCore.pyqtSignal(int, name="operation deleted")
+    signal_active_user_update = QtCore.pyqtSignal(int, int)
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -78,8 +79,18 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('operation-deleted', handler=self.handle_operation_deleted)
         # On New Operation
         self.sio.on('operation-list-update', handler=self.handle_operation_list_update)
+        # On active user update
+        self.sio.on('active-user-update', handler=self.handle_active_user_update)
 
         self.sio.emit('start', {'token': token})
+
+    def handle_active_user_update(self, data):
+        """Handle the update for the number of active users on an operation."""
+        if isinstance(data, str):
+            data = json.loads(data)  # Safely decode in case of string
+        op_id = data['op_id']
+        count = data['count']
+        self.signal_active_user_update.emit(op_id, count)
 
     def handle_update_permission(self, message):
         """
@@ -180,6 +191,10 @@ class ConnectionManager(QtCore.QObject):
         else:
             # this triggers disconnect
             self.signal_reload.emit(op_id)
+
+    def select_operation(self, op_id):
+        # Emit an event to notify the server of the operation selection.
+        self.sio.emit('operation-selected', {'token': self.token, 'op_id': op_id})
 
     def save_file(self, token, op_id, content, comment=None):
         # ToDo refactor API

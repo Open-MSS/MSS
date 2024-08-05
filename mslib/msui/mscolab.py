@@ -668,6 +668,7 @@ class MSUIMscolab(QtCore.QObject):
             self.conn.signal_update_permission.connect(self.handle_update_permission)
             self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
             self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
+            self.conn.signal_active_user_update.connect(self.update_active_user_label)
 
             self.ui.connectBtn.hide()
             self.ui.openOperationsGb.show()
@@ -1653,8 +1654,11 @@ class MSUIMscolab(QtCore.QObject):
     @QtCore.pyqtSlot(int, int)
     def handle_revoke_permission(self, op_id, u_id):
         if u_id == self.user["id"]:
+            revoked_operation_currently_active = True if self.active_op_id == op_id else False
             operation_name = self.delete_operation_from_list(op_id)
             if operation_name is not None:
+                if revoked_operation_currently_active:
+                    self.ui.userCountLabel.hide()
                 show_popup(self.ui, "Permission Revoked",
                            f'Your access to operation - "{operation_name}" was revoked!', icon=1)
                 # on import permissions revoked name can not taken from the operation list,
@@ -1675,6 +1679,12 @@ class MSUIMscolab(QtCore.QObject):
         if op_id == old_active_id and operation_name is None:
             operation_name = old_operation_name
         show_popup(self.ui, "Success", f'Operation "{operation_name}" was deleted!', icon=1)
+
+    @QtCore.pyqtSlot(int, int)
+    def update_active_user_label(self, op_id, count):
+        # Update UI component which displays the number of active users
+        if self.active_op_id == op_id:
+            self.ui.userCountLabel.setText(f"Active Users: {count}")
 
     def show_categories_to_ui(self, ops=None):
         """
@@ -1871,6 +1881,12 @@ class MSUIMscolab(QtCore.QObject):
                     window.enable_navbar_action_buttons()
 
             self.ui.switch_to_mscolab()
+
+            # Enable the active user count label
+            self.ui.userCountLabel.show()
+
+            # call select operation method from connection manager to emit signal
+            self.conn.select_operation(item.op_id)
         else:
             if self.mscolab_server_url is not None:
                 show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -2161,9 +2177,13 @@ class MSUIMscolab(QtCore.QObject):
 
         self.operation_archive_browser.hide()
 
+        # reset profile image pixmap
         if hasattr(self, 'profile_dialog'):
             del self.profile_dialog
             self.profile_dialog = None
+
+        # reset the user count label to 0
+        self.ui.userCountLabel.setText("Active Users: 0")
 
         # activate first local flighttrack after logging out
         self.ui.listFlightTracks.setCurrentRow(0)

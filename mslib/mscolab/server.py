@@ -48,7 +48,7 @@ from flask.wrappers import Response
 
 from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
 from mslib.mscolab.models import Change, MessageType, User
-from mslib.mscolab.sockets_manager import setup_managers
+from mslib.mscolab.sockets_manager import _setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 from mslib.index import create_app
@@ -126,8 +126,8 @@ def confirm_token(token, expiration=3600):
     return email
 
 
-def initialize_managers(app):
-    sockio, cm, fm = setup_managers(app)
+def _initialize_managers(app):
+    sockio, cm, fm = _setup_managers(app)
     # initializing socketio and db
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
@@ -135,7 +135,7 @@ def initialize_managers(app):
     return app, sockio, cm, fm
 
 
-_app, sockio, cm, fm = initialize_managers(APP)
+_app, sockio, cm, fm = _initialize_managers(APP)
 
 
 def check_login(emailid, password):
@@ -688,6 +688,7 @@ def delete_bulk_permissions():
     success = fm.delete_bulk_permission(op_id, user, u_ids)
     if success:
         for u_id in u_ids:
+            sockio.sm.remove_active_user_id_from_specific_operation(u_id, op_id)
             sockio.sm.emit_revoke_permission(u_id, op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify({"success": True, "message": "User permissions successfully deleted!"})

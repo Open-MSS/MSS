@@ -33,7 +33,7 @@ from PIL import Image
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.server import initialize_managers, check_login, register_user
+from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 
@@ -46,9 +46,9 @@ class Test_Server:
         with self.app.app_context():
             yield
 
-    def test_initialize_managers(self):
-        app, sockio, cm, fm = initialize_managers(self.app)
-        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+    def test_initialized_managers(self, mscolab_managers):
+        sockio, cm, fm = mscolab_managers
+        assert self.app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
