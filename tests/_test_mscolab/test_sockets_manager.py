@@ -74,7 +74,7 @@ class Test_Socket_Manager:
 
     def test_join_creator_to_operatiom(self):
         sio = self._connect()
-        operation = self._new_operation('new_operation', "example decription")
+        operation = self._new_operation('new_operation', "example description")
         with self.app.app_context():
             assert self.fm.get_file(int(operation.id), self.user) is False
         json_config = {"token": self.token,
@@ -88,7 +88,7 @@ class Test_Socket_Manager:
 
     def test_join_collaborator_to_operation(self):
         self._connect()
-        operation = self._new_operation('new_operation', "example decription")
+        operation = self._new_operation('new_operation', "example description")
         sm = SocketsManager(self.cm, self.fm)
         sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
@@ -187,7 +187,7 @@ class Test_Socket_Manager:
         sio = self._connect()
         sio.emit('start', {'token': self.token})
 
-        # ToDo same message gets twice emmitted, why? (use a helper function)
+        # ToDo same message gets twice emitted, why? (use a helper function)
         sio.emit("chat-message", {
             "op_id": self.operation.id,
             "token": self.token,
@@ -217,7 +217,7 @@ class Test_Socket_Manager:
     def test_get_messages_api(self):
         sio = self._connect()
         sio.emit('start', {'token': self.token})
-        # ToDo same message gets twice emmitted, why?
+        # ToDo same message gets twice emitted, why?
         sio.emit("chat-message", {
             "op_id": self.operation.id,
             "token": self.token,

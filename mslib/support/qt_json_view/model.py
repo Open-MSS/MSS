@@ -41,7 +41,7 @@ class JsonModel(QtGui.QStandardItemModel):
 
 
 class JsonSortFilterProxyModel(QtCore.QSortFilterProxyModel):  # (msui)
-    """Show ALL occurences by keeping the parents of each occurence visible."""
+    """Show ALL occurrences by keeping the parents of each occurrence visible."""
 
     def filterAcceptsRow(self, sourceRow, sourceParent):
         """Accept the row if the parent has been accepted."""

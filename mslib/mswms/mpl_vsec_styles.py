@@ -146,7 +146,7 @@ def make_generic_class(name, standard_name, vert, add_data=None, add_contours=No
             E.g. [("ertel_potential_vorticity", [2, 4, 8, 16], "green", "red", "dashed", 2, True)]
             cause PV to be plotted for 2, 4, 8, and 16 PVU with dashed green
             lines, red labels, and line width of 2. The last value defines
-            wether a stroke effect shall be applied.
+            whether a stroke effect shall be applied.
 
         fix_styles (list, optional): A list of plotting styles, which must be
             defined in the mslib.mswms.generics.STYLES dictionary. Defaults
@@ -1128,7 +1128,7 @@ class VS_PotentialVorticityStyle_01(AbstractVerticalSectionStyle):
 class VS_ProbabilityOfWCBStyle_01(AbstractVerticalSectionStyle):
     """
     Probability of WCB
-    Vertical sections of probability of WCB trajectory occurence,
+    Vertical sections of probability of WCB trajectory occurrence,
     derived from Lagranto trajectories (TNF 2012 product).
     """
 

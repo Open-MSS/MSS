@@ -52,7 +52,7 @@ setup(
     keywords="mslib",
     maintainer="Reimar Bauer",
     maintainer_email="rb.proj@gmail.com",
-    author="Marc Rautenahaus",
+    author="Marc Rautenhaus",
     author_email="wxmetvis@posteo.de",
     license="Apache-2.0",
     url="https://github.com/Open-MSS/MSS",

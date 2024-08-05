@@ -38,7 +38,7 @@ class ConnectionManager(QtCore.QObject):
     signal_reload = QtCore.pyqtSignal(int, name="reload_wps")
     signal_message_receive = QtCore.pyqtSignal(str, name="message rcv")
     signal_message_reply_receive = QtCore.pyqtSignal(str, name="message reply")
-    signal_message_edited = QtCore.pyqtSignal(str, name="message editted")
+    signal_message_edited = QtCore.pyqtSignal(str, name="message edited")
     signal_message_deleted = QtCore.pyqtSignal(str, name="message deleted")
     signal_new_permission = QtCore.pyqtSignal(int, int, name="new permission")
     signal_update_permission = QtCore.pyqtSignal(int, int, str, name="update permission")

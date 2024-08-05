@@ -448,7 +448,7 @@ class Test_FileManager:
             self.fm.add_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "collaborator")
             assert self.fm.is_member(self.collaboratoruser.id, operation_no_1.id) is True
             assert self.fm.is_collaborator(self.collaboratoruser.id, operation_no_1.id)
-            # check that not other catergories get changed
+            # check that not other categories get changed
             assert self.fm.is_member(self.collaboratoruser.id, operation_oslo.id) is False
             self.fm.modify_bulk_permission(operation_group.id, self.user, [self.collaboratoruser.id], "viewer")
             assert self.fm.is_viewer(self.collaboratoruser.id, operation_no_1.id)

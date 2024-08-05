@@ -4,9 +4,9 @@
 The Mission Support System (MSS) is a software that is written by
 scientists in the field of atmospheric science. The purpose is to have a
 tool that simplifies the process for planning a scientific flight in
-which parameters of the atmosphere are measured. The research aircrafts
+which parameters of the atmosphere are measured. The research aircraft
 typically carry a comprehensive scientific payload comprised of data
-aquisition instruments by different companies and research institutions.
+acquisition instruments by different companies and research institutions.
 The measurement of relevant parameters, for example the chemical
 composition of trace gases, temperature or aerosol particle
 characteristics, are needed to improve the scientific understanding of
