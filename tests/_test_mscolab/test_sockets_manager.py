@@ -98,7 +98,7 @@ class Test_Socket_Manager:
 
     def test_remove_collaborator_from_operation(self):
         pytest.skip("get_session_id has None result")
-        operation = self._new_operation('new_operation', "example decription")
+        operation = self._new_operation('new_operation', "example description")
         sm = SocketsManager(self.cm, self.fm)
         sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
