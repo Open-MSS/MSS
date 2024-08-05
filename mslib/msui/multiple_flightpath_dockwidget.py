@@ -204,13 +204,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                                                        self.list_operation_track,
                                                        self.active_op_id,
                                                        self.listOperationsMSC, self.view)
-        self.obb.append(self.operations)
+        self.obb = [self.operations]
 
         self.ui.signal_permission_revoked.connect(lambda op_id: self.operations.permission_revoked(op_id))
         self.ui.signal_render_new_permission.connect(lambda op_id, path: self.operations.render_permission(op_id, path))
         # Signal emitted, on activation of operation from MSUI
         self.ui.signal_activate_operation.connect(self.update_op_id)
         self.ui.signal_operation_added.connect(self.add_operation_slot)
+        self.ui.signal_reload_operation.connect(self.reload_operation)
         self.ui.signal_operation_removed.connect(self.remove_operation_slot)
 
         # deactivate vice versa selection of Operation or Flight Track
@@ -222,6 +223,18 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         # Mscolab Server logout
         self.ui.signal_logout_mscolab.connect(self.logout)
+
+    @QtCore.pyqtSlot()
+    def reload_operation(self):
+        # reload operation is important
+        # because it is triggerd when you are invited into an operation or access is revoked
+        # Idey:
+        # cleanup old list, see logout
+        # fetch mainwindow.listOperationsMSC, this is always recent etc
+        # call similiar to connect_mscolab_server MultipleFlightpathOperations
+        # set self.obb
+        # ToDo we need access to the mainwindow
+        pass
 
     def update(self):
         for entry in self.dict_flighttrack.values():

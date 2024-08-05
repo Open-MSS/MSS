@@ -180,6 +180,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_ft_vertices_color_change = QtCore.pyqtSignal(tuple)
     signal_operation_added = QtCore.pyqtSignal(int, str)
     signal_operation_removed = QtCore.pyqtSignal(int)
+    signal_reload_operation = QtCore.pyqtSignal()
     signal_login_mscolab = QtCore.pyqtSignal(str, str)
     signal_logout_mscolab = QtCore.pyqtSignal()
     signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
@@ -199,6 +200,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mainwindow_signal_listFlighttrack_doubleClicked = mainwindow.signal_listFlighttrack_doubleClicked
         self.mainwindow_signal_activate_operation = mainwindow.signal_activate_operation
         self.mainwindow_signal_permission_revoked = mainwindow.signal_permission_revoked
+        self.mainwindow_signal_reload_operation = mainwindow.signal_reload_operation
         self.mainwindow_signal_render_new_permission = mainwindow.signal_render_new_permission
         self.mainwindow_signal_activate_flighttrack = mainwindow.signal_activate_flighttrack
         self.mainwindow_listFlightTracks = mainwindow.listFlightTracks
@@ -361,6 +363,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                                                             token=self.token)
 
                 self.mainwindow_signal_logout_mscolab.connect(self.signal_logout_mscolab.emit)
+                self.mainwindow_signal_reload_operation.connect(self.signal_reload_operation.emit)
                 self.mainwindow_signal_listFlighttrack_doubleClicked.connect(
                     lambda: self.signal_listFlighttrack_doubleClicked.emit())
                 self.mainwindow_signal_permission_revoked.connect(
