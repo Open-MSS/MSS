@@ -601,14 +601,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.hsTransparencyControl.setEnabled(False)
             self.cbLineStyle.setEnabled(False)
             self.labelStatus.setText(
-                "Status: You can change line attributes of the active flight track through options only.")
+                "Status: ✗ No flight track selected")
 
         else:
             self.pushButton_color.setEnabled(True)
             self.dsbx_linewidth.setEnabled(True)
             self.hsTransparencyControl.setEnabled(True)
             self.cbLineStyle.setEnabled(True)
-            self.labelStatus.setText("Status: ")
+            self.labelStatus.setText("Status: ✔ flight track selected")
 
     def drawInactiveFlighttracks(self, list_widget):
         """
@@ -706,7 +706,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 self.dsbx_linewidth.setEnabled(True)
                 self.hsTransparencyControl.setEnabled(True)
                 self.cbLineStyle.setEnabled(True)
-                self.labelStatus.setText("Status: ")
+                self.labelStatus.setText("Status: ✔ flight track selected")
 
 
 class MultipleFlightpathOperations:
@@ -851,6 +851,25 @@ class MultipleFlightpathOperations:
             listItem.setFont(font)
         # connect itemChanged after everything setup, otherwise it will be triggered on each entry
         self.list_operation_track.itemChanged.connect(self.set_flag)
+        self.update_line_properties_state()
+
+    def update_line_properties_state(self):
+        """
+        Enable or disable line properties options based on whether the active flight track is selected.
+        """
+        if self.active_op_id:
+            self.parent.pushButton_color.setEnabled(False)
+            self.parent.dsbx_linewidth.setEnabled(False)
+            self.parent.hsTransparencyControl.setEnabled(False)
+            self.parent.cbLineStyle.setEnabled(False)
+            self.parent.labelStatus.setText(
+                "Status: ✗ No flight track selected")
+        else:
+            self.parent.pushButton_color.setEnabled(True)
+            self.parent.dsbx_linewidth.setEnabled(True)
+            self.parent.hsTransparencyControl.setEnabled(True)
+            self.parent.cbLineStyle.setEnabled(True)
+            self.parent.labelStatus.setText("Status: ✔ flight track selected")
 
     def save_last_used_operation(self, op_id):
         if self.active_op_id is not None:
@@ -1115,9 +1134,12 @@ class MultipleFlightpathOperations:
                 self.parent.dsbx_linewidth.setEnabled(False)
                 self.parent.hsTransparencyControl.setEnabled(False)
                 self.parent.cbLineStyle.setEnabled(False)
+                self.parent.labelStatus.setText(
+                    "Status: You can change line attributes of the active flight track through options only.")
             else:
                 # enable the buttons
                 self.parent.pushButton_color.setEnabled(True)
                 self.parent.dsbx_linewidth.setEnabled(True)
                 self.parent.hsTransparencyControl.setEnabled(True)
                 self.parent.cbLineStyle.setEnabled(True)
+                self.parent.labelStatus.setText("Status: ✔ flight track selected")
