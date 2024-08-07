@@ -389,13 +389,3 @@ class Ui_MSUIMainWindow(object):
         self.actionLeaveOperation.setText(_translate("MSUIMainWindow", "&Leave Operation"))
         self.actionArchiveOperation.setText(_translate("MSUIMainWindow", "Archive Operation"))
         self.actionChangeCategory.setText(_translate("MSUIMainWindow", "Change Category"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MSUIMainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MSUIMainWindow()
-    ui.setupUi(MSUIMainWindow)
-    MSUIMainWindow.show()
-    sys.exit(app.exec_())

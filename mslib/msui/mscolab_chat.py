@@ -368,12 +368,18 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
 
     def render_new_message(self, message, scroll=True):
         message_item = MessageItem(message, self)
-        list_widget_item = QtWidgets.QListWidgetItem(self.messageList)
+        list_widget_item = QtWidgets.QListWidgetItem()
         list_widget_item.setSizeHint(message_item.sizeHint())
-        self.messageList.addItem(list_widget_item)
-        self.messageList.setItemWidget(list_widget_item, message_item)
+        # Check if the message is a service message or a normal message and add to its corresponding list
+        if message['message_type'] == MessageType.SYSTEM_MESSAGE:
+            self.serviceMessageList.addItem(list_widget_item)
+            self.serviceMessageList.setItemWidget(list_widget_item, message_item)
+        else:
+            self.messageList.addItem(list_widget_item)
+            self.messageList.setItemWidget(list_widget_item, message_item)
         if scroll:
             self.messageList.scrollToBottom()
+            self.serviceMessageList.scrollToBottom()
 
     # SOCKET HANDLERS
     @QtCore.pyqtSlot(int)
