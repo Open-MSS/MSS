@@ -190,6 +190,12 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.cbLineStyle.addItems(["Solid", "Dashed", "Dotted", "Dash-dot"])  # Item added in the list
         self.cbLineStyle.setCurrentText("Solid")
 
+        # Disable the buttons initially
+        self.pushButton_color.setEnabled(False)
+        self.dsbx_linewidth.setEnabled(False)
+        self.hsTransparencyControl.setEnabled(False)
+        self.cbLineStyle.setEnabled(False)
+
         # Connect Signals and Slots
         self.listFlightTracks.model().rowsInserted.connect(self.wait)
         self.listFlightTracks.model().rowsRemoved.connect(self.flighttrackRemoved)
@@ -667,9 +673,17 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 self.cbLineStyle.setCurrentText("Solid")
 
             if self.list_flighttrack.currentItem().flighttrack_model == self.active_flight_track:
-                self.groupBox.hide()
+                # Disable the buttons
+                self.pushButton_color.setEnabled(False)
+                self.dsbx_linewidth.setEnabled(False)
+                self.hsTransparencyControl.setEnabled(False)
+                self.cbLineStyle.setEnabled(False)
             else:
-                self.groupBox.show()
+                # Enable the buttons
+                self.pushButton_color.setEnabled(True)
+                self.dsbx_linewidth.setEnabled(True)
+                self.hsTransparencyControl.setEnabled(True)
+                self.cbLineStyle.setEnabled(True)
 
 
 class MultipleFlightpathOperations:
@@ -1073,6 +1087,13 @@ class MultipleFlightpathOperations:
                 self.parent.cbLineStyle.setCurrentText("Solid")
 
             if self.list_operation_track.currentItem().op_id == self.active_op_id:
-                self.parent.groupBox.hide()
+                # Disable the buttons
+                self.parent.pushButton_color.setEnabled(False)
+                self.parent.dsbx_linewidth.setEnabled(False)
+                self.parent.hsTransparencyControl.setEnabled(False)
+                self.parent.cbLineStyle.setEnabled(False)
             else:
-                self.parent.groupBox.show()
+                self.parent.pushButton_color.setEnabled(True)
+                self.parent.dsbx_linewidth.setEnabled(True)
+                self.parent.hsTransparencyControl.setEnabled(True)
+                self.parent.cbLineStyle.setEnabled(True)
