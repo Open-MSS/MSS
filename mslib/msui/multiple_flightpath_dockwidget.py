@@ -1093,6 +1093,7 @@ class MultipleFlightpathOperations:
                 self.parent.hsTransparencyControl.setEnabled(False)
                 self.parent.cbLineStyle.setEnabled(False)
             else:
+                # enable the buttons
                 self.parent.pushButton_color.setEnabled(True)
                 self.parent.dsbx_linewidth.setEnabled(True)
                 self.parent.hsTransparencyControl.setEnabled(True)
