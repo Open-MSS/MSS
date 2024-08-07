@@ -589,6 +589,26 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
             self.set_activate_flag()
             listItem.setFont(font)
+        self.update_line_properties_state()
+
+    def update_line_properties_state(self):
+        """
+        Enable or disable line properties options based on whether the active flight track is selected.
+        """
+        if self.active_flight_track:
+            self.pushButton_color.setEnabled(False)
+            self.dsbx_linewidth.setEnabled(False)
+            self.hsTransparencyControl.setEnabled(False)
+            self.cbLineStyle.setEnabled(False)
+            self.labelStatus.setText(
+                "Status: You can change line attributes of the active flight track through options only.")
+
+        else:
+            self.pushButton_color.setEnabled(True)
+            self.dsbx_linewidth.setEnabled(True)
+            self.hsTransparencyControl.setEnabled(True)
+            self.cbLineStyle.setEnabled(True)
+            self.labelStatus.setText("Status: ")
 
     def drawInactiveFlighttracks(self, list_widget):
         """
@@ -678,12 +698,15 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 self.dsbx_linewidth.setEnabled(False)
                 self.hsTransparencyControl.setEnabled(False)
                 self.cbLineStyle.setEnabled(False)
+                self.labelStatus.setText(
+                    "Status: You can change line attributes of the active flight track through options only.")
             else:
                 # Enable the buttons
                 self.pushButton_color.setEnabled(True)
                 self.dsbx_linewidth.setEnabled(True)
                 self.hsTransparencyControl.setEnabled(True)
                 self.cbLineStyle.setEnabled(True)
+                self.labelStatus.setText("Status: ")
 
 
 class MultipleFlightpathOperations:
