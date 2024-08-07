@@ -460,8 +460,8 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
             try:
                 error_msg = json.loads(r.text)["message"]
             except Exception as e:
-                logging.debug("Unexpected error occured %s", e)
-                error_msg = "Unexpected error occured. Please try again."
+                logging.debug("Unexpected error occurred %s", e)
+                error_msg = "Unexpected error occurred. Please try again."
             self.set_status("Error", error_msg)
 
 
@@ -1797,7 +1797,8 @@ class MSUIMscolab(QtCore.QObject):
                 data = {
                     "token": self.token,
                     "op_id": self.active_op_id,
-                    "days": 31,
+                    # when a user archives an operation we set the max “natural” integer in days
+                    "days": sys.maxsize,
                 }
                 url = urljoin(self.mscolab_server_url, 'set_last_used')
                 try:

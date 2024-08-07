@@ -129,7 +129,7 @@ class FileManager:
             ).days > mscolab_settings.ARCHIVE_THRESHOLD:
                 # outdated OPs get archived
                 self.update_operation(permission.op_id, "active", False, user)
-            # new query to get uptodate data
+            # new query to get up-to-date data
             if skip_archived:
                 operation = Operation.query.filter_by(id=permission.op_id, active=skip_archived).first()
             else:
@@ -236,7 +236,7 @@ class FileManager:
                 db.session.delete(user)
                 db.session.commit()
             user_query = User.query.filter_by(id=user.id).first()
-            # on delete we return succesfull deleted
+            # on delete we return successful deleted
             if user_query is None:
                 return True
         elif action == "update_idp_user":

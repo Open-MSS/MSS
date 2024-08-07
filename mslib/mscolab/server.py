@@ -142,7 +142,7 @@ def check_login(emailid, password):
     try:
         user = User.query.filter_by(emailid=str(emailid)).first()
     except sqlalchemy.exc.OperationalError as ex:
-        logging.debug("Problem in the database (%ex), likly version client different", ex)
+        logging.debug("Problem in the database (%ex), likely version client different", ex)
         return False
     if user is not None:
         if mscolab_settings.MAIL_ENABLED:
@@ -752,7 +752,7 @@ def reset_request():
     if mscolab_settings.MAIL_ENABLED:
         form = ResetRequestForm()
         if form.validate_on_submit():
-            # Check wheather user exists or not based on the db
+            # Check whether user exists or not based on the db
             user = User.query.filter_by(emailid=form.email.data).first()
             if user:
                 try:

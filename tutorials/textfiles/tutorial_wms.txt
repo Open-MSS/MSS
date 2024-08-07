@@ -9,7 +9,7 @@ So, lets start the tutorial to know what is wms in depth.
 
 When we open the top view of the map, the web map service is already opened by default.
 
-It collects its data from the server: "open-mss.org" that provides all the meteorological or atmospheric informations as layer lists.
+It collects its data from the server: "open-mss.org" that provides all the meteorological or atmospheric information as layer lists.
 
 
 As we click on the server layer option, the layer list window opens that lists out various layers.

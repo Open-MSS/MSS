@@ -170,7 +170,7 @@ class Test_WMS:
                 ("ecmwf_EUR_LL015.PLDiv01", "PLDiv01"),
                 ("ecmwf_EUR_LL015.PLDiv01", "ecmwf_EUR_LL015.PLDav01"),
                 ("ecmwf_EUR_LL015.PLDiv01", "ecmwf_AUR_LL015.PLDiv01"),
-                ("format=image%2Fpng", "format=omage%2Fpng"),
+                ("format=image%2Fpng", "format=omage%2Fpng"),  # codespell:ignore omage
                 ("bbox=-50.0%2C20.0%2C20.0%2C75.0", "bbox=-abcd%2C20.0%2C20.0%2C75.0")]:
             environ["QUERY_STRING"] = query_string.replace(orig, fake)
             result = self.client.get('/?{}'.format(environ["QUERY_STRING"]))
@@ -225,7 +225,7 @@ class Test_WMS:
                 ("&time=2012-10-17T12%3A00%3A00Z", ""),
                 ("layers=ecmwf_EUR_LL015.VS_HV01", "layers=ecmwf_AUR_LL015.VS_HV01"),
                 ("layers=ecmwf_EUR_LL015.VS_HV01", "layers=ecmwf_EUR_LL015.VS_HV99"),
-                ("format=image%2Fpng", "format=omage%2Fpng"),
+                ("format=image%2Fpng", "format=omage%2Fpng"),  # codespell:ignore omage
                 ("path=52.78%2C-8.93%2C48.08%2C11.28", "path=aaaa%2C-8.93%2C48.08%2C11.28"),
                 ("&path=52.78%2C-8.93%2C48.08%2C11.28", ""),
                 ("bbox=201%2C500.0%2C10%2C100.0", "bbox=aaa%2C500.0%2C10%2C100.0")]:

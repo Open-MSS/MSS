@@ -181,7 +181,7 @@ except ImportError as ex:
                         if not os.path.exists(yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0]):
                             yaml_data["config"]["localhost_test_idp"]["metadata"]["local"] = []
                             warnings.warn("idp.xml file does not exists !\
-                                           Ignore this warning when you initializeing metadata.")
+                                           Ignore this warning when you initialize metadata.")
 
                         localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
                         localhost_test_idp.verify_ssl_cert = mscolab_settings.ENABLE_SSO_SSL_CERT_VERIFICATION

@@ -322,7 +322,7 @@ Create a client specifically for SAML
 
         .. note::
             When creating client ID, it should be same as the issuer ID of the MSColab server.
-            In here, the MSColab server used different issuer IDs for the particular idp_iedentity_name, and issued it by url bellow
+            In here, the MSColab server used different issuer IDs for the particular idp_iedentity_name, and issued it by url below
 
                 http://127.0.0.1:8083/metadata/idp_identityname/
 
@@ -433,7 +433,7 @@ Create a client specifically for SAML
 
         When all sorted you need to export metadata file from the keycloak,
 
-        http://localhost:8080/auth/realms/saml-example-realm/protocol/saml/descripto
+        http://localhost:8080/auth/realms/saml-example-realm/protocol/saml/description
 
         Since we're going to import the file with the name as "key_cloak_v_13_idp.xml" in this example, We should store it with the same name.
 
@@ -546,7 +546,7 @@ Configuration mss_saml2_backend.yaml file
                 eg:- entityid: http://127.0.0.1:8083/metadata/
 
         .. note::
-            may be can be occured invalid redirect url problem, since we defined localhost in keycloak admin, and using 127.0..... be careful to set it correctly.
+            may be can be occurred invalid redirect url problem, since we defined localhost in keycloak admin, and using 127.0..... be careful to set it correctly.
 
             eg:-
                 assertion_consumer_service:
