@@ -426,7 +426,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                     color_dialog.color_selected.connect(lambda color: self.apply_color(wp_model, color))
                     color_dialog.exec_()
             else:
-                self.labelStatus.setText("Check Mark the flighttrack to change its color.")
+                self.labelStatus.setText("Status: Check Mark the flight track to change it's Colour.")
         elif self.list_operation_track.currentItem() is not None:
             self.operations.select_color()
         else:
@@ -474,7 +474,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                         self.change_linewidth = True
                         self.dsbx_linewidth.setValue(self.dict_flighttrack[wp_model]["linewidth"])
             else:
-                self.labelStatus.setText("Status: No flight track selected")
+                item = self.list_flighttrack.currentItem()
+                self.dsbx_linewidth.setEnabled(item is not None and item.checkState() == QtCore.Qt.Checked)
+                self.labelStatus.setText("Status: Check Mark the flight track to change it's line width.")
         elif self.list_operation_track.currentItem() is not None:
             self.operations.set_linewidth()
         else:
@@ -497,7 +499,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                         self.hsTransparencyControl.setValue(
                             int(self.dict_flighttrack[wp_model]["line_transparency"] * 100))
             else:
-                self.labelStatus.setText("Status: No flight track selected")
+                item = self.list_flighttrack.currentItem()
+                self.hsTransparencyControl.setEnabled(item is not None and item.checkState() == QtCore.Qt.Checked)
+                self.labelStatus.setText("Status: Check Mark the flight track to change it's transparency.")
         elif self.list_operation_track.currentItem() is not None:
             self.operations.set_transparency()
         else:
@@ -522,7 +526,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                         self.change_line_style = True
                         self.cbLineStyle.setCurrentText(self.dict_flighttrack[wp_model]["line_style"])
             else:
-                self.labelStatus.setText("Status: No flight track selected")
+                item = self.list_flighttrack.currentItem()
+                self.cbLineStyle.setEnabled(item is not None and item.checkState() == QtCore.Qt.Checked)
+                self.labelStatus.setText("Status: Check Mark the flight track to change it's line style.")
         elif self.list_operation_track.currentItem() is not None:
             self.operations.set_linestyle()
         else:
@@ -626,8 +632,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                     patch = MultipleFlightpath(self.view.map,
                                                self.dict_flighttrack[listItem.flighttrack_model][
                                                    "wp_data"],
-                                               color=self.dict_flighttrack[listItem.flighttrack_model]['color'],
-                                               linewidth=self.dict_flighttrack[listItem.flighttrack_model]['linewidth'],
+                                               color=self.dict_flighttrack[listItem.flighttrack_model]["color"],
+                                               linewidth=self.dict_flighttrack[listItem.flighttrack_model]["linewidth"],
                                                line_transparency=self.dict_flighttrack[listItem.flighttrack_model][
                                                    "line_transparency"],
                                                line_style=self.dict_flighttrack[listItem.flighttrack_model][
@@ -897,8 +903,7 @@ class MultipleFlightpathOperations:
                                                line_transparency=self.dict_operations[listItem.op_id][
                                                    "line_transparency"],
                                                line_style=self.dict_operations[listItem.op_id][
-                                                   "line_style"]
-                                               )
+                                                   "line_style"])
 
                     self.dict_operations[listItem.op_id]["patch"] = patch
 
@@ -985,7 +990,7 @@ class MultipleFlightpathOperations:
                     color_dialog.color_selected.connect(lambda color: self.apply_color(op_id, color))
                     color_dialog.exec_()
             else:
-                self.parent.labelStatus.setText("Check Mark the Operation to change color.")
+                self.parent.labelStatus.setText("Status: Check Mark the flight track to change it's color.")
 
     def apply_color(self, op_id, color):
         if color.isValid():
@@ -1045,9 +1050,9 @@ class MultipleFlightpathOperations:
         """
         Change the line width of the selected operation track.
         """
-        if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
-                self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
-            op_id = self.list_operation_track.currentItem().op_id
+        item = self.list_operation_track.currentItem()
+        if hasattr(item, "checkState") and item.checkState() == QtCore.Qt.Checked:
+            op_id = item.op_id
             if op_id != self.active_op_id:
                 self.parent.groupBox.show()
                 if self.dict_operations[op_id]["linewidth"] != self.parent.dsbx_linewidth.value():
@@ -1055,14 +1060,17 @@ class MultipleFlightpathOperations:
                     self.update_flighttrack_patch(op_id)
                     self.parent.change_linewidth = True
                     self.parent.dsbx_linewidth.setValue(self.dict_operations[op_id]["linewidth"])
+        else:
+            self.parent.dsbx_linewidth.setEnabled(item is not None and item.checkState() == QtCore.Qt.Checked)
+            self.parent.labelStatus.setText("Status: Check Mark the flight track to change it's line width.")
 
     def set_transparency(self):
         """
         Change the line transparency of the selected operation track.
         """
-        if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
-                self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
-            op_id = self.list_operation_track.currentItem().op_id
+        item = self.list_operation_track.currentItem()
+        if hasattr(item, "checkState") and item.checkState() == QtCore.Qt.Checked:
+            op_id = item.op_id
             if op_id != self.active_op_id:
                 self.parent.groupBox.show()
                 new_transparency = self.parent.hsTransparencyControl.value() / 100.0
@@ -1072,14 +1080,17 @@ class MultipleFlightpathOperations:
                     self.parent.change_line_transparency = True
                     self.parent.hsTransparencyControl.setValue(
                         int(self.dict_operations[op_id]["line_transparency"] * 100))
+        else:
+            self.parent.hsTransparencyControl.setEnabled(item is not None and item.checkState() == QtCore.Qt.Checked)
+            self.parent.labelStatus.setText("Status: Check Mark the flight track to change it's transparency.")
 
     def set_linestyle(self):
         """
         Change the line style of the selected operation track.
         """
-        if (hasattr(self.list_operation_track.currentItem(), "checkState")) and (
-                self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked):
-            op_id = self.list_operation_track.currentItem().op_id
+        item = self.list_operation_track.currentItem()
+        if hasattr(item, "checkState") and item.checkState() == QtCore.Qt.Checked:
+            op_id = item.op_id
             if op_id != self.active_op_id:
                 self.parent.groupBox.show()
             selected_style = self.parent.cbLineStyle.currentText()
@@ -1090,6 +1101,9 @@ class MultipleFlightpathOperations:
                 self.update_flighttrack_patch(op_id)
                 self.parent.change_line_style = True
                 self.parent.cbLineStyle.setCurrentText(self.dict_operations[op_id]["line_style"])
+        else:
+            self.parent.cbLineStyle.setEnabled(item is not None and item.checkState() == QtCore.Qt.Checked)
+            self.parent.labelStatus.setText("Status: Check Mark the flight track to change it's line style.")
 
     def update_flighttrack_patch(self, op_id):
         """
