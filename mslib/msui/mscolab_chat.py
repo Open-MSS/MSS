@@ -349,7 +349,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             for user in users:
                 # Add active status to all the users
                 active_status = "🟢" if user["id"] in active_users else ""
-                display_text = f'{user["username"]} - {user["access_level"]} {active_status}'
+                display_text = f'{active_status} {user["username"]} - {user["access_level"]}'
                 item = QtWidgets.QListWidgetItem(display_text, parent=self.collaboratorsList)
 
                 # Fetch and set the avatar if it exists
