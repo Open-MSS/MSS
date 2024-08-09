@@ -1033,6 +1033,9 @@ class MultipleFlightpathOperations:
             self.list_operation_track.takeItem(0)
             a -= 1
 
+        # Uncheck the "Select All" checkbox
+        self.parent.cbSlectAll2.setChecked(False)
+
         self.list_operation_track.itemChanged.disconnect()
         self.mscolab_server_url = None
         self.token = None
