@@ -47,6 +47,7 @@ class ConnectionManager(QtCore.QObject):
     signal_operation_list_updated = QtCore.pyqtSignal(name="operation list updated")
     signal_operation_deleted = QtCore.pyqtSignal(int, name="operation deleted")
     signal_active_user_update = QtCore.pyqtSignal(int, int)
+    signal_update_collaborator_list = QtCore.pyqtSignal()
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -91,6 +92,7 @@ class ConnectionManager(QtCore.QObject):
         op_id = data['op_id']
         count = data['count']
         self.signal_active_user_update.emit(op_id, count)
+        self.signal_update_collaborator_list.emit()
 
     def handle_update_permission(self, message):
         """

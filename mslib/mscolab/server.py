@@ -530,6 +530,13 @@ def authorized_users():
     return json.dumps({"users": fm.get_authorized_users(int(op_id))})
 
 
+@APP.route('/active_users', methods=["GET"])
+@verify_user
+def active_users():
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    return jsonify(active_users=list(sockio.sm.active_users_per_operation[int(op_id)]))
+
+
 @APP.route('/operations', methods=['GET'])
 @verify_user
 def get_operations():

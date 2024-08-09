@@ -38,6 +38,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
+from mslib.mscolab.conf import mscolab_settings
 
 
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
@@ -117,6 +118,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         self.conn.signal_message_reply_receive.connect(self.handle_incoming_message_reply)
         self.conn.signal_message_edited.connect(self.handle_message_edited)
         self.conn.signal_message_deleted.connect(self.handle_deleted_message)
+        self.conn.signal_update_collaborator_list.connect(self.update_user_list)
         # Set Label text
         self.set_label_text()
         # Hide Edit Message section
@@ -327,19 +329,43 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     # API REQUESTS
     def load_users(self):
         # load users to side-tab here
-        # make request to get users
+        # make requests to get all users and active users of the operation
         data = {
             "token": self.token,
             "op_id": self.op_id
         }
-        url = urljoin(self.mscolab_server_url, 'authorized_users')
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text != "False":
+        users_url = urljoin(self.mscolab_server_url, 'authorized_users')
+        active_users_url = urljoin(self.mscolab_server_url, 'active_users')
+
+        # Fetch both authorized and active users
+        users_response = requests.get(users_url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        active_response = requests.get(active_users_url, data=data,
+                                       timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+
+        if users_response != "False":
             self.collaboratorsList.clear()
-            users = r.json()["users"]
+            users = users_response.json()["users"]
+            active_users = set(active_response.json()["active_users"])
             for user in users:
-                item = QtWidgets.QListWidgetItem(f'{user["username"]} - {user["access_level"]}',
-                                                 parent=self.collaboratorsList)
+                # Add active status to all the users
+                active_status = "🟢" if user["id"] in active_users else ""
+                display_text = f'{user["username"]} - {user["access_level"]} {active_status}'
+                item = QtWidgets.QListWidgetItem(display_text, parent=self.collaboratorsList)
+
+                # Fetch and set the avatar if it exists
+                if user['avatar_path']:
+                    full_avatar_path = fs.path.join(mscolab_settings.UPLOAD_FOLDER, user['avatar_path'])
+                    icon = QtGui.QIcon(full_avatar_path)
+                    item.setIcon(icon)
+                else:
+                    user_name = user["username"]
+                    try:
+                        first_alphabet = user_name[user_name.find(next(filter(str.isalpha, user_name)))].lower()
+                    except StopIteration:
+                        first_alphabet = "default"
+                    default_avatar_path = f":/gravatars/default-gravatars/{first_alphabet}.png"
+                    icon = QtGui.QIcon(default_avatar_path)
+                    item.setIcon(icon)
                 self.collaboratorsList.addItem(item)
         else:
             show_popup(self, "Error", "Session expired, new login required")
@@ -442,6 +468,10 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             if message_widget.id == message_id:
                 self.messageList.takeItem(i)
                 break
+
+    @QtCore.pyqtSlot()
+    def update_user_list(self):
+        self.load_users()
 
     def closeEvent(self, event):
         self.viewCloses.emit()

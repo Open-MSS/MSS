@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mscolab_operation_window.ui'
+# Form implementation generated from reading ui file 'ui/ui_mscolab_operation_window.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -148,6 +148,7 @@ class Ui_MscolabOperation(object):
         sizePolicy.setHeightForWidth(self.serviceMessageList.sizePolicy().hasHeightForWidth())
         self.serviceMessageList.setSizePolicy(sizePolicy)
         self.serviceMessageList.setMinimumSize(QtCore.QSize(275, 0))
+        self.serviceMessageList.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.serviceMessageList.setObjectName("serviceMessageList")
         self.horizontalLayout_4.addWidget(self.serviceMessageList)
         self.horizontalLayout_4.setStretch(1, 1)
