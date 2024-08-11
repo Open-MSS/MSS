@@ -598,6 +598,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             listItem.setFont(font)
         self.update_line_properties_state()
         self.flagop()
+
     def update_line_properties_state(self):
         """
         Check if there is an active flight track selected. If there is an active flight track selected in the
