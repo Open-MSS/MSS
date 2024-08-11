@@ -597,7 +597,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.set_activate_flag()
             listItem.setFont(font)
         self.update_line_properties_state()
-
+        self.flagop()
     def update_line_properties_state(self):
         """
         Check if there is an active flight track selected. If there is an active flight track selected in the
@@ -850,6 +850,7 @@ class MultipleFlightpathOperations:
         # connect itemChanged after everything setup, otherwise it will be triggered on each entry
         self.list_operation_track.itemChanged.connect(self.set_flag)
         self.update_line_properties_state()
+        self.set_flag()
 
     def update_line_properties_state(self):
         """
