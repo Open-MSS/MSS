@@ -100,7 +100,7 @@
        </rect>
       </property>
       <property name="text">
-       <string>Select all list of Open Flighttracks</string>
+       <string>Select all Flighttracks</string>
       </property>
      </widget>
      <widget class="QCheckBox" name="cbSlectAll2">
@@ -113,7 +113,20 @@
        </rect>
       </property>
       <property name="text">
-       <string>Select all list of MsColab Flighttracks</string>
+       <string>Select all Operations</string>
+      </property>
+     </widget>
+     <widget class="Line" name="line">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>0</y>
+        <width>16</width>
+        <height>31</height>
+       </rect>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Vertical</enum>
       </property>
      </widget>
     </widget>

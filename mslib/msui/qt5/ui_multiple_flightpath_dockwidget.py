@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_multiple_flightpath_dockwidget.ui'
+# Form implementation generated from reading ui file '/home/zandar/Desktop/MSS/mslib/msui/ui/ui_multiple_flightpath_dockwidget.ui'
 #
 # Created by: PyQt5 UI code generator 5.12.3
 #
@@ -67,6 +67,11 @@ class Ui_MultipleViewWidget(object):
         self.cbSlectAll2 = QtWidgets.QCheckBox(self.frame_4)
         self.cbSlectAll2.setGeometry(QtCore.QRect(280, 10, 251, 20))
         self.cbSlectAll2.setObjectName("cbSlectAll2")
+        self.line = QtWidgets.QFrame(self.frame_4)
+        self.line.setGeometry(QtCore.QRect(260, 0, 16, 31))
+        self.line.setFrameShape(QtWidgets.QFrame.VLine)
+        self.line.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.line.setObjectName("line")
         self.verticalLayout_2.addWidget(self.frame_4)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setSizeConstraint(QtWidgets.QLayout.SetMinimumSize)
@@ -148,8 +153,8 @@ class Ui_MultipleViewWidget(object):
         _translate = QtCore.QCoreApplication.translate
         MultipleViewWidget.setWindowTitle(_translate("MultipleViewWidget", "Form"))
         self.ft_color_label.setText(_translate("MultipleViewWidget", "Activated Flighttrack/Operation Vertices Color: "))
-        self.cbSlectAll1.setText(_translate("MultipleViewWidget", "Select all list of Open Flighttracks"))
-        self.cbSlectAll2.setText(_translate("MultipleViewWidget", "Select all list of MsColab Flighttracks"))
+        self.cbSlectAll1.setText(_translate("MultipleViewWidget", "Select all Flighttracks"))
+        self.cbSlectAll2.setText(_translate("MultipleViewWidget", "Select all Operations"))
         self.list_flighttrack.setToolTip(_translate("MultipleViewWidget", "List of Open Flighttracks.\n"
 "Check box to activate and display track on topview."))
         self.list_operation_track.setToolTip(_translate("MultipleViewWidget", "List of Mscolab Operations.\n"

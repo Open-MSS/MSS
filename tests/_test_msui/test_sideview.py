@@ -31,7 +31,7 @@ import os
 import pytest
 import shutil
 import tempfile
-from PyQt5 import QtTest, QtCore, QtGui
+from PyQt5 import QtTest, QtCore, QtGui, QtWidgets
 from mslib.msui import flighttrack as ft
 import mslib.msui.sideview as tv
 from mslib.msui.mpl_qtwidget import _DEFAULT_SETTINGS_SIDEVIEW
@@ -65,10 +65,18 @@ class Test_MSS_SV_OptionsDialog:
         levels = self.window.get_flight_levels()
         assert all(x == y for x, y in zip(levels, [0, 300, 320, 340]))
 
-    @mock.patch("PyQt5.QtWidgets.QColorDialog.getColor", return_value=QtGui.QColor())
-    def test_setColour(self, mockdlg):
+    @mock.patch("mslib.utils.colordialog.CustomColorDialog.exec_", return_value=QtWidgets.QDialog.Accepted)
+    @mock.patch("mslib.utils.colordialog.CustomColorDialog.color_selected", new_callable=mock.Mock)
+    def test_setColour(self, mock_color_selected, mockdlg):
         QtTest.QTest.mouseClick(self.window.btFillColour, QtCore.Qt.LeftButton)
         assert mockdlg.call_count == 1
+
+        # Simulate a color being selected
+        color = QtGui.QColor("#0000ff")  # Example color
+        mock_color_selected.emit(color)
+
+        # Ensure the color_selected signal was emitted
+        mock_color_selected.emit.assert_called_with(color)
 
 
 class Test_MSSSideViewWindow:

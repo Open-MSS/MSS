@@ -195,6 +195,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.dsbx_linewidth.setEnabled(False)
         self.hsTransparencyControl.setEnabled(False)
         self.cbLineStyle.setEnabled(False)
+        self.labelStatus.setText("Status: Select a flighttrack/operation")
 
         # Connect Signals and Slots
         self.listFlightTracks.model().rowsInserted.connect(self.wait)
@@ -599,16 +600,21 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def update_line_properties_state(self):
         """
-        Enable or disable line properties options based on whether the active flight track is selected.
+        Check if there is an active flight track selected. If there is an active flight track selected in the
+        list widget, disable these UI elements else enable
         """
-        if self.active_flight_track:
+        if self.list_flighttrack.currentItem() is not None:
+            wp_model = self.list_flighttrack.currentItem().flighttrack_model
+            self.enable_disable_line_style_buttons(wp_model)
+
+    def enable_disable_line_style_buttons(self, wp_model):
+        if wp_model == self.active_flight_track:
             self.pushButton_color.setEnabled(False)
             self.dsbx_linewidth.setEnabled(False)
             self.hsTransparencyControl.setEnabled(False)
             self.cbLineStyle.setEnabled(False)
             self.labelStatus.setText(
-                "Status: ✗ No flight track selected")
-
+                "Status: You can change line attributes of the active flight track through options only.")
         else:
             self.pushButton_color.setEnabled(True)
             self.dsbx_linewidth.setEnabled(True)
@@ -698,21 +704,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             else:
                 self.cbLineStyle.setCurrentText("Solid")
 
-            if self.list_flighttrack.currentItem().flighttrack_model == self.active_flight_track:
-                # Disable the buttons
-                self.pushButton_color.setEnabled(False)
-                self.dsbx_linewidth.setEnabled(False)
-                self.hsTransparencyControl.setEnabled(False)
-                self.cbLineStyle.setEnabled(False)
-                self.labelStatus.setText(
-                    "Status: You can change line attributes of the active flight track through options only.")
-            else:
-                # Enable the buttons
-                self.pushButton_color.setEnabled(True)
-                self.dsbx_linewidth.setEnabled(True)
-                self.hsTransparencyControl.setEnabled(True)
-                self.cbLineStyle.setEnabled(True)
-                self.labelStatus.setText("Status: ✔ flight track selected")
+            self.enable_disable_line_style_buttons(wp_model)
 
 
 class MultipleFlightpathOperations:
@@ -861,15 +853,21 @@ class MultipleFlightpathOperations:
 
     def update_line_properties_state(self):
         """
-        Enable or disable line properties options based on whether the active flight track is selected.
+        Check if there is an active flight track selected. If there is an active flight track selected in the
+        list widget, disable these UI elements else enable
         """
-        if self.active_op_id:
+        if self.list_operation_track.currentItem() is not None:
+            op_id = self.list_operation_track.currentItem().op_id
+            self.enable_disable_line_style_buttons(op_id)
+
+    def enable_disable_line_style_buttons(self, op_id):
+        if op_id == self.active_op_id:
             self.parent.pushButton_color.setEnabled(False)
             self.parent.dsbx_linewidth.setEnabled(False)
             self.parent.hsTransparencyControl.setEnabled(False)
             self.parent.cbLineStyle.setEnabled(False)
             self.parent.labelStatus.setText(
-                "Status: ✗ No flight track selected")
+                "Status: You can change line attributes of the active flight track through options only.")
         else:
             self.parent.pushButton_color.setEnabled(True)
             self.parent.dsbx_linewidth.setEnabled(True)
@@ -1035,6 +1033,7 @@ class MultipleFlightpathOperations:
 
         # Uncheck the "Select All" checkbox
         self.parent.cbSlectAll2.setChecked(False)
+        self.parent.labelStatus.setText("Status: Select a flighttrack/operation")
 
         self.list_operation_track.itemChanged.disconnect()
         self.mscolab_server_url = None
@@ -1145,18 +1144,4 @@ class MultipleFlightpathOperations:
             else:
                 self.parent.cbLineStyle.setCurrentText("Solid")
 
-            if self.list_operation_track.currentItem().op_id == self.active_op_id:
-                # Disable the buttons
-                self.parent.pushButton_color.setEnabled(False)
-                self.parent.dsbx_linewidth.setEnabled(False)
-                self.parent.hsTransparencyControl.setEnabled(False)
-                self.parent.cbLineStyle.setEnabled(False)
-                self.parent.labelStatus.setText(
-                    "Status: You can change line attributes of the active flight track through options only.")
-            else:
-                # enable the buttons
-                self.parent.pushButton_color.setEnabled(True)
-                self.parent.dsbx_linewidth.setEnabled(True)
-                self.parent.hsTransparencyControl.setEnabled(True)
-                self.parent.cbLineStyle.setEnabled(True)
-                self.parent.labelStatus.setText("Status: ✔ flight track selected")
+            self.enable_disable_line_style_buttons(op_id)
