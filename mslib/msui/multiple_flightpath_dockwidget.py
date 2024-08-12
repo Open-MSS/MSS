@@ -174,6 +174,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.color = self.get_random_color()
         self.obb = []
 
+        self.operations = None
         self.operation_list = False
         self.flighttrack_list = True
 
@@ -539,7 +540,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         Update the flighttrack patch with the latest attributes.
         """
-        self.dict_flighttrack[wp_model]["patch"].remove()
+        if self.dict_flighttrack[wp_model]["patch"] is not None:
+            self.dict_flighttrack[wp_model]["patch"].remove()
         self.dict_flighttrack[wp_model]["patch"] = MultipleFlightpath(
             self.view.map,
             self.dict_flighttrack[wp_model]["wp_data"],
@@ -598,6 +600,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             listItem.setFont(font)
         self.update_line_properties_state()
         self.flagop()
+        if self.operations is not None:
+            self.operations.set_flag()
 
     def update_line_properties_state(self):
         """
@@ -606,22 +610,18 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         """
         if self.list_flighttrack.currentItem() is not None:
             wp_model = self.list_flighttrack.currentItem().flighttrack_model
-            self.enable_disable_line_style_buttons(wp_model)
+            self.enable_disable_line_style_buttons(wp_model != self.active_flight_track)
 
-    def enable_disable_line_style_buttons(self, wp_model):
-        if wp_model == self.active_flight_track:
-            self.pushButton_color.setEnabled(False)
-            self.dsbx_linewidth.setEnabled(False)
-            self.hsTransparencyControl.setEnabled(False)
-            self.cbLineStyle.setEnabled(False)
+    def enable_disable_line_style_buttons(self, enable):
+        self.pushButton_color.setEnabled(enable)
+        self.dsbx_linewidth.setEnabled(enable)
+        self.hsTransparencyControl.setEnabled(enable)
+        self.cbLineStyle.setEnabled(enable)
+        if enable:
+            self.labelStatus.setText("Status: ✔ flight track selected")
+        else:
             self.labelStatus.setText(
                 "Status: You can change line attributes of the active flight track through options only.")
-        else:
-            self.pushButton_color.setEnabled(True)
-            self.dsbx_linewidth.setEnabled(True)
-            self.hsTransparencyControl.setEnabled(True)
-            self.cbLineStyle.setEnabled(True)
-            self.labelStatus.setText("Status: ✔ flight track selected")
 
     def drawInactiveFlighttracks(self, list_widget):
         """
@@ -667,6 +667,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
             self.set_activate_flag()
             listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+            listItem.setIcon(self.show_color_icon(self.get_color(listItem.flighttrack_model)))
 
             if listItem.flighttrack_model == self.active_flight_track:
                 font = QtGui.QFont()
@@ -705,7 +706,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             else:
                 self.cbLineStyle.setCurrentText("Solid")
 
-            self.enable_disable_line_style_buttons(wp_model)
+            print(wp_model != self.active_flight_track, self.list_flighttrack.currentItem().checkState() != QtCore.Qt.Checked)
+            self.enable_disable_line_style_buttons(wp_model != self.active_flight_track and self.list_flighttrack.currentItem().checkState() == QtCore.Qt.Checked)
 
 
 class MultipleFlightpathOperations:
@@ -852,6 +854,7 @@ class MultipleFlightpathOperations:
         self.list_operation_track.itemChanged.connect(self.set_flag)
         self.update_line_properties_state()
         self.set_flag()
+        self.parent.flagop()
 
     def update_line_properties_state(self):
         """
@@ -860,22 +863,7 @@ class MultipleFlightpathOperations:
         """
         if self.list_operation_track.currentItem() is not None:
             op_id = self.list_operation_track.currentItem().op_id
-            self.enable_disable_line_style_buttons(op_id)
-
-    def enable_disable_line_style_buttons(self, op_id):
-        if op_id == self.active_op_id:
-            self.parent.pushButton_color.setEnabled(False)
-            self.parent.dsbx_linewidth.setEnabled(False)
-            self.parent.hsTransparencyControl.setEnabled(False)
-            self.parent.cbLineStyle.setEnabled(False)
-            self.parent.labelStatus.setText(
-                "Status: You can change line attributes of the active flight track through options only.")
-        else:
-            self.parent.pushButton_color.setEnabled(True)
-            self.parent.dsbx_linewidth.setEnabled(True)
-            self.parent.hsTransparencyControl.setEnabled(True)
-            self.parent.cbLineStyle.setEnabled(True)
-            self.parent.labelStatus.setText("Status: ✔ flight track selected")
+            self.parent.enable_disable_line_style_buttons(op_id == self.active_op_id)
 
     def save_last_used_operation(self, op_id):
         if self.active_op_id is not None:
@@ -954,6 +942,7 @@ class MultipleFlightpathOperations:
 
             self.set_activate_flag()
             listItem.setFlags(listItem.flags() | QtCore.Qt.ItemIsUserCheckable)
+            listItem.setIcon(self.show_color_icon(self.get_color(listItem.op_id)))
 
             # if listItem.op_id == self.active_op_id:
             self.set_activate_flag()
@@ -1113,7 +1102,8 @@ class MultipleFlightpathOperations:
         """
         Update the flighttrack patch with the latest attributes.
         """
-        self.dict_operations[op_id]["patch"].remove()
+        if self.dict_operations[op_id]["patch"] is not None:
+            self.dict_operations[op_id]["patch"].remove()
         self.dict_operations[op_id]["patch"] = MultipleFlightpath(
             self.view.map,
             self.dict_operations[op_id]["wp_data"],
@@ -1146,4 +1136,4 @@ class MultipleFlightpathOperations:
             else:
                 self.parent.cbLineStyle.setCurrentText("Solid")
 
-            self.enable_disable_line_style_buttons(op_id)
+            self.parent.enable_disable_line_style_buttons(op_id != self.active_op_id and self.list_operation_track.currentItem().checkState() == QtCore.Qt.Checked)
