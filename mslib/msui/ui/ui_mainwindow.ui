@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>738</width>
-    <height>749</height>
+    <width>770</width>
+    <height>895</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -235,6 +235,12 @@ Save a flight track to name it.</string>
            </property>
            <item row="6" column="0" colspan="2">
             <widget class="QLabel" name="workingStatusLabel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="text">
               <string>No operations selected</string>
              </property>
@@ -243,21 +249,7 @@ Save a flight track to name it.</string>
              </property>
             </widget>
            </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="QLabel" name="activeOperationDesc">
-             <property name="text">
-              <string>Select Operation to View Description</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="activeOperationsLabel">
-             <property name="text">
-              <string>Operations</string>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="0">
+           <item row="9" column="0">
             <widget class="QCheckBox" name="workLocallyCheckbox">
              <property name="toolTip">
               <string>Check to work asynchronously from the server</string>
@@ -268,30 +260,6 @@ Save a flight track to name it.</string>
             </widget>
            </item>
            <item row="9" column="1">
-            <widget class="QComboBox" name="filterCategoryCb">
-             <property name="whatsThis">
-              <string>filter by operation category</string>
-             </property>
-             <property name="autoFillBackground">
-              <bool>false</bool>
-             </property>
-             <property name="editable">
-              <bool>false</bool>
-             </property>
-             <property name="currentText">
-              <string>ANY</string>
-             </property>
-             <property name="currentIndex">
-              <number>0</number>
-             </property>
-             <item>
-              <property name="text">
-               <string>ANY</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="10" column="1">
             <widget class="QComboBox" name="serverOptionsCb">
              <property name="toolTip">
               <string>Fetch/Save Server options</string>
@@ -313,22 +281,109 @@ Save a flight track to name it.</string>
              </item>
             </widget>
            </item>
-           <item row="9" column="0">
-            <widget class="QLabel" name="categoryLabel">
-             <property name="text">
-              <string>Category:</string>
+           <item row="7" column="0" colspan="2">
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
+              <string>Filter flight operations</string>
              </property>
+             <widget class="QLabel" name="categoryLabel">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>30</y>
+                <width>111</width>
+                <height>23</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Filter by category:</string>
+              </property>
+             </widget>
+             <widget class="QComboBox" name="filterCategoryCb">
+              <property name="geometry">
+               <rect>
+                <x>170</x>
+                <y>30</y>
+                <width>151</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="whatsThis">
+               <string>filter by operation category</string>
+              </property>
+              <property name="autoFillBackground">
+               <bool>false</bool>
+              </property>
+              <property name="editable">
+               <bool>false</bool>
+              </property>
+              <property name="currentText">
+               <string>ANY</string>
+              </property>
+              <property name="currentIndex">
+               <number>0</number>
+              </property>
+              <item>
+               <property name="text">
+                <string>ANY</string>
+               </property>
+              </item>
+             </widget>
+             <widget class="QLabel" name="regexlable">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>60</y>
+                <width>131</width>
+                <height>16</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Regex filter pattern:</string>
+              </property>
+             </widget>
+             <widget class="QCheckBox" name="ignoreArchiveCb">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>90</y>
+                <width>181</width>
+                <height>21</height>
+               </rect>
+              </property>
+              <property name="text">
+               <string>Ignore Archive operations</string>
+              </property>
+             </widget>
+             <widget class="QDialogButtonBox" name="applyCancelBb">
+              <property name="geometry">
+               <rect>
+                <x>100</x>
+                <y>120</y>
+                <width>161</width>
+                <height>24</height>
+               </rect>
+              </property>
+              <property name="standardButtons">
+               <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel</set>
+              </property>
+              <property name="centerButtons">
+               <bool>false</bool>
+              </property>
+             </widget>
+             <widget class="QLineEdit" name="regexFilterLe">
+              <property name="geometry">
+               <rect>
+                <x>170</x>
+                <y>60</y>
+                <width>151</width>
+                <height>23</height>
+               </rect>
+              </property>
+             </widget>
             </widget>
            </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QListWidget" name="listOperationsMSC">
-             <property name="toolTip">
-              <string>List of mscolab operations.
-Double click a operation to activate and view its description.</string>
-             </property>
-            </widget>
-           </item>
-           <item row="11" column="0" colspan="2">
+           <item row="10" column="0" colspan="2">
             <widget class="QPushButton" name="pbOpenOperationArchive">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -339,6 +394,92 @@ Double click a operation to activate and view its description.</string>
              <property name="text">
               <string>Operation Archive</string>
              </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="2">
+            <widget class="QFrame" name="frame">
+             <property name="minimumSize">
+              <size>
+               <width>200</width>
+               <height>420</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Raised</enum>
+             </property>
+             <widget class="QLabel" name="activeOperationDesc">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>10</y>
+                <width>332</width>
+                <height>15</height>
+               </rect>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Select Operation to View Description</string>
+              </property>
+             </widget>
+             <widget class="QLabel" name="activeOperationsLabel">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>40</y>
+                <width>332</width>
+                <height>15</height>
+               </rect>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="text">
+               <string>Operations</string>
+              </property>
+             </widget>
+             <widget class="QListWidget" name="listOperationsMSC">
+              <property name="geometry">
+               <rect>
+                <x>10</x>
+                <y>60</y>
+                <width>332</width>
+                <height>351</height>
+               </rect>
+              </property>
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="maximumSize">
+               <size>
+                <width>16777215</width>
+                <height>400</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>List of mscolab operations.
+Double click a operation to activate and view its description.</string>
+              </property>
+             </widget>
             </widget>
            </item>
           </layout>
@@ -355,8 +496,8 @@ Double click a operation to activate and view its description.</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>738</width>
-     <height>22</height>
+     <width>770</width>
+     <height>20</height>
     </rect>
    </property>
    <property name="nativeMenuBar">
@@ -627,7 +768,6 @@ Double click a operation to activate and view its description.</string>
   <tabstop>userOptionsTb</tabstop>
   <tabstop>listFlightTracks</tabstop>
   <tabstop>listViews</tabstop>
-  <tabstop>listOperationsMSC</tabstop>
   <tabstop>workLocallyCheckbox</tabstop>
   <tabstop>serverOptionsCb</tabstop>
  </tabstops>
