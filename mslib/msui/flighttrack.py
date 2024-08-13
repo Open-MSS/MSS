@@ -176,6 +176,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     distances between the individual waypoints, and to interpret the results of
     flight performance calculations.
     """
+    # signal to emit when a waypoint is moved, inserted or deleted
+    changeMessageSignal = QtCore.pyqtSignal(str)
 
     def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
                  xml_content=None):
@@ -422,6 +424,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.modified = True
             # Performance computations loose their validity if a change is made.
             if update:
+                self.changeMessageSignal.emit(f'updated {index.row()}')
                 self.dataChanged.emit(index, index2)
             return True
         return False
@@ -445,6 +448,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.update_distances(position, rows=rows)
         self.endInsertRows()
         self.modified = True
+        # self.dataChangedMessage.emit(f'Inserted {rows} waypoint(s) at position {position}')
         return True
 
     def removeRows(self, position, rows=1, index=QtCore.QModelIndex()):
@@ -461,6 +465,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         # endRemoveRows emits rowsRemoved(index, first, last).
         self.endRemoveRows()
+        # self.dataChangedMessage.emit(f'Removed {rows} waypoint(s) starting from position {position}')
         self.modified = True
         return True
 
@@ -570,6 +575,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             wp1.ceiling_alt = aircraft.get_ceiling_altitude(wp1.weight)
 
         index1 = self.createIndex(0, TIME_UTC)
+        # self.changeMessageSignal.emit(f'updated {index1}')
         self.dataChanged.emit(index1, index1)
 
     def invert_direction(self):

@@ -575,12 +575,20 @@ class MSUIMscolab(QtCore.QObject):
         # Gravatar image path
         self.gravatar = None
 
+        # message for change in waypoints
+        self.lastChangeMessage = None
+
         # set data dir, uri
         if data_dir is None:
             self.data_dir = config_loader(dataset="mss_dir")
         else:
             self.data_dir = data_dir
         self.create_dir()
+
+    @QtCore.pyqtSlot(str)
+    def handle_change_message(self, message):
+        logging.info("handle change message : this should be called before handle_waypoints_changed")
+        self.lastChangeMessage = message
 
     def view_description(self):
         data = {
@@ -1157,6 +1165,7 @@ class MSUIMscolab(QtCore.QObject):
         initial_waypoints = [ft.Waypoint(location=locations[0]), ft.Waypoint(location=locations[1])]
         waypoints_model = ft.WaypointsTableModel(name="", waypoints=initial_waypoints)
         self.waypoints_model = waypoints_model
+        self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         self.reload_view_windows()
 
     def close_external_windows(self):
@@ -1441,6 +1450,7 @@ class MSUIMscolab(QtCore.QObject):
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
@@ -1482,6 +1492,7 @@ class MSUIMscolab(QtCore.QObject):
                 xml_content = self.merge_dialog.get_values()
                 if xml_content is not None:
                     self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                    self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
                     self.waypoints_model.save_to_ftml(self.local_ftml_file)
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
@@ -1502,8 +1513,9 @@ class MSUIMscolab(QtCore.QObject):
             if self.merge_dialog.exec_():
                 xml_content = self.merge_dialog.get_values()
                 if xml_content is not None:
-                    self.conn.save_file(self.token, self.active_op_id, xml_content, comment=comment)
+                    self.conn.save_file(self.token, self.active_op_id, xml_content, comment=comment, messageText="saved a waypoint")
                     self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                    self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
                     self.waypoints_model.save_to_ftml(self.local_ftml_file)
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
@@ -2001,6 +2013,7 @@ class MSUIMscolab(QtCore.QObject):
         xml_content = self.request_wps_from_server()
         if xml_content is not None:
             self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+            self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
             self.waypoints_model.name = self.active_operation_name
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
@@ -2020,12 +2033,16 @@ class MSUIMscolab(QtCore.QObject):
 
     def handle_waypoints_changed(self):
         logging.debug("handle_waypoints_changed")
+        
+        # self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
+        logging.info("should be called after handle_change_message")
+        
         if verify_user_token(self.mscolab_server_url, self.token):
             if self.ui.workLocallyCheckbox.isChecked():
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
             else:
                 xml_content = self.waypoints_model.get_xml_content()
-                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None)
+                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None, messageText=self.lastChangeMessage)
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -2072,6 +2089,7 @@ class MSUIMscolab(QtCore.QObject):
                 xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
             self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
             self.waypoints_model = model
+            self.waypoints_model.changeMessageSignal.connect(self.handleModelChangeMessage)
             self.handle_waypoints_changed()
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             self.reload_view_windows()
