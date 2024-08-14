@@ -14,8 +14,8 @@ dependencies:
       - markdown
       - xstatic
       - defusedxml
-      - sphinx_rtd_theme>=0.2.1
-      - sphinxcontrib-video
+      - sphinx_rtd_theme
+      - sphinxcontrib-video>=0.2.1
       - sphinx
       - fs
       - netCDF4
