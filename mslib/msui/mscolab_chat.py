@@ -389,6 +389,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             for message in messages:
                 self.render_new_message(message, scroll=False)
             self.messageList.scrollToBottom()
+            self.serviceMessageList.scrollToBottom()
         else:
             show_popup(self, "Error", "Session expired, new login required")
 

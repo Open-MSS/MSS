@@ -283,7 +283,7 @@ class SocketsManager:
             # if permission is correct and file saved properly
             if perm and self.fm.save_file(int(op_id), content, user, comment):
                 # send service message
-                message_ = f"[service message] **{user.username}** saved changes : {messageText}"
+                message_ = f"[service message] **{user.username}** saved changes. {messageText}"
                 new_message = self.cm.add_message(user, message_, str(op_id), message_type=MessageType.SYSTEM_MESSAGE)
                 new_message_dict = get_message_dict(new_message)
                 socketio.emit('chat-message-client', json.dumps(new_message_dict))

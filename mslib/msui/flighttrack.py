@@ -176,7 +176,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
     distances between the individual waypoints, and to interpret the results of
     flight performance calculations.
     """
-    # signal to emit when a waypoint is moved, inserted or deleted
+
+    # Signal emitted when a waypoint is moved, inserted or deleted
     changeMessageSignal = QtCore.pyqtSignal(str)
 
     def __init__(self, name="", filename=None, waypoints=None, mscolab_mode=False, data_dir=mss_default.mss_dir,
@@ -354,6 +355,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                         waypoint.location = loc[1]
                     # A change of position requires an update of the distances.
                     if update:
+                        self.changeMessageSignal.emit("")
                         self.update_distances(index.row())
                     # Notify the views that items between the edited item and
                     # the distance item of the corresponding waypoint have been
@@ -380,6 +382,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                         waypoint.lat, waypoint.lon = loc[0]
                         waypoint.location = loc[1]
                     if update:
+                        self.changeMessageSignal.emit(f'Moved waypoint {index.row()}')
                         self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), LOCATION)
             elif column == FLIGHTLEVEL:
@@ -396,6 +399,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     waypoint.flightlevel = flightlevel
                     waypoint.pressure = pressure
                     if update:
+                        self.changeMessageSignal.emit(f'Moved waypoint {index.row()}')
                         self.update_distances(index.row())
                     # need to notify view of the second item that has been
                     # changed as well.
@@ -417,6 +421,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                     waypoint.pressure = pressure
                     waypoint.flightlevel = flightlevel
                     if update:
+                        self.changeMessageSignal.emit(f'Moved waypoint {index.row()}')
                         self.update_distances(index.row())
                     index2 = self.createIndex(index.row(), FLIGHTLEVEL)
             else:
@@ -424,7 +429,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             self.modified = True
             # Performance computations loose their validity if a change is made.
             if update:
-                self.changeMessageSignal.emit(f'updated {index.row()}')
                 self.dataChanged.emit(index, index2)
             return True
         return False
@@ -440,6 +444,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         assert len(waypoints) == rows, (waypoints, rows)
 
+        self.changeMessageSignal.emit("Inserted a new waypoint!")
         self.beginInsertRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
         for row, wp in enumerate(waypoints):
@@ -448,7 +453,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.update_distances(position, rows=rows)
         self.endInsertRows()
         self.modified = True
-        # self.dataChangedMessage.emit(f'Inserted {rows} waypoint(s) at position {position}')
         return True
 
     def removeRows(self, position, rows=1, index=QtCore.QModelIndex()):
@@ -456,6 +460,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         Remove waypoint; overrides the corresponding QAbstractTableModel
         method.
         """
+        self.changeMessageSignal.emit(f"Deleted waypoint {position}")
         # beginRemoveRows emits rowsAboutToBeRemoved(index, first, last).
         self.beginRemoveRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
@@ -465,7 +470,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         # endRemoveRows emits rowsRemoved(index, first, last).
         self.endRemoveRows()
-        # self.dataChangedMessage.emit(f'Removed {rows} waypoint(s) starting from position {position}')
         self.modified = True
         return True
 
@@ -575,7 +579,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             wp1.ceiling_alt = aircraft.get_ceiling_altitude(wp1.weight)
 
         index1 = self.createIndex(0, TIME_UTC)
-        # self.changeMessageSignal.emit(f'updated {index1}')
+        logging.info("Pehla data change yaha se emit ho raha hai")
         self.dataChanged.emit(index1, index1)
 
     def invert_direction(self):
