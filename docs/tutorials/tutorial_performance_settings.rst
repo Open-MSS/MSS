@@ -3,7 +3,7 @@ Table View and Aircraft Performance Data
 
 The range-specific data of an aircraft can be taken into account in Tableview for flight planning.
 
-  .. video:: ../_static/mp4/tutorial_performancesettings.mp4
+  .. video:: ../videos/mp4/tutorial_performancesettings.mp4
      :alt: This is the Performance Settings dockwidget opened in the Table View (CTRL+T) of the MSS software
            where by putting and changing some parameters, we can evaluate the performance of the aircraft.
            Parameters like Flight Altitude, Aviation fuel, Aircraft weight, Maximum take off weight
