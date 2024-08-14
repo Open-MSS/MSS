@@ -579,7 +579,6 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             wp1.ceiling_alt = aircraft.get_ceiling_altitude(wp1.weight)
 
         index1 = self.createIndex(0, TIME_UTC)
-        logging.info("Pehla data change yaha se emit ho raha hai")
         self.dataChanged.emit(index1, index1)
 
     def invert_direction(self):
