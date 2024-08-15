@@ -150,8 +150,8 @@ class Ui_MultipleViewWidget(object):
         self.list_operation_track.setToolTip(_translate("MultipleViewWidget", "List of Mscolab Operations.\n"
 "Check box to activate and display track on topview."))
         self.groupBox.setTitle(_translate("MultipleViewWidget", "Flight Track style options"))
-        self.pushButton_color.setText(_translate("MultipleViewWidget", "Change Color of flight track"))
-        self.label.setText(_translate("MultipleViewWidget", "Line thnickness"))
-        self.label_3.setText(_translate("MultipleViewWidget", "Line style"))
+        self.pushButton_color.setText(_translate("MultipleViewWidget", "Change Color"))
+        self.label.setText(_translate("MultipleViewWidget", "Thickness"))
+        self.label_3.setText(_translate("MultipleViewWidget", "Style"))
         self.label_2.setText(_translate("MultipleViewWidget", "Transparency"))
         self.labelStatus.setText(_translate("MultipleViewWidget", "Status: "))

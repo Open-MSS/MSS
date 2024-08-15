@@ -169,7 +169,7 @@ Check box to activate and display track on topview.</string>
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Change Color of flight track</string>
+           <string>Change Color</string>
           </property>
          </widget>
          <widget class="QLabel" name="label">
@@ -182,7 +182,7 @@ Check box to activate and display track on topview.</string>
            </rect>
           </property>
           <property name="text">
-           <string>Line thnickness</string>
+           <string>Thickness</string>
           </property>
          </widget>
          <widget class="QDoubleSpinBox" name="dsbx_linewidth">
@@ -214,7 +214,7 @@ Check box to activate and display track on topview.</string>
            </rect>
           </property>
           <property name="text">
-           <string>Line style</string>
+           <string>Style</string>
           </property>
          </widget>
          <widget class="QComboBox" name="cbLineStyle">
