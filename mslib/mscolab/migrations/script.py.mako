@@ -7,6 +7,7 @@ Create Date: ${create_date}
 """
 from alembic import op
 import sqlalchemy as sa
+import mslib.mscolab.custom_migration_types as cu
 ${imports if imports else ""}
 
 # revision identifiers, used by Alembic.
