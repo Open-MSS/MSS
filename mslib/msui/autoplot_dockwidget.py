@@ -28,12 +28,17 @@
 """
 
 import json
+import click
+from mslib.utils.mssautoplot import main as autopl
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
+from PyQt5 import QtCore
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui import constants as const
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
+    
+    treewidget_item_selected = QtCore.pyqtSignal(str,str,str,str)
 
     def __init__(self, parent=None, view=None, config_settings=None):
         super().__init__()
@@ -41,6 +46,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         self.UploadAutoplotButton.setVisible(False)
         self.UploadAutoplotSecsButton.setVisible(False)
+        self.cpath = ""
         self.view = view
         self.url = ""
         self.layer = ""
@@ -51,6 +57,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.vertical = ""
         self.filename = ""
         self.itime = ""
+        self.vtime= ""
         self.stime = ""
         self.etime = ""
         self.intv = ""
@@ -58,6 +65,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.refresh_sig(config_settings)
 
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
+        
+        self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.autoplotSecsTreeWidget_selected_row)
 
         # Add to TreeWidget
         if self.view == "Top View":
@@ -126,6 +135,41 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed)
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
+        self.downloadPushButton.clicked.connect(self.download_plots_cli)
+ 
+    def download_plots_cli(self):
+        view=""
+        if self.view == "Top View":
+            view="top"
+        elif self.view == "Side View":
+            view="side"
+        else:
+            view="linear"
+        args = [
+        "--cpath", self.cpath,
+        "--view", view,
+        "--ftrack", self.flight,
+        "--itime", self.itime,
+        "--vtime", self.vtime,
+        "--intv", self.intv,
+        "--stime", self.stime,
+        "--etime", self.etime
+        ]
+        with click.Context(autopl):
+            autopl.main(args=args, prog_name="autoplot_gui")
+        
+    
+    def autoplotSecsTreeWidget_selected_row(self):
+        selected_items = self.autoplotSecsTreeWidget.selectedItems()
+        if selected_items:
+            url = selected_items[0].text(0)
+            layer = selected_items[0].text(1)
+            styles = selected_items[0].text(2)
+            level = selected_items[0].text(3)
+
+            self.treewidget_item_selected.emit(url,layer,styles,level)
+            print("autoplot_dockwidget",url,layer,styles,level)
+        
 
     def on_item_selection_changed(self):
         selected_item = self.autoplotTreeWidget.selectedItems()
@@ -149,6 +193,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
         if fileName != "":
+            self.cpath=fileName
             with open(fileName, 'r') as file:
                 configure = json.load(file)
             autoplot_flights = configure["automated_plotting_flights"]
@@ -188,6 +233,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 config_settings["automated_plotting_vsecs"].append([url, layer, styles, level])
             else:
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
+            self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
         self.stime = ""
         self.etime = ""
@@ -242,6 +288,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             else:
                 if index != -1:
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
+            self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
         self.stime = ""
         self.etime = ""

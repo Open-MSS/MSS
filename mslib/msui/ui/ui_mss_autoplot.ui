@@ -109,13 +109,13 @@
             <date>
              <year>2009</year>
              <month>12</month>
-             <day>16</day>
+             <day>15</day>
             </date>
            </property>
            <property name="minimumDateTime">
             <datetime>
-             <hour>6</hour>
-             <minute>30</minute>
+             <hour>1</hour>
+             <minute>0</minute>
              <second>0</second>
              <year>1999</year>
              <month>12</month>
@@ -131,8 +131,8 @@
            </property>
            <property name="minimumTime">
             <time>
-             <hour>6</hour>
-             <minute>30</minute>
+             <hour>1</hour>
+             <minute>0</minute>
              <second>0</second>
             </time>
            </property>
@@ -358,11 +358,18 @@
          </property>
          <property name="sizeHint" stdset="0">
           <size>
-           <width>250</width>
+           <width>100</width>
            <height>20</height>
           </size>
          </property>
         </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="downloadPushButton">
+         <property name="text">
+          <string>Download Plots</string>
+         </property>
+        </widget>
        </item>
        <item>
         <widget class="QPushButton" name="updateConfigFile">
