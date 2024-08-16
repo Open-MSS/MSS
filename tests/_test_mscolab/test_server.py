@@ -33,6 +33,7 @@ from mslib.mscolab.models import User, Operation
 from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
+from tests.utils import XML_CONTENT1, XML_CONTENT2
 
 
 class Test_Server:
@@ -233,7 +234,7 @@ class Test_Server:
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, "content2", user)
+            fm.save_file(operation.id, XML_CONTENT2, user)
             # the newest change is on index 0, because it has a recent created_at time
             response = test_client.get('/get_all_changes', data={"token": token,
                                                                  "op_id": operation.id})
@@ -250,20 +251,20 @@ class Test_Server:
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, "content2", user)
+            fm.save_file(operation.id, XML_CONTENT2, user)
             all_changes = fm.get_all_changes(operation.id, user)
             response = test_client.get('/get_change_content', data={"token": token,
                                                                     "ch_id": all_changes[1]["id"]})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
-            assert data == {'content': 'content1'}
+            assert data == {'content': XML_CONTENT1}
 
     def test_set_version_name(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, "content2", user)
+            fm.save_file(operation.id, XML_CONTENT2, user)
             all_changes = fm.get_all_changes(operation.id, user)
             ch_id = all_changes[1]["id"]
             version_name = "THIS"
@@ -410,5 +411,5 @@ class Test_Server:
             userdata = self.userdata
         user = get_user(userdata[0])
         fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
-        fm.save_file(operation.id, "content1", user)
+        fm.save_file(operation.id, XML_CONTENT1, user)
         return fm, user
