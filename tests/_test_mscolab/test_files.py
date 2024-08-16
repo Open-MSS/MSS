@@ -32,7 +32,6 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
-from tests.utils import XML_CONTENT1, XML_CONTENT2
 
 
 class Test_Files:
@@ -95,48 +94,25 @@ class Test_Files:
     def test_file_save(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation77")
-            assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
-            assert self.fm.get_file(operation.id, self.user) == XML_CONTENT1
-            assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
-            assert self.fm.get_file(operation.id, self.user) == XML_CONTENT2
+            assert self.fm.save_file(operation.id, "beta", self.user)
+            assert self.fm.get_file(operation.id, self.user) == "beta"
+            assert self.fm.save_file(operation.id, "gamma", self.user)
+            assert self.fm.get_file(operation.id, self.user) == "gamma"
             # check if change is saved properly
             changes = self.fm.get_all_changes(operation.id, self.user)
             assert len(changes) == 2
 
-    def test_cant_save(self):
-        with self.app.test_client():
-            flight_path, operation = self._create_operation(flight_path="operation911")
-            assert self.fm.save_file(operation.id, "text", self.user) is False
-            incomplete = """<?xml version="1.0" encoding="utf-8"?>
-  <FlightTrack version="9.1.0">
-    <ListOfWaypoints/>
-  </FlightTrack>"""
-            assert self.fm.save_file(operation.id, incomplete, self.user) is False
-            incomplete = """<?xml version="1.0" encoding="utf-8"?>
-  <FlightTrack version="9.1.0.">
-    <ListOfWaypoints>
-      <Waypoint flightlevel="350">
-        <Comments></Comments>
-      </Waypoint>
-      <Waypoint flightlevel="350">
-        <Comments></Comments>
-      </Waypoint>
-    </ListOfWaypoints>
-  </FlightTrack>"""
-            assert self.fm.save_file(operation.id, incomplete, self.user) is False
-
-
     def test_undo(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7", content="alpha")
-            assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
-            assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
+            assert self.fm.save_file(operation.id, "beta", self.user)
+            assert self.fm.save_file(operation.id, "gamma", self.user)
             changes = Change.query.filter_by(op_id=operation.id).all()
             assert changes is not None
             assert changes[0].id == 1
             assert self.fm.undo_changes(changes[0].id, self.user) is True
             assert len(self.fm.get_all_changes(operation.id, self.user)) == 3
-            assert XML_CONTENT1 == self.fm.get_file(operation.id, self.user)
+            assert "beta" in self.fm.get_file(operation.id, self.user)
 
     def test_get_operation(self):
         with self.app.test_client():

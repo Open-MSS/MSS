@@ -31,7 +31,6 @@ import logging
 import git
 import threading
 from sqlalchemy.exc import IntegrityError
-from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
@@ -84,11 +83,11 @@ class FileManager:
                     self.import_permissions(import_op.id, operation_id, user.id)
             data = fs.open_fs(self.data_dir)
             data.makedir(operation.path)
-            with data.open(fs.path.combine(operation.path, 'main.ftml'), 'w') as operation_file:
-                if content is not None and verify_waypoint_data(content):
-                    operation_file.write(content)
-                else:
-                    operation_file.write(mscolab_settings.STUB_CODE)
+            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
+            if content is not None:
+                operation_file.write(content)
+            else:
+                operation_file.write(mscolab_settings.STUB_CODE)
             operation_path = fs.path.combine(self.data_dir, operation.path)
             r = git.Repo.init(operation_path)
             r.git.clear_cache()
@@ -264,14 +263,14 @@ class FileManager:
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 logging.debug("malicious request: %s", user)
                 return False
-            with fs.open_fs(self.data_dir) as data:
-                if data.exists(value):
-                    return False
-                # will be move when operations are introduced
-                # make a directory, else movedir
-                data.makedir(value)
-                data.movedir(operation.path, value)
-                # when renamed to a Group operation
+            data = fs.open_fs(self.data_dir)
+            if data.exists(value):
+                return False
+            # will be move when operations are introduced
+            # make a directory, else movedir
+            data.makedir(value)
+            data.movedir(operation.path, value)
+            # when renamed to a Group operation
             if value.endswith(mscolab_settings.GROUP_POSTFIX):
                 # getting the category
                 category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
@@ -319,8 +318,6 @@ class FileManager:
         content: content of the file to be saved
         # ToDo save change in schema
         """
-        if not verify_waypoint_data(content):
-            return False
         # ToDo use comment
         operation = Operation.query.filter_by(id=op_id).first()
         if not operation:

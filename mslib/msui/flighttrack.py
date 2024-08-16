@@ -48,7 +48,6 @@ from mslib import __version__
 from mslib.utils.units import units
 from mslib.utils.coordinate import find_location, path_points, get_distance
 from mslib.utils import thermolib
-from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.config import config_loader, save_settings_qsettings, load_settings_qsettings
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.qt import variant_to_string, variant_to_float
@@ -645,19 +644,13 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         _dirname, _name = os.path.split(filename)
         _fs = fs.open_fs(_dirname)
         xml_content = _fs.readtext(_name)
-        if verify_waypoint_data(xml_content):
-            name = os.path.basename(filename.replace(".ftml", "").strip())
-            self.load_from_xml_data(xml_content, name)
-        else:
-            raise SyntaxError(f"Invalid flight track filename: {filename}")
+        name = os.path.basename(filename.replace(".ftml", "").strip())
+        self.load_from_xml_data(xml_content, name)
 
     def load_from_xml_data(self, xml_content, name="Flight track"):
         self.name = name
-        if verify_waypoint_data(xml_content):
-            _waypoints_list = load_from_xml_data(xml_content, name)
-            self.replace_waypoints(_waypoints_list)
-        else:
-            raise Exception(f"Invalid flight track filename: {name}")
+        _waypoints_list = load_from_xml_data(xml_content, name)
+        self.replace_waypoints(_waypoints_list)
 
     def get_filename(self):
         return self.filename
