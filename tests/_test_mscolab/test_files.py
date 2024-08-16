@@ -125,7 +125,6 @@ class Test_Files:
   </FlightTrack>"""
             assert self.fm.save_file(operation.id, incomplete, self.user) is False
 
-
     def test_undo(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7", content="alpha")
