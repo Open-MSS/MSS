@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>770</width>
-    <height>895</height>
+    <width>811</width>
+    <height>835</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -233,56 +233,33 @@ Save a flight track to name it.</string>
            <property name="bottomMargin">
             <number>8</number>
            </property>
-           <item row="6" column="0" colspan="2">
-            <widget class="QLabel" name="workingStatusLabel">
+           <item row="0" column="0">
+            <widget class="QLabel" name="activeOperationDesc">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
              <property name="text">
-              <string>No operations selected</string>
-             </property>
-             <property name="wordWrap">
-              <bool>true</bool>
+              <string>Select Operation to View Description</string>
              </property>
             </widget>
            </item>
-           <item row="9" column="0">
-            <widget class="QCheckBox" name="workLocallyCheckbox">
-             <property name="toolTip">
-              <string>Check to work asynchronously from the server</string>
-             </property>
-             <property name="text">
-              <string>Work Asynchronously</string>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="1">
-            <widget class="QComboBox" name="serverOptionsCb">
-             <property name="toolTip">
-              <string>Fetch/Save Server options</string>
-             </property>
-             <item>
-              <property name="text">
-               <string>Server Options</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Fetch From Server</string>
-              </property>
-             </item>
-             <item>
-              <property name="text">
-               <string>Save To Server</string>
-              </property>
-             </item>
-            </widget>
-           </item>
-           <item row="7" column="0" colspan="2">
+           <item row="9" column="0" colspan="2">
             <widget class="QGroupBox" name="groupBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>120</height>
+              </size>
+             </property>
              <property name="title">
               <string>Filter flight operations</string>
              </property>
@@ -355,22 +332,6 @@ Save a flight track to name it.</string>
                <string>Ignore Archive operations</string>
               </property>
              </widget>
-             <widget class="QDialogButtonBox" name="applyCancelBb">
-              <property name="geometry">
-               <rect>
-                <x>100</x>
-                <y>120</y>
-                <width>161</width>
-                <height>24</height>
-               </rect>
-              </property>
-              <property name="standardButtons">
-               <set>QDialogButtonBox::Apply|QDialogButtonBox::Cancel</set>
-              </property>
-              <property name="centerButtons">
-               <bool>false</bool>
-              </property>
-             </widget>
              <widget class="QLineEdit" name="regexFilterLe">
               <property name="geometry">
                <rect>
@@ -383,7 +344,7 @@ Save a flight track to name it.</string>
              </widget>
             </widget>
            </item>
-           <item row="10" column="0" colspan="2">
+           <item row="12" column="0" colspan="2">
             <widget class="QPushButton" name="pbOpenOperationArchive">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -396,90 +357,91 @@ Save a flight track to name it.</string>
              </property>
             </widget>
            </item>
-           <item row="0" column="0" colspan="2">
-            <widget class="QFrame" name="frame">
+           <item row="1" column="0">
+            <widget class="QLabel" name="activeOperationsLabel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Operations</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="0">
+            <widget class="QCheckBox" name="workLocallyCheckbox">
+             <property name="toolTip">
+              <string>Check to work asynchronously from the server</string>
+             </property>
+             <property name="text">
+              <string>Work Asynchronously</string>
+             </property>
+            </widget>
+           </item>
+           <item row="11" column="1">
+            <widget class="QComboBox" name="serverOptionsCb">
+             <property name="toolTip">
+              <string>Fetch/Save Server options</string>
+             </property>
+             <item>
+              <property name="text">
+               <string>Server Options</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Fetch From Server</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>Save To Server</string>
+              </property>
+             </item>
+            </widget>
+           </item>
+           <item row="8" column="0">
+            <widget class="QLabel" name="workingStatusLabel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>No operations selected</string>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0" colspan="2">
+            <widget class="QListWidget" name="listOperationsMSC">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
-               <width>200</width>
-               <height>420</height>
+               <width>0</width>
+               <height>0</height>
               </size>
              </property>
-             <property name="frameShape">
-              <enum>QFrame::StyledPanel</enum>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
              </property>
-             <property name="frameShadow">
-              <enum>QFrame::Raised</enum>
-             </property>
-             <widget class="QLabel" name="activeOperationDesc">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>10</y>
-                <width>332</width>
-                <height>15</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Select Operation to View Description</string>
-              </property>
-             </widget>
-             <widget class="QLabel" name="activeOperationsLabel">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>40</y>
-                <width>332</width>
-                <height>15</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Operations</string>
-              </property>
-             </widget>
-             <widget class="QListWidget" name="listOperationsMSC">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>60</y>
-                <width>332</width>
-                <height>351</height>
-               </rect>
-              </property>
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777215</width>
-                <height>400</height>
-               </size>
-              </property>
-              <property name="toolTip">
-               <string>List of mscolab operations.
+             <property name="toolTip">
+              <string>List of mscolab operations.
 Double click a operation to activate and view its description.</string>
-              </property>
-             </widget>
+             </property>
             </widget>
            </item>
           </layout>
@@ -496,7 +458,7 @@ Double click a operation to activate and view its description.</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>770</width>
+     <width>811</width>
      <height>20</height>
     </rect>
    </property>
