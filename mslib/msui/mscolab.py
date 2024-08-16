@@ -1979,7 +1979,7 @@ class MSUIMscolab(QtCore.QObject):
                 xml_doc = self.waypoints_model.get_xml_doc()
                 xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
             if not verify_waypoint_data(xml_content):
-                show_popup(self.ui, "Import Success", f"The file - {file_name}, was not imported!", 0)
+                show_popup(self.ui, "Import Failed", f"The file - {file_name}, was not imported!", 0)
                 return
             self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
             self.waypoints_model = model
