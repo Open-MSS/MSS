@@ -28,6 +28,8 @@
 """
 
 import json
+import os
+from datetime import datetime
 import click
 from mslib.utils.mssautoplot import main as autopl
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
@@ -60,7 +62,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.vtime= ""
         self.stime = ""
         self.etime = ""
-        self.intv = ""
+        self.intv = 0
 
         self.refresh_sig(config_settings)
 
@@ -138,22 +140,32 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.downloadPushButton.clicked.connect(self.download_plots_cli)
  
     def download_plots_cli(self):
-        view=""
+        view="top"
+        etime_str = self.etime
+        date_time_obj = datetime.strptime(etime_str, '%Y/%m/%d %H:%M %Z')
+        formatted_etime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
+        stime_str = self.stime
+        date_time_obj = datetime.strptime(stime_str, '%Y/%m/%d %H:%M %Z')
+        formatted_stime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
+        index=self.intv.find(' ')
+        intv=self.intv[:index]
         if self.view == "Top View":
             view="top"
         elif self.view == "Side View":
             view="side"
         else:
             view="linear"
+        config_path=os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
+        print("config path is ",config_path,view)
         args = [
-        "--cpath", self.cpath,
+        "--cpath", config_path,
         "--view", view,
-        "--ftrack", self.flight,
-        "--itime", self.itime,
-        "--vtime", self.vtime,
-        "--intv", self.intv,
-        "--stime", self.stime,
-        "--etime", self.etime
+        "--ftrack", None,
+        "--itime", None,
+        "--vtime", None,
+        "--intv", intv,
+        "--stime", formatted_stime,
+        "--etime", formatted_etime
         ]
         with click.Context(autopl):
             autopl.main(args=args, prog_name="autoplot_gui")
