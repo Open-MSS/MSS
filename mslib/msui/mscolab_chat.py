@@ -356,13 +356,18 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                     "token": self.token
                 }
                 response = requests.get(url, data=data)
+                pixmap = QtGui.QPixmap()
                 if response.status_code == 200:
-                    pixmap = QtGui.QPixmap()
+                    # pixmap = QtGui.QPixmap()
                     pixmap.loadFromData(response.content)
                 else:
                     first_alphabet = user["username"][0].lower() if user["username"] else "default"
                     default_avatar_path = f":/gravatars/default-gravatars/{first_alphabet}.png"
-                    pixmap = QtGui.QPixmap(default_avatar_path)
+                    pixmap.load(default_avatar_path)
+
+                # Scale pixmap to a standard size
+                icon_size = QtCore.QSize(50, 50)
+                pixmap = pixmap.scaled(icon_size, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
 
                 # Load avatar and overlay green dot on profile image pixmap if user is active
                 if user["id"] in active_users:
@@ -372,7 +377,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                     pen = QtGui.QPen(QtGui.QColor(0, 0, 0), 3)            # (border color, width)
                     painter.setPen(pen)
                     # Draw circle at bottom-right corner
-                    diameter = 15               # Size of the dot
+                    diameter = 13               # Size of the dot
                     margin = -2                 # Distance from the edges
                     position = QtCore.QPoint(pixmap.width() - diameter - margin, pixmap.height() - diameter - margin)
                     painter.drawEllipse(position, diameter, diameter)
