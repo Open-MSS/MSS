@@ -386,7 +386,7 @@ class FileManager:
         for permission in permissions:
             user = User.query.filter_by(id=permission.u_id).first()
             users.append({"username": user.username, "access_level": permission.access_level,
-                         "id": permission.u_id, "avatar_path": user.profile_image_path})
+                          "id": permission.u_id})
         return users
 
     def save_file(self, op_id, content, user, comment=""):

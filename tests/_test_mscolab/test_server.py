@@ -322,8 +322,7 @@ class Test_Server:
                                                                   "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
-            assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1],
-                                     "id": 1, "avatar_path": None}]
+            assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1], 'id': 1}]
 
     def test_delete_operation(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])

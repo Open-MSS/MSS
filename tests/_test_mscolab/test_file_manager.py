@@ -241,8 +241,7 @@ class Test_FileManager:
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation5')
             assert self.fm.get_authorized_users(operation.id) == [{'access_level': 'creator',
-                                                                   'username': self.userdata[1],
-                                                                   "id": 1, "avatar_path": None}]
+                                                                   'username': self.userdata[1], 'id': 1}]
 
     def test_save_file(self):
         with self.app.test_client():

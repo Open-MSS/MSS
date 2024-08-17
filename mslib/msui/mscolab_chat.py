@@ -38,7 +38,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from mslib.utils.qt import get_open_filename, get_save_filename, show_popup
 from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
-from mslib.mscolab.conf import mscolab_settings
 
 
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
@@ -347,25 +346,41 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             users = users_response.json()["users"]
             active_users = set(active_response.json()["active_users"])
             for user in users:
-                # Add active status to all the users
-                active_status = "🟢" if user["id"] in active_users else ""
-                display_text = f'{active_status} {user["username"]} - {user["access_level"]}'
+                display_text = f'{user["username"]} - {user["access_level"]}'
                 item = QtWidgets.QListWidgetItem(display_text, parent=self.collaboratorsList)
 
-                # Fetch and set the avatar if it exists
-                if user['avatar_path']:
-                    full_avatar_path = fs.path.join(mscolab_settings.UPLOAD_FOLDER, user['avatar_path'])
-                    icon = QtGui.QIcon(full_avatar_path)
-                    item.setIcon(icon)
+                # Pixmap for icon i.e. profile image
+                url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
+                data = {
+                    "user_id": str(user["id"]),
+                    "token": self.token
+                }
+                response = requests.get(url, data=data)
+                if response.status_code == 200:
+                    pixmap = QtGui.QPixmap()
+                    pixmap.loadFromData(response.content)
                 else:
-                    user_name = user["username"]
-                    try:
-                        first_alphabet = user_name[user_name.find(next(filter(str.isalpha, user_name)))].lower()
-                    except StopIteration:
-                        first_alphabet = "default"
+                    first_alphabet = user["username"][0].lower() if user["username"] else "default"
                     default_avatar_path = f":/gravatars/default-gravatars/{first_alphabet}.png"
-                    icon = QtGui.QIcon(default_avatar_path)
-                    item.setIcon(icon)
+                    pixmap = QtGui.QPixmap(default_avatar_path)
+
+                # Load avatar and overlay green dot on profile image pixmap if user is active
+                if user["id"] in active_users:
+                    painter = QtGui.QPainter(pixmap)
+                    painter.setBrush(QtGui.QColor(0, 230, 0, 230))        # RGBA
+                    # Set a thin pen for the border around green dot
+                    pen = QtGui.QPen(QtGui.QColor(0, 0, 0), 3)            # (border color, width)
+                    painter.setPen(pen)
+                    # Draw circle at bottom-right corner
+                    diameter = 15               # Size of the dot
+                    margin = -2                 # Distance from the edges
+                    position = QtCore.QPoint(pixmap.width() - diameter - margin, pixmap.height() - diameter - margin)
+                    painter.drawEllipse(position, diameter, diameter)
+                    painter.end()
+
+                # Set the icon
+                icon = QtGui.QIcon(pixmap)
+                item.setIcon(icon)
                 self.collaboratorsList.addItem(item)
         else:
             show_popup(self, "Error", "Session expired, new login required")
