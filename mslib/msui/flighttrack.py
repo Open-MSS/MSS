@@ -434,7 +434,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         return False
 
     def insertRows(self, position, rows=1, index=QtCore.QModelIndex(),
-                   waypoints=None):
+                   waypoints=None, hexagonCreated=False):
         """
         Insert waypoint; overrides the corresponding QAbstractTableModel
         method.
@@ -444,7 +444,9 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
 
         assert len(waypoints) == rows, (waypoints, rows)
 
-        self.changeMessageSignal.emit("Inserted a new waypoint!")
+        savedChangeMessage = "Hexagon created." if hexagonCreated else ("Inserted a new waypoint.")
+        self.changeMessageSignal.emit(savedChangeMessage)
+
         self.beginInsertRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
         for row, wp in enumerate(waypoints):
@@ -455,12 +457,17 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         self.modified = True
         return True
 
-    def removeRows(self, position, rows=1, index=QtCore.QModelIndex()):
+    def removeRows(self, position, rows=1, index=QtCore.QModelIndex(), hexagonDeleted=False):
         """
         Remove waypoint; overrides the corresponding QAbstractTableModel
         method.
         """
-        self.changeMessageSignal.emit(f"Deleted waypoint {position}")
+        if hexagonDeleted:
+            savedChangeMessage = f"Deleted waypoints {position}-{position + rows - 1}."
+        else:
+            savedChangeMessage = f"Deleted waypoint {position}."
+        self.changeMessageSignal.emit(savedChangeMessage)
+
         # beginRemoveRows emits rowsAboutToBeRemoved(index, first, last).
         self.beginRemoveRows(QtCore.QModelIndex(), position,
                              position + rows - 1)
