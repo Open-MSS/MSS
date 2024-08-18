@@ -466,6 +466,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_as_handler)
         self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
 
+        # regex filter
+        self.regexFilterLe.textChanged.connect(self.apply_filter)
+
         # Views menu.
         self.actionTopView.triggered.connect(functools.partial(self.create_view_handler, "topview"))
         self.actionSideView.triggered.connect(functools.partial(self.create_view_handler, "sideview"))
@@ -537,6 +540,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.updater = UpdaterUI(self)
             self.actionUpdater.triggered.connect(self.updater.show)
         self.openOperationsGb.hide()
+
+    def apply_filter(self):
+        # Trigger filtering in MSColab
+        self.mscolab.apply_regex_filter()
 
     def bring_main_window_to_front(self):
         self.show()
