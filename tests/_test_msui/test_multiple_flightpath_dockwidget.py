@@ -25,33 +25,39 @@
     limitations under the License.
 """
 import pytest
-from PyQt5 import QtTest
+# from PyQt5 import QtTest
 from mslib.msui import msui
-from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
-from mslib.msui import flighttrack as ft
+# from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
+# from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 
 
 class Test_MultipleFlightpathControlWidget:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
-        self.window = msui.MSUIMainWindow()
-        self.window.create_new_flight_track()
+        # Start a MSUI window
+        self.main_window = msui.MSUIMainWindow()
+        self.main_window.show()
+        qtbot.wait_exposed(self.main_window)
 
-        self.window.actionNewFlightTrack.trigger()
-        self.window.actionTopView.trigger()
-        initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
-        self.waypoints_model = ft.WaypointsTableModel("myname")
-        self.waypoints_model.insertRows(
-            0, rows=len(initial_waypoints), waypoints=initial_waypoints)
+        # Create two flight tracks
+        self.main_window.actionNewFlightTrack.trigger()
+        self.main_window.actionNewFlightTrack.trigger()
 
-        self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window)
-        self.window.show()
-        QtTest.QTest.qWaitForWindowExposed(self.window)
+        # Open a Top View window
+        self.main_window.actionTopView.trigger()
+        self.topview_window = self.main_window.listViews.currentItem().window
+
+        # Switch to the Multiple Flightpath Widget
+        self.topview_window.cbTools.setCurrentIndex(6)
+
+        # Get a reference to the created MultipleFlightpathControlWidget
+        self.multiple_flightpath_widget = self.topview_window.docks[tv.MULTIPLEFLIGHTPATH].widget()
+
         yield
-        self.window.hide()
+        self.main_window.hide()
 
     def test_initialization(self):
-        widget = MultipleFlightpathControlWidget(parent=self.widget,
-                                                 listFlightTracks=self.window.listFlightTracks)
-        assert widget.color == (0, 0, 1, 1)
+        # Ensure the MultipleFlightpathControlWidget is correctly initialized
+        assert self.multiple_flightpath_widget is not None
+        assert self.multiple_flightpath_widget.color == (0, 0, 1, 1)
