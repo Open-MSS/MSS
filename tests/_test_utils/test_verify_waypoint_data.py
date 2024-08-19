@@ -29,7 +29,7 @@ from mslib.utils.verify_waypoint_data import verify_waypoint_data
 
 def test_verify_xml_waypoint():
     """
-    tests various
+    tests various XML waypoint data content
     """
     flight_track_with_waypoints = """<?xml version="1.0" encoding="utf-8"?>
     <FlightTrack version="9.0.0">
