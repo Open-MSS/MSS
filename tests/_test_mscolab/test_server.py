@@ -428,7 +428,6 @@ class Test_Server:
         operation = Operation.query.filter_by(path=path).first()
         return operation, token
 
-
     def _get_token(self, test_client, userdata=None):
         if userdata is None:
             userdata = self.userdata
