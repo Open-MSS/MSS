@@ -28,9 +28,7 @@
 
 import logging
 import functools
-
 from PyQt5 import QtGui, QtWidgets, QtCore
-
 from mslib.msui.qt5 import ui_sideview_window as ui
 from mslib.msui.qt5 import ui_sideview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
@@ -39,6 +37,7 @@ from mslib.msui.icons import icons
 from mslib.utils import thermolib
 from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
+from mslib.utils.colordialog import CustomColorDialog
 
 # Dock window indices.
 WMS = 0
@@ -171,15 +170,18 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
         elif which == "ceiling":
             button = self.btCeilingColour
 
-        palette = QtGui.QPalette(button.palette())
-        colour = palette.color(QtGui.QPalette.Button)
-        colour = QtWidgets.QColorDialog.getColor(colour)
-        if colour.isValid():
+        dialog = CustomColorDialog(self)
+        dialog.color_selected.connect(lambda color: self.on_color_selected(which, color, button))
+        dialog.exec_()
+
+    def on_color_selected(self, which, color, button):
+        if color.isValid():
             if which == "ft_fill":
                 # Fill colour is transparent with an alpha value of 0.15. If
                 # you like to change this, modify the PathInteractor class.
-                colour.setAlphaF(0.15)
-            palette.setColor(QtGui.QPalette.Button, colour)
+                color.setAlphaF(0.15)
+            palette = QtGui.QPalette(button.palette())
+            palette.setColor(QtGui.QPalette.Button, color)
             button.setPalette(palette)
 
     def addItem(self):
