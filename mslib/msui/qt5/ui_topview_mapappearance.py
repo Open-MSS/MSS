@@ -13,7 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MapAppearanceDialog(object):
     def setupUi(self, MapAppearanceDialog):
         MapAppearanceDialog.setObjectName("MapAppearanceDialog")
-        MapAppearanceDialog.resize(394, 459)
+        MapAppearanceDialog.resize(394, 465)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -291,13 +291,3 @@ class Ui_MapAppearanceDialog(object):
         self.tov_cbaxessize.setItemText(14, _translate("MapAppearanceDialog", "30"))
         self.tov_cbaxessize.setItemText(15, _translate("MapAppearanceDialog", "32"))
         self.label.setText(_translate("MapAppearanceDialog", " Plot Title Size"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MapAppearanceDialog = QtWidgets.QDialog()
-    ui = Ui_MapAppearanceDialog()
-    ui.setupUi(MapAppearanceDialog)
-    MapAppearanceDialog.show()
-    sys.exit(app.exec_())
