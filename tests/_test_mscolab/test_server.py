@@ -425,11 +425,9 @@ class Test_Server:
                                                                "content": content,
                                                                "active": str(active)})
         assert response.status_code == 200
-        if response.data.decode('utf-8') == "True":
-            operation = Operation.query.filter_by(path=path).first()
-            return operation, token
-        else:
-            return None, token
+        operation = Operation.query.filter_by(path=path).first()
+        return operation, token
+
 
     def _get_token(self, test_client, userdata=None):
         if userdata is None:
