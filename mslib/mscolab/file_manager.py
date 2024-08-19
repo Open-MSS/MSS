@@ -88,7 +88,7 @@ class FileManager:
             with data.open(fs.path.combine(operation.path, 'main.ftml'), 'w') as operation_file:
                 if content is not None:
                     if verify_waypoint_data(content):
-                       operation_file.write(content)
+                        operation_file.write(content)
                     else:
                         logging.debug("Invalid content: %s", path)
                         valid_content = False
