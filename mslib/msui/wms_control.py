@@ -547,8 +547,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def row_is_selected(self,url,layer,styles,level):
         self.layer_name=layer
         self.style_name=styles
-        self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles)
-
+        self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles,level=level)
+                            
+                
     def __del__(self):
         """Destructor.
         """
@@ -567,7 +568,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         else:
             self.get_map([self.multilayers.get_current_layer()])
 
-    def initialise_wms(self, base_url, version="1.3.0"):
+    def initialise_wms(self, base_url, version="1.3.0",level=None):
         """Initialises a MSUIWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
@@ -583,7 +584,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         (mr, 2011-02-25)
         """
         # initialize login cache from config file, but do not overwrite existing keys
-        print("initialise wms 1")
+        print("initialise wms 1 level value0    ",level)
         http_auth = config_loader(dataset="MSS_auth")
         auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
 
@@ -612,7 +613,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 
                 print("initialise wms 3")
 
-                self.activate_wms(wms)
+                self.activate_wms(wms,level=level)
                 WMS_SERVICE_CACHE[wms.url] = wms
                 self.cpdlg.close()
 
@@ -775,19 +776,19 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             else:
                 print(f"Style '{style_name}' not found for layer '{layer_name}'.")
     
-    def update_url_layer_styles(self, url_name, layer_name, style_name):
+    def update_url_layer_styles(self, url_name, layer_name, style_name,level=None):
         self.multilayers.cbWMS_URL.setEditText(url_name)
-        print("url name",self.multilayers.cbWMS_URL.currentText())
-        self.get_capabilities()
+        print("url name",self.multilayers.cbWMS_URL.currentText()," level is ",level)
+        self.get_capabilities(level=level)
         
-    def get_capabilities(self):
+    def get_capabilities(self,level=None):
         """
         Query the WMS server in the URL combobox for its capabilities.
         """
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-        print("get capabiblities 1")
+        print("get capabiblities 1 level is  ",level)
         base_url = self.multilayers.cbWMS_URL.currentText()
         self.base_url_changed.emit(base_url)
 
@@ -806,7 +807,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
             print("get capabiblities 4")
-            self.initialise_wms(url, None)
+            self.initialise_wms(url, None,level=level)
 
         def on_failure(e):
             try:
@@ -830,7 +831,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         Worker.create(lambda: requests.get(base_url, params=params, timeout=(5, 60)),
                       on_success, on_failure)
 
-    def activate_wms(self, wms, cache=False):
+    def activate_wms(self, wms, cache=False,level=None):
         print("activate wms")
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
@@ -858,7 +859,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.multilayers.update_checkboxes()
         self.multilayers.pbViewCapabilities.setEnabled(True)
         if len(filtered_layers) > 0:
-            self.populate_ui()
+            self.populate_ui(update_level=level)
 
         if self.prefetcher is not None:
             self.prefetch.disconnect(self.prefetcher.fetch_maps)
@@ -878,7 +879,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
-        self.select_layer_and_style(layer_list=self.multilayers.listLayers,layer_name=self.layer_name,style_name=self.style_name)
+        if level:
+            self.select_layer_and_style(layer_list=self.multilayers.listLayers,layer_name=self.layer_name,style_name=self.style_name)
+            self.populate_ui(update_level=level)        
+            
+        
 
     def view_capabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
@@ -949,7 +954,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_level_elements(False)
         self.btGetMap.setEnabled(False)
 
-    def populate_ui(self):
+    def populate_ui(self,update_level=None):
         """
         Adds the values of the current layer to the UI comboboxes
         """
@@ -1002,6 +1007,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.cbValidTime.addItems(vtimes)
             self.cbValidTime.setCurrentIndex(self.cbValidTime.findText(layer.get_vtime()))
         self.enable_valid_time_elements(len(vtimes) > 0)
+        
 
         if not self.init_time_changed():
             self.disable_dteInitTime_elements()
@@ -1020,6 +1026,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
             logging.debug("Selected '%s' for Combobox.", extra)
             self.parent().parent().update_predefined_maps(extra)
+        if update_level:
+            for i in range(self.cbLevel.count()):
+                item_text = self.cbLevel.itemText(i)
+                index=item_text.find(' ')
+                item_text = item_text[:index]
+                if item_text == update_level:
+                    self.cbLevel.setCurrentIndex(i)
 
         self.layerChangeInProgress = False
 

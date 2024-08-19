@@ -62,7 +62,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.vtime= ""
         self.stime = ""
         self.etime = ""
-        self.intv = 0
+        self.intv = ""
 
         self.refresh_sig(config_settings)
 
@@ -148,7 +148,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         date_time_obj = datetime.strptime(stime_str, '%Y/%m/%d %H:%M %Z')
         formatted_stime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
         index=self.intv.find(' ')
-        intv=self.intv[:index]
+        intv=0
+        intv=int(self.intv[:index])
         if self.view == "Top View":
             view="top"
         elif self.view == "Side View":
