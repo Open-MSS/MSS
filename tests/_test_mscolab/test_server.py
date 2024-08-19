@@ -211,7 +211,6 @@ class Test_Server:
             operation, token = self._create_operation(test_client, self.userdata, content=content)
             assert operation is None
 
-
     def test_get_operation_by_id(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
