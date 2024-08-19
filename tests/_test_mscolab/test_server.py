@@ -200,6 +200,18 @@ class Test_Server:
             assert operation.active is False
             assert token is not None
 
+    def test_dont_create_operation(self):
+        content = """<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="9.1.0">
+    </ListOfWaypoints>
+  </FlightTrack>
+"""
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata, content=content)
+            assert operation is None
+
+
     def test_get_operation_by_id(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
@@ -401,7 +413,8 @@ class Test_Server:
             # creator is not listed
             assert data["success"] is True
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", active=True):
+    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", active=True,
+                          content=None):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
@@ -410,11 +423,14 @@ class Test_Server:
         response = test_client.post('/create_operation', data={"token": token,
                                                                "path": path,
                                                                "description": description,
+                                                               "content": content,
                                                                "active": str(active)})
         assert response.status_code == 200
-        assert response.data.decode('utf-8') == "True"
-        operation = Operation.query.filter_by(path=path).first()
-        return operation, token
+        if response.data.decode('utf-8') == "True":
+            operation = Operation.query.filter_by(path=path).first()
+            return operation, token
+        else:
+            return None, token
 
     def _get_token(self, test_client, userdata=None):
         if userdata is None:
