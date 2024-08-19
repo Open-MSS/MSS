@@ -179,8 +179,7 @@ class Test_Files:
             assert len(messages) == 0
 
     def _example_data(self):
-        self.content1 = """\
-    <?xml version="1.0" encoding="utf-8"?>
+        self.content1 = """<?xml version="1.0" encoding="utf-8"?>
       <FlightTrack>
         <Name>new flight track (1)</Name>
         <ListOfWaypoints>
@@ -201,8 +200,7 @@ class Test_Files:
           </Waypoint>
         </ListOfWaypoints>
       </FlightTrack>"""
-        self.content2 = """\
-    <?xml version="1.0" encoding="utf-8"?>
+        self.content2 = """<?xml version="1.0" encoding="utf-8"?>
       <FlightTrack>
         <Name>new flight track (1)</Name>
         <ListOfWaypoints>
