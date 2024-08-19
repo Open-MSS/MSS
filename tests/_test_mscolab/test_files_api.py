@@ -182,7 +182,7 @@ class Test_Files:
 
     def test_get_change_content(self):
         with self.app.test_client():
-            flight_path, operation = self._create_operation(flight_path="V12", content='initial')
+            flight_path, operation = self._create_operation(flight_path="V12", content=XML_CONTENT3)
             assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
             assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
             assert self.fm.save_file(operation.id, XML_CONTENT3, self.user)
@@ -194,7 +194,7 @@ class Test_Files:
 
     def test_set_version_name(self):
         with self.app.test_client():
-            flight_path, operation = self._create_operation(flight_path="V13", content='initial')
+            flight_path, operation = self._create_operation(flight_path="V13", content=XML_CONTENT3)
             assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             ch_id = all_changes[-1]["id"]

@@ -32,7 +32,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
-from tests.utils import XML_CONTENT1, XML_CONTENT2
+from tests.utils import XML_CONTENT1, XML_CONTENT2, XML_CONTENT3
 
 
 class Test_Files:
@@ -127,15 +127,15 @@ class Test_Files:
 
     def test_undo(self):
         with self.app.test_client():
-            flight_path, operation = self._create_operation(flight_path="operation7", content="alpha")
-            assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
+            flight_path, operation = self._create_operation(flight_path="operation7", content=XML_CONTENT1)
             assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
+            assert self.fm.save_file(operation.id, XML_CONTENT3, self.user)
             changes = Change.query.filter_by(op_id=operation.id).all()
             assert changes is not None
             assert changes[0].id == 1
             assert self.fm.undo_changes(changes[0].id, self.user) is True
             assert len(self.fm.get_all_changes(operation.id, self.user)) == 3
-            assert XML_CONTENT1 == self.fm.get_file(operation.id, self.user)
+            assert XML_CONTENT2 == self.fm.get_file(operation.id, self.user)
 
     def test_get_operation(self):
         with self.app.test_client():
