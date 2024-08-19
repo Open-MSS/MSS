@@ -125,6 +125,13 @@ class Test_Files:
   </FlightTrack>"""
             assert self.fm.save_file(operation.id, incomplete, self.user) is False
 
+    def test_stub_data(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="operationstub")
+            content = self.fm.get_file(operation.id, self.user)
+            assert flight_path == "operationstub"
+            assert content == mscolab_settings.STUB_CODE
+
     def test_undo(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7", content=XML_CONTENT1)
