@@ -85,8 +85,12 @@ class FileManager:
             data = fs.open_fs(self.data_dir)
             data.makedir(operation.path)
             with data.open(fs.path.combine(operation.path, 'main.ftml'), 'w') as operation_file:
-                if content is not None and verify_waypoint_data(content):
-                    operation_file.write(content)
+                if content is not None:
+                    if verify_waypoint_data(content):
+                        operation_file.write(content)
+                    else:
+                        logging.debug("Invalid content for operation: %s", operation_id)
+                        return "False"
                 else:
                     operation_file.write(mscolab_settings.STUB_CODE)
             operation_path = fs.path.combine(self.data_dir, operation.path)

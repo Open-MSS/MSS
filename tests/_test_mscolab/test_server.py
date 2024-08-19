@@ -38,9 +38,14 @@ from tests.utils import XML_CONTENT1, XML_CONTENT2
 
 class Test_Server:
     @pytest.fixture(autouse=True)
-    def setup(self, mscolab_app):
+    def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
+        self.sockio, self.cm, self.fm = mscolab_managers
+        self.sm = self.sockio.sm
+        self.sockets = []
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.sio = self.sockio.test_client(self.app)
+        self.sockets.append(self.sio)
         with self.app.app_context():
             yield
 
@@ -233,8 +238,14 @@ class Test_Server:
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
-            fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, XML_CONTENT2, user)
+            self._save_content(operation, self.userdata)
+            # ToDo implement storing comment
+            self.sio.emit('file-save', {
+                          "op_id": operation.id,
+                          "token": token,
+                          "content": XML_CONTENT2,
+                          "comment": "XML_CONTENT2"})
+
             # the newest change is on index 0, because it has a recent created_at time
             response = test_client.get('/get_all_changes', data={"token": token,
                                                                  "op_id": operation.id})
@@ -251,7 +262,12 @@ class Test_Server:
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, XML_CONTENT2, user)
+            # ToDo implement storing comment
+            self.sio.emit('file-save', {
+                "op_id": operation.id,
+                "token": token,
+                "content": XML_CONTENT2,
+                "comment": "XML_CONTENT2"})
             all_changes = fm.get_all_changes(operation.id, user)
             response = test_client.get('/get_change_content', data={"token": token,
                                                                     "ch_id": all_changes[1]["id"]})
@@ -264,7 +280,11 @@ class Test_Server:
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, XML_CONTENT2, user)
+            self.sio.emit('file-save', {
+                          "op_id": operation.id,
+                          "token": token,
+                          "content": XML_CONTENT2,
+                          "comment": "XML_CONTENT2"})
             all_changes = fm.get_all_changes(operation.id, user)
             ch_id = all_changes[1]["id"]
             version_name = "THIS"

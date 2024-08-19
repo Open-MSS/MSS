@@ -657,7 +657,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
             _waypoints_list = load_from_xml_data(xml_content, name)
             self.replace_waypoints(_waypoints_list)
         else:
-            raise Exception(f"Invalid flight track filename: {name}")
+            raise SyntaxError(f"Invalid flight track filename: {name}")
 
     def get_filename(self):
         return self.filename
