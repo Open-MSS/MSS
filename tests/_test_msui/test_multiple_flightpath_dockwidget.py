@@ -34,6 +34,9 @@ import mslib.msui.topview as tv
 
 @pytest.fixture
 def main_window(qtbot):
+    """
+    Set-up for the docking widget
+    """
     # Start a MSUI window
     window = msui.MSUIMainWindow()
     window.show()
@@ -59,6 +62,9 @@ def main_window(qtbot):
 
 
 def test_initialization(main_window):
+    """
+    test for conforming docking widget has initialized
+    """
     _, multiple_flightpath_widget = main_window
 
     # Ensure the MultipleFlightpathControlWidget is correctly initialized
@@ -67,6 +73,9 @@ def test_initialization(main_window):
 
 
 def test_setColour(main_window):
+    """
+    test for the filghttrack colour
+    """
     _, multiple_flightpath_widget = main_window
     color_button = multiple_flightpath_widget.pushButton_color
 
@@ -91,6 +100,125 @@ def test_setColour(main_window):
 
         # Ensure the color_selected signal was emitted
         mock_color_selected.emit.assert_called_with(color)
+
+
+def test_set_linewidth(main_window):
+    """
+    test for the filghttrack line width
+    """
+    _, multiple_flightpath_widget = main_window
+
+    activate_flight_track_at_index(main_window[0], 0)
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+
+    # Ensure the current item is checked
+    item = multiple_flightpath_widget.list_flighttrack.currentItem()
+    item.setCheckState(QtCore.Qt.Checked)
+
+    # Mock the dsbx_linewidth setValue and the update_flighttrack_patch method
+    with mock.patch.object(multiple_flightpath_widget.dsbx_linewidth, "setValue", return_value=3.0) as mock_set_value, \
+            mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch, \
+            mock.patch.object(multiple_flightpath_widget.dsbx_linewidth, "value", return_value=3.0) as mock_value:
+        multiple_flightpath_widget.set_linewidth()
+
+        # Verify the line width has been updated in dict_flighttrack and update_flighttrack_patch was called
+        wp_model = item.flighttrack_model
+        mock_update_patch.assert_called_once_with(wp_model)
+
+        assert multiple_flightpath_widget.dict_flighttrack[wp_model]["linewidth"] == mock_value.return_value
+        assert multiple_flightpath_widget.change_linewidth is True
+
+        mock_set_value.assert_called_once_with(mock_value.return_value)
+
+
+def test_set_transparency(main_window):
+    """
+    test for the filghttrack line transparency
+    """
+    _, multiple_flightpath_widget = main_window
+
+    activate_flight_track_at_index(main_window[0], 0)
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+
+    item = multiple_flightpath_widget.list_flighttrack.currentItem()
+    item.setCheckState(QtCore.Qt.Checked)
+
+    # Mock the hsTransparencyControl setValue and the update_flighttrack_patch method
+    with mock.patch.object(multiple_flightpath_widget.hsTransparencyControl, "setValue") as mock_set_value, \
+            mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch, \
+            mock.patch.object(multiple_flightpath_widget.hsTransparencyControl, "value", return_value=50):
+
+        multiple_flightpath_widget.set_transparency()
+
+        # Verify the transparency has been updated in dict_flighttrack and update_flighttrack_patch was called
+        wp_model = item.flighttrack_model
+        mock_update_patch.assert_called_once_with(wp_model)
+
+        expected_transparency = 0.5
+        assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_transparency"] == expected_transparency
+        assert multiple_flightpath_widget.change_line_transparency is True
+
+        mock_set_value.assert_called_once_with(int(expected_transparency * 100))
+
+
+def test_set_linestyle(main_window):
+    """
+    test for the filghttrack line style
+    """
+    _, multiple_flightpath_widget = main_window
+
+    activate_flight_track_at_index(main_window[0], 0)
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+
+    item = multiple_flightpath_widget.list_flighttrack.currentItem()
+    item.setCheckState(QtCore.Qt.Checked)
+
+    # Mock the cbLineStyle setCurrentText and the update_flighttrack_patch method
+    with mock.patch.object(multiple_flightpath_widget.cbLineStyle, "setCurrentText") as mock_set_text, \
+            mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch, \
+            mock.patch.object(multiple_flightpath_widget.cbLineStyle, "currentText", return_value='Dashed'):
+
+        multiple_flightpath_widget.set_linestyle()
+
+        # Verify the line style has been updated in dict_flighttrack and update_flighttrack_patch was called
+        wp_model = item.flighttrack_model
+        mock_update_patch.assert_called_once_with(wp_model)
+
+        expected_style = '--'
+        assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_style"] == expected_style
+        assert multiple_flightpath_widget.change_line_style is True
+
+        mock_set_text.assert_called_once_with(expected_style)
+
+
+def test_selectAll(main_window):
+    """
+    test for the selectALL method
+    """
+    _, multiple_flightpath_widget = main_window
+
+    # Mock the selectAll method to check if it gets called
+    with mock.patch.object(multiple_flightpath_widget, "selectAll",
+                           wraps=multiple_flightpath_widget.selectAll) as mock_selectAll:
+
+        multiple_flightpath_widget.selectAll(QtCore.Qt.Checked)
+        mock_selectAll.assert_called_once_with(QtCore.Qt.Checked)
+
+        # Verify that all items are checked
+        for i in range(multiple_flightpath_widget.list_flighttrack.count()):
+            item = multiple_flightpath_widget.list_flighttrack.item(i)
+            assert item.checkState() == QtCore.Qt.Checked
+
+        # Reset mock for the next call
+        mock_selectAll.reset_mock()
+
+        multiple_flightpath_widget.selectAll(QtCore.Qt.Unchecked)
+        mock_selectAll.assert_called_once_with(QtCore.Qt.Unchecked)
+
+        # Verify that all items are Unchecked
+        for i in range(multiple_flightpath_widget.list_flighttrack.count()):
+            item = multiple_flightpath_widget.list_flighttrack.item(i)
+            assert item.checkState() == QtCore.Qt.Unchecked
 
 
 def activate_flight_track_at_index(main_window, index):
