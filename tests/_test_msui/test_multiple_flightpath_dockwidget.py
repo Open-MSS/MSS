@@ -25,56 +25,65 @@
     limitations under the License.
 """
 import pytest
-from PyQt5 import QtTest, QtWidgets, QtCore, QtGui
-from mock import mock
+from PyQt5 import QtWidgets, QtCore, QtGui, QtTest
+from unittest import mock
 
 from mslib.msui import msui
-# from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
-# from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 
 
-class Test_MultipleFlightpathControlWidget:
-    @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        # Start a MSUI window
-        self.main_window = msui.MSUIMainWindow()
-        self.main_window.show()
-        qtbot.wait_exposed(self.main_window)
+@pytest.fixture
+def main_window(qtbot):
+    # Start a MSUI window
+    window = msui.MSUIMainWindow()
+    window.show()
+    qtbot.wait_exposed(window)
 
-        # Create two flight tracks
-        self.main_window.actionNewFlightTrack.trigger()
-        self.main_window.actionNewFlightTrack.trigger()
+    # Create two flight tracks
+    window.actionNewFlightTrack.trigger()
+    window.actionNewFlightTrack.trigger()
 
-        # Open a Top View window
-        self.main_window.actionTopView.trigger()
-        self.topview_window = self.main_window.listViews.currentItem().window
+    # Open a Top View window
+    window.actionTopView.trigger()
+    topview_window = window.listViews.currentItem().window
 
-        # Switch to the Multiple Flightpath Widget
-        self.topview_window.cbTools.setCurrentIndex(6)
+    # Switch to the Multiple Flightpath Widget
+    topview_window.cbTools.setCurrentIndex(6)
 
-        # Get a reference to the created MultipleFlightpathControlWidget
-        self.multiple_flightpath_widget = self.topview_window.docks[tv.MULTIPLEFLIGHTPATH].widget()
+    # Get a reference to the created MultipleFlightpathControlWidget
+    multiple_flightpath_widget = topview_window.docks[tv.MULTIPLEFLIGHTPATH].widget()
 
-        yield
-        self.main_window.hide()
+    yield window, multiple_flightpath_widget
 
-    def test_initialization(self):
-        # Ensure the MultipleFlightpathControlWidget is correctly initialized
-        assert self.multiple_flightpath_widget is not None
-        assert self.multiple_flightpath_widget.color == (0, 0, 1, 1)
+    window.hide()
 
-    @mock.patch("mslib.utils.colordialog.CustomColorDialog.exec_", return_value=QtWidgets.QDialog.Accepted)
-    @mock.patch("mslib.utils.colordialog.CustomColorDialog.color_selected", new_callable=mock.Mock)
-    def test_setColour(self, mock_color_selected, mockdlg):
-        color_button = self.multiple_flightpath_widget.pushButton_color
 
-        self._activate_flight_track_at_index(0)
-        self.click_on_flight_track_in_docking_widget_at_index(1)
+def test_initialization(main_window):
+    _, multiple_flightpath_widget = main_window
+
+    # Ensure the MultipleFlightpathControlWidget is correctly initialized
+    assert multiple_flightpath_widget is not None
+    assert multiple_flightpath_widget.color == (0, 0, 1, 1)
+
+
+def test_setColour(main_window):
+    _, multiple_flightpath_widget = main_window
+    color_button = multiple_flightpath_widget.pushButton_color
+
+    # Mock the exec_ method and color_selected signal of the CustomColorDialog
+    with mock.patch("mslib.utils.colordialog.CustomColorDialog.exec_",
+                    return_value=QtWidgets.QDialog.Accepted) as mock_exec, \
+            mock.patch("mslib.utils.colordialog.CustomColorDialog.color_selected",
+                       new_callable=mock.Mock) as mock_color_selected:
+        # Activate the first flight track
+        activate_flight_track_at_index(main_window[0], 0)
+
+        # Click on the second flight track in the docking widget
+        click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
 
         # Simulate clicking the button to open the color dialog
-        QtTest.QTest.mouseClick(color_button, QtCore.Qt.LeftButton)
-        assert mockdlg.call_count == 1
+        color_button.click()
+        assert mock_exec.call_count == 1
 
         # Simulate a color being selected
         color = QtGui.QColor("#0000ff")  # Example color
@@ -83,20 +92,23 @@ class Test_MultipleFlightpathControlWidget:
         # Ensure the color_selected signal was emitted
         mock_color_selected.emit.assert_called_with(color)
 
-    def _activate_flight_track_at_index(self, index):
-        # The main window must be on top
-        self.main_window.activateWindow()
-        # get the item by its index
-        item = self.main_window.listFlightTracks.item(index)
-        point = self.main_window.listFlightTracks.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.main_window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
-        QtTest.QTest.mouseDClick(self.main_window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
 
-    def click_on_flight_track_in_docking_widget_at_index(self, index):
-        # Activating the dock_widget window
-        self.multiple_flightpath_widget.activateWindow()
-        # get the item by its index
-        item = self.multiple_flightpath_widget.list_flighttrack.item(index)
-        point = self.multiple_flightpath_widget.list_flighttrack.visualItemRect(item).center()
-        QtTest.QTest.mouseClick(self.multiple_flightpath_widget.list_flighttrack.viewport(),
-                                QtCore.Qt.LeftButton, pos=point)
+def activate_flight_track_at_index(main_window, index):
+    # The main window must be on top
+    main_window.activateWindow()
+    # get the item by its index
+    item = main_window.listFlightTracks.item(index)
+    point = main_window.listFlightTracks.visualItemRect(item).center()
+    QtTest.QTest.mouseClick(main_window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+    QtTest.QTest.mouseDClick(main_window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+
+
+def click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, index):
+    # Activating the dock_widget window
+    multiple_flightpath_widget.activateWindow()
+    # Get the item by its index
+    item = multiple_flightpath_widget.list_flighttrack.item(index)
+    multiple_flightpath_widget.list_flighttrack.setCurrentItem(item)
+    # Simulate selection of the flight track by single clicking the item
+    point = multiple_flightpath_widget.list_flighttrack.visualItemRect(item).center()
+    QtTest.QTest.mouseClick(multiple_flightpath_widget.list_flighttrack.viewport(), QtCore.Qt.LeftButton, pos=point)
