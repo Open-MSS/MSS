@@ -25,13 +25,13 @@
 """
 
 
-import xml.dom.minidom
+import defusedxml.minidom
 import xml.parsers.expat
 
 
 def verify_waypoint_data(xml_content):
     try:
-        doc = xml.dom.minidom.parseString(xml_content)
+        doc = defusedxml.minidom.parseString(xml_content)
     except xml.parsers.expat.ExpatError:
         return False
 
