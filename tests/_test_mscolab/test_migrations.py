@@ -129,5 +129,9 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
             del actual_data_after_downgrade["alembic_version"]  # expected data doesn't have the revision table
             # Check that after a downgrade the data is definitely the same
             assert expected_data == actual_data_after_downgrade
+
+            # Try to add a new user after the migration
+            flask_migrate.upgrade(directory=migrations_path)
+            assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456')
     finally:
         mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM = None
