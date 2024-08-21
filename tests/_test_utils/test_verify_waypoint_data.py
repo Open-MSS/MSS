@@ -27,36 +27,61 @@
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 
 
-def test_verify_xml_waypoint():
-    """
-    tests various XML waypoint data content
-    """
-    flight_track_with_waypoints = """<?xml version="1.0" encoding="utf-8"?>
-    <FlightTrack version="9.0.0">
-      <ListOfWaypoints>
-        <Waypoint flightlevel="233.0" lat="41.601070573320186" location="" lon="41.355120439498535">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="374.0" lat="48.19354838709677" location="" lon="33.74841526975632">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="372.0" lat="51.23623045499366" location="" lon="-34.20481757994082">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="20.0" lat="37.037047471474835" location="" lon="-40.797295393717434">
-          <Comments></Comments>
-        </Waypoint>
-      </ListOfWaypoints>
-    </FlightTrack>"""
+def test_verify_waypoint_data_with_valid_data():
+    xml = """<?xml version="1.0" encoding="utf-8"?>
+        <FlightTrack version="9.1.0">
+          <ListOfWaypoints>
+            <Waypoint flightlevel="233.0" lat="41.601070573320186" location="" lon="41.355120439498535">
+              <Comments></Comments>
+            </Waypoint>
+            <Waypoint flightlevel="374.0" lat="48.19354838709677" location="" lon="33.74841526975632">
+              <Comments></Comments>
+            </Waypoint>
+            <Waypoint flightlevel="372.0" lat="51.23623045499366" location="" lon="-34.20481757994082">
+              <Comments></Comments>
+            </Waypoint>
+            <Waypoint flightlevel="20.0" lat="37.037047471474835" location="" lon="-40.797295393717434">
+              <Comments></Comments>
+            </Waypoint>
+          </ListOfWaypoints>
+        </FlightTrack>"""
+    assert verify_waypoint_data(xml) is True
 
-    flight_track_empty = """<?xml version="1.0" encoding="utf-8"?>
-    <FlightTrack version="9.0.0">
-      <ListOfWaypoints>
-      </ListOfWaypoints>
-    </FlightTrack>"""
 
-    flight_track_incomplete = """<?xml version="1.0" encoding="utf-8"?>
-        <FlightTrack version="9.0.0">
+def test_verify_waypoint_data_with_valid_data_and_broken_by_linebreak():
+    xml = """
+    <?xml version="1.0" encoding="utf-8"?>
+        <FlightTrack version="9.1.0">
+          <ListOfWaypoints>
+            <Waypoint flightlevel="233.0" lat="41.601070573320186" location="" lon="41.355120439498535">
+              <Comments></Comments>
+            </Waypoint>
+            <Waypoint flightlevel="374.0" lat="48.19354838709677" location="" lon="33.74841526975632">
+              <Comments></Comments>
+            </Waypoint>
+            <Waypoint flightlevel="372.0" lat="51.23623045499366" location="" lon="-34.20481757994082">
+              <Comments></Comments>
+            </Waypoint>
+            <Waypoint flightlevel="20.0" lat="37.037047471474835" location="" lon="-40.797295393717434">
+              <Comments></Comments>
+            </Waypoint>
+          </ListOfWaypoints>
+        </FlightTrack>"""
+    assert verify_waypoint_data(xml) is False
+
+
+def test_verify_waypoint_data_no_waypoints():
+    xml = """<?xml version="1.0" encoding="utf-8"?>
+        <FlightTrack version="9.1.0">
+          <ListOfWaypoints>
+          </ListOfWaypoints>
+        </FlightTrack>"""
+    assert verify_waypoint_data(xml) is False
+
+
+def test_verify_waypoint_data_incomplete_data():
+    xml = """<?xml version="1.0" encoding="utf-8"?>
+        <FlightTrack version="9.1.0">
           <ListOfWaypoints>
             <Waypoint flightlevel="233.0" lat="41.601070573320186">
               <Comments></Comments>
@@ -72,27 +97,23 @@ def test_verify_xml_waypoint():
             </Waypoint>
           </ListOfWaypoints>
         </FlightTrack>"""
+    assert verify_waypoint_data(xml) is False
 
-    flight_track_with_typo = """<?xml version="1.0" encoding="utf-8"?>
-        <FlightTrack version="9.0.0">
-          <ListOfWaypoints>
-            <Waypoint flightlevel="233.0"" lat="41.601070573320186" location="" lon="41.355120439498535">
-              <Comments></Comments>
-            </Waypoint>
-            <Waypoint flightlevel="374.0" lat="48.19354838709677" location="" lon="33.74841526975632">
-              <Comments></Comments>
-            </Waypoint>
-              <Comments></Comments>
-            </Waypoint>
-          </ListOfWaypoints>
-        </FlightTrack>"""
 
-    xml_content = (
-        (flight_track_with_waypoints, True),
-        (flight_track_empty, False),
-        (flight_track_incomplete, False),
-        (flight_track_with_typo, False),
-    )
-
-    for xml, check in xml_content:
-        assert verify_waypoint_data(xml) is check
+def test_verify_waypoint_data_with_typo():
+    # the typo is "233.0""
+    xml = """<?xml version="1.0" encoding="utf-8"?>
+            <FlightTrack version="9.1.0">
+              <ListOfWaypoints>
+                <Waypoint flightlevel="233.0"" lat="41.601070573320186" location="" lon="41.355120439498535">
+                  <Comments></Comments>
+                </Waypoint>
+                <Waypoint flightlevel="374.0" lat="48.19354838709677" location="" lon="33.74841526975632">
+                  <Comments></Comments>
+                </Waypoint>
+                  <Comments></Comments>
+                </Waypoint>
+              </ListOfWaypoints>
+            </FlightTrack>
+            """
+    assert verify_waypoint_data(xml) is False
