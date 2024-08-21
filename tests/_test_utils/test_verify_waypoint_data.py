@@ -23,12 +23,12 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import pytest
 
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 
 
-def test_verify_waypoint_data_with_valid_data():
-    xml = """<?xml version="1.0" encoding="utf-8"?>
+flight_track_with_waypoints = """<?xml version="1.0" encoding="utf-8"?>
         <FlightTrack version="9.1.0">
           <ListOfWaypoints>
             <Waypoint flightlevel="233.0" lat="41.601070573320186" location="" lon="41.355120439498535">
@@ -45,11 +45,8 @@ def test_verify_waypoint_data_with_valid_data():
             </Waypoint>
           </ListOfWaypoints>
         </FlightTrack>"""
-    assert verify_waypoint_data(xml) is True
 
-
-def test_verify_waypoint_data_with_valid_data_and_broken_by_linebreak():
-    xml = """
+flight_track_with_waypoints_and_broken_by_linebreak = """
     <?xml version="1.0" encoding="utf-8"?>
         <FlightTrack version="9.1.0">
           <ListOfWaypoints>
@@ -67,20 +64,14 @@ def test_verify_waypoint_data_with_valid_data_and_broken_by_linebreak():
             </Waypoint>
           </ListOfWaypoints>
         </FlightTrack>"""
-    assert verify_waypoint_data(xml) is False
 
-
-def test_verify_waypoint_data_no_waypoints():
-    xml = """<?xml version="1.0" encoding="utf-8"?>
+flight_track_empty = """<?xml version="1.0" encoding="utf-8"?>
         <FlightTrack version="9.1.0">
           <ListOfWaypoints>
           </ListOfWaypoints>
         </FlightTrack>"""
-    assert verify_waypoint_data(xml) is False
 
-
-def test_verify_waypoint_data_incomplete_data():
-    xml = """<?xml version="1.0" encoding="utf-8"?>
+flight_track_incomplete = """<?xml version="1.0" encoding="utf-8"?>
         <FlightTrack version="9.1.0">
           <ListOfWaypoints>
             <Waypoint flightlevel="233.0" lat="41.601070573320186">
@@ -97,12 +88,8 @@ def test_verify_waypoint_data_incomplete_data():
             </Waypoint>
           </ListOfWaypoints>
         </FlightTrack>"""
-    assert verify_waypoint_data(xml) is False
 
-
-def test_verify_waypoint_data_with_typo():
-    # the typo is "233.0""
-    xml = """<?xml version="1.0" encoding="utf-8"?>
+flight_track_with_typo = """<?xml version="1.0" encoding="utf-8"?>
             <FlightTrack version="9.1.0">
               <ListOfWaypoints>
                 <Waypoint flightlevel="233.0"" lat="41.601070573320186" location="" lon="41.355120439498535">
@@ -115,5 +102,18 @@ def test_verify_waypoint_data_with_typo():
                 </Waypoint>
               </ListOfWaypoints>
             </FlightTrack>
-            """
-    assert verify_waypoint_data(xml) is False
+            """  # typo is "233.0""
+
+cases = [
+    (flight_track_with_waypoints, True),
+    (flight_track_with_waypoints_and_broken_by_linebreak, False),
+    (flight_track_empty, False),
+    (flight_track_incomplete, False),
+    (flight_track_with_typo, False),
+]
+
+
+@pytest.mark.parametrize("xml_content,verification_result", cases)
+def test_verify_xml_waypoint(xml_content, verification_result):
+    """Test xml verification."""
+    assert verify_waypoint_data(xml_content) is verification_result
