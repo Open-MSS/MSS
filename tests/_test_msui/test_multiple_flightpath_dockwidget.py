@@ -221,6 +221,32 @@ def test_selectAll(main_window):
             assert item.checkState() == QtCore.Qt.Unchecked
 
 
+def test_random_custom_color_selection(main_window):
+    """
+    Test that a random custom color is selected automatically each time
+    and ensure that it is different from the previous selections.
+    """
+    _, multiple_flightpath_widget = main_window
+
+    # Mock the get_random_color method to test random selection
+    with mock.patch.object(multiple_flightpath_widget, "get_random_color",
+                           wraps=multiple_flightpath_widget.get_random_color) as mock_get_random_color:
+        # Select random colors multiple times
+        selected_colors = set()
+        for _ in range(10):  # Test with 10 random selections
+            color = multiple_flightpath_widget.get_random_color()
+            normalized_color = tuple(int(c * 255) for c in color)
+            assert normalized_color not in selected_colors, "Duplicate color selected!"
+            selected_colors.add(normalized_color)
+
+        # Ensure the mock method was called 10 times
+        assert mock_get_random_color.call_count == 10
+
+        # Check that all selected colors are from the custom_colors list
+        for color in selected_colors:
+            assert color in multiple_flightpath_widget.custom_colors
+
+
 def activate_flight_track_at_index(main_window, index):
     # The main window must be on top
     main_window.activateWindow()
