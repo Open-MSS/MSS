@@ -1963,10 +1963,12 @@ class MSUIMscolab(QtCore.QObject):
                 return
             dir_path, file_name = fs.path.split(file_path)
             file_name = fs.path.basename(file_path)
-            name, file_ext = fs.path.splitext(file_name)
             if function is None:
                 with open_fs(dir_path) as file_dir:
                     xml_content = file_dir.readtext(file_name)
+                    if not verify_waypoint_data(xml_content):
+                        show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
+                        return
                 try:
                     model = ft.WaypointsTableModel(xml_content=xml_content)
                 except SyntaxError:

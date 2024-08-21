@@ -645,11 +645,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         _dirname, _name = os.path.split(filename)
         _fs = fs.open_fs(_dirname)
         xml_content = _fs.readtext(_name)
-        if verify_waypoint_data(xml_content):
-            name = os.path.basename(filename.replace(".ftml", "").strip())
-            self.load_from_xml_data(xml_content, name)
-        else:
-            raise SyntaxError(f"Invalid flight track filename: {filename}")
+        name = os.path.basename(filename.replace(".ftml", "").strip())
+        self.load_from_xml_data(xml_content, name)
 
     def load_from_xml_data(self, xml_content, name="Flight track"):
         self.name = name
