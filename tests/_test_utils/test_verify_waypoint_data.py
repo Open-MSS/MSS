@@ -113,7 +113,7 @@ cases = [
 ]
 
 
-@pytest.mark.parametrize("xml_content,verification_result", cases)
+@pytest.mark.parametrize("xml_content, verification_result", cases)
 def test_verify_xml_waypoint(xml_content, verification_result):
     """Test xml verification."""
     assert verify_waypoint_data(xml_content) is verification_result
