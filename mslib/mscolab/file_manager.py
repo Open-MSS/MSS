@@ -54,54 +54,57 @@ class FileManager:
 
     def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
-        path: path to the operation
-        description: description of the operation
+        Creates a new operation in the mscolab system.
+
+        :param path: The path of the operation.
+        :param description: The description of the operation.
+        :param user: The user object creating the operation.
+        :param last_used: The last used datetime of the operation. Default is None.
+        :param content: The content of the operation. Default is None.
+        :param category: The category of the operation. Default is 'default'.
+        :param active: The activity status of the operation. Default is True.
+        :return: True if the operation is created successfully, False otherwise.
         """
-        # set codes on these later
-        if content is None or verify_waypoint_data(content):
-            if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
-                logging.debug("malicious request: %s", user)
-                return False
-            proj_available = Operation.query.filter_by(path=path).first()
-            if proj_available is not None:
-                return False
-            if last_used is None:
-                last_used = datetime.datetime.now(tz=datetime.timezone.utc)
-            operation = Operation(path, description, last_used, category, active=active)
-            db.session.add(operation)
-            db.session.flush()
-            operation_id = operation.id
-
-            op_lock = self._get_operation_lock(operation_id)
-            with op_lock:
-                # this is the only insertion with "creator" access_level
-                perm = Permission(user.id, operation_id, "creator")
-                db.session.add(perm)
-                db.session.commit()
-                # here we can import the permissions from Group file
-                if not path.endswith(mscolab_settings.GROUP_POSTFIX):
-                    import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
-                    if import_op is not None:
-                        self.import_permissions(import_op.id, operation_id, user.id)
-                data = fs.open_fs(self.data_dir)
-                data.makedir(operation.path)
-                with data.open(fs.path.combine(operation.path, 'main.ftml'), 'w') as operation_file:
-                    if content is not None:
-                        if verify_waypoint_data(content):
-                            operation_file.write(content)
-                        else:
-                            logging.debug("Invalid content: %s", path)
-                    else:
-                        operation_file.write(mscolab_settings.STUB_CODE)
-
-                    operation_path = fs.path.combine(self.data_dir, operation.path)
-                    r = git.Repo.init(operation_path)
-                    r.git.clear_cache()
-                    r.index.add(['main.ftml'])
-                    r.index.commit("initial commit")
-                    return True
-        else:
+        if content is not None and not verify_waypoint_data(content):
             return False
+        # set codes on these later
+        if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
+            logging.debug("malicious request: %s", user)
+            return False
+        proj_available = Operation.query.filter_by(path=path).first()
+        if proj_available is not None:
+            return False
+        if last_used is None:
+            last_used = datetime.datetime.now(tz=datetime.timezone.utc)
+        operation = Operation(path, description, last_used, category, active=active)
+        db.session.add(operation)
+        db.session.flush()
+        operation_id = operation.id
+
+        op_lock = self._get_operation_lock(operation_id)
+        with op_lock:
+            # this is the only insertion with "creator" access_level
+            perm = Permission(user.id, operation_id, "creator")
+            db.session.add(perm)
+            db.session.commit()
+            # here we can import the permissions from Group file
+            if not path.endswith(mscolab_settings.GROUP_POSTFIX):
+                import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
+                if import_op is not None:
+                    self.import_permissions(import_op.id, operation_id, user.id)
+            data = fs.open_fs(self.data_dir)
+            data.makedir(operation.path)
+            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
+            if content is not None:
+                operation_file.write(content)
+            else:
+                operation_file.write(mscolab_settings.STUB_CODE)
+            operation_path = fs.path.combine(self.data_dir, operation.path)
+            r = git.Repo.init(operation_path)
+            r.git.clear_cache()
+            r.index.add(['main.ftml'])
+            r.index.commit("initial commit")
+            return True
 
     def get_operation_details(self, op_id, user):
         """
