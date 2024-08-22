@@ -2039,6 +2039,7 @@ class MSUIMscolab(QtCore.QObject):
                 xml_content = self.waypoints_model.get_xml_content()
                 self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None,
                                     messageText=self.lastChangeMessage)
+                # Reset the last change message to make sure that it is used only once
                 self.lastChangeMessage = ""
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")

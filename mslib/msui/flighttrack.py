@@ -355,7 +355,7 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
                         waypoint.location = loc[1]
                     # A change of position requires an update of the distances.
                     if update:
-                        self.changeMessageSignal.emit("")
+                        self.changeMessageSignal.emit(f'Moved waypoint {index.row()}')
                         self.update_distances(index.row())
                     # Notify the views that items between the edited item and
                     # the distance item of the corresponding waypoint have been
