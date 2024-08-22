@@ -102,6 +102,7 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
         with mscolab_app.app_context():
             db.drop_all()
             db.session.execute(sqlalchemy.text("DROP TABLE alembic_version"))
+            db.session.commit()
             inspector = sqlalchemy.inspect(db.engine)
             existing_tables = inspector.get_table_names()
             assert existing_tables == []
