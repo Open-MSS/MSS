@@ -52,6 +52,35 @@ class Test_MSS_TV_MapAppearanceDialog:
     def test_get(self):
         self.window.get_settings()
 
+    def test_line_thickness_change(self):
+        # Verify initial value
+        assert self.window.line_thickness == _DEFAULT_SETTINGS_TOPVIEW.get("line_thickness", 2)
+
+        # Simulate changing line thickness
+        new_thickness = 5
+        self.window.sbLineThickness.setValue(new_thickness)
+
+        # Verify that the internal value is updated
+        assert self.window.line_thickness == new_thickness
+
+    def test_line_style_change(self):
+        assert self.window.line_style == _DEFAULT_SETTINGS_TOPVIEW.get("line_style", "Solid")
+
+        # Simulate changing line style
+        new_style = "Dashed"
+        self.window.cbLineStyle.setCurrentText(new_style)
+
+        assert self.window.line_style == new_style
+
+    def test_line_transparency_change(self):
+        assert self.window.line_transparency == _DEFAULT_SETTINGS_TOPVIEW.get("line_transparency", 1.0)
+
+        # Simulate changing transparency
+        new_transparency = 50  # == 0.5
+        self.window.hsTransparencyControl.setValue(new_transparency)
+
+        assert self.window.line_transparency == new_transparency / 100.0
+
 
 class Test_MSSTopViewWindow:
     @pytest.fixture(autouse=True)
