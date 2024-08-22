@@ -190,6 +190,8 @@ Operation based features
   - All the operations the user has created or has been added to can be found in Mscolab's main window along with the user's access level.
   - To start working on an operation the user needs to select it which enables all the operation related buttons.
   - Any change made to an operation by a user will be shared with everyone in real-time unless `Work Locally` is turned on.(More on this later)
+  - Operations can be manually archived to remove them from normal view without having to delete them.
+    They can be found again in the Archive view, where they can be unarchived for further use.
 
 Operation Permissions
 .....................

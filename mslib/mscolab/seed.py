@@ -27,8 +27,6 @@
 import logging
 import fs
 import git
-import datetime
-import dateutil.relativedelta
 from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.conf import mscolab_settings
@@ -215,13 +213,9 @@ def archive_operation(path=None, emailid=None):
                 perm = Permission.query.filter_by(u_id=user.id, op_id=operation.id).first()
                 if perm is None:
                     return False
-                elif perm.access_level != "creator":
+                elif perm.access_level not in ["admin", "creator"]:
                     return False
                 operation.active = False
-                operation.last_used = (
-                    datetime.datetime.now(tz=datetime.timezone.utc) -
-                    dateutil.relativedelta.relativedelta(days=mscolab_settings.ARCHIVE_THRESHOLD)
-                )
                 db.session.commit()
 
 

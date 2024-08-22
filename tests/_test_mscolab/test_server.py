@@ -24,6 +24,7 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import datetime
 import pytest
 import json
 import io
@@ -402,11 +403,51 @@ class Test_Server:
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
+            old = operation.last_used
             response = test_client.post('/set_last_used', data={"token": token,
                                                                 "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data["success"] is True
+            new = operation.last_used
+            assert old != new
+            response = test_client.post('/set_last_used', data={"token": token,
+                                                                "op_id": operation.id,
+                                                                "days": 10})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True
+            new = operation.last_used
+            assert datetime.timedelta(days=11) > old - new > datetime.timedelta(days=9)
+
+    def test_set_active(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            assert operation.active is True
+            response = test_client.post('/update_operation', data={
+                "token": token,
+                "op_id": operation.id, "attribute": "active", "value": "False"})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
+            assert operation.active is False
+
+            response = test_client.post('/update_operation', data={
+                "token": token,
+                "op_id": operation.id, "attribute": "active", "value": "True"})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
+            assert operation.active is True
+
+            response = test_client.post('/update_operation', data={
+                "token": token,
+                "op_id": operation.id, "attribute": "active", "value": False})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
+            assert operation.active is False
 
     def test_get_users_without_permission(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])

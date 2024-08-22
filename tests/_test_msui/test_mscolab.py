@@ -660,8 +660,7 @@ class Test_Mscolab:
         self._activate_operation_at_index(1)
         assert self.window.mscolab.active_operation_name == "reproduce-test"
 
-    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
-    def test_handle_delete_operation(self, mocktext, qtbot):
+    def test_handle_delete_operation(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "berta@something.org"}})
         self._create_user(qtbot, "berta", "berta@something.org", "something")
@@ -676,11 +675,13 @@ class Test_Mscolab:
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None
         assert self.window.listOperationsMSC.model().rowCount() == 1
-        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m, \
+                mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True)):
             self.window.actionDeleteOperation.trigger()
             qtbot.wait_until(
                 lambda: m.assert_called_once_with(self.window, "Success", 'Operation "flight7" was deleted!')
             )
+        assert self.window.mscolab.active_op_id is None
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
         # check operation dir name removed
@@ -743,6 +744,18 @@ class Test_Mscolab:
             m.assert_called_once_with(self.window, "Update successful", "Description is updated successfully.")
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_description == "new_description"
+
+    def test_archive_operation(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something")
+        self._create_operation(qtbot, "flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+            self.window.actionArchiveOperation.trigger()
+        assert self.window.mscolab.active_op_id is None
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_category", True))
     def test_update_category(self, mocktext, qtbot):
