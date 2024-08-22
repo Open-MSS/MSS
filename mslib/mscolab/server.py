@@ -676,6 +676,10 @@ def set_last_used():
     op_id = request.form.get('op_id', None)
     user = g.user
     days_ago = int(request.form.get('days', 0))
+    if days_ago > 99999:
+        days_ago = 99999
+    elif days_ago < -99999:
+        days_ago = -99999
     fm.update_operation(int(op_id), 'last_used',
                         datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
                         user)
