@@ -87,7 +87,7 @@ class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArc
 
     def select_archived_operation(self, item):
         logging.debug('select_inactive_operation')
-        if item.access_level == "creator":
+        if item.access_level in ["creator", "admin"]:
             self.archived_op_id = item.op_id
             self.pbUnarchiveOperation.setEnabled(True)
         else:
@@ -101,20 +101,19 @@ class MSColab_OperationArchiveBrowser(QtWidgets.QDialog, ui_opar.Ui_OperationArc
             data = {
                 "token": self.mscolab.token,
                 "op_id": self.archived_op_id,
+                "attribute": "active",
+                "value": "True"
             }
-            url = urljoin(self.mscolab.mscolab_server_url, 'set_last_used')
+            url = urljoin(self.mscolab.mscolab_server_url, 'update_operation')
             try:
                 res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.RequestException as e:
                 logging.debug(e)
                 show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
+                self.logout()
             else:
-                if res.text != "False":
-                    res = res.json()
-                    if res["success"]:
-                        self.mscolab.reload_operations()
-                    else:
-                        show_popup(self.parent, "Error", "Some error occurred! Could not activate operation")
+                if res.text == "True":
+                    self.mscolab.reload_operations()
                 else:
                     show_popup(self.parent, "Error", "Session expired, new login required")
                     self.mscolab.logout()
@@ -1818,9 +1817,10 @@ class MSUIMscolab(QtCore.QObject):
                     "token": self.token,
                     "op_id": self.active_op_id,
                     # when a user archives an operation we set the max “natural” integer in days
-                    "days": 99999,  # larger values run into a lot of issues
+                    "attribute": "active",
+                    "value": "False"
                 }
-                url = urljoin(self.mscolab_server_url, 'set_last_used')
+                url = urljoin(self.mscolab_server_url, 'update_operation')
                 try:
                     res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 except requests.exceptions.RequestException as e:
@@ -1833,6 +1833,7 @@ class MSUIMscolab(QtCore.QObject):
                     logging.debug("activate local")
                     self.ui.listFlightTracks.setCurrentRow(0)
                     self.ui.activate_selected_flight_track()
+                    self.active_op_id = None
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -1865,12 +1866,6 @@ class MSUIMscolab(QtCore.QObject):
             self.waypoints_model = None
 
             self.signal_unarchive_operation.emit(self.active_op_id)
-
-            self.inactive_op_id = None
-            font = QtGui.QFont()
-            for i in range(self.ui.listOperationsMSC.count()):
-                self.ui.listOperationsMSC.item(i).setFont(font)
-            font.setBold(False)
 
             # Set active operation description
             self.set_operation_desc_label(self.active_operation_description)
@@ -1970,6 +1965,7 @@ class MSUIMscolab(QtCore.QObject):
             self.ui.actionChangeDescription.setEnabled(True)
             self.ui.filterCategoryCb.setEnabled(True)
             self.ui.actionRenameOperation.setEnabled(True)
+            self.ui.actionArchiveOperation.setEnabled(True)
         else:
             if self.admin_window is not None:
                 self.admin_window.close()
@@ -1977,7 +1973,6 @@ class MSUIMscolab(QtCore.QObject):
         if self.access_level in ["creator"]:
             self.ui.actionDeleteOperation.setEnabled(True)
             self.ui.actionLeaveOperation.setEnabled(False)
-            self.ui.actionArchiveOperation.setEnabled(True)
 
         self.ui.menuImportFlightTrack.setEnabled(True)
 

@@ -658,12 +658,12 @@ def update_operation():
     attribute = request.form['attribute']
     value = request.form['value']
     user = g.user
-    r = str(fm.update_operation(int(op_id), attribute, value, user))
-    if r == "True":
+    r = fm.update_operation(int(op_id), attribute, value, user)
+    if r is True:
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
-    return r
+    return str(r)
 
 
 @APP.route('/operation_details', methods=["GET"])
@@ -690,13 +690,6 @@ def set_last_used():
     fm.update_operation(int(op_id), 'last_used',
                         datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
                         user)
-    if days_ago > mscolab_settings.ARCHIVE_THRESHOLD:
-        fm.update_operation(int(op_id), "active", False, user)
-    else:
-        fm.update_operation(int(op_id), "active", True, user)
-        token = request.args.get('token', request.form.get('token', False))
-        json_config = {"token": token}
-        sockio.sm.update_operation_list(json_config)
     return jsonify({"success": True}), 200
 
 

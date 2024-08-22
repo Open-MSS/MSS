@@ -135,18 +135,7 @@ class FileManager:
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
             operation = Operation.query.filter_by(id=permission.op_id).first()
-            if operation.last_used is not None and (
-                    datetime.datetime.now(tz=datetime.timezone.utc) - operation.last_used
-            ).days > mscolab_settings.ARCHIVE_THRESHOLD:
-                # outdated OPs get archived
-                self.update_operation(permission.op_id, "active", False, user)
-            # new query to get up-to-date data
-            if skip_archived:
-                operation = Operation.query.filter_by(id=permission.op_id, active=skip_archived).first()
-            else:
-                operation = Operation.query.filter_by(id=permission.op_id).first()
-
-            if operation is not None:
+            if operation is not None and (operation.active or not skip_archived):
                 operations.append({
                     "op_id": permission.op_id,
                     "access_level": permission.access_level,
@@ -367,6 +356,9 @@ class FileManager:
                     # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
                     # then members of this op gets added to all others of same category
                     self.import_permissions(op_id, ops.id, user.id)
+        elif attribute == "active":
+            if isinstance(value, str):
+                value = value.upper() == "TRUE"
         setattr(operation, attribute, value)
         db.session.commit()
         return True
@@ -376,7 +368,7 @@ class FileManager:
         op_id: operation id
         user: logged in user
         """
-        if self.auth_type(user.id, op_id) != "creator":
+        if not self.is_creator(user.id, op_id):
             return False
         Permission.query.filter_by(op_id=op_id).delete()
         Change.query.filter_by(op_id=op_id).delete()
