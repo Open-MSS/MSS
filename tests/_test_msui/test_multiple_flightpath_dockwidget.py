@@ -53,8 +53,6 @@ def main_window(qtbot):
     # Switch to the Multiple Flightpath Widget
     topview_window.cbTools.setCurrentIndex(6)
 
-    QtTest.QTest.qWait(200)
-
     # Get a reference to the created MultipleFlightpathControlWidget
     multiple_flightpath_widget = topview_window.docks[tv.MULTIPLEFLIGHTPATH].widget()
 
