@@ -1788,7 +1788,7 @@ class MSUIMscolab(QtCore.QObject):
                     "token": self.token,
                     "op_id": self.active_op_id,
                     # when a user archives an operation we set the max “natural” integer in days
-                    "days": sys.maxsize,
+                    "days": 99999,  # larger values run into a lot of issues
                 }
                 url = urljoin(self.mscolab_server_url, 'set_last_used')
                 try:
