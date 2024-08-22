@@ -1,6 +1,16 @@
 Changelog
 =========
 
+Version 9.2.0
+~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We added a verification for xml data and changed the startup of the SocketsManager.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/106?closed=1
+
+
 Version 9.1.0
 ~~~~~~~~~~~~~
 
