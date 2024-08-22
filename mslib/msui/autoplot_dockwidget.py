@@ -324,7 +324,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         for row in autoplot_secs:
             item = QTreeWidgetItem(row)
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
-
+        self.autoplotSecsTreeWidget.clearSelection()
+        self.autoplotTreeWidget.clearSelection()
     def remove_selected_row(self, parent, treewidget, config_settings):
         selected_item = treewidget.currentItem()
         if selected_item:

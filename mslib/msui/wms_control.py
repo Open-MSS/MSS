@@ -424,6 +424,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.view = view
         self.layer_name = None
         self.style_name = None
+        self.current_sel_layer = None
 
         # Multilayering things
         self.multilayers = Multilayers(self)
@@ -545,11 +546,57 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
     def row_is_selected(self,url,layer,styles,level):
-        self.layer_name=layer
-        self.style_name=styles
-        self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles,level=level)
-                            
-                
+        if url not in self.multilayers.layers:
+            self.layer_name=layer
+            self.style_name=styles
+            self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles,level=level)
+        else:
+            # Get coordinate reference system and bounding box from the map
+            # object in the view.
+            crs = self.view.get_crs()
+            bbox = self.view.getBBOX()
+    
+            # Determine the current size of the vertical section plot on the
+            # screen in pixels. The image will be retrieved in this size.
+            width, height = self.view.get_plot_size_in_px()
+            
+            
+            for index in range(self.multilayers.listLayers.topLevelItemCount()):
+                top_item = self.multilayers.listLayers.topLevelItem(index)
+                # Iterate over the children of the top-level item
+                for i in range(top_item.childCount()):
+                    child_item = top_item.child(i)
+
+                    # Process both columns of the child item
+                    
+                    for column in range(child_item.columnCount()):
+                        
+                        if child_item.text(column).endswith(layer):
+                            self.current_sel_layer=child_item
+            
+            layers = [self.current_sel_layer]
+            args = []
+            for i, layer_itr in enumerate(layers):
+                transparent = self.cbTransparent.isChecked() if i == 0 else True
+                bbox_tmp = tuple(bbox)
+                wms = self.multilayers.layers[layer_itr.wms_name]["wms"]
+                if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
+                    bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
+                args.extend(self.retrieve_image(layer_itr, crs, bbox_tmp, None, width, height, transparent))
+    
+            self.fetch.emit(args)
+            
+            self.prefet = WMSMapFetcher(self.wms_cache)
+            self.prefet.moveToThread(self.thread_prefetch)
+            self.prefetch.connect(self.prefet.fetch_maps)  # implicitly uses a queued connection
+    
+            self.fet = WMSMapFetcher(self.wms_cache)
+            self.fet.moveToThread(self.thread_fetch)
+            self.fetch.connect(self.fet.fetch_maps)  # implicitly uses a queued connection
+            self.fet.finished.connect(self.continue_retrieve_image)  # implicitly uses a queued connection
+            self.fet.exception.connect(self.display_exception)  # implicitly uses a queued connection
+            self.fet.started_request.connect(self.display_progress_dialog)  # implicitly uses a queued connection
+
     def __del__(self):
         """Destructor.
         """
@@ -584,12 +631,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         (mr, 2011-02-25)
         """
         # initialize login cache from config file, but do not overwrite existing keys
-        print("initialise wms 1 level value0    ",level)
         http_auth = config_loader(dataset="MSS_auth")
         auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
 
         def on_success(wms):
-            print("initialise wms 2")
             self.cpdlg.setValue(9)
             if wms is not None:
 
@@ -611,8 +656,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.multilayers.cbWMS_URL.setEditText(base_url)
                     save_settings_qsettings('wms', {'recent_wms_url': base_url})
                 
-                print("initialise wms 3")
-
                 self.activate_wms(wms,level=level)
                 WMS_SERVICE_CACHE[wms.url] = wms
                 self.cpdlg.close()
@@ -690,7 +733,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                       on_success, on_failure)
 
     def wms_url_changed(self, text):
-        print("wms changed")
         wms = WMS_SERVICE_CACHE.get(text)
         if wms is not None:
             self.activate_wms(wms, cache=True)
@@ -734,44 +776,38 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     def select_layer_and_style(self,layer_list, layer_name, style_name):
         if layer_list is None or layer_name is None:
             return
-        selected_layer=None
-        print("printing")
-        print(layer_list.topLevelItemCount())
+        self.current_sel_layer=None
+        
         for index in range(layer_list.topLevelItemCount()):
             top_item = layer_list.topLevelItem(index)
 
-            # Process both columns of the top-level item
-            for column in range(top_item.columnCount()):
-                print(f"Top-Level Item ({index}, Column {column}): {top_item.text(column)}")
-
+            
             # Iterate over the children of the top-level item
             for i in range(top_item.childCount()):
                 child_item = top_item.child(i)
 
-                # Process both columns of the child item
-                print(child_item)
-                print(type(child_item))
+                
                 for column in range(child_item.columnCount()):
-                    print(f"Child Item ({i}, Column {column}): {child_item.text(column)}")
-                    if child_item.text(column).endswith(layer_name):
-                        selected_layer=child_item
                     
-        if not selected_layer:
+                    if child_item.text(column).endswith(layer_name):
+                        self.current_sel_layer=child_item
+                    
+        if not self.current_sel_layer:
             print(f"Layer '{layer_name}' not found.")
             return
 
         # Simulate clicking the layer
-        self.multilayers.multilayer_clicked(selected_layer)
+        self.multilayers.multilayer_clicked(self.current_sel_layer)
 
         # Find the style by its name and set it in the ComboBox
-        for styles in selected_layer.styles:
+        for styles in self.current_sel_layer.styles:
             selected_style=str(styles)[1:(len(style_name)+1)]
             print(selected_style)        
             if selected_style == style_name:
-                selected_layer.style = styles
-                selected_layer.style_changed()
-                self.multilayers.multilayer_clicked(selected_layer)
-                selected_layer.parent.dock_widget.auto_update()
+                self.current_sel_layer.style = styles
+                self.current_sel_layer.style_changed()
+                self.multilayers.multilayer_clicked(self.current_sel_layer)
+                self.current_sel_layer.parent.dock_widget.auto_update()
                 print("success")
             else:
                 print(f"Style '{style_name}' not found for layer '{layer_name}'.")
@@ -788,17 +824,15 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-        print("get capabiblities 1 level is  ",level)
+        
         base_url = self.multilayers.cbWMS_URL.currentText()
         self.base_url_changed.emit(base_url)
 
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
-        print("get capabiblities 2")
         
 
         def on_success(request):
-            print("get capabiblities 3")            
             self.cpdlg.setValue(5)
             # url shortener url translated
             url = request.url
@@ -825,14 +859,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             finally:
                 self.cpdlg.close()
                 
-        print(5)
         self.display_capabilities_dialog()
-        print(6)
         Worker.create(lambda: requests.get(base_url, params=params, timeout=(5, 60)),
                       on_success, on_failure)
 
     def activate_wms(self, wms, cache=False,level=None):
-        print("activate wms")
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
         filtered_layers = set()
