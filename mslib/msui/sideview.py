@@ -172,7 +172,7 @@ class MSUI_SV_OptionsDialog(QtWidgets.QDialog, ui_opt.Ui_SideViewOptionsDialog):
 
         dialog = CustomColorDialog(self)
         dialog.color_selected.connect(lambda color: self.on_color_selected(which, color, button))
-        dialog.exec_()
+        dialog.show()
 
     def on_color_selected(self, which, color, button):
         if color.isValid():

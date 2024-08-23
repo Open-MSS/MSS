@@ -190,7 +190,7 @@ class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialo
 
         dialog = CustomColorDialog(self)
         dialog.color_selected.connect(lambda color: self.on_color_selected(which, color, button))
-        dialog.exec_()
+        dialog.show()
 
     def on_color_selected(self, which, color, button):
         if color.isValid():
