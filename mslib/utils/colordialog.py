@@ -60,6 +60,7 @@ class CustomColorDialog(QtWidgets.QDialog):
             row = i // 5
             col = i % 5
             swatch_layout.addWidget(button, row, col)
+            self.color_buttons.append(button)
 
         # Add "Pick Custom Color" button
         self.custom_color_button = QtWidgets.QPushButton("Pick Custom Color")

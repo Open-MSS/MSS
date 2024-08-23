@@ -79,34 +79,31 @@ def test_setColour(main_window):
     main_window, multiple_flightpath_widget = main_window
     color_button = multiple_flightpath_widget.pushButton_color
 
-    # Mock the exec_ method to accept the dialog otherwise test get stuck
-    with mock.patch("mslib.utils.colordialog.CustomColorDialog.exec_",
-                    return_value=QtWidgets.QDialog.Accepted) as mock_exec:
-        # Activate the first flight track
-        activate_flight_track_at_index(main_window, 0)
+    # Activate the first flight track
+    activate_flight_track_at_index(main_window, 0)
 
-        # Click on the second flight track in the docking widget
-        click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+    # Click on the second flight track in the docking widget
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
 
-        # Simulate clicking the button to open the color dialog
-        color_button.click()
-        assert mock_exec.call_count == 1
+    # Simulate clicking the button to open the color dialog
+    color_button.click()
 
-        color_dialog = multiple_flightpath_widget.findChild(QtWidgets.QDialog)
-        assert color_dialog is not None
+    # Get a reference to the custom color dialog
+    color_dialog = multiple_flightpath_widget.findChild(QtWidgets.QDialog)
+    assert color_dialog is not None
 
-        # Simulate a color being selected
-        color = QtGui.QColor("#0000ff")  # Example color
-        color_dialog.color_selected.emit(color)
+    # Select the first color
+    color = QtGui.QColor(color_dialog.colors[0])
+    color_dialog.color_buttons[0].click()
 
-        # Verify that the flight track data structure was updated with the new color
-        wp_model = multiple_flightpath_widget.list_flighttrack.currentItem().flighttrack_model
-        applied_color_rgba = multiple_flightpath_widget.get_color(wp_model)
+    # Verify that the flight track data structure was updated with the new color
+    wp_model = multiple_flightpath_widget.list_flighttrack.currentItem().flighttrack_model
+    applied_color_rgba = multiple_flightpath_widget.get_color(wp_model)
 
-        # Convert the applied_color_rgba to a QColor object
-        applied_color = QtGui.QColor.fromRgbF(*applied_color_rgba)
+    # Convert the applied_color_rgba to a QColor object
+    applied_color = QtGui.QColor.fromRgbF(*applied_color_rgba)
 
-        assert applied_color == color
+    assert applied_color == color
 
 
 def test_set_linewidth(main_window):

@@ -422,7 +422,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 else:
                     color_dialog = CustomColorDialog(self)
                     color_dialog.color_selected.connect(lambda color: self.apply_color(wp_model, color))
-                    color_dialog.exec_()
+                    color_dialog.show()
             else:
                 self.labelStatus.setText("Status: Check Mark the flighttrack to change its color.")
         elif self.list_operation_track.currentItem() is not None:
@@ -983,7 +983,7 @@ class MultipleFlightpathOperations:
                 else:
                     color_dialog = CustomColorDialog(self.parent)
                     color_dialog.color_selected.connect(lambda color: self.apply_color(op_id, color))
-                    color_dialog.exec_()
+                    color_dialog.show()
             else:
                 self.parent.labelStatus.setText("Status: Check Mark the flighttrack to change its color.")
 
