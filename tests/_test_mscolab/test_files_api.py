@@ -79,7 +79,7 @@ class Test_Files:
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V1")
             users = self.fm.get_authorized_users(operation.id)
-            assert users[0] == {'username': 'UV10', 'access_level': 'creator'}
+            assert users[0] == {'username': 'UV10', 'access_level': 'creator', 'id': 1}
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():

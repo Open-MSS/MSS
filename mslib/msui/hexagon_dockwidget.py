@@ -114,7 +114,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
             waypoints.append(
                 ft.Waypoint(lon=float(point[1]), lat=float(point[0]),
                             flightlevel=float(flightlevel), comments=f"Hexagon {(i + 1):d}"))
-        waypoints_model.insertRows(row, rows=len(waypoints), waypoints=waypoints)
+        waypoints_model.insertRows(row, rows=len(waypoints), waypoints=waypoints, hexagonCreated=True)
         index = waypoints_model.index(row, 0)
         table_view.setCurrentIndex(index)
         table_view.resizeRowsToContents()
@@ -156,7 +156,7 @@ class HexagonControlWidget(QtWidgets.QWidget, ui.Ui_HexagonDockWidget):
                             QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                             QtWidgets.QMessageBox.Yes)
                         if sel == QtWidgets.QMessageBox.Yes:
-                            waypoints_model.removeRows(row_min, rows=7)
+                            waypoints_model.removeRows(row_min, rows=7, hexagonDeleted=True)
             else:
                 raise HexagonException("Cannot remove hexagon, please select a hexagon "
                                        "waypoint ('Hexagon x' in comments field)")
