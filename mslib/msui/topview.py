@@ -285,8 +285,52 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
             self.mainwindow_signal_login_mscolab.connect(self.login)
 
+            # Initialize flight tracks and legend
+            self.load_flight_tracks()
+            self.init_legend()
+
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
+
+    def load_flight_tracks(self):
+        """
+        Load flight track data from the main window's listFlightTracks widget.
+        """
+        self.flight_tracks = []
+        for index in range(self.mainwindow_listFlightTracks.count()):
+            item = self.mainwindow_listFlightTracks.item(index)
+            flighttrack_model = item.flighttrack_model
+            track_name = flighttrack_model.name
+            self.flight_tracks.append({"name": track_name})
+
+    def init_legend(self):
+        """
+        Initialize the legend by creating label and line pairs for each flight track.
+        """
+        # Clear existing legend items
+        while self.gridLayout.count():
+            child = self.gridLayout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
+
+        # Add new legend items
+        for row, flight_track in enumerate(self.flight_tracks):
+            # Create label for the flight track name
+            label = QtWidgets.QLabel(flight_track["name"])
+
+            # Create a small colored line to represent the flight track
+            line = QtWidgets.QFrame()
+            line.setFrameShape(QtWidgets.QFrame.HLine)
+            line.setFrameShadow(QtWidgets.QFrame.Plain)
+            line.setFixedWidth(50)
+            # line_color = flight_track["color"]
+            # line.setStyleSheet(
+            #     f"background-color: rgb({line_color[0] * 255}, {line_color[1] * 255}, {line_color[2] * 255});")
+            # to do : color implementation for the line
+
+            # Add label and line to the grid layout in the same row, different columns
+            self.gridLayout.addWidget(label, row, 0, alignment=QtCore.Qt.AlignLeft)
+            self.gridLayout.addWidget(line, row, 1, alignment=QtCore.Qt.AlignRight)
 
     @QtCore.pyqtSlot(ft.WaypointsTableModel)
     def update_active_flighttrack(self, active_flighttrack):
