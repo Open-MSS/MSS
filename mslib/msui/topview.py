@@ -191,6 +191,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     refresh_signal_emit = QtCore.pyqtSignal()
     refresh_signal_send = QtCore.pyqtSignal()
     item_selected = QtCore.pyqtSignal(str,str,str,str)
+    itemSecs_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
                  active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None):
@@ -360,6 +361,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
                 self.item_selected.connect(lambda url,layer,style,level: widget.row_is_selected(url,layer,style,level))
+                self.itemSecs_selected.connect(lambda vtime: widget.leftrow_is_selected(vtime))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
             elif index == SATELLITE:
@@ -397,6 +399,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 title = "Autoplot (Top View)"
                 widget = dock.AutoplotDockWidget(parent=self, view="Top View", config_settings=config_settings)
                 widget.treewidget_item_selected.connect(lambda url,layer,style,level: self.tree_item_select(url,layer,style,level))
+                widget.autoplot_treewidget_item_selected.connect(lambda section,vtime: self.treePlot_item_select(section,vtime))
             else:
                 raise IndexError("invalid control index")
 
@@ -414,6 +417,12 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.pyqtSlot()
     def tree_item_select(self,url,layer,style,level):
         self.item_selected.emit(url,layer,style,level)
+    
+    @QtCore.pyqtSlot()
+    def treePlot_item_select(self,section,vtime):
+        self.cbChangeMapSection.setCurrentText(section)
+        self.changeMapSection()
+        self.itemSecs_selected.emit(vtime)
 
     @QtCore.pyqtSlot()
     def url_val_changed(self, strr):

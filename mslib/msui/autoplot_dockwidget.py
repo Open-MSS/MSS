@@ -41,6 +41,7 @@ from mslib.msui import constants as const
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     
     treewidget_item_selected = QtCore.pyqtSignal(str,str,str,str)
+    autoplot_treewidget_item_selected = QtCore.pyqtSignal(str,str)
 
     def __init__(self, parent=None, view=None, config_settings=None):
         super().__init__()
@@ -69,6 +70,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
         
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.autoplotSecsTreeWidget_selected_row)
+        self.autoplotTreeWidget.itemSelectionChanged.connect(self.autoplotTreeWidget_selected_row)
 
         # Add to TreeWidget
         if self.view == "Top View":
@@ -181,7 +183,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             level = selected_items[0].text(3)
 
             self.treewidget_item_selected.emit(url,layer,styles,level)
-            print("autoplot_dockwidget",url,layer,styles,level)
+            print("autoplotSecsTreewidget_dockwidget",url,layer,styles,level)
+
+    def autoplotTreeWidget_selected_row(self):
+        selected_items = self.autoplotTreeWidget.selectedItems()
+        if selected_items:
+            section = selected_items[0].text(1)
+            vtime = selected_items[0].text(5)
+            self.autoplot_treewidget_item_selected.emit(section,vtime)
+            print("autoplotTreewidget_dockwidget",section,vtime)        
         
 
     def on_item_selection_changed(self):

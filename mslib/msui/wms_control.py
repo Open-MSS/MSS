@@ -550,6 +550,16 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.layer_name=layer
             self.style_name=styles
             self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles,level=level)
+            self.populate_ui(update_level=level)
+            for i in range(self.cbLevel.count()):
+                item_text = self.cbLevel.itemText(i)
+                print("elements present ",i,item_text)
+                if item_text.startswith(level):
+                    self.cbLevel.setCurrentText(item_text)
+                    print("level changed iufhvfhdhhlbl sd fs fsfs fsdf",item_text)
+                    self.level_changed()
+                    break
+            print(layer)
         else:
             # Get coordinate reference system and bounding box from the map
             # object in the view.
@@ -596,6 +606,22 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.fet.finished.connect(self.continue_retrieve_image)  # implicitly uses a queued connection
             self.fet.exception.connect(self.display_exception)  # implicitly uses a queued connection
             self.fet.started_request.connect(self.display_progress_dialog)  # implicitly uses a queued connection
+            self.populate_ui(update_level=level)
+            for i in range(self.cbLevel.count()):
+                item_text = self.cbLevel.itemText(i)
+                print("elements present ",i,item_text)
+                if item_text.startswith(level):
+                    print("level changed iufhvfhdhhlbl sd fs fsfs fsdf",item_text)
+                    self.cbLevel.setCurrentText(item_text)
+                    self.level_changed()
+                    break
+            print(layer)
+    
+    def leftrow_is_selected(self,vtime):
+        self.populate_ui()
+        self.cbValidTime.setCurrentText(vtime)
+        self.valid_time_changed()
+        pass
 
     def __del__(self):
         """Destructor.
@@ -996,6 +1022,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         active_layers = self.multilayers.get_active_layers()
         layer = self.multilayers.get_current_layer()
+        print("layer in current multilayer  iss d fg g ",layer)
         if layer is not None:
             self.layer_changed.emit(layer)
             currentstyle = layer.get_style()
