@@ -123,12 +123,12 @@ def test_set_linewidth(main_window):
     with mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch:
         # s.et the line width
         multiple_flightpath_widget.dsbx_linewidth.setValue(3.0)
+        mock_update_patch.assert_called_once_with(item.flighttrack_model)
 
-        # Verify the line width has been updated in dict_flighttrack and the patch was updated
-        wp_model = item.flighttrack_model
-        assert multiple_flightpath_widget.dict_flighttrack[wp_model]["linewidth"] == 3.0
-        assert multiple_flightpath_widget.change_linewidth is True
-        mock_update_patch.assert_called_once_with(wp_model)
+    # Verify the line width has been updated in dict_flighttrack
+    wp_model = item.flighttrack_model
+    assert multiple_flightpath_widget.dict_flighttrack[wp_model]["linewidth"] == 3.0
+    assert multiple_flightpath_widget.change_linewidth is True
 
 
 def test_set_transparency(main_window):
@@ -147,12 +147,12 @@ def test_set_transparency(main_window):
     with mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch:
 
         multiple_flightpath_widget.hsTransparencyControl.setValue(50)
+        mock_update_patch.assert_called_once_with(item.flighttrack_model)
 
-        # Verify the transparency has been updated in dict_flighttrack and update_flighttrack_patch was called
-        wp_model = item.flighttrack_model
-        assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_transparency"] == (50 / 100)
-        assert multiple_flightpath_widget.change_line_transparency is True
-        mock_update_patch.assert_called_once_with(wp_model)
+    # Verify the transparency has been updated in dict_flighttrack
+    wp_model = item.flighttrack_model
+    assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_transparency"] == (50 / 100)
+    assert multiple_flightpath_widget.change_line_transparency is True
 
 
 def test_set_linestyle(main_window):
@@ -171,14 +171,14 @@ def test_set_linestyle(main_window):
     with mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch:
 
         multiple_flightpath_widget.cbLineStyle.setCurrentText('Dashed')
+        mock_update_patch.assert_called_once_with(item.flighttrack_model)
 
-        # Verify the line style has been updated in dict_flighttrack and update_flighttrack_patch was called
-        wp_model = item.flighttrack_model
-
-        expected_style = '--'
-        assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_style"] == expected_style
-        assert multiple_flightpath_widget.change_line_style is True
-        mock_update_patch.assert_called_once_with(wp_model)
+    # Verify the line style has been updated in dict_flighttrack
+    wp_model = item.flighttrack_model
+    expected_style = '--'
+    assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_style"] == expected_style
+    assert multiple_flightpath_widget.change_line_style is True
+    mock_update_patch.assert_called_once_with(wp_model)
 
 
 def test_selectAll(main_window):
@@ -211,23 +211,17 @@ def test_random_custom_color_selection(main_window):
     """
     _, multiple_flightpath_widget = main_window
 
-    # Mock the get_random_color method to test random selection
-    with mock.patch.object(multiple_flightpath_widget, "get_random_color",
-                           wraps=multiple_flightpath_widget.get_random_color) as mock_get_random_color:
-        # Select random colors multiple times
-        selected_colors = set()
-        for _ in range(10):  # Test with 10 random selections
-            color = multiple_flightpath_widget.get_random_color()
-            normalized_color = tuple(int(c * 255) for c in color)
-            assert normalized_color not in selected_colors, "Duplicate color selected!"
-            selected_colors.add(normalized_color)
+    # Select random colors multiple times
+    selected_colors = set()
+    for _ in range(10):  # Test with 10 random selections
+        color = multiple_flightpath_widget.get_random_color()
+        normalized_color = tuple(int(c * 255) for c in color)
+        assert normalized_color not in selected_colors, "Duplicate color selected!"
+        selected_colors.add(normalized_color)
 
-        # Ensure the mock method was called 10 times
-        assert mock_get_random_color.call_count == 10
-
-        # Check that all selected colors are from the custom_colors list
-        for color in selected_colors:
-            assert color in multiple_flightpath_widget.custom_colors
+    # Check that all selected colors are from the custom_colors list
+    for color in selected_colors:
+        assert color in multiple_flightpath_widget.custom_colors
 
 
 def activate_flight_track_at_index(main_window, index):
