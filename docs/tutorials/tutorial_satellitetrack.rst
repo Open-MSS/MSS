@@ -4,7 +4,7 @@ Top View and  Satellite Overflight
 To combine a flight path with a satellite overflight, the remotesensing widget is used.
 
 
-  .. video:: ../_static/mp4/tutorial_satellitetrack.mp4
+  .. video:: ../videos/mp4/tutorial_satellitetrack.mp4
      :alt: This is Satellite Tracking Prediction System that can be used to check the accuracy of the path
            travelled by a Satellite by the help of data collected from different space agencies and planning
            a flight accordingly.

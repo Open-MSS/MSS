@@ -61,6 +61,7 @@ from PyQt5.QtGui import QPixmap
 
 from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
 from mslib.utils.verify_user_token import verify_user_token
+from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
 from mslib.msui.qt5 import ui_add_operation_dialog as add_operation_ui
@@ -2039,10 +2040,12 @@ class MSUIMscolab(QtCore.QObject):
                 return
             dir_path, file_name = fs.path.split(file_path)
             file_name = fs.path.basename(file_path)
-            name, file_ext = fs.path.splitext(file_name)
             if function is None:
                 with open_fs(dir_path) as file_dir:
                     xml_content = file_dir.readtext(file_name)
+                    if not verify_waypoint_data(xml_content):
+                        show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
+                        return
                 try:
                     model = ft.WaypointsTableModel(xml_content=xml_content)
                 except SyntaxError:
@@ -2054,6 +2057,9 @@ class MSUIMscolab(QtCore.QObject):
                 model = ft.WaypointsTableModel(waypoints=new_waypoints)
                 xml_doc = self.waypoints_model.get_xml_doc()
                 xml_content = xml_doc.toprettyxml(indent="  ", newl="\n")
+            if not verify_waypoint_data(xml_content):
+                show_popup(self.ui, "Import Failed", f"The file - {file_name}, was not imported!", 0)
+                return
             self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
             self.waypoints_model = model
             self.handle_waypoints_changed()
