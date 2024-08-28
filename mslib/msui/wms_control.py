@@ -551,14 +551,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.style_name=styles
             self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles,level=level)
             self.populate_ui(update_level=level)
-            for i in range(self.cbLevel.count()):
-                item_text = self.cbLevel.itemText(i)
-                print("elements present ",i,item_text)
-                if item_text.startswith(level):
-                    self.cbLevel.setCurrentText(item_text)
-                    print("level changed iufhvfhdhhlbl sd fs fsfs fsdf",item_text)
-                    self.level_changed()
-                    break
             print(layer)
         else:
             # Get coordinate reference system and bounding box from the map
@@ -583,7 +575,22 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                         
                         if child_item.text(column).endswith(layer):
                             self.current_sel_layer=child_item
-            
+
+            self.multilayers.threads += 1
+
+            if self.multilayers.carry_parameters["level"] in self.current_sel_layer.get_levels():
+                self.current_sel_layer.set_level(self.multilayers.carry_parameters["level"])
+            if self.multilayers.carry_parameters["itime"] in self.current_sel_layer.get_itimes():
+                self.current_sel_layer.set_itime(self.multilayers.carry_parameters["itime"])
+            if self.multilayers.carry_parameters["vtime"] in self.current_sel_layer.get_vtimes():
+                self.current_sel_layer.set_vtime(self.multilayers.carry_parameters["vtime"])
+            # check the first element of a fresh list can be clicked too
+            if self.multilayers.current_layer != self.current_sel_layer or list(self.multilayers.layers[self.current_sel_layer.wms_name]).index(self.current_sel_layer.text(0)) == 2:
+                self.multilayers.current_layer = self.current_sel_layer
+                self.multilayers.listLayers.setCurrentItem(self.current_sel_layer)
+                index = self.multilayers.cbWMS_URL.findText(self.current_sel_layer.get_wms().url)
+                if index != -1 and index != self.multilayers.cbWMS_URL.currentIndex():
+                    self.multilayers.cbWMS_URL.setCurrentIndex(index)
             layers = [self.current_sel_layer]
             args = []
             for i, layer_itr in enumerate(layers):
@@ -618,7 +625,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             print(layer)
     
     def leftrow_is_selected(self,vtime):
-        self.populate_ui()
         self.cbValidTime.setCurrentText(vtime)
         self.valid_time_changed()
         pass

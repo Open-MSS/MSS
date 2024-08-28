@@ -39,11 +39,11 @@ from mslib.msui import constants as const
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
-    
-    treewidget_item_selected = QtCore.pyqtSignal(str,str,str,str)
-    autoplot_treewidget_item_selected = QtCore.pyqtSignal(str,str)
 
-    def __init__(self, parent=None, view=None, config_settings=None):
+    treewidget_item_selected = QtCore.pyqtSignal(str, str, str, str)
+    autoplot_treewidget_item_selected = QtCore.pyqtSignal(str, str)
+
+    def __init__(self, parent=None, parent2=None, view=None, config_settings=None):
         super().__init__()
         self.setupUi(self)
 
@@ -60,7 +60,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.vertical = ""
         self.filename = ""
         self.itime = ""
-        self.vtime= ""
+        self.vtime = ""
         self.stime = ""
         self.etime = ""
         self.intv = ""
@@ -68,31 +68,31 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.refresh_sig(config_settings)
 
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
-        
+
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.autoplotSecsTreeWidget_selected_row)
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.autoplotTreeWidget_selected_row)
 
         # Add to TreeWidget
         if self.view == "Top View":
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
                 parent.cbChangeMapSection.currentText(), self.vertical, parent.waypoints_model.name, parent.curritime,
                 parent.currvtime, "", "", "", ""
             ))
         elif self.view == "Side View":
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
                 parent.currvertical, parent.waypoints_model.name, parent.curritime, parent.currvtime, "", "",
                 "", ""
             ))
         else:
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
                 parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
 
         self.addToAutoplotSecsButton.clicked.connect(lambda: self.add_to_treewidget(
-            parent, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
+            parent, parent2, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
             parent.currurl, parent.currlayer, str(parent.currstyles).strip(), parent.currlevel
         ))
 
@@ -105,23 +105,23 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         # Update Tree Widget
         if self.view == "Top View":
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
                 parent.cbChangeMapSection.currentText(), "", parent.waypoints_model.name, parent.curritime,
                 parent.currvtime, "", "", "", ""
             ))
         elif self.view == "Side View":
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
                 parent.currvertical, parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
         else:
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
                 parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
 
         self.UploadAutoplotSecsButton.clicked.connect(lambda: self.update_treewidget(
-            parent, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
+            parent, parent2, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
             parent.currurl, parent.currlayer, str(parent.currstyles).strip(), parent.currlevel
         ))
 
@@ -140,40 +140,39 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed)
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
         self.downloadPushButton.clicked.connect(self.download_plots_cli)
- 
+
     def download_plots_cli(self):
-        view="top"
+        view = "top"
         etime_str = self.etime
         date_time_obj = datetime.strptime(etime_str, '%Y/%m/%d %H:%M %Z')
         formatted_etime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
         stime_str = self.stime
         date_time_obj = datetime.strptime(stime_str, '%Y/%m/%d %H:%M %Z')
         formatted_stime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
-        index=self.intv.find(' ')
-        intv=0
-        intv=int(self.intv[:index])
+        index = self.intv.find(' ')
+        intv = 0
+        intv = int(self.intv[:index])
         if self.view == "Top View":
-            view="top"
+            view = "top"
         elif self.view == "Side View":
-            view="side"
+            view = "side"
         else:
-            view="linear"
-        config_path=os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
-        print("config path is ",config_path,view)
+            view = "linear"
+        config_path = os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
+        print("config path is ", config_path, view)
         args = [
-        "--cpath", config_path,
-        "--view", view,
-        "--ftrack", None,
-        "--itime", None,
-        "--vtime", None,
-        "--intv", intv,
-        "--stime", formatted_stime,
-        "--etime", formatted_etime
+            "--cpath", config_path,
+            "--view", view,
+            "--ftrack", None,
+            "--itime", None,
+            "--vtime", None,
+            "--intv", intv,
+            "--stime", formatted_stime,
+            "--etime", formatted_etime
         ]
         with click.Context(autopl):
             autopl.main(args=args, prog_name="autoplot_gui")
-        
-    
+
     def autoplotSecsTreeWidget_selected_row(self):
         selected_items = self.autoplotSecsTreeWidget.selectedItems()
         if selected_items:
@@ -182,17 +181,16 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             styles = selected_items[0].text(2)
             level = selected_items[0].text(3)
 
-            self.treewidget_item_selected.emit(url,layer,styles,level)
-            print("autoplotSecsTreewidget_dockwidget",url,layer,styles,level)
+            self.treewidget_item_selected.emit(url, layer, styles, level)
+            print("autoplotSecsTreewidget_dockwidget", url, layer, styles, level)
 
     def autoplotTreeWidget_selected_row(self):
         selected_items = self.autoplotTreeWidget.selectedItems()
         if selected_items:
             section = selected_items[0].text(1)
             vtime = selected_items[0].text(5)
-            self.autoplot_treewidget_item_selected.emit(section,vtime)
-            print("autoplotTreewidget_dockwidget",section,vtime)        
-        
+            self.autoplot_treewidget_item_selected.emit(section, vtime)
+            print("autoplotTreewidget_dockwidget", section, vtime)
 
     def on_item_selection_changed(self):
         selected_item = self.autoplotTreeWidget.selectedItems()
@@ -216,7 +214,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
         if fileName != "":
-            self.cpath=fileName
+            self.cpath = fileName
             with open(fileName, 'r') as file:
                 configure = json.load(file)
             autoplot_flights = configure["automated_plotting_flights"]
@@ -232,7 +230,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
 
-    def add_to_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
+    def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
         if treewidget.objectName() == "autoplotTreeWidget":
             if flight.startswith("new flight track"):
@@ -261,7 +259,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.stime = ""
         self.etime = ""
 
-    def update_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
+    def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
         if flight.startswith("new flight track"):
             filename = ""
@@ -336,6 +334,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
         self.autoplotSecsTreeWidget.clearSelection()
         self.autoplotTreeWidget.clearSelection()
+
     def remove_selected_row(self, parent, treewidget, config_settings):
         selected_item = treewidget.currentItem()
         if selected_item:

@@ -260,7 +260,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, config_settings=config_settings))
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, parent=parent,config_settings=config_settings))
 
         if mainwindow is not None:
             # Update flighttrack
@@ -341,7 +341,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         if current_map_key in predefined_map_sections.keys():
             self.cbChangeMapSection.setCurrentText(current_map_key)
 
-    def openTool(self, index, config_settings=None):
+    def openTool(self, index, parent=None,config_settings=None):
         """
         Slot that handles requests to open control windows.
         """
@@ -397,7 +397,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     self.signal_activate_operation.emit(self.active_op_id)
             elif index == AUTOPLOT:
                 title = "Autoplot (Top View)"
-                widget = dock.AutoplotDockWidget(parent=self, view="Top View", config_settings=config_settings)
+                widget = dock.AutoplotDockWidget(parent=self,parent2=parent, view="Top View", config_settings=config_settings)
                 widget.treewidget_item_selected.connect(lambda url,layer,style,level: self.tree_item_select(url,layer,style,level))
                 widget.autoplot_treewidget_item_selected.connect(lambda section,vtime: self.treePlot_item_select(section,vtime))
             else:
