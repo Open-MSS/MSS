@@ -654,6 +654,14 @@ class MSUIMscolab(QtCore.QObject):
         self.user = _json["user"]
         self.mscolab_server_url = url
 
+        if config_loader(dataset="MSCOLAB_skip_archived_operations"):
+            self.ui.pbOpenOperationArchive.setEnabled(False)
+            self.ui.pbOpenOperationArchive.setToolTip(
+                "This button is disabled to the config option 'MSCOLAB_skip_archived_operations'")
+        else:
+            self.ui.pbOpenOperationArchive.setEnabled(True)
+            self.ui.pbOpenOperationArchive.setToolTip("")
+
         # create socket connection here
         try:
             self.conn = sc.ConnectionManager(self.token, user=self.user, mscolab_server_url=self.mscolab_server_url)
