@@ -625,9 +625,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             print(layer)
     
     def leftrow_is_selected(self,vtime):
-        self.cbValidTime.setCurrentText(vtime)
-        self.valid_time_changed()
-        pass
+        if vtime is not None:
+            self.cbValidTime.setCurrentText(vtime)
+            self.valid_time_changed()
 
     def __del__(self):
         """Destructor.

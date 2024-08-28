@@ -35,6 +35,7 @@ import click
 import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
+from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from fs import open_fs
 
 import mslib
@@ -323,7 +324,8 @@ class LinearViewPlotting(Plotting):
 @click.option('--intv', default=0, help='Time interval.')
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
-def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
+@click.pass_context
+def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
     if view == "top":
@@ -352,6 +354,11 @@ def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
                 print(str(e))
         else:
             print("Plot downloaded!")
+            QMessageBox.information(
+                ctx.obj,  # The parent widget (use `None` if no parent)
+                "SUCCESS",  # Title of the message box
+                "Plots downloaded successfully."  # Message text
+            )
 
     for flight, section, vertical, filename, init_time, time in \
         config["automated_plotting_flights"]:

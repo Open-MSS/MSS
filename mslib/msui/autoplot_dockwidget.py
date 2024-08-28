@@ -32,7 +32,7 @@ import os
 from datetime import datetime
 import click
 from mslib.utils.mssautoplot import main as autopl
-from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
+from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui import constants as const
@@ -143,15 +143,20 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
     def download_plots_cli(self):
         view = "top"
+        formatted_etime = None
+        formatted_stime = None
         etime_str = self.etime
-        date_time_obj = datetime.strptime(etime_str, '%Y/%m/%d %H:%M %Z')
-        formatted_etime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
+        if etime_str != "":
+            date_time_obj = datetime.strptime(etime_str, '%Y/%m/%d %H:%M %Z')
+            formatted_etime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
         stime_str = self.stime
-        date_time_obj = datetime.strptime(stime_str, '%Y/%m/%d %H:%M %Z')
-        formatted_stime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
-        index = self.intv.find(' ')
+        if stime_str != "":
+            date_time_obj = datetime.strptime(stime_str, '%Y/%m/%d %H:%M %Z')
+            formatted_stime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
         intv = 0
-        intv = int(self.intv[:index])
+        if self.intv != "":
+            index = self.intv.find(' ')
+            intv = int(self.intv[:index])
         if self.view == "Top View":
             view = "top"
         elif self.view == "Side View":
@@ -170,8 +175,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             "--stime", formatted_stime,
             "--etime", formatted_etime
         ]
-        with click.Context(autopl):
-            autopl.main(args=args, prog_name="autoplot_gui")
+        autopl.main(args=args, prog_name="autoplot_gui", obj=self)
 
     def autoplotSecsTreeWidget_selected_row(self):
         selected_items = self.autoplotSecsTreeWidget.selectedItems()
@@ -237,13 +241,16 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 filename = ""
                 flight = ""
             else:
-                filename += ".ftml"
+                if filename != parent2.mscolab.active_operation_name:
+                    filename += ".ftml"
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
             config_settings["automated_plotting_flights"].append([flight, sections, vertical, filename, itime, vtime])
             parent.refresh_signal_emit.emit()
         if treewidget.objectName() == "autoplotSecsTreeWidget":
+            if url is None:
+                return
             item = QTreeWidgetItem([url, layer, styles, level, self.stime, self.etime, self.intv])
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
             self.autoplotSecsTreeWidget.setCurrentItem(item)
@@ -265,7 +272,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             filename = ""
             flight = ""
         else:
-            filename += ".ftml"
+            if filename != parent2.mscolab.active_operation_name:
+                filename += ".ftml"
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)
@@ -291,6 +299,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
 
         if treewidget.objectName() == "autoplotSecsTreeWidget":
+            if url is None:
+                return
             selected_item = self.autoplotSecsTreeWidget.currentItem()
             selected_item.setText(0, url)
             selected_item.setText(1, layer)
