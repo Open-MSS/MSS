@@ -4,7 +4,7 @@ Introduction to MSUI
 Using the different views of the MSUI with a fictitious flight path and demo data.
 
 
-  .. video:: ../_static/mp4//tutorial_views.mp4
+  .. video:: ../videos/mp4/tutorial_views.mp4
      :alt: Lets look at the tutorial of the various views required for flight planning:
            Top View (CTRL+H), Side View (CTRL+V), Linear View (CTRL+L) and Table View (CTRL+T).
            At first, lets open Top View and Side View.

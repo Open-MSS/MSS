@@ -34,11 +34,15 @@ import sys
 import secrets
 import subprocess
 import git
+import flask_migrate
+import pathlib
 
 from mslib import __version__
+from mslib.mscolab import migrations
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operation, \
     add_all_users_to_all_operations, delete_user
+from mslib.mscolab.server import APP
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 from mslib.utils.qt import Worker, Updater
@@ -65,24 +69,25 @@ def confirm_action(confirmation_prompt):
             print("Invalid input! Please select an option between y or n")
 
 
-def handle_db_init():
-    from mslib.mscolab.models import db
-    from mslib.mscolab.server import APP
-    create_files()
-    with APP.app_context():
-        db.create_all()
-    print("Database initialised successfully!")
-
-
 def handle_db_reset(verbose=True):
-    from mslib.mscolab.models import db
-    from mslib.mscolab.server import APP
-    if os.path.exists(mscolab_settings.DATA_DIR):
+    if mscolab_settings.SQLALCHEMY_DB_URI.startswith("sqlite:///") and (
+        db_path := pathlib.Path(mscolab_settings.SQLALCHEMY_DB_URI.removeprefix("sqlite:///"))
+    ).is_relative_to(mscolab_settings.DATA_DIR):
+        # Don't remove the database file
+        # This would be easier if the database wasn't stored in DATA_DIR...
+        p = pathlib.Path(mscolab_settings.DATA_DIR)
+        for root, dirs, files in os.walk(p, topdown=False):
+            for name in files:
+                full_file_path = pathlib.Path(root) / name
+                if full_file_path != db_path:
+                    full_file_path.unlink()
+            for name in dirs:
+                (pathlib.Path(root) / name).rmdir()
+    elif os.path.exists(mscolab_settings.DATA_DIR):
         shutil.rmtree(mscolab_settings.DATA_DIR)
     create_files()
-    with APP.app_context():
-        db.drop_all()
-        db.create_all()
+    flask_migrate.downgrade(directory=migrations.__path__[0], revision="base")
+    flask_migrate.upgrade(directory=migrations.__path__[0])
     if verbose is True:
         print("Database has been reset successfully!")
 
@@ -365,7 +370,6 @@ def main():
 
     database_parser = subparsers.add_parser("db", help="Manage mscolab database")
     database_parser = database_parser.add_mutually_exclusive_group(required=True)
-    database_parser.add_argument("--init", help="Initialise database", action="store_true")
     database_parser.add_argument("--reset", help="Reset database", action="store_true")
     database_parser.add_argument("--seed", help="Seed database", action="store_true")
     database_parser.add_argument("--users_by_file", type=argparse.FileType('r'),
@@ -417,18 +421,18 @@ def main():
         handle_start(args)
 
     elif args.action == "db":
-        if args.init:
-            handle_db_init()
-        elif args.reset:
+        if args.reset:
             confirmation = confirm_action("Are you sure you want to reset the database? This would delete "
                                           "all your data! (y/[n]):")
             if confirmation is True:
-                handle_db_reset()
+                with APP.app_context():
+                    handle_db_reset()
         elif args.seed:
             confirmation = confirm_action("Are you sure you want to seed the database? Seeding will delete all your "
                                           "existing data and replace it with seed data (y/[n]):")
             if confirmation is True:
-                handle_db_seed()
+                with APP.app_context():
+                    handle_db_seed()
         elif args.users_by_file is not None:
             # fileformat: suggested_username  name   <email>
             confirmation = confirm_action("Are you sure you want to add users to the database? (y/[n]):")

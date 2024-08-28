@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.version
-    ~~~~~~~~~~~~~~~~
+    mslib.mscolab.custom_migration_types
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    This module provides the version number
+    Consolidated module of all custom/non-standard database types used in MSColab.
 
     This file is part of MSS.
 
-    :copyright: Copyright 2016-2017 Reimar Bauer
-    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2024 Matthias Riße
+    :copyright: Copyright 2024 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,4 +24,4 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-__version__ = u'9.2.0'
+from mslib.mscolab.models import AwareDateTime  # noqa: F401
