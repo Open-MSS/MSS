@@ -77,7 +77,7 @@ requirements:
     - metpy
     - pycountry
     - websocket-client
-    - libtiff
+    - libtiff <4.5.0
     - flask-wtf
     - email_validator
     - keyring

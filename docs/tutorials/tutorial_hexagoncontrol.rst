@@ -3,7 +3,7 @@ Table View and Hexagon Flight Patterns
 
 For tomographic imaging, a hexagonal flight pattern can be integrated by a docking widget of Table View
 
-   .. video:: ../videos/mp4/tutorial_hexagoncontrol.mp4
+   .. video:: ../_static/mp4/tutorial_hexagoncontrol.mp4
      :alt: Top View windows is opened (CTRL+H).
            We select the "global (cyl)" for the world map.
            Zooming in for the required region.
