@@ -42,6 +42,7 @@ from matplotlib import cbook, figure
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT, FigureCanvasQTAgg
 import matplotlib.backend_bases
 from PyQt5 import QtCore, QtWidgets, QtGui
+from matplotlib.lines import Line2D
 
 from mslib.utils.thermolib import convert_pressure_to_vertical_axis_measure
 from mslib.utils import thermolib, FatalUserError
@@ -347,6 +348,38 @@ class TopViewPlotter(ViewPlotter):
             # Plot the new legimg in the legax axes.
             self.legimg = self.legax.imshow(img, origin=PIL_IMAGE_ORIGIN, aspect="equal", interpolation="nearest")
         self.ax.figure.canvas.draw()
+
+    def draw_flightpath_legend(self, flightpath_dict):
+        """
+        Draw the flight path legend on the plot.
+        """
+        # Clear any existing legend
+        if self.legax is not None:
+            self.legax.remove()
+            self.legax = None
+
+        if not flightpath_dict:
+            self.ax.figure.canvas.draw()
+            return
+
+        # Create a new axis for the legend
+        self.legax = self.fig.add_axes([0.85, 0.7, 0.13, 0.2], frameon=False)
+        self.legax.axis('off')  # Hide the axis
+
+        # Create legend handles
+        legend_handles = []
+        for name, (color, linestyle) in flightpath_dict.items():
+            line = Line2D([0], [0], color=color, linestyle=linestyle, linewidth=2)
+            legend_handles.append((line, name))
+
+        # Add legend to the legend axis
+        self.legax.legend(
+            [handle for handle, _ in legend_handles],
+            [name for _, name in legend_handles],
+            frameon=False
+        )
+
+        self.ax.figure.canvas.draw_idle()
 
 
 class SideViewPlotter(ViewPlotter):
@@ -1638,6 +1671,13 @@ class MplTopViewCanvas(MplCanvas):
         self.plotter.draw_legend(img)
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
+
+    def update_flightpath_legend(self, flightpath_dict):
+        """
+        Update the flight path legend.
+        flightpath_dict: Dictionary where keys are flighttrack names, and values are tuples with (color, linestyle).
+        """
+        self.plotter.draw_flightpath_legend(flightpath_dict)
 
     def plot_satellite_overpass(self, segments):
         """Plots a satellite track on top of the map.

@@ -392,6 +392,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
         # Show flighttrack color icon
         listItem.setIcon(self.show_color_icon(self.get_color(wp_model)))
+        self.update_flightpath_legend()
 
         return listItem
 
@@ -545,6 +546,20 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             line_transparency=self.dict_flighttrack[wp_model]["line_transparency"],
             line_style=self.dict_flighttrack[wp_model]["line_style"]
         )
+        self.update_flightpath_legend()
+
+    def update_flightpath_legend(self):
+        """
+        Collects flight path data and updates the legend in the TopView.
+        """
+        flightpath_dict = {}
+        for wp_model, flighttrack_data in self.dict_flighttrack.items():
+            name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed Flighttrack'
+            color = flighttrack_data.get('color', '#000000')  # Default to black
+            linestyle = flighttrack_data.get('line_style', '-')  # Default to solid line
+            flightpath_dict[name] = (color, linestyle)
+
+        self.view.update_flightpath_legend(flightpath_dict)
 
     def flighttrackRemoved(self, parent, start, end):
         """
@@ -556,6 +571,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         else:
             self.dict_flighttrack[self.list_flighttrack.item(start).flighttrack_model]["patch"].remove()
         self.list_flighttrack.takeItem(start)
+        self.update_flightpath_legend()
 
     def update_last_flighttrack(self):
         """
