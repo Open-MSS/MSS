@@ -865,7 +865,7 @@ class MSUIMscolab(QtCore.QObject):
             try:
                 # Resize the image and set profile image pixmap
                 image = Image.open(file_name)
-                image = image.resize((64, 64), Image.ANTIALIAS)
+                image = image.resize((64, 64), Image.LANCZOS)
                 img_byte_arr = io.BytesIO()
                 image.save(img_byte_arr, format=file_format)
                 img_byte_arr.seek(0)
