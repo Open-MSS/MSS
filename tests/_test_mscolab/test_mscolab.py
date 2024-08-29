@@ -53,7 +53,7 @@ def test_main():
 
     with mock.patch("mslib.mscolab.mscolab.argparse.ArgumentParser.parse_args",
                     return_value=argparse.Namespace(version=False, update=False, action="db",
-                                                    init=False, reset=False, seed=False, users_by_file=None,
+                                                    reset=False, seed=False, users_by_file=None,
                                                     default_operation=False, add_all_to_all_operation=False,
                                                     delete_users_by_file=False)):
         main()
