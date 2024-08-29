@@ -3,7 +3,7 @@ Top View Drawing Waypoints
 
 Waypoints for a flight path are defined, shifted and deleted.
 
-  .. video:: ../_static/mp4/tutorial_waypoints.mp4
+  .. video:: ../videos/mp4/tutorial_waypoints.mp4
      :alt: This is the waypoints tutorial,i.e., whenever we are going to plan
            a flight track, we have to place the waypoints in some places and,
            form a flight path.
