@@ -285,7 +285,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
             self.mainwindow_signal_login_mscolab.connect(self.login)
 
-
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
 
