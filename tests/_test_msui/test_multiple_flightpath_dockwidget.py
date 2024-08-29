@@ -25,33 +25,221 @@
     limitations under the License.
 """
 import pytest
-from PyQt5 import QtTest
+from PyQt5 import QtWidgets, QtCore, QtGui, QtTest
+from unittest import mock
+
 from mslib.msui import msui
-from mslib.msui.multiple_flightpath_dockwidget import MultipleFlightpathControlWidget
-from mslib.msui import flighttrack as ft
 import mslib.msui.topview as tv
 
 
-class Test_MultipleFlightpathControlWidget:
-    @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
-        self.window = msui.MSUIMainWindow()
-        self.window.create_new_flight_track()
+@pytest.fixture
+def main_window(qtbot):
+    """
+    Set-up for the docking widget
+    """
+    # Start a MSUI window
+    window = msui.MSUIMainWindow()
+    window.show()
+    qtbot.wait_exposed(window)
 
-        self.window.actionNewFlightTrack.trigger()
-        self.window.actionTopView.trigger()
-        initial_waypoints = [ft.Waypoint(40., 25., 0), ft.Waypoint(60., -10., 0), ft.Waypoint(40., 10, 0)]
-        self.waypoints_model = ft.WaypointsTableModel("myname")
-        self.waypoints_model.insertRows(
-            0, rows=len(initial_waypoints), waypoints=initial_waypoints)
+    # Create two flight tracks
+    window.actionNewFlightTrack.trigger()
+    window.actionNewFlightTrack.trigger()
 
-        self.widget = tv.MSUITopViewWindow(model=self.waypoints_model, mainwindow=self.window)
-        self.window.show()
-        QtTest.QTest.qWaitForWindowExposed(self.window)
-        yield
-        self.window.hide()
+    # Open a Top View window
+    window.actionTopView.trigger()
+    topview_window = window.listViews.currentItem().window
 
-    def test_initialization(self):
-        widget = MultipleFlightpathControlWidget(parent=self.widget,
-                                                 listFlightTracks=self.window.listFlightTracks)
-        assert widget.color == (0, 0, 1, 1)
+    # Switch to the Multiple Flightpath Widget
+    topview_window.cbTools.setCurrentIndex(6)
+
+    # Get a reference to the created MultipleFlightpathControlWidget
+    multiple_flightpath_widget = topview_window.docks[tv.MULTIPLEFLIGHTPATH].widget()
+
+    yield window, multiple_flightpath_widget
+
+    window.hide()
+
+
+def test_initialization(main_window):
+    """
+    test for conforming docking widget has initialized
+    """
+    _, multiple_flightpath_widget = main_window
+
+    # Ensure the MultipleFlightpathControlWidget is correctly initialized
+    assert multiple_flightpath_widget is not None
+    assert multiple_flightpath_widget.color == (0, 0, 1, 1)
+
+
+def test_setColour(main_window):
+    """
+    test for the filghttrack colour
+    """
+    main_window, multiple_flightpath_widget = main_window
+    color_button = multiple_flightpath_widget.pushButton_color
+
+    # Activate the first flight track
+    activate_flight_track_at_index(main_window, 0)
+
+    # Click on the second flight track in the docking widget
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+
+    # Simulate clicking the button to open the color dialog
+    color_button.click()
+
+    # Get a reference to the custom color dialog
+    color_dialog = multiple_flightpath_widget.findChild(QtWidgets.QDialog)
+    assert color_dialog is not None
+
+    # Select the first color
+    color = QtGui.QColor(color_dialog.colors[0])
+    color_dialog.color_buttons[0].click()
+
+    # Verify that the flight track data structure was updated with the new color
+    wp_model = multiple_flightpath_widget.list_flighttrack.currentItem().flighttrack_model
+    applied_color_rgba = multiple_flightpath_widget.get_color(wp_model)
+
+    # Convert the applied_color_rgba to a QColor object
+    applied_color = QtGui.QColor.fromRgbF(*applied_color_rgba)
+
+    assert applied_color == color
+
+
+def test_set_linewidth(main_window):
+    """
+    test for the filghttrack line width
+    """
+    main_window, multiple_flightpath_widget = main_window
+
+    activate_flight_track_at_index(main_window, 0)
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+
+    # Ensure the current item is checked
+    item = multiple_flightpath_widget.list_flighttrack.currentItem()
+    item.setCheckState(QtCore.Qt.Checked)
+
+    # mock update_flighttrack_patch method to check if it gets called
+    with mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch:
+        # s.et the line width
+        multiple_flightpath_widget.dsbx_linewidth.setValue(3.0)
+        mock_update_patch.assert_called_once_with(item.flighttrack_model)
+
+    # Verify the line width has been updated in dict_flighttrack
+    wp_model = item.flighttrack_model
+    assert multiple_flightpath_widget.dict_flighttrack[wp_model]["linewidth"] == 3.0
+    assert multiple_flightpath_widget.change_linewidth is True
+
+
+def test_set_transparency(main_window):
+    """
+    test for the filghttrack line transparency
+    """
+    main_window, multiple_flightpath_widget = main_window
+
+    activate_flight_track_at_index(main_window, 0)
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+
+    item = multiple_flightpath_widget.list_flighttrack.currentItem()
+    item.setCheckState(QtCore.Qt.Checked)
+
+    # Mock the update_flighttrack_patch method
+    with mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch:
+
+        multiple_flightpath_widget.hsTransparencyControl.setValue(50)
+        mock_update_patch.assert_called_once_with(item.flighttrack_model)
+
+    # Verify the transparency has been updated in dict_flighttrack
+    wp_model = item.flighttrack_model
+    assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_transparency"] == (50 / 100)
+    assert multiple_flightpath_widget.change_line_transparency is True
+
+
+def test_set_linestyle(main_window):
+    """
+    test for the filghttrack line style
+    """
+    main_window, multiple_flightpath_widget = main_window
+
+    activate_flight_track_at_index(main_window, 0)
+    click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, 1)
+
+    item = multiple_flightpath_widget.list_flighttrack.currentItem()
+    item.setCheckState(QtCore.Qt.Checked)
+
+    # Mock the cbLineStyle setCurrentText and the update_flighttrack_patch method
+    with mock.patch.object(multiple_flightpath_widget, "update_flighttrack_patch") as mock_update_patch:
+
+        multiple_flightpath_widget.cbLineStyle.setCurrentText('Dashed')
+        mock_update_patch.assert_called_once_with(item.flighttrack_model)
+
+    # Verify the line style has been updated in dict_flighttrack
+    wp_model = item.flighttrack_model
+    expected_style = '--'
+    assert multiple_flightpath_widget.dict_flighttrack[wp_model]["line_style"] == expected_style
+    assert multiple_flightpath_widget.change_line_style is True
+    mock_update_patch.assert_called_once_with(wp_model)
+
+
+def test_selectAll(main_window):
+    """
+    Test the selectAll method by interacting with the UI directly.
+    """
+    main_window, multiple_flightpath_widget = main_window
+
+    # Check the "Select All" checkbox
+    select_all_checkbox = multiple_flightpath_widget.cbSlectAll1
+    select_all_checkbox.setCheckState(QtCore.Qt.Checked)
+
+    # Verify that all items in the list are checked
+    for i in range(multiple_flightpath_widget.list_flighttrack.count()):
+        item = multiple_flightpath_widget.list_flighttrack.item(i)
+        assert item.checkState() == QtCore.Qt.Checked
+
+    select_all_checkbox.setCheckState(QtCore.Qt.Unchecked)
+
+    # Verify that all items in the list are unchecked
+    for i in range(multiple_flightpath_widget.list_flighttrack.count()):
+        item = multiple_flightpath_widget.list_flighttrack.item(i)
+        assert item.checkState() == QtCore.Qt.Unchecked
+
+
+def test_random_custom_color_selection(main_window):
+    """
+    Test that a random custom color is selected automatically each time
+    and ensure that it is different from the previous selections.
+    """
+    _, multiple_flightpath_widget = main_window
+
+    # Select random colors multiple times
+    selected_colors = set()
+    for _ in range(10):  # Test with 10 random selections
+        color = multiple_flightpath_widget.get_random_color()
+        normalized_color = tuple(int(c * 255) for c in color)
+        assert normalized_color not in selected_colors, "Duplicate color selected!"
+        selected_colors.add(normalized_color)
+
+    # Check that all selected colors are from the custom_colors list
+    for color in selected_colors:
+        assert color in multiple_flightpath_widget.custom_colors
+
+
+def activate_flight_track_at_index(main_window, index):
+    # The main window must be on top
+    main_window.activateWindow()
+    # get the item by its index
+    item = main_window.listFlightTracks.item(index)
+    point = main_window.listFlightTracks.visualItemRect(item).center()
+    QtTest.QTest.mouseClick(main_window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+    QtTest.QTest.mouseDClick(main_window.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+
+
+def click_on_flight_track_in_docking_widget_at_index(multiple_flightpath_widget, index):
+    # Activating the dock_widget window
+    multiple_flightpath_widget.activateWindow()
+    # Get the item by its index
+    item = multiple_flightpath_widget.list_flighttrack.item(index)
+    multiple_flightpath_widget.list_flighttrack.setCurrentItem(item)
+    # Simulate selection of the flight track by single clicking the item
+    point = multiple_flightpath_widget.list_flighttrack.visualItemRect(item).center()
+    QtTest.QTest.mouseClick(multiple_flightpath_widget.list_flighttrack.viewport(), QtCore.Qt.LeftButton, pos=point)
