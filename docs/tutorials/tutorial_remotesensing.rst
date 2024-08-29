@@ -4,7 +4,7 @@ Top View and Remotesensing Tools
 In order to be able to take into account the viewing angle and solar level for measuring instruments, the remotesensing tools are used
 
 
-  .. video:: ../videos/mp4/tutorial_remotesensing.mp4
+  .. video:: ../_static/mp4/tutorial_remotesensing.mp4
      :alt: This is the Remote Sensing Section of the Top View.
            It shows the position and angle of the flight from any particular object in the sky.
            Azimuth is the forward direction line of the flight. If we go above tHE AZIMUTH, angle is in positive,

@@ -8,7 +8,7 @@ software that simplifies the process for planning a scientific flight.
 # Drawing waypoints in the MSUI Topview
 The example shows defining of waypoints for a flight path, moved and deleted.
 
-![Waypoint Tutorial](https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.mp4)
+![Waypoint Tutorial](https://mss.readthedocs.io/en/stable/_static/mp4/tutorial_waypoints.mp4)
 
 
 Further tutorials about the Mission Support System Software on:

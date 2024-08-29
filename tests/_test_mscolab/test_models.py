@@ -30,7 +30,7 @@ import textwrap
 from zoneinfo import ZoneInfo
 
 from mslib.mscolab.server import register_user
-from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, MessageType, Change
+from mslib.mscolab.models import AwareDateTime, User, Permission, Operation, Message, Change
 
 
 def test_aware_datetime_conversion():
@@ -90,12 +90,12 @@ def test_operation_repr():
 
 
 def test_message_creation():
-    message = Message(1, 1, "Hello, this is a test message", MessageType.TEXT, None)
+    message = Message(1, 1, "Hello, this is a test message", "TEXT", None)
 
     assert message.op_id == 1
     assert message.u_id == 1
     assert message.text == "Hello, this is a test message"
-    assert message.message_type == MessageType.TEXT
+    assert message.message_type == "TEXT"
     assert message.reply_id is None
 
 

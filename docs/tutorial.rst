@@ -9,7 +9,7 @@ a `public share <https://fz-juelich.sciebo.de/s/IzNGi24Ki68iV7t#pdfviewer>`_
 Get familiar by some videos about the Mission Support System (MSS).
 
 
-  .. video:: videos/mp4/tutorial_waypoints.mp4
+  .. video:: _static/mp4/tutorial_waypoints.mp4
      :autoplay:
      :loop:
      :alt: This is the waypoints tutorial,i.e., whenever we are going to plan

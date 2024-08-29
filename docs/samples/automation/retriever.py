@@ -31,7 +31,6 @@ import datetime
 import io
 import os
 import xml
-import defusedxml.minidom
 import requests
 from fs import open_fs
 import PIL.Image
@@ -59,7 +58,7 @@ def load_from_ftml(filename):
     _fs = open_fs(_dirname)
     datasource = _fs.open(_name)
     try:
-        doc = defusedxml.minidom.parse(datasource)
+        doc = xml.dom.minidom.parse(datasource)
     except xml.parsers.expat.ExpatError as ex:
         raise SyntaxError(str(ex))
 
