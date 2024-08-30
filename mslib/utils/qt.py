@@ -30,14 +30,13 @@ import os
 import re
 import platform
 import sys
-import subprocess
 import traceback
 
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
 from PyQt5 import QtCore, QtWidgets, QtGui  # noqa
 
 from mslib.utils.config import config_loader
-from mslib.utils import FatalUserError, subprocess_startupinfo
+from mslib.utils import FatalUserError
 
 
 def get_open_filename_qt(*args):
@@ -384,7 +383,6 @@ class Worker(QtCore.QThread):
         if QtCore.QCoreApplication.startingUp():
             self.finished = NonQtCallback()
             self.failed = NonQtCallback()
-
 
     def run(self):
         try:
