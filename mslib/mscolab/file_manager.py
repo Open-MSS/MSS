@@ -36,6 +36,7 @@ import threading
 import mimetypes
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
+from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
@@ -58,9 +59,19 @@ class FileManager:
 
     def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
-        path: path to the operation
-        description: description of the operation
+        Creates a new operation in the mscolab system.
+
+        :param path: The path of the operation.
+        :param description: The description of the operation.
+        :param user: The user object creating the operation.
+        :param last_used: The last used datetime of the operation. Default is None.
+        :param content: The content of the operation. Default is None.
+        :param category: The category of the operation. Default is 'default'.
+        :param active: The activity status of the operation. Default is True.
+        :return: True if the operation is created successfully, False otherwise.
         """
+        if content is not None and not verify_waypoint_data(content):
+            return False
         # set codes on these later
         if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
             logging.debug("malicious request: %s", user)
@@ -339,14 +350,14 @@ class FileManager:
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 logging.debug("malicious request: %s", user)
                 return False
-            data = fs.open_fs(self.data_dir)
-            if data.exists(value):
-                return False
-            # will be move when operations are introduced
-            # make a directory, else movedir
-            data.makedir(value)
-            data.movedir(operation.path, value)
-            # when renamed to a Group operation
+            with fs.open_fs(self.data_dir) as data:
+                if data.exists(value):
+                    return False
+                # will be move when operations are introduced
+                # make a directory, else movedir
+                data.makedir(value)
+                data.movedir(operation.path, value)
+                # when renamed to a Group operation
             if value.endswith(mscolab_settings.GROUP_POSTFIX):
                 # getting the category
                 category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
@@ -394,6 +405,8 @@ class FileManager:
         content: content of the file to be saved
         # ToDo save change in schema
         """
+        if not verify_waypoint_data(content):
+            return False
         # ToDo use comment
         operation = Operation.query.filter_by(id=op_id).first()
         if not operation:

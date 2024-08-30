@@ -34,6 +34,57 @@ from flask import json
 from tests.constants import MSUI_CONFIG_PATH
 
 
+XML_CONTENT1 = """<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="9.1.0">
+    <ListOfWaypoints>
+      <Waypoint flightlevel="180.0" lat="49.161457403107704" location="   B" lon="-0.7246829791034095">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="200.0" lat="52.376317199499915" location="" lon="-7.230946852754318">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="210.0" lat="49.161457403107704" location="" lon="-10.063085244814125">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="180.0" lat="49.23800168397418" location="" lon="-0.7246829791034095">
+        <Comments></Comments>
+      </Waypoint>
+    </ListOfWaypoints>
+  </FlightTrack>"""
+
+
+XML_CONTENT2 = """<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="9.1.0">
+    <ListOfWaypoints>
+      <Waypoint flightlevel="350" lat="61.168" location="Anchorage" lon="-149.96">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="350" lat="51.878" location="Adak" lon="-176.646">
+        <Comments></Comments>
+      </Waypoint>
+    </ListOfWaypoints>
+  </FlightTrack>"""
+
+
+XML_CONTENT3 = """<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="9.1.0">
+    <ListOfWaypoints>
+      <Waypoint flightlevel="0.0" lat="46.558951853647336" location="   C" lon="20.78425994437783">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="100.0" lat="46.635496134513815" location="" lon="6.393935141479346">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="150.0" lat="38.98106804786569" location="" lon="1.495101166024547">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="200.0" lat="46.48240757278086" location="" lon="20.78425994437783">
+        <Comments></Comments>
+      </Waypoint>
+    </ListOfWaypoints>
+  </FlightTrack>"""
+
+
 def callback_ok_image(status, response_headers):
     assert status == "200 OK"
     assert response_headers[0] == ('Content-type', 'image/png')

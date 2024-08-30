@@ -226,7 +226,7 @@ if not on_rtd:  # only import and set the theme if we're building docs locally
     html_style = 'css/mss.css'
 else:
     htmls_static_path = ['_static']
-    html_css_files = ['mss.css']
+    html_css_files = ['css/mss.css']
     html_context = {
         'display_github': False,  # Add 'Edit on Bitbucket' link instead of 'View page source'
         'last_updated': True,

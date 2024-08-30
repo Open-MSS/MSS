@@ -27,7 +27,7 @@
 import pytest
 
 from mslib.mscolab.models import Message, MessageType
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
+from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
 
 
 class Test_Chat_Manager:
@@ -42,20 +42,21 @@ class Test_Chat_Manager:
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
+        self.operation = get_operation(self.operation_name)
         with self.app.app_context():
             yield
 
     def test_add_message(self):
         with self.app.test_client():
             message = self.cm.add_message(self.user, 'some message',
-                                          self.operation_name, message_type=MessageType.TEXT,
+                                          self.operation.id, message_type=MessageType.TEXT,
                                           reply_id=None)
             assert message.text == 'some message'
 
     def test_edit_messages(self):
         with self.app.test_client():
             message = self.cm.add_message(self.user, 'some test message',
-                                          self.operation_name, message_type=MessageType.TEXT,
+                                          self.operation.id, message_type=MessageType.TEXT,
                                           reply_id=None)
             new_message_text = "Wonderland"
             self.cm.edit_message(message.id, new_message_text)
@@ -65,7 +66,7 @@ class Test_Chat_Manager:
     def test_delete_messages(self):
         with self.app.test_client():
             message = self.cm.add_message(self.user, 'some test example message',
-                                          self.operation_name, message_type=MessageType.TEXT,
+                                          self.operation.id, message_type=MessageType.TEXT,
                                           reply_id=None)
             assert 'some test example message' in message.text
             self.cm.delete_message(message.id)
