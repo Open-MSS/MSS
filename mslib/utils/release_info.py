@@ -4,7 +4,7 @@
     mslib.utils.release_info
     ~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Shows by an github API call informations about the latests release
+    Shows by a github API call information about the latest release
 
     This file is part of MSS.
 
