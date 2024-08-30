@@ -420,60 +420,6 @@ class Worker(QtCore.QThread):
             worker.start()
         return worker
 
-    @staticmethod
-    def _update_gui():
-        """
-        Iterate through all windows and update them.
-        Useful for when a thread modifies the GUI.
-        Happens automatically at the end of a Worker.
-        """
-        for window in QtWidgets.QApplication.allWindows():
-            window.requestUpdate()
-
-
-class Updater(QtCore.QObject):
-    """
-    Checks for a newer versions of MSS and provide functions to install it asynchronously.
-    Only works if conda is installed.
-    """
-    on_update_available = QtCore.pyqtSignal([str, str])
-    on_update_finished = QtCore.pyqtSignal()
-    on_log_update = QtCore.pyqtSignal([str])
-    on_status_update = QtCore.pyqtSignal([str])
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.is_git_env = False
-        self.new_version = None
-        self.old_version = None
-        # we are using the installer version of the env
-        self.conda_prefix = os.getenv("CONDA_PREFIX")
-        if self.conda_prefix is not None:
-            self.command = os.path.join(self.conda_prefix, 'bin', "conda")
-            mamba_cmd = os.path.join(self.conda_prefix, 'bin', 'mamba')
-            # Check if mamba is installed in the env
-            try:
-                subprocess.run([mamba_cmd], startupinfo=subprocess_startupinfo(),
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                self.command = mamba_cmd
-            except FileNotFoundError:
-                pass
-        else:
-            self.command = "conda"
-
-        # pyqtSignals don't work without an application eventloop running
-        if QtCore.QCoreApplication.startingUp():
-            self.on_update_available = NonQtCallback()
-            self.on_update_finished = NonQtCallback()
-            self.on_log_update = NonQtCallback()
-            self.on_status_update = NonQtCallback()
-
-    def run(self):
-        """
-        Starts the updater process
-        """
-        Worker.create(self._check_version)
-
     def _check_version(self):
         """
         Checks if conda search has a newer version of MSS

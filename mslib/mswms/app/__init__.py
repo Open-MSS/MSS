@@ -25,11 +25,14 @@
 """
 
 import os
+import logging
 import mslib
 
 from flask import Flask, url_for
 from mslib.mswms.gallery_builder import STATIC_LOCATION
-from mslib.utils import prefix_route
+from mslib.utils import prefix_route, release_info
+
+logging.debug(release_info.check_for_new_release())
 
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))

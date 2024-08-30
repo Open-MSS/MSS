@@ -46,11 +46,11 @@ from mslib.msui.qt5 import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview, topview, sideview, linearview
 from mslib.msui import constants, editor, mscolab
-from mslib.msui.updater import UpdaterUI
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
+from mslib.utils import release_info
 from PyQt5 import QtGui, QtCore, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -408,6 +408,7 @@ class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         super().__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText(f"Version: {__version__}")
+        self.lblNewVersion.setText(f"{release_info.check_for_new_release()}")
         self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
         self.lblChanges.setText(f'<a href="{self.milestone_url}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
@@ -532,10 +533,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.signal_render_new_permission.connect(
             lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
 
-        # Don't start the updater during a test run of msui
-        if "pytest" not in sys.modules:
-            self.updater = UpdaterUI(self)
-            self.actionUpdater.triggered.connect(self.updater.show)
         self.openOperationsGb.hide()
 
     def bring_main_window_to_front(self):
