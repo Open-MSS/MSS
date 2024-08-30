@@ -5,7 +5,7 @@ Using the different views of the MSUI with a fictitious flight path and demo dat
 In comparison to the standalone mode of the MSUI an example setup of users is
 shown on a MSColab server and the possibilities of interactions.
 
-  .. video:: ../_static/mp4/tutorial_mscolab.mp4
+  .. video:: ../videos/mp4/tutorial_mscolab.mp4
      :alt: MSColab stores data in an online server, and can be used to access the data remotely as also working in a
            team where everyone contributes his part. It is used for collaborating with the users as a team together
            and working on a shared MSColab operation.
