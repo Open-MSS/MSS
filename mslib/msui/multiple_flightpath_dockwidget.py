@@ -166,6 +166,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.listFlightTracks = listFlightTracks
         self.mscolab_server_url = mscolab_server_url
         self.token = token
+        self.flightpath_dict = {}
         if self.ui is not None:
             ft_settings_dict = self.ui.getView().get_settings()
             self.color = ft_settings_dict["colour_ft_vertices"]
@@ -398,11 +399,14 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def selectAll(self, state):
         """
-        select/deselect local operations
+        Select/deselect local operations
         """
         for i in range(self.list_flighttrack.count()):
             item = self.list_flighttrack.item(i)
-            item.setCheckState(state)
+            if self.active_flight_track is not None and item.flighttrack_model == self.active_flight_track:
+                item.setCheckState(QtCore.Qt.Checked)  # Ensure the active flight track remains checked
+            else:
+                item.setCheckState(state)
 
     def select_color(self):
         """
@@ -438,6 +442,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.list_flighttrack.currentItem().setIcon(self.show_color_icon(self.get_color(wp_model)))
             self.dict_flighttrack[wp_model]["patch"].update(
                 color=self.dict_flighttrack[wp_model]["color"])
+            self.update_flightpath_legend()
 
     def get_color(self, wp_model):
         """
@@ -551,15 +556,28 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
     def update_flightpath_legend(self):
         """
         Collects flight path data and updates the legend in the TopView.
+        Only checked flight tracks will be included in the legend.
+        Unchecked flight tracks will be removed from the flightpath_dict.
         """
-        flightpath_dict = {}
-        for wp_model, flighttrack_data in self.dict_flighttrack.items():
-            name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed Flighttrack'
-            color = flighttrack_data.get('color', '#000000')  # Default to black
-            linestyle = flighttrack_data.get('line_style', '-')  # Default to solid line
-            flightpath_dict[name] = (color, linestyle)
+        # Iterate over all items in the list_flighttrack
+        for i in range(self.list_flighttrack.count()):
+            listItem = self.list_flighttrack.item(i)
+            wp_model = listItem.flighttrack_model
 
-        self.view.update_flightpath_legend(flightpath_dict)
+            # If the flight track is checked, add/update it in the dictionary
+            if listItem.checkState() == QtCore.Qt.Checked:
+                name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed flighttrack'
+                color = self.dict_flighttrack[wp_model].get('color', '#000000')  # Default to black
+                linestyle = self.dict_flighttrack[wp_model].get('line_style', '-')  # Default to solid line
+                self.flightpath_dict[name] = (color, linestyle)
+            # If the flight track is unchecked, ensure it is removed from the dictionary
+            else:
+                name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed flighttrack'
+                if name in self.flightpath_dict:
+                    del self.flightpath_dict[name]
+
+        # Update the legend in the view with the filtered flightpath_dict
+        self.view.update_flightpath_legend(self.flightpath_dict)
 
     def flighttrackRemoved(self, parent, start, end):
         """
@@ -663,6 +681,9 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 # pass
                 self.dict_flighttrack[listItem.flighttrack_model]["checkState"] = False
 
+        # Update the legend after drawing the flight tracks
+        self.update_flightpath_legend()
+
     def set_activate_flag(self):
         if not self.flighttrack_added:
             self.flighttrack_activated = True
@@ -722,6 +743,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             self.enable_disable_line_style_buttons(
                 wp_model != self.active_flight_track and self.list_flighttrack.currentItem().
                 checkState() == QtCore.Qt.Checked)
+            # Update the legend
+            self.update_flightpath_legend()
 
 
 class MultipleFlightpathOperations:
@@ -837,6 +860,7 @@ class MultipleFlightpathOperations:
 
         # Show operations color icon
         listItem.setIcon(self.show_color_icon(self.get_color(op_id)))
+        self.update_operation_legend()
 
         return listItem
 
@@ -919,6 +943,7 @@ class MultipleFlightpathOperations:
                                                    "line_style"])
 
                     self.dict_operations[listItem.op_id]["patch"] = patch
+        self.update_operation_legend()
 
     def get_op_id(self, op_id):
         if self.active_op_id is not None:
@@ -983,7 +1008,10 @@ class MultipleFlightpathOperations:
         """
         for i in range(self.list_operation_track.count()):
             item = self.list_operation_track.item(i)
-            item.setCheckState(state)
+            if self.active_op_id is not None and item.op_id == self.active_op_id:
+                item.setCheckState(QtCore.Qt.Checked)  # Ensure the active flight track remains checked
+            else:
+                item.setCheckState(state)
 
     def select_color(self):
         """
@@ -1011,6 +1039,7 @@ class MultipleFlightpathOperations:
             self.dict_operations[op_id]["patch"].update(
                 color=self.dict_operations[op_id]["color"],
                 linewidth=self.dict_operations[op_id]["linewidth"])
+            self.update_operation_legend()
 
     def get_color(self, op_id):
         """
@@ -1043,6 +1072,9 @@ class MultipleFlightpathOperations:
                 self.dict_operations[self.list_operation_track.item(0).op_id]['patch'].remove()
             self.list_operation_track.takeItem(0)
             a -= 1
+
+        # Remove only the operations from flightpath_dict without affecting flight tracks
+        self.parent.flightpath_dict.clear()
 
         # Uncheck the "Select All" checkbox
         self.parent.cbSlectAll2.setChecked(False)
@@ -1134,6 +1166,35 @@ class MultipleFlightpathOperations:
             line_transparency=self.dict_operations[op_id]["line_transparency"],
             line_style=self.dict_operations[op_id]["line_style"]
         )
+        self.update_operation_legend()
+
+    def update_operation_legend(self):
+        """
+        Collects operation data and updates the legend in the TopView.
+        Only checked operations will be included in the legend.
+        Unchecked operations will be removed from the flightpath_dict.
+        """
+        # Iterate over all items in the list_operation_track
+        for i in range(self.list_operation_track.count()):
+            listItem = self.list_operation_track.item(i)
+
+            # If the operation is checked, add/update it in the dictionary
+            if listItem.checkState() == QtCore.Qt.Checked:
+                wp_model = listItem.flighttrack_model
+                name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed operation'
+                op_id = listItem.op_id
+                color = self.dict_operations[op_id].get('color', '#000000')  # Default to black
+                linestyle = self.dict_operations[op_id].get('line_style', '-')  # Default to solid line
+                self.parent.flightpath_dict[name] = (color, linestyle)
+            # If the flight track is unchecked, ensure it is removed from the dictionary
+            else:
+                wp_model = listItem.flighttrack_model
+                name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed flighttrack'
+                if name in self.parent.flightpath_dict:
+                    del self.parent.flightpath_dict[name]
+
+        # Update the legend in the view with the filtered flightpath_dict
+        self.view.update_flightpath_legend(self.parent.flightpath_dict)
 
     def listOperations_itemClicked(self):
         """
@@ -1160,3 +1221,4 @@ class MultipleFlightpathOperations:
 
             self.enable_disable_line_style_buttons(op_id != self.active_op_id and self.list_operation_track.
                                                    currentItem().checkState() == QtCore.Qt.Checked)
+            self.update_operation_legend()
