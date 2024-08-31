@@ -351,20 +351,15 @@ class TopViewPlotter(ViewPlotter):
 
     def draw_flightpath_legend(self, flightpath_dict):
         """
-        Draw the flight path legend on the plot.
+        Draw the flight path legend on the plot, attached to the upper-left corner.
         """
         # Clear any existing legend
-        if self.legax is not None:
-            self.legax.remove()
-            self.legax = None
+        if self.ax.get_legend() is not None:
+            self.ax.get_legend().remove()
 
         if not flightpath_dict:
             self.ax.figure.canvas.draw()
             return
-
-        # Create a new axis for the legend
-        self.legax = self.fig.add_axes([0.85, 0.7, 0.13, 0.2], frameon=False)
-        self.legax.axis('off')  # Hide the axis
 
         # Create legend handles
         legend_handles = []
@@ -372,10 +367,13 @@ class TopViewPlotter(ViewPlotter):
             line = Line2D([0], [0], color=color, linestyle=linestyle, linewidth=2)
             legend_handles.append((line, name))
 
-        # Add legend to the legend axis
-        self.legax.legend(
+        # Add legend directly to the main axis, attached to the upper-left corner
+        self.ax.legend(
             [handle for handle, _ in legend_handles],
             [name for _, name in legend_handles],
+            loc='upper left',
+            bbox_to_anchor=(0, 1),  # (x, y) coordinates relative to the figure
+            bbox_transform=self.fig.transFigure,  # Use figure coordinates
             frameon=False
         )
 
