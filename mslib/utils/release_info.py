@@ -28,12 +28,12 @@
 import datetime
 import logging
 import requests
-import timeout_decorator
+from pebble import concurrent
 
 from mslib.version import __version__ as installed_version
 
 
-@timeout_decorator.timeout(1, use_signals=False)
+@concurrent.process(timeout=1)
 def get_latest_release():
     # GitHub API URL for the MSS Release
     url = "https://api.github.com/repos/Open-MSS/MSS/releases/latest"
@@ -64,8 +64,8 @@ def check_for_new_release():
     no_new_release_found = f"{datetime.date.today()}: No new release found."
     try:
         # we use the timeout_decorator on the function to stop requests trying to establish a connection
-        latest_release = get_latest_release()
-    except timeout_decorator.timeout_decorator.TimeoutError as e:
+        latest_release = get_latest_release().result()
+    except TimeoutError as e:
         logging.debug(f"Error fetching release data: {e}")
         latest_release = None
 
