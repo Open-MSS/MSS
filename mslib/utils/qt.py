@@ -2,7 +2,7 @@
 """
 
     mslib.utils.msui_qt
-    ~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~
 
     This module helps with qt
 

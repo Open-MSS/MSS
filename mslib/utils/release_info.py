@@ -9,6 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2024 Reimar Bauer
+    :copyright: Copyright 2024 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,18 +26,21 @@
 """
 
 import datetime
+import logging
 import requests
+import timeout_decorator
 
 from mslib.version import __version__ as installed_version
 
 
+@timeout_decorator.timeout(1, use_signals=False)
 def get_latest_release():
-    # GitHub API URL for releases
+    # GitHub API URL for the MSS Release
     url = "https://api.github.com/repos/Open-MSS/MSS/releases/latest"
 
     try:
         # Make a GET request to the GitHub API
-        response = requests.get(url)
+        response = requests.get(url, timeout=(1, 1))
         response.raise_for_status()  # Raise an error for non-200 status codes
 
         # Extract the JSON response
@@ -52,19 +56,25 @@ def get_latest_release():
         return latest_release
 
     except requests.exceptions.RequestException as e:
-        print(f"Error fetching release data: {e}")
+        logging.debug(f"Error fetching release data: {e}")
         return None
 
 
 def check_for_new_release():
     no_new_release_found = f"{datetime.date.today()}: No new release found."
-    latest_release = get_latest_release()
+    try:
+        # we use the timeout_decorator on the function to stop requests trying to establish a connection
+        latest_release = get_latest_release()
+    except timeout_decorator.timeout_decorator.TimeoutError as e:
+        logging.debug(f"Error fetching release data: {e}")
+        latest_release = None
+
     if latest_release is None or latest_release['tag_name'] == installed_version:
-        return no_new_release_found
+        return no_new_release_found, False
 
     github_url = f'<a href="{latest_release["url"]}#target">{latest_release["url"]}</a>'
     return ' | '.join([
         f"New release found: {latest_release['release_name']} ({latest_release['tag_name']})",
         f"Published at: {latest_release['published_at']}",
         f"Release URL: {github_url}",
-    ])
+    ]), True
