@@ -24,8 +24,7 @@
     limitations under the License.
 """
 
-# Parts of the code
-import logging
+
 import os.path
 
 from saml2 import BINDING_HTTP_ARTIFACT
