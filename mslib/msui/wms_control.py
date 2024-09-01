@@ -410,6 +410,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     styles_changed = QtCore.pyqtSignal(str)
     itime_changed = QtCore.pyqtSignal(str)
     vtime_changed = QtCore.pyqtSignal(str)
+    vtime_data = QtCore.pyqtSignal([list])
+    
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -628,6 +630,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if vtime is not None:
             self.cbValidTime.setCurrentText(vtime)
             self.valid_time_changed()
+            
 
     def __del__(self):
         """Destructor.
@@ -1281,6 +1284,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
             self.multilayers.carry_parameters["vtime"] = self.cbValidTime.currentText()
+        
+        combo_items = [self.cbValidTime.itemText(i) for i in range(self.cbValidTime.count())]
+        print(combo_items)
+        self.vtime_data.emit(combo_items)
 
         self.auto_update()
         return valid_time == "" or valid_time is not None

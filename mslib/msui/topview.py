@@ -192,6 +192,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     refresh_signal_send = QtCore.pyqtSignal()
     item_selected = QtCore.pyqtSignal(str,str,str,str)
     itemSecs_selected = QtCore.pyqtSignal(str)
+    vtime_vals = QtCore.pyqtSignal([list])
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
                  active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None):
@@ -354,6 +355,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     default_WMS=config_loader(dataset="default_WMS"),
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.vtime_data.connect(lambda vtime: self.valid_time_vals(vtime))
                 widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
                 widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
                 widget.on_level_changed.connect(lambda level: self.level_val_changed(level))
@@ -427,6 +429,10 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.pyqtSlot()
     def url_val_changed(self, strr):
         self.currurl = strr
+    
+    @QtCore.pyqtSlot()
+    def valid_time_vals(self, vtimes_list):
+        self.vtime_vals.emit(vtimes_list)
 
     @QtCore.pyqtSlot()
     def layer_val_changed(self, strr):

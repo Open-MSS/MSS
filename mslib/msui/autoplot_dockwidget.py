@@ -29,6 +29,7 @@
 
 import json
 import os
+import threading
 from datetime import datetime
 import click
 from mslib.utils.mssautoplot import main as autopl
@@ -68,6 +69,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.refresh_sig(config_settings)
 
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
+        parent.vtime_vals.connect(lambda vtime_vals: self.update_stime_etime(vtime_vals))
 
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.autoplotSecsTreeWidget_selected_row)
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.autoplotTreeWidget_selected_row)
@@ -129,30 +131,25 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.selectConfigButton.clicked.connect(lambda: self.configure_from_path(parent, config_settings))
         self.updateConfigFile.clicked.connect(lambda: self.update_config_file(config_settings))
 
-        # stime/etime
-        self.stimeSpinBox.dateTimeChanged.connect(self.updateDateTimeValue)
-        self.etimeSpinBox.dateTimeChanged.connect(self.updateDateTimeValue)
-
         # time interval combobox
         self.timeIntervalComboBox.currentIndexChanged.connect(
             lambda: self.combo_box_input(self.timeIntervalComboBox))
+        # stime/etime
+        self.stimeComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.stimeComboBox))
+        self.etimeComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.etimeComboBox))
 
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed)
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
         self.downloadPushButton.clicked.connect(self.download_plots_cli)
 
+    def download_cli(self):
+        thread = threading.Thread(target=self.download_plots_cli, args=(self,))
+        thread.start()
+
     def download_plots_cli(self):
         view = "top"
-        formatted_etime = None
-        formatted_stime = None
-        etime_str = self.etime
-        if etime_str != "":
-            date_time_obj = datetime.strptime(etime_str, '%Y/%m/%d %H:%M %Z')
-            formatted_etime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
-        stime_str = self.stime
-        if stime_str != "":
-            date_time_obj = datetime.strptime(stime_str, '%Y/%m/%d %H:%M %Z')
-            formatted_stime = date_time_obj.strftime('%Y-%m-%dT%H:%M:%S')
         intv = 0
         if self.intv != "":
             index = self.intv.find(' ')
@@ -165,6 +162,21 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             view = "linear"
         config_path = os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
         print("config path is ", config_path, view)
+        print("parameters: ")
+        print("cpath  ",config_path)
+        print("view  ",view)
+        print("ftrack  ",None)
+        print("itime  ",None)
+        print("vtime  ",None)
+        print("intv  ",intv)
+        print("stime  ",self.stime[:-1])
+        print("etime  ",self.etime[:-1])
+        if self.stime > self.etime:
+            QMessageBox.information(
+                    self,  # The parent widget (use `None` if no parent)
+                    "WARNING",  # Title of the message box
+                    "Start time should be before end time"  # Message text
+                )
         args = [
             "--cpath", config_path,
             "--view", view,
@@ -172,8 +184,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             "--itime", None,
             "--vtime", None,
             "--intv", intv,
-            "--stime", formatted_stime,
-            "--etime", formatted_etime
+            "--stime", self.stime[:-1],
+            "--etime", self.etime[:-1]
         ]
         autopl.main(args=args, prog_name="autoplot_gui", obj=self)
 
@@ -195,7 +207,14 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             vtime = selected_items[0].text(5)
             self.autoplot_treewidget_item_selected.emit(section, vtime)
             print("autoplotTreewidget_dockwidget", section, vtime)
-
+            
+    def update_stime_etime(self,vtime_data):
+        self.stimeComboBox.clear()
+        self.etimeComboBox.clear()
+        self.stimeComboBox.addItems(vtime_data)
+        self.etimeComboBox.addItems(vtime_data)
+        
+        
     def on_item_selection_changed(self):
         selected_item = self.autoplotTreeWidget.selectedItems()
         if selected_item:
@@ -374,10 +393,10 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         currentText = combo.currentText()
         if comboBoxName == "timeIntervalComboBox":
             self.intv = currentText
-
-    def updateDateTimeValue(self):
-        self.stime = self.stimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
-        self.etime = self.etimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
+        elif comboBoxName == "stimeComboBox":
+            self.stime = currentText
+        elif comboBoxName == "etimeComboBox":
+            self.etime = currentText
 
     def resize_treewidgets(self):
         for i in range(6):
