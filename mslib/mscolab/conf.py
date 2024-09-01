@@ -68,10 +68,6 @@ class default_mscolab_settings:
     # Enable SSL certificate verification during SSO between MSColab and IdP
     SSO_SSL_CERT_VERIFICATION = True
 
-    # path to xmlsec1 (sign, verify, encrypt and decrypt XML documents)
-    # this is only needed for a testing IDP setup
-    # SSO_XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
-
     # MYSQL CONNECTION STRING: "mysql+pymysql://<username>:<password>@<host>:<port>/<db_name>?charset=utf8mb4"
     SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
 

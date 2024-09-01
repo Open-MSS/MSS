@@ -36,12 +36,10 @@ from saml2 import BINDING_URI
 from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
+from saml2.sigver import get_xmlsec_binary
 
 from mslib.mscolab.conf import mscolab_settings
 
-if not hasattr(mscolab_settings, 'SSO_XMLSEC_PATH') or not os.path.exists(mscolab_settings.SSO_XMLSEC_PATH):
-    logging.error("SSO_XMLSEC_PATH not found, check your mscolab_settings.SSO_XMLSEC_PATH")
-    raise Exception("SSO_XMLSEC_PATH not found")
 
 # CRTs and metadata files can be generated through the mscolab server.
 # if configured that way CRTs DIRs should be same in both IDP and mscolab server.
@@ -165,7 +163,7 @@ CONFIG = {
     ],
     # This database holds the map between a subject's local identifier and
     # the identifier returned to a SP
-    "xmlsec_binary": mscolab_settings.SSO_XMLSEC_PATH,
+    "xmlsec_binary": get_xmlsec_binary(),
     # "attribute_map_dir": "../attributemaps",
     "logging": {
         "version": 1,

@@ -55,10 +55,6 @@ SSO_DIR = os.path.join(DATA_DIR, 'datasso')
 # Enable SSL certificate verification during SSO between MSColab and IdP
 SSO_SSL_CERT_VERIFICATION = True
 
-# path to xmlsec1 (sign, verify, encrypt and decrypt XML documents)
-# this is only needed for a testing IDP setup
-# SSO_XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
-
 # Directory where uploaded images and documents in the chat are stored
 UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
 
