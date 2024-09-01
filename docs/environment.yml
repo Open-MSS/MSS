@@ -22,6 +22,7 @@ dependencies:
       - PyQt5
       - owslib
       - future
+      - pebble
   - basemap >=1.3.3
   - pint
   - python <3.12
