@@ -63,7 +63,7 @@ def get_latest_release():
 def check_for_new_release():
     no_new_release_found = f"{datetime.date.today()}: No new release found."
     try:
-        # we use the timeout_decorator on the function to stop requests trying to establish a connection
+        # we use the @concurrent.process(timeout=1) on the function to stop requests trying to establish a connection
         latest_release = get_latest_release().result()
     except TimeoutError as e:
         logging.debug(f"Error fetching release data: {e}")
