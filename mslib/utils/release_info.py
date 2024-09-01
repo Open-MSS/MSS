@@ -59,17 +59,12 @@ def get_latest_release():
 def check_for_new_release():
     no_new_release_found = f"{datetime.date.today()}: No new release found."
     latest_release = get_latest_release()
-    if latest_release is None:
+    if latest_release is None or latest_release['tag_name'] == installed_version:
         return no_new_release_found
 
-    result = []
-    # Compare the latest release with the previous known version
-    if latest_release['tag_name'] != installed_version:
-        github_url = f'<a href="{latest_release["url"]}#target">{latest_release["url"]}</a>'
-        result.append(f"New release found: {latest_release['release_name']} ({latest_release['tag_name']})")
-        result.append(f"Published at: {latest_release['published_at']}")
-        result.append(f"Release URL: {github_url}")
-        result = ' | '.join(result)
-    else:
-        result = no_new_release_found
-    return result
+    github_url = f'<a href="{latest_release["url"]}#target">{latest_release["url"]}</a>'
+    return ' | '.join([
+        f"New release found: {latest_release['release_name']} ({latest_release['tag_name']})",
+        f"Published at: {latest_release['published_at']}",
+        f"Release URL: {github_url}",
+    ])
