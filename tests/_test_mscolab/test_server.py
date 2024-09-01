@@ -47,7 +47,7 @@ class Test_Server:
 
     def test_initialized_managers(self, mscolab_managers):
         sockio, cm, fm = mscolab_managers
-        assert self.app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+        assert self.app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.FILE_DATA
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__

@@ -37,27 +37,22 @@ from saml2.saml import NAME_FORMAT_URI
 from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 
-XMLSEC_PATH = os.path.join(os.environ["CONDA_PREFIX"], "bin", "xmlsec1")
-if not os.path.exists(XMLSEC_PATH):
-    logging.warning("%s not found", XMLSEC_PATH)
+from mslib.mscolab.conf import mscolab_settings
+
+if not hasattr(mscolab_settings, 'SSO_XMLSEC_PATH') or not os.path.exists(mscolab_settings.SSO_XMLSEC_PATH):
+    logging.error("SSO_XMLSEC_PATH not found, check your mscolab_settings.SSO_XMLSEC_PATH")
+    raise Exception("SSO_XMLSEC_PATH not found")
 
 # CRTs and metadata files can be generated through the mscolab server.
 # if configured that way CRTs DIRs should be same in both IDP and mscolab server.
-BASE_DIR = os.path.expanduser("~")
-DATA_DIR = os.path.join(BASE_DIR, "colabdata")
-MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
-
-BASEDIR = os.path.abspath(os.path.dirname(__file__))
-
-
-def full_path(local_file):
-    """Return the full path by joining the BASEDIR and local_file."""
-    return os.path.join(BASEDIR, local_file)
+BASE_DIR = mscolab_settings.BASE_DIR
+DATA_DIR = mscolab_settings.DATA_DIR
+SSO_DIR = mscolab_settings.SSO_DIR
 
 
 def sso_dir_path(local_file):
     """Return the full path by joining the MSCOLAB_SSO_DIR and local_file."""
-    return os.path.join(MSCOLAB_SSO_DIR, local_file)
+    return os.path.join(SSO_DIR, local_file)
 
 
 HOST = 'localhost'
@@ -71,8 +66,8 @@ else:
     BASE = f"http://{HOST}:{PORT}"
 
 # HTTPS cert information
-SERVER_CERT = f"{MSCOLAB_SSO_DIR}/crt_local_idp.crt"
-SERVER_KEY = f"{MSCOLAB_SSO_DIR}/key_local_idp.key"
+SERVER_CERT = f"{SSO_DIR}/crt_local_idp.crt"
+SERVER_KEY = f"{SSO_DIR}/key_local_idp.key"
 CERT_CHAIN = ""
 SIGN_ALG = None
 DIGEST_ALG = None
@@ -170,7 +165,7 @@ CONFIG = {
     ],
     # This database holds the map between a subject's local identifier and
     # the identifier returned to a SP
-    "xmlsec_binary": XMLSEC_PATH,
+    "xmlsec_binary": mscolab_settings.SSO_XMLSEC_PATH,
     # "attribute_map_dir": "../attributemaps",
     "logging": {
         "version": 1,
