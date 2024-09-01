@@ -281,6 +281,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 config_settings["automated_plotting_vsecs"].append([url, layer, styles, level])
             else:
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
+            parent.refresh_signal_emit.emit()
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
         self.stime = ""
@@ -339,6 +340,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             else:
                 if index != -1:
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
+            parent.refresh_signal_emit.emit()
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
         self.stime = ""

@@ -593,6 +593,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 index = self.multilayers.cbWMS_URL.findText(self.current_sel_layer.get_wms().url)
                 if index != -1 and index != self.multilayers.cbWMS_URL.currentIndex():
                     self.multilayers.cbWMS_URL.setCurrentIndex(index)
+            
+            self.multilayers.threads -= 1
+
             layers = [self.current_sel_layer]
             args = []
             for i, layer_itr in enumerate(layers):
@@ -875,7 +878,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
                 .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
-            print("get capabiblities 4")
             self.initialise_wms(url, None,level=level)
 
         def on_failure(e):
@@ -1214,6 +1216,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         a layer change).
         """
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
+            print("get maps autoupdate")
             self.get_all_maps()
 
     def check_init_time(self, dt):
@@ -1286,18 +1289,21 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.multilayers.carry_parameters["vtime"] = self.cbValidTime.currentText()
         
         combo_items = [self.cbValidTime.itemText(i) for i in range(self.cbValidTime.count())]
-        print(combo_items)
         self.vtime_data.emit(combo_items)
 
         self.auto_update()
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
+        print("level changed   now")
+        print("multilayers threads",self.multilayers.threads,"layer progress",self.layerChangeInProgress)
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
+            print("inside level changes if block")
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
             self.multilayers.carry_parameters["level"] = self.cbLevel.currentText()
-            currentlevel = self.cbLevel.currentText()
-            self.on_level_changed.emit(currentlevel)
+        currentlevel = self.cbLevel.currentText()
+        print("currentlevel",currentlevel)
+        self.on_level_changed.emit(currentlevel)
         self.auto_update()
 
     def enable_level_elements(self, enable):
