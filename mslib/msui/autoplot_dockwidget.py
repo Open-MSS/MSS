@@ -177,6 +177,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     "WARNING",  # Title of the message box
                     "Start time should be before end time"  # Message text
                 )
+            return
         args = [
             "--cpath", config_path,
             "--view", view,
