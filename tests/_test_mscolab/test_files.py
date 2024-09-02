@@ -64,7 +64,7 @@ class Test_Files:
             # test for '/' in path
             assert self.fm.create_operation('test/path', 'sth', self.user) is False
             # check file existence
-            assert os.path.exists(os.path.join(mscolab_settings.FILE_DATA, 'test_path')) is True
+            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'test_path')) is True
             # check creation in db
             p = Operation.query.filter_by(path="test_path").first()
             assert p is not None
@@ -166,7 +166,7 @@ class Test_Files:
             assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(mscolab_settings.FILE_DATA, 'dummy'))
+            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'dummy'))
             assert self.fm.update_operation(op_id, 'description', 'dummy', self.user) is True
 
     def test_delete_operation(self):

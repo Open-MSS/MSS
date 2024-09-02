@@ -47,7 +47,7 @@ class Test_Server:
 
     def test_initialized_managers(self, mscolab_managers):
         sockio, cm, fm = mscolab_managers
-        assert self.app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.FILE_DATA
+        assert self.app.config['OPERATIONS_DATA'] == mscolab_settings.OPERATIONS_DATA
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
@@ -403,7 +403,7 @@ class Test_Server:
             import_operation, token = self._create_operation(test_client, self.userdata, path="import")
             user = get_user(self.userdata[0])
             another = get_user(another_user[0])
-            fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+            fm = FileManager(self.app.config["OPERATIONS_DATA"])
             fm.add_bulk_permission(import_operation.id, user, [another.id], "viewer")
             current_operation, token = self._create_operation(test_client, self.userdata, path="current")
             response = test_client.post('/import_permissions', data={"token": token,

@@ -62,7 +62,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
             operation = Operation(path, description)
             db.session.add(operation)
             db.session.commit()
-            with fs.open_fs(mscolab_settings.FILE_DATA) as file_dir:
+            with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
                 if not file_dir.exists(path):
                     file_dir.makedir(path)
                     file_dir.writetext(f'{path}/main.ftml', mscolab_settings.STUB_CODE)
@@ -150,7 +150,7 @@ def add_operation(operation_name, description):
             operation = Operation(operation_name, description)
             db.session.add(operation)
             db.session.commit()
-            with fs.open_fs(mscolab_settings.FILE_DATA) as file_dir:
+            with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
                 if not file_dir.exists(operation_name):
                     file_dir.makedir(operation_name)
                     file_dir.writetext(f'{operation_name}/main.ftml', mscolab_settings.STUB_CODE)
@@ -396,7 +396,7 @@ def seed_data():
     db.session.commit()
     db.session.close()
 
-    with fs.open_fs(mscolab_settings.FILE_DATA) as file_dir:
+    with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
         file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
         for file_path in file_paths:
             file_dir.makedir(file_path)

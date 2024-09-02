@@ -74,6 +74,6 @@ def os_fs_create_dir(directory_path):
 
 
 def create_files():
-    os_fs_create_dir(mscolab_settings.FILE_DATA)
+    os_fs_create_dir(mscolab_settings.OPERATIONS_DATA)
     os_fs_create_dir(mscolab_settings.UPLOAD_FOLDER)
     os_fs_create_dir(mscolab_settings.SSO_DIR)

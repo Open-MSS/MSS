@@ -271,7 +271,7 @@ def _setup_managers(app):
     """
 
     cm = ChatManager()
-    fm = FileManager(app.config["MSCOLAB_DATA_DIR"])
+    fm = FileManager(app.config["OPERATIONS_DATA"])
     sm = SocketsManager(cm, fm)
     # sockets related handlers
     socketio.on_event('connect', sm.handle_connect)

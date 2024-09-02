@@ -58,7 +58,7 @@ class default_mscolab_settings:
     DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
     # mscolab data directory for operation git repositories
-    FILE_DATA = os.path.join(DATA_DIR, 'filedata')
+    OPERATIONS_DATA = os.path.join(DATA_DIR, 'filedata')
 
     # SSO by SAML2 is optional
 

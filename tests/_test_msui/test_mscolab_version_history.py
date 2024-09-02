@@ -45,7 +45,7 @@ class Test_MscolabVersionHistory:
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-        self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.FILE_DATA)
+        self.window = msui.MSUIMainWindow(operations_data=mscolab_settings.OPERATIONS_DATA)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab

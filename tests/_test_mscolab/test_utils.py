@@ -79,7 +79,7 @@ class Test_Utils:
     def test_create_file(self):
         create_files()
         # ToDo refactor to fs
-        assert os.path.exists(mscolab_settings.FILE_DATA)
+        assert os.path.exists(mscolab_settings.OPERATIONS_DATA)
         assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
 
     def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test"):

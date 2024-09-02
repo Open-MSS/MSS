@@ -47,7 +47,7 @@ APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', '
 APP.config.from_object(__name__)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
-APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.FILE_DATA
+APP.config['OPERATIONS_DATA'] = mscolab_settings.OPERATIONS_DATA
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
 APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['SQLALCHEMY_ECHO'] = mscolab_settings.SQLALCHEMY_ECHO
