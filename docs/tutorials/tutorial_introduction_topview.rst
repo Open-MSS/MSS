@@ -3,7 +3,7 @@ Top View and Selecting of Layers
 
 Selection and display of different data in the Top View with the help of the layer chooser.
 
-  .. video:: ../_static/mp4/tutorial_wms.mp4
+  .. video:: ../videos/mp4/tutorial_wms.mp4
      :alt: When we open the Top View (CTRL+H) of the map, the Web Map Service is already opened by default.
            It collects its data from the server: "open-mss dot org" that provides demodata for the meteorological or
            atmospheric information as layer lists.

@@ -3,7 +3,7 @@ Top View and KML Data
 
 es can be displayed in the Top View. Color and line width can be adjusted.
 
-  .. video:: ../_static/mp4/tutorial_kml.mp4
+  .. video:: ../videos/mp4/tutorial_kml.mp4
      :alt: Open the TopView (CTRL+H)
            After clicking on "(select to open control)", click on KML OVERLAY. The UI will look as shown.
            KML files can be used to show the geographical boundary which helps in planning the WAY POINTS.

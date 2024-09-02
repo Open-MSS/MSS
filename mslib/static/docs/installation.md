@@ -7,7 +7,7 @@ The Mission Support System (MSS) including a Web Map Service a Collaboration Ser
 [conda-forge](https://anaconda.org/conda-forge/mss) package.
 
 
-We strongly recommend to start from [Mambaforge](https://mamba.readthedocs.io/en/latest/installation.html)
+We strongly recommend to start from [Miniforge3](https://github.com/conda-forge/miniforge?tab=readme-ov-file#miniforge3)
 a community project of the conda-forge community.
 
 You can install it either automatically with the help of a script or manually.
@@ -31,8 +31,8 @@ You can install it either automatically with the help of a script or manually.
 
 ### Manually
 
-As **Beginner** start with an installation of Mambaforge
-Get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge) for your Operation System
+As **Beginner** start with an installation of Miniforge3
+Get [Miniforge3](https://github.com/conda-forge/miniforge?tab=readme-ov-file#miniforge3) for your Operation System
 
 
 You must install mss into a new environment to ensure the most recent
@@ -65,10 +65,10 @@ user for the apache2 wsgi script. We suggest to create a mss user.
 -   login as mss user
 -   create a *src* directory in /home/mss
 -   cd src
--   get [mambaforge](https://github.com/conda-forge/miniforge#mambaforge)
+-   get [Miniforge3](https://github.com/conda-forge/miniforge?tab=readme-ov-file#miniforge3)
 -   set execute bit on install script
 -   execute script, enable environment in .bashrc
--   login again or export PATH="/home/mss/mambaforge/bin:\$PATH"
+-   start your shell again (new login)
 -   python --version should tell Python 3.X.X
 -   mamba create -n mssenv
 -   mamba activate mssenv

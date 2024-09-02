@@ -1495,7 +1495,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 current_height += image.height
 
             if max_height < result.height:
-                result.thumbnail((result.width, max_height), Image.ANTIALIAS)
+                result.thumbnail((result.width, max_height), Image.LANCZOS)
             return result
 
 
