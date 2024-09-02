@@ -86,7 +86,6 @@ requirements:
     - flask-login
     - pysaml2
     - libxmlsec1  # [not win]
-    - pebble
   run_constrained:
     - menuinst >=2.0.2
 
