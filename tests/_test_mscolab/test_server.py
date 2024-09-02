@@ -485,9 +485,6 @@ class Test_Server:
         user = get_user(userdata[0])
         self.fm.save_file(operation.id, XML_CONTENT1, user)
         return user
-        fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
-        fm.save_file(operation.id, "content1", user)
-        return fm, user
 
     def _upload_profile_image(self, test_client, token, email):
         # Creating a dummy image
