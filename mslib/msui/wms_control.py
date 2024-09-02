@@ -633,7 +633,17 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if vtime is not None:
             self.cbValidTime.setCurrentText(vtime)
             self.valid_time_changed()
-            
+        
+        layer = self.multilayers.get_current_layer()
+        crs = layer.get_allowed_crs()
+        if crs and \
+           self.parent() is not None and \
+           self.parent().parent() is not None:
+            logging.debug("Layer offers '%s' projections.", crs)
+            extra = [_code for _code in crs if _code.startswith("EPSG")]
+            extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
+            logging.debug("Selected '%s' for Combobox.", extra)
+            self.parent().parent().update_predefined_maps(extra)
 
     def __del__(self):
         """Destructor.

@@ -212,6 +212,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     def update_stime_etime(self,vtime_data):
         self.stimeComboBox.clear()
         self.etimeComboBox.clear()
+        self.stimeComboBox.addItem("")
+        self.etimeComboBox.addItem("")
         self.stimeComboBox.addItems(vtime_data)
         self.etimeComboBox.addItems(vtime_data)
         
@@ -271,6 +273,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if treewidget.objectName() == "autoplotSecsTreeWidget":
             if url is None:
                 return
+            print("stime,etime,add",self.stime, self.etime)
             item = QTreeWidgetItem([url, layer, styles, level, self.stime, self.etime, self.intv])
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
             self.autoplotSecsTreeWidget.setCurrentItem(item)
@@ -281,11 +284,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 config_settings["automated_plotting_vsecs"].append([url, layer, styles, level])
             else:
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
-            parent.refresh_signal_emit.emit()
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
-        self.stime = ""
-        self.etime = ""
+        
 
     def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
@@ -322,6 +323,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if treewidget.objectName() == "autoplotSecsTreeWidget":
             if url is None:
                 return
+            print("stime,etime,update",self.stime, self.etime)
             selected_item = self.autoplotSecsTreeWidget.currentItem()
             selected_item.setText(0, url)
             selected_item.setText(1, layer)
@@ -340,11 +342,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             else:
                 if index != -1:
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
-            parent.refresh_signal_emit.emit()
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
-        self.stime = ""
-        self.etime = ""
+        
 
     def refresh_sig(self, config_settings):
         autoplot_flights = config_settings["automated_plotting_flights"]
@@ -388,12 +388,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     parent.takeChild(parent.indexOfChild(selected_item))
         parent.refresh_signal_emit.emit()
         self.resize_treewidgets()
-        self.stime = ""
-        self.etime = ""
+        
 
     def combo_box_input(self, combo):
         comboBoxName = combo.objectName()
         currentText = combo.currentText()
+        print("stime,etime  ",currentText)
         if comboBoxName == "timeIntervalComboBox":
             self.intv = currentText
         elif comboBoxName == "stimeComboBox":
