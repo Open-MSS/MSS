@@ -112,7 +112,7 @@ if not root_fs.exists('colabTestData'):
 BASE_DIR = ROOT_DIR
 DATA_DIR = fs.path.join(ROOT_DIR, 'colabTestData')
 # mscolab data directory for operation git repositories
-OPERATIONS_DATA = os.path.join(DATA_DIR, 'filedata')
+OPERATIONS_DATA = fs.path.join(DATA_DIR, 'filedata')
 SSO_DIR = fs.path.join(DATA_DIR, 'datasso')
 
 # In the unit days when Operations get archived because not used
