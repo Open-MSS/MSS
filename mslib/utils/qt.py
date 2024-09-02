@@ -384,6 +384,9 @@ class Worker(QtCore.QThread):
             self.finished = NonQtCallback()
             self.failed = NonQtCallback()
 
+        self.failed.connect(lambda e: self._update_gui())
+        self.finished.connect(lambda x: self._update_gui())
+
     def run(self):
         try:
             result = self.function()
@@ -416,15 +419,15 @@ class Worker(QtCore.QThread):
             worker.start()
         return worker
 
-    def _restart_msui(self):
+    @staticmethod
+    def _update_gui():
         """
-        Restart msui with all the same parameters, not entirely
-        safe in case parameters change in higher versions, or while debugging
+        Iterate through all windows and update them.
+        Useful for when a thread modifies the GUI.
+        Happens automatically at the end of a Worker.
         """
-        command = [sys.executable.split(os.sep)[-1]] + sys.argv
-        if os.name == "nt" and not command[1].endswith(".py"):
-            command[1] += "-script.py"
-        os.execv(sys.executable, command)
+        for window in QtWidgets.QApplication.allWindows():
+            window.requestUpdate()
 
 
 class NonQtCallback:

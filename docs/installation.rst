@@ -125,7 +125,7 @@ versions for dependencies. ::
 
 
 Update Methods
-.............
+..............
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If your current version is not far behind the new version
