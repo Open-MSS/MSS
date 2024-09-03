@@ -187,6 +187,13 @@ def test_selectAll(main_window):
     """
     main_window, multiple_flightpath_widget = main_window
 
+    # Activate the first flight track
+    activate_flight_track_at_index(main_window, 0)
+
+    # Retrieve the index of the active flight track
+    active_item = main_window.listFlightTracks.currentItem()
+    active_index = main_window.listFlightTracks.row(active_item)
+
     # Check the "Select All" checkbox
     select_all_checkbox = multiple_flightpath_widget.cbSlectAll1
     select_all_checkbox.setCheckState(QtCore.Qt.Checked)
@@ -196,12 +203,16 @@ def test_selectAll(main_window):
         item = multiple_flightpath_widget.list_flighttrack.item(i)
         assert item.checkState() == QtCore.Qt.Checked
 
+    # Uncheck the "Select All" checkbox
     select_all_checkbox.setCheckState(QtCore.Qt.Unchecked)
 
-    # Verify that all items in the list are unchecked
+    # Verify that all items except the active one are unchecked
     for i in range(multiple_flightpath_widget.list_flighttrack.count()):
         item = multiple_flightpath_widget.list_flighttrack.item(i)
-        assert item.checkState() == QtCore.Qt.Unchecked
+        if i == active_index:
+            assert item.checkState() == QtCore.Qt.Checked  # Active item should remain checked
+        else:
+            assert item.checkState() == QtCore.Qt.Unchecked
 
 
 def test_random_custom_color_selection(main_window):
