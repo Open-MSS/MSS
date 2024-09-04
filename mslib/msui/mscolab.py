@@ -481,7 +481,7 @@ class MSUIMscolab(QtCore.QObject):
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
-    def __init__(self, parent=None, data_dir=None):
+    def __init__(self, parent=None, local_operations_data=None):
         super().__init__(parent)
         self.ui = parent
 
@@ -577,10 +577,10 @@ class MSUIMscolab(QtCore.QObject):
         self.gravatar = None
 
         # set data dir, uri
-        if data_dir is None:
+        if local_operations_data is None:
             self.data_dir = config_loader(dataset="mss_dir")
         else:
-            self.data_dir = data_dir
+            self.data_dir = local_operations_data
         self.create_dir()
 
     def view_description(self):
@@ -1411,7 +1411,7 @@ class MSUIMscolab(QtCore.QObject):
                 self.local_ftml_file = fs.path.combine(
                     self.data_dir,
                     fs.path.join(
-                        "local_mscolab_data", self.user["username"],
+                        "local_colabdata", self.user["username"],
                         self.active_operation_name, "mscolab_operation.ftml"),
                 )
                 self.ui.workingStatusLabel.setText(
@@ -1439,7 +1439,7 @@ class MSUIMscolab(QtCore.QObject):
 
     def create_local_operation_file(self):
         with open_fs(self.data_dir) as mss_dir:
-            rel_file_path = fs.path.join('local_mscolab_data', self.user['username'],
+            rel_file_path = fs.path.join('local_colabdata', self.user['username'],
                                          self.active_operation_name, 'mscolab_operation.ftml')
             if mss_dir.exists(rel_file_path) is True:
                 return

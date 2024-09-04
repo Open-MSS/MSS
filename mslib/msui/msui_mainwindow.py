@@ -430,7 +430,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
-    def __init__(self, operations_data=None, tutorial_mode=False, *args):
+    def __init__(self, local_operations_data=None, tutorial_mode=False, *args):
+        """
+        This method initializes the main window of the application.
+        It sets up the user interface, icons, menu actions, and connects signals to slots.
+
+        :param local_operations_data: Base path used by "work asynchronously" to store operations.
+        :param tutorial_mode: Whether to run the application in tutorial mode. Default is False.
+        :param args: Additional arguments to pass to the parent class.
+
+        """
         super().__init__(*args)
         self.tutorial_mode = tutorial_mode
         self.setupUi(self)
@@ -506,7 +515,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
-        self.mscolab = mscolab.MSUIMscolab(parent=self, data_dir=operations_data)
+        self.mscolab = mscolab.MSUIMscolab(parent=self, local_operations_data=local_operations_data)
 
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)

@@ -37,18 +37,18 @@ from saml2.saml import NAMEID_FORMAT_PERSISTENT
 from saml2.saml import NAMEID_FORMAT_TRANSIENT
 from saml2.sigver import get_xmlsec_binary
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.msidp.conf import msidp_settings
 
 
 # CRTs and metadata files can be generated through the mscolab server.
 # if configured that way CRTs DIRs should be same in both IDP and mscolab server.
-BASE_DIR = mscolab_settings.BASE_DIR
-DATA_DIR = mscolab_settings.DATA_DIR
-SSO_DIR = mscolab_settings.SSO_DIR
+BASE_DIR = msidp_settings.BASE_DIR
+DATA_DIR = msidp_settings.DATA_DIR
+SSO_DIR = msidp_settings.SSO_DIR
 
 
 def sso_dir_path(local_file):
-    """Return the full path by joining the MSCOLAB_SSO_DIR and local_file."""
+    """Return the full path by joining the SSO_DIR and local_file."""
     return os.path.join(SSO_DIR, local_file)
 
 

@@ -53,7 +53,7 @@ class default_mscolab_settings:
     CORS_ORIGINS = ["*"]
 
     # dir where msui output files are stored
-    BASE_DIR = os.path.expanduser("~")
+    BASE_DIR = os.path.join(os.path.expanduser("~"), 'mss')
 
     DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 

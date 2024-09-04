@@ -29,8 +29,8 @@ import mock
 import pytest
 
 import mslib.utils.auth
+from tests.constants import ROOT_DIR
 from mslib.msui import flighttrack as ft
-from mslib.mscolab.conf import mscolab_settings
 from PyQt5 import QtCore, QtTest
 from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
                          mscolab_delete_all_operations, mscolab_delete_user)
@@ -44,7 +44,7 @@ class Test_Mscolab_Merge_Waypoints:
     def setup(self, qtbot, mscolab_app, mscolab_server):
         self.app = mscolab_app
         self.url = mscolab_server
-        self.window = msui.MSUIMainWindow(operations_data=mscolab_settings.OPERATIONS_DATA)
+        self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
         yield
@@ -53,7 +53,7 @@ class Test_Mscolab_Merge_Waypoints:
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
             mscolab_delete_user(self.app, self.url, self.emailid, 'abcdef')
-        with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as mss_dir:
+        with fs.open_fs(ROOT_DIR) as mss_dir:
             if mss_dir.exists('local_mscolab_data'):
                 mss_dir.removetree('local_mscolab_data')
             assert mss_dir.exists('local_mscolab_data') is False
