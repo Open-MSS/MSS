@@ -576,6 +576,9 @@ class MSUIMscolab(QtCore.QObject):
         # Gravatar image path
         self.gravatar = None
 
+        # Service message text for flight-track changes (waypoints inserted, moved or deleted)
+        self.lastChangeMessage = ""
+
         # set data dir, uri
         if data_dir is None:
             self.data_dir = config_loader(dataset="mss_dir")
@@ -677,6 +680,7 @@ class MSUIMscolab(QtCore.QObject):
             self.conn.signal_update_permission.connect(self.handle_update_permission)
             self.conn.signal_revoke_permission.connect(self.handle_revoke_permission)
             self.conn.signal_operation_deleted.connect(self.handle_operation_deleted)
+            self.conn.signal_active_user_update.connect(self.update_active_user_label)
 
             self.ui.connectBtn.hide()
             self.ui.openOperationsGb.show()
@@ -861,7 +865,7 @@ class MSUIMscolab(QtCore.QObject):
             try:
                 # Resize the image and set profile image pixmap
                 image = Image.open(file_name)
-                image = image.resize((64, 64), Image.ANTIALIAS)
+                image = image.resize((64, 64), Image.LANCZOS)
                 img_byte_arr = io.BytesIO()
                 image.save(img_byte_arr, format=file_format)
                 img_byte_arr.seek(0)
@@ -1165,6 +1169,7 @@ class MSUIMscolab(QtCore.QObject):
         initial_waypoints = [ft.Waypoint(location=locations[0]), ft.Waypoint(location=locations[1])]
         waypoints_model = ft.WaypointsTableModel(name="", waypoints=initial_waypoints)
         self.waypoints_model = waypoints_model
+        self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         self.reload_view_windows()
 
     def close_external_windows(self):
@@ -1449,6 +1454,7 @@ class MSUIMscolab(QtCore.QObject):
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
+        self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
 
@@ -1490,6 +1496,7 @@ class MSUIMscolab(QtCore.QObject):
                 xml_content = self.merge_dialog.get_values()
                 if xml_content is not None:
                     self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                    self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
                     self.waypoints_model.save_to_ftml(self.local_ftml_file)
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
@@ -1512,6 +1519,7 @@ class MSUIMscolab(QtCore.QObject):
                 if xml_content is not None:
                     self.conn.save_file(self.token, self.active_op_id, xml_content, comment=comment)
                     self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                    self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
                     self.waypoints_model.save_to_ftml(self.local_ftml_file)
                     self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
                     self.reload_view_windows()
@@ -1662,8 +1670,11 @@ class MSUIMscolab(QtCore.QObject):
     @QtCore.pyqtSlot(int, int)
     def handle_revoke_permission(self, op_id, u_id):
         if u_id == self.user["id"]:
+            revoked_operation_currently_active = True if self.active_op_id == op_id else False
             operation_name = self.delete_operation_from_list(op_id)
             if operation_name is not None:
+                if revoked_operation_currently_active:
+                    self.ui.userCountLabel.hide()
                 show_popup(self.ui, "Permission Revoked",
                            f'Your access to operation - "{operation_name}" was revoked!', icon=1)
                 # on import permissions revoked name can not taken from the operation list,
@@ -1684,6 +1695,16 @@ class MSUIMscolab(QtCore.QObject):
         if op_id == old_active_id and operation_name is None:
             operation_name = old_operation_name
         show_popup(self.ui, "Success", f'Operation "{operation_name}" was deleted!', icon=1)
+
+    @QtCore.pyqtSlot(int, int)
+    def update_active_user_label(self, op_id, count):
+        # Update UI component which displays the number of active users
+        if self.active_op_id == op_id:
+            self.ui.userCountLabel.setText(f"Active Users: {count}")
+
+    @QtCore.pyqtSlot(str)
+    def handle_change_message(self, message):
+        self.lastChangeMessage = message
 
     def show_categories_to_ui(self, ops=None):
         """
@@ -1881,6 +1902,12 @@ class MSUIMscolab(QtCore.QObject):
                     window.enable_navbar_action_buttons()
 
             self.ui.switch_to_mscolab()
+
+            # Enable the active user count label
+            self.ui.userCountLabel.show()
+
+            # call select operation method from connection manager to emit signal
+            self.conn.select_operation(item.op_id)
         else:
             if self.mscolab_server_url is not None:
                 show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
@@ -1994,6 +2021,7 @@ class MSUIMscolab(QtCore.QObject):
         xml_content = self.request_wps_from_server()
         if xml_content is not None:
             self.waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+            self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
             self.waypoints_model.name = self.active_operation_name
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
 
@@ -2018,7 +2046,10 @@ class MSUIMscolab(QtCore.QObject):
                 self.waypoints_model.save_to_ftml(self.local_ftml_file)
             else:
                 xml_content = self.waypoints_model.get_xml_content()
-                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None)
+                self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None,
+                                    messageText=self.lastChangeMessage)
+                # Reset the last change message to make sure that it is used only once
+                self.lastChangeMessage = ""
         else:
             show_popup(self.ui, "Error", "Your Connection is expired. New Login required!")
             self.logout()
@@ -2070,6 +2101,7 @@ class MSUIMscolab(QtCore.QObject):
                 return
             self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
             self.waypoints_model = model
+            self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
             self.handle_waypoints_changed()
             self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
             self.reload_view_windows()
@@ -2176,9 +2208,13 @@ class MSUIMscolab(QtCore.QObject):
 
         self.operation_archive_browser.hide()
 
+        # reset profile image pixmap
         if hasattr(self, 'profile_dialog'):
             del self.profile_dialog
             self.profile_dialog = None
+
+        # reset the user count label to 0
+        self.ui.userCountLabel.setText("Active Users: 0")
 
         # activate first local flighttrack after logging out
         self.ui.listFlightTracks.setCurrentRow(0)
