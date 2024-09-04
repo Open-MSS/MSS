@@ -801,6 +801,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.listFlightTracks.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
+        self.userCountLabel.hide()
         self.menu_handler()
         self.signal_activate_flighttrack.emit(self.active_flight_track)
 

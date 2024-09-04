@@ -449,7 +449,7 @@ def get_user():
 @APP.route('/upload_profile_image', methods=["POST"])
 @verify_user
 def upload_profile_image():
-    user_id = request.form['user_id']
+    user_id = g.user.id
     file = request.files['image']
     if not file:
         return jsonify({'message': 'No file provided or invalid file type'}), 400
@@ -623,6 +623,13 @@ def authorized_users():
     return json.dumps({"users": fm.get_authorized_users(int(op_id))})
 
 
+@APP.route('/active_users', methods=["GET"])
+@verify_user
+def active_users():
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    return jsonify(active_users=list(sockio.sm.active_users_per_operation[int(op_id)]))
+
+
 @APP.route('/operations', methods=['GET'])
 @verify_user
 def get_operations():
@@ -785,6 +792,7 @@ def delete_bulk_permissions():
     success = fm.delete_bulk_permission(op_id, user, u_ids)
     if success:
         for u_id in u_ids:
+            sockio.sm.remove_active_user_id_from_specific_operation(u_id, op_id)
             sockio.sm.emit_revoke_permission(u_id, op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify({"success": True, "message": "User permissions successfully deleted!"})

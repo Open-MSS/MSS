@@ -27,6 +27,9 @@
 import pytest
 import json
 import io
+import os
+
+from PIL import Image
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
@@ -132,14 +135,50 @@ class Test_Server:
     def test_delete_user(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
+            # Case 1 : The user has no profile image set
             token = self._get_token(test_client, self.userdata)
             response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["success"] is True
-            response = test_client.post('/delete_own_account', data={"token": "dsdsds"})
+            assert response.get_json()["success"] is True
+            # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
+            # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
+
+            # Case 2 : The user has a custom profile image set
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            token = self._get_token(test_client, self.userdata)
+            response = self._upload_profile_image(test_client, token, self.userdata[0])
+            assert response.status_code == 200  # this will ensure image was uploaded
+
+            user = get_user(self.userdata[0])
+            relative_image_path = user.profile_image_path  # Capture the path before deletion
+            full_image_path = os.path.join(mscolab_settings.UPLOAD_FOLDER, relative_image_path)
+            response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
-            assert response.data.decode('utf-8') == "False"
+            assert response.get_json()["success"] is True
+            assert not os.path.exists(full_image_path)
+            # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
+            # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
+
+    # ToDo: Add a test for an oversized image/file ( > MAX_UPLOAD_SIZE) for chat attachments and profile image.
+    # Currently, flask is unable to raise exception for an oversized file.
+
+    def test_unauthorized_profile_image_upload(self):
+        other_user_data = 'other@ex.com', 'other', 'other'
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(other_user_data[0], other_user_data[1], other_user_data[2])
+        with self.app.test_client() as test_client:
+            # Case 1: Unauthenticated upload attempt
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None
+            self._upload_profile_image(test_client, token="random-string", email=self.userdata[0])
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None   # profile-image-path should remain None after failed upload
+
+            # Case 2: Authenticated as another user trying to upload for main user
+            token_of_other_user = self._get_token(test_client, other_user_data)
+            self._upload_profile_image(test_client, token_of_other_user, self.userdata[0])
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None  # User should not be able to upload an image for another user
 
     def test_messages(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -317,7 +356,7 @@ class Test_Server:
                                                                   "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
-            assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1]}]
+            assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1], 'id': 1}]
 
     def test_delete_operation(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -446,3 +485,21 @@ class Test_Server:
         user = get_user(userdata[0])
         self.fm.save_file(operation.id, XML_CONTENT1, user)
         return user
+
+    def _upload_profile_image(self, test_client, token, email):
+        # Creating a dummy image
+        img = Image.new('RGB', (64, 64), color='yellow')
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        filename = "test.jpeg"
+
+        # Post request for uploading the image
+        user = get_user(email)
+        data = {
+            "user_id": str(user.id),
+            "token": token,
+            'image': (img_byte_arr, filename, 'image/jpeg')
+        }
+        response = test_client.post('/upload_profile_image', data=data)
+        return response

@@ -34,7 +34,7 @@ from mslib.mscolab.models import Operation, Message, MessageType, User
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
                                  get_message_dict, create_files,
-                                 os_fs_create_dir)
+                                 os_fs_create_dir, get_user_id)
 
 
 class Test_Utils:
@@ -62,6 +62,10 @@ class Test_Utils:
     def test_get_session_id(self):
         sockets = [{"u_id": 5, "s_id": 100}]
         assert get_session_id(sockets, 5) == 100
+
+    def test_get_user_id(self):
+        sockets = [{"u_id": 9, "s_id": 101}]
+        assert get_user_id(sockets, 101) == 9
 
     def test_get_message_dict(self):
         message = Message(0, 0, "Moin")
