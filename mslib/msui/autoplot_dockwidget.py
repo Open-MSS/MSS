@@ -273,7 +273,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if treewidget.objectName() == "autoplotSecsTreeWidget":
             if url is None:
                 return
-            print("stime,etime,add",self.stime, self.etime)
             item = QTreeWidgetItem([url, layer, styles, level, self.stime, self.etime, self.intv])
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
             self.autoplotSecsTreeWidget.setCurrentItem(item)
@@ -323,7 +322,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if treewidget.objectName() == "autoplotSecsTreeWidget":
             if url is None:
                 return
-            print("stime,etime,update",self.stime, self.etime)
             selected_item = self.autoplotSecsTreeWidget.currentItem()
             selected_item.setText(0, url)
             selected_item.setText(1, layer)
@@ -393,7 +391,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     def combo_box_input(self, combo):
         comboBoxName = combo.objectName()
         currentText = combo.currentText()
-        print("stime,etime  ",currentText)
         if comboBoxName == "timeIntervalComboBox":
             self.intv = currentText
         elif comboBoxName == "stimeComboBox":

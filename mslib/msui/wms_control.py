@@ -495,6 +495,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.multilayers.btGetCapabilities.clicked.connect(self.get_capabilities)
         self.multilayers.pbViewCapabilities.clicked.connect(self.view_capabilities)
+        self.multilayers.styles_on_change.connect(lambda styles:self.style_changed_now(styles))
 
         self.btClearMap.clicked.connect(self.clear_map)
 
@@ -548,12 +549,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
     def row_is_selected(self,url,layer,styles,level):
+        print("row is selected",url,layer,styles,level)
         if url not in self.multilayers.layers:
             self.layer_name=layer
             self.style_name=styles
             self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles,level=level)
             self.populate_ui(update_level=level)
-            print(layer)
         else:
             # Get coordinate reference system and bounding box from the map
             # object in the view.
@@ -595,6 +596,27 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.multilayers.cbWMS_URL.setCurrentIndex(index)
             
             self.multilayers.threads -= 1
+            #print("styles list",self.current_sel_layer.styles)
+            styles_name=str(styles).strip().split()[0].strip();
+            def style_changed(layer):
+                for style in self.current_sel_layer.styles:
+                    this_style=str(style)
+                    this_style=this_style.strip().split()[0];
+                    this_style=this_style.strip()
+                    #print("styles present:",this_style,"style selected:",styles_name)        
+                    if this_style.startswith(styles_name):
+                        self.current_sel_layer.style = style
+                        self.current_sel_layer.style_changed()
+                        self.multilayers.multilayer_clicked(self.current_sel_layer)
+                        self.current_sel_layer.parent.dock_widget.auto_update()
+                        break
+                
+                layer.style_changed()
+                self.multilayers.multilayer_clicked(layer)
+                self.multilayers.dock_widget.auto_update()
+                self.multilayers.styles_on_change.emit(layer.style)
+            
+            style_changed(self.current_sel_layer)
 
             layers = [self.current_sel_layer]
             args = []
@@ -621,13 +643,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.populate_ui(update_level=level)
             for i in range(self.cbLevel.count()):
                 item_text = self.cbLevel.itemText(i)
-                print("elements present ",i,item_text)
                 if item_text.startswith(level):
-                    print("level changed iufhvfhdhhlbl sd fs fsfs fsdf",item_text)
                     self.cbLevel.setCurrentText(item_text)
                     self.level_changed()
                     break
-            print(layer)
     
     def leftrow_is_selected(self,vtime):
         if vtime is not None:
@@ -644,6 +663,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
             logging.debug("Selected '%s' for Combobox.", extra)
             self.parent().parent().update_predefined_maps(extra)
+
+    def style_changed_now(self,style):
+        self.styles_changed.emit(style)
 
     def __del__(self):
         """Destructor.
@@ -848,21 +870,20 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.multilayers.multilayer_clicked(self.current_sel_layer)
 
         # Find the style by its name and set it in the ComboBox
+        #print("styles list",self.current_sel_layer.styles)
         for styles in self.current_sel_layer.styles:
-            selected_style=str(styles)[1:(len(style_name)+1)]
-            print(selected_style)        
+            selected_style=str(styles)
+            #print("styles present 2  ",styles,"style selected  ",selected_style)        
             if selected_style == style_name:
                 self.current_sel_layer.style = styles
                 self.current_sel_layer.style_changed()
                 self.multilayers.multilayer_clicked(self.current_sel_layer)
                 self.current_sel_layer.parent.dock_widget.auto_update()
-                print("success")
-            else:
-                print(f"Style '{style_name}' not found for layer '{layer_name}'.")
-    
+                break
+            
     def update_url_layer_styles(self, url_name, layer_name, style_name,level=None):
         self.multilayers.cbWMS_URL.setEditText(url_name)
-        print("url name",self.multilayers.cbWMS_URL.currentText()," level is ",level)
+        #print("url name",self.multilayers.cbWMS_URL.currentText()," level is ",level)
         self.get_capabilities(level=level)
         
     def get_capabilities(self,level=None):
@@ -1043,7 +1064,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         active_layers = self.multilayers.get_active_layers()
         layer = self.multilayers.get_current_layer()
-        print("layer in current multilayer  iss d fg g ",layer)
         if layer is not None:
             self.layer_changed.emit(layer)
             currentstyle = layer.get_style()
@@ -1226,7 +1246,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         a layer change).
         """
         if self.btGetMap.isEnabled() and self.cbAutoUpdate.isChecked() and not self.layerChangeInProgress:
-            print("get maps autoupdate")
             self.get_all_maps()
 
     def check_init_time(self, dt):
@@ -1305,14 +1324,10 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         return valid_time == "" or valid_time is not None
 
     def level_changed(self):
-        print("level changed   now")
-        print("multilayers threads",self.multilayers.threads,"layer progress",self.layerChangeInProgress)
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
-            print("inside level changes if block")
             self.multilayers.get_current_layer().set_level(self.cbLevel.currentText())
             self.multilayers.carry_parameters["level"] = self.cbLevel.currentText()
         currentlevel = self.cbLevel.currentText()
-        print("currentlevel",currentlevel)
         self.on_level_changed.emit(currentlevel)
         self.auto_update()
 
