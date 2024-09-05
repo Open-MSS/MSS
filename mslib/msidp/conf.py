@@ -2,7 +2,7 @@
 """
 
     mslib.msidp.conf
-    ~~~~~~~~~~~~~~~f
+    ~~~~~~~~~~~~~~~~
 
     config for msidp.
 
