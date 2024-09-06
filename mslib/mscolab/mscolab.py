@@ -102,9 +102,9 @@ def handle_mscolab_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "key_mscolab.key"),
+               os.path.join(mscolab_settings.SSO_DIR, "key_mscolab.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR,
+               "/CN=localhost", "-out", os.path.join(mscolab_settings.SSO_DIR,
                                                      "crt_mscolab.crt")]
         subprocess.run(cmd, check=True)
         logging.info("generated CRTs for the mscolab server.")
@@ -119,9 +119,9 @@ def handle_local_idp_certificate_init():
 
     try:
         cmd = ["openssl", "req", "-newkey", "rsa:4096", "-keyout",
-               os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "key_local_idp.key"),
+               os.path.join(mscolab_settings.SSO_DIR, "key_local_idp.key"),
                "-nodes", "-x509", "-days", "365", "-batch", "-subj",
-               "/CN=localhost", "-out", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "crt_local_idp.crt")]
+               "/CN=localhost", "-out", os.path.join(mscolab_settings.SSO_DIR, "crt_local_idp.crt")]
         subprocess.run(cmd, check=True)
         logging.info("generated CRTs for the local identity provider")
         return True
@@ -252,7 +252,7 @@ config:
   #       name_id_format_allow_create: true
 """
     try:
-        file_path = os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "mss_saml2_backend.yaml")
+        file_path = os.path.join(mscolab_settings.SSO_DIR, "mss_saml2_backend.yaml")
         with open(file_path, "w", encoding="utf-8") as file:
             file.write(saml_2_backend_yaml_content)
         return True
@@ -278,7 +278,7 @@ def handle_mscolab_metadata_init(repo_exists):
         process = subprocess.Popen(command)
         cmd_curl = ["curl", "--retry", "5", "--retry-connrefused", "--retry-delay", "3",
                     "http://localhost:8083/metadata/localhost_test_idp",
-                    "-o", os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "metadata_sp.xml")]
+                    "-o", os.path.join(mscolab_settings.SSO_DIR, "metadata_sp.xml")]
         subprocess.run(cmd_curl, check=True)
         process.terminate()
         logging.info('mscolab metadata file generated succesfully')
@@ -293,8 +293,8 @@ def handle_local_idp_metadata_init(repo_exists):
     print('generating metadata for localhost identity provider')
 
     try:
-        if os.path.exists(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml")):
-            os.remove(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml"))
+        if os.path.exists(os.path.join(mscolab_settings.SSO_DIR, "idp.xml")):
+            os.remove(os.path.join(mscolab_settings.SSO_DIR, "idp.xml"))
 
         idp_conf_path = os.path.join("mslib", "msidp", "idp_conf.py")
 
@@ -305,15 +305,15 @@ def handle_local_idp_metadata_init(repo_exists):
 
         cmd = ["make_metadata", idp_conf_path]
 
-        with open(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml"),
+        with open(os.path.join(mscolab_settings.SSO_DIR, "idp.xml"),
                   "w", encoding="utf-8") as output_file:
             subprocess.run(cmd, stdout=output_file, check=True)
         logging.info("idp metadata file generated successfully")
         return True
     except subprocess.CalledProcessError as error:
         # Delete the idp.xml file when the subprocess fails
-        if os.path.exists(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml")):
-            os.remove(os.path.join(mscolab_settings.MSCOLAB_SSO_DIR, "idp.xml"))
+        if os.path.exists(os.path.join(mscolab_settings.SSO_DIR, "idp.xml")):
+            os.remove(os.path.join(mscolab_settings.SSO_DIR, "idp.xml"))
         print(f"Error while generating metadata for localhost identity provider: {error}")
         return False
 
@@ -323,8 +323,8 @@ def handle_sso_crts_init():
         This will generate necessary CRTs files for sso in mscolab through localhost idp
     """
     print("\n\nmscolab sso conf initiating......")
-    if os.path.exists(mscolab_settings.MSCOLAB_SSO_DIR):
-        shutil.rmtree(mscolab_settings.MSCOLAB_SSO_DIR)
+    if os.path.exists(mscolab_settings.SSO_DIR):
+        shutil.rmtree(mscolab_settings.SSO_DIR)
     create_files()
     if not handle_mscolab_certificate_init():
         print('Error while handling mscolab certificate.')

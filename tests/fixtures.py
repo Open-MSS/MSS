@@ -92,7 +92,7 @@ def mscolab_session_app():
     """
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['OPERATIONS_DATA'] = mscolab_settings.OPERATIONS_DATA
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
     return _app
 

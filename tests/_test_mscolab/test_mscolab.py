@@ -73,20 +73,20 @@ class Test_Mscolab:
 
     def test_handle_db_reset(self):
         assert os.path.isdir(mscolab_settings.UPLOAD_FOLDER)
-        assert os.path.isdir(mscolab_settings.MSCOLAB_DATA_DIR)
+        assert os.path.isdir(mscolab_settings.OPERATIONS_DATA)
         all_operations = Operation.query.all()
         assert all_operations == []
         operation_name = "Example"
         assert add_operation(operation_name, "Test Example")
-        assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name))
+        assert os.path.isdir(os.path.join(mscolab_settings.OPERATIONS_DATA, operation_name))
         operation = Operation.query.filter_by(path=operation_name).first()
         assert operation.description == "Test Example"
         all_operations = Operation.query.all()
         assert len(all_operations) == 1
         handle_db_reset()
         # check operation dir name removed
-        assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
-        assert os.path.isdir(mscolab_settings.MSCOLAB_DATA_DIR)
+        assert os.path.isdir(os.path.join(mscolab_settings.OPERATIONS_DATA, operation_name)) is False
+        assert os.path.isdir(mscolab_settings.OPERATIONS_DATA)
         assert os.path.isdir(mscolab_settings.UPLOAD_FOLDER)
         # query db for operation_name
         operation = Operation.query.filter_by(path=operation_name).first()

@@ -471,7 +471,7 @@ Configuration in MSColab settings for Keycloak
 
 Configuration mss_saml2_backend.yaml file
 
-    Create your mss_saml2_backend.yaml file in your ``MSCOLAB_SSO_DIR``.
+    Create your mss_saml2_backend.yaml file in your ``SSO_DIR``.
 
         .. code:: text
 
