@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mslib/msui/ui/ui_mainwindow.ui'
+# Form implementation generated from reading ui file 'ui_mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #
@@ -272,7 +272,6 @@ class Ui_MSUIMainWindow(object):
         self.menuFile.addAction(self.actionQuit)
         self.menuHelp.addAction(self.actionShortcuts)
         self.menuHelp.addAction(self.actionMSColabHelp)
-        self.menuHelp.addAction(self.actionUpdater)
         self.menuHelp.addAction(self.actionOnlineHelp)
         self.menuHelp.addAction(self.actionAboutMSUI)
         self.menuHelp.addAction(self.actionSearch)

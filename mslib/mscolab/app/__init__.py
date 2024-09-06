@@ -25,6 +25,7 @@
 """
 
 import os
+import logging
 import sqlalchemy
 
 from flask_migrate import Migrate
@@ -34,7 +35,11 @@ import mslib
 from flask import Flask, url_for
 from mslib.mscolab.conf import mscolab_settings
 from flask_sqlalchemy import SQLAlchemy
-from mslib.utils import prefix_route
+from mslib.utils import prefix_route, release_info
+
+message, update = release_info.check_for_new_release()
+if update:
+    logging.warning(message)
 
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))

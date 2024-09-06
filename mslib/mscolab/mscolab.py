@@ -45,7 +45,6 @@ from mslib.mscolab.seed import seed_data, add_user, add_all_users_default_operat
 from mslib.mscolab.server import APP
 from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
-from mslib.utils.qt import Worker, Updater
 
 
 def handle_start(args):
@@ -358,7 +357,6 @@ def handle_sso_metadata_init(repo_exists):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
-    parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     subparsers = parser.add_subparsers(help='Available actions', dest='action')
 
@@ -406,16 +404,6 @@ def main():
 
     except git.exc.InvalidGitRepositoryError:
         repo_exists = False
-
-    updater = Updater()
-    if args.update:
-        updater.on_update_available.connect(lambda old, new: updater.update_mss())
-        updater.on_log_update.connect(lambda s: print(s.replace("\n", "")))
-        updater.on_status_update.connect(lambda s: print(s.replace("\n", "")))
-        updater.run()
-        while Worker.workers:
-            list(Worker.workers)[0].wait()
-        sys.exit()
 
     if args.action == "start":
         handle_start(args)

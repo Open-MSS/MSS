@@ -124,22 +124,8 @@ versions for dependencies. ::
     (mssenv) $ msui
 
 
-Update
-------
-
-Builtin Update
+Update Methods
 ..............
-
-Since version 5.0 we provide a feature for updating MSS by the UI or the command line
-After you started the MSS UI it informs you after a while if there is a new update available.
-From the command line you can trigger this update feature by ::
-
-    (mssenv) $ msui --update
-
-
-
-Other Methods
-.............
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If your current version is not far behind the new version

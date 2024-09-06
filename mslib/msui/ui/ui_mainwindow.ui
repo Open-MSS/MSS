@@ -467,7 +467,6 @@ Double click a operation to activate and view its description.</string>
     </property>
     <addaction name="actionShortcuts"/>
     <addaction name="actionMSColabHelp"/>
-    <addaction name="actionUpdater"/>
     <addaction name="actionOnlineHelp"/>
     <addaction name="actionAboutMSUI"/>
     <addaction name="actionSearch"/>
