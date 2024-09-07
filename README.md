@@ -12,7 +12,6 @@ into the right direction in order to get the software working on your
 computer.
 
 
-
 Installing MSS
 ==============
 
