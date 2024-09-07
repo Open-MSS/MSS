@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>798</width>
-    <height>282</height>
+    <width>828</width>
+    <height>313</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -137,126 +137,162 @@ Check box to activate and display track on topview.</string>
         </layout>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>220</width>
-           <height>160</height>
-          </size>
-         </property>
-         <property name="title">
-          <string>Flight Track style options</string>
-         </property>
-         <widget class="QPushButton" name="pushButton_color">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>30</y>
-            <width>174</width>
-            <height>23</height>
-           </rect>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Change Color</string>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label">
-          <property name="geometry">
-           <rect>
-            <x>120</x>
-            <y>130</y>
-            <width>101</width>
-            <height>20</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Thickness</string>
-          </property>
-         </widget>
-         <widget class="QDoubleSpinBox" name="dsbx_linewidth">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>120</y>
-            <width>101</width>
-            <height>31</height>
-           </rect>
-          </property>
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_3">
-          <property name="geometry">
-           <rect>
-            <x>120</x>
-            <y>100</y>
-            <width>61</width>
-            <height>16</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Style</string>
-          </property>
-         </widget>
-         <widget class="QComboBox" name="cbLineStyle">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>90</y>
-            <width>101</width>
-            <height>22</height>
-           </rect>
-          </property>
-         </widget>
-         <widget class="QLabel" name="label_2">
-          <property name="geometry">
-           <rect>
-            <x>120</x>
-            <y>60</y>
-            <width>81</width>
-            <height>20</height>
-           </rect>
-          </property>
-          <property name="text">
-           <string>Transparency</string>
-          </property>
-         </widget>
-         <widget class="QSlider" name="hsTransparencyControl">
-          <property name="geometry">
-           <rect>
-            <x>10</x>
-            <y>60</y>
-            <width>101</width>
-            <height>21</height>
-           </rect>
-          </property>
-          <property name="value">
-           <number>20</number>
-          </property>
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-         </widget>
-        </widget>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="0" column="0">
+          <widget class="QGroupBox" name="groupBox">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>220</width>
+             <height>160</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>Flight Track style options</string>
+           </property>
+           <widget class="QPushButton" name="pushButton_color">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>30</y>
+              <width>201</width>
+              <height>23</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="text">
+             <string>Change Color</string>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label">
+            <property name="geometry">
+             <rect>
+              <x>120</x>
+              <y>130</y>
+              <width>101</width>
+              <height>20</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Thickness</string>
+            </property>
+           </widget>
+           <widget class="QDoubleSpinBox" name="dsbx_linewidth">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>120</y>
+              <width>101</width>
+              <height>31</height>
+             </rect>
+            </property>
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label_3">
+            <property name="geometry">
+             <rect>
+              <x>120</x>
+              <y>100</y>
+              <width>61</width>
+              <height>16</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Style</string>
+            </property>
+           </widget>
+           <widget class="QComboBox" name="cbLineStyle">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>90</y>
+              <width>101</width>
+              <height>22</height>
+             </rect>
+            </property>
+           </widget>
+           <widget class="QLabel" name="label_2">
+            <property name="geometry">
+             <rect>
+              <x>120</x>
+              <y>60</y>
+              <width>81</width>
+              <height>20</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Transparency</string>
+            </property>
+           </widget>
+           <widget class="QSlider" name="hsTransparencyControl">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>60</y>
+              <width>101</width>
+              <height>21</height>
+             </rect>
+            </property>
+            <property name="value">
+             <number>20</number>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QGroupBox" name="groupBox_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>220</width>
+             <height>60</height>
+            </size>
+           </property>
+           <property name="title">
+            <string>Plot Annotation</string>
+           </property>
+           <widget class="QCheckBox" name="annotationCB">
+            <property name="geometry">
+             <rect>
+              <x>10</x>
+              <y>30</y>
+              <width>191</width>
+              <height>21</height>
+             </rect>
+            </property>
+            <property name="text">
+             <string>Enable Annotation</string>
+            </property>
+           </widget>
+          </widget>
+         </item>
+        </layout>
        </item>
       </layout>
      </item>

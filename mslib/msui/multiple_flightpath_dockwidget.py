@@ -569,8 +569,8 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
                 name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed flighttrack'
                 color = self.dict_flighttrack[wp_model].get('color', '#000000')  # Default to black
                 linestyle = self.dict_flighttrack[wp_model].get('line_style', '-')  # Default to solid line
-                self.flightpath_dict[name] = (color, linestyle)
-            # If the flight track is unchecked, ensure it is removed from the dictionary
+                label = self.flightpath_dict.get(name, (name, color, linestyle))[0] # If label exist used label else nme
+                self.flightpath_dict[name] = (label, color, linestyle)
             else:
                 name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed flighttrack'
                 if name in self.flightpath_dict:
@@ -1185,7 +1185,8 @@ class MultipleFlightpathOperations:
                 op_id = listItem.op_id
                 color = self.dict_operations[op_id].get('color', '#000000')  # Default to black
                 linestyle = self.dict_operations[op_id].get('line_style', '-')  # Default to solid line
-                self.parent.flightpath_dict[name] = (color, linestyle)
+                label = self.dict_operations.get(name, (name, color, linestyle))[0]
+                self.parent.flightpath_dict[name] = (label, color, linestyle)
             # If the flight track is unchecked, ensure it is removed from the dictionary
             else:
                 wp_model = listItem.flighttrack_model
