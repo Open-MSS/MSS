@@ -1,3 +1,8 @@
+**Chat:**
+[![IRC: #mss-general on libera.chat](https://img.shields.io/badge/libera.chat-%23MSS_General-blue)](https://web.libera.chat/?channels=#mss-general)
+[![IRC: #mss-gsoc on libera.chat](https://img.shields.io/badge/libera.chat-%23MSS_GSoC-brightgreen)](https://web.libera.chat/?channels=#mss-gsoc)
+
+
 Mission Support System Usage Guidelines
 =======================================
 
@@ -5,6 +10,7 @@ Welcome to the Mission Support System software for planning
 atmospheric research flights. This document is intended to point you
 into the right direction in order to get the software working on your
 computer.
+
 
 
 Installing MSS
