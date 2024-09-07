@@ -419,6 +419,7 @@ class TopViewPlotter(ViewPlotter):
             # Redraw the legend with the updated label
             self.draw_flightpath_legend(self.flightpath_dict)
 
+
 class SideViewPlotter(ViewPlotter):
     _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
