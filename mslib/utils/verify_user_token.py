@@ -46,13 +46,13 @@ def verify_user_token(mscolab_server_url, token):
         logging.debug("Certificate Verification Failed")
         return False
     except requests.exceptions.InvalidSchema:
-        logging.debug("Invalid schema of url")
+        logging.debug("Invalid schema of url '%s'", url)
         return False
     except requests.exceptions.ConnectionError as ex:
         logging.error("unexpected error: %s %s", type(ex), ex)
         return False
     except requests.exceptions.MissingSchema as ex:
         # self.mscolab_server_url can be None??
-        logging.error("unexpected error: %s %s", type(ex), ex)
+        logging.error("unexpected error for url '%s': %s %s", url, type(ex), ex)
         return False
     return r.text == "True"
