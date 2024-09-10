@@ -393,6 +393,9 @@ class TopViewPlotter(ViewPlotter):
             legend_item.set_picker(True)  # Make the legend items clickable
             legend_item.label = label  # Attach the label to the item
 
+        # Call the annotation function after setting up the legend
+        self.annotate_flight_tracks(flightpath_dict)
+
         # Attach the pick event handler
         self.fig.canvas.mpl_connect('pick_event', self.on_legend_click)
         self.ax.figure.canvas.draw_idle()
@@ -419,6 +422,46 @@ class TopViewPlotter(ViewPlotter):
             # Redraw the legend with the updated label
             self.draw_flightpath_legend(self.flightpath_dict)
 
+    def annotate_flight_tracks(self, flightpath_dict):
+        """
+        Annotate each flight track with its corresponding label next to the track, avoiding overlap.
+        """
+        annotated_positions = []  # Store the positions
+
+        for flighttrack, (label, color, linestyle) in flightpath_dict.items():
+            # Get the specific waypoints for the current flight track
+            if self.fig.canvas.waypoints_interactor:
+                path = self.fig.canvas.waypoints_interactor.plotter.pathpatch.get_path()
+                waypoints = path.vertices
+
+                if len(waypoints) >= 2:
+                    # Compute the midpoint between the first two waypoints of the flight track which is not working
+                    midpoint_x = (waypoints[0][0] + waypoints[1][0]) / 2
+                    midpoint_y = (waypoints[0][1] + waypoints[1][1]) / 2
+
+                    # Dynamic offset to avoid overlap
+                    offset_x, offset_y = 10, 10
+
+                    # Check for overlaps and adjust position if needed
+                    for pos in annotated_positions:
+                        dist = np.linalg.norm(np.array([midpoint_x, midpoint_y]) - np.array(pos))
+                        if dist < 20:  # If the labels are too close, move the annotation
+                            offset_x += 20
+                            offset_y += 20
+
+                    # Save the current annotation position with offset
+                    annotated_positions.append((midpoint_x + offset_x, midpoint_y + offset_y))
+
+                    # Plot the annotation with adjusted position
+                    self.ax.annotate(
+                        label,
+                        xy=(midpoint_x, midpoint_y),  # Position of the label
+                        xytext=(midpoint_x + offset_x, midpoint_y + offset_y),  # Offset position
+                        textcoords='offset points',
+                        arrowprops=dict(facecolor=color, shrink=0.05),
+                        fontsize=15,
+                        color=color
+                    )
 
 class SideViewPlotter(ViewPlotter):
     _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
