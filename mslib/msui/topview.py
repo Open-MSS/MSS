@@ -402,6 +402,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget = dock.AutoplotDockWidget(parent=self,parent2=parent, view="Top View", config_settings=config_settings)
                 widget.treewidget_item_selected.connect(lambda url,layer,style,level: self.tree_item_select(url,layer,style,level))
                 widget.autoplot_treewidget_item_selected.connect(lambda section,vtime: self.treePlot_item_select(section,vtime))
+                widget.update_op_flight_treewidget.connect(lambda opfl,flight: parent.update_treewidget_op_fl(opfl,flight))
             else:
                 raise IndexError("invalid control index")
 

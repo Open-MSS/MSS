@@ -43,6 +43,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
     treewidget_item_selected = QtCore.pyqtSignal(str, str, str, str)
     autoplot_treewidget_item_selected = QtCore.pyqtSignal(str, str)
+    update_op_flight_treewidget = QtCore.pyqtSignal(str, str)
 
     def __init__(self, parent=None, parent2=None, view=None, config_settings=None):
         super().__init__()
@@ -204,8 +205,14 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     def autoplotTreeWidget_selected_row(self):
         selected_items = self.autoplotTreeWidget.selectedItems()
         if selected_items:
+            flight = selected_items[0].text(0)
+            filename = selected_items[0].text(3)
             section = selected_items[0].text(1)
             vtime = selected_items[0].text(5)
+            if flight == filename:
+                self.update_op_flight_treewidget.emit("operation",flight)
+            else:
+                self.update_op_flight_treewidget.emit("flight",flight)                
             self.autoplot_treewidget_item_selected.emit(section, vtime)
             print("autoplotTreewidget_dockwidget", section, vtime)
             
