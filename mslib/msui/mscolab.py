@@ -577,6 +577,8 @@ class MSUIMscolab(QtCore.QObject):
         else:
             self.data_dir = data_dir
         self.create_dir()
+        # Variable to store filtered operations
+        self.filtered_operations = []
 
     def view_description(self):
         data = {
@@ -1382,6 +1384,41 @@ class MSUIMscolab(QtCore.QObject):
                         row += 1
             else:
                 self.add_operations_to_ui()
+
+    def apply_regex_filter(self):
+
+        """
+        Filters the operations list based on a regex pattern provided by the user.
+        """
+        pattern = self.ui.regexFilterLe.text()
+        if not pattern:
+            # If no pattern, reset to show all operations
+            self.filtered_operations = self.operations
+        else:
+            try:
+                regex = re.compile(pattern)
+                self.filtered_operations = [op for op in self.operations if regex.search(op['path'])]
+            except re.error:
+                show_popup(self.ui, "Error", "Invalid regex pattern!", icon=2)
+                self.filtered_operations = self.operations
+
+        # Update the UI with the filtered operations
+        self.display_operations(self.filtered_operations)
+
+    def display_operations(self, operations):
+        """
+        Displays the given list of operations in the UI.
+        """
+        self.ui.listOperationsMSC.clear()
+        for operation in operations:
+            operation_desc = f'{operation["path"]} - {operation["access_level"]}'
+            widgetItem = QtWidgets.QListWidgetItem(operation_desc)
+            widgetItem.op_id = operation["op_id"]
+            widgetItem.operation_category = operation["category"]
+            widgetItem.operation_path = operation["path"]
+            widgetItem.access_level = operation["access_level"]
+            widgetItem.active_operation_description = operation["description"]
+            self.ui.listOperationsMSC.addItem(widgetItem)
 
     def server_options_handler(self, index):
         selected_option = self.ui.serverOptionsCb.currentText()
