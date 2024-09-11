@@ -83,7 +83,7 @@ from werkzeug.serving import run_simple as WSGIServer
 from mslib.msidp.idp_user import EXTRA
 from mslib.msidp.idp_user import USERS, PASSWD
 from mako.lookup import TemplateLookup
-from mslib.mscolab.conf import mscolab_settings
+from mslib.msidp.conf import msidp_settings
 
 logger = logging.getLogger("saml2.idp")
 logger.setLevel(logging.WARNING)
@@ -91,7 +91,7 @@ logger.setLevel(logging.WARNING)
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(msidp.__file__))
 LOOKUP = TemplateLookup(
     directories=[os.path.join(DOCS_SERVER_PATH, "templates"), os.path.join(DOCS_SERVER_PATH, "htdocs")],
-    module_directory=os.path.join(mscolab_settings.DATA_DIR, 'msidp_modules'),
+    module_directory=os.path.join(msidp_settings.DATA_DIR, 'msidp_modules'),
     input_encoding="utf-8",
     output_encoding="utf-8",
 )
@@ -373,11 +373,11 @@ class SSO(Service):
                 identity[REPOZE_ID_EQUIVALENT] = self.user
             try:
                 try:
-                    metod = self.environ["idp.authn"]
+                    method = self.environ["idp.authn"]
                 except KeyError:
                     pass
                 else:
-                    resp_args["authn"] = metod
+                    resp_args["authn"] = method
 
                 _resp = IdpServerSettings_.IDP.create_authn_response(
                     identity, userid=self.user, encrypt_cert_assertion=encrypt_cert, **resp_args
@@ -991,7 +991,7 @@ def metadata(environ, start_response):
         start_response("200 OK", [("Content-Type", "text/xml")])
         return [metadata]
     except Exception as ex:
-        logger.error("An error occured while creating metadata: %s", ex.message)
+        logger.error("An error occurred while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
 
 
@@ -1010,7 +1010,7 @@ def staticfile(environ, start_response):
         start_response("200 OK", [("Content-Type", "text/xml")])
         return open(path).read()
     except Exception as ex:
-        logger.error("An error occured while creating metadata: %s", ex.message)
+        logger.error("An error occurred while creating metadata: %s", ex.message)
         return not_found(environ, start_response)
 
 

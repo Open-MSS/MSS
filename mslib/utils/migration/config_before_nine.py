@@ -144,7 +144,7 @@ class MSUIDefaultConfig:
     WMS_preload = []
 
     # WMS image cache settings:
-    # this changes on any start of msui, use ths msui_settings.json when you want a persistent path
+    # this changes on any start of msui, use the msui_settings.json when you want a persistent path
     wms_cache = os.path.join(tempfile.TemporaryDirectory().name, "msui_wms_cache")
 
     # Maximum size of the cache in bytes.

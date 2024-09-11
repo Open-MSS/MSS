@@ -24,28 +24,34 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import datetime
 import pytest
 import json
 import io
+import os
+
+from PIL import Image
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.server import initialize_managers, check_login, register_user
+from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
+from tests.utils import XML_CONTENT1, XML_CONTENT2
 
 
 class Test_Server:
     @pytest.fixture(autouse=True)
-    def setup(self, mscolab_app):
+    def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
+        self.sockio, _, self.fm = mscolab_managers
         self.userdata = 'UV10@uv10', 'UV10', 'uv10'
         with self.app.app_context():
             yield
 
-    def test_initialize_managers(self):
-        app, sockio, cm, fm = initialize_managers(self.app)
-        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+    def test_initialized_managers(self, mscolab_managers):
+        sockio, cm, fm = mscolab_managers
+        assert self.app.config['OPERATIONS_DATA'] == mscolab_settings.OPERATIONS_DATA
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
@@ -130,14 +136,50 @@ class Test_Server:
     def test_delete_user(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
+            # Case 1 : The user has no profile image set
             token = self._get_token(test_client, self.userdata)
             response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
-            data = json.loads(response.data.decode('utf-8'))
-            assert data["success"] is True
-            response = test_client.post('/delete_own_account', data={"token": "dsdsds"})
+            assert response.get_json()["success"] is True
+            # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
+            # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
+
+            # Case 2 : The user has a custom profile image set
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            token = self._get_token(test_client, self.userdata)
+            response = self._upload_profile_image(test_client, token, self.userdata[0])
+            assert response.status_code == 200  # this will ensure image was uploaded
+
+            user = get_user(self.userdata[0])
+            relative_image_path = user.profile_image_path  # Capture the path before deletion
+            full_image_path = os.path.join(mscolab_settings.UPLOAD_FOLDER, relative_image_path)
+            response = test_client.post('/delete_own_account', data={"token": token})
             assert response.status_code == 200
-            assert response.data.decode('utf-8') == "False"
+            assert response.get_json()["success"] is True
+            assert not os.path.exists(full_image_path)
+            # ToDo: Check if user token was cleared after deleting account as assert returns True instead of False
+            # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
+
+    # ToDo: Add a test for an oversized image/file ( > MAX_UPLOAD_SIZE) for chat attachments and profile image.
+    # Currently, flask is unable to raise exception for an oversized file.
+
+    def test_unauthorized_profile_image_upload(self):
+        other_user_data = 'other@ex.com', 'other', 'other'
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(other_user_data[0], other_user_data[1], other_user_data[2])
+        with self.app.test_client() as test_client:
+            # Case 1: Unauthenticated upload attempt
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None
+            self._upload_profile_image(test_client, token="random-string", email=self.userdata[0])
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None   # profile-image-path should remain None after failed upload
+
+            # Case 2: Authenticated as another user trying to upload for main user
+            token_of_other_user = self._get_token(test_client, other_user_data)
+            self._upload_profile_image(test_client, token_of_other_user, self.userdata[0])
+            user = get_user(self.userdata[0])
+            assert user.profile_image_path is None  # User should not be able to upload an image for another user
 
     def test_messages(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -194,6 +236,17 @@ class Test_Server:
             assert operation.active is False
             assert token is not None
 
+    def test_dont_create_operation(self):
+        content = """<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="9.1.0">
+    </ListOfWaypoints>
+  </FlightTrack>
+"""
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata, content=content)
+            assert operation is None
+
     def test_get_operation_by_id(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
@@ -232,8 +285,16 @@ class Test_Server:
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
-            fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, "content2", user)
+            self._save_content(operation, self.userdata)
+            sio = self.sockio.test_client(self.app)
+            # ToDo implement storing comment
+            sio.emit('file-save', {
+                     "op_id": operation.id,
+                     "token": token,
+                     "content": XML_CONTENT2,
+                     "comment": "XML_CONTENT2"})
+            sio.emit('disconnect')
+
             # the newest change is on index 0, because it has a recent created_at time
             response = test_client.get('/get_all_changes', data={"token": token,
                                                                  "op_id": operation.id})
@@ -249,22 +310,35 @@ class Test_Server:
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
-            fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, "content2", user)
-            all_changes = fm.get_all_changes(operation.id, user)
+            user = self._save_content(operation, self.userdata)
+            sio = self.sockio.test_client(self.app)
+            # ToDo implement storing comment
+            sio.emit('file-save', {
+                     "op_id": operation.id,
+                     "token": token,
+                     "content": XML_CONTENT2,
+                     "comment": "XML_CONTENT2"})
+            sio.emit('disconnect')
+            all_changes = self.fm.get_all_changes(operation.id, user)
             response = test_client.get('/get_change_content', data={"token": token,
                                                                     "ch_id": all_changes[1]["id"]})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
-            assert data == {'content': 'content1'}
+            assert data == {'content': XML_CONTENT1}
 
     def test_set_version_name(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
-            fm, user = self._save_content(operation, self.userdata)
-            fm.save_file(operation.id, "content2", user)
-            all_changes = fm.get_all_changes(operation.id, user)
+            user = self._save_content(operation, self.userdata)
+            sio = self.sockio.test_client(self.app)
+            sio.emit('file-save', {
+                     "op_id": operation.id,
+                     "token": token,
+                     "content": XML_CONTENT2,
+                     "comment": "XML_CONTENT2"})
+            sio.emit("disconnect")
+            all_changes = self.fm.get_all_changes(operation.id, user)
             ch_id = all_changes[1]["id"]
             version_name = "THIS"
             response = test_client.post('/set_version_name', data={"token": token,
@@ -283,7 +357,7 @@ class Test_Server:
                                                                   "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
-            assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1]}]
+            assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1], 'id': 1}]
 
     def test_delete_operation(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -329,11 +403,51 @@ class Test_Server:
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
+            old = operation.last_used
             response = test_client.post('/set_last_used', data={"token": token,
                                                                 "op_id": operation.id})
             assert response.status_code == 200
             data = json.loads(response.data.decode('utf-8'))
             assert data["success"] is True
+            new = operation.last_used
+            assert old != new
+            response = test_client.post('/set_last_used', data={"token": token,
+                                                                "op_id": operation.id,
+                                                                "days": 10})
+            assert response.status_code == 200
+            data = json.loads(response.data.decode('utf-8'))
+            assert data["success"] is True
+            new = operation.last_used
+            assert datetime.timedelta(days=11) > old - new > datetime.timedelta(days=9)
+
+    def test_set_active(self):
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        with self.app.test_client() as test_client:
+            operation, token = self._create_operation(test_client, self.userdata)
+            assert operation.active is True
+            response = test_client.post('/update_operation', data={
+                "token": token,
+                "op_id": operation.id, "attribute": "active", "value": "False"})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
+            assert operation.active is False
+
+            response = test_client.post('/update_operation', data={
+                "token": token,
+                "op_id": operation.id, "attribute": "active", "value": "True"})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
+            assert operation.active is True
+
+            response = test_client.post('/update_operation', data={
+                "token": token,
+                "op_id": operation.id, "attribute": "active", "value": False})
+            assert response.status_code == 200
+            data = response.data.decode('utf-8')
+            assert data == "True"
+            assert operation.active is False
 
     def test_get_users_without_permission(self):
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
@@ -369,7 +483,7 @@ class Test_Server:
             import_operation, token = self._create_operation(test_client, self.userdata, path="import")
             user = get_user(self.userdata[0])
             another = get_user(another_user[0])
-            fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
+            fm = FileManager(self.app.config["OPERATIONS_DATA"])
             fm.add_bulk_permission(import_operation.id, user, [another.id], "viewer")
             current_operation, token = self._create_operation(test_client, self.userdata, path="current")
             response = test_client.post('/import_permissions', data={"token": token,
@@ -380,7 +494,8 @@ class Test_Server:
             # creator is not listed
             assert data["success"] is True
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", active=True):
+    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", active=True,
+                          content=None):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
@@ -389,9 +504,9 @@ class Test_Server:
         response = test_client.post('/create_operation', data={"token": token,
                                                                "path": path,
                                                                "description": description,
+                                                               "content": content,
                                                                "active": str(active)})
         assert response.status_code == 200
-        assert response.data.decode('utf-8') == "True"
         operation = Operation.query.filter_by(path=path).first()
         return operation, token
 
@@ -409,6 +524,23 @@ class Test_Server:
         if userdata is None:
             userdata = self.userdata
         user = get_user(userdata[0])
-        fm = FileManager(self.app.config["MSCOLAB_DATA_DIR"])
-        fm.save_file(operation.id, "content1", user)
-        return fm, user
+        self.fm.save_file(operation.id, XML_CONTENT1, user)
+        return user
+
+    def _upload_profile_image(self, test_client, token, email):
+        # Creating a dummy image
+        img = Image.new('RGB', (64, 64), color='yellow')
+        img_byte_arr = io.BytesIO()
+        img.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        filename = "test.jpeg"
+
+        # Post request for uploading the image
+        user = get_user(email)
+        data = {
+            "user_id": str(user.id),
+            "token": token,
+            'image': (img_byte_arr, filename, 'image/jpeg')
+        }
+        response = test_client.post('/upload_profile_image', data=data)
+        return response

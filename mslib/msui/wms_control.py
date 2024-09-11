@@ -569,7 +569,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         (mr, 2011-02-25)
         """
-        # initialize login cache fomr config file, but do not overwrite existing keys
+        # initialize login cache from config file, but do not overwrite existing keys
         http_auth = config_loader(dataset="MSS_auth")
         auth_username, auth_password = get_auth_from_url_and_name(base_url, http_auth)
 
@@ -788,14 +788,14 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
         self.prefetcher = WMSMapFetcher(self.wms_cache)
         self.prefetcher.moveToThread(self.thread_prefetch)
-        self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitely uses a queued connection
+        self.prefetch.connect(self.prefetcher.fetch_maps)  # implicitly uses a queued connection
 
         self.fetcher = WMSMapFetcher(self.wms_cache)
         self.fetcher.moveToThread(self.thread_fetch)
-        self.fetch.connect(self.fetcher.fetch_maps)  # implicitely uses a queued connection
-        self.fetcher.finished.connect(self.continue_retrieve_image)  # implicitely uses a queued connection
-        self.fetcher.exception.connect(self.display_exception)  # implicitely uses a queued connection
-        self.fetcher.started_request.connect(self.display_progress_dialog)  # implicitely uses a queued connection
+        self.fetch.connect(self.fetcher.fetch_maps)  # implicitly uses a queued connection
+        self.fetcher.finished.connect(self.continue_retrieve_image)  # implicitly uses a queued connection
+        self.fetcher.exception.connect(self.display_exception)  # implicitly uses a queued connection
+        self.fetcher.started_request.connect(self.display_progress_dialog)  # implicitly uses a queued connection
 
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
@@ -1041,7 +1041,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
     def auto_update(self):
         """If the auto update check box is checked, let btGetMap emit a
-           clicked() signal everytime this method is called.
+           clicked() signal every time this method is called.
            autoUpdate() should be called from the slots that handle
            time and level changes.
 
@@ -1482,7 +1482,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         """
         images = [x for x in imgs if x]
         if images:
-            # Add border around seperate legends
+            # Add border around separate legends
             if len(images) > 1:
                 images = [ImageOps.expand(x, border=1, fill="black") for x in images]
             max_height = int((self.view.plotter.fig.get_size_inches() * self.view.plotter.fig.get_dpi())[1] * 0.99)
@@ -1495,7 +1495,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 current_height += image.height
 
             if max_height < result.height:
-                result.thumbnail((result.width, max_height), Image.ANTIALIAS)
+                result.thumbnail((result.width, max_height), Image.LANCZOS)
             return result
 
 

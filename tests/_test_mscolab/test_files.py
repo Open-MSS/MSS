@@ -32,6 +32,7 @@ from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
+from tests.utils import XML_CONTENT1, XML_CONTENT2, XML_CONTENT3
 
 
 class Test_Files:
@@ -63,7 +64,7 @@ class Test_Files:
             # test for '/' in path
             assert self.fm.create_operation('test/path', 'sth', self.user) is False
             # check file existence
-            assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_path')) is True
+            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'test_path')) is True
             # check creation in db
             p = Operation.query.filter_by(path="test_path").first()
             assert p is not None
@@ -94,25 +95,54 @@ class Test_Files:
     def test_file_save(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation77")
-            assert self.fm.save_file(operation.id, "beta", self.user)
-            assert self.fm.get_file(operation.id, self.user) == "beta"
-            assert self.fm.save_file(operation.id, "gamma", self.user)
-            assert self.fm.get_file(operation.id, self.user) == "gamma"
+            assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
+            assert self.fm.get_file(operation.id, self.user) == XML_CONTENT1
+            assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
+            assert self.fm.get_file(operation.id, self.user) == XML_CONTENT2
             # check if change is saved properly
             changes = self.fm.get_all_changes(operation.id, self.user)
             assert len(changes) == 2
 
+    def test_cant_save(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="operation911")
+            assert self.fm.save_file(operation.id, "text", self.user) is False
+            incomplete = """<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="9.1.0">
+    <ListOfWaypoints/>
+  </FlightTrack>"""
+            assert self.fm.save_file(operation.id, incomplete, self.user) is False
+            incomplete = """<?xml version="1.0" encoding="utf-8"?>
+  <FlightTrack version="9.1.0.">
+    <ListOfWaypoints>
+      <Waypoint flightlevel="350">
+        <Comments></Comments>
+      </Waypoint>
+      <Waypoint flightlevel="350">
+        <Comments></Comments>
+      </Waypoint>
+    </ListOfWaypoints>
+  </FlightTrack>"""
+            assert self.fm.save_file(operation.id, incomplete, self.user) is False
+
+    def test_stub_data(self):
+        with self.app.test_client():
+            flight_path, operation = self._create_operation(flight_path="operationstub")
+            content = self.fm.get_file(operation.id, self.user)
+            assert flight_path == "operationstub"
+            assert content == mscolab_settings.STUB_CODE
+
     def test_undo(self):
         with self.app.test_client():
-            flight_path, operation = self._create_operation(flight_path="operation7", content="alpha")
-            assert self.fm.save_file(operation.id, "beta", self.user)
-            assert self.fm.save_file(operation.id, "gamma", self.user)
+            flight_path, operation = self._create_operation(flight_path="operation7", content=XML_CONTENT1)
+            assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
+            assert self.fm.save_file(operation.id, XML_CONTENT3, self.user)
             changes = Change.query.filter_by(op_id=operation.id).all()
             assert changes is not None
             assert changes[0].id == 1
             assert self.fm.undo_changes(changes[0].id, self.user) is True
             assert len(self.fm.get_all_changes(operation.id, self.user)) == 3
-            assert "beta" in self.fm.get_file(operation.id, self.user)
+            assert XML_CONTENT2 == self.fm.get_file(operation.id, self.user)
 
     def test_get_operation(self):
         with self.app.test_client():
@@ -136,7 +166,7 @@ class Test_Files:
             assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'dummy'))
+            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'dummy'))
             assert self.fm.update_operation(op_id, 'description', 'dummy', self.user) is True
 
     def test_delete_operation(self):
@@ -156,8 +186,7 @@ class Test_Files:
             assert len(messages) == 0
 
     def _example_data(self):
-        self.content1 = """\
-    <?xml version="1.0" encoding="utf-8"?>
+        self.content1 = """<?xml version="1.0" encoding="utf-8"?>
       <FlightTrack>
         <Name>new flight track (1)</Name>
         <ListOfWaypoints>
@@ -178,8 +207,7 @@ class Test_Files:
           </Waypoint>
         </ListOfWaypoints>
       </FlightTrack>"""
-        self.content2 = """\
-    <?xml version="1.0" encoding="utf-8"?>
+        self.content2 = """<?xml version="1.0" encoding="utf-8"?>
       <FlightTrack>
         <Name>new flight track (1)</Name>
         <ListOfWaypoints>

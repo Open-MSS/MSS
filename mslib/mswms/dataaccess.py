@@ -199,7 +199,7 @@ class DefaultDataAccess(NWPDataAccess):
     Constructor needs information on domain ID.
     """
 
-    # Workaround for the numerical issue concering the lon dimension in
+    # Workaround for the numerical issue concerning the lon dimension in
     # NetCDF files produced by netcdf-java 4.3..
 
     def __init__(self, rootpath, domain_id, skip_dim_check=None, **kwargs):
@@ -232,7 +232,8 @@ class DefaultDataAccess(NWPDataAccess):
             else:
                 logging.error("Could not identify filename. %s %s %s %s %s %s",
                               variable, vartype, init_time, valid_time, type(ex), ex)
-                raise ValueError(f"variable type {vartype} not available for variable {variable}")
+                raise ValueError(f"Variable '{variable}' not available for type '{vartype}', "
+                                 f"init_time '{init_time}', and valid_time '{valid_time}'")
 
     def is_reload_required(self, filenames):
         return False
@@ -293,7 +294,7 @@ class DefaultDataAccess(NWPDataAccess):
                         try:
                             units(ncvar.units)
                         except (AttributeError, ValueError, pint.UndefinedUnitError, pint.DefinitionSyntaxError):
-                            logging.error("Skipping variable '%s' in file '%s': unparseable units attribute '%s'",
+                            logging.error("Skipping variable '%s' in file '%s': unparsable units attribute '%s'",
                                           ncvarname, filename, ncvar.units)
                             continue
                     if len(ncvar.shape) == 4 and vert_name in ncvar.dimensions:

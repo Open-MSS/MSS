@@ -141,7 +141,7 @@ def start(target=None, duration=120, dry_run=False):
     Note: Uncomment the line pag.press('q') if recording windows do not close in some cases.
     """
     if platform.system() == 'Linux':
-        # makes shure the keyboard is set to US
+        # makes sure the keyboard is set to US
         os.system("setxkbmap -layout us")
     if target is None:
         return

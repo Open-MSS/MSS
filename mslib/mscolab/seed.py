@@ -27,8 +27,6 @@
 import logging
 import fs
 import git
-import datetime
-import dateutil.relativedelta
 from sqlalchemy.exc import IntegrityError
 
 from mslib.mscolab.conf import mscolab_settings
@@ -62,7 +60,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
             operation = Operation(path, description)
             db.session.add(operation)
             db.session.commit()
-            with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+            with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
                 if not file_dir.exists(path):
                     file_dir.makedir(path)
                     file_dir.writetext(f'{path}/main.ftml', mscolab_settings.STUB_CODE)
@@ -150,7 +148,7 @@ def add_operation(operation_name, description):
             operation = Operation(operation_name, description)
             db.session.add(operation)
             db.session.commit()
-            with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+            with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
                 if not file_dir.exists(operation_name):
                     file_dir.makedir(operation_name)
                     file_dir.writetext(f'{operation_name}/main.ftml', mscolab_settings.STUB_CODE)
@@ -215,191 +213,184 @@ def archive_operation(path=None, emailid=None):
                 perm = Permission.query.filter_by(u_id=user.id, op_id=operation.id).first()
                 if perm is None:
                     return False
-                elif perm.access_level != "creator":
+                elif perm.access_level not in ["admin", "creator"]:
                     return False
                 operation.active = False
-                operation.last_used = (
-                    datetime.datetime.now(tz=datetime.timezone.utc) -
-                    dateutil.relativedelta.relativedelta(days=mscolab_settings.ARCHIVE_THRESHOLD)
-                )
                 db.session.commit()
 
 
 def seed_data():
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
-        # create users
-        users = [{
-            'username': 'a',
-            'id': 8,
-            'password': 'a',
-            'emailid': 'a@notexisting.org'
-        }, {
-            'username': 'b',
-            'id': 9,
-            'password': 'b',
-            'emailid': 'b@notexisting.org'
-        }, {
-            'username': 'c',
-            'id': 10,
-            'password': 'c',
-            'emailid': 'c@notexisting.org'
-        }, {
-            'username': 'd',
-            'id': 11,
-            'password': 'd',
-            'emailid': 'd@notexisting.org'
-        }, {
-            'username': 'test1',
-            'id': 12,
-            'password': 'test1',
-            'emailid': 'test1@notexisting.org'
-        }, {
-            'username': 'test2',
-            'id': 13,
-            'password': 'test2',
-            'emailid': 'test2@notexisting.org'
-        }, {
-            'username': 'test3',
-            'id': 14,
-            'password': 'test3',
-            'emailid': 'test3@notexisting.org'
-        }, {
-            'username': 'test4',
-            'id': 15,
-            'password': 'test4',
-            'emailid': 'test4@notexisting.org'
-        }, {
-            'username': 'mscolab_user',
-            'id': 16,
-            'password': 'password',
-            'emailid': 'mscolab_user@notexisting.org'
-        }, {
-            'username': 'merge_waypoints_user',
-            'id': 17,
-            'password': 'password',
-            'emailid': 'merge_waypoints_user@notexisting.org'
-        }]
-        for user in users:
-            db_user = User(user['emailid'], user['username'], user['password'])
-            db_user.id = user['id']
-            db.session.add(db_user)
+    # create users
+    users = [{
+        'username': 'a',
+        'id': 8,
+        'password': 'a',
+        'emailid': 'a@notexisting.org'
+    }, {
+        'username': 'b',
+        'id': 9,
+        'password': 'b',
+        'emailid': 'b@notexisting.org'
+    }, {
+        'username': 'c',
+        'id': 10,
+        'password': 'c',
+        'emailid': 'c@notexisting.org'
+    }, {
+        'username': 'd',
+        'id': 11,
+        'password': 'd',
+        'emailid': 'd@notexisting.org'
+    }, {
+        'username': 'test1',
+        'id': 12,
+        'password': 'test1',
+        'emailid': 'test1@notexisting.org'
+    }, {
+        'username': 'test2',
+        'id': 13,
+        'password': 'test2',
+        'emailid': 'test2@notexisting.org'
+    }, {
+        'username': 'test3',
+        'id': 14,
+        'password': 'test3',
+        'emailid': 'test3@notexisting.org'
+    }, {
+        'username': 'test4',
+        'id': 15,
+        'password': 'test4',
+        'emailid': 'test4@notexisting.org'
+    }, {
+        'username': 'mscolab_user',
+        'id': 16,
+        'password': 'password',
+        'emailid': 'mscolab_user@notexisting.org'
+    }, {
+        'username': 'merge_waypoints_user',
+        'id': 17,
+        'password': 'password',
+        'emailid': 'merge_waypoints_user@notexisting.org'
+    }]
+    for user in users:
+        db_user = User(user['emailid'], user['username'], user['password'])
+        db_user.id = user['id']
+        db.session.add(db_user)
 
-        # create operations
-        operations = [{
-            'id': 1,
-            'path': 'one',
-            'description': 'a, b',
-            'category': 'default'
-        }, {
-            'id': 2,
-            'path': 'two',
-            'description': 'b, c',
-            'category': 'default'
-        }, {
-            'id': 3,
-            'path': 'three',
-            'description': 'a, c',
-            'category': 'default'
-        }, {
-            'id': 4,
-            'path': 'four',
-            'description': 'd',
-            'category': 'default'
-        }, {
-            'id': 5,
-            'path': 'Admin_Test',
-            'description': 'Operation for testing admin window',
-            'category': 'default'
-        }, {
-            'id': 6,
-            'path': 'test_mscolab',
-            'description': 'Operation for testing mscolab main window',
-            'category': 'default'
-        }]
-        for operation in operations:
-            db_operation = Operation(operation['path'], operation['description'], operation['category'])
-            db_operation.id = operation['id']
-            db.session.add(db_operation)
+    # create operations
+    operations = [{
+        'id': 1,
+        'path': 'one',
+        'description': 'a, b',
+        'category': 'default'
+    }, {
+        'id': 2,
+        'path': 'two',
+        'description': 'b, c',
+        'category': 'default'
+    }, {
+        'id': 3,
+        'path': 'three',
+        'description': 'a, c',
+        'category': 'default'
+    }, {
+        'id': 4,
+        'path': 'four',
+        'description': 'd',
+        'category': 'default'
+    }, {
+        'id': 5,
+        'path': 'Admin_Test',
+        'description': 'Operation for testing admin window',
+        'category': 'default'
+    }, {
+        'id': 6,
+        'path': 'test_mscolab',
+        'description': 'Operation for testing mscolab main window',
+        'category': 'default'
+    }]
+    for operation in operations:
+        db_operation = Operation(operation['path'], operation['description'], operation['category'])
+        db_operation.id = operation['id']
+        db.session.add(db_operation)
 
-        # create permissions
-        permissions = [{
-            'u_id': 8,
-            'op_id': 1,
-            'access_level': "creator"
-        }, {
-            'u_id': 9,
-            'op_id': 1,
-            'access_level': "collaborator"
-        }, {
-            'u_id': 9,
-            'op_id': 2,
-            'access_level': "creator"
-        }, {
-            'u_id': 10,
-            'op_id': 2,
-            'access_level': "collaborator"
-        }, {
-            'u_id': 10,
-            'op_id': 3,
-            'access_level': "creator"
-        }, {
-            'u_id': 8,
-            'op_id': 3,
-            'access_level': "collaborator"
-        }, {
-            'u_id': 10,
-            'op_id': 1,
-            'access_level': "viewer"
-        }, {
-            'u_id': 11,
-            'op_id': 4,
-            'access_level': 'creator'
-        }, {
-            'u_id': 8,
-            'op_id': 4,
-            'access_level': 'admin'
-        }, {
-            'u_id': 13,
-            'op_id': 3,
-            'access_level': 'viewer'
-        }, {
-            'u_id': 12,
-            'op_id': 5,
-            'access_level': 'creator'
-        }, {
-            'u_id': 12,
-            'op_id': 3,
-            'access_level': 'collaborator'
-        }, {
-            'u_id': 15,
-            'op_id': 5,
-            'access_level': 'viewer'
-        }, {
-            'u_id': 14,
-            'op_id': 3,
-            'access_level': 'collaborator'
-        }, {
-            'u_id': 15,
-            'op_id': 3,
-            'access_level': 'collaborator'
-        }, {
-            'u_id': 16,
-            'op_id': 6,
-            'access_level': 'creator'
-        }, {
-            'u_id': 17,
-            'op_id': 6,
-            'access_level': 'admin'
-        }]
-        for perm in permissions:
-            db_perm = Permission(perm['u_id'], perm['op_id'], perm['access_level'])
-            db.session.add(db_perm)
-        db.session.commit()
-        db.session.close()
+    # create permissions
+    permissions = [{
+        'u_id': 8,
+        'op_id': 1,
+        'access_level': "creator"
+    }, {
+        'u_id': 9,
+        'op_id': 1,
+        'access_level': "collaborator"
+    }, {
+        'u_id': 9,
+        'op_id': 2,
+        'access_level': "creator"
+    }, {
+        'u_id': 10,
+        'op_id': 2,
+        'access_level': "collaborator"
+    }, {
+        'u_id': 10,
+        'op_id': 3,
+        'access_level': "creator"
+    }, {
+        'u_id': 8,
+        'op_id': 3,
+        'access_level': "collaborator"
+    }, {
+        'u_id': 10,
+        'op_id': 1,
+        'access_level': "viewer"
+    }, {
+        'u_id': 11,
+        'op_id': 4,
+        'access_level': 'creator'
+    }, {
+        'u_id': 8,
+        'op_id': 4,
+        'access_level': 'admin'
+    }, {
+        'u_id': 13,
+        'op_id': 3,
+        'access_level': 'viewer'
+    }, {
+        'u_id': 12,
+        'op_id': 5,
+        'access_level': 'creator'
+    }, {
+        'u_id': 12,
+        'op_id': 3,
+        'access_level': 'collaborator'
+    }, {
+        'u_id': 15,
+        'op_id': 5,
+        'access_level': 'viewer'
+    }, {
+        'u_id': 14,
+        'op_id': 3,
+        'access_level': 'collaborator'
+    }, {
+        'u_id': 15,
+        'op_id': 3,
+        'access_level': 'collaborator'
+    }, {
+        'u_id': 16,
+        'op_id': 6,
+        'access_level': 'creator'
+    }, {
+        'u_id': 17,
+        'op_id': 6,
+        'access_level': 'admin'
+    }]
+    for perm in permissions:
+        db_perm = Permission(perm['u_id'], perm['op_id'], perm['access_level'])
+        db.session.add(db_perm)
+    db.session.commit()
+    db.session.close()
 
-    with fs.open_fs(mscolab_settings.MSCOLAB_DATA_DIR) as file_dir:
+    with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
         file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
         for file_path in file_paths:
             file_dir.makedir(file_path)

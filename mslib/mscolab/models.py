@@ -58,20 +58,23 @@ class User(db.Model):
     username = db.Column(db.String(255))
     emailid = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
+    profile_image_path = db.Column(db.String(255), nullable=True)  # relative path
     registered_on = db.Column(AwareDateTime, nullable=False)
     confirmed = db.Column(db.Boolean, nullable=False, default=False)
     confirmed_on = db.Column(AwareDateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
 
-    def __init__(self, emailid, username, password, confirmed=False, confirmed_on=None, authentication_backend='local'):
-        self.username = username
-        self.emailid = emailid
+    def __init__(self, emailid, username, password, profile_image_path=None, confirmed=False,
+                 confirmed_on=None, authentication_backend='local'):
+        self.username = str(username)
+        self.emailid = str(emailid)
         self.hash_password(password)
+        self.profile_image_path = profile_image_path
         self.registered_on = datetime.datetime.now(tz=datetime.timezone.utc)
-        self.confirmed = confirmed
+        self.confirmed = bool(confirmed)
         self.confirmed_on = confirmed_on
-        self.authentication_backend = authentication_backend
+        self.authentication_backend = str(authentication_backend)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -134,9 +137,9 @@ class Permission(db.Model):
         op_id: process-id
         access_level: the type of authorization to the operation
         """
-        self.u_id = u_id
-        self.op_id = op_id
-        self.access_level = access_level
+        self.u_id = int(u_id)
+        self.op_id = int(op_id)
+        self.access_level = str(access_level)
 
     def __repr__(self):
         return f'<Permission u_id: {self.u_id}, op_id:{self.op_id}, access_level: {str(self.access_level)}>'
@@ -158,10 +161,10 @@ class Operation(db.Model):
         description: small description of operation
         category: name of category
         """
-        self.path = path
-        self.description = description
-        self.category = category
-        self.active = active
+        self.path = str(path)
+        self.description = str(description)
+        self.category = str(category)
+        self.active = bool(active)
         if self.last_used is None:
             self.last_used = datetime.datetime.now(tz=datetime.timezone.utc)
         else:
@@ -187,9 +190,9 @@ class Message(db.Model):
     replies = db.relationship('Message', cascade='all,delete,delete-orphan', single_parent=True)
 
     def __init__(self, op_id, u_id, text, message_type=MessageType.TEXT, reply_id=None):
-        self.op_id = op_id
-        self.u_id = u_id
-        self.text = text
+        self.op_id = int(op_id)
+        self.u_id = int(u_id)
+        self.text = str(text)
         self.message_type = message_type
         self.reply_id = reply_id
 
@@ -210,8 +213,8 @@ class Change(db.Model):
     user = db.relationship('User')
 
     def __init__(self, op_id, u_id, commit_hash, version_name=None, comment=None):
-        self.op_id = op_id
-        self.u_id = u_id
-        self.commit_hash = commit_hash
-        self.version_name = version_name
-        self.comment = comment
+        self.op_id = int(op_id)
+        self.u_id = int(u_id)
+        self.commit_hash = str(commit_hash)
+        self.version_name = str(version_name)
+        self.comment = str(comment)
