@@ -143,13 +143,13 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed)
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
-        self.downloadPushButton.clicked.connect(self.download_plots_cli)
+        self.downloadPushButton.clicked.connect(lambda: self.download_plots_cli(config_settings))
 
     def download_cli(self):
         thread = threading.Thread(target=self.download_plots_cli, args=(self,))
         thread.start()
 
-    def download_plots_cli(self):
+    def download_plots_cli(self,config_settings):
         view = "top"
         intv = 0
         if self.intv != "":
@@ -162,6 +162,11 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         else:
             view = "linear"
         config_path = os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
+
+        if config_path:
+            with open(config_path, 'w') as file:
+                json.dump(config_settings, file, indent=4)
+
         print("config path is ", config_path, view)
         print("parameters: ")
         print("cpath  ",config_path)
@@ -209,9 +214,10 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             filename = selected_items[0].text(3)
             section = selected_items[0].text(1)
             vtime = selected_items[0].text(5)
-            if flight == filename:
+            print("flight desc",flight,type(flight),len(flight))
+            if flight != "" and flight == filename:
                 self.update_op_flight_treewidget.emit("operation",flight)
-            else:
+            elif flight != "":
                 self.update_op_flight_treewidget.emit("flight",flight)                
             self.autoplot_treewidget_item_selected.emit(section, vtime)
             print("autoplotTreewidget_dockwidget", section, vtime)

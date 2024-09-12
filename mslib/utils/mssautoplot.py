@@ -42,6 +42,7 @@ import mslib
 import mslib.utils
 import mslib.msui
 import mslib.msui.mpl_map
+import mslib.utils.auth
 import mslib.utils.qt
 import mslib.utils.thermolib
 from mslib.utils.config import config_loader, read_config_file
@@ -328,6 +329,19 @@ class LinearViewPlotting(Plotting):
 def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
+    flight_name=config["automated_plotting_flights"][0][0]
+    file=config["automated_plotting_flights"][0][3]
+    print(len(flight_name),len(file))
+    print(type(flight_name),type(file))
+    print(flight_name,file)
+    if flight_name != "" and flight_name == file:
+        #operation passed
+        
+        mss_url=config["mscolab_server_url"]
+        mss_auth=config["MSS_auth"][mss_url]
+        print(mss_url,mss_auth)
+        print("operation passed")
+        print(mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=mss_auth))
     if view == "top":
         top_view = TopViewPlotting(cpath)
         sec = "automated_plotting_hsecs"
@@ -359,38 +373,38 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
                 "SUCCESS",  # Title of the message box
                 "Plots downloaded successfully."  # Message text
             )
-
-    for flight, section, vertical, filename, init_time, time in \
-        config["automated_plotting_flights"]:
-        for url, layer, style, elevation in config[sec]:
-            if vtime == "" and stime == "":
-                no_of_plots = 1
-                draw(no_of_plots)
-            elif intv == 0:
-                if itime != "":
-                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                time = datetime.strptime(vtime, "%Y-%m-%dT" "%H:%M:%S")
-                if ftrack != "":
-                    flight = ftrack
-                no_of_plots = 1
-                draw(no_of_plots)
-            elif intv > 0:
-                if itime != "":
-                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                starttime = datetime.strptime(stime, "%Y-%m-%dT" "%H:%M:%S")
-                endtime = datetime.strptime(etime, "%Y-%m-%dT" "%H:%M:%S")
-                i = 1
-                time = starttime
-                while time <= endtime:
-                    logging.debug(time)
+    if flight_name == "" or flight_name != file:
+        for flight, section, vertical, filename, init_time, time in \
+            config["automated_plotting_flights"]:
+            for url, layer, style, elevation in config[sec]:
+                if vtime == "" and stime == "":
+                    no_of_plots = 1
+                    draw(no_of_plots)
+                elif intv == 0:
+                    if itime != "":
+                        init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
+                    time = datetime.strptime(vtime, "%Y-%m-%dT" "%H:%M:%S")
                     if ftrack != "":
                         flight = ftrack
-                    no_of_plots = i
+                    no_of_plots = 1
                     draw(no_of_plots)
-                    time = time + timedelta(hours=intv)
-                    i = i + 1
-            else:
-                raise Exception("Invalid interval")
+                elif intv > 0:
+                    if itime != "":
+                        init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
+                    starttime = datetime.strptime(stime, "%Y-%m-%dT" "%H:%M:%S")
+                    endtime = datetime.strptime(etime, "%Y-%m-%dT" "%H:%M:%S")
+                    i = 1
+                    time = starttime
+                    while time <= endtime:
+                        logging.debug(time)
+                        if ftrack != "":
+                            flight = ftrack
+                        no_of_plots = i
+                        draw(no_of_plots)
+                        time = time + timedelta(hours=intv)
+                        i = i + 1
+                else:
+                    raise Exception("Invalid interval")
 
 
 if __name__ == '__main__':
