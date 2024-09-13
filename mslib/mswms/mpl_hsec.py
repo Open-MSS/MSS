@@ -332,7 +332,7 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
             logging.debug("Loaded '%s' from basemap cache", key)
         else:
             bm = basemap.Basemap(resolution='l', **bm_params)
-            # read in countries manually, as those are laoded only on demand
+            # read in countries manually, as those are loaded only on demand
             bm.cntrysegs, _ = bm._readboundarydata("countries")
             if basemap_use_cache:
                 BASEMAP_CACHE[key] = (bm.resolution, bm.coastsegs, bm.coastpolygontypes, bm.coastpolygons,

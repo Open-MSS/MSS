@@ -24,6 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import fs
+import sys
 import functools
 import json
 import logging
@@ -32,6 +34,7 @@ import secrets
 import socketio
 import sqlalchemy.exc
 import werkzeug
+import flask_migrate
 
 from itsdangerous import URLSafeTimedSerializer, BadSignature
 from flask import g, jsonify, request, render_template, flash
@@ -46,14 +49,106 @@ from flask.wrappers import Response
 
 from mslib.mscolab.conf import mscolab_settings, setup_saml2_backend
 from mslib.mscolab.models import Change, MessageType, User
-from mslib.mscolab.sockets_manager import setup_managers
+from mslib.mscolab.sockets_manager import _setup_managers
 from mslib.mscolab.utils import create_files, get_message_dict
 from mslib.utils import conditional_decorator
 from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
+from mslib.mscolab import migrations
+
+
+def _handle_db_upgrade():
+    from mslib.mscolab.models import db
+
+    create_files()
+    inspector = sqlalchemy.inspect(db.engine)
+    existing_tables = inspector.get_table_names()
+    if ("alembic_version" not in existing_tables and len(existing_tables) > 0) or (
+        "alembic_version" in existing_tables
+        and len(existing_tables) > 1
+        and db.session.execute(sqlalchemy.text("SELECT * FROM alembic_version")).first() is None
+    ):
+        sys.exit(
+            """Your database contains no alembic_version revision identifier, but it has a schema. This suggests \
+that you have a pre-existing database but haven't followed the database migration instructions. To prevent damage to \
+your database MSColab will abort. Please follow the documentation for a manual database migration from MSColab v8/v9."""
+        )
+
+    is_empty_database = len(existing_tables) == 0 or (
+        len(existing_tables) == 1
+        and "alembic_version" in existing_tables
+        and db.session.execute(sqlalchemy.text("SELECT * FROM alembic_version")).first() is None
+    )
+    # If a database connection to migrate from is set and the target database is empty, then migrate the existing data
+    if is_empty_database and mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM is not None:
+        logging.info("The target database is empty and a database to migrate from is set, starting the data migration")
+        source_engine = sqlalchemy.create_engine(mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM)
+        source_metadata = sqlalchemy.MetaData()
+        source_metadata.reflect(bind=source_engine)
+        # Determine the previous MSColab version based on the database content and upgrade to the corresponding revision
+        if "authentication_backend" in source_metadata.tables["users"].columns:
+            # It should be v9
+            flask_migrate.upgrade(directory=migrations.__path__[0], revision="c171019fe3ee")
+        else:
+            # It's probably v8
+            flask_migrate.upgrade(directory=migrations.__path__[0], revision="92eaba86a92e")
+        # Copy over the existing data
+        target_engine = sqlalchemy.create_engine(mscolab_settings.SQLALCHEMY_DB_URI)
+        target_metadata = sqlalchemy.MetaData()
+        target_metadata.reflect(bind=target_engine)
+        with source_engine.connect() as src_connection, target_engine.connect() as target_connection:
+            for table in source_metadata.sorted_tables:
+                if table.name == "alembic_version":
+                    # Do not migrate the alembic_version table!
+                    continue
+                logging.debug("Copying table %s", table.name)
+                stmt = target_metadata.tables[table.name].insert()
+                for row in src_connection.execute(table.select()):
+                    logging.debug("Copying row %s", row)
+                    row = tuple(
+                        r.replace(tzinfo=datetime.timezone.utc) if isinstance(r, datetime.datetime) else r for r in row
+                    )
+                    target_connection.execute(stmt.values(row))
+            target_connection.commit()
+            if target_engine.name == "postgresql":
+                # Fix the databases auto-increment sequences, if it is a PostgreSQL database
+                # For reference, see: https://wiki.postgresql.org/wiki/Fixing_Sequences
+                logging.info("Using a PostgreSQL database, will fix up sequences")
+                cur = target_connection.execute(sqlalchemy.text(r"""
+SELECT
+    'SELECT SETVAL(' ||
+    quote_literal(quote_ident(sequence_namespace.nspname) || '.' || quote_ident(class_sequence.relname)) ||
+    ', COALESCE(MAX(' ||quote_ident(pg_attribute.attname)|| '), 1) ) FROM ' ||
+    quote_ident(table_namespace.nspname)|| '.'||quote_ident(class_table.relname)|| ';'
+FROM pg_depend
+    INNER JOIN pg_class AS class_sequence
+        ON class_sequence.oid = pg_depend.objid
+            AND class_sequence.relkind = 'S'
+    INNER JOIN pg_class AS class_table
+        ON class_table.oid = pg_depend.refobjid
+    INNER JOIN pg_attribute
+        ON pg_attribute.attrelid = class_table.oid
+            AND pg_depend.refobjsubid = pg_attribute.attnum
+    INNER JOIN pg_namespace as table_namespace
+        ON table_namespace.oid = class_table.relnamespace
+    INNER JOIN pg_namespace AS sequence_namespace
+        ON sequence_namespace.oid = class_sequence.relnamespace
+ORDER BY sequence_namespace.nspname, class_sequence.relname;
+"""))
+                for stmt, in cur.all():
+                    target_connection.execute(sqlalchemy.text(stmt))
+                target_connection.commit()
+        logging.info("Data migration finished")
+
+    # Upgrade to the latest database revision
+    flask_migrate.upgrade(directory=migrations.__path__[0])
+
+    logging.info("Database initialised successfully!")
 
 
 APP = create_app(__name__, imprint=mscolab_settings.IMPRINT, gdpr=mscolab_settings.GDPR)
+with APP.app_context():
+    _handle_db_upgrade()
 mail = Mail(APP)
 CORS(APP, origins=mscolab_settings.CORS_ORIGINS if hasattr(mscolab_settings, "CORS_ORIGINS") else ["*"])
 auth = HTTPBasicAuth()
@@ -124,8 +219,8 @@ def confirm_token(token, expiration=3600):
     return email
 
 
-def initialize_managers(app):
-    sockio, cm, fm = setup_managers(app)
+def _initialize_managers(app):
+    sockio, cm, fm = _setup_managers(app)
     # initializing socketio and db
     app.wsgi_app = socketio.Middleware(socketio.server, app.wsgi_app)
     sockio.init_app(app)
@@ -133,14 +228,14 @@ def initialize_managers(app):
     return app, sockio, cm, fm
 
 
-_app, sockio, cm, fm = initialize_managers(APP)
+_app, sockio, cm, fm = _initialize_managers(APP)
 
 
 def check_login(emailid, password):
     try:
         user = User.query.filter_by(emailid=str(emailid)).first()
     except sqlalchemy.exc.OperationalError as ex:
-        logging.debug("Problem in the database (%ex), likly version client different", ex)
+        logging.debug("Problem in the database (%ex), likely version client different", ex)
         return False
     if user is not None:
         if mscolab_settings.MAIL_ENABLED:
@@ -351,6 +446,41 @@ def get_user():
     return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
 
 
+@APP.route('/upload_profile_image', methods=["POST"])
+@verify_user
+def upload_profile_image():
+    user_id = g.user.id
+    file = request.files['image']
+    if not file:
+        return jsonify({'message': 'No file provided or invalid file type'}), 400
+    if not file.mimetype.startswith('image/'):
+        return jsonify({'message': 'Invalid file type'}), 400
+    if file.content_length > mscolab_settings.MAX_UPLOAD_SIZE:
+        return jsonify({'message': 'File too large'}), 413
+
+    success, message = fm.save_user_profile_image(user_id, file)
+    if success:
+        return jsonify({'message': message}), 200
+    else:
+        return jsonify({'message': message}), 400
+
+
+@APP.route('/fetch_profile_image', methods=["GET"])
+@verify_user
+def fetch_profile_image():
+    user_id = request.form['user_id']
+    user = User.query.get(user_id)
+    if user and user.profile_image_path:
+        base_path = mscolab_settings.UPLOAD_FOLDER
+        if sys.platform.startswith('win'):
+            base_path = base_path.replace('\\', '/')
+        filename = user.profile_image_path
+        with fs.open_fs(base_path) as _fs:
+            return send_from_directory(_fs.getsyspath(""), filename)
+    else:
+        abort(404)
+
+
 @APP.route("/delete_own_account", methods=["POST"])
 @verify_user
 def delete_own_account():
@@ -381,7 +511,6 @@ def message_attachment():
     user = g.user
     op_id = request.form.get("op_id", None)
     if fm.is_member(user.id, op_id):
-        file_token = secrets.token_urlsafe(16)
         file = request.files['file']
         message_type = MessageType(int(request.form.get("message_type")))
         user = g.user
@@ -389,7 +518,7 @@ def message_attachment():
         if users is False:
             return jsonify({"success": False, "message": "Could not send message. No file uploaded."})
         if file is not None:
-            static_file_path = cm.add_attachment(op_id, APP.config['UPLOAD_FOLDER'], file, file_token)
+            static_file_path = fm.upload_file(file, subfolder=str(op_id), include_prefix=True)
             if static_file_path is not None:
                 new_message = cm.add_message(user, static_file_path, op_id, message_type)
                 new_message_dict = get_message_dict(new_message)
@@ -494,6 +623,13 @@ def authorized_users():
     return json.dumps({"users": fm.get_authorized_users(int(op_id))})
 
 
+@APP.route('/active_users', methods=["GET"])
+@verify_user
+def active_users():
+    op_id = request.args.get('op_id', request.form.get('op_id', None))
+    return jsonify(active_users=list(sockio.sm.active_users_per_operation[int(op_id)]))
+
+
 @APP.route('/operations', methods=['GET'])
 @verify_user
 def get_operations():
@@ -522,12 +658,12 @@ def update_operation():
     attribute = request.form['attribute']
     value = request.form['value']
     user = g.user
-    r = str(fm.update_operation(int(op_id), attribute, value, user))
-    if r == "True":
+    r = fm.update_operation(int(op_id), attribute, value, user)
+    if r is True:
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
-    return r
+    return str(r)
 
 
 @APP.route('/operation_details', methods=["GET"])
@@ -547,16 +683,13 @@ def set_last_used():
     op_id = request.form.get('op_id', None)
     user = g.user
     days_ago = int(request.form.get('days', 0))
+    if days_ago > 99999:
+        days_ago = 99999
+    elif days_ago < -99999:
+        days_ago = -99999
     fm.update_operation(int(op_id), 'last_used',
                         datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(days=days_ago),
                         user)
-    if days_ago > mscolab_settings.ARCHIVE_THRESHOLD:
-        fm.update_operation(int(op_id), "active", False, user)
-    else:
-        fm.update_operation(int(op_id), "active", True, user)
-        token = request.args.get('token', request.form.get('token', False))
-        json_config = {"token": token}
-        sockio.sm.update_operation_list(json_config)
     return jsonify({"success": True}), 200
 
 
@@ -652,6 +785,7 @@ def delete_bulk_permissions():
     success = fm.delete_bulk_permission(op_id, user, u_ids)
     if success:
         for u_id in u_ids:
+            sockio.sm.remove_active_user_id_from_specific_operation(u_id, op_id)
             sockio.sm.emit_revoke_permission(u_id, op_id)
         sockio.sm.emit_operation_permissions_updated(user.id, op_id)
         return jsonify({"success": True, "message": "User permissions successfully deleted!"})
@@ -715,7 +849,7 @@ def reset_request():
     if mscolab_settings.MAIL_ENABLED:
         form = ResetRequestForm()
         if form.validate_on_submit():
-            # Check wheather user exists or not based on the db
+            # Check whether user exists or not based on the db
             user = User.query.filter_by(emailid=form.email.data).first()
             if user:
                 try:

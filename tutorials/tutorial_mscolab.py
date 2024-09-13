@@ -37,7 +37,7 @@ USERNAME = 'John Doe'
 EMAIL = 'johndoe@gmail.com'
 PASSWORD = 'johndoe'
 OPERATION_NAME = 'operation_of_john_doe'
-OPERATION_DESCRIPTION = """This is John Doe's operation. He wants his collegues and friends \
+OPERATION_DESCRIPTION = """This is John Doe's operation. He wants his colleagues and friends \
 to collaborate on this operation with him in the network. Mscolab, here, \
 will be very helpful for Joe with various features to use!"""
 PATH = os.path.normpath(os.getcwd() + os.sep + os.pardir)
@@ -232,7 +232,7 @@ def _adminwindow():
     select_listelement(2, sleep=1)
     pag.sleep(1)
     create_tutorial_images()
-    # positions of buttons in the view mscolab admin windo
+    # positions of buttons in the view mscolab admin window
     pic = picture("mscolabadminwindow-all-users-without-permission.png")
     pos = pag.locateOnScreen(pic)
     left_side = (pos.left, pos.top, 500, 800)

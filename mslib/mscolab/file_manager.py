@@ -24,13 +24,19 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import sys
+import secrets
+import time
 import datetime
 import fs
 import difflib
 import logging
 import git
 import threading
+import mimetypes
+from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
+from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
@@ -53,9 +59,19 @@ class FileManager:
 
     def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
-        path: path to the operation
-        description: description of the operation
+        Creates a new operation in the mscolab system.
+
+        :param path: The path of the operation.
+        :param description: The description of the operation.
+        :param user: The user object creating the operation.
+        :param last_used: The last used datetime of the operation. Default is None.
+        :param content: The content of the operation. Default is None.
+        :param category: The category of the operation. Default is 'default'.
+        :param active: The activity status of the operation. Default is True.
+        :return: True if the operation is created successfully, False otherwise.
         """
+        if content is not None and not verify_waypoint_data(content):
+            return False
         # set codes on these later
         if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
             logging.debug("malicious request: %s", user)
@@ -119,18 +135,7 @@ class FileManager:
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
             operation = Operation.query.filter_by(id=permission.op_id).first()
-            if operation.last_used is not None and (
-                    datetime.datetime.now(tz=datetime.timezone.utc) - operation.last_used
-            ).days > mscolab_settings.ARCHIVE_THRESHOLD:
-                # outdated OPs get archived
-                self.update_operation(permission.op_id, "active", False, user)
-            # new query to get uptodate data
-            if skip_archived:
-                operation = Operation.query.filter_by(id=permission.op_id, active=skip_archived).first()
-            else:
-                operation = Operation.query.filter_by(id=permission.op_id).first()
-
-            if operation is not None:
+            if operation is not None and (operation.active or not skip_archived):
                 operations.append({
                     "op_id": permission.op_id,
                     "access_level": permission.access_level,
@@ -225,10 +230,13 @@ class FileManager:
         elif action == "delete":
             user_query = User.query.filter_by(id=user.id).first()
             if user_query is not None:
+                # Delete profile image if it exists
+                if user.profile_image_path:
+                    self.delete_user_profile_image(user.profile_image_path)
                 db.session.delete(user)
                 db.session.commit()
             user_query = User.query.filter_by(id=user.id).first()
-            # on delete we return succesfull deleted
+            # on delete we return successful deleted
             if user_query is None:
                 return True
         elif action == "update_idp_user":
@@ -250,6 +258,74 @@ class FileManager:
             db.session.commit()
         return True
 
+    def delete_user_profile_image(self, image_to_be_deleted):
+        '''
+        This function is called when deleting account or updating the profile picture
+        '''
+        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        if sys.platform.startswith('win'):
+            upload_folder = upload_folder.replace('\\', '/')
+
+        with fs.open_fs(upload_folder) as profile_fs:
+            if profile_fs.exists(image_to_be_deleted):
+                profile_fs.remove(image_to_be_deleted)
+                logging.debug(f"Successfully deleted image: {image_to_be_deleted}")
+
+    def upload_file(self, file, subfolder=None, identifier=None, include_prefix=False):
+        """
+        Generic function to save files securely in any specified directory with unique filename
+        and return the relative file path.
+        """
+        upload_folder = mscolab_settings.UPLOAD_FOLDER
+        if sys.platform.startswith('win'):
+            upload_folder = upload_folder.replace('\\', '/')
+
+        subfolder_path = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
+        with fs.open_fs(subfolder_path, create=True) as _fs:
+            # Creating unique and secure filename
+            file_name, _ = file.filename.rsplit('.', 1)
+            mime_type, _ = mimetypes.guess_type(file.filename)
+            file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
+            token = secrets.token_urlsafe()
+            timestamp = time.strftime("%Y%m%dT%H%M%S")
+
+            if identifier:
+                file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
+            else:
+                file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
+            file_name = secure_filename(file_name)
+
+            # Saving the file
+            with _fs.open(file_name, mode="wb") as f:
+                file.save(f)
+
+            # Relative File path
+            if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
+                static_dir = fs.path.basename(upload_folder)
+                static_file_path = fs.path.join(static_dir, str(subfolder), file_name)
+            else:
+                static_file_path = fs.path.relativefrom(upload_folder, fs.path.join(subfolder_path, file_name))
+
+            logging.debug(f'Relative Path: {static_file_path}')
+            return static_file_path
+
+    def save_user_profile_image(self, user_id, image_file):
+        """
+        Save the user's profile image path to the database.
+        """
+        relative_file_path = self.upload_file(image_file, subfolder='profile', identifier=user_id)
+
+        user = User.query.get(user_id)
+        if user:
+            if user.profile_image_path:
+                # Delete the previous image
+                self.delete_user_profile_image(user.profile_image_path)
+            user.profile_image_path = relative_file_path
+            db.session.commit()
+            return True, "Image uploaded successfully"
+        else:
+            return False, "User not found"
+
     def update_operation(self, op_id, attribute, value, user):
         """
         op_id: operation id
@@ -263,14 +339,14 @@ class FileManager:
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 logging.debug("malicious request: %s", user)
                 return False
-            data = fs.open_fs(self.data_dir)
-            if data.exists(value):
-                return False
-            # will be move when operations are introduced
-            # make a directory, else movedir
-            data.makedir(value)
-            data.movedir(operation.path, value)
-            # when renamed to a Group operation
+            with fs.open_fs(self.data_dir) as data:
+                if data.exists(value):
+                    return False
+                # will be move when operations are introduced
+                # make a directory, else movedir
+                data.makedir(value)
+                data.movedir(operation.path, value)
+                # when renamed to a Group operation
             if value.endswith(mscolab_settings.GROUP_POSTFIX):
                 # getting the category
                 category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
@@ -280,6 +356,9 @@ class FileManager:
                     # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
                     # then members of this op gets added to all others of same category
                     self.import_permissions(op_id, ops.id, user.id)
+        elif attribute == "active":
+            if isinstance(value, str):
+                value = value.upper() == "TRUE"
         setattr(operation, attribute, value)
         db.session.commit()
         return True
@@ -289,7 +368,7 @@ class FileManager:
         op_id: operation id
         user: logged in user
         """
-        if self.auth_type(user.id, op_id) != "creator":
+        if not self.is_creator(user.id, op_id):
             return False
         Permission.query.filter_by(op_id=op_id).delete()
         Change.query.filter_by(op_id=op_id).delete()
@@ -309,7 +388,8 @@ class FileManager:
         users = []
         for permission in permissions:
             user = User.query.filter_by(id=permission.u_id).first()
-            users.append({"username": user.username, "access_level": permission.access_level})
+            users.append({"username": user.username, "access_level": permission.access_level,
+                          "id": permission.u_id})
         return users
 
     def save_file(self, op_id, content, user, comment=""):
@@ -318,6 +398,8 @@ class FileManager:
         content: content of the file to be saved
         # ToDo save change in schema
         """
+        if not verify_waypoint_data(content):
+            return False
         # ToDo use comment
         operation = Operation.query.filter_by(id=op_id).first()
         if not operation:

@@ -31,13 +31,6 @@ jobs:
       run: cmp -s /meta.yaml localbuild/meta.yaml && cmp -s /development.txt requirements.d/development.txt ||
         (echo Dependencies differ && echo "triggerdockerbuild=yes" >> $GITHUB_ENV )
 
-    - name: Install pyvirtualdisplay if on stable
-      if: ${{ inputs.image_suffix == 'stable' }}
-      run: |
-        source /opt/conda/etc/profile.d/conda.sh
-        source /opt/conda/etc/profile.d/mamba.sh
-        mamba install -n mss-${{ inputs.image_suffix }}-env pyvirtualdisplay
-
     - name: Always rebuild dependencies for scheduled builds (started from testing-scheduled.yml)
       if: ${{ github.event_name == 'workflow_dispatch' }}
       run: echo "triggerdockerbuild=yes" >> $GITHUB_ENV
@@ -47,7 +40,7 @@ jobs:
       # scheduled tests should just check that new dependency versions do not break the
       # tests, but should not update the image.
       if: ${{ (github.ref_name == 'stable' || github.ref_name == 'develop') && github.event_name == 'push' && env.triggerdockerbuild == 'yes' && matrix.order == 'normal' }}
-      uses: benc-uk/workflow-dispatch@v1.2.3
+      uses: benc-uk/workflow-dispatch@v1.2.4
       with:
         workflow: Update Image testing-${{ inputs.image_suffix }}
         repo: Open-MSS/dockertesting

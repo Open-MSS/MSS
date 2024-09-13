@@ -10,7 +10,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: benc-uk/workflow-dispatch@v1.2.3
+      - uses: benc-uk/workflow-dispatch@v1.2.4
         with:
           workflow: testing-stable.yml
           ref: stable
@@ -20,7 +20,7 @@ jobs:
     permissions:
       actions: write
     steps:
-      - uses: benc-uk/workflow-dispatch@v1.2.3
+      - uses: benc-uk/workflow-dispatch@v1.2.4
         with:
           workflow: testing-develop.yml
           ref: develop

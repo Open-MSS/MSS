@@ -5,7 +5,7 @@ Using the different views of the MSUI with a fictitious flight path and demo dat
 In comparison to the standalone mode of the MSUI an example setup of users is
 shown on a MSColab server and the possibilities of interactions.
 
-  .. video:: ../_static/mp4/tutorial_mscolab.mp4
+  .. video:: ../videos/mp4/tutorial_mscolab.mp4
      :alt: MSColab stores data in an online server, and can be used to access the data remotely as also working in a
            team where everyone contributes his part. It is used for collaborating with the users as a team together
            and working on a shared MSColab operation.
@@ -34,7 +34,7 @@ shown on a MSColab server and the possibilities of interactions.
            After selecting users, we click on Add button, which moves these users to All users with permission section to the right side of the window.
            For the users who have access permission to the operation, we can also change the access roles.
            Here for b, we have changed the permission from collaborator to admin.
-           We can alo delete a user with a permission by selecting user and clicking on delete button.
+           We can also delete a user with a permission by selecting user and clicking on delete button.
            Changing their access roles....
            We can filter users based on their roles being Collaborator, admin or viewer.
            Filtering for some time....
