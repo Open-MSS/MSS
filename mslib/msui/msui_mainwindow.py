@@ -546,6 +546,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 }
             }
         }
+        print("waypoint data mainwindow")
+        way_obj=ft.WaypointsTableModel(name="op1")
+        print(way_obj.all_waypoint_data)
+        print(way_obj.waypoint_data)
 
         self.config_for_gui["predefined_map_sections"].update(map_sections)
 

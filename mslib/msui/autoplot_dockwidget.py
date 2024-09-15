@@ -29,10 +29,8 @@
 
 import json
 import os
-import threading
-from datetime import datetime
 import click
-from mslib.utils.mssautoplot import main as autopl
+from mslib.utils.mssautoplot import cli_tool
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
@@ -70,6 +68,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.refresh_sig(config_settings)
 
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
+
         parent.vtime_vals.connect(lambda vtime_vals: self.update_stime_etime(vtime_vals))
 
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.autoplotSecsTreeWidget_selected_row)
@@ -145,24 +144,25 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
         self.downloadPushButton.clicked.connect(lambda: self.download_plots_cli(config_settings))
 
-    def download_cli(self):
-        thread = threading.Thread(target=self.download_plots_cli, args=(self,))
-        thread.start()
 
-    def download_plots_cli(self,config_settings):
+    def download_plots_cli(self, config_settings):
         view = "top"
         intv = 0
         if self.intv != "":
             index = self.intv.find(' ')
             intv = int(self.intv[:index])
+
         if self.view == "Top View":
             view = "top"
         elif self.view == "Side View":
             view = "side"
         else:
             view = "linear"
+
+        # Create the configuration path
         config_path = os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
 
+        # Save the config settings to the file
         if config_path:
             with open(config_path, 'w') as file:
                 json.dump(config_settings, file, indent=4)
@@ -177,25 +177,30 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         print("intv  ",intv)
         print("stime  ",self.stime[:-1])
         print("etime  ",self.etime[:-1])
+        # Validate time ranges
         if self.stime > self.etime:
             QMessageBox.information(
-                    self,  # The parent widget (use `None` if no parent)
-                    "WARNING",  # Title of the message box
-                    "Start time should be before end time"  # Message text
-                )
+                self,  # The parent widget (use `None` if no parent)
+                "WARNING",  # Title of the message box
+                "Start time should be before end time"  # Message text
+            )
             return
-        args = [
-            "--cpath", config_path,
-            "--view", view,
-            "--ftrack", None,
-            "--itime", None,
-            "--vtime", None,
-            "--intv", intv,
-            "--stime", self.stime[:-1],
-            "--etime", self.etime[:-1]
-        ]
-        autopl.main(args=args, prog_name="autoplot_gui", obj=self)
 
+        args = {
+            'cpath': config_path,
+            'view': view,
+            'ftrack': None,
+            'itime': self.itime,
+            'vtime': self.vtime,
+            'intv': intv,
+            'stime': self.stime[:-1],
+            'etime': self.etime[:-1]
+        }
+
+        # Invoke the cli_tool method using click
+        ctx = click.Context(cli_tool)
+        ctx.invoke(cli_tool, **args)
+        
     def autoplotSecsTreeWidget_selected_row(self):
         selected_items = self.autoplotSecsTreeWidget.selectedItems()
         if selected_items:

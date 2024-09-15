@@ -257,6 +257,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     refresh_signal_send = QtCore.pyqtSignal()
     refresh_signal_emit = QtCore.pyqtSignal()
     item_selected = QtCore.pyqtSignal(str,str,str,str)
+    vtime_vals = QtCore.pyqtSignal([list])
 
     def __init__(self, parent=None, model=None, _id=None, config_settings=None):
         """
@@ -315,6 +316,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.vtime_data.connect(lambda vtime: self.valid_time_vals(vtime))
                 widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
                 widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
                 widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
@@ -365,6 +367,10 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):
         self.curritime = strr
+    
+    @QtCore.pyqtSlot()
+    def valid_time_vals(self, vtimes_list):
+        self.vtime_vals.emit(vtimes_list)
 
     def setFlightTrackModel(self, model):
         """
