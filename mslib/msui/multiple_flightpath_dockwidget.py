@@ -208,6 +208,7 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
         self.ui.signal_ft_vertices_color_change.connect(self.ft_vertices_color)
         self.dsbx_linewidth.valueChanged.connect(self.set_linewidth)
         self.hsTransparencyControl.valueChanged.connect(self.set_transparency)
+        self.annotationCB.stateChanged.connect(lambda state: self.view.annotation(state, self.flightpath_dict))
         self.cbLineStyle.currentTextChanged.connect(self.set_linestyle)
         self.cbSlectAll1.stateChanged.connect(self.selectAll)
         self.ui.signal_login_mscolab.connect(self.login)
@@ -555,22 +556,27 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
 
     def update_flightpath_legend(self):
         """
-        Collects flight path data and updates the legend in the TopView.
-        Only checked flight tracks will be included in the legend.
-        Unchecked flight tracks will be removed from the flightpath_dict.
+        Collects flight path data, including waypoints, and updates the legend in the TopView.
+        Only checked and non-active flight tracks will be included in the legend.
         """
         # Iterate over all items in the list_flighttrack
         for i in range(self.list_flighttrack.count()):
             listItem = self.list_flighttrack.item(i)
             wp_model = listItem.flighttrack_model
 
-            # If the flight track is checked, add/update it in the dictionary
-            if listItem.checkState() == QtCore.Qt.Checked:
+            # Check if the flight track is non-active and checked
+            if listItem.checkState() == QtCore.Qt.Checked and wp_model != self.active_flight_track:
+                # Extract relevant data
                 name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed flighttrack'
                 color = self.dict_flighttrack[wp_model].get('color', '#000000')  # Default to black
                 linestyle = self.dict_flighttrack[wp_model].get('line_style', '-')  # Default to solid line
-                label = self.flightpath_dict.get(name, (name, color, linestyle))[0]  # If label exist used label else nm
-                self.flightpath_dict[name] = (label, color, linestyle)
+                label = self.flightpath_dict.get(name, (name, color, linestyle))[0]  # Existing label or use name
+
+                # Extract waypoints as a list of (lat, lon) tuples
+                waypoints = [(wp.lat, wp.lon) for wp in wp_model.all_waypoint_data()]
+
+                # Update the flightpath_dict with the label, color, linestyle, and waypoints
+                self.flightpath_dict[name] = (label, color, linestyle, waypoints)
             else:
                 name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed flighttrack'
                 if name in self.flightpath_dict:
@@ -1177,16 +1183,20 @@ class MultipleFlightpathOperations:
         # Iterate over all items in the list_operation_track
         for i in range(self.list_operation_track.count()):
             listItem = self.list_operation_track.item(i)
+            op_id = listItem.op_id
 
             # If the operation is checked, add/update it in the dictionary
-            if listItem.checkState() == QtCore.Qt.Checked:
+            if listItem.checkState() == QtCore.Qt.Checked and op_id != self.active_op_id:
                 wp_model = listItem.flighttrack_model
                 name = wp_model.name if hasattr(wp_model, 'name') else 'Unnamed operation'
-                op_id = listItem.op_id
                 color = self.dict_operations[op_id].get('color', '#000000')  # Default to black
                 linestyle = self.dict_operations[op_id].get('line_style', '-')  # Default to solid line
                 label = self.dict_operations.get(name, (name, color, linestyle))[0]
-                self.parent.flightpath_dict[name] = (label, color, linestyle)
+
+                # Extract waypoints as a list of (lat, lon) tuples
+                waypoints = [(wp.lat, wp.lon) for wp in wp_model.all_waypoint_data()]
+
+                self.parent.flightpath_dict[name] = (label, color, linestyle, waypoints)
             # If the flight track is unchecked, ensure it is removed from the dictionary
             else:
                 wp_model = listItem.flighttrack_model
