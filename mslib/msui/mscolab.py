@@ -48,6 +48,7 @@ from urllib.parse import urljoin
 from fs import open_fs
 from PIL import Image, UnidentifiedImageError
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
+import socketio
 
 from mslib.msui import flighttrack as ft
 from mslib.msui import mscolab_chat as mc
@@ -77,21 +78,34 @@ class MSColabConnectionError(RuntimeError):
     pass
 
 
+__verify_user_token_depth = 0
+
+
 def verify_user_token(func):
+
     @functools.wraps(func)
     def wrapper(*args, **vargs):
+        global __verify_user_token_depth
+
         self = args[0]
         if self.mscolab_server_url is None:
             # in case of a forecd logout some QT events may still trigger MSCOLAB functions
             return
+        __verify_user_token_depth += 1
         try:
             if not _verify_user_token(self.mscolab_server_url, self.token):
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
-            return func(*args, **vargs)
-        except MSColabConnectionError as ex:
+            assert self.mscolab_server_url is not None
+            result = func(*args, **vargs)
+            return result
+        except (MSColabConnectionError, socketio.exceptions.SocketIOError) as ex:
+            if __verify_user_token_depth > 1:
+                raise
             logging.error("%s", ex)
             show_popup(self.ui, "Error", str(ex))
             self.logout()
+        finally:
+            __verify_user_token_depth -= 1
     return wrapper
 
 
