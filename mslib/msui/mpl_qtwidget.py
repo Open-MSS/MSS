@@ -422,7 +422,6 @@ class TopViewPlotter(ViewPlotter):
             # Re-annotate the flight track
             self.annotate_flight_tracks(self.flightpath_dict)
 
-
     def annotate_flight_tracks(self, flightpath_dict):
         """
         Annotate each flight track with its corresponding label next to the track, avoiding overlap.
@@ -1774,7 +1773,6 @@ class MplTopViewCanvas(MplCanvas):
             self.plotter.annotate_flight_tracks(flightpath_dict)
         else:
             self.plotter.remove_annotations()
-
 
     def update_flightpath_legend(self, flightpath_dict):
         """
