@@ -9,7 +9,6 @@ pytest
 pytest-qt
 pytest-xdist
 pytest-cov
-pytest-timeout
 sphinx
 sphinx_rtd_theme
 sphinxcontrib-video
@@ -21,4 +20,3 @@ eventlet>0.30.2
 dnspython>=2.0.0, <2.3.0
 gsl==2.7.0
 boa
-xmlschema<2.5.0

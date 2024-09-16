@@ -2,7 +2,7 @@
 """
 
     mslib.utils.msui_qt
-    ~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~
 
     This module helps with qt
 
@@ -30,14 +30,13 @@ import os
 import re
 import platform
 import sys
-import subprocess
 import traceback
 
 from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
 from PyQt5 import QtCore, QtWidgets, QtGui  # noqa
 
 from mslib.utils.config import config_loader
-from mslib.utils import FatalUserError, subprocess_startupinfo
+from mslib.utils import FatalUserError
 
 
 def get_open_filename_qt(*args):
@@ -315,7 +314,7 @@ class CheckableComboBox(QtWidgets.QComboBox):
         self.updateText()
 
     def timerEvent(self, event):
-        # After timeout, kill timer, and reenable click on line edit
+        # After timeout, kill timer, and re-enable click on line edit
         self.killTimer(event.timerId())
         self.closeOnLineEditClick = False
 
@@ -391,7 +390,7 @@ class Worker(QtCore.QThread):
     def run(self):
         try:
             result = self.function()
-            # ToDo the capbilities worker member needs the possibility to terminate itselfs.
+            # ToDo the capbilities worker member needs the possibility to terminate itself.
             # ToDo refactoring needed
             if "MSUIWebMapService" in repr(result) and not result.contents:
                 raise NoLayersError
@@ -429,159 +428,6 @@ class Worker(QtCore.QThread):
         """
         for window in QtWidgets.QApplication.allWindows():
             window.requestUpdate()
-
-
-class Updater(QtCore.QObject):
-    """
-    Checks for a newer versions of MSS and provide functions to install it asynchronously.
-    Only works if conda is installed.
-    """
-    on_update_available = QtCore.pyqtSignal([str, str])
-    on_update_finished = QtCore.pyqtSignal()
-    on_log_update = QtCore.pyqtSignal([str])
-    on_status_update = QtCore.pyqtSignal([str])
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.is_git_env = False
-        self.new_version = None
-        self.old_version = None
-        # we are using the installer version of the env
-        self.conda_prefix = os.getenv("CONDA_PREFIX")
-        if self.conda_prefix is not None:
-            self.command = os.path.join(self.conda_prefix, 'bin', "conda")
-            mamba_cmd = os.path.join(self.conda_prefix, 'bin', 'mamba')
-            # Check if mamba is installed in the env
-            try:
-                subprocess.run([mamba_cmd], startupinfo=subprocess_startupinfo(),
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-                self.command = mamba_cmd
-            except FileNotFoundError:
-                pass
-        else:
-            self.command = "conda"
-
-        # pyqtSignals don't work without an application eventloop running
-        if QtCore.QCoreApplication.startingUp():
-            self.on_update_available = NonQtCallback()
-            self.on_update_finished = NonQtCallback()
-            self.on_log_update = NonQtCallback()
-            self.on_status_update = NonQtCallback()
-
-    def run(self):
-        """
-        Starts the updater process
-        """
-        Worker.create(self._check_version)
-
-    def _check_version(self):
-        """
-        Checks if conda search has a newer version of MSS
-        """
-        # Don't notify on updates if mss is in a git repo, as you are most likely a developer
-        try:
-            git = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"],
-                                 startupinfo=subprocess_startupinfo(),
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.STDOUT, encoding="utf8")
-            if "true" in git.stdout:
-                self.is_git_env = True
-        except FileNotFoundError:
-            pass
-
-        # Return if conda is not installed. conda is fallback of mamba
-        try:
-            subprocess.run([self.command], startupinfo=subprocess_startupinfo(),
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        except FileNotFoundError:
-            return
-
-        self.on_status_update.emit("Checking for updates...")
-
-        # Check if "search mss" yields a higher version than the currently running one
-        search = self._execute_command(f"{self.command} search mss")
-        self.new_version = search.split("\n")[-2].split()[1]
-        c_list = self._execute_command(f"{self.command} list -f mss")
-        self.old_version = c_list.split("\n")[-2].split()[1]
-        if any(c.isdigit() for c in self.new_version):
-            if self.new_version > self.old_version:
-                self.on_status_update.emit("Your version of MSS is outdated!")
-                self.on_update_available.emit(self.old_version, self.new_version)
-            else:
-                self.on_status_update.emit("Your MSS is up to date.")
-
-    def _restart_msui(self):
-        """
-        Restart msui with all the same parameters, not entirely
-        safe in case parameters change in higher versions, or while debugging
-        """
-        command = [sys.executable.split(os.sep)[-1]] + sys.argv
-        if os.name == "nt" and not command[1].endswith(".py"):
-            command[1] += "-script.py"
-        os.execv(sys.executable, command)
-
-    def _try_updating(self):
-        """
-        Execute 'conda/mamba install mss=newest python -y' and return if it worked or not
-        """
-        self.on_status_update.emit("Trying to update MSS...")
-        self._execute_command(f"{self.command} install mss={self.new_version} python -y")
-        if self._verify_newest_mss():
-            return True
-
-        return False
-
-    def _update_mss(self):
-        """
-        Try to install MSS' newest version
-        """
-        if not self._try_updating():
-            self.on_status_update.emit("Update failed. Please try it manually or by creating a new environment!")
-        else:
-            self.on_update_finished.emit()
-            self.on_status_update.emit("Update successful. Please restart MSS.")
-
-    def _verify_newest_mss(self):
-        """
-        Return if the newest mss exists in the environment or not
-        """
-        verify = self._execute_command(f"{self.command} list -f mss")
-        if self.new_version in verify:
-            return True
-
-        return False
-
-    def _execute_command(self, command):
-        """
-        Handles proper execution of conda subprocesses and logging
-        """
-        process = subprocess.Popen(command.split(),
-                                   startupinfo=subprocess_startupinfo(),
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT,
-                                   encoding="utf8")
-        self.on_log_update.emit(" ".join(process.args) + "\n")
-
-        text = ""
-        for line in process.stdout:
-            self.on_log_update.emit(line)
-            text += line
-
-        # Happens e.g. on connection errors during installation attempts
-        if "An unexpected error has occurred. Conda has prepared the above report" in text:
-            raise RuntimeError("Something went wrong! Can't safely continue to update.")
-        else:
-            return text
-
-    def update_mss(self):
-        """
-        Installs the newest mss version
-        """
-        def on_failure(e: Exception):
-            self.on_status_update.emit("Update failed, please do it manually.")
-            self.on_log_update.emit(str(e))
-
-        Worker.create(self._update_mss, on_failure=on_failure)
 
 
 class NonQtCallback:

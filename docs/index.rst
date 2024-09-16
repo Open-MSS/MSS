@@ -3,7 +3,7 @@
 
 Mission Support System's Documentation
 ======================================
-|Conda Version| |GitHub Issues| |Coverage Status| |DOI| |Conda Platforms| |Conda Recipe| |Conda Downloads|
+|Conda Version| |DOI| |JuRSE Code Pick| |GitHub Issues| |Coverage Status| |Conda Platforms| |Conda Recipe| |Conda Downloads|
 
 .. |Conda Version| image:: https://img.shields.io/conda/vn/conda-forge/mss.svg
    :target: https://anaconda.org/conda-forge/mss
@@ -13,6 +13,8 @@ Mission Support System's Documentation
    :target: https://coveralls.io/github/Open-MSS/MSS?branch=develop
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.6572620.svg
    :target: https://doi.org/10.5281/zenodo.6572620
+.. |JuRSE Code Pick| image:: https://img.shields.io/badge/JuRSE_Code_Pick-July_2024-blue
+   :target: https://www.fz-juelich.de/en/rse/jurse-community/jurse-code-of-the-month/july-2024
 .. |Conda Platforms| image:: https://img.shields.io/conda/pn/conda-forge/mss.svg
    :target: https://anaconda.org/conda-forge/mss
 .. |Conda Recipe| image:: https://img.shields.io/badge/recipe-mss-green.svg

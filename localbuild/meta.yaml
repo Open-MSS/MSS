@@ -42,7 +42,7 @@ requirements:
     - requests >=2.31.0
     - scipy
     - skyfield >=1.12
-    - skyfield-data >=5
+    - skyfield-data >=6
     - tk
     - owslib >=0.24
     - unicodecsv
@@ -77,7 +77,7 @@ requirements:
     - metpy
     - pycountry
     - websocket-client
-    - libtiff <4.5.0
+    - libtiff
     - flask-wtf
     - email_validator
     - keyring
@@ -115,7 +115,7 @@ about:
     * http://www.geosci-model-dev.net/5/55/2012/gmd-5-55-2012.pdf
 
     Software for planning research Aircraft Missions.
-    For discussion of the possibilites of the research flights,
+    For discussion of the possibilities of the research flights,
     the Mission Support System (MSS) was developed.
     This software helps to review a big amount of metereological and
     model data by viewing the forecasted parameters of interest along possible regions

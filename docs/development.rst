@@ -7,8 +7,8 @@ This chapter will get you started with MSS development.
 
 MSS is written in Python.
 
-Once a stable release is published we do only bug fixes in stable and release regulary
-new minor versions. If a fix needs a API change or it is likly more a new feature you have
+Once a stable release is published we do only bug fixes in stable and release regularly
+new minor versions. If a fix needs a API change or it is likely more a new feature you have
 to make a pull request to the develop branch. Documentation of changes is done by using our
 `issue tracker <https://github.com/Open-MSS/MSS/issues>`_.
 
@@ -147,7 +147,7 @@ Using predefined docker images instead of installing all requirements
 
 You can easily use our testing docker images which have all libraries pre installed. These are based on miniforge.
 We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have mss-develop-env defined.
-In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these evironments.
+In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these environments.
 
 You can either mount your MSS workdir in the container or use the environment from the container as environment on your machine.
 
@@ -282,7 +282,7 @@ Building the docs with Sphinx
 The documentation (in reStructuredText format, .rst) is in docs/.
 
 Usually building the docs also includes creating the images and pages for the gallery feature.
-This can be ommitted by setting an environment variable ::
+This can be omitted by setting an environment variable ::
 
    export GALLERY=False
 
@@ -349,7 +349,7 @@ This plugin produces a coverage report, example::
     --------------------------------------------------------------------------
     mslib/__init__.py                            2      0      0      0   100%
     mslib/msui/__init__.py                      23      0      0      0   100%
-    mslib/msui/aircrafts.py                     52      1      8      1    97%
+    mslib/msui/aircraft.py                      52      1      8      1    97%
     mslib/msui/constants.py                     12      2      4      2    75%
     mslib/msui/flighttrack.py                  383    117    141     16    66%
 
@@ -399,6 +399,26 @@ like e.g. a running MSColab server or a QApplication instance for GUI tests,
 are collected in :mod:`tests.fixtures` in the form of pytest fixtures that can be requested as needed in tests.
 
 
+Changing the database model
+---------------------------
+
+Changing the database model requires adding a corresponding migration script to MSS,
+so that existing databases can be migrated automatically.
+
+To generate such a migration script you can run::
+
+  flask --app mslib.mscolab.app db migrate -d mslib/mscolab/migrations -m "To version <next-major-version>"
+
+Depending on the complexity of the changes that were made,
+the generated migration script might need some tweaking.
+
+If there is already a migration script for the next release,
+then please incorporate the generated migration script into this existing one,
+instead of adding a new one.
+You can still generate a script with the above command first
+to get a starting point for the changes.
+
+
 Pushing your changes
 --------------------
 
@@ -428,7 +448,7 @@ After filling the template completely click on Pull request
 Merging stable into develop
 ---------------------------
 
-Bug fixes we have done in stable we need to merge regulary into develop too::
+Bug fixes we have done in stable we need to merge regularly into develop too::
 
    git checkout stable
    git pull git@github.com:Open-MSS/MSS.git stable

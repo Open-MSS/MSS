@@ -54,7 +54,7 @@ Make a text file with the following format to import many users to the mscolab d
 
   $ mscolab db --users_by_file /path/to/file
 
-After executed you get informations to exchange with users.
+After executed you get information to exchange with users.
 
  .. code-block:: text
 
@@ -69,7 +69,7 @@ Further options can be listed by `mscolab db -h`
 
 User Groups for Operations
 ..........................
-When you want to use same set of users for different operations using same catagory
+When you want to use same set of users for different operations using same category
 you can do this by setting up users in a special operation.
 
 On a given category for an operation ending with GROUP_POSTFIX
@@ -139,10 +139,10 @@ If you want to use nginx to proxy this gunicorn server have a look on the exampl
 Backup Data Base
 ................
 
-For backups you can dump by `pg_dump -d mscolab -f outpu.sql` the sqlite database
+For backups you can dump by `pg_dump -d mscolab -f output.sql` the sqlite database
 and restore it by `psql -v ON_ERROR_STOP=1 < new_db.sql`
 
-On a PostgreSQL db you can regulary do backups by creating a dump
+On a PostgreSQL db you can regularly do backups by creating a dump
 by `pg_dump <https://www.postgresql.org/docs/current/app-pgdump.html>`_ using a cron job ::
 
     #!/bin/bash
@@ -150,28 +150,24 @@ by `pg_dump <https://www.postgresql.org/docs/current/app-pgdump.html>`_ using a 
     pg_dump -d mscolab -f "/home/mscolab/dump/$timestamp.sql"
 
 
-Data Base Migration
-...................
+Database Migration from Version 8 or 9
+.................................
 
-For an easy way to update the database scheme we implemented  `flask migrate <https://flask-migrate.readthedocs.io/en/latest/>`_.
+From v10 onwards MSColab uses `Flask-Migrate <https://flask-migrate.readthedocs.io/en/latest/>` to automatically deal with database migrations.
+To upgrade from v8 or v9 a recreation of the database and subsequent copy of existing data is necessary.
+To do this follow these steps:
 
-You have to create based on your configuration a migration script and call that afterwards. ::
+#. Stop MSColab completely, no process interacting with the MSColab database should remain running
+#. **Make a backup of your existing database**
+#. Set ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM`` to your existing database
+#. Set ``SQLALCHEMY_DB_URI`` to a new database
+#. If you are not using SQLite: create the new database
+#. Start MSColab
+#. Check that everything was migrated successfully
+#. Unset ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM``
 
-    mamba activate instance
-    cd ~/INSTANCE/config
-    export PYTHONPATH=`pwd`
-    cd ~/INSTANCE/wsgi
-    flask --app mscolab.py db init
-    flask --app mscolab.py db migrate -m "To version 8.0.0"
-    flask --app mscolab.py db upgrade
-
-The output looks like ::
-
-    ~/INSTANCE/wsgi$ flask --app mscolab.py db upgrade
-    INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
-    INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
-    INFO  [alembic.runtime.migration] Running upgrade  -> b70961f58f94, To version 8.0.0
-
+If you want to keep using your old database URI you can first rename your existing database so that it has a different URI
+and just set ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM`` to that.
 
 
 Steps to use the MSColab UI features
@@ -194,6 +190,8 @@ Operation based features
   - All the operations the user has created or has been added to can be found in Mscolab's main window along with the user's access level.
   - To start working on an operation the user needs to select it which enables all the operation related buttons.
   - Any change made to an operation by a user will be shared with everyone in real-time unless `Work Locally` is turned on.(More on this later)
+  - Operations can be manually archived to remove them from normal view without having to delete them.
+    They can be found again in the Archive view, where they can be unarchived for further use.
 
 Operation Permissions
 .....................

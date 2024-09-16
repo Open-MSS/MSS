@@ -368,11 +368,11 @@ class SSO(Service):
                 identity[REPOZE_ID_EQUIVALENT] = self.user
             try:
                 try:
-                    metod = self.environ["idp.authn"]
+                    method = self.environ["idp.authn"]
                 except KeyError:
                     pass
                 else:
-                    resp_args["authn"] = metod
+                    resp_args["authn"] = method
 
                 _resp = IDP.create_authn_response(identity, userid=self.user,
                                                   encrypt_cert=encrypt_cert, **resp_args)
@@ -957,7 +957,7 @@ def metadata(environ, start_response):
         start_response("200 OK", [("Content-Type", "text/xml")])
         return metadata
     except Exception as ex:
-        logger.error("An error occured while creating metadata:", ex.message)
+        logger.error("An error occurred while creating metadata:", ex.message)
         return not_found(environ, start_response)
 
 
@@ -979,7 +979,7 @@ def staticfile(environ, start_response):
         start_response("200 OK", [("Content-Type", "text/xml")])
         return open(path).read()
     except Exception as ex:
-        logger.error("An error occured while creating metadata: %s", str(ex))
+        logger.error("An error occurred while creating metadata: %s", str(ex))
         return not_found(environ, start_response)
 
 

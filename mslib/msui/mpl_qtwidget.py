@@ -317,7 +317,7 @@ class TopViewPlotter(ViewPlotter):
 
     def draw_legend(self, img):
         """Draw the legend graphics img on the current plot.
-        Adds new axes to the plot that accomodate the legend.
+        Adds new axes to the plot that accommodate the legend.
         """
         # If the method is called with a "None" image, the current legend
         # graphic should be removed (if one exists).
@@ -871,9 +871,9 @@ class LinearViewPlotter(ViewPlotter):
 
         pts = (self.linearview_size_settings["plot_title_size"] if self.settings["plot_title_size"] == "default"
                else int(self.settings["plot_title_size"]))
-        als = (self.linearview_size_settings["axes_label_size"] if self.settings["axes_label_size"] == "default"
-               else int(self.settings["axes_label_size"]))
-        self.ax.tick_params(axis='both', labelsize=als)
+        label_size = (self.linearview_size_settings["axes_label_size"] if self.settings["axes_label_size"] == "default"
+                      else int(self.settings["axes_label_size"]))
+        self.ax.tick_params(axis='both', labelsize=label_size)
         self.ax.set_title("Linear flight profile", fontsize=pts, horizontalalignment='left', x=0)
         self.ax.figure.canvas.draw()
 
@@ -1762,7 +1762,7 @@ class MplTopViewCanvas(MplCanvas):
 
     def draw_legend(self, img):
         """Draw the legend graphics img on the current plot.
-        Adds new axes to the plot that accomodate the legend.
+        Adds new axes to the plot that accommodate the legend.
         """
         self.plotter.draw_legend(img)
         # required so that it is actually drawn...

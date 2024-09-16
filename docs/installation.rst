@@ -6,7 +6,7 @@ The Mission Support System (MSS) including a Web Map Service, a Collaboration Se
 
 This channel conda-forge has builds for osx-64, linux-64, win-64
 
-The conda-forge `github organization <https://conda-forge.github.io/>`_ uses various automated continuos integration
+The conda-forge `github organization <https://conda-forge.github.io/>`_ uses various automated continuous integration
 build processes.
 
 We provide an automatic installation and a manual installation.
@@ -124,22 +124,8 @@ versions for dependencies. ::
     (mssenv) $ msui
 
 
-Update
-------
-
-Builtin Update
+Update Methods
 ..............
-
-Since version 5.0 we provide a feature for updating MSS by the UI or the command line
-After you started the MSS UI it informs you after a while if there is a new update available.
-From the command line you can trigger this update feature by ::
-
-    (mssenv) $ msui --update
-
-
-
-Other Methods
-.............
 
 For updating an existing MSS installation to the current version, it is best to install
 it into a new environment. If your current version is not far behind the new version
@@ -147,7 +133,7 @@ you could try the `mamba update mss` as described.
 
 
 .. Important::
-  mamba is under development. All dependencies of MSS and MSS itselfs are under development.
+  mamba is under development. All dependencies of MSS and MSS itself are under development.
   Sometimes this update feature of mamba can't resolve from existing to new dependencies.
 
 search for MSS what you can get ::
@@ -164,7 +150,7 @@ compare what you have installed ::
      mss                            7.0.2     py310hff52083_0    conda-forge
 
 
-We have reports that often an update suceeds by using the install option and the new version number,
+We have reports that often an update succeeds by using the install option and the new version number,
 in this example $mss_version and python as second option ::
 
    (mssenv) $ mamba install mss=$mss_version python
@@ -175,7 +161,7 @@ The alternative is to use a new environment and install mss.
 
 
 
-For further details of configurating mss :ref:`msui-configuration`
+For further details of configuring mss :ref:`msui-configuration`
 
 
 Docker Instance
