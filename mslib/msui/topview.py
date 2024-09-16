@@ -289,9 +289,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def update_active_operation(self, active_op_id):
         self.active_op_id = active_op_id
         self.signal_activate_operation.emit(self.active_op_id)
-        print("waypoint data topview")
-        print(ft.WaypointsTableModel.all_waypoint_data)
-        print(ft.WaypointsTableModel.waypoint_data)
 
     @QtCore.pyqtSlot(int, str)
     def add_operation_slot(self, op_id, path):

@@ -332,7 +332,6 @@ class MSColab_ConnectDialog(QtWidgets.QDialog, ui_conn.Ui_MSColabConnectDialog):
         url = urljoin(self.mscolab_server_url, "token")
         url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
         try:
-            print(url,data,tuple(config_loader(dataset="MSCOLAB_timeout")))
             r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.status_code == 401:
                 raise requests.exceptions.ConnectionError
@@ -653,8 +652,6 @@ class MSUIMscolab(QtCore.QObject):
         self.token = _json["token"]
         self.user = _json["user"]
         self.mscolab_server_url = url
-        print("output from mscolab main:")
-        print(_json,self.token,self.user,self.mscolab_server_url)    
 
         # create socket connection here
         try:
@@ -1041,7 +1038,6 @@ class MSUIMscolab(QtCore.QObject):
             r = requests.get(url, data=data)
             if r.text != "False":
                 _json = json.loads(r.text)
-                print("mscolab.py json val :",_json)
                 operations = _json["operations"]
                 op_id = None
                 if operations:
@@ -1530,7 +1526,6 @@ class MSUIMscolab(QtCore.QObject):
             r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
-                print("mscolab.py json val :",_json)
                 operations = _json["operations"]
                 recent_operation = None
                 if operations:
@@ -1730,7 +1725,6 @@ class MSUIMscolab(QtCore.QObject):
             r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if r.text != "False":
                 _json = json.loads(r.text)
-                print("mscolab.py json val :",_json)
                 self.operations = _json["operations"]
                 logging.debug("adding operations to ui")
                 operations = sorted(self.operations, key=lambda k: k["path"].lower())

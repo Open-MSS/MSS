@@ -398,7 +398,6 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
         Gets called whenever the user clicks on a layer in the multilayer list
         Makes sure the dock widget updates its data depending on the users selection
         """
-        print(type(item))
         if self.skip_clicked_event:
             self.skip_clicked_event = False
             return

@@ -546,11 +546,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 }
             }
         }
-        print("waypoint data mainwindow")
-        way_obj=ft.WaypointsTableModel(name="op1")
-        print(way_obj.all_waypoint_data)
-        print(way_obj.waypoint_data)
-
+        
         self.config_for_gui["predefined_map_sections"].update(map_sections)
 
         # Reference to the flight track that is currently displayed in the views.
@@ -698,11 +694,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     
     def update_treewidget_op_fl(self,op_fl,flight):
         if op_fl == "operation":
-            print("selected operation is:",flight)
             
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)
-                print(item.text())
                 if item.text().startswith(flight):
                     item = self.listOperationsMSC.item(index)
                     point = self.listOperationsMSC.visualItemRect(item).center()
@@ -710,10 +704,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     QtTest.QTest.mouseDClick(self.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
                     break         
         else:
-            print("selected flight is:",flight)
             for index in range(self.listFlightTracks.count()):
                 item = self.listFlightTracks.item(index)
-                print(item.text())
                 if flight == item.text():
                     item = self.listFlightTracks.item(index)
                     point = self.listFlightTracks.visualItemRect(item).center()

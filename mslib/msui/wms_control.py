@@ -411,7 +411,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
     itime_changed = QtCore.pyqtSignal(str)
     vtime_changed = QtCore.pyqtSignal(str)
     vtime_data = QtCore.pyqtSignal([list])
-    
 
     def __init__(self, parent=None, default_WMS=None, wms_cache=None, view=None):
         """
@@ -495,7 +494,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         self.multilayers.btGetCapabilities.clicked.connect(self.get_capabilities)
         self.multilayers.pbViewCapabilities.clicked.connect(self.view_capabilities)
-        self.multilayers.styles_on_change.connect(lambda styles:self.style_changed_now(styles))
+        self.multilayers.styles_on_change.connect(lambda styles: self.style_changed_now(styles))
 
         self.btClearMap.clicked.connect(self.clear_map)
 
@@ -548,24 +547,22 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.multilayers.cbWMS_URL.setCurrentIndex(0)
             self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
-    def row_is_selected(self,url,layer,styles,level):
-        print("row is selected",url,layer,styles,level)
+    def row_is_selected(self, url, layer, styles, level):
         if url not in self.multilayers.layers:
-            self.layer_name=layer
-            self.style_name=styles
-            self.update_url_layer_styles(url_name=url,layer_name=layer,style_name=styles,level=level)
+            self.layer_name = layer
+            self.style_name = styles
+            self.update_url_layer_styles(url_name=url, layer_name=layer, style_name=styles, level=level)
             self.populate_ui(update_level=level)
         else:
             # Get coordinate reference system and bounding box from the map
             # object in the view.
             crs = self.view.get_crs()
             bbox = self.view.getBBOX()
-    
+
             # Determine the current size of the vertical section plot on the
             # screen in pixels. The image will be retrieved in this size.
             width, height = self.view.get_plot_size_in_px()
-            
-            
+
             for index in range(self.multilayers.listLayers.topLevelItemCount()):
                 top_item = self.multilayers.listLayers.topLevelItem(index)
                 # Iterate over the children of the top-level item
@@ -573,11 +570,11 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     child_item = top_item.child(i)
 
                     # Process both columns of the child item
-                    
+
                     for column in range(child_item.columnCount()):
-                        
+
                         if child_item.text(column).endswith(layer):
-                            self.current_sel_layer=child_item
+                            self.current_sel_layer = child_item
 
             self.multilayers.threads += 1
 
@@ -594,28 +591,27 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 index = self.multilayers.cbWMS_URL.findText(self.current_sel_layer.get_wms().url)
                 if index != -1 and index != self.multilayers.cbWMS_URL.currentIndex():
                     self.multilayers.cbWMS_URL.setCurrentIndex(index)
-            
+
             self.multilayers.threads -= 1
-            #print("styles list",self.current_sel_layer.styles)
-            styles_name=str(styles).strip().split()[0].strip();
+            styles_name = str(styles).strip().split()[0].strip()
+
             def style_changed(layer):
                 for style in self.current_sel_layer.styles:
-                    this_style=str(style)
-                    this_style=this_style.strip().split()[0];
-                    this_style=this_style.strip()
-                    #print("styles present:",this_style,"style selected:",styles_name)        
+                    this_style = str(style)
+                    this_style = this_style.strip().split()[0]
+                    this_style = this_style.strip()
                     if this_style.startswith(styles_name):
                         self.current_sel_layer.style = style
                         self.current_sel_layer.style_changed()
                         self.multilayers.multilayer_clicked(self.current_sel_layer)
                         self.current_sel_layer.parent.dock_widget.auto_update()
                         break
-                
+
                 layer.style_changed()
                 self.multilayers.multilayer_clicked(layer)
                 self.multilayers.dock_widget.auto_update()
                 self.multilayers.styles_on_change.emit(layer.style)
-            
+
             style_changed(self.current_sel_layer)
 
             layers = [self.current_sel_layer]
@@ -627,13 +623,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
                     bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
                 args.extend(self.retrieve_image(layer_itr, crs, bbox_tmp, None, width, height, transparent))
-    
+
             self.fetch.emit(args)
-            
+
             self.prefet = WMSMapFetcher(self.wms_cache)
             self.prefet.moveToThread(self.thread_prefetch)
             self.prefetch.connect(self.prefet.fetch_maps)  # implicitly uses a queued connection
-    
+
             self.fet = WMSMapFetcher(self.wms_cache)
             self.fet.moveToThread(self.thread_fetch)
             self.fetch.connect(self.fet.fetch_maps)  # implicitly uses a queued connection
@@ -647,12 +643,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.cbLevel.setCurrentText(item_text)
                     self.level_changed()
                     break
-    
-    def leftrow_is_selected(self,vtime):
+
+    def leftrow_is_selected(self, vtime):
         if vtime is not None:
             self.cbValidTime.setCurrentText(vtime)
             self.valid_time_changed()
-        
+
         layer = self.multilayers.get_current_layer()
         crs = layer.get_allowed_crs()
         if crs and \
@@ -664,7 +660,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             logging.debug("Selected '%s' for Combobox.", extra)
             self.parent().parent().update_predefined_maps(extra)
 
-    def style_changed_now(self,style):
+    def style_changed_now(self, style):
         self.styles_changed.emit(style)
 
     def __del__(self):
@@ -685,7 +681,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         else:
             self.get_map([self.multilayers.get_current_layer()])
 
-    def initialise_wms(self, base_url, version="1.3.0",level=None):
+    def initialise_wms(self, base_url, version="1.3.0", level=None):
         """Initialises a MSUIWebMapService object with the specified base_url.
 
         If the web server returns a '401 Unauthorized', prompt the user for
@@ -725,8 +721,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     add_wms_urls(self.multilayers.cbWMS_URL, [base_url])
                     self.multilayers.cbWMS_URL.setEditText(base_url)
                     save_settings_qsettings('wms', {'recent_wms_url': base_url})
-                
-                self.activate_wms(wms,level=level)
+
+                self.activate_wms(wms, level=level)
                 WMS_SERVICE_CACHE[wms.url] = wms
                 self.cpdlg.close()
 
@@ -842,64 +838,56 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.view.plotter.clear_figure()
         logging.debug("enabling checkboxes in map-options if any")
         self.signal_enable_cbs.emit()
-    
-    def select_layer_and_style(self,layer_list, layer_name, style_name):
+
+    def select_layer_and_style(self, layer_list, layer_name, style_name):
         if layer_list is None or layer_name is None:
             return
-        self.current_sel_layer=None
-        
+        self.current_sel_layer = None
+
         for index in range(layer_list.topLevelItemCount()):
             top_item = layer_list.topLevelItem(index)
 
-            
             # Iterate over the children of the top-level item
             for i in range(top_item.childCount()):
                 child_item = top_item.child(i)
 
-                
                 for column in range(child_item.columnCount()):
-                    
+
                     if child_item.text(column).endswith(layer_name):
-                        self.current_sel_layer=child_item
-                    
+                        self.current_sel_layer = child_item
+
         if not self.current_sel_layer:
             print(f"Layer '{layer_name}' not found.")
             return
 
         # Simulate clicking the layer
         self.multilayers.multilayer_clicked(self.current_sel_layer)
-
-        # Find the style by its name and set it in the ComboBox
-        #print("styles list",self.current_sel_layer.styles)
         for styles in self.current_sel_layer.styles:
-            selected_style=str(styles)
-            #print("styles present 2  ",styles,"style selected  ",selected_style)        
+            selected_style = str(styles)
             if selected_style == style_name:
                 self.current_sel_layer.style = styles
                 self.current_sel_layer.style_changed()
                 self.multilayers.multilayer_clicked(self.current_sel_layer)
                 self.current_sel_layer.parent.dock_widget.auto_update()
                 break
-            
-    def update_url_layer_styles(self, url_name, layer_name, style_name,level=None):
+
+    def update_url_layer_styles(self, url_name, layer_name, style_name, level=None):
         self.multilayers.cbWMS_URL.setEditText(url_name)
-        #print("url name",self.multilayers.cbWMS_URL.currentText()," level is ",level)
         self.get_capabilities(level=level)
-        
-    def get_capabilities(self,level=None):
+
+    def get_capabilities(self, level=None):
         """
         Query the WMS server in the URL combobox for its capabilities.
         """
 
         # Load new WMS. Only add those layers to the combobox that can provide
         # the CRS that match the filter of this module.
-        
+
         base_url = self.multilayers.cbWMS_URL.currentText()
         self.base_url_changed.emit(base_url)
 
         params = {'service': 'WMS',
                   'request': 'GetCapabilities'}
-        
 
         def on_success(request):
             self.cpdlg.setValue(5)
@@ -909,7 +897,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             url = url.replace("?service=WMS", "").replace("&service=WMS", "") \
                 .replace("?request=GetCapabilities", "").replace("&request=GetCapabilities", "")
             logging.debug("requesting capabilities from %s", url)
-            self.initialise_wms(url, None,level=level)
+            self.initialise_wms(url, None, level=level)
 
         def on_failure(e):
             try:
@@ -926,12 +914,12 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.tr(f"ERROR: We cannot load the capability document!\n\\n{type(ex)}\n{ex}"))
             finally:
                 self.cpdlg.close()
-                
+
         self.display_capabilities_dialog()
         Worker.create(lambda: requests.get(base_url, params=params, timeout=(5, 60)),
                       on_success, on_failure)
 
-    def activate_wms(self, wms, cache=False,level=None):
+    def activate_wms(self, wms, cache=False, level=None):
         # Parse layer tree of the wms object and discover usable layers.
         stack = list(wms.contents.values())
         filtered_layers = set()
@@ -979,10 +967,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         # logic to disable fill continents, fill oceans on connection to
         self.signal_disable_cbs.emit()
         if level:
-            self.select_layer_and_style(layer_list=self.multilayers.listLayers,layer_name=self.layer_name,style_name=self.style_name)
-            self.populate_ui(update_level=level)        
-            
-        
+            self.select_layer_and_style(layer_list=self.multilayers.listLayers,
+                                        layer_name=self.layer_name, style_name=self.style_name)
+            self.populate_ui(update_level=level)
 
     def view_capabilities(self):
         """Open a WMSCapabilitiesBrowser dialog showing the capabilities
@@ -1053,7 +1040,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         self.enable_level_elements(False)
         self.btGetMap.setEnabled(False)
 
-    def populate_ui(self,update_level=None):
+    def populate_ui(self, update_level=None):
         """
         Adds the values of the current layer to the UI comboboxes
         """
@@ -1106,7 +1093,6 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.cbValidTime.addItems(vtimes)
             self.cbValidTime.setCurrentIndex(self.cbValidTime.findText(layer.get_vtime()))
         self.enable_valid_time_elements(len(vtimes) > 0)
-        
 
         if not self.init_time_changed():
             self.disable_dteInitTime_elements()
@@ -1128,7 +1114,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if update_level:
             for i in range(self.cbLevel.count()):
                 item_text = self.cbLevel.itemText(i)
-                index=item_text.find(' ')
+                index = item_text.find(' ')
                 item_text = item_text[:index]
                 if item_text == update_level:
                     self.cbLevel.setCurrentIndex(i)
@@ -1316,7 +1302,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         if self.multilayers.threads == 0 and not self.layerChangeInProgress:
             self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
             self.multilayers.carry_parameters["vtime"] = self.cbValidTime.currentText()
-        
+
         combo_items = [self.cbValidTime.itemText(i) for i in range(self.cbValidTime.count())]
         self.vtime_data.emit(combo_items)
 

@@ -144,8 +144,21 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
         self.downloadPushButton.clicked.connect(lambda: self.download_plots_cli(config_settings))
 
-
     def download_plots_cli(self, config_settings):
+        if self.stime > self.etime:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Start time should be before end time"
+            )
+            return
+        if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Cannot remove from empty treewidget"
+            )
+            return
         view = "top"
         intv = 0
         if self.intv != "":
@@ -167,29 +180,10 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             with open(config_path, 'w') as file:
                 json.dump(config_settings, file, indent=4)
 
-        print("config path is ", config_path, view)
-        print("parameters: ")
-        print("cpath  ",config_path)
-        print("view  ",view)
-        print("ftrack  ",None)
-        print("itime  ",None)
-        print("vtime  ",None)
-        print("intv  ",intv)
-        print("stime  ",self.stime[:-1])
-        print("etime  ",self.etime[:-1])
-        # Validate time ranges
-        if self.stime > self.etime:
-            QMessageBox.information(
-                self,  # The parent widget (use `None` if no parent)
-                "WARNING",  # Title of the message box
-                "Start time should be before end time"  # Message text
-            )
-            return
-
         args = {
             'cpath': config_path,
             'view': view,
-            'ftrack': None,
+            'ftrack': "",
             'itime': self.itime,
             'vtime': self.vtime,
             'intv': intv,
@@ -199,8 +193,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         # Invoke the cli_tool method using click
         ctx = click.Context(cli_tool)
+        ctx.obj = self
         ctx.invoke(cli_tool, **args)
-        
+
     def autoplotSecsTreeWidget_selected_row(self):
         selected_items = self.autoplotSecsTreeWidget.selectedItems()
         if selected_items:
@@ -219,23 +214,20 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             filename = selected_items[0].text(3)
             section = selected_items[0].text(1)
             vtime = selected_items[0].text(5)
-            print("flight desc",flight,type(flight),len(flight))
             if flight != "" and flight == filename:
-                self.update_op_flight_treewidget.emit("operation",flight)
+                self.update_op_flight_treewidget.emit("operation", flight)
             elif flight != "":
-                self.update_op_flight_treewidget.emit("flight",flight)                
+                self.update_op_flight_treewidget.emit("flight", flight)
             self.autoplot_treewidget_item_selected.emit(section, vtime)
-            print("autoplotTreewidget_dockwidget", section, vtime)
-            
-    def update_stime_etime(self,vtime_data):
+
+    def update_stime_etime(self, vtime_data):
         self.stimeComboBox.clear()
         self.etimeComboBox.clear()
         self.stimeComboBox.addItem("")
         self.etimeComboBox.addItem("")
         self.stimeComboBox.addItems(vtime_data)
         self.etimeComboBox.addItems(vtime_data)
-        
-        
+
     def on_item_selection_changed(self):
         selected_item = self.autoplotTreeWidget.selectedItems()
         if selected_item:
@@ -303,7 +295,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
-        
 
     def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime,
                           vtime, url, layer, styles, level):
@@ -360,7 +351,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
-        
 
     def refresh_sig(self, config_settings):
         autoplot_flights = config_settings["automated_plotting_flights"]
@@ -384,6 +374,13 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.autoplotTreeWidget.clearSelection()
 
     def remove_selected_row(self, parent, treewidget, config_settings):
+        if treewidget.topLevelItemCount() == 0:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Cannot remove from empty treewidget"
+            )
+            return
         selected_item = treewidget.currentItem()
         if selected_item:
             index = treewidget.indexOfTopLevelItem(selected_item)
@@ -404,7 +401,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     parent.takeChild(parent.indexOfChild(selected_item))
         parent.refresh_signal_emit.emit()
         self.resize_treewidgets()
-        
 
     def combo_box_input(self, combo):
         comboBoxName = combo.objectName()
