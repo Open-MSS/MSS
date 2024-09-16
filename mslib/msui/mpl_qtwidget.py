@@ -419,8 +419,22 @@ class TopViewPlotter(ViewPlotter):
 
             # Redraw the legend with the updated label
             self.draw_flightpath_legend(self.flightpath_dict)
-            # Re-annotate the flight track
-            self.annotate_flight_tracks(self.flightpath_dict)
+
+            # Update annotations without making them visible
+            self.update_annotation_labels_only(self.flightpath_dict)
+
+    def update_annotation_labels_only(self, flightpath_dict):
+        """
+        Update the label of the annotation without making the annotation visible.
+        """
+        for flighttrack, (label, color, linestyle, waypoints) in flightpath_dict.items():
+            if flighttrack in self.annotations:
+                # Update only the label of the existing annotation
+                annotation = self.annotations[flighttrack]
+                annotation.set_text(label)
+
+        # Redraw the canvas to reflect the updated labels
+        self.ax.figure.canvas.draw_idle()
 
     def annotate_flight_tracks(self, flightpath_dict):
         """
