@@ -430,28 +430,28 @@ class LinearViewPlotting(Plotting):
 @click.pass_context
 def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     print(cpath, view, ftrack, itime, vtime, intv, stime, etime)
-    # if ctx.obj is not None:
-    #     pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
-    #     pdlg.setMinimumDuration(0)
-    #     pdlg.repaint()
-    #     pdlg.canceled.connect(lambda: close_process_dialog(pdlg))
-    #     pdlg.setWindowModality(Qt.WindowModal)
-    #     pdlg.setAutoReset(True)     # Close dialog automatically when reaching max value
-    #     pdlg.setAutoClose(True)     # Automatically close when value reaches maximum
-    #     pdlg.setValue(0)            # Initial progress value
+    if ctx.obj is not None:
+        pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
+        pdlg.setMinimumDuration(0)
+        pdlg.repaint()
+        pdlg.canceled.connect(lambda: close_process_dialog(pdlg))
+        pdlg.setWindowModality(Qt.WindowModal)
+        pdlg.setAutoReset(True)     # Close dialog automatically when reaching max value
+        pdlg.setAutoClose(True)     # Automatically close when value reaches maximum
+        pdlg.setValue(0)            # Initial progress value
 
-    #     # Set window flags to ensure visibility and modality
-    #     pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
+        # Set window flags to ensure visibility and modality
+        pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
 
-    #     pdlg.setValue(0)
+        pdlg.setValue(0)
     
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
 
     flight_name = config["automated_plotting_flights"][0][0]
     file = config["automated_plotting_flights"][0][3]
-    # if ctx.obj is not None:
-    #     pdlg.setValue(1)
+    if ctx.obj is not None:
+        pdlg.setValue(1)
 
     mss_url = None
     mss_auth = None
@@ -469,8 +469,8 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     else:
         side_view = SideViewPlotting(cpath, mss_url, mss_password, mss_auth)
         sec = "automated_plotting_vsecs"
-    # if ctx.obj is not None:
-    #     pdlg.setValue(2)
+    if ctx.obj is not None:
+        pdlg.setValue(2)
 
     def close_process_dialog(pdlg):
         pdlg.close()
@@ -496,12 +496,12 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
             print("Plot downloaded!")
             return True
         return False
-    # if ctx.obj is not None:
-    #     pdlg.setValue(4)
+    if ctx.obj is not None:
+        pdlg.setValue(4)
     flag = False
     for flight, section, vertical, filename, init_time, time in config["automated_plotting_flights"]:
-        # if ctx.obj is not None:
-        #     pdlg.setValue(8)
+        if ctx.obj is not None:
+            pdlg.setValue(8)
         for url, layer, style, elevation in config[sec]:
             print(flight, section, vertical, filename, init_time, time,url, layer, style, elevation)
             if vtime == "" and stime == "":
@@ -532,21 +532,21 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
                     i += 1
             else:
                 raise Exception("Invalid interval")
-    # if ctx.obj is not None:
-    #     pdlg.setValue(10)
-    #     pdlg.close()
-    #     if flag:
-    #         QMessageBox.information(
-    #             ctx.obj,  # The parent widget (use `None` if no parent)
-    #             "SUCCESS",  # Title of the message box
-    #             "Plots downloaded successfully."  # Message text
-    #         )
-    #     else:
-    #         QMessageBox.information(
-    #             ctx.obj,  # The parent widget (use `None` if no parent)
-    #             "FAILURE",  # Title of the message box
-    #             "Plots couldnot be downloaded."  # Message text
-    #         )
+    if ctx.obj is not None:
+        pdlg.setValue(10)
+        pdlg.close()
+        if flag:
+            QMessageBox.information(
+                ctx.obj,  # The parent widget (use `None` if no parent)
+                "SUCCESS",  # Title of the message box
+                "Plots downloaded successfully."  # Message text
+            )
+        else:
+            QMessageBox.information(
+                ctx.obj,  # The parent widget (use `None` if no parent)
+                "FAILURE",  # Title of the message box
+                "Plots couldnot be downloaded."  # Message text
+            )
 
 
 if __name__ == '__main__':
