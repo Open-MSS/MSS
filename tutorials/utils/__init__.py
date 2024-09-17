@@ -161,7 +161,7 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
 
         # early
         if mscolab:
-            mscdir = "/tmp/mscolab/tutorials"
+            mscdir = "/tmp/mscolab_tutorials"
             if not os.path.isdir(mscdir):
                 os.makedirs(mscdir)
             settings_file = os.path.join(mscdir, "mscolab_settings.py")
