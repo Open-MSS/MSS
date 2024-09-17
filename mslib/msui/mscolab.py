@@ -78,34 +78,30 @@ class MSColabConnectionError(RuntimeError):
     pass
 
 
-__verify_user_token_depth = 0
-
-
 def verify_user_token(func):
+    if not hasattr(verify_user_token, "depth"):
+        verify_user_token.depth = 0
 
     @functools.wraps(func)
-    def wrapper(*args, **vargs):
-        global __verify_user_token_depth
-
-        self = args[0]
+    def wrapper(self, *args, **vargs):
         if self.mscolab_server_url is None:
             # in case of a forecd logout some QT events may still trigger MSCOLAB functions
             return
-        __verify_user_token_depth += 1
+        verify_user_token.depth += 1
         try:
             if not _verify_user_token(self.mscolab_server_url, self.token):
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
             assert self.mscolab_server_url is not None
-            result = func(*args, **vargs)
+            result = func(self, *args, **vargs)
             return result
         except (MSColabConnectionError, socketio.exceptions.SocketIOError) as ex:
-            if __verify_user_token_depth > 1:
+            if verify_user_token.depth > 1:
                 raise
             logging.error("%s", ex)
             show_popup(self.ui, "Error", str(ex))
             self.logout()
         finally:
-            __verify_user_token_depth -= 1
+            verify_user_token.depth -= 1
     return wrapper
 
 
