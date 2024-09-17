@@ -237,7 +237,6 @@ class TopViewPlotting(Plotting):
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
-        print(filename,flight)
         if filename != "" and filename == flight:
             self.update_path_ops(filename)
         elif filename != "":
@@ -430,25 +429,29 @@ class LinearViewPlotting(Plotting):
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.pass_context
 def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
-    pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
-    pdlg.setMinimumDuration(0)
-    pdlg.repaint()
-    pdlg.canceled.connect(lambda: close_process_dialog(pdlg))
-    pdlg.setWindowModality(Qt.WindowModal)
-    pdlg.setAutoReset(True)     # Close dialog automatically when reaching max value
-    pdlg.setAutoClose(True)     # Automatically close when value reaches maximum
-    pdlg.setValue(0)            # Initial progress value
+    print(cpath, view, ftrack, itime, vtime, intv, stime, etime)
+    # if ctx.obj is not None:
+    #     pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
+    #     pdlg.setMinimumDuration(0)
+    #     pdlg.repaint()
+    #     pdlg.canceled.connect(lambda: close_process_dialog(pdlg))
+    #     pdlg.setWindowModality(Qt.WindowModal)
+    #     pdlg.setAutoReset(True)     # Close dialog automatically when reaching max value
+    #     pdlg.setAutoClose(True)     # Automatically close when value reaches maximum
+    #     pdlg.setValue(0)            # Initial progress value
 
-    # Set window flags to ensure visibility and modality
-    pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
+    #     # Set window flags to ensure visibility and modality
+    #     pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
 
-    pdlg.setValue(0)
+    #     pdlg.setValue(0)
+    
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
 
     flight_name = config["automated_plotting_flights"][0][0]
     file = config["automated_plotting_flights"][0][3]
-    pdlg.setValue(1)
+    # if ctx.obj is not None:
+    #     pdlg.setValue(1)
 
     mss_url = None
     mss_auth = None
@@ -466,8 +469,8 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     else:
         side_view = SideViewPlotting(cpath, mss_url, mss_password, mss_auth)
         sec = "automated_plotting_vsecs"
-    pdlg.setValue(2)
-    flag = False
+    # if ctx.obj is not None:
+    #     pdlg.setValue(2)
 
     def close_process_dialog(pdlg):
         pdlg.close()
@@ -493,11 +496,14 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
             print("Plot downloaded!")
             return True
         return False
-
-    pdlg.setValue(4)
+    # if ctx.obj is not None:
+    #     pdlg.setValue(4)
+    flag = False
     for flight, section, vertical, filename, init_time, time in config["automated_plotting_flights"]:
-        pdlg.setValue(8)
+        # if ctx.obj is not None:
+        #     pdlg.setValue(8)
         for url, layer, style, elevation in config[sec]:
+            print(flight, section, vertical, filename, init_time, time,url, layer, style, elevation)
             if vtime == "" and stime == "":
                 no_of_plots = 1
                 flag = draw(no_of_plots)
@@ -526,24 +532,22 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
                     i += 1
             else:
                 raise Exception("Invalid interval")
-    pdlg.setValue(10)
-    pdlg.close()
-    if flag:
-        QMessageBox.information(
-            ctx.obj,  # The parent widget (use `None` if no parent)
-            "SUCCESS",  # Title of the message box
-            "Plots downloaded successfully."  # Message text
-        )
-    else:
-        QMessageBox.information(
-            ctx.obj,  # The parent widget (use `None` if no parent)
-            "FAILURE",  # Title of the message box
-            "Plots couldnot be downloaded."  # Message text
-        )
-
-def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
-    cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime)
+    # if ctx.obj is not None:
+    #     pdlg.setValue(10)
+    #     pdlg.close()
+    #     if flag:
+    #         QMessageBox.information(
+    #             ctx.obj,  # The parent widget (use `None` if no parent)
+    #             "SUCCESS",  # Title of the message box
+    #             "Plots downloaded successfully."  # Message text
+    #         )
+    #     else:
+    #         QMessageBox.information(
+    #             ctx.obj,  # The parent widget (use `None` if no parent)
+    #             "FAILURE",  # Title of the message box
+    #             "Plots couldnot be downloaded."  # Message text
+    #         )
 
 
 if __name__ == '__main__':
-    main()
+    cli_tool()
