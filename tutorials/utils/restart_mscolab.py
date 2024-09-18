@@ -74,7 +74,7 @@ def wait_until_mscolab_server_alive(max_wait=10, interval=0.5):
 
         # Check if the max wait time has passed
         if time.time() - start_time > max_wait:
-            print("Waited for 10 seconds, butd MSColab server is still not alive.")
+            print(f"Waited for {max_wait} seconds, but MSColab server is still not alive.")
             break
 
         # Wait for short interval before checking server status again
