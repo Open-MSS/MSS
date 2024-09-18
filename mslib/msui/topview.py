@@ -455,10 +455,11 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     @QtCore.pyqtSlot()
     def styles_val_changed(self, strr):
-        if strr is None:
+        if strr is None or not str(strr).strip():
             self.currstyles = ""
         else:
-            self.currstyles = str(strr).strip().split()[0].strip()
+            split_strr = str(strr).strip().split()
+            self.currstyles = split_strr[0].strip() if split_strr else ""
 
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):
