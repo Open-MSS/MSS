@@ -55,6 +55,7 @@ from mslib.msui import mscolab_chat as mc
 from mslib.msui import mscolab_admin_window as maw
 from mslib.msui import mscolab_version_history as mvh
 from mslib.msui import socket_control as sc
+from mslib.msui.mscolab_exceptions import MSColabConnectionError
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
@@ -72,10 +73,6 @@ from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
-
-
-class MSColabConnectionError(RuntimeError):
-    pass
 
 
 def verify_user_token(func):
@@ -97,7 +94,7 @@ def verify_user_token(func):
         except (MSColabConnectionError, socketio.exceptions.SocketIOError) as ex:
             if verify_user_token.depth > 1:
                 raise
-            logging.error("%s", ex)
+            logging.error("%s %s", type(ex), ex)
             show_popup(self.ui, "Error", str(ex))
             self.logout()
         finally:
@@ -129,16 +126,12 @@ class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowse
     def unarchive_operation(self):
         if _verify_user_token(self.mscolab.mscolab_server_url, self.mscolab.token):
             logging.debug('unarchive_operation')
-            # set last used date for operation
-            data = {
-                "token": self.mscolab.token,
-                "op_id": self.archived_op_id,
-                "attribute": "active",
-                "value": "True"
-            }
-            url = urljoin(self.mscolab.mscolab_server_url, 'update_operation')
             try:
-                res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                res = self.mscolab.conn.request_post(
+                    "update_operation",
+                    {"op_id": self.archived_op_id,
+                     "attribute": "active",
+                     "value": "True"})
             except requests.exceptions.RequestException as e:
                 logging.debug(e)
                 show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
@@ -252,13 +245,14 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         try:
             url = str(self.urlCb.currentText())
             auth = config_loader(dataset="MSCOLAB_auth_user_name"), self.httpPasswordLe.text()
-            s = requests.Session()
-            s.auth = auth
-            s.headers.update({'x-test': 'true'})
-            r = s.get(urljoin(url, 'status'), timeout=tuple(tuple(config_loader(dataset="MSCOLAB_timeout"))))
-            if r.status_code == 401:
+            session = requests.Session()
+            session.auth = auth
+            session.headers.update({'x-test': 'true'})
+            response = session.get(
+                urljoin(url, 'status'), timeout=tuple(tuple(config_loader(dataset="MSCOLAB_timeout"))))
+            if response.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
-            elif r.status_code == 200:
+            elif response.status_code == 200:
                 self.stackedWidget.setCurrentWidget(self.loginPage)
                 self.set_status("Success", "Successfully connected to MSColab server.")
                 # disable url input
@@ -271,12 +265,12 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.loginPasswordLe.setEnabled(True)
 
                 try:
-                    idp_enabled = json.loads(r.text)["use_saml2"]
+                    idp_enabled = json.loads(response.text)["use_saml2"]
                 except (json.decoder.JSONDecodeError, KeyError):
                     idp_enabled = False
 
                 try:
-                    direct_login = json.loads(r.text)["direct_login"]
+                    direct_login = json.loads(response.text)["direct_login"]
                 except (json.decoder.JSONDecodeError, KeyError):
                     direct_login = True
 
@@ -315,7 +309,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.connectBtn.hide()
                 self.disconnectBtn.show()
             else:
-                logging.error("Error %s", r)
+                logging.error("Error %s", response)
                 self.set_status("Error", "Some unexpected error occurred. Please try again.")
         except requests.exceptions.SSLError:
             logging.debug("Certificate Verification Failed")
@@ -329,8 +323,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         except requests.exceptions.ConnectionError:
             logging.debug("MSColab server isn't active")
             self.set_status("Error", "MSColab server isn't active.")
-        except Exception as e:
-            logging.error("Error %s %s", type(e), str(e))
+        except Exception as ex:
+            logging.error("Error %s %s", type(ex), str(ex))
             self.set_status("Error", "Some unexpected error occurred. Please try again.")
 
     def disconnect_handler(self):
@@ -359,15 +353,14 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             "email": self.loginEmailLe.text(),
             "password": self.loginPasswordLe.text()
         }
-        s = requests.Session()
-        s.auth = self.auth
-        s.headers.update({'x-test': 'true'})
+        session = requests.Session()
+        session.auth = self.auth
+        session.headers.update({'x-test': 'true'})
         url = urljoin(self.mscolab_server_url, "token")
         url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
         try:
-            r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-            if r.status_code == 401:
-                raise requests.exceptions.ConnectionError
+            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response.raise_for_status()
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
@@ -375,16 +368,15 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 f'Failed to establish a new connection to "{self.mscolab_server_url}". Try again in a moment.',
             )
             self.disconnect_handler()
-            return
-
-        if r.text == "False":
-            # show status indicating about wrong credentials
-            self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
-                            f'<a href="{url_recover_password}">recover your password</a>.')
-            self.loginBtn.setEnabled(True)
         else:
-            self.save_user_credentials_to_config_file(data["email"], data["password"])
-            self.mscolab.after_login(data["email"], self.mscolab_server_url, r)
+            if response.text == "False":
+                # show status indicating about wrong credentials
+                self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
+                                f'<a href="{url_recover_password}">recover your password</a>.')
+                self.loginBtn.setEnabled(True)
+            else:
+                self.save_user_credentials_to_config_file(data["email"], data["password"])
+                self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
 
     def idp_login_handler(self):
         """Handle IDP login Button"""
@@ -405,7 +397,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 self.stackedWidget.setCurrentWidget(self.loginPage)
 
             elif response.status_code == 200:
-                _json = json.loads(response.text)
+                _json = response.json()
                 token = _json["token"]
                 user = _json["user"]
 
@@ -414,19 +406,18 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                     "password": token,
                 }
 
-                s = requests.Session()
-                s.auth = self.auth
-                s.headers.update({'x-test': 'true'})
+                session = requests.Session()
+                session.auth = self.auth
+                session.headers.update({'x-test': 'true'})
                 url = urljoin(self.mscolab_server_url, "token")
 
-                r = s.post(url, data=data, timeout=(2, 10))
-                if r.status_code == 401:
-                    raise requests.exceptions.ConnectionError
-                if r.text == "False":
+                response = session.post(url, data=data, timeout=(2, 10))
+                response.raise_for_status()
+                if response.text == "False":
                     # show status indicating about wrong credentials
                     self.set_status("Error", 'Invalid token. Please enter correct token')
                 else:
-                    self.mscolab.after_login(data["email"], self.mscolab_server_url, r)
+                    self.mscolab.after_login(data["email"], self.mscolab_server_url, response)
                     self.set_status("Success", 'Succesfully logged into mscolab server')
 
         except requests.exceptions.RequestException as error:
@@ -463,12 +454,12 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             "password": password,
             "username": username
         }
-        s = requests.Session()
-        s.auth = self.auth
-        s.headers.update({'x-test': 'true'})
+        session = requests.Session()
+        session.auth = self.auth
+        session.headers.update({'x-test': 'true'})
         url = urljoin(self.mscolab_server_url, "register")
         try:
-            r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(
@@ -478,13 +469,13 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.disconnect_handler()
             return
 
-        if r.status_code == 204:
+        if response.status_code == 204:
             self.set_status("Success", 'You are registered, confirm your email before logging in.')
             self.save_user_credentials_to_config_file(emailid, password)
             self.stackedWidget.setCurrentWidget(self.loginPage)
             self.loginEmailLe.setText(emailid)
             self.loginPasswordLe.setText(password)
-        elif r.status_code == 201:
+        elif response.status_code == 201:
             self.set_status("Success", 'You are registered.')
             self.save_user_credentials_to_config_file(emailid, password)
             self.loginEmailLe.setText(emailid)
@@ -492,7 +483,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.login_handler()
         else:
             try:
-                error_msg = json.loads(r.text)["message"]
+                error_msg = response.json()["message"]
             except Exception as e:
                 logging.debug("Unexpected error occurred %s", e)
                 error_msg = "Unexpected error occurred. Please try again."
@@ -632,16 +623,15 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.activate_selected_flight_track()
         self.active_op_id = None
 
-    def view_description(self):
-        data = {
-            "token": self.token,
-            "op_id": self.active_op_id
-        }
-        url = urljoin(self.mscolab_server_url, "creator_of_operation")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        creator_name = "unknown"
-        if r.text != "False":
-            _json = json.loads(r.text)
+    @verify_user_token
+    def view_description(self, _=None):
+        try:
+            response = self.conn.request_get(
+                "creator_of_operation", {"op_id": self.active_op_id})
+        except MSColabConnectionError:
+            creator_name = "unknown"
+        else:
+            _json = response.json()
             creator_name = _json["username"]
         QMessageBox.information(
             self.ui, "Operation Description",
@@ -689,7 +679,7 @@ class MSUIMscolab(QtCore.QObject):
         self.connect_window.setModal(True)
         self.connect_window.exec_()
 
-    def after_login(self, emailid, url, r):
+    def after_login(self, emailid, url, response):
         logging.debug("after login %s %s", emailid, url)
         # emailid by direct call
         self.email = emailid
@@ -698,7 +688,7 @@ class MSUIMscolab(QtCore.QObject):
         QtWidgets.QApplication.processEvents()
         # fill value of mscolab url if found in QSettings storage
 
-        _json = json.loads(r.text)
+        _json = response.json()
         self.token = _json["token"]
         self.user = _json["user"]
         self.mscolab_server_url = url
@@ -769,17 +759,13 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.userOptionsTb.setIcon(icon)
 
     def fetch_profile_image(self, refresh=False):
-        # Display custom profile picture if exists
-        url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
-        data = {
-            "user_id": str(self.user["id"]),
-            "token": self.token
-        }
-        response = requests.get(url, data=data)
-        if response.status_code == 200:
-            self.set_profile_pixmap(response.content)
-        else:
+        try:
+            response = self.conn.request_get(
+                "fetch_profile_image", {"user_id": str(self.user["id"])})
+        except MSColabConnectionError:
             self.fetch_gravatar(refresh)
+        else:
+            self.set_profile_pixmap(response.content)
 
     def fetch_gravatar(self, refresh):
         # Display default gravatar if custom profile image is not set
@@ -899,6 +885,7 @@ class MSUIMscolab(QtCore.QObject):
         self.prof_diag.show()
         self.fetch_profile_image()
 
+    @verify_user_token
     def upload_image(self):
         file_name, _ = QFileDialog.getOpenFileName(self.prof_diag, "Open Image", "",
                                                    "Image (*.png *.gif *.jpg *.jpeg *.bpm)")
@@ -918,13 +905,10 @@ class MSUIMscolab(QtCore.QObject):
                 # Prepare the file data for upload
                 try:
                     img_byte_arr.seek(0)  # Reset buffer position
-                    files = {'image': (os.path.basename(file_name), img_byte_arr, mime_type)}
-                    data = {
-                        "user_id": str(self.user["id"]),
-                        "token": self.token
-                    }
-                    url = urljoin(self.mscolab_server_url, 'upload_profile_image')
-                    response = requests.post(url, files=files, data=data)
+                    response = self.conn.request_post(
+                        "upload_profile_image",
+                        {"user_id": str(self.user["id"])},
+                        {'image': (os.path.basename(file_name), img_byte_arr, mime_type)})
 
                     # Check response status
                     if response.status_code == 200:
@@ -952,18 +936,12 @@ class MSUIMscolab(QtCore.QObject):
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.No:
             return
-        data = {
-            "token": self.token
-        }
-
         try:
-            url = urljoin(self.mscolab_server_url, "delete_own_account")
-            r = requests.post(url, data=data,
-                              timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = self.conn.request_post("delete_own_account")
         except requests.exceptions.RequestException as ex:
             raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
         else:
-            if r.status_code == 200 and json.loads(r.text)["success"] is True:
+            if response.status_code == 200 and response.json()["success"] is True:
                 self.logout()
 
     @verify_user_token
@@ -1041,21 +1019,16 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
 
-        data = {
-            "token": self.token,
-            "path": path,
-            "description": description,
-            "category": category
-        }
+        data = {"path": path,
+                "description": description,
+                "category": category}
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
         try:
-            url = urljoin(self.mscolab_server_url, "create_operation")
-            r = requests.post(url, data=data,
-                              timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = self.conn.request_post("create_operation", data)
         except requests.exceptions.RequestException as ex:
             raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-        if r.text == "True":
+        if response.text == "True":
             QMessageBox.information(
                 self.ui, "Creation successful",
                 "Your operation was created successfully.",
@@ -1075,15 +1048,10 @@ class MSUIMscolab(QtCore.QObject):
         """
         logging.debug('get_recent_op_id')
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
-        data = {
-            "token": self.token,
-            "skip_archived": skip_archived
-        }
-        url = urljoin(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data)
-        if r.text == "False":
+        response = self.conn.request_get("operations", {"skip_archived": skip_archived})
+        if response.text == "False":
             raise MSColabConnectionError("Session expired, new login required")
-        _json = json.loads(r.text)
+        _json = response.json()
         operations = _json["operations"]
         op_id = None
         if operations:
@@ -1217,17 +1185,13 @@ class MSUIMscolab(QtCore.QObject):
         )
         if ok:
             if entered_operation_name == self.active_operation_name:
-                data = {
-                    "token": self.token,
-                    "op_id": self.active_op_id
-                }
-                url = urljoin(self.mscolab_server_url, 'delete_operation')
                 try:
-                    res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                    response = self.conn.request_post(
+                        "delete_operation", {"op_id": self.active_op_id})
                 except requests.exceptions.RequestException as ex:
                     raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
                 else:
-                    res.raise_for_status()
+                    response.raise_for_status()
                     self.reload_operations()
                     self.signal_operation_removed.emit(self.active_op_id)
             else:
@@ -1241,20 +1205,16 @@ class MSUIMscolab(QtCore.QObject):
             self.tr("Do you want to leave this operation?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            data = {
-                "token": self.token,
-                "op_id": self.active_op_id,
-                "selected_userids": json.dumps([self.user["id"]])
-            }
-            url = urljoin(self.mscolab_server_url, "delete_bulk_permissions")
             try:
-                res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = self.conn.request_post(
+                    "delete_bulk_permissions",
+                    {"op_id": self.active_op_id, "selected_userids": json.dumps([self.user["id"]])})
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if res.text == "False":
+            if response.text == "False":
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
-            res = res.json()
-            if res["success"]:
+            response = response.json()
+            if response["success"]:
                 for window in self.ui.get_active_views():
                     window.handle_force_close()
                 self.reload_operations()
@@ -1286,18 +1246,15 @@ class MSUIMscolab(QtCore.QObject):
             text=self.active_operation_category
         )
         if ok:
-            data = {
-                "token": self.token,
-                "op_id": self.active_op_id,
-                "attribute": 'category',
-                "value": entered_operation_category
-            }
-            url = urljoin(self.mscolab_server_url, 'update_operation')
             try:
-                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = self.conn.request_post(
+                    "update_operation",
+                    {"op_id": self.active_op_id,
+                     "attribute": 'category',
+                     "value": entered_operation_category})
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if r.text == "False":
+            if response.text == "False":
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
             self.active_operation_category = entered_operation_category
             self.reload_operation_list()
@@ -1321,18 +1278,15 @@ class MSUIMscolab(QtCore.QObject):
             text=self.active_operation_description
         )
         if ok:
-            data = {
-                "token": self.token,
-                "op_id": self.active_op_id,
-                "attribute": 'description',
-                "value": entered_operation_desc
-            }
-            url = urljoin(self.mscolab_server_url, 'update_operation')
             try:
-                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = self.conn.request_post(
+                    "update_operation",
+                    {"op_id": self.active_op_id,
+                     "attribute": 'description',
+                     "value": entered_operation_desc})
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if r.text == "False":
+            if response.text == "False":
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
             # Update active operation description label
             self.set_operation_desc_label(entered_operation_desc)
@@ -1358,18 +1312,15 @@ class MSUIMscolab(QtCore.QObject):
             text=f"{self.active_operation_name}",
         )
         if ok:
-            data = {
-                "token": self.token,
-                "op_id": self.active_op_id,
-                "attribute": 'path',
-                "value": entered_operation_name
-            }
-            url = urljoin(self.mscolab_server_url, 'update_operation')
             try:
-                r = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = self.conn.request_post(
+                    "update_operation",
+                    {"op_id": self.active_op_id,
+                     "attribute": 'path',
+                     "value": entered_operation_name})
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
-            if r.text == "False":
+            if response.text == "False":
                 raise MSColabConnectionError("Your Connection is expired. New Login required!")
             # Update active operation name
             self.active_operation_name = entered_operation_name
@@ -1508,15 +1459,11 @@ class MSUIMscolab(QtCore.QObject):
         get most recent operation
         """
         logging.debug('get_recent_operation')
-        data = {
-            "token": self.token
-        }
-        url = urljoin(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text == "False":
+        response = self.conn.request_get("operations")
+        if response.text == "False":
             raise MSColabConnectionError("Session expired, new login required")
-        _json = json.loads(r.text)
-        operations = _json["operations"]
+        response = response.json()
+        operations = response["operations"]
         recent_operation = None
         if operations:
             recent_operation = operations[-1]
@@ -1546,14 +1493,10 @@ class MSUIMscolab(QtCore.QObject):
         to render new permission if added
         """
         logging.debug('render_new_permission')
-        data = {
-            'token': self.token
-        }
-        url = urljoin(self.mscolab_server_url, "user")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text != "False":
-            _json = json.loads(r.text)
-            if _json['user']['id'] == u_id:
+        response = self.conn.request_get("user")
+        if response.text != "False":
+            response = response.json()
+            if response['user']['id'] == u_id:
                 operation = self.get_recent_operation()
                 operation_desc = f'{operation["path"]} - {operation["access_level"]}'
                 widgetItem = QtWidgets.QListWidgetItem(operation_desc, parent=self.ui.listOperationsMSC)
@@ -1683,21 +1626,17 @@ class MSUIMscolab(QtCore.QObject):
         adds the list of operation categories to the UI
         """
         logging.debug('show_categories_to_ui')
-        r = None
+        response = None
         if ops is not None:
-            r = ops
+            response = ops
         else:
-            data = {
-                "token": self.token
-            }
-            url = urljoin(self.mscolab_server_url, "operations")
             try:
-                r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = self.conn.request_get("operations")
             except requests.exceptions.MissingSchema:
                 raise MSColabConnectionError("Session expired, new login required")
-        if r is not None and r.text != "False":
-            _json = json.loads(r.text)
-            operations = _json["operations"]
+        if response is not None and response.text != "False":
+            response = response.json()
+            operations = response["operations"]
             self.ui.filterCategoryCb.currentIndexChanged.disconnect(self.operation_category_handler)
             self.ui.filterCategoryCb.clear()
             categories = set(["*ANY*"])
@@ -1716,18 +1655,12 @@ class MSUIMscolab(QtCore.QObject):
     @verify_user_token
     def add_operations_to_ui(self):
         logging.debug('add_operations_to_ui')
-        r = None
         skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
-        data = {
-            "token": self.token,
-            "skip_archived": skip_archived
-        }
-        url = urljoin(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text == "False":
+        response = self.conn.request_get("operations", {"skip_archived": skip_archived})
+        if response.text == "False":
             raise MSColabConnectionError("Session expired, new login required")
 
-        _json = json.loads(r.text)
+        _json = response.json()
         self.operations = _json["operations"]
         operations = sorted(self.operations, key=lambda k: k["path"].lower())
         self.ui.listOperationsMSC.clear()
@@ -1770,7 +1703,7 @@ class MSUIMscolab(QtCore.QObject):
 
         self.ui.listOperationsMSC.itemActivated.connect(self.set_active_op_id)
         self.new_op_id = None
-        return r
+        return response
 
     def show_operation_options_in_inactivated_state(self, access_level):
         logging.debug('show_operation_options_in_inactivated_state')
@@ -1786,19 +1719,15 @@ class MSUIMscolab(QtCore.QObject):
             self.tr(f"Do you want to archive this operation '{self.active_operation_name}'?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
         if ret == QMessageBox.Yes:
-            data = {
-                "token": self.token,
-                "op_id": self.active_op_id,
-                # when a user archives an operation we set the max “natural” integer in days
-                "attribute": "active",
-                "value": "False"
-            }
-            url = urljoin(self.mscolab_server_url, 'update_operation')
             try:
-                res = requests.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                response = self.conn.request_post(
+                    "update_operation",
+                    {"op_id": self.active_op_id,
+                     "attribute": "active",
+                     "value": "False"})
             except requests.exceptions.RequestException as ex:
                 raise MSColabConnectionError(f"Some error occurred ({ex})! Could not archive operation.")
-            res.raise_for_status()
+            response.raise_for_status()
             self.reload_operations()
             self.signal_operation_removed.emit(self.active_op_id)
             logging.debug("activate local")
@@ -1942,14 +1871,10 @@ class MSUIMscolab(QtCore.QObject):
 
     @verify_user_token
     def request_wps_from_server(self):
-        data = {
-            "token": self.token,
-            "op_id": self.active_op_id
-        }
-        url = urljoin(self.mscolab_server_url, "get_operation_by_id")
-        r = requests.get(url, data=data)
-        if r.text != "False":
-            xml_content = json.loads(r.text)["content"]
+        response = self.conn.request_get(
+            "get_operation_by_id", {"op_id": self.active_op_id})
+        if response.text != "False":
+            xml_content = response.json()["content"]
             return xml_content
         else:
             raise MSColabConnectionError("Session expired, new login required")
