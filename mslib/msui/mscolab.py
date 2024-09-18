@@ -354,6 +354,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         self.set_status("Info", 'Disconnected from server.')
 
     def login_handler(self):
+        self.loginBtn.setEnabled(False)
         data = {
             "email": self.loginEmailLe.text(),
             "password": self.loginPasswordLe.text()
@@ -380,6 +381,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             # show status indicating about wrong credentials
             self.set_status("Error", 'Invalid credentials. Fix them, create a new user, or '
                             f'<a href="{url_recover_password}">recover your password</a>.')
+            self.loginBtn.setEnabled(True)
         else:
             self.save_user_credentials_to_config_file(data["email"], data["password"])
             self.mscolab.after_login(data["email"], self.mscolab_server_url, r)
