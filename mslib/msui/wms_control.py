@@ -584,8 +584,9 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                 self.current_sel_layer.set_itime(self.multilayers.carry_parameters["itime"])
             if self.multilayers.carry_parameters["vtime"] in self.current_sel_layer.get_vtimes():
                 self.current_sel_layer.set_vtime(self.multilayers.carry_parameters["vtime"])
-            # check the first element of a fresh list can be clicked too
-            if self.multilayers.current_layer != self.current_sel_layer or list(self.multilayers.layers[self.current_sel_layer.wms_name]).index(self.current_sel_layer.text(0)) == 2:
+            if self.multilayers.current_layer != self.current_sel_layer or list(
+                self.multilayers.layers[self.current_sel_layer.wms_name]
+            ).index(self.current_sel_layer.text(0)) == 2:
                 self.multilayers.current_layer = self.current_sel_layer
                 self.multilayers.listLayers.setCurrentItem(self.current_sel_layer)
                 index = self.multilayers.cbWMS_URL.findText(self.current_sel_layer.get_wms().url)

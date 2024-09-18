@@ -273,8 +273,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
 
-    def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime, 
-                          vtime, url, layer, styles, level):
+    def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
+                          itime, vtime, url, layer, styles, level):
         if treewidget.objectName() == "autoplotTreeWidget":
             if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
                 QMessageBox.information(
@@ -310,8 +310,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
 
-    def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime, 
-                          vtime, url, layer, styles, level):
+    def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
+                          itime, vtime, url, layer, styles, level):
         if flight.startswith("new flight track"):
             filename = ""
             flight = ""

@@ -183,7 +183,6 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     def itime_val_changed(self, strr):
         self.curritime = strr
 
-
     @QtCore.pyqtSlot()
     def valid_time_vals(self, vtimes_list):
         self.vtime_vals.emit(vtimes_list)

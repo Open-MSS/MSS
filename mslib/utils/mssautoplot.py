@@ -40,7 +40,7 @@ import click
 import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
-from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox, QProgressDialog
+from PyQt5.QtWidgets import QMessageBox, QProgressDialog
 from fs import open_fs
 
 import mslib
@@ -60,9 +60,7 @@ from mslib.msui import flighttrack as ft
 from mslib.utils import config as conf
 from mslib.utils.auth import get_auth_from_url_and_name
 from mslib.utils.loggerdef import configure_mpl_logger
-from mslib.msui.flighttrack import WaypointsTableModel
 from mslib.utils.verify_user_token import verify_user_token
-from mslib.mscolab.server import get_operation_by_id
 
 TEXT_CONFIG = {
     "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"), "fontweight": "bold",
