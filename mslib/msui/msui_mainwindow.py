@@ -546,7 +546,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 }
             }
         }
-        
+
         self.config_for_gui["predefined_map_sections"].update(map_sections)
 
         # Reference to the flight track that is currently displayed in the views.
@@ -691,10 +691,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         action.triggered.connect(functools.partial(handler, extension, function, pickertype))
         menu.addAction(action)
         setattr(self, action_name, action)
-    
-    def update_treewidget_op_fl(self,op_fl,flight):
+
+    def update_treewidget_op_fl(self, op_fl, flight):
         if op_fl == "operation":
-            
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)
                 if item.text().startswith(flight):
@@ -702,7 +701,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     point = self.listOperationsMSC.visualItemRect(item).center()
                     QtTest.QTest.mouseClick(self.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
                     QtTest.QTest.mouseDClick(self.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-                    break         
+                    break
         else:
             for index in range(self.listFlightTracks.count()):
                 item = self.listFlightTracks.item(index)
@@ -712,8 +711,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                     QtTest.QTest.mouseClick(self.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
                     QtTest.QTest.mouseDClick(self.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
                     break
-                
-    
+
     def add_import_plugins(self, picker_default):
         plugins = config_loader(dataset="import_plugins")
         for name in plugins:

@@ -256,7 +256,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
     refresh_signal_send = QtCore.pyqtSignal()
     refresh_signal_emit = QtCore.pyqtSignal()
-    item_selected = QtCore.pyqtSignal(str,str,str,str)
+    item_selected = QtCore.pyqtSignal(str, str, str, str)
     vtime_vals = QtCore.pyqtSignal([list])
 
     def __init__(self, parent=None, model=None, _id=None, config_settings=None):
@@ -322,12 +322,14 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                 widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
-                self.item_selected.connect(lambda url,layer,style,level: widget.row_is_selected(url,layer,style,level))
+                self.item_selected.connect(lambda url, layer, style,
+                                           level: widget.row_is_selected(url, layer, style, level))
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
             elif index == AUTOPLOT:
                 title = "Autoplot (Side View)"
                 widget = dock.AutoplotDockWidget(parent=self, view="Side View", config_settings=config_settings)
-                widget.treewidget_item_selected.connect(lambda url,layer,style,level: self.tree_item_select(url,layer,style,level))
+                widget.treewidget_item_selected.connect(
+                    lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.
@@ -346,8 +348,8 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
 
     @QtCore.pyqtSlot()
-    def tree_item_select(self,url,layer,style,level):
-        self.item_selected.emit(url,layer,style,level)
+    def tree_item_select(self, url, layer, style, level):
+        self.item_selected.emit(url, layer, style, level)
 
     @QtCore.pyqtSlot()
     def level_val_changed(self, strr):
@@ -367,7 +369,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):
         self.curritime = strr
-    
+
     @QtCore.pyqtSlot()
     def valid_time_vals(self, vtimes_list):
         self.vtime_vals.emit(vtimes_list)

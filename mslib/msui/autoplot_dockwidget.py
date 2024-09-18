@@ -156,7 +156,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             QMessageBox.information(
                 self,
                 "WARNING",
-                "Cannot remove from empty treewidget"
+                "Cannot download empty treewidget"
             )
             return
         view = "top"
@@ -208,6 +208,13 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             print("autoplotSecsTreewidget_dockwidget", url, layer, styles, level)
 
     def autoplotTreeWidget_selected_row(self):
+        if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Select right tree widget row first."
+            )
+            return
         selected_items = self.autoplotTreeWidget.selectedItems()
         if selected_items:
             flight = selected_items[0].text(0)
@@ -266,9 +273,16 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
 
-    def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime,
+    def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime, 
                           vtime, url, layer, styles, level):
         if treewidget.objectName() == "autoplotTreeWidget":
+            if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Add right tree widget row first."
+                )
+                return
             if flight.startswith("new flight track"):
                 filename = ""
                 flight = ""
@@ -296,7 +310,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
 
-    def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime,
+    def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename, itime, 
                           vtime, url, layer, styles, level):
         if flight.startswith("new flight track"):
             filename = ""

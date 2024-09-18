@@ -190,7 +190,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     sections_changed = QtCore.pyqtSignal(str)
     refresh_signal_emit = QtCore.pyqtSignal()
     refresh_signal_send = QtCore.pyqtSignal()
-    item_selected = QtCore.pyqtSignal(str,str,str,str)
+    item_selected = QtCore.pyqtSignal(str, str, str, str)
     itemSecs_selected = QtCore.pyqtSignal(str)
     vtime_vals = QtCore.pyqtSignal([list])
 
@@ -261,7 +261,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, parent=parent,config_settings=config_settings))
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
+            index=ind, parent=parent, config_settings=config_settings))
 
         if mainwindow is not None:
             # Update flighttrack
@@ -272,7 +273,6 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             self.signal_operation_removed.connect(self.remove_operation_slot)
 
             self.mainwindow_signal_login_mscolab.connect(self.login)
-        
 
     def __del__(self):
         del self.mpl.canvas.waypoints_interactor
@@ -343,7 +343,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         if current_map_key in predefined_map_sections.keys():
             self.cbChangeMapSection.setCurrentText(current_map_key)
 
-    def openTool(self, index, parent=None,config_settings=None):
+    def openTool(self, index, parent=None, config_settings=None):
         """
         Slot that handles requests to open control windows.
         """
@@ -363,7 +363,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
-                self.item_selected.connect(lambda url,layer,style,level: widget.row_is_selected(url,layer,style,level))
+                self.item_selected.connect(lambda url, layer, style,
+                                           level: widget.row_is_selected(url, layer, style, level))
                 self.itemSecs_selected.connect(lambda vtime: widget.leftrow_is_selected(vtime))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
@@ -400,10 +401,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     self.signal_activate_operation.emit(self.active_op_id)
             elif index == AUTOPLOT:
                 title = "Autoplot (Top View)"
-                widget = dock.AutoplotDockWidget(parent=self,parent2=parent, view="Top View", config_settings=config_settings)
-                widget.treewidget_item_selected.connect(lambda url,layer,style,level: self.tree_item_select(url,layer,style,level))
-                widget.autoplot_treewidget_item_selected.connect(lambda section,vtime: self.treePlot_item_select(section,vtime))
-                widget.update_op_flight_treewidget.connect(lambda opfl,flight: parent.update_treewidget_op_fl(opfl,flight))
+                widget = dock.AutoplotDockWidget(parent=self, parent2=parent,
+                                                 view="Top View", config_settings=config_settings)
+                widget.treewidget_item_selected.connect(
+                    lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
+                widget.autoplot_treewidget_item_selected.connect(
+                    lambda section, vtime: self.treePlot_item_select(section, vtime))
+                widget.update_op_flight_treewidget.connect(
+                    lambda opfl, flight: parent.update_treewidget_op_fl(opfl, flight))
             else:
                 raise IndexError("invalid control index")
 
@@ -417,13 +422,13 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.pyqtSlot()
     def enable_cbs(self):
         self.wms_connected = False
-    
+
     @QtCore.pyqtSlot()
-    def tree_item_select(self,url,layer,style,level):
-        self.item_selected.emit(url,layer,style,level)
-    
+    def tree_item_select(self, url, layer, style, level):
+        self.item_selected.emit(url, layer, style, level)
+
     @QtCore.pyqtSlot()
-    def treePlot_item_select(self,section,vtime):
+    def treePlot_item_select(self, section, vtime):
         self.cbChangeMapSection.setCurrentText(section)
         self.changeMapSection()
         self.itemSecs_selected.emit(vtime)
@@ -431,7 +436,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     @QtCore.pyqtSlot()
     def url_val_changed(self, strr):
         self.currurl = strr
-    
+
     @QtCore.pyqtSlot()
     def valid_time_vals(self, vtimes_list):
         self.vtime_vals.emit(vtimes_list)
@@ -453,7 +458,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         if strr is None:
             self.currstyles = ""
         else:
-            self.currstyles = str(strr).strip().split()[0].strip();
+            self.currstyles = str(strr).strip().split()[0].strip()
 
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):

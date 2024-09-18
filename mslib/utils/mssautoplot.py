@@ -132,6 +132,7 @@ def get_xml_data(mscolab_server_url, token, op_id):
             xml_content = json.loads(r.text)["content"]
             return xml_content
 
+
 def get_op_id(token, mscolab_server_url, curr_op):
     logging.debug('get_recent_op_id')
     if verify_user_token(mscolab_server_url, token):
@@ -272,7 +273,7 @@ class TopViewPlotting(Plotting):
         image_io = io.BytesIO(img.read())
         img = PIL.Image.open(image_io)
         self.myfig.draw_image(img)
-        t=str(time)
+        t = str(time)
         date_time = re.sub(r'\W+', '', t)
         self.myfig.fig.savefig(f"{flight}_{layer}_{section}_{date_time}_{no_of_plots}_{elevation}.png")
 
@@ -287,7 +288,6 @@ class SideViewPlotting(Plotting):
         self.fig.canvas.draw()
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
         self.plotter = mpath.PathV_Plotter(self.myfig.ax)
-        print("side view")
 
     def setup(self):
         self.intermediate_indexes = []
@@ -446,7 +446,7 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
         pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
 
         pdlg.setValue(0)
-    
+
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
 
