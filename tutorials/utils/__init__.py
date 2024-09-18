@@ -169,7 +169,7 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
                 sf.write('\n\n')
                 sf.write(f"BASE_DIR = '{mscdir}'\n")
                 sf.write('DATA_DIR = os.path.join(BASE_DIR, "colabdata")\n')
-                sf.write('OPERATIONS_DATA = os.path.join(DATA_DIR, "filedata")\n')
+                sf.write('OP ERATIONS_DATA = os.path.join(DATA_DIR, "filedata")\n')
                 sf.write("DEBUG = True\n")
 
             os.environ["MSCOLAB_SETTINGS"] = settings_file
