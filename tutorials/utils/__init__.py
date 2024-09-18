@@ -169,7 +169,7 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
                 sf.write('\n\n')
                 sf.write(f"BASE_DIR = '{mscdir}'\n")
                 sf.write('DATA_DIR = os.path.join(BASE_DIR, "colabdata")\n')
-                sf.write('OP ERATIONS_DATA = os.path.join(DATA_DIR, "filedata")\n')
+                sf.write('OPERATIONS_DATA = os.path.join(DATA_DIR, "filedata")\n')
                 sf.write("DEBUG = True\n")
 
             os.environ["MSCOLAB_SETTINGS"] = settings_file
@@ -194,12 +194,12 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
     p1.start()
     p2.start()
 
-    p2.join()
-    p1.join()
-    if not dry_run:
-        p3.join()
-    if mscolab:
-        p4.join()
+    #p2.join()
+    #p1.join()
+    #if not dry_run:
+    #    p3.join()
+    #if mscolab:
+    #    p4.join()
     print("\n\nINFO : Automation Completes Successfully!")
 
     # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
