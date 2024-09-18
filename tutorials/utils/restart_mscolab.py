@@ -29,7 +29,7 @@ from pathlib import Path
 try:
     import mscolab_settings
 except ImportError:
-    msc_settings = None
+    mscolab_settings = None
 
 
 sio = socketio.Client()
@@ -48,7 +48,7 @@ def disconnect():
 
 
 def restart_mscolab():
-    if msc_settings is not None:
+    if mscolab_settings is not None:
         msc_settings_file = mscolab_settings.__file__
         Path(msc_settings_file).touch()
     else:
