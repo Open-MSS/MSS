@@ -28,6 +28,7 @@
 from datetime import datetime, timedelta
 import io
 import logging
+import re
 import os
 import sys
 import requests
@@ -271,7 +272,9 @@ class TopViewPlotting(Plotting):
         image_io = io.BytesIO(img.read())
         img = PIL.Image.open(image_io)
         self.myfig.draw_image(img)
-        self.myfig.fig.savefig(f"{flight}_{layer}_{no_of_plots}.png")
+        t=str(time)
+        date_time = re.sub(r'\W+', '', t)
+        self.myfig.fig.savefig(f"{flight}_{layer}_{section}_{date_time}_{no_of_plots}_{elevation}.png")
 
 
 class SideViewPlotting(Plotting):
@@ -429,7 +432,6 @@ class LinearViewPlotting(Plotting):
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.pass_context
 def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
-    print(cpath, view, ftrack, itime, vtime, intv, stime, etime)
     if ctx.obj is not None:
         pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
         pdlg.setMinimumDuration(0)
@@ -503,7 +505,6 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
         if ctx.obj is not None:
             pdlg.setValue(8)
         for url, layer, style, elevation in config[sec]:
-            print(flight, section, vertical, filename, init_time, time,url, layer, style, elevation)
             if vtime == "" and stime == "":
                 no_of_plots = 1
                 flag = draw(no_of_plots)
