@@ -679,7 +679,8 @@ class Test_Mscolab:
                 mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True)):
             self.window.actionDeleteOperation.trigger()
             qtbot.wait_until(
-                lambda: m.assert_called_once_with(self.window, "Success", 'Operation "flight7" was deleted!')
+                lambda: m.assert_called_once_with(
+                    self.window, "Information", 'Active operation "flight7" is inaccessible!')
             )
         assert self.window.mscolab.active_op_id is None
         op_id = self.window.mscolab.get_recent_op_id()
@@ -707,7 +708,12 @@ class Test_Mscolab:
         self.window.actionSideView.trigger()
         assert len(self.window.get_active_views()) == 2
 
-        self.window.actionLeaveOperation.trigger()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self.window.actionLeaveOperation.trigger()
+            qtbot.wait_until(
+                lambda: m.assert_called_once_with(
+                    self.window, "Information", 'Active operation "kerala" is inaccessible!')
+            )
 
         def assert_leave_operation_done():
             assert self.window.mscolab.active_op_id is None
@@ -753,8 +759,13 @@ class Test_Mscolab:
         assert self.window.listOperationsMSC.model().rowCount() == 1
         self._activate_operation_at_index(0)
         assert self.window.mscolab.active_op_id is not None
-        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes):
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes), \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
             self.window.actionArchiveOperation.trigger()
+            qtbot.wait_until(
+                lambda: m.assert_called_once_with(
+                    self.window, "Information", 'Active operation "flight1234" is inaccessible!')
+            )
         assert self.window.mscolab.active_op_id is None
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_category", True))
