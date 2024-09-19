@@ -28,6 +28,7 @@
 import os
 import fs
 import tempfile
+import logging
 from fs.tempfs import TempFS
 
 try:
@@ -35,10 +36,14 @@ try:
 except ImportError:
     SHA = ""
 else:
-    repo = git.Repo(os.path.dirname(os.path.realpath(__file__)), search_parent_directories=True)
+    path = os.path.dirname(os.path.realpath(__file__))
+    repo = git.Repo(path, search_parent_directories=True)
+    logging.debug(path)
     try:
+        # this is for local development important to get a fresh named tmpdir
         SHA = repo.head.object.hexsha[0:10]
-    except ValueError:
+    except (ValueError, BrokenPipeError) as ex:
+        logging.debug("Unknown Problem: %s", ex)
         # mounted dir in docker container and owner is not root
         SHA = ""
 
