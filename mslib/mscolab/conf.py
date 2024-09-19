@@ -49,6 +49,9 @@ class default_mscolab_settings:
     # To enable Engine.IO logging set to True or pass a logger object to use.
     ENGINEIO_LOGGER = False
 
+    # To enable flask socketio debugging, this sets in flask_socketio app.debug too
+    DEBUG = False
+
     # Which origins are allowed to communicate with your server
     CORS_ORIGINS = ["*"]
 

@@ -47,9 +47,10 @@ from mslib.mscolab.utils import create_files
 from mslib.utils import setup_logging
 
 
-def handle_start(args):
+def handle_start(args=None):
     from mslib.mscolab.server import APP, sockio, cm, fm, start_server
-    setup_logging(args)
+    if args is not None:
+        setup_logging(args)
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())

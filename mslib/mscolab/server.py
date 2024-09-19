@@ -1015,7 +1015,7 @@ if mscolab_settings.USE_SAML2:
 
 def start_server(app, sockio, cm, fm, port=8083):
     create_files()
-    sockio.run(app, port=port)
+    sockio.run(app, port=port, debug=mscolab_settings.DEBUG)
 
 
 def main():
