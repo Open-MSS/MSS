@@ -237,13 +237,13 @@ def test_random_custom_color_selection(main_window):
 
 def test_update_flightpath_legend(main_window):
     """
-    Test update_flightpath_legend to ensure only checked flight tracks
-    are included in the legend with correct name, color, and style.
+    Test update_flightpath_legend to ensure only checked, non-active flight tracks
+    are included in the legend with correct name, color, style, and waypoints.
     """
     main_window, multiple_flightpath_widget = main_window
 
     # Activate the first flight track
-    activate_flight_track_at_index(main_window, 0)
+    activate_flight_track_at_index(main_window, 1)
 
     # Set the first flight track as checked and the second as unchecked
     first_item = multiple_flightpath_widget.list_flighttrack.item(0)
@@ -251,23 +251,31 @@ def test_update_flightpath_legend(main_window):
     first_item.setCheckState(QtCore.Qt.Checked)
     second_item.setCheckState(QtCore.Qt.Unchecked)
 
-    # Define color and style for the first flight track
-    multiple_flightpath_widget.dict_flighttrack[first_item.flighttrack_model] = {
+    # Define color, style, and mock waypoints for the first flight track
+    wp_model = first_item.flighttrack_model
+    multiple_flightpath_widget.dict_flighttrack[wp_model] = {
         "color": "#FF0000",
         "line_style": "--"
     }
 
-    # Calling the method
+    # Mocking waypoint data for the first flight track
+    mock_waypoints = [(21.15, 79.083), (28.566, 77.103)]
+    wp_model.all_waypoint_data = lambda: [
+        type('Waypoint', (object,), {'lat': lat, 'lon': lon}) for lat, lon in mock_waypoints
+    ]
+
+    # Call the method
     multiple_flightpath_widget.update_flightpath_legend()
 
-    # Verify that only the checked flight track is included in the legend
-    assert first_item.flighttrack_model.name in multiple_flightpath_widget.flightpath_dict
+    # Verify that only the checked, non-active flight track is included in the legend
+    assert wp_model.name in multiple_flightpath_widget.flightpath_dict
     assert second_item.flighttrack_model.name not in multiple_flightpath_widget.flightpath_dict
 
-    # Verify that the color and style in the legend match the first flight track
-    legend_color, legend_style = multiple_flightpath_widget.flightpath_dict[first_item.flighttrack_model.name]
+    # Verify that the color, style, and waypoints in the legend match the first flight track
+    label, legend_color, legend_style, legend_waypoints = multiple_flightpath_widget.flightpath_dict[wp_model.name]
     assert legend_color == "#FF0000"
     assert legend_style == "--"
+    assert legend_waypoints == mock_waypoints
 
 
 def activate_flight_track_at_index(main_window, index):

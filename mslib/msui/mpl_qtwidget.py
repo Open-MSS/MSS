@@ -182,6 +182,8 @@ class TopViewPlotter(ViewPlotter):
         self.map = None
         self.legimg = None
         self.legax = None
+        self.flightpath_dict = {}  # Store flightpath_dict as instance variable
+        self.annotations = {}  # Store annotations by flighttrack name
         # stores the  topview plot title size(tov_pts) and topview axes label size(tov_als),initially as None.
         self.tov_pts = None
         self.tov_als = None
@@ -353,6 +355,17 @@ class TopViewPlotter(ViewPlotter):
         """
         Draw the flight path legend on the plot, attached to the upper-left corner.
         """
+        # Update the internal flightpath_dict to make sure it's always in sync
+        # but keep the existing labels if modified by the user.
+        for key, (label, color, linestyle, waypoints) in flightpath_dict.items():
+            # Check if the label was modified if not, use the flight track name as default.
+            if key in self.flightpath_dict:
+                # Preserve the user-updated label
+                flightpath_dict[key] = (self.flightpath_dict[key][0], color, linestyle, waypoints)
+            else:
+                # New entry or unmodified, just add it
+                self.flightpath_dict[key] = (label, color, linestyle, waypoints)
+
         # Clear any existing legend
         if self.ax.get_legend() is not None:
             self.ax.get_legend().remove()
@@ -363,20 +376,119 @@ class TopViewPlotter(ViewPlotter):
 
         # Create legend handles
         legend_handles = []
-        for name, (color, linestyle) in flightpath_dict.items():
+        for name, (label, color, linestyle, waypoints) in flightpath_dict.items():
             line = Line2D([0], [0], color=color, linestyle=linestyle, linewidth=2)
-            legend_handles.append((line, name))
+            legend_handles.append((line, label))
 
-        # Add legend directly to the main axis, attached to the upper-left corner
-        self.ax.legend(
+        legend = self.ax.legend(
             [handle for handle, _ in legend_handles],
-            [name for _, name in legend_handles],
+            [label for _, label in legend_handles],
             loc='upper left',
-            bbox_to_anchor=(0, 1),  # (x, y) coordinates relative to the figure
-            bbox_transform=self.fig.transFigure,  # Use figure coordinates
+            bbox_to_anchor=(0, 1),
+            bbox_transform=self.fig.transFigure,
             frameon=False
         )
 
+        # Connect the click event to the legend
+        for legend_item, (line, label) in zip(legend.get_texts(), legend_handles):
+            legend_item.set_picker(True)  # Make the legend items clickable
+            legend_item.label = label  # Attach the label to the item
+
+        # Attach the pick event handler
+        self.fig.canvas.mpl_connect('pick_event', self.on_legend_click)
+        self.ax.figure.canvas.draw_idle()
+
+    def on_legend_click(self, event):
+        """
+        Handle the legend click event, prompting the user to update the label.
+        """
+        legend_item = event.artist
+        old_label = legend_item.label  # Retrieve the old label
+
+        # Open a dialog to input a new label
+        new_label, ok = QtWidgets.QInputDialog.getText(
+            None, "Update Legend Label", f"Enter new label for [{old_label}]:"
+        )
+
+        if ok and new_label:
+            # Find the entry in self.flightpath_dict and update the label
+            for key, (label, color, linestyle, waypoints) in self.flightpath_dict.items():
+                if label == old_label:
+                    self.flightpath_dict[key] = (new_label, color, linestyle, waypoints)
+                    break
+
+            # Redraw the legend with the updated label
+            self.draw_flightpath_legend(self.flightpath_dict)
+
+            # Update annotations without making them visible
+            self.update_annotation_labels_only(self.flightpath_dict)
+
+    def update_annotation_labels_only(self, flightpath_dict):
+        """
+        Update the label of the annotation without making the annotation visible.
+        """
+        for flighttrack, (label, color, linestyle, waypoints) in flightpath_dict.items():
+            if flighttrack in self.annotations:
+                # Update only the label of the existing annotation
+                annotation = self.annotations[flighttrack]
+                annotation.set_text(label)
+
+        # Redraw the canvas to reflect the updated labels
+        self.ax.figure.canvas.draw_idle()
+
+    def annotate_flight_tracks(self, flightpath_dict):
+        """
+        Annotate each flight track with its corresponding label next to the track, avoiding overlap.
+        """
+        annotated_positions = []  # Store positions to avoid overlap
+
+        for flighttrack, (label, color, linestyle, waypoints) in flightpath_dict.items():
+            if len(waypoints) >= 2:
+                # Remove old annotation if it exists
+                if flighttrack in self.annotations:
+                    self.annotations[flighttrack].remove()
+
+                # Convert lat/lon of the waypoints to the map's projected coordinates
+                waypoint_coords = [self.map(waypoint[1], waypoint[0]) for waypoint in waypoints]
+
+                # Compute the midpoint between the first two waypoints in map coordinates
+                midpoint_x = (waypoint_coords[0][0] + waypoint_coords[1][0]) / 2
+                midpoint_y = (waypoint_coords[0][1] + waypoint_coords[1][1]) / 2
+
+                # Offset to avoid overlap
+                offset_x, offset_y = 10, 10
+
+                for pos in annotated_positions:
+                    dist = np.linalg.norm(np.array([midpoint_x, midpoint_y]) - np.array(pos))
+                    if dist < 30:  # Adjust based on your layout
+                        offset_x += 20
+                        offset_y += 20
+
+                # Plot the new annotation
+                annotation = self.ax.annotate(
+                    label,
+                    xy=(midpoint_x, midpoint_y),  # Annotation position
+                    xytext=(midpoint_x + offset_x, midpoint_y + offset_y),  # Offset position
+                    textcoords='offset points',
+                    arrowprops=dict(facecolor=color, shrink=0.05),
+                    fontsize=15,
+                    color=color
+                )
+
+                # Save the annotation and position
+                self.annotations[flighttrack] = annotation
+                annotated_positions.append((midpoint_x + offset_x, midpoint_y + offset_y))
+
+        # Redraw the canvas to reflect the annotations
+        self.ax.figure.canvas.draw_idle()
+
+    def remove_annotations(self):
+        """
+        Remove all annotations from the plot.
+        """
+        for annotation in self.annotations.values():
+            annotation.remove()
+        self.annotations.clear()
         self.ax.figure.canvas.draw_idle()
 
 
@@ -1669,6 +1781,12 @@ class MplTopViewCanvas(MplCanvas):
         self.plotter.draw_legend(img)
         # required so that it is actually drawn...
         QtWidgets.QApplication.processEvents()
+
+    def annotation(self, state, flightpath_dict):
+        if state == QtCore.Qt.Checked:
+            self.plotter.annotate_flight_tracks(flightpath_dict)
+        else:
+            self.plotter.remove_annotations()
 
     def update_flightpath_legend(self, flightpath_dict):
         """
