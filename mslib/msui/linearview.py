@@ -83,7 +83,9 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
     refresh_signal_send = QtCore.pyqtSignal()
     refresh_signal_emit = QtCore.pyqtSignal()
+    item_selected = QtCore.pyqtSignal(str, str, str, str)
     vtime_vals = QtCore.pyqtSignal([list])
+    itemSecs_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, model=None, _id=None, config_settings=None):
         """
@@ -116,7 +118,8 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         parent.refresh_signal_connect.connect(self.refresh_signal_send.emit)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(ind, config_settings))
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
+            index=ind, parent=parent, config_settings=config_settings))
         self.lvoptionbtn.clicked.connect(self.open_settings_dialog)
 
         self.openTool(WMS + 1)
@@ -127,7 +130,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     def update_predefined_maps(self, extra):
         pass
 
-    def openTool(self, index, config_settings=None):
+    def openTool(self, index, parent=None, config_settings=None):
         """
         Slot that handles requests to open tool windows.
         """
@@ -147,10 +150,16 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
                 widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
+                self.item_selected.connect(lambda url, layer, style,
+                                           level: widget.row_is_selected(url, layer, style, level, "linear"))
+                self.itemSecs_selected.connect(lambda vtime: widget.leftrow_is_selected(vtime))
                 self.mpl.canvas.waypoints_interactor.signal_get_lsec.connect(widget.call_get_lsec)
             elif index == AUTOPLOT:
                 title = "Autoplot (Linear View)"
-                widget = dock.AutoplotDockWidget(parent=self, view="Linear View", config_settings=config_settings)
+                widget = dock.AutoplotDockWidget(parent=self, parent2=parent,
+                                                 view="Side View", config_settings=config_settings)
+                widget.treewidget_item_selected.connect(
+                    lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.
@@ -184,8 +193,16 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
         self.curritime = strr
 
     @QtCore.pyqtSlot()
+    def tree_item_select(self, url, layer, style, level):
+        self.item_selected.emit(url, layer, style, level)
+
+    @QtCore.pyqtSlot()
     def valid_time_vals(self, vtimes_list):
         self.vtime_vals.emit(vtimes_list)
+
+    @QtCore.pyqtSlot()
+    def treePlot_item_select(self, section, vtime):
+        self.itemSecs_selected.emit(vtime)
 
     @QtCore.pyqtSlot()
     def vtime_val_changed(self, strr):

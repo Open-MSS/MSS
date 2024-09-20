@@ -364,7 +364,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
                 self.item_selected.connect(lambda url, layer, style,
-                                           level: widget.row_is_selected(url, layer, style, level))
+                                           level: widget.row_is_selected(url, layer, style, level,"top"))
                 self.itemSecs_selected.connect(lambda vtime: widget.leftrow_is_selected(vtime))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
@@ -479,22 +479,23 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             dataset="predefined_map_sections")
         current_map = predefined_map_sections.get(
             current_map_key, {"CRS": current_map_key, "map": {}})
-        proj_params = get_projection_params(current_map["CRS"])
 
-        # Create a keyword arguments dictionary for basemap that contains
-        # the projection parameters.
-        kwargs = dict(current_map["map"])
-        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
-                       "OPERATION_NAME": self.waypoints_model.name})
-        kwargs.update(proj_params["basemap"])
+        if current_map["CRS"] != "":
+            proj_params = get_projection_params(current_map["CRS"])
+            # Create a keyword arguments dictionary for basemap that contains
+            # the projection parameters.
+            kwargs = dict(current_map["map"])
+            kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
+                        "OPERATION_NAME": self.waypoints_model.name})
+            kwargs.update(proj_params["basemap"])
 
-        if only_kwargs:
-            # Return kwargs dictionary and do NOT redraw the map.
-            return kwargs
+            if only_kwargs:
+                # Return kwargs dictionary and do NOT redraw the map.
+                return kwargs
 
-        logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
-        self.mpl.canvas.redraw_map(kwargs)
-        self.mpl.navbar.clear_history()
+            logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
+            self.mpl.canvas.redraw_map(kwargs)
+            self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
         super().setIdentifier(identifier)

@@ -447,3 +447,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         if file_path:
             with open(file_path, 'w') as file:
                 json.dump(config_settings, file, indent=4)
+        
+        QMessageBox.information(
+                    self,
+                    "SUCCESS",
+                    "Configurations successfully saved."
+                )

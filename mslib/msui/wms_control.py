@@ -547,7 +547,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.multilayers.cbWMS_URL.setCurrentIndex(0)
             self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
-    def row_is_selected(self, url, layer, styles, level):
+    def row_is_selected(self, url, layer, styles, level,view_name):
         if url not in self.multilayers.layers:
             self.layer_name = layer
             self.style_name = styles
@@ -556,7 +556,13 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
         else:
             # Get coordinate reference system and bounding box from the map
             # object in the view.
-            crs = self.view.get_crs()
+
+            if view_name == "top":
+                crs = self.view.get_crs()
+            elif view_name == "side":
+                crs = "VERT:LOGP"
+            else:
+                crs = "LINE:1"
             bbox = self.view.getBBOX()
 
             # Determine the current size of the vertical section plot on the
@@ -615,17 +621,64 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
             style_changed(self.current_sel_layer)
 
-            layers = [self.current_sel_layer]
-            args = []
-            for i, layer_itr in enumerate(layers):
-                transparent = self.cbTransparent.isChecked() if i == 0 else True
-                bbox_tmp = tuple(bbox)
-                wms = self.multilayers.layers[layer_itr.wms_name]["wms"]
-                if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
-                    bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
-                args.extend(self.retrieve_image(layer_itr, crs, bbox_tmp, None, width, height, transparent))
+            if view_name == "top":
+                layers = [self.current_sel_layer]
+                args = []
+                for i, layer_itr in enumerate(layers):
+                    transparent = self.cbTransparent.isChecked() if i == 0 else True
+                    bbox_tmp = tuple(bbox)
+                    wms = self.multilayers.layers[layer_itr.wms_name]["wms"]
+                    if wms.version == "1.3.0" and crs.startswith("EPSG") and int(crs[5:]) in axisorder_yx:
+                        bbox_tmp = (bbox[1], bbox[0], bbox[3], bbox[2])
+                    args.extend(self.retrieve_image(layer_itr, crs, bbox_tmp, None, width, height, transparent))
 
-            self.fetch.emit(args)
+                self.fetch.emit(args)
+            elif view_name == "side":
+                crs = "VERT:LOGP"
+                bbox = self.view.getBBOX()
+
+                # Get lat/lon coordinates of flight track and convert to string for URL.
+                path_string = ""
+                for waypoint in self.waypoints_model.all_waypoint_data():
+                    path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},"
+                path_string = path_string[:-1]
+
+                # Determine the current size of the vertical section plot on the
+                # screen in pixels. The image will be retrieved in this size.
+                width, height = self.view.get_plot_size_in_px()
+                layers = [self.current_sel_layer]
+                # Retrieve the image.
+                if not layers:
+                    layers = [self.multilayers.get_current_layer()]
+                layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+
+                args = []
+                for i, layer in enumerate(layers):
+                    transparent = self.cbTransparent.isChecked() if i == 0 else True
+                    args.extend(self.retrieve_image(layer, crs, bbox, path_string, width, height, transparent))
+
+                self.fetch.emit(args)
+            else:
+                crs = "LINE:1"
+                bbox = self.view.getBBOX()
+
+                # Get lat/lon/alt coordinates of flight track and convert to string for URL.
+                path_string = ""
+                for waypoint in self.waypoints_model.all_waypoint_data():
+                    path_string += f"{waypoint.lat:.2f},{waypoint.lon:.2f},{waypoint.pressure},"
+                path_string = path_string[:-1]
+
+                layers = [self.current_sel_layer]
+                # Retrieve the image.
+                if not layers:
+                    layers = [self.multilayers.get_current_layer()]
+                layers.sort(key=lambda x: self.multilayers.get_multilayer_priority(x))
+
+                args = []
+                for i, layer in enumerate(layers):
+                    args.extend(self.retrieve_image(layer, crs, bbox, path_string, transparent=False, format="text/xml"))
+
+                self.fetch.emit(args)
 
             self.prefet = WMSMapFetcher(self.wms_cache)
             self.prefet.moveToThread(self.thread_prefetch)
