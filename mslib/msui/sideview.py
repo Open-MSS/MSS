@@ -294,7 +294,8 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         self.btOptions.clicked.connect(self.open_settings_dialog)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, parent=parent, config_settings=config_settings))
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
+            index=ind, parent=parent, config_settings=config_settings))
         self.openTool(WMS + 1)
 
     def __del__(self):
@@ -376,7 +377,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     @QtCore.pyqtSlot()
     def valid_time_vals(self, vtimes_list):
         self.vtime_vals.emit(vtimes_list)
-    
+
     @QtCore.pyqtSlot()
     def treePlot_item_select(self, section, vtime):
         self.itemSecs_selected.emit(vtime)

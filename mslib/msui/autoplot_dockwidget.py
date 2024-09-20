@@ -443,13 +443,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             "JSON Files (*.json);;All Files (*)",
             options=options
         )
-
         if file_path:
             with open(file_path, 'w') as file:
                 json.dump(config_settings, file, indent=4)
-        
-        QMessageBox.information(
-                    self,
-                    "SUCCESS",
-                    "Configurations successfully saved."
-                )
+
+            QMessageBox.information(
+                self,
+                "SUCCESS",
+                "Configurations successfully saved."
+            )

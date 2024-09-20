@@ -547,7 +547,7 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.multilayers.cbWMS_URL.setCurrentIndex(0)
             self.wms_url_changed(self.multilayers.cbWMS_URL.currentText())
 
-    def row_is_selected(self, url, layer, styles, level,view_name):
+    def row_is_selected(self, url, layer, styles, level, view_name):
         if url not in self.multilayers.layers:
             self.layer_name = layer
             self.style_name = styles
@@ -676,7 +676,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
 
                 args = []
                 for i, layer in enumerate(layers):
-                    args.extend(self.retrieve_image(layer, crs, bbox, path_string, transparent=False, format="text/xml"))
+                    args.extend(self.retrieve_image(layer, crs, bbox, path_string,
+                                                    transparent=False, format="text/xml"))
 
                 self.fetch.emit(args)
 
