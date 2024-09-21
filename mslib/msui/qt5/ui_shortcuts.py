@@ -5,6 +5,13 @@
 # Created by: PyQt5 UI code generator 5.12.3
 #
 # WARNING! All changes made in this file will be lost!
+# -*- coding: utf-8 -*-
+#
+# This Python file was auto-generated from a .ui file using the PyQt5 UI code generator 5.12.3.
+# Manual modifications to this file may be lost if it is re-generated.
+#
+# To modify the UI, edit the original .ui file and regenerate this Python file.
+
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -72,6 +79,14 @@ class Ui_ShortcutsDialog(object):
         self.buttonBox.accepted.connect(ShortcutsDialog.accept)
         self.buttonBox.rejected.connect(ShortcutsDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(ShortcutsDialog)
+        # Add this if possible as this will enhance the shortcut feature implementation
+        # self.filterLabel = QtWidgets.QLabel(ShortcutsDialog)
+        # self.filterLabel.setObjectName("filterLabel")
+        # self.shortcutFilterInput = QtWidgets.QLineEdit(ShortcutsDialog)
+        # self.shortcutFilterInput.setObjectName("shortcutFilterInput")
+        # self.shortcutTreeWidget = QtWidgets.QTreeWidget(ShortcutsDialog)
+        # self.shortcutTreeWidget.setObjectName("shortcutTreeWidget")
+
 
     def retranslateUi(self, ShortcutsDialog):
         _translate = QtCore.QCoreApplication.translate
@@ -84,3 +99,6 @@ class Ui_ShortcutsDialog(object):
         self.cbDisplayType.setItemText(2, _translate("ShortcutsDialog", "ObjectName"))
         self.cbAdvanced.setText(_translate("ShortcutsDialog", "Advanced Settings"))
         self.cbHighlight.setText(_translate("ShortcutsDialog", "Highlight on all Windows"))
+        self.filterLabel.setToolTip("Type here to filter the shortcuts")
+self.cbNoShortcut.setAccessibleDescription("Show or hide items without shortcuts")
+
