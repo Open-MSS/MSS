@@ -450,5 +450,5 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             QMessageBox.information(
                 self,
                 "SUCCESS",
-                "Configurations successfully saved."
+                "Configuration successfully saved."
             )
