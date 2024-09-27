@@ -194,7 +194,7 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
     p1.start()
     p2.start()
 
-    # recording process neeeds to become joined
+    # recording process needs to become joined
     if not dry_run:
         p3.join()
 
