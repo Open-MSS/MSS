@@ -48,8 +48,4 @@ jobs:
         micromamba-version: '1.5.10-0'
     - name: Run tests
       timeout-minutes: 40
-      # The ignored files can somehow cause the test suite to timeout.
-      # I have no idea yet on why this happens and how to fix it.
-      # Even a module level skip is not enough, they need to be completely ignored.
-      # TODO: fix those tests and drop the ignores
       run: micromamba run -n ci env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib tests
