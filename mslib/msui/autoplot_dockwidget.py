@@ -421,6 +421,16 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         comboBoxName = combo.objectName()
         currentText = combo.currentText()
         if comboBoxName == "timeIntervalComboBox":
+            if currentText == "":
+                return
+            if self.stimeComboBox.count() == 0:
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Please select a layer first."
+                )
+                self.timeIntervalComboBox.setCurrentIndex(0)
+                return
             datetime1_str = self.stimeComboBox.itemText(1)
             datetime2_str = self.stimeComboBox.itemText(2)
 
