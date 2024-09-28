@@ -207,7 +207,6 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             level = selected_items[0].text(3)
 
             self.treewidget_item_selected.emit(url, layer, styles, level)
-            print("autoplotSecsTreewidget_dockwidget", url, layer, styles, level)
 
     def autoplotTreeWidget_selected_row(self):
         if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
