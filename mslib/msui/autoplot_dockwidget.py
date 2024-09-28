@@ -35,6 +35,7 @@ from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui import constants as const
+from datetime import datetime
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
@@ -420,6 +421,32 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         comboBoxName = combo.objectName()
         currentText = combo.currentText()
         if comboBoxName == "timeIntervalComboBox":
+            datetime1_str = self.stimeComboBox.itemText(1)
+            datetime2_str = self.stimeComboBox.itemText(2)
+
+            datetime1 = datetime.strptime(datetime1_str, "%Y-%m-%dT%H:%M:%SZ")
+            datetime2 = datetime.strptime(datetime2_str, "%Y-%m-%dT%H:%M:%SZ")
+            time_difference = int((datetime2 - datetime1).total_seconds())
+            time_diff = 1
+            num = int(currentText.split()[0])
+            if currentText.endswith("mins"):
+                time_diff = time_diff * 60 * num
+            elif currentText.endswith("hour"):
+                time_diff = time_diff * 3600 * num
+            elif currentText.endswith("hours"):
+                time_diff = time_diff * 3600 * num
+            elif currentText.endswith("days"):
+                time_diff = time_diff * 86400 * num
+
+            if time_diff % time_difference != 0:
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Please select valid time interval."
+                )
+                self.timeIntervalComboBox.setCurrentIndex(0)
+                return
+
             self.intv = currentText
         elif comboBoxName == "stimeComboBox":
             self.stime = currentText
