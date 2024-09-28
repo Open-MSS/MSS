@@ -131,6 +131,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         # config buttons
         self.selectConfigButton.clicked.connect(lambda: self.configure_from_path(parent, config_settings))
         self.updateConfigFile.clicked.connect(lambda: self.update_config_file(config_settings))
+        self.updateConfigFile.setDefault(True)
 
         # time interval combobox
         self.timeIntervalComboBox.currentIndexChanged.connect(
