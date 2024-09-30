@@ -194,13 +194,10 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
     p1.start()
     p2.start()
 
-    # unclear for what the join was needed
-    # p2.join()
-    # p1.join()
-    # if not dry_run:
-    #    p3.join()
-    # if mscolab:
-    #    p4.join()
+    # recording process needs to become joined
+    if not dry_run:
+        p3.join()
+
     print("\n\nINFO : Automation Completes Successfully!")
 
     # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.

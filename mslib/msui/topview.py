@@ -187,13 +187,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
-                 active_flighttrack=None, mscolab_server_url=None, token=None):
+                 active_flighttrack=None, mscolab_server_url=None, token=None, tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """
         super().__init__(parent, model, _id)
         logging.debug(_id)
         self.settings_tag = "topview"
+        self.tutorial_mode = tutorial_mode
         self.mainwindow_signal_login_mscolab = mainwindow.signal_login_mscolab
         self.mainwindow_signal_logout_mscolab = mainwindow.signal_logout_mscolab
         self.mainwindow_signal_listFlighttrack_doubleClicked = mainwindow.signal_listFlighttrack_doubleClicked
