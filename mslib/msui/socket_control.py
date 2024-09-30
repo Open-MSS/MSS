@@ -28,9 +28,14 @@ import socketio
 import json
 import logging
 
+import requests
+from urllib.parse import urljoin
+
 from PyQt5 import QtCore
+from mslib.msui.mscolab_exceptions import MSColabConnectionError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.verify_user_token import verify_user_token
+from mslib.utils.config import config_loader
 
 
 class ConnectionManager(QtCore.QObject):
@@ -234,3 +239,19 @@ class ConnectionManager(QtCore.QObject):
                 pass
 
         self.sio.disconnect()
+
+    def request_post(self, api, data=None, files=None):
+        response = requests.post(
+            urljoin(self.mscolab_server_url, api),
+            data=((data if data is not None else {}) | {"token": self.token}),
+            files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        return response
+
+    def request_get(self, api, data=None):
+        response = requests.get(
+            urljoin(self.mscolab_server_url, api),
+            data=((data if data is not None else {}) | {"token": self.token}),
+            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if response.status_code != 200:
+            raise MSColabConnectionError
+        return response
