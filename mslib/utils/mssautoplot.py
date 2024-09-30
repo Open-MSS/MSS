@@ -28,19 +28,26 @@
 from datetime import datetime, timedelta
 import io
 import logging
+import re
 import os
 import sys
+import requests
+from urllib.parse import urljoin
+import json
+from PyQt5.QtCore import Qt
 
 import click
 import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
+from PyQt5.QtWidgets import QMessageBox, QProgressDialog
 from fs import open_fs
 
 import mslib
 import mslib.utils
 import mslib.msui
 import mslib.msui.mpl_map
+import mslib.utils.auth
 import mslib.utils.qt
 import mslib.utils.thermolib
 from mslib.utils.config import config_loader, read_config_file
@@ -53,7 +60,7 @@ from mslib.msui import flighttrack as ft
 from mslib.utils import config as conf
 from mslib.utils.auth import get_auth_from_url_and_name
 from mslib.utils.loggerdef import configure_mpl_logger
-
+from mslib.utils.verify_user_token import verify_user_token
 
 TEXT_CONFIG = {
     "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"), "fontweight": "bold",
@@ -77,14 +84,83 @@ def load_from_ftml(filename):
     return data_list, wp_list
 
 
+def load_from_operation(operation, email, password, mscolab_url):
+    """Load from operation.
+    """
+    data = {
+        "email": email,
+        "password": password
+    }
+    s = requests.Session()
+    auth = config_loader(dataset="MSCOLAB_auth_user_name"), password
+    s.auth = auth
+    s.headers.update({'x-test': 'true'})
+    url = urljoin(mscolab_url, "token")
+    try:
+        r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+        if r.status_code == 401:
+            raise requests.exceptions.ConnectionError
+    except requests.exceptions.RequestException as ex:
+        logging.error("unexpected error: %s %s %s", type(ex), url, ex)
+        return
+    if r.text != "False":
+        _json = json.loads(r.text)
+        token = _json["token"]
+        mscolab_server_url = url
+        op_id = get_op_id(token=token, mscolab_server_url=mscolab_server_url, curr_op=operation)
+        xml_data = get_xml_data(mscolab_server_url=mscolab_server_url, token=token, op_id=op_id)
+        wp_list = ft.load_from_xml_data(xml_data)
+        now = datetime.now()
+        for wp in wp_list:
+            wp.utc_time = now
+        data_list = [
+            (wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_list]
+        return data_list, wp_list
+
+
+def get_xml_data(mscolab_server_url, token, op_id):
+    if verify_user_token(mscolab_server_url, token):
+        data = {
+            "token": token,
+            "op_id": op_id
+        }
+        url = urljoin(mscolab_server_url, "get_operation_by_id")
+        r = requests.get(url, data=data)
+        if r.text != "False":
+            xml_content = json.loads(r.text)["content"]
+            return xml_content
+
+
+def get_op_id(token, mscolab_server_url, curr_op):
+    logging.debug('get_recent_op_id')
+    if verify_user_token(mscolab_server_url, token):
+        """
+        get most recent operation's op_id
+        """
+        skip_archived = config_loader(dataset="MSCOLAB_skip_archived_operations")
+        data = {
+            "token": token,
+            "skip_archived": skip_archived
+        }
+        url = urljoin(mscolab_server_url, "operations")
+        r = requests.get(url, data=data)
+        if r.text != "False":
+            _json = json.loads(r.text)
+            operations = _json["operations"]
+            for op in operations:
+                if op["path"] == curr_op:
+                    return op["op_id"]
+
+
 class Plotting:
-    def __init__(self, cpath):
+    def __init__(self, cpath, username=None, password=None, mscolab_server_url=None):
         read_config_file(cpath)
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
         self.tick_index_step = self.num_interpolation_points // self.num_labels
         self.bbox = None
+        flight = self.config["automated_plotting_flights"][0][0]
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
         if self.__class__.__name__ == "TopViewPlotting":
@@ -96,7 +172,9 @@ class Plotting:
                 sys.exit("Invalid SECTION and/or CRS")
             self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
             self.bbox_units = self.params["bbox"]
-        if filename != "":
+        if filename != "" and filename == flight:
+            self.read_operation(flight, username, password, mscolab_server_url)
+        elif filename != "":
             self.read_ftml(filename)
 
     def read_ftml(self, filename):
@@ -116,16 +194,31 @@ class Plotting:
                                                                   numpoints=self.num_interpolation_points + 1,
                                                                   connection="greatcircle")
 
+    def read_operation(self, operation, email, password, mscolab_url):
+        self.wps, self.wp_model_data = load_from_operation(
+            operation, email=email, password=password, mscolab_url=mscolab_url)
+        self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
+        self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
+        self.path = [(wp[0], wp[1], datetime.now()) for wp in self.wps]
+        self.vertices = [list(a) for a in (zip(self.wp_lons, self.wp_lats))]
+        self.lats, self.lons = mslib.utils.coordinate.path_points([_x[0] for _x in self.path],
+                                                                  [_x[1] for _x in self.path],
+                                                                  numpoints=self.num_interpolation_points + 1,
+                                                                  connection="greatcircle")
+
 
 class TopViewPlotting(Plotting):
-    def __init__(self, cpath):
-        super(TopViewPlotting, self).__init__(cpath)
+    def __init__(self, cpath, mss_url, mss_password, mss_auth):
+        super(TopViewPlotting, self).__init__(cpath, mss_auth, mss_password, mss_url)
         self.myfig = qt.TopViewPlotter()
         self.myfig.fig.canvas.draw()
         self.fig, self.ax = self.myfig.fig, self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
         self.myfig.init_map(**(self.params["basemap"]))
         self.plotter = mpath.PathH_Plotter(self.myfig.map)
+        self.email = mss_auth
+        self.password = mss_password
+        self.url = mss_url
 
     def update_path(self, filename=None):
         # plot path and label
@@ -135,8 +228,18 @@ class TopViewPlotting(Plotting):
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
-    def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
+    def update_path_ops(self, filename=None):
+        # plot path and label
         if filename != "":
+            self.read_operation(filename, self.email, self.password, self.url)
+        self.fig.canvas.draw()
+        self.plotter.update_from_waypoints(self.wp_model_data)
+        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
+
+    def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
+        if filename != "" and filename == flight:
+            self.update_path_ops(filename)
+        elif filename != "":
             self.update_path(filename)
 
         width, height = self.myfig.get_plot_size_in_px()
@@ -168,11 +271,13 @@ class TopViewPlotting(Plotting):
         image_io = io.BytesIO(img.read())
         img = PIL.Image.open(image_io)
         self.myfig.draw_image(img)
-        self.myfig.fig.savefig(f"{flight}_{layer}_{no_of_plots}.png")
+        t = str(time)
+        date_time = re.sub(r'\W+', '', t)
+        self.myfig.fig.savefig(f"{flight}_{layer}_{section}_{date_time}_{no_of_plots}_{elevation}.png")
 
 
 class SideViewPlotting(Plotting):
-    def __init__(self, cpath):
+    def __init__(self, cpath, mss_url, mss_password, mss_auth):
         super(SideViewPlotting, self).__init__(cpath)
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
@@ -323,55 +428,97 @@ class LinearViewPlotting(Plotting):
 @click.option('--intv', default=0, help='Time interval.')
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
-def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
+@click.pass_context
+def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
+    if ctx.obj is not None:
+        pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
+        pdlg.setMinimumDuration(0)
+        pdlg.repaint()
+        pdlg.canceled.connect(lambda: close_process_dialog(pdlg))
+        pdlg.setWindowModality(Qt.WindowModal)
+        pdlg.setAutoReset(True)     # Close dialog automatically when reaching max value
+        pdlg.setAutoClose(True)     # Automatically close when value reaches maximum
+        pdlg.setValue(0)            # Initial progress value
+
+        # Set window flags to ensure visibility and modality
+        pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
+
+        pdlg.setValue(0)
+
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
+
+    flight_name = config["automated_plotting_flights"][0][0]
+    file = config["automated_plotting_flights"][0][3]
+    if ctx.obj is not None:
+        pdlg.setValue(1)
+
+    mss_url = None
+    mss_auth = None
+    mss_password = None
+    # Check if flight_name is valid
+    if flight_name != "" and flight_name == file:
+        mss_url = config["mscolab_server_url"]
+        mss_auth = config["MSS_auth"][mss_url]
+        mss_password = mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=mss_auth)
+
+    # Choose view (top or side)
     if view == "top":
-        top_view = TopViewPlotting(cpath)
+        top_view = TopViewPlotting(cpath, mss_url, mss_password, mss_auth)
         sec = "automated_plotting_hsecs"
     else:
-        side_view = SideViewPlotting(cpath)
+        side_view = SideViewPlotting(cpath, mss_url, mss_password, mss_auth)
         sec = "automated_plotting_vsecs"
+    if ctx.obj is not None:
+        pdlg.setValue(2)
+
+    def close_process_dialog(pdlg):
+        pdlg.close()
 
     def draw(no_of_plots):
         try:
             if view == "top":
-                top_view.draw(flight, section, vertical, filename, init_time,
-                              time, url, layer, style, elevation, no_of_plots=no_of_plots)
+                top_view.draw(flight, section, vertical, filename, init_time, time,
+                              url, layer, style, elevation, no_of_plots)
             elif view == "side":
-                side_view.draw(flight, section, vertical, filename, init_time,
-                               time, url, layer, style, elevation, no_of_plots=no_of_plots)
+                side_view.draw(flight, section, vertical, filename, init_time, time,
+                               url, layer, style, elevation, no_of_plots=no_of_plots)
         except Exception as e:
             if "times" in str(e):
                 print("Invalid times and/or levels requested")
             elif "LAYER" in str(e):
-                print("Invalid LAYER '{}' requested".format(layer))
-            elif "404 Client Error" in e or "NOT FOUND for url" in e:
+                print(f"Invalid LAYER '{layer}' requested")
+            elif "404 Client Error" in str(e) or "NOT FOUND for url" in str(e):
                 print("Invalid STYLE and/or URL requested")
             else:
                 print(str(e))
         else:
             print("Plot downloaded!")
-
-    for flight, section, vertical, filename, init_time, time in \
-        config["automated_plotting_flights"]:
+            return True
+        return False
+    if ctx.obj is not None:
+        pdlg.setValue(4)
+    flag = False
+    for flight, section, vertical, filename, init_time, time in config["automated_plotting_flights"]:
+        if ctx.obj is not None:
+            pdlg.setValue(8)
         for url, layer, style, elevation in config[sec]:
             if vtime == "" and stime == "":
                 no_of_plots = 1
-                draw(no_of_plots)
+                flag = draw(no_of_plots)
             elif intv == 0:
                 if itime != "":
-                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                time = datetime.strptime(vtime, "%Y-%m-%dT" "%H:%M:%S")
+                    init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
+                time = datetime.strptime(vtime, "%Y-%m-%dT%H:%M:%S")
                 if ftrack != "":
                     flight = ftrack
                 no_of_plots = 1
-                draw(no_of_plots)
+                flag = draw(no_of_plots)
             elif intv > 0:
                 if itime != "":
-                    init_time = datetime.strptime(itime, "%Y-%m-%dT" "%H:%M:%S")
-                starttime = datetime.strptime(stime, "%Y-%m-%dT" "%H:%M:%S")
-                endtime = datetime.strptime(etime, "%Y-%m-%dT" "%H:%M:%S")
+                    init_time = datetime.strptime(itime, "%Y-%m-%dT%H:%M:%S")
+                starttime = datetime.strptime(stime, "%Y-%m-%dT%H:%M:%S")
+                endtime = datetime.strptime(etime, "%Y-%m-%dT%H:%M:%S")
                 i = 1
                 time = starttime
                 while time <= endtime:
@@ -379,12 +526,27 @@ def main(cpath, view, ftrack, itime, vtime, intv, stime, etime):
                     if ftrack != "":
                         flight = ftrack
                     no_of_plots = i
-                    draw(no_of_plots)
+                    flag = draw(no_of_plots)
                     time = time + timedelta(hours=intv)
-                    i = i + 1
+                    i += 1
             else:
                 raise Exception("Invalid interval")
+    if ctx.obj is not None:
+        pdlg.setValue(10)
+        pdlg.close()
+        if flag:
+            QMessageBox.information(
+                ctx.obj,  # The parent widget (use `None` if no parent)
+                "SUCCESS",  # Title of the message box
+                "Plots downloaded successfully."  # Message text
+            )
+        else:
+            QMessageBox.information(
+                ctx.obj,  # The parent widget (use `None` if no parent)
+                "FAILURE",  # Title of the message box
+                "Plots couldnot be downloaded."  # Message text
+            )
 
 
 if __name__ == '__main__':
-    main()
+    cli_tool()

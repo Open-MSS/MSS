@@ -256,6 +256,9 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
     refresh_signal_send = QtCore.pyqtSignal()
     refresh_signal_emit = QtCore.pyqtSignal()
+    item_selected = QtCore.pyqtSignal(str, str, str, str)
+    vtime_vals = QtCore.pyqtSignal([list])
+    itemSecs_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, model=None, _id=None, config_settings=None, tutorial_mode=False):
         """
@@ -292,7 +295,8 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         self.btOptions.clicked.connect(self.open_settings_dialog)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, config_settings=config_settings))
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
+            index=ind, parent=parent, config_settings=config_settings))
         self.openTool(WMS + 1)
 
     def __del__(self):
@@ -301,7 +305,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     def update_predefined_maps(self, extra):
         pass
 
-    def openTool(self, index=None, config_settings=None):
+    def openTool(self, index, parent=None, config_settings=None):
         """
         Slot that handles requests to open tool windows.
         """
@@ -315,15 +319,22 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                     waypoints_model=self.waypoints_model,
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.vtime_data.connect(lambda vtime: self.valid_time_vals(vtime))
                 widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
                 widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
                 widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
+                self.item_selected.connect(lambda url, layer, style,
+                                           level: widget.row_is_selected(url, layer, style, level, "side"))
+                self.itemSecs_selected.connect(lambda vtime: widget.leftrow_is_selected(vtime))
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
             elif index == AUTOPLOT:
                 title = "Autoplot (Side View)"
-                widget = dock.AutoplotDockWidget(parent=self, view="Side View", config_settings=config_settings)
+                widget = dock.AutoplotDockWidget(parent=self, parent2=parent,
+                                                 view="Side View", config_settings=config_settings)
+                widget.treewidget_item_selected.connect(
+                    lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
             else:
                 raise IndexError("invalid control index")
             # Create the actual dock widget containing <widget>.
@@ -340,6 +351,10 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
         self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
         self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
+
+    @QtCore.pyqtSlot()
+    def tree_item_select(self, url, layer, style, level):
+        self.item_selected.emit(url, layer, style, level)
 
     @QtCore.pyqtSlot()
     def level_val_changed(self, strr):
@@ -359,6 +374,14 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):
         self.curritime = strr
+
+    @QtCore.pyqtSlot()
+    def valid_time_vals(self, vtimes_list):
+        self.vtime_vals.emit(vtimes_list)
+
+    @QtCore.pyqtSlot()
+    def treePlot_item_select(self, section, vtime):
+        self.itemSecs_selected.emit(vtime)
 
     def setFlightTrackModel(self, model):
         """
@@ -380,4 +403,6 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
         if dlg.exec_() == QtWidgets.QDialog.Accepted:
             settings = dlg.get_settings()
             self.getView().set_settings(settings, save=True)
+        self.currvertical = ', '.join(map(str, settings["vertical_extent"]))
+        self.currlevel = settings["vertical_axis"]
         dlg.destroy()
