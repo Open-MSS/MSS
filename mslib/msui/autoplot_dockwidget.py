@@ -28,19 +28,29 @@
 """
 
 import json
-from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem
+import os
+import click
+from mslib.utils.mssautoplot import cli_tool
+from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
+from PyQt5 import QtCore
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui import constants as const
+from datetime import datetime
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
-    def __init__(self, parent=None, view=None, config_settings=None):
+    treewidget_item_selected = QtCore.pyqtSignal(str, str, str, str)
+    autoplot_treewidget_item_selected = QtCore.pyqtSignal(str, str)
+    update_op_flight_treewidget = QtCore.pyqtSignal(str, str)
+
+    def __init__(self, parent=None, parent2=None, view=None, config_settings=None):
         super().__init__()
         self.setupUi(self)
 
         self.UploadAutoplotButton.setVisible(False)
         self.UploadAutoplotSecsButton.setVisible(False)
+        self.cpath = ""
         self.view = view
         self.url = ""
         self.layer = ""
@@ -51,6 +61,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.vertical = ""
         self.filename = ""
         self.itime = ""
+        self.vtime = ""
         self.stime = ""
         self.etime = ""
         self.intv = ""
@@ -59,27 +70,32 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         parent.refresh_signal_send.connect(lambda: self.refresh_sig(config_settings))
 
+        parent.vtime_vals.connect(lambda vtime_vals: self.update_stime_etime(vtime_vals))
+
+        self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.autoplotSecsTreeWidget_selected_row)
+        self.autoplotTreeWidget.itemSelectionChanged.connect(self.autoplotTreeWidget_selected_row)
+
         # Add to TreeWidget
         if self.view == "Top View":
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
                 parent.cbChangeMapSection.currentText(), self.vertical, parent.waypoints_model.name, parent.curritime,
                 parent.currvtime, "", "", "", ""
             ))
         elif self.view == "Side View":
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
                 parent.currvertical, parent.waypoints_model.name, parent.curritime, parent.currvtime, "", "",
                 "", ""
             ))
         else:
             self.addToAutoplotButton.clicked.connect(lambda: self.add_to_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
                 parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
 
         self.addToAutoplotSecsButton.clicked.connect(lambda: self.add_to_treewidget(
-            parent, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
+            parent, parent2, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
             parent.currurl, parent.currlayer, str(parent.currstyles).strip(), parent.currlevel
         ))
 
@@ -92,40 +108,133 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         # Update Tree Widget
         if self.view == "Top View":
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name,
                 parent.cbChangeMapSection.currentText(), "", parent.waypoints_model.name, parent.curritime,
                 parent.currvtime, "", "", "", ""
             ))
         elif self.view == "Side View":
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "",
                 parent.currvertical, parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
         else:
             self.UploadAutoplotButton.clicked.connect(lambda: self.update_treewidget(
-                parent, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
+                parent, parent2, config_settings, self.autoplotTreeWidget, parent.waypoints_model.name, "", "",
                 parent.waypoints_model.name, "", parent.currvtime, "", "", "", ""
             ))
 
         self.UploadAutoplotSecsButton.clicked.connect(lambda: self.update_treewidget(
-            parent, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
+            parent, parent2, config_settings, self.autoplotSecsTreeWidget, "", "", "", "", "", "",
             parent.currurl, parent.currlayer, str(parent.currstyles).strip(), parent.currlevel
         ))
 
         # config buttons
         self.selectConfigButton.clicked.connect(lambda: self.configure_from_path(parent, config_settings))
         self.updateConfigFile.clicked.connect(lambda: self.update_config_file(config_settings))
-
-        # stime/etime
-        self.stimeSpinBox.dateTimeChanged.connect(self.updateDateTimeValue)
-        self.etimeSpinBox.dateTimeChanged.connect(self.updateDateTimeValue)
+        self.updateConfigFile.setDefault(True)
 
         # time interval combobox
         self.timeIntervalComboBox.currentIndexChanged.connect(
             lambda: self.combo_box_input(self.timeIntervalComboBox))
+        # stime/etime
+        self.stimeComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.stimeComboBox))
+        self.etimeComboBox.currentIndexChanged.connect(
+            lambda: self.combo_box_input(self.etimeComboBox))
 
         self.autoplotTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed)
         self.autoplotSecsTreeWidget.itemSelectionChanged.connect(self.on_item_selection_changed_secs)
+        self.downloadPushButton.clicked.connect(lambda: self.download_plots_cli(config_settings))
+
+    def download_plots_cli(self, config_settings):
+        if self.stime > self.etime:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Start time should be before end time"
+            )
+            return
+        if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Cannot download empty treewidget"
+            )
+            return
+        view = "top"
+        intv = 0
+        if self.intv != "":
+            index = self.intv.find(' ')
+            intv = int(self.intv[:index])
+
+        if self.view == "Top View":
+            view = "top"
+        elif self.view == "Side View":
+            view = "side"
+        else:
+            view = "linear"
+
+        # Create the configuration path
+        config_path = os.path.join(const.MSUI_CONFIG_PATH, "mssautoplot.json")
+
+        # Save the config settings to the file
+        if config_path:
+            with open(config_path, 'w') as file:
+                json.dump(config_settings, file, indent=4)
+
+        args = {
+            'cpath': config_path,
+            'view': view,
+            'ftrack': "",
+            'itime': self.itime,
+            'vtime': self.vtime,
+            'intv': intv,
+            'stime': self.stime[:-1],
+            'etime': self.etime[:-1]
+        }
+
+        # Invoke the cli_tool method using click
+        ctx = click.Context(cli_tool)
+        ctx.obj = self
+        ctx.invoke(cli_tool, **args)
+
+    def autoplotSecsTreeWidget_selected_row(self):
+        selected_items = self.autoplotSecsTreeWidget.selectedItems()
+        if selected_items:
+            url = selected_items[0].text(0)
+            layer = selected_items[0].text(1)
+            styles = selected_items[0].text(2)
+            level = selected_items[0].text(3)
+
+            self.treewidget_item_selected.emit(url, layer, styles, level)
+
+    def autoplotTreeWidget_selected_row(self):
+        if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Select right tree widget row first."
+            )
+            return
+        selected_items = self.autoplotTreeWidget.selectedItems()
+        if selected_items:
+            flight = selected_items[0].text(0)
+            filename = selected_items[0].text(3)
+            section = selected_items[0].text(1)
+            vtime = selected_items[0].text(5)
+            if flight != "" and flight == filename:
+                self.update_op_flight_treewidget.emit("operation", flight)
+            elif flight != "":
+                self.update_op_flight_treewidget.emit("flight", flight)
+            self.autoplot_treewidget_item_selected.emit(section, vtime)
+
+    def update_stime_etime(self, vtime_data):
+        self.stimeComboBox.clear()
+        self.etimeComboBox.clear()
+        self.stimeComboBox.addItem("")
+        self.etimeComboBox.addItem("")
+        self.stimeComboBox.addItems(vtime_data)
+        self.etimeComboBox.addItems(vtime_data)
 
     def on_item_selection_changed(self):
         selected_item = self.autoplotTreeWidget.selectedItems()
@@ -149,6 +258,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
 
         if fileName != "":
+            self.cpath = fileName
             with open(fileName, 'r') as file:
                 configure = json.load(file)
             autoplot_flights = configure["automated_plotting_flights"]
@@ -164,20 +274,30 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()
 
-    def add_to_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
-                          vtime, url, layer, styles, level):
+    def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
+                          itime, vtime, url, layer, styles, level):
         if treewidget.objectName() == "autoplotTreeWidget":
+            if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Add right tree widget row first."
+                )
+                return
             if flight.startswith("new flight track"):
                 filename = ""
                 flight = ""
             else:
-                filename += ".ftml"
+                if filename != parent2.mscolab.active_operation_name:
+                    filename += ".ftml"
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
             config_settings["automated_plotting_flights"].append([flight, sections, vertical, filename, itime, vtime])
             parent.refresh_signal_emit.emit()
         if treewidget.objectName() == "autoplotSecsTreeWidget":
+            if url is None:
+                return
             item = QTreeWidgetItem([url, layer, styles, level, self.stime, self.etime, self.intv])
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
             self.autoplotSecsTreeWidget.setCurrentItem(item)
@@ -188,17 +308,17 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 config_settings["automated_plotting_vsecs"].append([url, layer, styles, level])
             else:
                 config_settings["automated_plotting_lsecs"].append([url, layer, styles, level])
+            self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
-        self.stime = ""
-        self.etime = ""
 
-    def update_treewidget(self, parent, config_settings, treewidget, flight, sections, vertical, filename, itime,
-                          vtime, url, layer, styles, level):
+    def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
+                          itime, vtime, url, layer, styles, level):
         if flight.startswith("new flight track"):
             filename = ""
             flight = ""
         else:
-            filename += ".ftml"
+            if filename != parent2.mscolab.active_operation_name:
+                filename += ".ftml"
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)
@@ -224,6 +344,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
 
         if treewidget.objectName() == "autoplotSecsTreeWidget":
+            if url is None:
+                return
             selected_item = self.autoplotSecsTreeWidget.currentItem()
             selected_item.setText(0, url)
             selected_item.setText(1, layer)
@@ -242,9 +364,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             else:
                 if index != -1:
                     config_settings["automated_plotting_lsecs"][index] = [url, layer, styles, level]
+            self.autoplotSecsTreeWidget.clearSelection()
         self.resize_treewidgets()
-        self.stime = ""
-        self.etime = ""
 
     def refresh_sig(self, config_settings):
         autoplot_flights = config_settings["automated_plotting_flights"]
@@ -264,8 +385,17 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         for row in autoplot_secs:
             item = QTreeWidgetItem(row)
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
+        self.autoplotSecsTreeWidget.clearSelection()
+        self.autoplotTreeWidget.clearSelection()
 
     def remove_selected_row(self, parent, treewidget, config_settings):
+        if treewidget.topLevelItemCount() == 0:
+            QMessageBox.information(
+                self,
+                "WARNING",
+                "Cannot remove from empty treewidget"
+            )
+            return
         selected_item = treewidget.currentItem()
         if selected_item:
             index = treewidget.indexOfTopLevelItem(selected_item)
@@ -286,18 +416,52 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                     parent.takeChild(parent.indexOfChild(selected_item))
         parent.refresh_signal_emit.emit()
         self.resize_treewidgets()
-        self.stime = ""
-        self.etime = ""
 
     def combo_box_input(self, combo):
         comboBoxName = combo.objectName()
         currentText = combo.currentText()
         if comboBoxName == "timeIntervalComboBox":
-            self.intv = currentText
+            if currentText == "":
+                return
+            if self.stimeComboBox.count() == 0:
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Please select a layer first."
+                )
+                self.timeIntervalComboBox.setCurrentIndex(0)
+                return
+            datetime1_str = self.stimeComboBox.itemText(1)
+            datetime2_str = self.stimeComboBox.itemText(2)
 
-    def updateDateTimeValue(self):
-        self.stime = self.stimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
-        self.etime = self.etimeSpinBox.dateTime().toString('yyyy/MM/dd HH:mm UTC')
+            datetime1 = datetime.strptime(datetime1_str, "%Y-%m-%dT%H:%M:%SZ")
+            datetime2 = datetime.strptime(datetime2_str, "%Y-%m-%dT%H:%M:%SZ")
+            time_difference = int((datetime2 - datetime1).total_seconds())
+            time_diff = 1
+            num = int(currentText.split()[0])
+            if currentText.endswith("mins"):
+                time_diff = time_diff * 60 * num
+            elif currentText.endswith("hour"):
+                time_diff = time_diff * 3600 * num
+            elif currentText.endswith("hours"):
+                time_diff = time_diff * 3600 * num
+            elif currentText.endswith("days"):
+                time_diff = time_diff * 86400 * num
+
+            if time_diff % time_difference != 0:
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Please select valid time interval."
+                )
+                self.timeIntervalComboBox.setCurrentIndex(0)
+                return
+
+            self.intv = currentText
+        elif comboBoxName == "stimeComboBox":
+            self.stime = currentText
+        elif comboBoxName == "etimeComboBox":
+            self.etime = currentText
 
     def resize_treewidgets(self):
         for i in range(6):
@@ -316,7 +480,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             "JSON Files (*.json);;All Files (*)",
             options=options
         )
-
         if file_path:
             with open(file_path, 'w') as file:
                 json.dump(config_settings, file, indent=4)
+
+            QMessageBox.information(
+                self,
+                "SUCCESS",
+                "Configuration successfully saved."
+            )

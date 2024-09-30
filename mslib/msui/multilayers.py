@@ -38,6 +38,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
     """
 
     needs_repopulate = QtCore.pyqtSignal()
+    styles_on_change = QtCore.pyqtSignal(str)
 
     def __init__(self, dock_widget):
         super().__init__(parent=dock_widget)
@@ -374,6 +375,7 @@ class Multilayers(QtWidgets.QDialog, ui.Ui_MultilayersDialog):
                     layer.style_changed()
                     self.multilayer_clicked(layer)
                     self.dock_widget.auto_update()
+                    self.styles_on_change.emit(layer.style)
 
                 style.currentIndexChanged.connect(lambda: style_changed(widget))
                 self.listLayers.setItemWidget(widget, 1, style)
@@ -797,7 +799,7 @@ class Layer(QtWidgets.QTreeWidgetItem):
         if self.style != self.styles[0]:
             self.parent.settings["saved_styles"][str(self)] = self.style
         else:
-            self.parent.settings["saved_styles"].pop(str(self))
+            self.parent.settings["saved_styles"].pop(str(self), None)
         save_settings_qsettings("multilayers", self.parent.settings)
 
     def color_changed(self, color):

@@ -190,6 +190,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     sections_changed = QtCore.pyqtSignal(str)
     refresh_signal_emit = QtCore.pyqtSignal()
     refresh_signal_send = QtCore.pyqtSignal()
+    item_selected = QtCore.pyqtSignal(str, str, str, str)
+    itemSecs_selected = QtCore.pyqtSignal(str)
+    vtime_vals = QtCore.pyqtSignal([list])
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
                  active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None):
@@ -258,7 +261,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(index=ind, config_settings=config_settings))
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
+            index=ind, parent=parent, config_settings=config_settings))
 
         if mainwindow is not None:
             # Update flighttrack
@@ -339,7 +343,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         if current_map_key in predefined_map_sections.keys():
             self.cbChangeMapSection.setCurrentText(current_map_key)
 
-    def openTool(self, index, config_settings=None):
+    def openTool(self, index, parent=None, config_settings=None):
         """
         Slot that handles requests to open control windows.
         """
@@ -352,12 +356,16 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     default_WMS=config_loader(dataset="default_WMS"),
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.vtime_data.connect(lambda vtime: self.valid_time_vals(vtime))
                 widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
                 widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
                 widget.on_level_changed.connect(lambda level: self.level_val_changed(level))
                 widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
                 widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
                 widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
+                self.item_selected.connect(lambda url, layer, style,
+                                           level: widget.row_is_selected(url, layer, style, level, "top"))
+                self.itemSecs_selected.connect(lambda vtime: widget.leftrow_is_selected(vtime))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
             elif index == SATELLITE:
@@ -393,7 +401,14 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     self.signal_activate_operation.emit(self.active_op_id)
             elif index == AUTOPLOT:
                 title = "Autoplot (Top View)"
-                widget = dock.AutoplotDockWidget(parent=self, view="Top View", config_settings=config_settings)
+                widget = dock.AutoplotDockWidget(parent=self, parent2=parent,
+                                                 view="Top View", config_settings=config_settings)
+                widget.treewidget_item_selected.connect(
+                    lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
+                widget.autoplot_treewidget_item_selected.connect(
+                    lambda section, vtime: self.treePlot_item_select(section, vtime))
+                widget.update_op_flight_treewidget.connect(
+                    lambda opfl, flight: parent.update_treewidget_op_fl(opfl, flight))
             else:
                 raise IndexError("invalid control index")
 
@@ -409,8 +424,22 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.wms_connected = False
 
     @QtCore.pyqtSlot()
+    def tree_item_select(self, url, layer, style, level):
+        self.item_selected.emit(url, layer, style, level)
+
+    @QtCore.pyqtSlot()
+    def treePlot_item_select(self, section, vtime):
+        self.cbChangeMapSection.setCurrentText(section)
+        self.changeMapSection()
+        self.itemSecs_selected.emit(vtime)
+
+    @QtCore.pyqtSlot()
     def url_val_changed(self, strr):
         self.currurl = strr
+
+    @QtCore.pyqtSlot()
+    def valid_time_vals(self, vtimes_list):
+        self.vtime_vals.emit(vtimes_list)
 
     @QtCore.pyqtSlot()
     def layer_val_changed(self, strr):
@@ -426,10 +455,11 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
     @QtCore.pyqtSlot()
     def styles_val_changed(self, strr):
-        if strr is None:
+        if strr is None or not str(strr).strip():
             self.currstyles = ""
         else:
-            self.currstyles = strr
+            split_strr = str(strr).strip().split()
+            self.currstyles = split_strr[0].strip() if split_strr else ""
 
     @QtCore.pyqtSlot()
     def itime_val_changed(self, strr):
@@ -449,22 +479,23 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             dataset="predefined_map_sections")
         current_map = predefined_map_sections.get(
             current_map_key, {"CRS": current_map_key, "map": {}})
-        proj_params = get_projection_params(current_map["CRS"])
 
-        # Create a keyword arguments dictionary for basemap that contains
-        # the projection parameters.
-        kwargs = dict(current_map["map"])
-        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
-                       "OPERATION_NAME": self.waypoints_model.name})
-        kwargs.update(proj_params["basemap"])
+        if current_map["CRS"] != "":
+            proj_params = get_projection_params(current_map["CRS"])
+            # Create a keyword arguments dictionary for basemap that contains
+            # the projection parameters.
+            kwargs = dict(current_map["map"])
+            kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
+                           "OPERATION_NAME": self.waypoints_model.name})
+            kwargs.update(proj_params["basemap"])
 
-        if only_kwargs:
-            # Return kwargs dictionary and do NOT redraw the map.
-            return kwargs
+            if only_kwargs:
+                # Return kwargs dictionary and do NOT redraw the map.
+                return kwargs
 
-        logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
-        self.mpl.canvas.redraw_map(kwargs)
-        self.mpl.navbar.clear_history()
+            logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
+            self.mpl.canvas.redraw_map(kwargs)
+            self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
         super().setIdentifier(identifier)
