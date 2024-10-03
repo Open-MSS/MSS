@@ -548,5 +548,8 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
             )
 
 
-if __name__ == '__main__':
+def main():
     cli_tool()
+
+if __name__ == '__main__':
+    main()

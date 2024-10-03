@@ -254,17 +254,13 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
     """
     name = "Side View"
 
-<<<<<<< HEAD
     refresh_signal_send = QtCore.pyqtSignal()
     refresh_signal_emit = QtCore.pyqtSignal()
     item_selected = QtCore.pyqtSignal(str, str, str, str)
     vtime_vals = QtCore.pyqtSignal([list])
     itemSecs_selected = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None, model=None, _id=None, config_settings=None):
-=======
-    def __init__(self, parent=None, model=None, _id=None, tutorial_mode=False):
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
+    def __init__(self, parent=None, model=None, _id=None, config_settings=None, tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """

@@ -24,8 +24,4 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-<<<<<<< HEAD
-__version__ = u'9.1.0'
-=======
 __version__ = u'9.2.0'
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87

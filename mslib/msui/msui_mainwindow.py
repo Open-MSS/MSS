@@ -50,12 +50,9 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
-<<<<<<< HEAD
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
-=======
 from mslib.utils import release_info
 from PyQt5 import QtGui, QtCore, QtWidgets
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -1045,25 +1042,19 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window = topview.MSUITopViewWindow(parent=self, mainwindow=self, model=model,
                                                     active_flighttrack=self.active_flight_track,
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
-<<<<<<< HEAD
                                                     token=self.mscolab.token,
-                                                    config_settings=self.config_for_gui)
+                                                    config_settings=self.config_for_gui,
+                                                    tutorial_mode=self.tutorial_mode)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
-=======
-                                                    token=self.mscolab.token, tutorial_mode=self.tutorial_mode)
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-<<<<<<< HEAD
             view_window = sideview.MSUISideViewWindow(model=model, parent=self,
-                                                      config_settings=self.config_for_gui)
+                                                      config_settings=self.config_for_gui,
+                                                      tutorial_mode=self.tutorial_mode)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
-=======
-            view_window = sideview.MSUISideViewWindow(model=model, tutorial_mode=self.tutorial_mode)
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
@@ -1073,13 +1064,10 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-<<<<<<< HEAD
             view_window = linearview.MSUILinearViewWindow(model=model,
-                                                          parent=self, config_settings=self.config_for_gui)
+                                                          parent=self, config_settings=self.config_for_gui,
+                                                          tutorial_mode=self.tutorial_mode)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
-=======
-            view_window = linearview.MSUILinearViewWindow(model=model, tutorial_mode=self.tutorial_mode)
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])

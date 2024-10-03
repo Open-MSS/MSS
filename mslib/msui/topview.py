@@ -195,11 +195,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     vtime_vals = QtCore.pyqtSignal([list])
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
-<<<<<<< HEAD
-                 active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None):
-=======
-                 active_flighttrack=None, mscolab_server_url=None, token=None, tutorial_mode=False):
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
+                 active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None,
+                 tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """
