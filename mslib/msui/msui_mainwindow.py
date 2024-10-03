@@ -46,12 +46,16 @@ from mslib.msui.qt5 import ui_shortcuts as ui_sh
 from mslib.msui import flighttrack as ft
 from mslib.msui import tableview, topview, sideview, linearview
 from mslib.msui import constants, editor, mscolab
-from mslib.msui.updater import UpdaterUI
 from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
+<<<<<<< HEAD
 from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
+=======
+from mslib.utils import release_info
+from PyQt5 import QtGui, QtCore, QtWidgets
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -408,6 +412,7 @@ class MSUI_AboutDialog(QtWidgets.QDialog, ui_ab.Ui_AboutMSUIDialog):
         super().__init__(parent)
         self.setupUi(self)
         self.lblVersion.setText(f"Version: {__version__}")
+        self.lblNewVersion.setText(f"{release_info.check_for_new_release()[0]}")
         self.milestone_url = f'https://github.com/Open-MSS/MSS/issues?q=is%3Aclosed+milestone%3A{__version__[:-1]}'
         self.lblChanges.setText(f'<a href="{self.milestone_url}">New Features and Changes</a>')
         blub = QtGui.QPixmap(python_powered())
@@ -431,7 +436,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
     refresh_signal_connect = QtCore.pyqtSignal()
 
-    def __init__(self, mscolab_data_dir=None, tutorial_mode=False, *args):
+    def __init__(self, local_operations_data=None, tutorial_mode=False, *args):
+        """
+        This method initializes the main window of the application.
+        It sets up the user interface, icons, menu actions, and connects signals to slots.
+
+        :param local_operations_data: Base path used by "work asynchronously" to store operations.
+        :param tutorial_mode: Whether to run the application in tutorial mode. Default is False.
+        :param args: Additional arguments to pass to the parent class.
+
+        """
         super().__init__(*args)
         self.tutorial_mode = tutorial_mode
         self.setupUi(self)
@@ -607,7 +621,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.statusBar.showMessage(self.status())
 
         # Create MSColab instance to handle all MSColab functionalities
-        self.mscolab = mscolab.MSUIMscolab(parent=self, data_dir=mscolab_data_dir)
+        self.mscolab = mscolab.MSUIMscolab(parent=self, local_operations_data=local_operations_data)
 
         # Setting up MSColab Tab
         self.connectBtn.clicked.connect(self.mscolab.open_connect_window)
@@ -633,10 +647,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.mscolab.signal_render_new_permission.connect(
             lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
 
-        # Don't start the updater during a test run of msui
-        if "pytest" not in sys.modules:
-            self.updater = UpdaterUI(self)
-            self.actionUpdater.triggered.connect(self.updater.show)
         self.openOperationsGb.hide()
 
     def bring_main_window_to_front(self):
@@ -913,6 +923,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.listFlightTracks.item(i).setFont(font)
         font.setBold(True)
         item.setFont(font)
+        self.userCountLabel.hide()
         self.menu_handler()
         self.signal_activate_flighttrack.emit(self.active_flight_track)
 
@@ -1034,29 +1045,41 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window = topview.MSUITopViewWindow(parent=self, mainwindow=self, model=model,
                                                     active_flighttrack=self.active_flight_track,
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
+<<<<<<< HEAD
                                                     token=self.mscolab.token,
                                                     config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
+=======
+                                                    token=self.mscolab.token, tutorial_mode=self.tutorial_mode)
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
             view_window.mpl.resize(layout['topview'][0], layout['topview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
+<<<<<<< HEAD
             view_window = sideview.MSUISideViewWindow(model=model, parent=self,
                                                       config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
+=======
+            view_window = sideview.MSUISideViewWindow(model=model, tutorial_mode=self.tutorial_mode)
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['sideview'][0], layout['sideview'][1])
         elif _type == "tableview":
             # Table view.
-            view_window = tableview.MSUITableViewWindow(model=model)
+            view_window = tableview.MSUITableViewWindow(model=model, tutorial_mode=self.tutorial_mode)
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
+<<<<<<< HEAD
             view_window = linearview.MSUILinearViewWindow(model=model,
                                                           parent=self, config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
+=======
+            view_window = linearview.MSUILinearViewWindow(model=model, tutorial_mode=self.tutorial_mode)
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:
                 view_window.mpl.setFixedSize(layout['linearview'][0], layout['linearview'][1])

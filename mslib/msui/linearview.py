@@ -81,6 +81,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     """
     name = "Linear View"
 
+<<<<<<< HEAD
     refresh_signal_send = QtCore.pyqtSignal()
     refresh_signal_emit = QtCore.pyqtSignal()
     item_selected = QtCore.pyqtSignal(str, str, str, str)
@@ -88,11 +89,15 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     itemSecs_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, parent=None, model=None, _id=None, config_settings=None):
+=======
+    def __init__(self, parent=None, model=None, _id=None, tutorial_mode=False):
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
         """
         Set up user interface, connect signal/slots.
         """
         super().__init__(parent, model, _id)
         self.settings_tag = "linearview"
+        self.tutorial_mode = tutorial_mode
 
         self.setupUi(self)
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))

@@ -150,15 +150,23 @@ by `pg_dump <https://www.postgresql.org/docs/current/app-pgdump.html>`_ using a 
     pg_dump -d mscolab -f "/home/mscolab/dump/$timestamp.sql"
 
 
+<<<<<<< HEAD
 Data Base Migration from version 8
 ..................................
 
 .. important::
    This manual migration on the server side by a user is deprecated and will become removed with version 10.0.0.
    With version 10.0.0, the initialization of the database will be refactored and migrations will be performed automatically when mscolab is started
+=======
+Database Migration from Version 8 or 9
+.................................
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
 
-For an easy way to update the database scheme we implemented  `flask migrate <https://flask-migrate.readthedocs.io/en/latest/>`_.
+From v10 onwards MSColab uses `Flask-Migrate <https://flask-migrate.readthedocs.io/en/latest/>` to automatically deal with database migrations.
+To upgrade from v8 or v9 a recreation of the database and subsequent copy of existing data is necessary.
+To do this follow these steps:
 
+<<<<<<< HEAD
 You have to create based on your configuration a migration script and call that afterwards. ::
 
     mamba activate instance
@@ -218,7 +226,19 @@ The output looks like ::
     INFO  [alembic.runtime.migration] Context impl SQLiteImpl.
     INFO  [alembic.runtime.migration] Will assume non-transactional DDL.
     INFO  [alembic.runtime.migration] Running upgrade  -> e62d08ce88a, To version 9.0.0
+=======
+#. Stop MSColab completely, no process interacting with the MSColab database should remain running
+#. **Make a backup of your existing database**
+#. Set ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM`` to your existing database
+#. Set ``SQLALCHEMY_DB_URI`` to a new database
+#. If you are not using SQLite: create the new database
+#. Start MSColab
+#. Check that everything was migrated successfully
+#. Unset ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM``
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
 
+If you want to keep using your old database URI you can first rename your existing database so that it has a different URI
+and just set ``SQLALCHEMY_DB_URI_TO_MIGRATE_FROM`` to that.
 
 
 Steps to use the MSColab UI features
@@ -241,6 +261,8 @@ Operation based features
   - All the operations the user has created or has been added to can be found in Mscolab's main window along with the user's access level.
   - To start working on an operation the user needs to select it which enables all the operation related buttons.
   - Any change made to an operation by a user will be shared with everyone in real-time unless `Work Locally` is turned on.(More on this later)
+  - Operations can be manually archived to remove them from normal view without having to delete them.
+    They can be found again in the Archive view, where they can be unarchived for further use.
 
 Operation Permissions
 .....................

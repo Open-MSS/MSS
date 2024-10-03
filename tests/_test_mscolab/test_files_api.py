@@ -29,6 +29,7 @@ import pytest
 
 from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user
+from tests.utils import XML_CONTENT1, XML_CONTENT2, XML_CONTENT3
 
 
 class Test_Files:
@@ -79,7 +80,7 @@ class Test_Files:
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V1")
             users = self.fm.get_authorized_users(operation.id)
-            assert users[0] == {'username': 'UV10', 'access_level': 'creator'}
+            assert users[0] == {'username': 'UV10', 'access_level': 'creator', 'id': 1}
 
     def test_fetch_users_without_permission(self):
         with self.app.test_client():
@@ -170,8 +171,8 @@ class Test_Files:
     def test_get_all_changes(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="V11")
-            assert self.fm.save_file(operation.id, "content1", self.user)
-            assert self.fm.save_file(operation.id, "content2", self.user)
+            assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
+            assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             # the newest change is on index 0, because it has a recent created_at time
             assert len(all_changes) == 2
@@ -181,20 +182,20 @@ class Test_Files:
 
     def test_get_change_content(self):
         with self.app.test_client():
-            flight_path, operation = self._create_operation(flight_path="V12", content='initial')
-            assert self.fm.save_file(operation.id, "content1", self.user)
-            assert self.fm.save_file(operation.id, "content2", self.user)
-            assert self.fm.save_file(operation.id, "content3", self.user)
+            flight_path, operation = self._create_operation(flight_path="V12", content=XML_CONTENT3)
+            assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
+            assert self.fm.save_file(operation.id, XML_CONTENT2, self.user)
+            assert self.fm.save_file(operation.id, XML_CONTENT3, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             previous_change = self.fm.get_change_content(all_changes[2]["id"], self.user)
-            assert previous_change == "content1"
+            assert previous_change == XML_CONTENT1
             previous_change = self.fm.get_change_content(all_changes[1]["id"], self.user)
-            assert previous_change == "content2"
+            assert previous_change == XML_CONTENT2
 
     def test_set_version_name(self):
         with self.app.test_client():
-            flight_path, operation = self._create_operation(flight_path="V13", content='initial')
-            assert self.fm.save_file(operation.id, "content1", self.user)
+            flight_path, operation = self._create_operation(flight_path="V13", content=XML_CONTENT3)
+            assert self.fm.save_file(operation.id, XML_CONTENT1, self.user)
             all_changes = self.fm.get_all_changes(operation.id, self.user)
             ch_id = all_changes[-1]["id"]
             self.fm.set_version_name(ch_id, operation.id, self.user.id, "berlin")

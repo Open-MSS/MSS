@@ -36,6 +36,7 @@ import threading
 import mimetypes
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
+from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.mscolab.models import db, Operation, Permission, User, Change, Message
 from mslib.mscolab.conf import mscolab_settings
 
@@ -58,9 +59,19 @@ class FileManager:
 
     def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
-        path: path to the operation
-        description: description of the operation
+        Creates a new operation in the mscolab system.
+
+        :param path: The path of the operation.
+        :param description: The description of the operation.
+        :param user: The user object creating the operation.
+        :param last_used: The last used datetime of the operation. Default is None.
+        :param content: The content of the operation. Default is None.
+        :param category: The category of the operation. Default is 'default'.
+        :param active: The activity status of the operation. Default is True.
+        :return: True if the operation is created successfully, False otherwise.
         """
+        if content is not None and not verify_waypoint_data(content):
+            return False
         # set codes on these later
         if path.find("/") != -1 or path.find("\\") != -1 or (" " in path):
             logging.debug("malicious request: %s", user)
@@ -124,6 +135,7 @@ class FileManager:
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
             operation = Operation.query.filter_by(id=permission.op_id).first()
+<<<<<<< HEAD
             if operation.last_used is not None and (
                     datetime.datetime.now(tz=datetime.timezone.utc) - operation.last_used
             ).days > mscolab_settings.ARCHIVE_THRESHOLD:
@@ -136,6 +148,9 @@ class FileManager:
                 operation = Operation.query.filter_by(id=permission.op_id).first()
 
             if operation is not None:
+=======
+            if operation is not None and (operation.active or not skip_archived):
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
                 operations.append({
                     "op_id": permission.op_id,
                     "access_level": permission.access_level,
@@ -339,14 +354,14 @@ class FileManager:
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 logging.debug("malicious request: %s", user)
                 return False
-            data = fs.open_fs(self.data_dir)
-            if data.exists(value):
-                return False
-            # will be move when operations are introduced
-            # make a directory, else movedir
-            data.makedir(value)
-            data.movedir(operation.path, value)
-            # when renamed to a Group operation
+            with fs.open_fs(self.data_dir) as data:
+                if data.exists(value):
+                    return False
+                # will be move when operations are introduced
+                # make a directory, else movedir
+                data.makedir(value)
+                data.movedir(operation.path, value)
+                # when renamed to a Group operation
             if value.endswith(mscolab_settings.GROUP_POSTFIX):
                 # getting the category
                 category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
@@ -356,6 +371,9 @@ class FileManager:
                     # the user changing the {category}{mscolab_settings.GROUP_POSTFIX} needs to have rights in the op
                     # then members of this op gets added to all others of same category
                     self.import_permissions(op_id, ops.id, user.id)
+        elif attribute == "active":
+            if isinstance(value, str):
+                value = value.upper() == "TRUE"
         setattr(operation, attribute, value)
         db.session.commit()
         return True
@@ -365,7 +383,7 @@ class FileManager:
         op_id: operation id
         user: logged in user
         """
-        if self.auth_type(user.id, op_id) != "creator":
+        if not self.is_creator(user.id, op_id):
             return False
         Permission.query.filter_by(op_id=op_id).delete()
         Change.query.filter_by(op_id=op_id).delete()
@@ -385,7 +403,8 @@ class FileManager:
         users = []
         for permission in permissions:
             user = User.query.filter_by(id=permission.u_id).first()
-            users.append({"username": user.username, "access_level": permission.access_level})
+            users.append({"username": user.username, "access_level": permission.access_level,
+                          "id": permission.u_id})
         return users
 
     def save_file(self, op_id, content, user, comment=""):
@@ -394,6 +413,8 @@ class FileManager:
         content: content of the file to be saved
         # ToDo save change in schema
         """
+        if not verify_waypoint_data(content):
+            return False
         # ToDo use comment
         operation = Operation.query.filter_by(id=op_id).first()
         if not operation:

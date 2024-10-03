@@ -28,9 +28,14 @@ import socketio
 import json
 import logging
 
+import requests
+from urllib.parse import urljoin
+
 from PyQt5 import QtCore
+from mslib.msui.mscolab_exceptions import MSColabConnectionError
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.verify_user_token import verify_user_token
+from mslib.utils.config import config_loader
 
 
 class ConnectionManager(QtCore.QObject):
@@ -46,6 +51,8 @@ class ConnectionManager(QtCore.QObject):
     signal_operation_permissions_updated = QtCore.pyqtSignal(int, name="operation permissions updated")
     signal_operation_list_updated = QtCore.pyqtSignal(name="operation list updated")
     signal_operation_deleted = QtCore.pyqtSignal(int, name="operation deleted")
+    signal_active_user_update = QtCore.pyqtSignal(int, int)
+    signal_update_collaborator_list = QtCore.pyqtSignal()
 
     def __init__(self, token, user, mscolab_server_url=mss_default.mscolab_server_url):
         super(ConnectionManager, self).__init__()
@@ -78,8 +85,19 @@ class ConnectionManager(QtCore.QObject):
         self.sio.on('operation-deleted', handler=self.handle_operation_deleted)
         # On New Operation
         self.sio.on('operation-list-update', handler=self.handle_operation_list_update)
+        # On active user update
+        self.sio.on('active-user-update', handler=self.handle_active_user_update)
 
         self.sio.emit('start', {'token': token})
+
+    def handle_active_user_update(self, data):
+        """Handle the update for the number of active users on an operation."""
+        if isinstance(data, str):
+            data = json.loads(data)  # Safely decode in case of string
+        op_id = data['op_id']
+        count = data['count']
+        self.signal_active_user_update.emit(op_id, count)
+        self.signal_update_collaborator_list.emit()
 
     def handle_update_permission(self, message):
         """
@@ -181,7 +199,11 @@ class ConnectionManager(QtCore.QObject):
             # this triggers disconnect
             self.signal_reload.emit(op_id)
 
-    def save_file(self, token, op_id, content, comment=None):
+    def select_operation(self, op_id):
+        # Emit an event to notify the server of the operation selection.
+        self.sio.emit('operation-selected', {'token': self.token, 'op_id': op_id})
+
+    def save_file(self, token, op_id, content, comment=None, messageText=""):
         # ToDo refactor API
         if verify_user_token(self.mscolab_server_url, self.token):
             logging.debug("saving file")
@@ -189,7 +211,8 @@ class ConnectionManager(QtCore.QObject):
                           "op_id": op_id,
                           "token": self.token,
                           "content": content,
-                          "comment": comment})
+                          "comment": comment,
+                          "messageText": messageText})
         else:
             # this triggers disconnect
             self.signal_reload.emit(op_id)
@@ -216,3 +239,19 @@ class ConnectionManager(QtCore.QObject):
                 pass
 
         self.sio.disconnect()
+
+    def request_post(self, api, data=None, files=None):
+        response = requests.post(
+            urljoin(self.mscolab_server_url, api),
+            data=((data if data is not None else {}) | {"token": self.token}),
+            files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        return response
+
+    def request_get(self, api, data=None):
+        response = requests.get(
+            urljoin(self.mscolab_server_url, api),
+            data=((data if data is not None else {}) | {"token": self.token}),
+            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        if response.status_code != 200:
+            raise MSColabConnectionError
+        return response

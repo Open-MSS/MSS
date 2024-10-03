@@ -32,6 +32,10 @@ from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
+<<<<<<< HEAD
+=======
+from mslib.mscolab.conf import mscolab_settings
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
 
 
 class Test_FileManager:
@@ -240,7 +244,7 @@ class Test_FileManager:
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path='operation5')
             assert self.fm.get_authorized_users(operation.id) == [{'access_level': 'creator',
-                                                                   'username': self.userdata[1]}]
+                                                                   'username': self.userdata[1], 'id': 1}]
 
     def test_save_file(self):
         with self.app.test_client():
@@ -268,6 +272,33 @@ class Test_FileManager:
             assert name in static_path
             assert static_path.endswith(ext)
 
+<<<<<<< HEAD
+=======
+    def test_upload_file(self):
+        sample_file_path = os.path.join(os.path.dirname(__file__), "..", "data")
+        filename = "example.txt"
+        _, ext = filename.split('.')
+
+        open_txt = os.path.join(sample_file_path, "example.txt")
+        with open(open_txt, 'rb') as fp:
+            file_content = fp.read()
+            fp.seek(0)                  # reset file pointer
+            file = FileStorage(fp, filename=filename, content_type="text/plain")
+            subfolder = 'test_subfolder'
+            identifier = 'unique_identifier'
+            relative_path = self.fm.upload_file(file, subfolder=subfolder, identifier=identifier)
+            full_path = os.path.join(mscolab_settings.UPLOAD_FOLDER, relative_path)
+
+            assert os.path.isfile(full_path)
+            assert identifier in relative_path
+            assert subfolder in relative_path
+            assert relative_path.endswith(ext)
+            # comparing content of uploaded file with sample file
+            with open(full_path, 'rb') as uploaded_file:
+                uploaded_file_content = uploaded_file.read()
+                assert uploaded_file_content == file_content
+
+>>>>>>> 54854e1c408b7dd47889a575b83015260275af87
     def test_get_file(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7")

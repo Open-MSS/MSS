@@ -49,19 +49,33 @@ class default_mscolab_settings:
     # To enable Engine.IO logging set to True or pass a logger object to use.
     ENGINEIO_LOGGER = False
 
+    # To enable flask socketio debugging, this sets in flask_socketio app.debug too
+    DEBUG = False
+
     # Which origins are allowed to communicate with your server
     CORS_ORIGINS = ["*"]
 
     # dir where msui output files are stored
-    BASE_DIR = os.path.expanduser("~")
+    BASE_DIR = os.path.join(os.path.expanduser("~"), 'mss')
 
     DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
-    # mscolab data directory
-    MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+    # mscolab data directory for operation git repositories
+    OPERATIONS_DATA = os.path.join(DATA_DIR, 'filedata')
+
+    # SSO by SAML2 is optional
+
+    # dir where mscolab single sign-on process files are stored
+    SSO_DIR = os.path.join(DATA_DIR, 'datasso')
+
+    # Enable SSL certificate verification during SSO between MSColab and IdP
+    SSO_SSL_CERT_VERIFICATION = True
 
     # MYSQL CONNECTION STRING: "mysql+pymysql://<username>:<password>@<host>:<port>/<db_name>?charset=utf8mb4"
     SQLALCHEMY_DB_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'mscolab.db')
+
+    # SQLAlchemy connection string to migrate data from, if set
+    SQLALCHEMY_DB_URI_TO_MIGRATE_FROM = None
 
     # Set to True for testing and False for production
     SQLALCHEMY_ECHO = False
@@ -123,12 +137,6 @@ class default_mscolab_settings:
     # accounts on a database on the server
     DIRECT_LOGIN = True
 
-    # Enable SSL certificate verification during SSO between MSColab and IdP
-    ENABLE_SSO_SSL_CERT_VERIFICATION = True
-
-    # dir where mscolab single sign process files are stored
-    MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
-
 
 mscolab_settings = default_mscolab_settings()
 
@@ -162,19 +170,19 @@ except ImportError as ex:
             #     }
             # },
         ]
-        if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"):
-            with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
+        if os.path.exists(f"{mscolab_settings.SSO_DIR}/mss_saml2_backend.yaml"):
+            with open(f"{mscolab_settings.SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
                 yaml_data = yaml.safe_load(fobj)
             # go through configured IDPs and set conf file paths for particular files
             for configured_idp in CONFIGURED_IDPS:
                 # set CRTs and metadata paths for the localhost_test_idp
                 if 'localhost_test_idp' == configured_idp['idp_identity_name']:
                     yaml_data["config"]["localhost_test_idp"]["key_file"] = \
-                        f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'
+                        f'{mscolab_settings.SSO_DIR}/key_mscolab.key'
                     yaml_data["config"]["localhost_test_idp"]["cert_file"] = \
-                        f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'
+                        f'{mscolab_settings.SSO_DIR}/crt_mscolab.crt'
                     yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = \
-                        f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'
+                        f'{mscolab_settings.SSO_DIR}/idp.xml'
 
                     # configuration localhost_test_idp Saml2Client
                     try:
@@ -184,7 +192,7 @@ except ImportError as ex:
                                            Ignore this warning when you initialize metadata.")
 
                         localhost_test_idp = SPConfig().load(yaml_data["config"]["localhost_test_idp"])
-                        localhost_test_idp.verify_ssl_cert = mscolab_settings.ENABLE_SSO_SSL_CERT_VERIFICATION
+                        localhost_test_idp.verify_ssl_cert = mscolab_settings.SSO_SSL_CERT_VERIFICATION
                         sp_localhost_test_idp = Saml2Client(localhost_test_idp)
 
                         configured_idp['idp_data']['saml2client'] = sp_localhost_test_idp
