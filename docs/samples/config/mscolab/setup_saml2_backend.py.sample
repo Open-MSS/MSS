@@ -32,11 +32,7 @@ class setup_saml2_backend:
                 yaml_data["config"]["localhost_test_idp"]["key_file"] = \
                     f'{mscolab_settings.SSO_DIR}/key_mscolab.key'  # set path to your mscolab key file
                 yaml_data["config"]["localhost_test_idp"]["cert_file"] = \
-<<<<<<< HEAD
-                    f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'  # set path to your mscolab certificate file
-=======
                     f'{mscolab_settings.SSO_DIR}/crt_mscolab.crt'  # set path to your mscolab certificate file
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
                 yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = \
                     f'{mscolab_settings.SSO_DIR}/idp.xml'  # set path to your idp metadata xml file
 
