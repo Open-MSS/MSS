@@ -32,10 +32,7 @@ from werkzeug.datastructures import FileStorage
 
 from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
-<<<<<<< HEAD
-=======
 from mslib.mscolab.conf import mscolab_settings
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
 
 
 class Test_FileManager:
@@ -272,8 +269,6 @@ class Test_FileManager:
             assert name in static_path
             assert static_path.endswith(ext)
 
-<<<<<<< HEAD
-=======
     def test_upload_file(self):
         sample_file_path = os.path.join(os.path.dirname(__file__), "..", "data")
         filename = "example.txt"
@@ -298,7 +293,6 @@ class Test_FileManager:
                 uploaded_file_content = uploaded_file.read()
                 assert uploaded_file_content == file_content
 
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
     def test_get_file(self):
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="operation7")

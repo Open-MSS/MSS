@@ -449,11 +449,7 @@ def get_user():
 @APP.route('/upload_profile_image', methods=["POST"])
 @verify_user
 def upload_profile_image():
-<<<<<<< HEAD
-    user_id = request.form['user_id']
-=======
     user_id = g.user.id
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
     file = request.files['image']
     if not file:
         return jsonify({'message': 'No file provided or invalid file type'}), 400

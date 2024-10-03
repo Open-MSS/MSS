@@ -27,11 +27,7 @@
 import pytest
 
 from mslib.mscolab.models import Message, MessageType
-<<<<<<< HEAD
-from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation
-=======
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
 
 
 class Test_Chat_Manager:

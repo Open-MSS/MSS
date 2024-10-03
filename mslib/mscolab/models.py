@@ -67,13 +67,8 @@ class User(db.Model):
 
     def __init__(self, emailid, username, password, profile_image_path=None, confirmed=False,
                  confirmed_on=None, authentication_backend='local'):
-<<<<<<< HEAD
-        self.username = username
-        self.emailid = emailid
-=======
         self.username = str(username)
         self.emailid = str(emailid)
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
         self.hash_password(password)
         self.profile_image_path = profile_image_path
         self.registered_on = datetime.datetime.now(tz=datetime.timezone.utc)

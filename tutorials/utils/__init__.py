@@ -150,14 +150,11 @@ def start(target=None, duration=120, dry_run=False, mscolab=False):
     Note: Uncomment the line pag.press('q') if recording windows do not close in some cases.
     """
     if platform.system() == 'Linux':
-<<<<<<< HEAD
-=======
         tutdir = "/tmp/msui_tutorials"
         if not os.path.isdir(tutdir):
             os.mkdir(tutdir)
         os.environ["MSUI_CONFIG_PATH"] = tutdir
         os.environ["XDG_CACHE_HOME"] = tutdir
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
         # makes sure the keyboard is set to US
         os.system("setxkbmap -layout us")
 

@@ -135,7 +135,6 @@ class FileManager:
         permissions = Permission.query.filter_by(u_id=user.id).all()
         for permission in permissions:
             operation = Operation.query.filter_by(id=permission.op_id).first()
-<<<<<<< HEAD
             if operation.last_used is not None and (
                     datetime.datetime.now(tz=datetime.timezone.utc) - operation.last_used
             ).days > mscolab_settings.ARCHIVE_THRESHOLD:
@@ -147,10 +146,7 @@ class FileManager:
             else:
                 operation = Operation.query.filter_by(id=permission.op_id).first()
 
-            if operation is not None:
-=======
             if operation is not None and (operation.active or not skip_archived):
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
                 operations.append({
                     "op_id": permission.op_id,
                     "access_level": permission.access_level,

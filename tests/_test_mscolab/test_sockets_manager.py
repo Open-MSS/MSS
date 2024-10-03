@@ -98,10 +98,6 @@ class Test_Socket_Manager:
 
     def test_remove_collaborator_from_operation(self):
         pytest.skip("get_session_id has None result")
-<<<<<<< HEAD
-        sio = self._connect()
-=======
->>>>>>> 54854e1c408b7dd47889a575b83015260275af87
         operation = self._new_operation('new_operation', "example description")
         sm = SocketsManager(self.cm, self.fm)
         sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
