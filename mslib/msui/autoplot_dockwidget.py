@@ -193,7 +193,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             'etime': self.etime[:-1]
         }
 
-        # Invoke the main method using click
+        # Invoke the main method using click from the mssautoplot
         ctx = click.Context(cli_tool)
         ctx.obj = self
         ctx.invoke(cli_tool, **args)
