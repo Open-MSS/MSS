@@ -448,105 +448,13 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.local_active = True
         self.new_flight_track_counter = 0
         edit = editor.ConfigurationEditorWindow(self)
+        # ToDo review if this can replace of other config_loader() calls
         self.config_for_gui = edit.last_saved
+        # automated_plotting_* parameters must be stored or loaded by the mssautoplot.json file
         self.config_for_gui["automated_plotting_flights"].clear()
         self.config_for_gui["automated_plotting_hsecs"].clear()
         self.config_for_gui["automated_plotting_vsecs"].clear()
         self.config_for_gui["automated_plotting_lsecs"].clear()
-        map_sections = {
-            "00 global (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": -180.0,
-                    "llcrnrlat": -90.0,
-                    "urcrnrlon": 180.0,
-                    "urcrnrlat": 90.0
-                }
-            },
-            "01 SADPAP (stereo)": {
-                "CRS": "EPSG:77890290",
-                "map": {
-                    "llcrnrlon": -150.0,
-                    "llcrnrlat": -45.0,
-                    "urcrnrlon": -25.0,
-                    "urcrnrlat": -20.0
-                }
-            },
-            "02 SADPAP zoom (stereo)": {
-                "CRS": "EPSG:77890290",
-                "map": {
-                    "llcrnrlon": -120.0,
-                    "llcrnrlat": -65.0,
-                    "urcrnrlon": -45.0,
-                    "urcrnrlat": -28.0
-                }
-            },
-            "03 SADPAP (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": -100.0,
-                    "llcrnrlat": -75.0,
-                    "urcrnrlon": -30.0,
-                    "urcrnrlat": -30.0
-                }
-            },
-            "04 Southern Hemisphere (stereo)": {
-                "CRS": "EPSG:77889270",
-                "map": {
-                    "llcrnrlon": 135.0,
-                    "llcrnrlat": 0.0,
-                    "urcrnrlon": -45.0,
-                    "urcrnrlat": 0.0
-                }
-            },
-            "05 EDMO-SAL (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": -40,
-                    "llcrnrlat": 10,
-                    "urcrnrlon": 30,
-                    "urcrnrlat": 60
-                }
-            },
-            "06 SAL-BA (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": -80,
-                    "llcrnrlat": -40,
-                    "urcrnrlon": -10,
-                    "urcrnrlat": 30
-                }
-            },
-            "07 Europe (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": -15.0,
-                    "llcrnrlat": 35.0,
-                    "urcrnrlon": 30.0,
-                    "urcrnrlat": 65.0
-                }
-            },
-            "08 Germany (cyl)": {
-                "CRS": "EPSG:4326",
-                "map": {
-                    "llcrnrlon": 5.0,
-                    "llcrnrlat": 45.0,
-                    "urcrnrlon": 15.0,
-                    "urcrnrlat": 57.0
-                }
-            },
-            "09 Northern Hemisphere (stereo)": {
-                "CRS": "MSS:stere,0,90,90",
-                "map": {
-                    "llcrnrlon": -45.0,
-                    "llcrnrlat": 0.0,
-                    "urcrnrlon": 135.0,
-                    "urcrnrlat": 0.0
-                }
-            }
-        }
-
-        self.config_for_gui["predefined_map_sections"].update(map_sections)
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
