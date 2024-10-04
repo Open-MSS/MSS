@@ -32,7 +32,7 @@ from mslib.msui.qt5 import ui_linearview_options as ui_opt
 from mslib.msui.viewwindows import MSUIMplViewWindow
 from mslib.msui import wms_control as wms
 from mslib.msui.icons import icons
-from mslib.msui import autoplot_dockwidget as dock
+from mslib.msui import autoplot_dockwidget as apd
 
 # Dock window indices.
 WMS = 0
@@ -157,8 +157,8 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
                 self.mpl.canvas.waypoints_interactor.signal_get_lsec.connect(widget.call_get_lsec)
             elif index == AUTOPLOT:
                 title = "Autoplot (Linear View)"
-                widget = dock.AutoplotDockWidget(parent=self, parent2=parent,
-                                                 view="Linear View", config_settings=config_settings)
+                widget = apd.AutoplotDockWidget(parent=self, parent2=parent,
+                                                view="Linear View", config_settings=config_settings)
                 widget.treewidget_item_selected.connect(
                     lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
             else:
