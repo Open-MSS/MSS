@@ -429,7 +429,7 @@ class LinearViewPlotting(Plotting):
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.pass_context
-def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
+def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     if ctx.obj is not None:
         pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
         pdlg.setMinimumDuration(0)
@@ -549,4 +549,4 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
 
 
 if __name__ == '__main__':
-    cli_tool()
+    main()
