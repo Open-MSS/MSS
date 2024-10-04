@@ -30,7 +30,7 @@
 import json
 import os
 import click
-from mslib.utils.mssautoplot import cli_tool
+from mslib.utils.mssautoplot import main as cli_tool
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
@@ -193,7 +193,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             'etime': self.etime[:-1]
         }
 
-        # Invoke the cli_tool method using click
+        # Invoke the main method using click from the mssautoplot
         ctx = click.Context(cli_tool)
         ctx.obj = self
         ctx.invoke(cli_tool, **args)

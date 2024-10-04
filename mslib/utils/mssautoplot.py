@@ -91,20 +91,20 @@ def load_from_operation(operation, email, password, mscolab_url):
         "email": email,
         "password": password
     }
-    s = requests.Session()
+    session = requests.Session()
     auth = config_loader(dataset="MSCOLAB_auth_user_name"), password
-    s.auth = auth
-    s.headers.update({'x-test': 'true'})
+    session.auth = auth
+    session.headers.update({'x-test': 'true'})
     url = urljoin(mscolab_url, "token")
     try:
-        r = s.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
-        if r.status_code == 401:
+        response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+        if response.status_code == 401:
             raise requests.exceptions.ConnectionError
     except requests.exceptions.RequestException as ex:
         logging.error("unexpected error: %s %s %s", type(ex), url, ex)
         return
-    if r.text != "False":
-        _json = json.loads(r.text)
+    if response.text != "False":
+        _json = json.loads(response.text)
         token = _json["token"]
         mscolab_server_url = url
         op_id = get_op_id(token=token, mscolab_server_url=mscolab_server_url, curr_op=operation)
@@ -429,7 +429,7 @@ class LinearViewPlotting(Plotting):
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.pass_context
-def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
+def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     if ctx.obj is not None:
         pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
         pdlg.setMinimumDuration(0)
@@ -549,4 +549,4 @@ def cli_tool(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
 
 
 if __name__ == '__main__':
-    cli_tool()
+    main()

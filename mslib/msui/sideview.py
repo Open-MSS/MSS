@@ -39,7 +39,7 @@ from mslib.msui.icons import icons
 from mslib.utils import thermolib
 from mslib.utils.config import config_loader
 from mslib.utils.units import units, convert_to
-from mslib.msui import autoplot_dockwidget as dock
+from mslib.msui import autoplot_dockwidget as apd
 
 # Dock window indices.
 WMS = 0
@@ -331,8 +331,8 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
                 self.mpl.canvas.waypoints_interactor.signal_get_vsec.connect(widget.call_get_vsec)
             elif index == AUTOPLOT:
                 title = "Autoplot (Side View)"
-                widget = dock.AutoplotDockWidget(parent=self, parent2=parent,
-                                                 view="Side View", config_settings=config_settings)
+                widget = apd.AutoplotDockWidget(parent=self, parent2=parent,
+                                                view="Side View", config_settings=config_settings)
                 widget.treewidget_item_selected.connect(
                     lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
             else:

@@ -44,7 +44,7 @@ from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import airdata_dockwidget as ad
 from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui import flighttrack as ft
-from mslib.msui import autoplot_dockwidget as dock
+from mslib.msui import autoplot_dockwidget as apd
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -404,8 +404,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     self.signal_activate_operation.emit(self.active_op_id)
             elif index == AUTOPLOT:
                 title = "Autoplot (Top View)"
-                widget = dock.AutoplotDockWidget(parent=self, parent2=parent,
-                                                 view="Top View", config_settings=config_settings)
+                widget = apd.AutoplotDockWidget(parent=self, parent2=parent,
+                                                view="Top View", config_settings=config_settings)
                 widget.treewidget_item_selected.connect(
                     lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
                 widget.autoplot_treewidget_item_selected.connect(
