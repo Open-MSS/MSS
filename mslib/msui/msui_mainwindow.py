@@ -50,7 +50,7 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
-from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
+from PyQt5 import QtGui, QtCore, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -608,9 +608,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 item = self.listFlightTracks.item(index)
                 if flight == item.text():
                     item = self.listFlightTracks.item(index)
-                    point = self.listFlightTracks.visualItemRect(item).center()
-                    QtTest.QTest.mouseClick(self.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
-                    QtTest.QTest.mouseDClick(self.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+                    self.activate_flight_track(item)
                     break
 
     def add_import_plugins(self, picker_default):
@@ -1119,8 +1117,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if self.config_editor is not None:
                 self.config_editor.restart_on_save = False
                 self.config_editor.close()
-                from PyQt5 import QtTest
-                QtTest.QTest.qWait(5)
                 if self.config_editor is not None:
                     self.statusBar.showMessage("Save your config changes and try closing again")
                     event.ignore()
