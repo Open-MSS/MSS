@@ -50,8 +50,9 @@ from mslib.plugins.io.csv import load_from_csv, save_to_csv
 from mslib.msui.icons import icons, python_powered
 from mslib.utils.qt import get_open_filenames, get_save_filename, show_popup
 from mslib.utils.config import read_config_file, config_loader
+from PyQt5 import QtGui, QtCore, QtWidgets
 from mslib.utils import release_info
-from PyQt5 import QtGui, QtCore, QtWidgets, QtTest
+
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 # Add config path to PYTHONPATH so plugins located there may be found
@@ -601,20 +602,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if op_fl == "operation":
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)
-                if item.text().startswith(flight):
+                if flight == item.operation_path:
                     item = self.listOperationsMSC.item(index)
-                    point = self.listOperationsMSC.visualItemRect(item).center()
-                    QtTest.QTest.mouseClick(self.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-                    QtTest.QTest.mouseDClick(self.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+                    self.mscolab.set_active_op_id(item)
                     break
         else:
             for index in range(self.listFlightTracks.count()):
                 item = self.listFlightTracks.item(index)
                 if flight == item.text():
                     item = self.listFlightTracks.item(index)
-                    point = self.listFlightTracks.visualItemRect(item).center()
-                    QtTest.QTest.mouseClick(self.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
-                    QtTest.QTest.mouseDClick(self.listFlightTracks.viewport(), QtCore.Qt.LeftButton, pos=point)
+                    self.activate_flight_track(item)
                     break
 
     def add_import_plugins(self, picker_default):
@@ -1123,8 +1120,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             if self.config_editor is not None:
                 self.config_editor.restart_on_save = False
                 self.config_editor.close()
-                from PyQt5 import QtTest
-                QtTest.QTest.qWait(5)
                 if self.config_editor is not None:
                     self.statusBar.showMessage("Save your config changes and try closing again")
                     event.ignore()
