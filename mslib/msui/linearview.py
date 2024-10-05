@@ -87,7 +87,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
     vtime_vals = QtCore.pyqtSignal([list])
     itemSecs_selected = QtCore.pyqtSignal(str)
 
-    def __init__(self, parent=None, model=None, _id=None, config_settings=None, tutorial_mode=False):
+    def __init__(self, parent=None, mainwindow=None, model=None, _id=None, config_settings=None, tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """
@@ -115,8 +115,9 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         # Connect slots and signals.
         # ==========================
-
-        parent.refresh_signal_connect.connect(self.refresh_signal_send.emit)
+        # ToDo review 2026 after EOL of Win 10 if we can use parent again
+        if mainwindow is not None:
+            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send.emit)
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
