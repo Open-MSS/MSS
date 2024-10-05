@@ -297,7 +297,7 @@ class MSUISideViewWindow(MSUIMplViewWindow, ui.Ui_SideViewWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
-            index=ind, parent=parent, config_settings=config_settings))
+            index=ind, parent=mainwindow, config_settings=config_settings))
         self.openTool(WMS + 1)
 
     def __del__(self):

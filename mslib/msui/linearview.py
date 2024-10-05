@@ -121,7 +121,7 @@ class MSUILinearViewWindow(MSUIMplViewWindow, ui.Ui_LinearWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
-            index=ind, parent=parent, config_settings=config_settings))
+            index=ind, parent=mainwindow, config_settings=config_settings))
         self.lvoptionbtn.clicked.connect(self.open_settings_dialog)
 
         self.openTool(WMS + 1)
