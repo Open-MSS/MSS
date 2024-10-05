@@ -599,11 +599,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if op_fl == "operation":
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)
-                if item.text().startswith(flight):
+                if flight == item.text():
                     item = self.listOperationsMSC.item(index)
-                    point = self.listOperationsMSC.visualItemRect(item).center()
-                    QtTest.QTest.mouseClick(self.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
-                    QtTest.QTest.mouseDClick(self.listOperationsMSC.viewport(), QtCore.Qt.LeftButton, pos=point)
+                    self.mscolab.set_active_op_id(item)
                     break
         else:
             for index in range(self.listFlightTracks.count()):
