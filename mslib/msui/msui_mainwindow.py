@@ -599,7 +599,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if op_fl == "operation":
             for index in range(self.listOperationsMSC.count()):
                 item = self.listOperationsMSC.item(index)
-                if flight == item.text():
+                if flight == item.operation_path:
                     item = self.listOperationsMSC.item(index)
                     self.mscolab.set_active_op_id(item)
                     break
