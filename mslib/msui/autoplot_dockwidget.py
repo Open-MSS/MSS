@@ -27,15 +27,17 @@
     limitations under the License.
 """
 
-import json
 import os
-import click
-from mslib.utils.mssautoplot import main as cli_tool
+import json
+from datetime import datetime
+
 from PyQt5.QtWidgets import QWidget, QFileDialog, QTreeWidgetItem, QMessageBox
 from PyQt5 import QtCore
+import click
+
+from mslib.utils.mssautoplot import cli_tool
 from mslib.msui.qt5.ui_mss_autoplot import Ui_AutoplotDockWidget
 from mslib.msui import constants as const
-from datetime import datetime
 
 
 class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
