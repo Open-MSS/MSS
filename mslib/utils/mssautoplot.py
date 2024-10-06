@@ -85,7 +85,7 @@ def load_from_ftml(filename):
     return data_list, wp_list
 
 
-def load_from_operation(operation, email, password, mscolab_url):
+def load_from_operation(operation, auth_password, email, password, mscolab_url):
     """Load from operation.
     """
     data = {
@@ -93,30 +93,39 @@ def load_from_operation(operation, email, password, mscolab_url):
         "password": password
     }
     session = requests.Session()
-    auth = config_loader(dataset="MSCOLAB_auth_user_name"), password
+    auth = ("mscolab", auth_password)
     session.auth = auth
     session.headers.update({'x-test': 'true'})
-    url = urljoin(mscolab_url, "token")
-    try:
-        response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
-        if response.status_code == 401:
-            raise requests.exceptions.ConnectionError
-    except requests.exceptions.RequestException as ex:
-        logging.error("unexpected error: %s %s %s", type(ex), url, ex)
-        return
-    if response.text != "False":
-        _json = json.loads(response.text)
-        token = _json["token"]
-        mscolab_server_url = url
-        op_id = get_op_id(token=token, mscolab_server_url=mscolab_server_url, curr_op=operation)
-        xml_data = get_xml_data(mscolab_server_url=mscolab_server_url, token=token, op_id=op_id)
-        wp_list = ft.load_from_xml_data(xml_data)
-        now = datetime.now()
-        for wp in wp_list:
-            wp.utc_time = now
-        data_list = [
-            (wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_list]
-        return data_list, wp_list
+    # ToDp fix config_loader it gets a list of two times the entry
+    response = session.get(urljoin(mscolab_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+    session.close()
+    if response.status_code == 401:
+        logging.error("Error", 'Server authentication data were incorrect.')
+    elif response.status_code == 200:
+        session = requests.Session()
+        session.auth = auth
+        session.headers.update({'x-test': 'true'})
+        url = urljoin(mscolab_url, "token")
+        try:
+            # ToDp fix config_loader it gets a list of two times the entry
+            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+            response.raise_for_status()
+        except requests.exceptions.RequestException as ex:
+            logging.error("unexpected error: %s %s %s", type(ex), url, ex)
+            return
+        if response.text != "False":
+            _json = json.loads(response.text)
+            token = _json["token"]
+            mscolab_server_url = url
+            op_id = get_op_id(token=token, mscolab_server_url=mscolab_server_url, curr_op=operation)
+            xml_data = get_xml_data(mscolab_server_url=mscolab_server_url, token=token, op_id=op_id)
+            wp_list = ft.load_from_xml_data(xml_data)
+            now = datetime.now()
+            for wp in wp_list:
+                wp.utc_time = now
+            data_list = [
+                (wp.lat, wp.lon, wp.flightlevel, wp.location, wp.comments) for wp in wp_list]
+            return data_list, wp_list
 
 
 def get_xml_data(mscolab_server_url, token, op_id):
@@ -154,7 +163,7 @@ def get_op_id(token, mscolab_server_url, curr_op):
 
 
 class Plotting:
-    def __init__(self, cpath, username=None, password=None, mscolab_server_url=None):
+    def __init__(self, cpath, username=None, password=None, mscolab_server_url=None, msc_auth=None):
         read_config_file(cpath)
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
@@ -174,7 +183,7 @@ class Plotting:
             self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
             self.bbox_units = self.params["bbox"]
         if filename != "" and filename == flight:
-            self.read_operation(flight, username, password, mscolab_server_url)
+            self.read_operation(flight, msc_auth, username, password, mscolab_server_url)
         elif filename != "":
             self.read_ftml(filename)
 
@@ -195,9 +204,9 @@ class Plotting:
                                                                   numpoints=self.num_interpolation_points + 1,
                                                                   connection="greatcircle")
 
-    def read_operation(self, operation, email, password, mscolab_url):
+    def read_operation(self, operation, auth_password, email, password, mscolab_url):
         self.wps, self.wp_model_data = load_from_operation(
-            operation, email=email, password=password, mscolab_url=mscolab_url)
+            operation, auth_password=auth_password, email=email, password=password, mscolab_url=mscolab_url)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.path = [(wp[0], wp[1], datetime.now()) for wp in self.wps]
@@ -209,17 +218,18 @@ class Plotting:
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self, cpath, mss_url, mss_password, mss_auth):
-        super(TopViewPlotting, self).__init__(cpath, mss_auth, mss_password, mss_url)
+    def __init__(self, cpath, msc_url, msc_user, msc_password, msc_auth):
+        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_user, msc_password, msc_auth)
         self.myfig = qt.TopViewPlotter()
         self.myfig.fig.canvas.draw()
         self.fig, self.ax = self.myfig.fig, self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
         self.myfig.init_map(**(self.params["basemap"]))
         self.plotter = mpath.PathH_Plotter(self.myfig.map)
-        self.email = mss_auth
-        self.password = mss_password
-        self.url = mss_url
+        self.email = msc_user
+        self.password = msc_password
+        self.msc_auth = msc_auth
+        self.url = msc_url
 
     def update_path(self, filename=None):
         # plot path and label
@@ -232,7 +242,7 @@ class TopViewPlotting(Plotting):
     def update_path_ops(self, filename=None):
         # plot path and label
         if filename != "":
-            self.read_operation(filename, self.email, self.password, self.url)
+            self.read_operation(filename, self.msc_auth, self.email, self.password, self.url)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
@@ -278,7 +288,7 @@ class TopViewPlotting(Plotting):
 
 
 class SideViewPlotting(Plotting):
-    def __init__(self, cpath, mss_url, mss_password, mss_auth):
+    def __init__(self, cpath, msc_url, msc_user, msc_password, msc_auth):
         super(SideViewPlotting, self).__init__(cpath)
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
@@ -454,21 +464,22 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     if ctx.obj is not None:
         pdlg.setValue(1)
 
-    mss_url = None
+    msc_url = None
     mss_auth = None
-    mss_password = None
+    msc_password = None
     # Check if flight_name is valid
-    if flight_name != "" and flight_name == file:
-        mss_url = config["mscolab_server_url"]
-        mss_auth = config["MSS_auth"][mss_url]
-        mss_password = mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=mss_auth)
+    #if flight_name != "" and flight_name == file:
+    msc_url = config["mscolab_server_url"]
+    msc_auth = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}", username="mscolab")
+    msc_user = config["MSS_auth"][msc_url]
+    msc_password = mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=msc_user)
 
     # Choose view (top or side)
     if view == "top":
-        top_view = TopViewPlotting(cpath, mss_url, mss_password, mss_auth)
+        top_view = TopViewPlotting(cpath, msc_url, msc_user, msc_password, msc_auth)
         sec = "automated_plotting_hsecs"
     else:
-        side_view = SideViewPlotting(cpath, mss_url, mss_password, mss_auth)
+        side_view = SideViewPlotting(cpath, msc_url, msc_user, msc_password, msc_auth)
         sec = "automated_plotting_vsecs"
     if ctx.obj is not None:
         pdlg.setValue(2)
