@@ -957,7 +957,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSUILinearViewWindow(mainwindow=self, model=model, tutorial_mode=self.tutorial_mode,
+            view_window = linearview.MSUILinearViewWindow(mainwindow=self, model=model,
+                                                          tutorial_mode=self.tutorial_mode,
                                                           config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
