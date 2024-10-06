@@ -934,7 +934,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         view_window = None
         if _type == "topview":
             # Top view.
-            view_window = topview.MSUITopViewWindow(parent=self, mainwindow=self, model=model,
+            view_window = topview.MSUITopViewWindow(mainwindow=self, model=model,
                                                     active_flighttrack=self.active_flight_track,
                                                     mscolab_server_url=self.mscolab.mscolab_server_url,
                                                     token=self.mscolab.token, tutorial_mode=self.tutorial_mode,
@@ -945,7 +945,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 view_window.mpl.setFixedSize(layout['topview'][0], layout['topview'][1])
         elif _type == "sideview":
             # Side view.
-            view_window = sideview.MSUISideViewWindow(model=model, tutorial_mode=self.tutorial_mode, parent=self,
+            view_window = sideview.MSUISideViewWindow(mainwindow=self, model=model, tutorial_mode=self.tutorial_mode,
                                                       config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['sideview'][0], layout['sideview'][1])
@@ -957,8 +957,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             view_window.centralwidget.resize(layout['tableview'][0], layout['tableview'][1])
         elif _type == "linearview":
             # Linear view.
-            view_window = linearview.MSUILinearViewWindow(model=model, tutorial_mode=self.tutorial_mode,
-                                                          parent=self, config_settings=self.config_for_gui)
+            view_window = linearview.MSUILinearViewWindow(mainwindow=self, model=model,
+                                                          tutorial_mode=self.tutorial_mode,
+                                                          config_settings=self.config_for_gui)
             view_window.refresh_signal_emit.connect(self.refresh_signal_connect.emit)
             view_window.mpl.resize(layout['linearview'][0], layout['linearview'][1])
             if layout["immutable"]:

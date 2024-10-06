@@ -204,6 +204,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         logging.debug(_id)
         self.settings_tag = "topview"
         self.tutorial_mode = tutorial_mode
+        # ToDo review 2026 after EOL of Win 10 if we can use parent again
         self.mainwindow_signal_login_mscolab = mainwindow.signal_login_mscolab
         self.mainwindow_signal_logout_mscolab = mainwindow.signal_logout_mscolab
         self.mainwindow_signal_listFlighttrack_doubleClicked = mainwindow.signal_listFlighttrack_doubleClicked
@@ -249,8 +250,9 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Connect slots and signals.
         # ==========================
-
-        parent.refresh_signal_connect.connect(self.refresh_signal_send.emit)
+        # ToDo review 2026 after EOL of Win 10 if we can use parent again
+        if mainwindow is not None:
+            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send.emit)
 
         # Map controls.
         self.btMapRedraw.clicked.connect(self.mpl.canvas.redraw_map)
@@ -264,7 +266,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
 
         # Tool opener.
         self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
-            index=ind, parent=parent, config_settings=config_settings))
+            index=ind, parent=mainwindow, config_settings=config_settings))
 
         if mainwindow is not None:
             # Update flighttrack
