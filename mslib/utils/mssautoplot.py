@@ -85,27 +85,38 @@ def load_from_ftml(filename):
     return data_list, wp_list
 
 
-def load_from_operation(operation, auth_password, email, password, mscolab_url):
-    """Load from operation.
+def load_from_operation(op_name, msc_url, msc_auth_password, username, password):
+    """
+    Method to load data from an operation in MSColab.
+
+    Parameters:
+    :op_name: Name of the operation to load data from
+    :msc_url: URL of the MS Colab server
+    :msc_auth_password: Password for MS Colab authentication
+    :username: Username for authentication
+    :password: Password for authentication
+
+    Returns:
+    Tuple containing a list of data points and a list of Waypoints if successful, None otherwise
     """
     data = {
-        "email": email,
+        "email": username,
         "password": password
     }
     session = requests.Session()
-    auth = ("mscolab", auth_password)
-    session.auth = auth
+    msc_auth = ("mscolab", msc_auth_password)
+    session.auth = msc_auth
     session.headers.update({'x-test': 'true'})
     # ToDp fix config_loader it gets a list of two times the entry
-    response = session.get(urljoin(mscolab_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
     session.close()
     if response.status_code == 401:
         logging.error("Error", 'Server authentication data were incorrect.')
     elif response.status_code == 200:
         session = requests.Session()
-        session.auth = auth
+        session.auth = msc_auth
         session.headers.update({'x-test': 'true'})
-        url = urljoin(mscolab_url, "token")
+        url = urljoin(msc_url, "token")
         try:
             # ToDp fix config_loader it gets a list of two times the entry
             response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
@@ -116,9 +127,9 @@ def load_from_operation(operation, auth_password, email, password, mscolab_url):
         if response.text != "False":
             _json = json.loads(response.text)
             token = _json["token"]
-            mscolab_server_url = url
-            op_id = get_op_id(token=token, mscolab_server_url=mscolab_server_url, curr_op=operation)
-            xml_data = get_xml_data(mscolab_server_url=mscolab_server_url, token=token, op_id=op_id)
+            msc_url = url
+            op_id = get_op_id(msc_url=msc_url, token=token, op_name=op_name)
+            xml_data = get_xml_data(msc_url=msc_url, token=token, op_id=op_id)
             wp_list = ft.load_from_xml_data(xml_data)
             now = datetime.now()
             for wp in wp_list:
@@ -128,22 +139,44 @@ def load_from_operation(operation, auth_password, email, password, mscolab_url):
             return data_list, wp_list
 
 
-def get_xml_data(mscolab_server_url, token, op_id):
-    if verify_user_token(mscolab_server_url, token):
+def get_xml_data(msc_url, token, op_id):
+    """
+
+    Parameters:
+        :msc_url: The URL of the MSColab Server
+        :token: The user's token for authentication
+        :op_id: The id of the operation to retrieve
+
+    Returns:
+        str: The content of the XML data retrieved from the server
+
+    """
+    if verify_user_token(msc_url, token):
         data = {
             "token": token,
             "op_id": op_id
         }
-        url = urljoin(mscolab_server_url, "get_operation_by_id")
+        url = urljoin(msc_url, "get_operation_by_id")
         r = requests.get(url, data=data)
         if r.text != "False":
             xml_content = json.loads(r.text)["content"]
             return xml_content
 
 
-def get_op_id(token, mscolab_server_url, curr_op):
+def get_op_id(msc_url, token, op_name):
+    """
+    gets the operation id of the given operation name
+
+    Parameters:
+        :msc_url: The URL of the MSColab server
+        :token: The user token for authentication
+        :op_name:: The name of the operation to retrieve op_id for
+
+    Returns:
+        :op_id: The op_id of the operation with the specified name
+    """
     logging.debug('get_recent_op_id')
-    if verify_user_token(mscolab_server_url, token):
+    if verify_user_token(msc_url, token):
         """
         get most recent operation's op_id
         """
@@ -152,18 +185,28 @@ def get_op_id(token, mscolab_server_url, curr_op):
             "token": token,
             "skip_archived": skip_archived
         }
-        url = urljoin(mscolab_server_url, "operations")
+        url = urljoin(msc_url, "operations")
         r = requests.get(url, data=data)
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
             for op in operations:
-                if op["path"] == curr_op:
+                if op["path"] == op_name:
                     return op["op_id"]
 
 
 class Plotting:
-    def __init__(self, cpath, username=None, password=None, mscolab_server_url=None, msc_auth=None):
+    def __init__(self, cpath, msc_url=None, msc_auth_password=None, username=None, password=None):
+        """
+        Initialize the Plotting object with the provided parameters.
+
+        Parameters:
+        :cpath: Path to the configuration file
+        :msc_url: URL for MSColab service
+        :msc_auth_password: Authentication password for MSColab service
+        :username: User's username
+        :password: User's password
+        """
         read_config_file(cpath)
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
@@ -183,7 +226,7 @@ class Plotting:
             self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
             self.bbox_units = self.params["bbox"]
         if filename != "" and filename == flight:
-            self.read_operation(flight, msc_auth, username, password, mscolab_server_url)
+            self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif filename != "":
             self.read_ftml(filename)
 
@@ -204,9 +247,10 @@ class Plotting:
                                                                   numpoints=self.num_interpolation_points + 1,
                                                                   connection="greatcircle")
 
-    def read_operation(self, operation, auth_password, email, password, mscolab_url):
-        self.wps, self.wp_model_data = load_from_operation(
-            operation, auth_password=auth_password, email=email, password=password, mscolab_url=mscolab_url)
+    def read_operation(self, op_name, msc_url, msc_auth_password, username, password):
+        self.wps, self.wp_model_data = load_from_operation(op_name, msc_url=msc_url,
+                                                           msc_auth_password=msc_auth_password, username=username,
+                                                           password=password)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
         self.path = [(wp[0], wp[1], datetime.now()) for wp in self.wps]
@@ -218,20 +262,30 @@ class Plotting:
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_user, msc_password, msc_auth):
-        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_user, msc_password, msc_auth)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
+        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password)
         self.myfig = qt.TopViewPlotter()
         self.myfig.fig.canvas.draw()
         self.fig, self.ax = self.myfig.fig, self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
         self.myfig.init_map(**(self.params["basemap"]))
         self.plotter = mpath.PathH_Plotter(self.myfig.map)
-        self.email = msc_user
+        self.username= msc_username
         self.password = msc_password
-        self.msc_auth = msc_auth
+        self.msc_auth = msc_auth_password
         self.url = msc_url
 
     def update_path(self, filename=None):
+        """
+        Update the path by reading the FTML data from the given filename
+         and redrawing the path based on the updated waypoints model data.
+
+        Parameters:
+        :filename: The name of the file to read FTML data from.
+
+        Returns:
+        None
+        """
         # plot path and label
         if filename != "":
             self.read_ftml(filename)
@@ -242,7 +296,7 @@ class TopViewPlotting(Plotting):
     def update_path_ops(self, filename=None):
         # plot path and label
         if filename != "":
-            self.read_operation(filename, self.msc_auth, self.email, self.password, self.url)
+            self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
@@ -288,7 +342,8 @@ class TopViewPlotting(Plotting):
 
 
 class SideViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_user, msc_password, msc_auth):
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
+        # ToDo Implement access to MSColab
         super(SideViewPlotting, self).__init__(cpath)
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
@@ -365,8 +420,9 @@ class SideViewPlotting(Plotting):
 
 
 class LinearViewPlotting(Plotting):
-    def __init__(self):
-        super(LinearViewPlotting, self).__init__()
+    # ToDo Implement access of MSColab
+    def __init__(self, cpath):
+        super(LinearViewPlotting, self).__init__(cpath)
         self.myfig = qt.LinearViewPlotter()
         self.ax = self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
@@ -381,8 +437,7 @@ class LinearViewPlotting(Plotting):
         self.myfig.setup_linear_view()
 
     def draw(self):
-        for flight, section, vertical, filename, init_time, time in \
-            self.config["automated_plotting_flights"]:
+        for flight, section, vertical, filename, init_time, time in self.config["automated_plotting_flights"]:
             for url, layer, style in self.config["automated_plotting_lsecs"]:
                 width, height = self.myfig.get_plot_size_in_px()
 
@@ -464,22 +519,17 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     if ctx.obj is not None:
         pdlg.setValue(1)
 
-    msc_url = None
-    mss_auth = None
-    msc_password = None
-    # Check if flight_name is valid
-    #if flight_name != "" and flight_name == file:
     msc_url = config["mscolab_server_url"]
-    msc_auth = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}", username="mscolab")
-    msc_user = config["MSS_auth"][msc_url]
-    msc_password = mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=msc_user)
+    msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}", username="mscolab")
+    msc_username = config["MSS_auth"][msc_url]
+    msc_password = mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=msc_username)
 
     # Choose view (top or side)
     if view == "top":
-        top_view = TopViewPlotting(cpath, msc_url, msc_user, msc_password, msc_auth)
+        top_view = TopViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password)
         sec = "automated_plotting_hsecs"
     else:
-        side_view = SideViewPlotting(cpath, msc_url, msc_user, msc_password, msc_auth)
+        side_view = SideViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password)
         sec = "automated_plotting_vsecs"
     if ctx.obj is not None:
         pdlg.setValue(2)
