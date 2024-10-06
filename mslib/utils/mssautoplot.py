@@ -270,7 +270,7 @@ class TopViewPlotting(Plotting):
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.fig)
         self.myfig.init_map(**(self.params["basemap"]))
         self.plotter = mpath.PathH_Plotter(self.myfig.map)
-        self.username= msc_username
+        self.username = msc_username
         self.password = msc_password
         self.msc_auth = msc_auth_password
         self.url = msc_url
@@ -514,13 +514,14 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
 
-    flight_name = config["automated_plotting_flights"][0][0]
-    file = config["automated_plotting_flights"][0][3]
+    # flight_name = config["automated_plotting_flights"][0][0]
+    # file = config["automated_plotting_flights"][0][3]
     if ctx.obj is not None:
         pdlg.setValue(1)
 
     msc_url = config["mscolab_server_url"]
-    msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}", username="mscolab")
+    msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
+                                                                   username="mscolab")
     msc_username = config["MSS_auth"][msc_url]
     msc_password = mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=msc_username)
 
