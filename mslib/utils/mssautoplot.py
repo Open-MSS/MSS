@@ -25,22 +25,22 @@
     limitations under the License.
 """
 
-from datetime import datetime, timedelta
-import io
-import logging
-import re
 import os
 import sys
-import requests
-from urllib.parse import urljoin
+import io
+import re
 import json
-from PyQt5.QtCore import Qt
+import logging
+from datetime import datetime, timedelta
+from urllib.parse import urljoin
 
+import requests
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QMessageBox, QProgressDialog
 import click
 import defusedxml.ElementTree as etree
 import PIL.Image
 import matplotlib
-from PyQt5.QtWidgets import QMessageBox, QProgressDialog
 from fs import open_fs
 
 import mslib
@@ -61,6 +61,7 @@ from mslib.utils import config as conf
 from mslib.utils.auth import get_auth_from_url_and_name
 from mslib.utils.loggerdef import configure_mpl_logger
 from mslib.utils.verify_user_token import verify_user_token
+
 
 TEXT_CONFIG = {
     "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"), "fontweight": "bold",
