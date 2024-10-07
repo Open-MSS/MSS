@@ -47,6 +47,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
     update_op_flight_treewidget = QtCore.pyqtSignal(str, str)
 
     def __init__(self, parent=None, parent2=None, view=None, config_settings=None):
+        # ToDo refactor, reduce complexity
         super().__init__()
         self.setupUi(self)
 
@@ -296,7 +297,8 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
             if len(indices_to_remove) > 0:
                 QMessageBox.information(self, "WARNING",
-                                        f"{', '.join(names_not_available)} not loaded into MSUI. Load first!"
+                                        f"{', '.join(names_not_available)} not loaded into MSUI. Load first!\n"
+                                        f"Take care also to load get_apabilities of the WMS servers listed!"
                 )
 
             parent.refresh_signal_emit.emit()
