@@ -258,7 +258,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
 
         fileName, _ = QFileDialog.getOpenFileName(
             self, "Select .json Config File", const.MSUI_CONFIG_PATH, "JSON Files (*.json)", options=options)
-
+        # ToDo refactor
         if fileName != "":
             self.cpath = fileName
             with open(fileName, 'r') as file:
@@ -268,10 +268,36 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             autoplot_vsecs = configure["automated_plotting_vsecs"]
             autoplot_lsecs = configure["automated_plotting_lsecs"]
 
+            loaded_names = []
+            for index in range(parent.mainwindow_listFlightTracks.count()):
+                name = parent.mainwindow_listFlightTracks.item(index).flighttrack_model.filename
+                if name is not None:
+                    loaded_names.append(name)
+            for index in range(parent.mainwindow_listOperationsMSC.count()):
+                operation = parent.mainwindow_listOperationsMSC.item(index)
+                if operation is not None:
+                    loaded_names.append(operation.operation_path)
+
+            indices_to_remove = []
+            names_not_available = []
+            for count, line in enumerate(autoplot_flights):
+                if line[0] not in loaded_names:
+                    indices_to_remove.append(count)
+                    names_not_available.append(line[0])
+            autoplot_flights = [v for i, v in enumerate(autoplot_flights) if i not in indices_to_remove]
+            autoplot_hsecs = [v for i, v in enumerate(autoplot_hsecs) if i not in indices_to_remove]
+            autoplot_vsecs = [v for i, v in enumerate(autoplot_vsecs) if i not in indices_to_remove]
+            autoplot_lsecs = [v for i, v in enumerate(autoplot_lsecs) if i not in indices_to_remove]
+
             config_settings["automated_plotting_flights"] = autoplot_flights
             config_settings["automated_plotting_hsecs"] = autoplot_hsecs
             config_settings["automated_plotting_vsecs"] = autoplot_vsecs
             config_settings["automated_plotting_lsecs"] = autoplot_lsecs
+
+            if len(indices_to_remove) > 0:
+                QMessageBox.information(self, "WARNING",
+                                        f"{', '.join(names_not_available)} not loaded into MSUI. Load first!"
+                )
 
             parent.refresh_signal_emit.emit()
             self.resize_treewidgets()

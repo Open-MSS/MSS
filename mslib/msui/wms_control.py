@@ -705,15 +705,18 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             self.valid_time_changed()
 
         layer = self.multilayers.get_current_layer()
-        crs = layer.get_allowed_crs()
-        if crs and \
-           self.parent() is not None and \
-           self.parent().parent() is not None:
-            logging.debug("Layer offers '%s' projections.", crs)
-            extra = [_code for _code in crs if _code.startswith("EPSG")]
-            extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
-            logging.debug("Selected '%s' for Combobox.", extra)
-            self.parent().parent().update_predefined_maps(extra)
+        if layer is not None:
+            crs = layer.get_allowed_crs()
+            if crs and \
+               self.parent() is not None and \
+               self.parent().parent() is not None:
+                logging.debug("Layer offers '%s' projections.", crs)
+                extra = [_code for _code in crs if _code.startswith("EPSG")]
+                extra = [_code for _code in sorted(extra) if _code[5:] in basemap.epsg_dict]
+                logging.debug("Selected '%s' for Combobox.", extra)
+                self.parent().parent().update_predefined_maps(extra)
+        else:
+            logging.debug("layer is None")
 
     def style_changed_now(self, style):
         self.styles_changed.emit(style)
@@ -1354,7 +1357,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
             if valid_time is not None:
                 self.dteValidTime.setDateTime(valid_time)
 
-        if self.multilayers.threads == 0 and not self.layerChangeInProgress:
+        if (self.multilayers.get_current_layer() is not None and self.multilayers.threads == 0
+                and not self.layerChangeInProgress):
             self.multilayers.get_current_layer().set_vtime(self.cbValidTime.currentText())
             self.multilayers.carry_parameters["vtime"] = self.cbValidTime.currentText()
 
