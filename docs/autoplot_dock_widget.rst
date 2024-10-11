@@ -1,5 +1,5 @@
-GUI FOR AUTOMATED PLOTTING
-==========================
+mssautoplot - UI Setup
+======================
 
 Autoplot Docking Widget
 -----------------------
