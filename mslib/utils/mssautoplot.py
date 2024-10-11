@@ -196,7 +196,7 @@ def get_op_id(msc_url, token, op_name):
 
 
 class Plotting:
-    def __init__(self, cpath, msc_url=None, msc_auth_password=None, username=None, password=None):
+    def __init__(self, cpath, msc_url=None, msc_auth_password=None, username=None, password=None, pdlg=None):
         """
         Initialize the Plotting object with the provided parameters.
 
@@ -208,6 +208,7 @@ class Plotting:
         :password: User's password
         """
         read_config_file(cpath)
+        self.pdlg = pdlg
         self.config = config_loader()
         self.num_interpolation_points = self.config["num_interpolation_points"]
         self.num_labels = self.config["num_labels"]
@@ -222,21 +223,23 @@ class Plotting:
                     self.config["predefined_map_sections"][section]["CRS"].lower())
             except KeyError as e:
                 print(e)
-                sys.exit("Invalid SECTION and/or CRS")
+                raise SystemExit("Invalid SECTION and/or CRS")
             self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
             self.bbox_units = self.params["bbox"]
         if filename != "" and filename == flight:
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif filename != "":
+            # Todo add the dir to the file in the mssautoplot.json
+            dirpath = "./"
+            file_path = os.path.join(dirpath, filename)
+            exists = os.path.exists(file_path)
+            if not exists:
+                print("Filename {} doesn't exist".format(filename))
+                self.pdlg.close()
+                raise SystemExit("Filename {} doesn't exist".format(filename))
             self.read_ftml(filename)
 
     def read_ftml(self, filename):
-        dirpath = "./"
-        file_path = os.path.join(dirpath, filename)
-        exists = os.path.exists(file_path)
-        if not exists:
-            print("Filename {} doesn't exist".format(filename))
-            sys.exit()
         self.wps, self.wp_model_data = load_from_ftml(filename)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
@@ -262,8 +265,9 @@ class Plotting:
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
-        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg):
+        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
+        self.pdlg= pdlg
         self.myfig = qt.TopViewPlotter()
         self.myfig.fig.canvas.draw()
         self.fig, self.ax = self.myfig.fig, self.myfig.ax
@@ -342,9 +346,10 @@ class TopViewPlotting(Plotting):
 
 
 class SideViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg):
         # ToDo Implement access to MSColab
-        super(SideViewPlotting, self).__init__(cpath)
+        super(SideViewPlotting, self).__init__(cpath, pdlg)
+        self.pdlg = pdlg
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
@@ -384,7 +389,7 @@ class SideViewPlotting(Plotting):
             self.update_path(filename)
         except AttributeError as e:
             logging.debug(e)
-            sys.exit("No FLIGHT Selected")
+            raise SystemExit("No FLIGHT Selected")
         width, height = self.myfig.get_plot_size_in_px()
         p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
         self.bbox = tuple([x for x in (self.num_interpolation_points,
@@ -496,7 +501,11 @@ class LinearViewPlotting(Plotting):
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.pass_context
 def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
+    def close_process_dialog(pdlg):
+        pdlg.close()
+
     if ctx.obj is not None:
+        # ToDo find a simpler solution, on a splitted package QT is expensive for such a progressbar
         pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
         pdlg.setMinimumDuration(0)
         pdlg.repaint()
@@ -527,16 +536,14 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
 
     # Choose view (top or side)
     if view == "top":
-        top_view = TopViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password)
+        top_view = TopViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
         sec = "automated_plotting_hsecs"
     else:
-        side_view = SideViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password)
+        side_view = SideViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
         sec = "automated_plotting_vsecs"
     if ctx.obj is not None:
         pdlg.setValue(2)
 
-    def close_process_dialog(pdlg):
-        pdlg.close()
 
     def draw(no_of_plots):
         try:
@@ -565,6 +572,7 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     for flight, section, vertical, filename, init_time, time in config["automated_plotting_flights"]:
         if ctx.obj is not None:
             pdlg.setValue(8)
+        # where does sec comes from?
         for url, layer, style, elevation in config[sec]:
             if vtime == "" and stime == "":
                 no_of_plots = 1
