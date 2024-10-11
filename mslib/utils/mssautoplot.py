@@ -505,7 +505,7 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
         pdlg.close()
 
     if ctx.obj is not None:
-        # ToDo find a simpler solution, on a splitted package QT is expensive for such a progressbar
+        # ToDo find a simpler solution, on a split of the package, QT is expensive for such a progressbar
         pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
         pdlg.setMinimumDuration(0)
         pdlg.repaint()
