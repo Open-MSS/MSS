@@ -26,7 +26,6 @@
 """
 
 import os
-import sys
 import io
 import re
 import json
@@ -267,7 +266,7 @@ class Plotting:
 class TopViewPlotting(Plotting):
     def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg):
         super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
-        self.pdlg= pdlg
+        self.pdlg = pdlg
         self.myfig = qt.TopViewPlotter()
         self.myfig.fig.canvas.draw()
         self.fig, self.ax = self.myfig.fig, self.myfig.ax
@@ -543,7 +542,6 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
         sec = "automated_plotting_vsecs"
     if ctx.obj is not None:
         pdlg.setValue(2)
-
 
     def draw(no_of_plots):
         try:
