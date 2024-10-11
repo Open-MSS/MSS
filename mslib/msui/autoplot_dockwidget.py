@@ -298,7 +298,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             config_settings["automated_plotting_flights"].append([flight, sections, vertical, filename, itime, vtime])
             parent.refresh_signal_emit.emit()
         if treewidget.objectName() == "autoplotSecsTreeWidget":
-            if url is None:
+            if url == "":
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Please select the URL,layer,styles and level(row information first)"
+                )
                 return
             item = QTreeWidgetItem([url, layer, styles, level, self.stime, self.etime, self.intv])
             self.autoplotSecsTreeWidget.addTopLevelItem(item)
@@ -346,7 +351,12 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             parent.refresh_signal_emit.emit()
 
         if treewidget.objectName() == "autoplotSecsTreeWidget":
-            if url is None:
+            if url == "":
+                QMessageBox.information(
+                    self,
+                    "WARNING",
+                    "Please select the URL,layer,styles and level(row information first)"
+                )
                 return
             selected_item = self.autoplotSecsTreeWidget.currentItem()
             selected_item.setText(0, url)
