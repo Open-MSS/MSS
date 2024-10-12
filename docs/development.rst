@@ -536,6 +536,15 @@ Google Summer of Code(TM)
 MSS takes part in Google Summer of Code
 as a sub-organization of Python Software Foundation(PSF).
 
+GSoC'24 Projects
+................
+
+- `Aryan Gupta: (MSS) msui: Improve MSUI : GSoC 2024 <https://github.com/Open-MSS/MSS/wiki/Aryan-Gupta:-(MSS)-msui:-Improve-MSUI-:-GSOC2024>`_
+
+- `Preetam-Das26: MISSION SUPPORT SYSTEM(MSS): GUI FOR AUTOMATED PLOTTING : GSOC 2024 <https://github.com/Open-MSS/MSS/wiki/Preetam-Sundar-Das:-MISSION-SUPPORT-SYSTEM(MSS):-GUI-FOR-AUTOMATED-PLOTTING-:-GSOC2024>`_
+
+- `Rohit Prasad: Mission Support System: Improve multiple flightpath docking widget : GSOC 2024 <https://github.com/Open-MSS/MSS/wiki/Rohit-Prasad:-Mission-Support-System:-Improve-multiple-flightpath-docking-widget-:-GSOC2024>`_
+
 GSoC'22 Projects
 ................
 
