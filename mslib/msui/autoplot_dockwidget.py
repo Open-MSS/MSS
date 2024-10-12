@@ -302,7 +302,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 QMessageBox.information(
                     self,
                     "WARNING",
-                    "Please select the URL,layer,styles and level(row information first)"
+                    "Please select the URL, layer, styles and level (row information first)"
                 )
                 return
             item = QTreeWidgetItem([url, layer, styles, level, self.stime, self.etime, self.intv])
@@ -355,7 +355,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 QMessageBox.information(
                     self,
                     "WARNING",
-                    "Please select the URL,layer,styles and level(row information first)"
+                    "Please select the URL, layer, styles and level (row information first)"
                 )
                 return
             selected_item = self.autoplotSecsTreeWidget.currentItem()
