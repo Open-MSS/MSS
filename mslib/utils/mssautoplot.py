@@ -344,7 +344,7 @@ class TopViewPlotting(Plotting):
 class SideViewPlotting(Plotting):
     def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
         # ToDo Implement access to MSColab
-        super(SideViewPlotting, self).__init__(cpath)
+        super(SideViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password)
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
@@ -352,6 +352,10 @@ class SideViewPlotting(Plotting):
         self.fig.canvas.draw()
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
         self.plotter = mpath.PathV_Plotter(self.myfig.ax)
+        self.username = msc_username
+        self.password = msc_password
+        self.msc_auth = msc_auth_password
+        self.url = msc_url
 
     def setup(self):
         self.intermediate_indexes = []
@@ -378,6 +382,14 @@ class SideViewPlotting(Plotting):
                                  waypoints_model_data=self.wp_model_data)
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
+
+    def update_path_ops(self, filename=None):
+        # plot path and label
+        if filename != "":
+            self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
+        self.fig.canvas.draw()
+        self.plotter.update_from_waypoints(self.wp_model_data)
+        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def draw(self, flight, section, vertical, filename, init_time, time, url, layer, style, elevation, no_of_plots):
         try:
@@ -421,12 +433,16 @@ class SideViewPlotting(Plotting):
 
 class LinearViewPlotting(Plotting):
     # ToDo Implement access of MSColab
-    def __init__(self, cpath):
-        super(LinearViewPlotting, self).__init__(cpath)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
+        super(LinearViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password)
         self.myfig = qt.LinearViewPlotter()
         self.ax = self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
         self.fig = self.myfig.fig
+        self.username = msc_username
+        self.password = msc_password
+        self.msc_auth = msc_auth_password
+        self.url = msc_url
 
     def setup(self):
         self.bbox = (self.num_interpolation_points,)
@@ -435,6 +451,14 @@ class LinearViewPlotting(Plotting):
                          "axes_label_size": linearview_size_settings["axes_label_size"]}
         self.myfig.set_settings(settings_dict)
         self.myfig.setup_linear_view()
+
+    def update_path_ops(self, filename=None):
+        # plot path and label
+        if filename != "":
+            self.read_operation(filename, self.url, self.msc_auth, self.username, self.password)
+        self.fig.canvas.draw()
+        self.plotter.update_from_waypoints(self.wp_model_data)
+        self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def draw(self):
         for flight, section, vertical, filename, init_time, time in self.config["automated_plotting_flights"]:
