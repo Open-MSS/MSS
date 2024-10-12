@@ -344,7 +344,7 @@ class TopViewPlotting(Plotting):
 class SideViewPlotting(Plotting):
     def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
         # ToDo Implement access to MSColab
-        super(SideViewPlotting, self).__init__(cpath)
+        super(SideViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password)
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
         self.fig = self.myfig.fig
@@ -434,7 +434,7 @@ class SideViewPlotting(Plotting):
 class LinearViewPlotting(Plotting):
     # ToDo Implement access of MSColab
     def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password):
-        super(LinearViewPlotting, self).__init__(cpath)
+        super(LinearViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password)
         self.myfig = qt.LinearViewPlotter()
         self.ax = self.myfig.ax
         matplotlib.backends.backend_agg.FigureCanvasAgg(self.myfig.fig)
