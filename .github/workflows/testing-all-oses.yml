@@ -42,10 +42,6 @@ jobs:
         cache-environment: true
         # Set the cache key in a way that the cache is invalidated every week on monday
         cache-environment-key: environment-${{ steps.year-and-week.outputs.year-and-week }}
-        # micromamba>=2 breaks CI by hanging indefinitely at the micromamba list step.
-        # See: https://github.com/mamba-org/setup-micromamba/issues/225
-        # TODO: remove the pinning as soon as the issue is fixed
-        micromamba-version: '1.5.10-0'
     - name: Run tests
       timeout-minutes: 40
       run: micromamba run -n ci env QT_QPA_PLATFORM=offscreen pytest -v -n logical --durations=20 --cov=mslib tests
