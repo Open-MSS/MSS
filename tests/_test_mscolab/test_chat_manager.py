@@ -24,13 +24,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import os
-import secrets
 import pytest
 
-from werkzeug.datastructures import FileStorage
-
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Message, MessageType
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
 
@@ -77,16 +72,3 @@ class Test_Chat_Manager:
             self.cm.delete_message(message.id)
             message = Message.query.filter(Message.id == message.id).first()
             assert message is None
-
-    def test_add_attachment(self):
-        sample_path = os.path.join(os.path.dirname(__file__), "..", "data")
-        filename = "example.csv"
-        name, ext = filename.split('.')
-        open_csv = os.path.join(sample_path, "example.csv")
-        token = secrets.token_urlsafe(16)
-        with open(open_csv, 'rb') as fp:
-            file = FileStorage(fp, filename=filename, content_type="text/csv")
-            static_path = self.cm.add_attachment(self.operation.id, mscolab_settings.UPLOAD_FOLDER, file, token)
-            assert name in static_path
-            assert static_path.endswith(ext)
-            assert token in static_path

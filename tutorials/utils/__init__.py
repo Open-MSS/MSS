@@ -82,6 +82,15 @@ def call_msui():
     msui.main(tutorial_mode=True)
 
 
+def call_mscolab():
+    # change of config won't work when it becomes earlier imported
+    from mslib.mscolab import mscolab
+    with mscolab.APP.app_context():
+        # initialize our seeded example dbase
+        mscolab.handle_db_seed()
+    mscolab.handle_start()
+
+
 def finish(close_widgets=3):
     """
     Closes all open windows and exits the application.
@@ -129,7 +138,7 @@ def finish(close_widgets=3):
         raise
 
 
-def start(target=None, duration=120, dry_run=False):
+def start(target=None, duration=120, dry_run=False, mscolab=False):
     """
     Starts the automation process.
 
@@ -141,8 +150,31 @@ def start(target=None, duration=120, dry_run=False):
     Note: Uncomment the line pag.press('q') if recording windows do not close in some cases.
     """
     if platform.system() == 'Linux':
+        tutdir = "/tmp/msui_tutorials"
+        if not os.path.isdir(tutdir):
+            os.mkdir(tutdir)
+        os.environ["MSUI_CONFIG_PATH"] = tutdir
+        os.environ["XDG_CACHE_HOME"] = tutdir
         # makes sure the keyboard is set to US
         os.system("setxkbmap -layout us")
+
+        # early
+        if mscolab:
+            mscdir = "/tmp/mscolab_tutorials"
+            if not os.path.isdir(mscdir):
+                os.makedirs(mscdir)
+            settings_file = os.path.join(mscdir, "mscolab_settings.py")
+            with open(settings_file, "w") as sf:
+                sf.write('import os\n')
+                sf.write('\n\n')
+                sf.write(f"BASE_DIR = '{mscdir}'\n")
+                sf.write('DATA_DIR = os.path.join(BASE_DIR, "colabdata")\n')
+                sf.write('OPERATIONS_DATA = os.path.join(DATA_DIR, "filedata")\n')
+                sf.write("DEBUG = True\n")
+
+            os.environ["MSCOLAB_SETTINGS"] = settings_file
+            sys.path.insert(0, mscdir)
+
     if target is None:
         return
     p1 = multiprocessing.Process(target=call_msui)
@@ -150,6 +182,10 @@ def start(target=None, duration=120, dry_run=False):
     if not dry_run:
         p3 = multiprocessing.Process(target=call_recorder, kwargs={"duration": duration})
         p3.start()
+    if mscolab is True:
+        print("Start and Seed MSColab server")
+        p4 = multiprocessing.Process(target=call_mscolab, daemon=True)
+        p4.start()
 
     print("\nINFO : Starting Automation.....\n")
 
@@ -158,11 +194,12 @@ def start(target=None, duration=120, dry_run=False):
     p1.start()
     p2.start()
 
-    p2.join()
-    p1.join()
+    # recording process needs to become joined
     if not dry_run:
         p3.join()
+
     print("\n\nINFO : Automation Completes Successfully!")
+
     # pag.press('q') # In some cases, recording windows does not closes. So it needs to ne there.
     sys.exit()
 

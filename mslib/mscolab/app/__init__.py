@@ -25,6 +25,8 @@
 """
 
 import os
+import logging
+import sqlalchemy
 
 from flask_migrate import Migrate
 
@@ -33,7 +35,11 @@ import mslib
 from flask import Flask, url_for
 from mslib.mscolab.conf import mscolab_settings
 from flask_sqlalchemy import SQLAlchemy
-from mslib.utils import prefix_route
+from mslib.utils import prefix_route, release_info
+
+message, update = release_info.check_for_new_release()
+if update:
+    logging.warning(message)
 
 
 DOCS_SERVER_PATH = os.path.dirname(os.path.abspath(mslib.__file__))
@@ -46,7 +52,7 @@ APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', '
 APP.config.from_object(__name__)
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
 
-APP.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+APP.config['OPERATIONS_DATA'] = mscolab_settings.OPERATIONS_DATA
 APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
 APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 APP.config['SQLALCHEMY_ECHO'] = mscolab_settings.SQLALCHEMY_ECHO
@@ -62,8 +68,23 @@ APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
 APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
 APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
 
-db = SQLAlchemy(APP)
-migrate = Migrate(APP, db, render_as_batch=True)
+db = SQLAlchemy(
+    metadata=sqlalchemy.MetaData(
+        naming_convention={
+            # For reference: https://alembic.sqlalchemy.org/en/latest/naming.html#the-importance-of-naming-constraints
+            "ix": "ix_%(column_0_label)s",
+            "uq": "uq_%(table_name)s_%(column_0_name)s",
+            "ck": "ck_%(table_name)s_`%(constraint_name)s`",
+            "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+            "pk": "pk_%(table_name)s",
+        },
+    ),
+)
+db.init_app(APP)
+import mslib.mscolab.models
+
+migrate = Migrate(render_as_batch=True, user_module_prefix="cu.")
+migrate.init_app(APP, db)
 
 
 def get_topmenu():

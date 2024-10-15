@@ -30,7 +30,13 @@ To set up a local identity provider with the mscolab server, you'll first need t
 ----------------
 Before getting started, you should correctly activate the environments, set the correct Python path as explained in the mss instructions : https://github.com/Open-MSS/MSS/tree/develop#readme
 
+Setup your
 
+**msidp_settings.py**
+
+ .. literalinclude:: samples/config/msidp/msidp_settings.py.sample
+
+.. _configuration-mscolab:
 
 2. Generate Keys, Certificates, and backend_saml files
 ------------------------------------------------------

@@ -25,6 +25,7 @@
     limitations under the License.
 """
 import os
+import io
 import sys
 import fs
 import fs.errors
@@ -33,8 +34,10 @@ import requests.exceptions
 import mock
 import pytest
 
+from PIL import Image
+
+from tests.constants import ROOT_DIR
 import mslib.utils.auth
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
 from PyQt5 import QtCore, QtTest, QtWidgets
@@ -56,7 +59,7 @@ class Test_Mscolab_connect_window:
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
-        self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.main_window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.main_window.create_new_flight_track()
         self.main_window.show()
         self.window = mscolab.MSColab_ConnectDialog(parent=self.main_window, mscolab=self.main_window.mscolab)
@@ -278,7 +281,7 @@ class Test_Mscolab:
         assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2])
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
-        self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.window.create_new_flight_track()
         self.window.show()
 
@@ -551,7 +554,7 @@ class Test_Mscolab:
         # ToDo verify all operations disabled again without a visual check
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(fs.path.join(mscolab_settings.MSCOLAB_DATA_DIR, 'test_export.ftml'),
+                return_value=(fs.path.join(ROOT_DIR, 'test_export.ftml'),
                               "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)
@@ -657,8 +660,7 @@ class Test_Mscolab:
         self._activate_operation_at_index(1)
         assert self.window.mscolab.active_operation_name == "reproduce-test"
 
-    @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True))
-    def test_handle_delete_operation(self, mocktext, qtbot):
+    def test_handle_delete_operation(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "berta@something.org"}})
         self._create_user(qtbot, "berta", "berta@something.org", "something")
@@ -668,20 +670,23 @@ class Test_Mscolab:
         operation_name = "flight7"
         self._create_operation(qtbot, operation_name, "Description flight7")
         # check for operation dir is created on server
-        assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name))
+        assert os.path.isdir(os.path.join(ROOT_DIR, 'colabTestData', 'filedata', operation_name))
         self._activate_operation_at_index(0)
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is not None
         assert self.window.listOperationsMSC.model().rowCount() == 1
-        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m, \
+                mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("flight7", True)):
             self.window.actionDeleteOperation.trigger()
             qtbot.wait_until(
-                lambda: m.assert_called_once_with(self.window, "Success", 'Operation "flight7" was deleted!')
+                lambda: m.assert_called_once_with(
+                    self.window, "Information", 'Active operation "flight7" is inaccessible!')
             )
+        assert self.window.mscolab.active_op_id is None
         op_id = self.window.mscolab.get_recent_op_id()
         assert op_id is None
         # check operation dir name removed
-        assert os.path.isdir(os.path.join(mscolab_settings.MSCOLAB_DATA_DIR, operation_name)) is False
+        assert os.path.isdir(os.path.join(ROOT_DIR, operation_name)) is False
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_handle_leave_operation(self, mockmessage, qtbot):
@@ -703,7 +708,12 @@ class Test_Mscolab:
         self.window.actionSideView.trigger()
         assert len(self.window.get_active_views()) == 2
 
-        self.window.actionLeaveOperation.trigger()
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self.window.actionLeaveOperation.trigger()
+            qtbot.wait_until(
+                lambda: m.assert_called_once_with(
+                    self.window, "Information", 'Active operation "kerala" is inaccessible!')
+            )
 
         def assert_leave_operation_done():
             assert self.window.mscolab.active_op_id is None
@@ -740,6 +750,23 @@ class Test_Mscolab:
             m.assert_called_once_with(self.window, "Update successful", "Description is updated successfully.")
         assert self.window.mscolab.active_op_id is not None
         assert self.window.mscolab.active_operation_description == "new_description"
+
+    def test_archive_operation(self, qtbot):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
+        self._create_user(qtbot, "something", "something@something.org", "something")
+        self._create_operation(qtbot, "flight1234", "Description flight1234")
+        assert self.window.listOperationsMSC.model().rowCount() == 1
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        with mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes), \
+            mock.patch("PyQt5.QtWidgets.QMessageBox.information", return_value=QtWidgets.QMessageBox.Ok) as m:
+            self.window.actionArchiveOperation.trigger()
+            qtbot.wait_until(
+                lambda: m.assert_called_once_with(
+                    self.window, "Information", 'Active operation "flight1234" is inaccessible!')
+            )
+        assert self.window.mscolab.active_op_id is None
 
     @mock.patch("PyQt5.QtWidgets.QInputDialog.getText", return_value=("new_category", True))
     def test_update_category(self, mocktext, qtbot):
@@ -897,9 +924,67 @@ class Test_Mscolab:
         assert self.window.mscolab.prof_diag is not None
         # case: trying to fetch non-existing gravatar
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as critbox:
-            self.window.mscolab.fetch_gravatar(refresh=True)
+            self.window.mscolab.fetch_profile_image(refresh=True)
             critbox.assert_called_once()
         assert not self.window.mscolab.profile_dialog.gravatarLabel.pixmap().isNull()
+
+    def test_upload_and_fetch_profile_image(self, qtbot, tmp_path):
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, self.userdata[0], self.userdata[2])
+        self.window.mscolab.profile_action.trigger()
+        initial_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+
+        # Creating a new image and storing it at a temporary path
+        new_image = Image.new('RGB', (64, 64), color='cyan')
+        img_byte_arr = io.BytesIO()
+        new_image.save(img_byte_arr, format='JPEG')
+        img_byte_arr.seek(0)
+        temp_image_path = tmp_path / 'new_profile_image.jpg'
+        with open(temp_image_path, 'wb') as f:
+            f.write(img_byte_arr.getvalue())
+
+        # Mocking the QFileDialog to select the image
+        with mock.patch('PyQt5.QtWidgets.QFileDialog.getOpenFileName',
+                        return_value=(str(temp_image_path), 'Image (*.jpg)')):
+            with mock.patch.object(QtWidgets.QMessageBox, 'information'):
+                self.window.mscolab.upload_image()
+
+        def pixmap_updated():
+            updated_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+            assert initial_pixmap != updated_pixmap
+        qtbot.wait_until(pixmap_updated)
+        uploaded_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+
+        self.window.mscolab.fetch_profile_image(refresh=True)
+        qtbot.wait_until(pixmap_updated)
+        fetched_pixmap = self.window.mscolab.profile_dialog.gravatarLabel.pixmap().toImage()
+
+        assert initial_pixmap != fetched_pixmap
+        assert uploaded_pixmap == fetched_pixmap
+
+    def test_activate_operation_updates_active_users(self, qtbot):
+        """
+        Test that selecting an operation updates the active users label correctly.
+        """
+        # Login and activate an operation
+        self._connect_to_mscolab(qtbot)
+        modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+        self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.active_op_id is not None
+        assert self.window.mscolab.active_operation_name == self.operation_name
+
+        # Testing that the label is updated after an operation is selected
+        def assert_active_users_label_updated():
+            assert self.window.mscolab.ui.userCountLabel.text() == "Active Users: 1"
+        qtbot.wait_until(assert_active_users_label_updated)
+
+        # Testing that the label is indeed hidden after we select a flight track and vice versa
+        self._activate_flight_track_at_index(0)
+        assert not self.window.mscolab.ui.userCountLabel.isVisible()
+        self._activate_operation_at_index(0)
+        assert self.window.mscolab.ui.userCountLabel.isVisible()
 
     def _connect_to_mscolab(self, qtbot):
         self.connect_window = mscolab.MSColab_ConnectDialog(parent=self.window, mscolab=self.window.mscolab)

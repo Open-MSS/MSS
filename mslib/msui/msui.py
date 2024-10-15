@@ -42,7 +42,6 @@ from mslib.msui.msui_mainwindow import MSUIMainWindow
 from mslib.msui import constants
 from mslib.utils import setup_logging
 from mslib.msui.icons import icons
-from mslib.utils.qt import Worker, Updater
 from mslib.utils.config import read_config_file
 from PyQt5 import QtGui, QtCore, QtWidgets
 
@@ -62,7 +61,6 @@ def main(tutorial_mode=False):
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
                         default=os.path.join(constants.MSUI_CONFIG_PATH, "msui.log"))
-    parser.add_argument("--update", help="Updates MSS to the newest version", action="store_true", default=False)
 
     args = parser.parse_args()
 
@@ -72,16 +70,6 @@ def main(tutorial_mode=False):
         print("***********************************************************************")
         print("Documentation: http://mss.rtfd.io")
         print("Version:", __version__)
-        sys.exit()
-
-    if args.update:
-        updater = Updater()
-        updater.on_update_available.connect(lambda old, new: updater.update_mss())
-        updater.on_log_update.connect(lambda s: print(s.replace("\n", "")))
-        updater.on_status_update.connect(lambda s: print(s.replace("\n", "")))
-        updater.run()
-        while Worker.workers:
-            list(Worker.workers)[0].wait()
         sys.exit()
 
     setup_logging(args)

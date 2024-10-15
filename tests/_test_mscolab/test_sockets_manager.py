@@ -107,6 +107,48 @@ class Test_Socket_Manager:
         perms = Permission(self.anotheruser.id, operation.id, "collaborator")
         assert perms is None
 
+    def test_active_user_tracking_and_emissions_on_operation_selection(self):
+        """
+        Test that selecting an operation tracks the active user count appropriately
+        and verifies that the correct events are emitted.
+        """
+        sio = self._connect()
+
+        # Initial state: no active users for the operation
+        assert self.operation.id not in self.sm.active_users_per_operation
+
+        # User selects an operation
+        sio.emit("operation-selected", {"token": self.token, "op_id": self.operation.id})
+
+        # Check internal server tracking
+        assert self.operation.id in self.sm.active_users_per_operation
+        assert self.user.id in self.sm.active_users_per_operation[self.operation.id]
+        assert len(self.sm.active_users_per_operation[self.operation.id]) == 1
+
+        # Verify that the correct event is emitted
+        received_messages = sio.get_received()
+        assert len(received_messages) == 1
+        received_message_args = received_messages[0]["args"][0]
+        assert received_message_args["op_id"] == self.operation.id
+        assert received_message_args["count"] == 1
+
+        # Testing with multiple users
+        add_user_to_operation(path=self.operation_name, emailid=self.anotheruserdata[0])
+        another_sio = self._connect()
+        another_sio.emit("operation-selected",
+                         {"token": self.anotheruser.generate_auth_token(), "op_id": self.operation.id})
+
+        # Check internal server tracking
+        assert self.anotheruser.id in self.sm.active_users_per_operation[self.operation.id]
+        assert len(self.sm.active_users_per_operation[self.operation.id]) == 2
+
+        # Verify that the active user count is updated for both clients
+        updated_messages = another_sio.get_received()
+        assert len(updated_messages) == 1
+        updated_message_args = updated_messages[0]["args"][0]
+        assert updated_message_args["op_id"] == self.operation.id
+        assert updated_message_args["count"] == 2
+
     def test_handle_start_event(self):
         pytest.skip("unknown how to verify")
         sio = self._connect()
