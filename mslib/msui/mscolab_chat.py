@@ -117,6 +117,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         self.conn.signal_message_reply_receive.connect(self.handle_incoming_message_reply)
         self.conn.signal_message_edited.connect(self.handle_message_edited)
         self.conn.signal_message_deleted.connect(self.handle_deleted_message)
+        self.conn.signal_update_collaborator_list.connect(self.update_user_list)
         # Set Label text
         self.set_label_text()
         # Hide Edit Message section
@@ -327,19 +328,64 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
     # API REQUESTS
     def load_users(self):
         # load users to side-tab here
-        # make request to get users
+        # make requests to get all users and active users of the operation
         data = {
             "token": self.token,
             "op_id": self.op_id
         }
-        url = urljoin(self.mscolab_server_url, 'authorized_users')
-        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        if r.text != "False":
+        users_url = urljoin(self.mscolab_server_url, 'authorized_users')
+        active_users_url = urljoin(self.mscolab_server_url, 'active_users')
+
+        # Fetch both authorized and active users
+        users_response = requests.get(users_url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        active_response = requests.get(active_users_url, data=data,
+                                       timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+
+        if users_response != "False":
             self.collaboratorsList.clear()
-            users = r.json()["users"]
+            users = users_response.json()["users"]
+            active_users = set(active_response.json()["active_users"])
             for user in users:
-                item = QtWidgets.QListWidgetItem(f'{user["username"]} - {user["access_level"]}',
-                                                 parent=self.collaboratorsList)
+                display_text = f'{user["username"]} - {user["access_level"]}'
+                item = QtWidgets.QListWidgetItem(display_text, parent=self.collaboratorsList)
+
+                # Pixmap for icon i.e. profile image
+                url = urljoin(self.mscolab_server_url, 'fetch_profile_image')
+                data = {
+                    "user_id": str(user["id"]),
+                    "token": self.token
+                }
+                response = requests.get(url, data=data)
+                pixmap = QtGui.QPixmap()
+                if response.status_code == 200:
+                    # pixmap = QtGui.QPixmap()
+                    pixmap.loadFromData(response.content)
+                else:
+                    first_alphabet = user["username"][0].lower() if user["username"] else "default"
+                    default_avatar_path = f":/gravatars/default-gravatars/{first_alphabet}.png"
+                    pixmap.load(default_avatar_path)
+
+                # Scale pixmap to a standard size
+                icon_size = QtCore.QSize(50, 50)
+                pixmap = pixmap.scaled(icon_size, QtCore.Qt.KeepAspectRatio, QtCore.Qt.SmoothTransformation)
+
+                # Load avatar and overlay green dot on profile image pixmap if user is active
+                if user["id"] in active_users:
+                    painter = QtGui.QPainter(pixmap)
+                    painter.setBrush(QtGui.QColor(0, 230, 0, 230))        # RGBA
+                    # Set a thin pen for the border around green dot
+                    pen = QtGui.QPen(QtGui.QColor(0, 0, 0), 3)            # (border color, width)
+                    painter.setPen(pen)
+                    # Draw circle at bottom-right corner
+                    diameter = 13               # Size of the dot
+                    margin = -2                 # Distance from the edges
+                    position = QtCore.QPoint(pixmap.width() - diameter - margin, pixmap.height() - diameter - margin)
+                    painter.drawEllipse(position, diameter, diameter)
+                    painter.end()
+
+                # Set the icon
+                icon = QtGui.QIcon(pixmap)
+                item.setIcon(icon)
                 self.collaboratorsList.addItem(item)
         else:
             show_popup(self, "Error", "Session expired, new login required")
@@ -363,17 +409,24 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             for message in messages:
                 self.render_new_message(message, scroll=False)
             self.messageList.scrollToBottom()
+            self.serviceMessageList.scrollToBottom()
         else:
             show_popup(self, "Error", "Session expired, new login required")
 
     def render_new_message(self, message, scroll=True):
         message_item = MessageItem(message, self)
-        list_widget_item = QtWidgets.QListWidgetItem(self.messageList)
+        list_widget_item = QtWidgets.QListWidgetItem()
         list_widget_item.setSizeHint(message_item.sizeHint())
-        self.messageList.addItem(list_widget_item)
-        self.messageList.setItemWidget(list_widget_item, message_item)
+        # Check if the message is a service message or a normal message and add to its corresponding list
+        if message['message_type'] == MessageType.SYSTEM_MESSAGE:
+            self.serviceMessageList.addItem(list_widget_item)
+            self.serviceMessageList.setItemWidget(list_widget_item, message_item)
+        else:
+            self.messageList.addItem(list_widget_item)
+            self.messageList.setItemWidget(list_widget_item, message_item)
         if scroll:
             self.messageList.scrollToBottom()
+            self.serviceMessageList.scrollToBottom()
 
     # SOCKET HANDLERS
     @QtCore.pyqtSlot(int)
@@ -436,6 +489,10 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             if message_widget.id == message_id:
                 self.messageList.takeItem(i)
                 break
+
+    @QtCore.pyqtSlot()
+    def update_user_list(self):
+        self.load_users()
 
     def closeEvent(self, event):
         self.viewCloses.emit()

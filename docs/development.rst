@@ -349,7 +349,7 @@ This plugin produces a coverage report, example::
     --------------------------------------------------------------------------
     mslib/__init__.py                            2      0      0      0   100%
     mslib/msui/__init__.py                      23      0      0      0   100%
-    mslib/msui/aircrafts.py                     52      1      8      1    97%
+    mslib/msui/aircraft.py                      52      1      8      1    97%
     mslib/msui/constants.py                     12      2      4      2    75%
     mslib/msui/flighttrack.py                  383    117    141     16    66%
 
@@ -397,6 +397,26 @@ MSS uses pytest as a test runner and therefore their `docs <https://docs.pytest.
 Common resources that a test might need,
 like e.g. a running MSColab server or a QApplication instance for GUI tests,
 are collected in :mod:`tests.fixtures` in the form of pytest fixtures that can be requested as needed in tests.
+
+
+Changing the database model
+---------------------------
+
+Changing the database model requires adding a corresponding migration script to MSS,
+so that existing databases can be migrated automatically.
+
+To generate such a migration script you can run::
+
+  flask --app mslib.mscolab.app db migrate -d mslib/mscolab/migrations -m "To version <next-major-version>"
+
+Depending on the complexity of the changes that were made,
+the generated migration script might need some tweaking.
+
+If there is already a migration script for the next release,
+then please incorporate the generated migration script into this existing one,
+instead of adding a new one.
+You can still generate a script with the above command first
+to get a starting point for the changes.
 
 
 Pushing your changes
@@ -515,6 +535,15 @@ Google Summer of Code(TM)
 
 MSS takes part in Google Summer of Code
 as a sub-organization of Python Software Foundation(PSF).
+
+GSoC'24 Projects
+................
+
+- `Aryan Gupta: (MSS) msui: Improve MSUI : GSoC 2024 <https://github.com/Open-MSS/MSS/wiki/Aryan-Gupta:-(MSS)-msui:-Improve-MSUI-:-GSOC2024>`_
+
+- `Preetam-Das26: MISSION SUPPORT SYSTEM(MSS): GUI FOR AUTOMATED PLOTTING : GSOC 2024 <https://github.com/Open-MSS/MSS/wiki/Preetam-Sundar-Das:-MISSION-SUPPORT-SYSTEM(MSS):-GUI-FOR-AUTOMATED-PLOTTING-:-GSOC2024>`_
+
+- `Rohit Prasad: Mission Support System: Improve multiple flightpath docking widget : GSOC 2024 <https://github.com/Open-MSS/MSS/wiki/Rohit-Prasad:-Mission-Support-System:-Improve-multiple-flightpath-docking-widget-:-GSOC2024>`_
 
 GSoC'22 Projects
 ................

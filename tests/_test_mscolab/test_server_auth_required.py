@@ -45,7 +45,7 @@ class Test_Server_Auth_Not_Valid:
     def test_initialize_managers(self):
         app, sockio, cm, fm = initialize_managers(self.app)
 
-        assert app.config['MSCOLAB_DATA_DIR'] == mscolab_settings.MSCOLAB_DATA_DIR
+        assert app.config['OPERATIONS_DATA'] == mscolab_settings.OPERATIONS_DATA
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__

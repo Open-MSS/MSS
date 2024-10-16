@@ -27,7 +27,7 @@
 import pytest
 import datetime
 
-from mslib.mscolab.conf import mscolab_settings
+from tests.constants import ROOT_DIR
 from mslib.mscolab.models import Message, MessageType
 from PyQt5 import QtCore, QtTest, QtWidgets
 from mslib.msui import mscolab
@@ -56,7 +56,7 @@ class Test_MscolabOperation:
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-        self.window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
+        self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.window.create_new_flight_track()
         self.window.show()
         # connect and login to mscolab

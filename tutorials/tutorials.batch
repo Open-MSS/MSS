@@ -164,12 +164,6 @@ cd ..
 ####################################################
 # tutorial mscolab, 3K, because we need the menu in full screen
 
-# start a mscolab server on standard port after you have it seeded
-# we should have a seed for tutorials
-$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py db --seed
-
-$HOME/Miniforge/envs/mssdev/bin/python ../mslib/mscolab/mscolab.py start &
-
 ~/bin/highlight-pointer -r 10 --key-quit q &
 $HOME/Miniforge/envs/mssdev/bin/python tutorial_mscolab.py
 

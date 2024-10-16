@@ -553,4 +553,4 @@ def _connect_to_mscolab_url():
 
 
 if __name__ == '__main__':
-    start(target=automate_mscolab, duration=640)
+    start(target=automate_mscolab, duration=640, mscolab=True, dry_run=False)

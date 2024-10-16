@@ -37,7 +37,7 @@ from PyQt5 import QtWidgets
 from contextlib import contextmanager
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.server import APP, sockio, cm, fm
-from mslib.mscolab.mscolab import handle_db_init, handle_db_reset
+from mslib.mscolab.mscolab import handle_db_reset
 from mslib.utils.config import modify_config_file
 from tests.utils import is_url_response_ok
 
@@ -92,9 +92,8 @@ def mscolab_session_app():
     """
     _app = APP
     _app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    _app.config['MSCOLAB_DATA_DIR'] = mscolab_settings.MSCOLAB_DATA_DIR
+    _app.config['OPERATIONS_DATA'] = mscolab_settings.OPERATIONS_DATA
     _app.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-    handle_db_init()
     return _app
 
 
@@ -138,7 +137,8 @@ def reset_mscolab(mscolab_session_app):
     This fixture is not explicitly needed in tests, it is used in the other fixtures to
     do the cleanup actions.
     """
-    handle_db_reset()
+    with mscolab_session_app.app_context():
+        handle_db_reset()
 
 
 @pytest.fixture

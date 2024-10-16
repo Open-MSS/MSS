@@ -22,19 +22,19 @@ class setup_saml2_backend:
 
     ]
 
-    if os.path.exists(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml"):
-        with open(f"{mscolab_settings.MSCOLAB_SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
+    if os.path.exists(f"{mscolab_settings.SSO_DIR}/mss_saml2_backend.yaml"):
+        with open(f"{mscolab_settings.SSO_DIR}/mss_saml2_backend.yaml", encoding="utf-8") as fobj:
             yaml_data = yaml.safe_load(fobj)
         # go through configured IDPs and set conf file paths for particular files
         for configured_idp in CONFIGURED_IDPS:
             # set CRTs and metadata paths for the localhost_test_idp
             if 'localhost_test_idp' == configured_idp['idp_identity_name']:
                 yaml_data["config"]["localhost_test_idp"]["key_file"] = \
-                    f'{mscolab_settings.MSCOLAB_SSO_DIR}/key_mscolab.key'  # set path to your mscolab key file
+                    f'{mscolab_settings.SSO_DIR}/key_mscolab.key'  # set path to your mscolab key file
                 yaml_data["config"]["localhost_test_idp"]["cert_file"] = \
-                    f'{mscolab_settings.MSCOLAB_SSO_DIR}/crt_mscolab.crt'  # set path to your mscolab certificate file
+                    f'{mscolab_settings.SSO_DIR}/crt_mscolab.crt'  # set path to your mscolab certificate file
                 yaml_data["config"]["localhost_test_idp"]["metadata"]["local"][0] = \
-                    f'{mscolab_settings.MSCOLAB_SSO_DIR}/idp.xml'  # set path to your idp metadata xml file
+                    f'{mscolab_settings.SSO_DIR}/idp.xml'  # set path to your idp metadata xml file
 
                 # configuration localhost_test_idp Saml2Client
                 try:

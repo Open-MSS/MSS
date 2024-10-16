@@ -44,8 +44,16 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # Directory in which all data related to Mscolab is stored
 DATA_DIR = os.path.join(BASE_DIR, "colabdata")
 
-# Where mscolab project files are stored on the server
-MSCOLAB_DATA_DIR = os.path.join(DATA_DIR, 'filedata')
+# mscolab data directory for operation git repositories
+OPERATIONS_DATA = os.path.join(DATA_DIR, 'filedata')
+
+# SSO by SAML2 is optional
+
+# dir where mscolab single sign-on process files are stored
+SSO_DIR = os.path.join(DATA_DIR, 'datasso')
+
+# Enable SSL certificate verification during SSO between MSColab and IdP
+SSO_SSL_CERT_VERIFICATION = True
 
 # Directory where uploaded images and documents in the chat are stored
 UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
@@ -99,9 +107,3 @@ USE_SAML2 = False
 # all users in that Group are set to the operations of that category
 # having the roles in the TexGroup
 GROUP_POSTFIX = "Group"
-
-# Enable SSL certificate verification during SSO between MSColab and IdP
-ENABLE_SSO_SSL_CERT_VERIFICATION = True
-
-# dir where mscolab single sign process files are stored
-MSCOLAB_SSO_DIR = os.path.join(DATA_DIR, 'datasso')
