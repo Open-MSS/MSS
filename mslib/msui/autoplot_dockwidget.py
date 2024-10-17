@@ -29,6 +29,7 @@
 
 import os
 import json
+import logging
 from datetime import datetime
 
 import click
@@ -196,9 +197,19 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         }
 
         # Invoke the main method using click from the mssautoplot
-        ctx = click.Context(cli_tool)
-        ctx.obj = self
-        ctx.invoke(cli_tool, **args)
+        try:
+            ctx = click.Context(cli_tool)
+            ctx.obj = self
+            ctx.invoke(cli_tool, **args)
+        except SystemExit as ex:
+            logging.error("Can't find given data: %s", ex)
+            QMessageBox.information(
+                self,
+                "Error",
+                ex.args[0]
+            )
+            ctx.obj = None
+            return
 
     def autoplotSecsTreeWidget_selected_row(self):
         selected_items = self.autoplotSecsTreeWidget.selectedItems()
