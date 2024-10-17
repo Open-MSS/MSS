@@ -531,7 +531,7 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
                                                                    username="mscolab")
     msc_username = config["MSS_auth"][msc_url]
-    msc_password = mslib.utils.auth.get_password_from_keyring(service_name="MSCOLAB", username=msc_username)
+    msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
 
     # Choose view (top or side)
     if view == "top":
