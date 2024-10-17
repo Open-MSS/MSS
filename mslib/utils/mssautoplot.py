@@ -570,7 +570,6 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
     for flight, section, vertical, filename, init_time, time in config["automated_plotting_flights"]:
         if ctx.obj is not None:
             pdlg.setValue(8)
-        # where does sec comes from?
         for url, layer, style, elevation in config[sec]:
             if vtime == "" and stime == "":
                 no_of_plots = 1
