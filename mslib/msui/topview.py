@@ -44,6 +44,7 @@ from mslib.msui import kmloverlay_dockwidget as kml
 from mslib.msui import airdata_dockwidget as ad
 from mslib.msui import multiple_flightpath_dockwidget as mf
 from mslib.msui import flighttrack as ft
+from mslib.msui import autoplot_dockwidget as apd
 from mslib.msui.icons import icons
 from mslib.msui.flighttrack import Waypoint
 
@@ -54,6 +55,7 @@ REMOTESENSING = 2
 KMLOVERLAY = 3
 AIRDATA = 4
 MULTIPLEFLIGHTPATH = 5
+AUTOPLOT = 6
 
 
 class MSUI_TV_MapAppearanceDialog(QtWidgets.QDialog, ui_ma.Ui_MapAppearanceDialog):
@@ -185,9 +187,16 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     signal_listFlighttrack_doubleClicked = QtCore.pyqtSignal()
     signal_permission_revoked = QtCore.pyqtSignal(int)
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
+    sections_changed = QtCore.pyqtSignal(str)
+    refresh_signal_emit = QtCore.pyqtSignal()
+    refresh_signal_send = QtCore.pyqtSignal()
+    item_selected = QtCore.pyqtSignal(str, str, str, str)
+    itemSecs_selected = QtCore.pyqtSignal(str)
+    vtime_vals = QtCore.pyqtSignal([list])
 
     def __init__(self, parent=None, mainwindow=None, model=None, _id=None,
-                 active_flighttrack=None, mscolab_server_url=None, token=None, tutorial_mode=False):
+                 active_flighttrack=None, mscolab_server_url=None, token=None, config_settings=None,
+                 tutorial_mode=False):
         """
         Set up user interface, connect signal/slots.
         """
@@ -195,6 +204,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         logging.debug(_id)
         self.settings_tag = "topview"
         self.tutorial_mode = tutorial_mode
+        # ToDo review 2026 after EOL of Win 10 if we can use parent again
         self.mainwindow_signal_login_mscolab = mainwindow.signal_login_mscolab
         self.mainwindow_signal_logout_mscolab = mainwindow.signal_logout_mscolab
         self.mainwindow_signal_listFlighttrack_doubleClicked = mainwindow.signal_listFlighttrack_doubleClicked
@@ -210,7 +220,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.setWindowIcon(QtGui.QIcon(icons('64x64')))
 
         # Dock windows [WMS, Satellite, Trajectories, Remote Sensing, KML Overlay, Multiple Flightpath]:
-        self.docks = [None, None, None, None, None, None]
+        self.docks = [None, None, None, None, None, None, None]
 
         # Initialise the GUI elements (map view, items of combo boxes etc.).
         self.setup_top_view()
@@ -228,8 +238,21 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.mscolab_server_url = mscolab_server_url
         self.token = token
 
+        self.currurl = ""
+        self.currlayer = ""
+        self.currlevel = ""
+        self.currstyles = ""
+        self.currsections = ""
+        self.currflights = ""
+        self.curritime = ""
+        self.currvtime = ""
+        self.currlayerobj = None
+
         # Connect slots and signals.
         # ==========================
+        # ToDo review 2026 after EOL of Win 10 if we can use parent again
+        if mainwindow is not None:
+            mainwindow.refresh_signal_connect.connect(self.refresh_signal_send.emit)
 
         # Map controls.
         self.btMapRedraw.clicked.connect(self.mpl.canvas.redraw_map)
@@ -242,7 +265,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         self.btRoundtrip.clicked.connect(self.make_roundtrip)
 
         # Tool opener.
-        self.cbTools.currentIndexChanged.connect(self.openTool)
+        self.cbTools.currentIndexChanged.connect(lambda ind: self.openTool(
+            index=ind, parent=mainwindow, config_settings=config_settings))
 
         if mainwindow is not None:
             # Update flighttrack
@@ -289,8 +313,8 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         Initialise GUI elements. (This method is called before signals/slots
         are connected).
         """
-        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing", "KML Overlay",
-                     "Airports/Airspaces", "Multiple Flightpath"]
+        toolitems = ["(select to open control)", "Web Map Service", "Satellite Tracks", "Remote Sensing",
+                     "KML Overlay", "Airports/Airspaces", "Multiple Flightpath", "Autoplot"]
         self.cbTools.clear()
         self.cbTools.addItems(toolitems)
 
@@ -323,7 +347,7 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
         if current_map_key in predefined_map_sections.keys():
             self.cbChangeMapSection.setCurrentText(current_map_key)
 
-    def openTool(self, index):
+    def openTool(self, index, parent=None, config_settings=None):
         """
         Slot that handles requests to open control windows.
         """
@@ -336,6 +360,16 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     default_WMS=config_loader(dataset="default_WMS"),
                     view=self.mpl.canvas,
                     wms_cache=config_loader(dataset="wms_cache"))
+                widget.vtime_data.connect(lambda vtime: self.valid_time_vals(vtime))
+                widget.base_url_changed.connect(lambda url: self.url_val_changed(url))
+                widget.layer_changed.connect(lambda layer: self.layer_val_changed(layer))
+                widget.on_level_changed.connect(lambda level: self.level_val_changed(level))
+                widget.styles_changed.connect(lambda styles: self.styles_val_changed(styles))
+                widget.itime_changed.connect(lambda styles: self.itime_val_changed(styles))
+                widget.vtime_changed.connect(lambda styles: self.vtime_val_changed(styles))
+                self.item_selected.connect(lambda url, layer, style,
+                                           level: widget.row_is_selected(url, layer, style, level, "top"))
+                self.itemSecs_selected.connect(lambda vtime: widget.leftrow_is_selected(vtime))
                 widget.signal_disable_cbs.connect(self.disable_cbs)
                 widget.signal_enable_cbs.connect(self.enable_cbs)
             elif index == SATELLITE:
@@ -370,6 +404,16 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
                     lambda op_id, path: self.signal_render_new_permission.emit(op_id, path))
                 if self.active_op_id is not None:
                     self.signal_activate_operation.emit(self.active_op_id)
+            elif index == AUTOPLOT:
+                title = "Autoplot (Top View)"
+                widget = apd.AutoplotDockWidget(parent=self, parent2=parent,
+                                                view="Top View", config_settings=config_settings)
+                widget.treewidget_item_selected.connect(
+                    lambda url, layer, style, level: self.tree_item_select(url, layer, style, level))
+                widget.autoplot_treewidget_item_selected.connect(
+                    lambda section, vtime: self.treePlot_item_select(section, vtime))
+                widget.update_op_flight_treewidget.connect(
+                    lambda opfl, flight: parent.update_treewidget_op_fl(opfl, flight))
             else:
                 raise IndexError("invalid control index")
 
@@ -384,6 +428,52 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
     def enable_cbs(self):
         self.wms_connected = False
 
+    @QtCore.pyqtSlot()
+    def tree_item_select(self, url, layer, style, level):
+        self.item_selected.emit(url, layer, style, level)
+
+    @QtCore.pyqtSlot()
+    def treePlot_item_select(self, section, vtime):
+        self.cbChangeMapSection.setCurrentText(section)
+        self.changeMapSection()
+        self.itemSecs_selected.emit(vtime)
+
+    @QtCore.pyqtSlot()
+    def url_val_changed(self, strr):
+        self.currurl = strr
+
+    @QtCore.pyqtSlot()
+    def valid_time_vals(self, vtimes_list):
+        self.vtime_vals.emit(vtimes_list)
+
+    @QtCore.pyqtSlot()
+    def layer_val_changed(self, strr):
+        self.currlayerobj = strr
+        layerstring = str(strr)
+        second_colon_index = layerstring.find(':', layerstring.find(':') + 1)
+        self.currurl = layerstring[:second_colon_index].strip() if second_colon_index != -1 else layerstring.strip()
+        self.currlayer = layerstring.split('|')[1].strip() if '|' in layerstring else None
+
+    @QtCore.pyqtSlot()
+    def level_val_changed(self, strr):
+        self.currlevel = strr.split(' ')[0]
+
+    @QtCore.pyqtSlot()
+    def styles_val_changed(self, strr):
+        if strr is None or not str(strr).strip():
+            self.currstyles = ""
+        else:
+            split_strr = str(strr).strip().split()
+            self.currstyles = split_strr[0].strip() if split_strr else ""
+
+    @QtCore.pyqtSlot()
+    def itime_val_changed(self, strr):
+        self.curritime = strr
+
+    @QtCore.pyqtSlot()
+    def vtime_val_changed(self, strr):
+        self.currvtime = strr
+
     def changeMapSection(self, index=0, only_kwargs=False):
         """
         Change the current map section to one of the predefined regions.
@@ -394,22 +484,23 @@ class MSUITopViewWindow(MSUIMplViewWindow, ui.Ui_TopViewWindow):
             dataset="predefined_map_sections")
         current_map = predefined_map_sections.get(
             current_map_key, {"CRS": current_map_key, "map": {}})
-        proj_params = get_projection_params(current_map["CRS"])
 
-        # Create a keyword arguments dictionary for basemap that contains
-        # the projection parameters.
-        kwargs = dict(current_map["map"])
-        kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
-                       "OPERATION_NAME": self.waypoints_model.name})
-        kwargs.update(proj_params["basemap"])
+        if current_map["CRS"] != "":
+            proj_params = get_projection_params(current_map["CRS"])
+            # Create a keyword arguments dictionary for basemap that contains
+            # the projection parameters.
+            kwargs = dict(current_map["map"])
+            kwargs.update({"CRS": current_map["CRS"], "BBOX_UNITS": proj_params["bbox"],
+                           "OPERATION_NAME": self.waypoints_model.name})
+            kwargs.update(proj_params["basemap"])
 
-        if only_kwargs:
-            # Return kwargs dictionary and do NOT redraw the map.
-            return kwargs
+            if only_kwargs:
+                # Return kwargs dictionary and do NOT redraw the map.
+                return kwargs
 
-        logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
-        self.mpl.canvas.redraw_map(kwargs)
-        self.mpl.navbar.clear_history()
+            logging.debug("switching to map section '%s' - '%s'", current_map_key, kwargs)
+            self.mpl.canvas.redraw_map(kwargs)
+            self.mpl.navbar.clear_history()
 
     def setIdentifier(self, identifier):
         super().setIdentifier(identifier)

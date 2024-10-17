@@ -43,7 +43,7 @@ def automate_hexagoncontrol():
     msui_full_screen_and_open_first_view()
 
     # Changing map to Global
-    find_and_click_picture('topviewwindow-01-europe-cyl.png',
+    find_and_click_picture('topviewwindow-00-global-cyl.png',
                            "Map change dropdown could not be located on the screen")
     select_listelement(2)
     # Zooming into the map

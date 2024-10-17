@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>900</width>
+    <height>243</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MSSAUTOPLOT</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="0" column="0">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="1" column="0">
+      <widget class="QTreeWidget" name="autoplotTreeWidget">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>140</height>
+        </size>
+       </property>
+       <attribute name="headerDefaultSectionSize">
+        <number>150</number>
+       </attribute>
+       <column>
+        <property name="text">
+         <string>Flight</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Map Sections</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Vertical</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Filename</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Initial Time</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Valid Time</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_5">
+       <item>
+        <widget class="QPushButton" name="addToAutoplotSecsButton">
+         <property name="text">
+          <string>Add</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="RemoveFromAutoplotSecsButton">
+         <property name="text">
+          <string>Remove</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="UploadAutoplotSecsButton">
+         <property name="text">
+          <string>Update</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="selectConfigButton">
+       <property name="text">
+        <string>Select Configuration File</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <item>
+        <widget class="QPushButton" name="addToAutoplotButton">
+         <property name="text">
+          <string>Add</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="RemoveFromAutoplotButton">
+         <property name="text">
+          <string>Remove</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="UploadAutoplotButton">
+         <property name="text">
+          <string>Update</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="1">
+      <layout class="QHBoxLayout" name="horizontalLayout_2">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_10">
+         <item>
+          <widget class="QLabel" name="timeIntervalLabel">
+           <property name="text">
+            <string>Time Interval</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="timeIntervalComboBox">
+           <item>
+            <property name="text">
+             <string/>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1 min</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>5 min</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>10 min</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>15 min</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>30 min</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1 hour</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2 hours</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>3 hours</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>6 hours</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>12 hours</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>24 hours</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2 days</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>7 days</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout">
+         <item>
+          <spacer name="verticalSpacer">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="downloadPushButton">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Download Plots</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_3">
+         <item>
+          <spacer name="verticalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="updateConfigFile">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>24</height>
+            </size>
+           </property>
+           <property name="text">
+            <string>Update/Create Configuration File</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item row="3" column="0">
+      <layout class="QHBoxLayout" name="horizontalLayout_9">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_2">
+         <item>
+          <widget class="QLabel" name="stimeLabel">
+           <property name="text">
+            <string>Start Time</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="stimeComboBox">
+           <property name="editable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_8">
+         <item>
+          <widget class="QLabel" name="etimeLabel">
+           <property name="text">
+            <string>End Time</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QComboBox" name="etimeComboBox">
+           <property name="editable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item row="1" column="1">
+      <widget class="QTreeWidget" name="autoplotSecsTreeWidget">
+       <property name="minimumSize">
+        <size>
+         <width>0</width>
+         <height>0</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>16777215</width>
+         <height>140</height>
+        </size>
+       </property>
+       <attribute name="headerDefaultSectionSize">
+        <number>200</number>
+       </attribute>
+       <column>
+        <property name="text">
+         <string>URL</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Layers</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Styles</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Levels</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Start Time</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>End Time</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Time Interval</string>
+        </property>
+       </column>
+      </widget>
+     </item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

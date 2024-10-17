@@ -1,0 +1,294 @@
+{
+    "mscolab_skip_verify_user_token": true,
+    "filepicker_default": "default",
+    "data_dir": "~/mssdata",
+    "layout": {
+        "topview": [
+            963,
+            702
+        ],
+        "sideview": [
+            913,
+            557
+        ],
+        "linearview": [
+            913,
+            557
+        ],
+        "tableview": [
+            1236,
+            424
+        ],
+        "immutable": false
+    },
+    "predefined_map_sections": {
+        "00 global (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -180.0,
+                "llcrnrlat": -90.0,
+                "urcrnrlon": 180.0,
+                "urcrnrlat": 90.0
+            }
+        },
+        "01 SADPAP (stereo)": {
+            "CRS": "EPSG:77890290",
+            "map": {
+                "llcrnrlon": -150.0,
+                "llcrnrlat": -45.0,
+                "urcrnrlon": -25.0,
+                "urcrnrlat": -20.0
+            }
+        },
+        "02 SADPAP zoom (stereo)": {
+            "CRS": "EPSG:77890290",
+            "map": {
+                "llcrnrlon": -120.0,
+                "llcrnrlat": -65.0,
+                "urcrnrlon": -45.0,
+                "urcrnrlat": -28.0
+            }
+        },
+        "03 SADPAP (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -100.0,
+                "llcrnrlat": -75.0,
+                "urcrnrlon": -30.0,
+                "urcrnrlat": -30.0
+            }
+        },
+        "04 Southern Hemisphere (stereo)": {
+            "CRS": "EPSG:77889270",
+            "map": {
+                "llcrnrlon": 135.0,
+                "llcrnrlat": 0.0,
+                "urcrnrlon": -45.0,
+                "urcrnrlat": 0.0
+            }
+        },
+        "05 EDMO-SAL (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -40,
+                "llcrnrlat": 10,
+                "urcrnrlon": 30,
+                "urcrnrlat": 60
+            }
+        },
+        "06 SAL-BA (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -80,
+                "llcrnrlat": -40,
+                "urcrnrlon": -10,
+                "urcrnrlat": 30
+            }
+        },
+        "07 Europe (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": -15.0,
+                "llcrnrlat": 35.0,
+                "urcrnrlon": 30.0,
+                "urcrnrlat": 65.0
+            }
+        },
+        "08 Germany (cyl)": {
+            "CRS": "EPSG:4326",
+            "map": {
+                "llcrnrlon": 5.0,
+                "llcrnrlat": 45.0,
+                "urcrnrlon": 15.0,
+                "urcrnrlat": 57.0
+            }
+        },
+        "09 Northern Hemisphere (stereo)": {
+            "CRS": "MSS:stere,0,90,90",
+            "map": {
+                "llcrnrlon": -45.0,
+                "llcrnrlat": 0.0,
+                "urcrnrlon": 135.0,
+                "urcrnrlat": 0.0
+            }
+        }
+    },
+    "num_interpolation_points": 201,
+    "num_labels": 10,
+    "default_WMS": [
+        "http://localhost:8081/",
+        "https://view.eumetsat.int/geoserver/wms",
+        "http://eccharts.ecmwf.int/wms/?token=public",
+        "https://neo.gsfc.nasa.gov/wms/wms"
+    ],
+    "default_VSEC_WMS": [
+        "http://localhost:8081/"
+    ],
+    "default_LSEC_WMS": [
+        "http://localhost:8081/"
+    ],
+    "default_MSCOLAB": [
+        "http://localhost:8083"
+    ],
+    "MSCOLAB_auth_user_name": "mscolab",
+    "MSCOLAB_category": "default",
+    "MSCOLAB_timeout": [
+        2,
+        10
+    ],
+    "MSCOLAB_skip_archived_operations": false,
+    "MSS_auth": {
+        "https://forecast.fz-juelich.de/campaigns2019": "username",
+        "http://localhost:8083": "emailid"
+    },
+    "WMS_request_timeout": 30,
+    "WMS_preload": [],
+    "wms_cache": "wms cache path",
+    "wms_cache_max_size_bytes": 20971520,
+    "wms_cache_max_age_seconds": 432000,
+    "wms_prefetch": {
+        "validtime_fwd": 0,
+        "validtime_bck": 0,
+        "level_up": 0,
+        "level_down": 0
+    },
+    "locations": {
+        "EDMO": [
+            48.08,
+            11.28
+        ],
+        "Hannover": [
+            52.37,
+            9.74
+        ],
+        "Hamburg": [
+            53.55,
+            9.99
+        ],
+        "Juelich": [
+            50.92,
+            6.36
+        ],
+        "Leipzig": [
+            51.34,
+            12.37
+        ],
+        "Muenchen": [
+            48.14,
+            11.57
+        ],
+        "Stuttgart": [
+            48.78,
+            9.18
+        ],
+        "Wien": [
+            48.20833,
+            16.373064
+        ],
+        "Zugspitze": [
+            47.42,
+            10.98
+        ],
+        "Kiruna": [
+            67.821,
+            20.336
+        ],
+        "Ny-Alesund": [
+            78.928,
+            11.986
+        ],
+        "Zhukovsky": [
+            55.6,
+            38.116
+        ],
+        "Paphos": [
+            34.775,
+            32.425
+        ],
+        "Sharjah": [
+            25.35,
+            55.65
+        ],
+        "Brindisi": [
+            40.658,
+            17.947
+        ],
+        "Nagpur": [
+            21.15,
+            79.083
+        ],
+        "Mumbai": [
+            19.089,
+            72.868
+        ],
+        "Delhi": [
+            28.566,
+            77.103
+        ]
+    },
+    "new_flighttrack_template": [
+        "Nagpur",
+        "Delhi"
+    ],
+    "new_flighttrack_flightlevel": 0,
+    "proxies": {},
+    "mscolab_server_url": "http://localhost:8083",
+    "mss_dir": "~/mss",
+    "gravatar_ids": [],
+    "export_plugins": {},
+    "import_plugins": {},
+    "topview": {
+        "plot_title_size": 10,
+        "axes_label_size": 10
+    },
+    "sideview": {
+        "plot_title_size": 10,
+        "axes_label_size": 10
+    },
+    "linearview": {
+        "plot_title_size": 10,
+        "axes_label_size": 10
+    },
+    "automated_plotting_flights": [
+        [
+            "ST16",
+            "00 global (cyl)",
+            "",
+            "ST16.ftml",
+            "",
+            "2019-07-01T12:00:00Z"
+        ],
+        [
+            "op2",
+            "03 SADPAP (cyl)",
+            "1043.0, 176.0",
+            "op2",
+            "",
+            "2019-09-29T12:00:00Z"
+        ],
+        [
+            "op2",
+            "03 SADPAP (cyl)",
+            "",
+            "op2",
+            "",
+            "2019-09-30T00:00:00Z"
+        ]
+    ],
+    "automated_plotting_hsecs": [
+        [
+            "https://forecast.fz-juelich.de/campaigns2019",
+            "CLaMS_TL.mole_fraction_of_H1301_in_air_tl",
+            "auto",
+            "330"
+        ],
+        [
+            "https://forecast.fz-juelich.de/campaigns2019",
+            "CLaMS_PL.surface_origin_tracer_from_asia_pl",
+            "auto",
+            "500.0"
+        ]
+    ],
+    "automated_plotting_vsecs": [],
+    "automated_plotting_lsecs": []
+}

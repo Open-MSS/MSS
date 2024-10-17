@@ -137,8 +137,8 @@ def automate_views():
     topview = load_settings_qsettings('topview', {"os_screen_region": (0, 0, 0, 0)})
     pag.sleep(1)
 
-    find_and_click_picture('topviewwindow-01-europe-cyl.png',
-                           'Projection 01-europe-cyl not found',
+    find_and_click_picture('topviewwindow-00-global-cyl.png',
+                           'Projection 00-global-cyl not found',
                            region=topview["os_screen_region"])
     select_listelement(2)
 

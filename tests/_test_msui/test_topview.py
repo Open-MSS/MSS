@@ -61,7 +61,7 @@ class Test_MSSTopViewWindow:
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         yield
@@ -211,7 +211,7 @@ class Test_TopViewWMS:
             0, rows=len(initial_waypoints), waypoints=initial_waypoints)
 
         mainwindow = MSUIMainWindow()
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow, parent=mainwindow)
         self.window.show()
         QtTest.QTest.qWaitForWindowExposed(self.window)
         self.window.cbTools.currentIndexChanged.emit(1)
@@ -250,12 +250,12 @@ class Test_MSUITopViewWindow:
         waypoints_model = ft.WaypointsTableModel("")
         waypoints_model.insertRows(0, rows=len(initial_waypoints), waypoints=initial_waypoints)
         mainwindow = MSUIMainWindow()
-        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow)
+        self.window = tv.MSUITopViewWindow(model=waypoints_model, mainwindow=mainwindow, parent=mainwindow)
 
         # user_options is a global var
         from mslib.utils.config import user_options
 
-        assert user_options['predefined_map_sections']['01 Europe (cyl)']['map'] == {'llcrnrlat': 35.0,
+        assert user_options['predefined_map_sections']['07 Europe (cyl)']['map'] == {'llcrnrlat': 35.0,
                                                                                      'llcrnrlon': -15.0,
                                                                                      'urcrnrlat': 65.0,
                                                                                      'urcrnrlon': 30.0}
