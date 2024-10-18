@@ -35,7 +35,7 @@ jobs:
     - name: Get current year and calendar week
       id: year-and-week
       run: echo "year-and-week=$(date +%Y-%V)" >> "$GITHUB_OUTPUT"
-    - uses: mamba-org/setup-micromamba@v1
+    - uses: mamba-org/setup-micromamba@v2
       with:
         environment-file: requirements.txt
         environment-name: ci
