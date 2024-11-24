@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>387</width>
-    <height>149</height>
+    <height>200</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,10 +16,10 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" colspan="2">
     <layout class="QGridLayout" name="infoGl">
-     <item row="1" column="2">
-      <widget class="QLabel" name="emailLabel_2">
+     <item row="0" column="0">
+      <widget class="QLabel" name="usernameLabel">
        <property name="text">
-        <string/>
+        <string>Name</string>
        </property>
       </widget>
      </item>
@@ -30,20 +30,6 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="emailLabel">
-       <property name="text">
-        <string>Email</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="usernameLabel">
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </widget>
-     </item>
      <item row="0" column="2">
       <widget class="QLabel" name="usernameLabel_2">
        <property name="text">
@@ -51,7 +37,35 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="1">
+     <item row="1" column="0">
+      <widget class="QLabel" name="emailLabel">
+       <property name="text">
+        <string>Email</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1" alignment="Qt::AlignLeft">
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="2">
+      <widget class="QLabel" name="emailLabel_2">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="mscolabURLLabel">
+       <property name="text">
+        <string>Mscolab</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1" alignment="Qt::AlignLeft">
       <widget class="QLabel" name="label_3">
        <property name="text">
         <string>:</string>
@@ -65,17 +79,45 @@
        </property>
       </widget>
      </item>
-     <item row="1" column="1" alignment="Qt::AlignLeft">
-      <widget class="QLabel" name="label_2">
+     <item row="3" column="0">
+      <widget class="QLabel" name="nicknameLabel">
+       <property name="text">
+        <string>Nickname</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1" alignment="Qt::AlignLeft">
+      <widget class="QLabel" name="label_4">
        <property name="text">
         <string>:</string>
        </property>
       </widget>
      </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="mscolabURLLabel">
+     <item row="3" column="2">
+      <widget class="QLabel" name="nicknameValue">
        <property name="text">
-        <string>Mscolab</string>
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="0">
+      <widget class="QLabel" name="fullNameLabel">
+       <property name="text">
+        <string>Full Name</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1" alignment="Qt::AlignLeft">
+      <widget class="QLabel" name="label_5">
+       <property name="text">
+        <string>:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QLabel" name="fullNameValue">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
@@ -85,9 +127,6 @@
     <layout class="QVBoxLayout" name="gravatarVl">
      <item alignment="Qt::AlignHCenter|Qt::AlignVCenter">
       <widget class="QLabel" name="gravatarLabel">
-       <property name="text">
-        <string/>
-       </property>
        <property name="pixmap">
         <pixmap resource="../resources/resources.qrc">:/gravatars/default-gravatars/default.png</pixmap>
        </property>
@@ -125,20 +164,8 @@
      </item>
      <item alignment="Qt::AlignHCenter">
       <widget class="QDialogButtonBox" name="buttonBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="mouseTracking">
-        <bool>false</bool>
-       </property>
        <property name="standardButtons">
         <set>QDialogButtonBox::Ok</set>
-       </property>
-       <property name="centerButtons">
-        <bool>false</bool>
        </property>
       </widget>
      </item>

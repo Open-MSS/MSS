@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>478</width>
-    <height>271</height>
+    <width>446</width>
+    <height>305</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_4">
    <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0,0">
      <item>
       <widget class="QLabel" name="urlLabel">
        <property name="text">
@@ -68,7 +68,7 @@
    <item row="2" column="0">
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="loginPage">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -182,21 +182,7 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newPasswordLabel">
-         <property name="text">
-          <string>Password:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newConfirmPasswordLabel">
-         <property name="text">
-          <string>Confirm Password:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1" alignment="Qt::AlignLeft">
+       <item row="0" column="1">
         <widget class="QLabel" name="newUserTopicLabel">
          <property name="font">
           <font>
@@ -208,31 +194,7 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
-        <widget class="QLineEdit" name="newEmailLe">
-         <property name="placeholderText">
-          <string>johndoe@gmail.com</string>
-         </property>
-        </widget>
-       </item>
-       <item row="2" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newEmailLabel">
-         <property name="text">
-          <string>Email:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1" alignment="Qt::AlignLeft">
-        <widget class="QDialogButtonBox" name="newUserBb">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="standardButtons">
-          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
+       <item row="10" column="1">
         <widget class="QLineEdit" name="newPasswordLe">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
@@ -242,20 +204,86 @@
          </property>
         </widget>
        </item>
-       <item row="1" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newUsernameLabel">
-         <property name="text">
-          <string>Username:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="1">
+       <item row="11" column="1">
         <widget class="QLineEdit" name="newConfirmPasswordLe">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
          </property>
          <property name="placeholderText">
           <string>Confirm New Password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="12" column="1" alignment="Qt::AlignLeft">
+        <widget class="QDialogButtonBox" name="newUserBb">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="standardButtons">
+          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="1">
+        <widget class="QLineEdit" name="newEmailLe">
+         <property name="placeholderText">
+          <string>johndoe@gmail.com</string>
+         </property>
+        </widget>
+       </item>
+       <item row="9" column="0" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="newEmailLabel">
+         <property name="text">
+          <string>Email:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="fullname">
+         <property name="placeholderText">
+          <string>John Michael Doe</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="0" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="newPasswordLabel">
+         <property name="text">
+          <string>Password:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="11" column="0" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="newConfirmPasswordLabel">
+         <property name="text">
+          <string>Confirm Password:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QLineEdit" name="nickname">
+         <property name="placeholderText">
+          <string>Johnny</string>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="newUsernameLabel">
+         <property name="text">
+          <string>            Username:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="fullnameLabel">
+         <property name="text">
+          <string>             Fullname:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="nicknameLabel">
+         <property name="text">
+          <string>            Nickname:</string>
          </property>
         </widget>
        </item>
@@ -453,7 +481,6 @@
   <tabstop>loginPasswordLe</tabstop>
   <tabstop>loginBtn</tabstop>
   <tabstop>addUserBtn</tabstop>
-  <tabstop>newUsernameLe</tabstop>
   <tabstop>newEmailLe</tabstop>
   <tabstop>newPasswordLe</tabstop>
   <tabstop>newConfirmPasswordLe</tabstop>

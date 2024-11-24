@@ -81,7 +81,6 @@ def create_app(name="", imprint=None, gdpr=None):
 
     @APP.route('/xstatic/<name>/<path:filename>')
     def files(name, filename):
-
         base_path = _xstatic(name)
         if base_path is None:
             abort(404)
@@ -95,10 +94,6 @@ def create_app(name="", imprint=None, gdpr=None):
         return send_from_directory(base_path, filename)
 
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
-
-    @APP.route("/index")
-    def index():
-        return render_template("/index.html")
 
     @APP.route("/mss/about")
     @APP.route("/mss")
