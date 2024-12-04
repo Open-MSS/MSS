@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_add_user.ui'
+# Form implementation generated from reading ui file 'ui_add_user_dialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.9
 #

@@ -223,6 +223,8 @@ class FileManager:
         if action == "create":
             user_query = User.query.filter_by(emailid=str(user.emailid)).first()
             if user_query is None:
+                if not user.full_name or not user.nickname:
+                    raise ValueError("Full name and nickname must be provided.")
                 db.session.add(user)
                 db.session.commit()
             else:
@@ -254,6 +256,9 @@ class FileManager:
                 user_query = User.query.filter_by(emailid=str(value)).first()
                 if user_query is not None:
                     return False
+            if attribute in ["full_name", "nickname"]:
+                if not value.strip(): 
+                    raise ValueError(f"{attribute} cannot be empty.")
             setattr(user, attribute, value)
             db.session.commit()
         return True

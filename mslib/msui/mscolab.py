@@ -944,30 +944,28 @@ class MSUIMscolab(QtCore.QObject):
             if response.status_code == 200 and response.json()["success"] is True:
                 self.logout()
 
+    @verify_token_required
     def editfull_name(self):
-        if verify_user_token(self.mscolab_server_url, self.token):
-            fullname, ok = QtWidgets.QInputDialog.getText(
-                self.ui,
-                self.ui.tr("Edit Full Name"),
-                self.ui.tr(
-                    f"You're about to change the full name - '{self.active_operation_name}' "
-                    f"Enter new full name: "
-                ),
-            )
-            if ok:
-                data = {
-                    "token": self.token,
-                    "fullname": str(fullname)
-                }
-                url = url_join(self.mscolab_server_url, 'edit_full_name')
-                r = requests.post(url, data=data)
-                if r.text == "true":
-                    self.error_dialog = QtWidgets.QErrorMessage()
-                    self.error_dialog.showMessage("Fullname is updated successfully.")
-                    self.profile_dialog.fullname_label2.setText(self.user["fullname"])
-        else:
-            show_popup(self, "Error", "Your Connection is expired. New Login required!")
-            self.logout()
+        fullname, ok = QtWidgets.QInputDialog.getText(
+            self.ui,
+            self.ui.tr("Edit Full Name"),
+            self.ui.tr(
+                f"You're about to change the full name - '{self.active_operation_name}' "
+                f"Enter new full name: "
+        ),
+    )
+        if ok:
+            data = {
+                "token": self.token,
+                "fullname": str(fullname)
+        }
+            url = url_join(self.mscolab_server_url, 'edit_full_name')
+            r = requests.post(url, data=data)
+            if r.text == "true":
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage("Fullname is updated successfully.")
+                self.profile_dialog.fullname_label2.setText(self.user["fullname"])
+
 
     def editnick_name(self):
         pass

@@ -263,13 +263,3 @@ class Ui_MSColabConnectDialog(object):
         self.idpAuthTokenSubmitBtn.setText(_translate("MSColabConnectDialog", "Submit"))
         self.idpAuthTopicLabel.setText(_translate("MSColabConnectDialog", "Identity Provider Authentication"))
         self.statusLabel.setText(_translate("MSColabConnectDialog", "Status:"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MSColabConnectDialog = QtWidgets.QDialog()
-    ui = Ui_MSColabConnectDialog()
-    ui.setupUi(MSColabConnectDialog)
-    MSColabConnectDialog.show()
-    sys.exit(app.exec_())

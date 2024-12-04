@@ -249,9 +249,8 @@ def check_login(emailid, password):
 
 
 def register_user(email, password, username, fullname, nickname):
-    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0 or len(str(fullname.strip())) == 0 or len(
-            str(nickname.strip())) == 0:
-        return {"success": False, "message": "Your username, email, fullname, or nickname cannot be empty"}
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0 or len(str(fullname.strip())) == 0 or len(str(username.strip())) == 0:
+        return {"success": False, "message": "Your username, fullname, nickname or email cannot be empty"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
@@ -634,9 +633,7 @@ def edit_user_info():
         user_record.nickname = nickname  # Update nickname
 
         # Commit changes to the database
-        db.session.commit()
-
-        # Return the updated name and nickname if needed
+        db.session.commit() 
         return jsonify({
             "success": True,
             "fullname": user_record.fullname,
@@ -644,10 +641,12 @@ def edit_user_info():
         }), 200
 
     except Exception as e:
-        # Log the error message (use logging instead of print for production)
-        print(f"Error updating user info: {str(e)}")  # Replace with proper logging if needed
-        db.session.rollback()  # Rollback in case of error
-        return jsonify({"success": False, "error": "Failed to update user info."}), 500
+         logging.debug(f"Error updating user info: {str(e)}")
+         return jsonify({
+        "success": False,
+        "error": "Failed to update user info"
+    }), 500
+        
 
 
 @APP.route('/authorized_users', methods=['GET'])

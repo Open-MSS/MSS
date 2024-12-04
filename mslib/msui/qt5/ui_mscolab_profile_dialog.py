@@ -112,14 +112,3 @@ class Ui_ProfileWindow(object):
         self.label_5.setText(_translate("ProfileWindow", ":"))
         self.deleteAccountBtn.setText(_translate("ProfileWindow", "Delete Account"))
         self.uploadImageBtn.setText(_translate("ProfileWindow", "Change Avatar"))
-import resources_rc
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    ProfileWindow = QtWidgets.QDialog()
-    ui = Ui_ProfileWindow()
-    ui.setupUi(ProfileWindow)
-    ProfileWindow.show()
-    sys.exit(app.exec_())
