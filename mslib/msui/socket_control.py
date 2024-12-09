@@ -203,7 +203,7 @@ class ConnectionManager(QtCore.QObject):
         # Emit an event to notify the server of the operation selection.
         self.sio.emit('operation-selected', {'token': self.token, 'op_id': op_id})
 
-    def save_file(self, token, op_id, content, comment=None, messageText=""):
+    def save_file(self, token, op_id, content, comment=None, version_name=None, messageText=""):
         # ToDo refactor API
         if verify_user_token(self.mscolab_server_url, self.token):
             logging.debug("saving file")
@@ -212,6 +212,7 @@ class ConnectionManager(QtCore.QObject):
                           "token": self.token,
                           "content": content,
                           "comment": comment,
+                          "version_name": version_name,
                           "messageText": messageText})
         else:
             # this triggers disconnect

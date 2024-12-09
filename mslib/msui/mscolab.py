@@ -1905,14 +1905,13 @@ class MSUIMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     @verify_user_token
-    def handle_waypoints_changed(self, _1=None, _2=None, _3=None):
+    def handle_waypoints_changed(self, _1=None, _2=None, _3=None, version_name=None):
         logging.debug("handle_waypoints_changed")
         if self.ui.workLocallyCheckbox.isChecked():
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
         else:
             xml_content = self.waypoints_model.get_xml_content()
-            self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None,
-                                messageText=self.lastChangeMessage)
+            self.conn.save_file(self.token, self.active_op_id, xml_content, version_name=version_name, comment=None)
             # Reset the last change message to make sure that it is used only once
             self.lastChangeMessage = ""
 
@@ -1964,7 +1963,7 @@ class MSUIMscolab(QtCore.QObject):
         self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
         self.waypoints_model = model
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
-        self.handle_waypoints_changed()
+        self.handle_waypoints_changed(version_name=file_name)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
         show_popup(self.ui, "Import Success", f"The file - {file_name}, was imported successfully!", 1)
