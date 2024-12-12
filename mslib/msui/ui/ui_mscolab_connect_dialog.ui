@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>478</width>
-    <height>271</height>
+    <height>300</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout_4">
    <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,1,0,0">
      <item>
       <widget class="QLabel" name="urlLabel">
        <property name="text">
@@ -68,7 +68,7 @@
    <item row="2" column="0">
     <widget class="QStackedWidget" name="stackedWidget">
      <property name="currentIndex">
-      <number>3</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="loginPage">
       <layout class="QGridLayout" name="gridLayout_3">
@@ -175,24 +175,10 @@
        <property name="spacing">
         <number>5</number>
        </property>
-       <item row="1" column="1">
-        <widget class="QLineEdit" name="newUsernameLe">
-         <property name="placeholderText">
-          <string>John Doe</string>
-         </property>
-        </widget>
-       </item>
        <item row="3" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newPasswordLabel">
+        <widget class="QLabel" name="newEmailLabel">
          <property name="text">
-          <string>Password:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="4" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newConfirmPasswordLabel">
-         <property name="text">
-          <string>Confirm Password:</string>
+          <string>Email:</string>
          </property>
         </widget>
        </item>
@@ -208,37 +194,31 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="1">
+       <item row="5" column="0" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="newConfirmPasswordLabel">
+         <property name="text">
+          <string>Confirm Password:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="0" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="newPasswordLabel">
+         <property name="text">
+          <string>Password:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
         <widget class="QLineEdit" name="newEmailLe">
          <property name="placeholderText">
           <string>johndoe@gmail.com</string>
          </property>
         </widget>
        </item>
-       <item row="2" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newEmailLabel">
-         <property name="text">
-          <string>Email:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="5" column="1" alignment="Qt::AlignLeft">
-        <widget class="QDialogButtonBox" name="newUserBb">
-         <property name="layoutDirection">
-          <enum>Qt::LeftToRight</enum>
-         </property>
-         <property name="standardButtons">
-          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
-         </property>
-        </widget>
-       </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="newPasswordLe">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="newUsernameLe">
          <property name="placeholderText">
-          <string>New Password</string>
+          <string>John Doe</string>
          </property>
         </widget>
        </item>
@@ -249,13 +229,47 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QLineEdit" name="newConfirmPasswordLe">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
          </property>
          <property name="placeholderText">
           <string>Confirm New Password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="4" column="1">
+        <widget class="QLineEdit" name="newPasswordLe">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+         <property name="placeholderText">
+          <string>New Password</string>
+         </property>
+        </widget>
+       </item>
+       <item row="6" column="1" alignment="Qt::AlignLeft">
+        <widget class="QDialogButtonBox" name="newUserBb">
+         <property name="layoutDirection">
+          <enum>Qt::LeftToRight</enum>
+         </property>
+         <property name="standardButtons">
+          <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QLineEdit" name="fullNameLabel">
+         <property name="placeholderText">
+          <string>John David Doe</string>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>            Fullname:</string>
          </property>
         </widget>
        </item>

@@ -967,6 +967,28 @@ class MSUIMscolab(QtCore.QObject):
                 self.logout()
 
     @verify_user_token
+    def editfull_name(self):
+        fullname, ok = QtWidgets.QInputDialog.getText(
+            self.ui,
+            self.ui.tr("Edit Full Name"),
+            self.ui.tr("Enter new full name:")  # Removed the active_operation_name part
+    )
+    
+        if ok:
+            data = {
+                "token": self.token,
+                "fullname": str(fullname)  
+        }
+            url = urljoin(self.mscolab_server_url, 'edit_full_name')
+            r = requests.post(url, data=data)
+        
+            if r.text == "true":
+                self.error_dialog = QtWidgets.QErrorMessage()
+                self.error_dialog.showMessage("Fullname is updated successfully.")
+                self.profile_dialog.fullname_label2.setText(self.user["fullname"])
+
+
+    @verify_user_token
     def add_operation_handler(self, _=None):
         def check_and_enable_operation_accept():
             if (self.add_proj_dialog.path.text() != "" and
