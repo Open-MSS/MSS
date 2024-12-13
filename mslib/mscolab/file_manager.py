@@ -219,7 +219,7 @@ class FileManager:
             return False
         return perm.access_level
 
-    def modify_user_fullname(self, user, value=None, action=None):
+    def modify_user(self, user, attribute=None, value=None, action=None):
         if action == "create":
             user_query = User.query.filter_by(emailid=str(user.emailid)).first()
             if user_query is None:
