@@ -87,3 +87,4 @@ class Ui_addUserDialog(object):
         self.password.setPlaceholderText(_translate("addUserDialog", "Your password"))
         self.confirmPasswordLabel.setText(_translate("addUserDialog", "Confirm Password:"))
         self.rePassword.setPlaceholderText(_translate("addUserDialog", "Confirm your password"))
+

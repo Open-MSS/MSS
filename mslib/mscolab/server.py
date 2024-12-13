@@ -620,32 +620,29 @@ def set_version_name():
 def edit_user_info():
     user = g.user
     fullname = request.form.get("fullname")
-    nickname = request.form.get("nickname")
 
     try:
-        # Update the user's full name and nickname in the database
+        # Update the user's full name in the database
         user_record = User.query.filter_by(id=int(user.id)).first()
         if user_record is None:
             return jsonify({"success": False, "error": "User not found."}), 404
 
-        # Update fields
+        # Update the full name
         user_record.fullname = fullname  # Update full name
-        user_record.nickname = nickname  # Update nickname
 
         # Commit changes to the database
-        db.session.commit() 
+        _handle_db_upgrade().session.commit() 
         return jsonify({
             "success": True,
-            "fullname": user_record.fullname,
-            "nickname": user_record.nickname
+            "fullname": user_record.fullname  # Return the updated full name
         }), 200
 
     except Exception as e:
-         logging.debug(f"Error updating user info: {str(e)}")
-         return jsonify({
-        "success": False,
-        "error": "Failed to update user info"
-    }), 500
+        logging.debug(f"Error updating user info: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to update user info"
+        }), 500
         
 
 

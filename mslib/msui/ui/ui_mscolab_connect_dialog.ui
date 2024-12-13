@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>446</width>
-    <height>305</height>
+    <height>332</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -194,27 +194,14 @@
          </property>
         </widget>
        </item>
-       <item row="10" column="1">
-        <widget class="QLineEdit" name="newPasswordLe">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
+       <item row="8" column="1">
+        <widget class="QLineEdit" name="newEmailLe">
          <property name="placeholderText">
-          <string>New Password</string>
+          <string>johndoe@gmail.com</string>
          </property>
         </widget>
        </item>
-       <item row="11" column="1">
-        <widget class="QLineEdit" name="newConfirmPasswordLe">
-         <property name="echoMode">
-          <enum>QLineEdit::Password</enum>
-         </property>
-         <property name="placeholderText">
-          <string>Confirm New Password</string>
-         </property>
-        </widget>
-       </item>
-       <item row="12" column="1" alignment="Qt::AlignLeft">
+       <item row="11" column="1" alignment="Qt::AlignLeft">
         <widget class="QDialogButtonBox" name="newUserBb">
          <property name="layoutDirection">
           <enum>Qt::LeftToRight</enum>
@@ -225,16 +212,29 @@
         </widget>
        </item>
        <item row="9" column="1">
-        <widget class="QLineEdit" name="newEmailLe">
+        <widget class="QLineEdit" name="newPasswordLe">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
          <property name="placeholderText">
-          <string>johndoe@gmail.com</string>
+          <string>New Password</string>
          </property>
         </widget>
        </item>
-       <item row="9" column="0" alignment="Qt::AlignRight">
+       <item row="8" column="0" alignment="Qt::AlignRight">
         <widget class="QLabel" name="newEmailLabel">
          <property name="text">
           <string>Email:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="10" column="1">
+        <widget class="QLineEdit" name="newConfirmPasswordLe">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+         <property name="placeholderText">
+          <string>Confirm New Password</string>
          </property>
         </widget>
        </item>
@@ -246,30 +246,16 @@
         </widget>
        </item>
        <item row="10" column="0" alignment="Qt::AlignRight">
-        <widget class="QLabel" name="newPasswordLabel">
-         <property name="text">
-          <string>Password:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="11" column="0" alignment="Qt::AlignRight">
         <widget class="QLabel" name="newConfirmPasswordLabel">
          <property name="text">
           <string>Confirm Password:</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
-        <widget class="QLineEdit" name="nickname">
-         <property name="placeholderText">
-          <string>Johnny</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="newUsernameLabel">
+       <item row="9" column="0" alignment="Qt::AlignRight">
+        <widget class="QLabel" name="newPasswordLabel">
          <property name="text">
-          <string>            Username:</string>
+          <string>Password:</string>
          </property>
         </widget>
        </item>
@@ -280,10 +266,10 @@
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
-        <widget class="QLabel" name="nicknameLabel">
+       <item row="1" column="0">
+        <widget class="QLabel" name="newUsernameLabel">
          <property name="text">
-          <string>            Nickname:</string>
+          <string>            Username:</string>
          </property>
         </widget>
        </item>

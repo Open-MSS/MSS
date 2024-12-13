@@ -219,12 +219,12 @@ class FileManager:
             return False
         return perm.access_level
 
-    def modify_user(self, user, attribute=None, value=None, action=None):
+    def modify_user_fullname(self, user, value=None, action=None):
         if action == "create":
             user_query = User.query.filter_by(emailid=str(user.emailid)).first()
             if user_query is None:
-                if not user.full_name or not user.nickname:
-                    raise ValueError("Full name and nickname must be provided.")
+                if not user.fullname:
+                    raise ValueError("Full name must be provided.")
                 db.session.add(user)
                 db.session.commit()
             else:
@@ -232,36 +232,22 @@ class FileManager:
         elif action == "delete":
             user_query = User.query.filter_by(id=user.id).first()
             if user_query is not None:
-                # Delete profile image if it exists
-                if user.profile_image_path:
-                    self.delete_user_profile_image(user.profile_image_path)
                 db.session.delete(user)
                 db.session.commit()
             user_query = User.query.filter_by(id=user.id).first()
-            # on delete we return successful deleted
             if user_query is None:
                 return True
-        elif action == "update_idp_user":
-            user_query = User.query.filter_by(emailid=str(user.emailid)).first()
-            if user_query is not None:
-                db.session.add(user)
-                db.session.commit()
-            else:
+        elif action == "update_fullname":
+            user_query = User.query.filter_by(id=user.id).first()
+            if user_query is None:
                 return False
-        user_query = User.query.filter_by(id=user.id).first()
-        if user_query is None:
-            return False
-        if None not in (attribute, value):
-            if attribute == "emailid":
-                user_query = User.query.filter_by(emailid=str(value)).first()
-                if user_query is not None:
-                    return False
-            if attribute in ["full_name", "nickname"]:
-                if not value.strip(): 
-                    raise ValueError(f"{attribute} cannot be empty.")
-            setattr(user, attribute, value)
-            db.session.commit()
+            if value is not None:
+                if not value.strip():
+                    raise ValueError("Full name cannot be empty.")
+                setattr(user, "fullname", value)
+                db.session.commit()
         return True
+
 
     def delete_user_profile_image(self, image_to_be_deleted):
         '''

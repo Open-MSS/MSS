@@ -64,12 +64,10 @@ class User(db.Model):
     confirmed_on = db.Column(AwareDateTime, nullable=True)
     permissions = db.relationship('Permission', cascade='all,delete,delete-orphan', backref='user')
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
-
     fullname = db.Column(db.String(255), nullable=True)
-    nickname = db.Column(db.String(255), nullable=True)
 
     def __init__(self, emailid, username, password, profile_image_path=None, confirmed=False,
-                 confirmed_on=None, authentication_backend='local', fullname="", nickname=""):
+                 confirmed_on=None, authentication_backend='local', fullname=""):
         self.username = str(username)
         self.emailid = str(emailid)
         self.hash_password(password)
@@ -78,9 +76,7 @@ class User(db.Model):
         self.confirmed = bool(confirmed)
         self.confirmed_on = confirmed_on
         self.authentication_backend = str(authentication_backend)
-
-        self.fullname = str(fullname) if fullname else None
-        self.nickname = str(nickname) if nickname else None
+        self.fullname = str(fullname)
 
     def __repr__(self):
         return f'<User {self.username}>'
