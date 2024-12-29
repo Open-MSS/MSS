@@ -100,4 +100,4 @@ class Ui_ProfileWindow(object):
         self.mscolabURLLabel.setText(_translate("ProfileWindow", "Mscolab"))
         self.deleteAccountBtn.setText(_translate("ProfileWindow", "Delete Account"))
         self.uploadImageBtn.setText(_translate("ProfileWindow", "Change Avatar"))
-import resources_rc
+# import resources_rc
