@@ -95,6 +95,10 @@ def create_app(name="", imprint=None, gdpr=None):
 
     APP.jinja_env.globals.update(get_topmenu=get_topmenu)
 
+    @APP.route("/index")
+    def index():
+        return render_template("/index.html")
+
     @APP.route("/mss/about")
     @APP.route("/mss")
     def about():

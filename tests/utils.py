@@ -115,7 +115,7 @@ def mscolab_register_user(app, msc_url, email, password, username):
     data = {
         'email': email,
         'password': password,
-        'username' : username
+        'username': username
     }
     url = urljoin(msc_url, 'register')
     response = app.test_client().post(url, data=data)

@@ -249,7 +249,7 @@ def check_login(emailid, password):
 
 
 def register_user(email, password, username, fullname):
-    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0 or len(str(fullname.strip())) == 0 :
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0 or len(str(fullname.strip())) == 0:
         return {"success": False, "message": "Your username, fullname or email cannot be empty"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
@@ -266,6 +266,7 @@ def register_user(email, password, username, fullname):
     user = User(email, username, password, fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
+
 
 def verify_user(func):
     @functools.wraps(func)
@@ -632,7 +633,7 @@ def edit_user_info():
         user_record.fullname = fullname  # Update full name
 
         # Commit changes to the database
-        _handle_db_upgrade().session.commit() 
+        _handle_db_upgrade().session.commit()
         return jsonify({
             "success": True,
             "fullname": user_record.fullname  # Return the updated full name
@@ -644,7 +645,6 @@ def edit_user_info():
             "success": False,
             "error": "Failed to update user info"
         }), 500
-        
 
 
 @APP.route('/authorized_users', methods=['GET'])
@@ -1058,4 +1058,3 @@ application = socketio.WSGIApp(sockio)
 
 if __name__ == '__main__':
     main()
-
