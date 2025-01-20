@@ -107,7 +107,7 @@ def delete_user(email):
         return False
 
 
-def add_user(email, username, password):
+def add_user(email, username, password, fullname):
     """
     on db level we add a user
     """
@@ -118,11 +118,11 @@ def add_user(email, username, password):
         user_email_exists = User.query.filter_by(emailid=str(email)).first()
         user_name_exists = User.query.filter_by(username=str(username)).first()
         if not user_email_exists and not user_name_exists:
-            db_user = User(email, username, password)
+            db_user = User(email, username, password, fullname)
             db.session.add(db_user)
             db.session.commit()
             db.session.close()
-            logging.info("Userdata: %s %s %s", email, username, password)
+            logging.info("Userdata: %s %s %s %s", email, username, password, fullname)
             return True
         else:
             logging.info("%s already in db", user_name_exists)
