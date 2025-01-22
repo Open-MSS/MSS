@@ -29,7 +29,7 @@ import logging
 import datetime
 
 import numpy as np
-import pytest # type: ignore
+import pytest
 
 import mslib.utils.coordinate as coordinate
 from mslib.utils.find_location import find_location
