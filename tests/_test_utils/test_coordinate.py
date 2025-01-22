@@ -88,7 +88,7 @@ class TestAngles:
 
 
 class TestLatLonPoints:
-    def test_linear(self): 
+    def test_linear(self):
         ref_lats = [0, 10]
         ref_lons = [0, 0]
 
