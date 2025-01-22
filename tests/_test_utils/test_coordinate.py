@@ -82,7 +82,8 @@ class TestAngles:
     def test_rotate_point(self):
         point = [0.0, 2.5]
         angle = 45
-        rotated_point = (-1.7678, 1.7678)
+        # on github we need more decimal places
+        rotated_point = (-1.767767, 1.767767)
 
         assert coordinate.rotate_point(point, angle) == pytest.approx(rotated_point, rel=1e-6, abs=1e-6)
 
