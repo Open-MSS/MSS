@@ -248,9 +248,9 @@ def check_login(emailid, password):
     return False
 
 
-def register_user(email, password, username, fullname):
-    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0 or len(str(fullname.strip())) == 0:
-        return {"success": False, "message": "Your username, fullname or email cannot be empty"}
+def register_user(email, password, username, fullname=""):
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
+        return {"success": False, "message": "Your username or email cannot be empty"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
@@ -370,14 +370,14 @@ def get_auth_token():
                 token = user.generate_auth_token()
                 return json.dumps({
                     'token': token,
-                    'user': {'username': user.username, 'id': user.id}})
+                    'user': {'username': user.username, 'id': user.id}, 'fullname': user.fulllname})
             else:
                 return "False"
         else:
             token = user.generate_auth_token()
             return json.dumps({
                 'token': token,
-                'user': {'username': user.username, 'id': user.id}})
+                'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
     else:
         logging.debug("Unauthorized user: %s", emailid)
         return "False"
@@ -405,7 +405,7 @@ def user_register_handler():
     email = request.form['email']
     password = request.form['password']
     username = request.form['username']
-    fullname = request.form['fullname']
+    fullname = request.form.get('fullname', "")
     result = register_user(email, password, username, fullname)
     status_code = 200
     try:
@@ -444,7 +444,7 @@ def confirm_email(token):
 @APP.route('/user', methods=["GET"])
 @verify_user
 def get_user():
-    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
+    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username, 'fullname': g.user.fullname}})
 
 
 @APP.route('/upload_profile_image', methods=["POST"])
@@ -622,29 +622,8 @@ def set_version_name():
 def edit_user_info():
     user = g.user
     fullname = request.form.get("fullname")
-
-    try:
-        # Update the user's full name in the database
-        user_record = User.query.filter_by(id=int(user.id)).first()
-        if user_record is None:
-            return jsonify({"success": False, "error": "User not found."}), 404
-
-        # Update the full name
-        user_record.fullname = fullname  # Update full name
-
-        # Commit changes to the database
-        _handle_db_upgrade().session.commit()
-        return jsonify({
-            "success": True,
-            "fullname": user_record.fullname  # Return the updated full name
-        }), 200
-
-    except Exception as e:
-        logging.debug(f"Error updating user info: {str(e)}")
-        return jsonify({
-            "success": False,
-            "error": "Failed to update user info"
-        }), 500
+    result = fm.modify_user(user, attribute="fullname", value=fullname)
+    return jsonify({"success": result}), 200
 
 
 @APP.route('/authorized_users', methods=['GET'])

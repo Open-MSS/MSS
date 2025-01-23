@@ -1,4 +1,4 @@
- <?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>ProfileWindow</class>
  <widget class="QDialog" name="ProfileWindow">
@@ -16,27 +16,6 @@
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0" colspan="2">
     <layout class="QGridLayout" name="infoGl">
-     <item row="0" column="0">
-      <widget class="QLabel" name="usernameLabel">
-       <property name="text">
-        <string>Name</string>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="2">
-      <widget class="QLabel" name="fullNameValue">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="fullNameLabel">
-       <property name="text">
-        <string>Full Name</string>
-       </property>
-      </widget>
-     </item>
      <item row="3" column="1" alignment="Qt::AlignLeft">
       <widget class="QLabel" name="label_5">
        <property name="text">
@@ -44,36 +23,8 @@
        </property>
       </widget>
      </item>
-     <item row="2" column="2">
-      <widget class="QLabel" name="mscolabURLLabel_2">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="emailLabel">
-       <property name="text">
-        <string>Email</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1" alignment="Qt::AlignLeft">
       <widget class="QLabel" name="label_2">
-       <property name="text">
-        <string>:</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="2">
-      <widget class="QLabel" name="usernameLabel_2">
-       <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1" alignment="Qt::AlignLeft">
-      <widget class="QLabel" name="label">
        <property name="text">
         <string>:</string>
        </property>
@@ -86,17 +37,66 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="1" alignment="Qt::AlignLeft">
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="usernameLabel">
+       <property name="text">
+        <string>Username</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLabel" name="usernameLabel_2">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="fullNameLabel">
+       <property name="text">
+        <string>Full Name</string>
+       </property>
+      </widget>
+     </item>
      <item row="1" column="2">
-      <widget class="QLabel" name="emailLabel_2">
+      <widget class="QLabel" name="fullNameLabel_2">
        <property name="text">
         <string/>
        </property>
       </widget>
      </item>
      <item row="2" column="0">
+      <widget class="QLabel" name="emailLabel">
+       <property name="text">
+        <string>Email</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
       <widget class="QLabel" name="mscolabURLLabel">
        <property name="text">
         <string>Mscolab</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QLabel" name="mscolabURLLabel_2">
+       <property name="text">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QLabel" name="emailLabel_2">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>

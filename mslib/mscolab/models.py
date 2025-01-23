@@ -66,17 +66,17 @@ class User(db.Model):
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
     fullname = db.Column(db.String(255), nullable=True)
 
-    def __init__(self, emailid, username, password, profile_image_path=None, confirmed=False,
-                 confirmed_on=None, authentication_backend='local', fullname=""):
+    def __init__(self, emailid, username, password, fullname="", profile_image_path=None, confirmed=False,
+                 confirmed_on=None, authentication_backend='local'):
         self.username = str(username)
         self.emailid = str(emailid)
+        self.fullname = str(fullname)
         self.hash_password(password)
         self.profile_image_path = profile_image_path
         self.registered_on = datetime.datetime.now(tz=datetime.timezone.utc)
         self.confirmed = bool(confirmed)
         self.confirmed_on = confirmed_on
         self.authentication_backend = str(authentication_backend)
-        self.fullname = str(fullname)
 
     def __repr__(self):
         return f'<User {self.username}, fullname={self.fullname}>'

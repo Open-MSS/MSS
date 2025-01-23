@@ -239,7 +239,7 @@
         </widget>
        </item>
        <item row="2" column="1">
-        <widget class="QLineEdit" name="fullname">
+        <widget class="QLineEdit" name="newFullnameLe">
          <property name="placeholderText">
           <string>John Michael Doe</string>
          </property>
@@ -260,16 +260,22 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="fullnameLabel">
+        <widget class="QLabel" name="newFullnameLabel">
+         <property name="minimumSize">
+          <size>
+           <width>107</width>
+           <height>25</height>
+          </size>
+         </property>
          <property name="text">
-          <string>             Fullname:</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Fullname:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
        <item row="1" column="0">
         <widget class="QLabel" name="newUsernameLabel">
          <property name="text">
-          <string>            Username:</string>
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;Username:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>

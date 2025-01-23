@@ -213,7 +213,6 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
     def page_switched(self, index):
         # clear all text in add user widget
         self.newUsernameLe.setText("")
-        self.fullnameLe.setText("")
         self.newEmailLe.setText("")
         self.newPasswordLe.setText("")
         self.newConfirmPasswordLe.setText("")
@@ -446,13 +445,9 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         password = self.newPasswordLe.text()
         re_password = self.newConfirmPasswordLe.text()
         username = self.newUsernameLe.text()
-        fullname = self.newFullNameLe.text()
+        fullname = self.newFullnameLe.text()
         if password != re_password:
             self.set_status("Error", 'Your passwords don\'t match.')
-            return
-
-        if not fullname.strip():  # Validate full name
-            self.set_status("Error", "Full name cannot be empty.")
             return
 
         data = {
@@ -877,9 +872,9 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.setupUi(self.prof_diag)
         self.profile_dialog.buttonBox.accepted.connect(lambda: self.prof_diag.close())
         self.profile_dialog.usernameLabel_2.setText(self.user['username'])
+        self.profile_dialog.fullNameLabel_2.setText(self.user['fullname'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
-        self.profile_dialog.fullNameLabel.setText(self.user.get('full_name', 'Not Set'))
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
         self.profile_dialog.uploadImageBtn.clicked.connect(self.upload_image)
 
