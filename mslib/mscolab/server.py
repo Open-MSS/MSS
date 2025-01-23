@@ -433,7 +433,7 @@ def confirm_email(token):
         if email is False:
             return jsonify({"success": False}), 401
         user = User.query.filter_by(emailid=email).first_or_404()
-        if user.confirmed:
+        if user.confirmed:  
             return render_template('user/confirmed.html', username=user.username)
         else:
             fm.modify_user(user, attribute="confirmed_on", value=datetime.datetime.now(tz=datetime.timezone.utc))
