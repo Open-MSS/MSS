@@ -197,7 +197,7 @@ def get_op_id(msc_url, token, op_name):
 
 
 class Plotting:
-    def __init__(self, cpath, msc_url=None, msc_auth_password=None, username=None, password=None, pdlg=None):
+    def __init__(self, cpath, msc_url=None, msc_auth_password=None, username=None, password=None, pdlg=None, raw=False):
         """
         Initialize the Plotting object with the provided parameters.
 
@@ -300,8 +300,8 @@ class Plotting:
 
 
 class TopViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg):
-        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
+        super(TopViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
         self.pdlg = pdlg
         self.myfig = qt.TopViewPlotter()
         self.myfig.fig.canvas.draw()
@@ -313,6 +313,7 @@ class TopViewPlotting(Plotting):
         self.password = msc_password
         self.msc_auth = msc_auth_password
         self.url = msc_url
+        self.raw = raw
 
     def setup(self):
         pass
@@ -356,17 +357,20 @@ class TopViewPlotting(Plotting):
         img = wms.getmap(**kwargs)
         image_io = io.BytesIO(img.read())
         img = PIL.Image.open(image_io)
-        self.myfig.draw_image(img)
         t = str(time)
         date_time = re.sub(r'\W+', '', t)
         plot_filename = slugify(f"{flight}_{layer}_{section}_{date_time}_{no_of_plots}_{elevation}") + ".png"
-        self.myfig.fig.savefig(plot_filename)
+        if self.raw:
+            img.save(plot_filename)
+        else:
+            self.myfig.draw_image(img)
+            self.myfig.fig.savefig(plot_filename)
         print(f"The image is saved at: {os.getcwd()}/{plot_filename}")
 
 
 class SideViewPlotting(Plotting):
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg):
-        super(SideViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
+        super(SideViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
         self.pdlg = pdlg
         self.myfig = qt.SideViewPlotter()
         self.ax = self.myfig.ax
@@ -481,8 +485,8 @@ class SideViewPlotting(Plotting):
 
 class LinearViewPlotting(Plotting):
     # ToDo Implement access of MSColab
-    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg):
-        super(LinearViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password)
+    def __init__(self, cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw=False):
+        super(LinearViewPlotting, self).__init__(cpath, msc_url, msc_auth_password, msc_username, msc_password, raw)
         self.pdlg = pdlg
         self.myfig = qt.LinearViewPlotter()
         self.ax = self.myfig.ax
@@ -584,8 +588,9 @@ class LinearViewPlotting(Plotting):
 @click.option('--intv', default=0, help='Time interval.')
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
+@click.option('--raw', default=False, help='Saves the raw image with its projection in topview')
 @click.pass_context
-def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
+def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
     pdlg = None
 
     def close_process_dialog(pdlg):
@@ -623,13 +628,13 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime):
 
     # Choose view (top or side)
     if view == "top":
-        top_view = TopViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
+        top_view = TopViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
         sec = "automated_plotting_hsecs"
     elif view == "side":
-        side_view = SideViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
+        side_view = SideViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
         sec = "automated_plotting_vsecs"
     elif view == "linear":
-        linear_view = LinearViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg)
+        linear_view = LinearViewPlotting(cpath, msc_url, msc_auth_password, msc_username, msc_password, pdlg, raw)
         sec = "automated_plotting_lsecs"
     else:
         print("Invalid view")

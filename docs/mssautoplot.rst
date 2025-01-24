@@ -25,6 +25,9 @@ The CLI tool has the following parameters:
 +--------------+-------+----------------------------------------------------------------------+
 | ``--etime``  | TEXT  |   Ending time for downloading multiple plots with a fixed interval.  |
 +--------------+-------+----------------------------------------------------------------------+
+| ``--raw``    | BOOL  |   Saves the raw image with its projection in topview.                |
++--------------+-------+----------------------------------------------------------------------+
+
 
 A short description of how to start the program is given by the ``--help`` option.
 
@@ -50,6 +53,13 @@ For downloading plots of multiple flight tracks, specify the flight track and it
 3. ``mssautoplot --cpath mssautoplot.json --stime="2019-09-01T00:00:00" --etime="2019-09-02T00:00:00" --intv=6``
 
 The above command will download plots of the with/without flight track from start time "2019-09-01T00:00:00" to end time "2019-09-02T00:00:00". The user would need to compulsorily specify the init_time and time in mss_autoplot.json inorder to use this functionality.
+
+
+4. ``mssautoplot --cpath mssautoplot.json --raw=True``
+
+This command stores the data of topview as PNG for overlays without axis, titles etc.
+This could be used in systems like PLANET. You may want to set large values in the layout
+of topview in the mssautoplot.json.
 
 
 Settings file
