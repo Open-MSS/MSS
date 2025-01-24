@@ -28,30 +28,13 @@
 import os
 import fs
 import tempfile
-import logging
 from fs.tempfs import TempFS
-
-try:
-    import git
-except ImportError:
-    SHA = ""
-else:
-    path = os.path.dirname(os.path.realpath(__file__))
-    repo = git.Repo(path, search_parent_directories=True)
-    logging.debug(path)
-    try:
-        # this is for local development important to get a fresh named tmpdir
-        SHA = repo.head.object.hexsha[0:10]
-    except (ValueError, BrokenPipeError) as ex:
-        logging.debug("Unknown Problem: %s", ex)
-        # mounted dir in docker container and owner is not root
-        SHA = ""
 
 CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mswms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 MSCOLAB_AUTH_FILE = "mscolab_auth.py"
-ROOT_FS = TempFS(identifier=f"msui{SHA}")
+ROOT_FS = TempFS(identifier=f"msui")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
 
 ROOT_DIR = ROOT_FS.getsyspath("")
