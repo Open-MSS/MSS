@@ -106,6 +106,17 @@ With setting the option "filepicker_default": "default" you can only access loca
 
   "data_dir": "~/mssdata",
 
+Battery Mode
+............
+
+When running on battery mode, many laptops automatically switch to a power-saving profile. This profile is designed to conserve battery life by reducing the performance of hardware components, including the CPU and GPU. Power-saving settings may throttle the CPU speed, limit background tasks, or prioritize energy efficiency over performance.
+
+As a result, applications that require significant computational resources to initialize may take longer to start in battery mode. The MSUI during its startup sequence could experience noticeable delays. The reduced CPU frequency and limited power allocation in power-saving mode directly impact the speed at which the application can load and initialize its processes.
+
+This behavior is particularly pronounced in scenarios where the system has aggressive power-saving configurations or when running on low battery levels, as these conditions further limit the system's performance to extend runtime.
+
+Additionally, different systems implement power-saving measures with varying levels of aggressiveness. Some devices might drastically reduce CPU clock speeds or disable processor cores to extend battery life, resulting in longer startup times for the MSUI.
+
 MSColab Login and WWW-authentication
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 You can setup which accounts are used to login into MSColab and used for authenticate to the webservers.
