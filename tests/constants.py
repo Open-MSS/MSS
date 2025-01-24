@@ -34,7 +34,7 @@ CACHED_CONFIG_FILE = None
 SERVER_CONFIG_FILE = "mswms_settings.py"
 MSCOLAB_CONFIG_FILE = "mscolab_settings.py"
 MSCOLAB_AUTH_FILE = "mscolab_auth.py"
-ROOT_FS = TempFS(identifier=f"msui")
+ROOT_FS = TempFS(identifier="msui")
 OSFS_URL = ROOT_FS.geturl("", purpose="fs")
 
 ROOT_DIR = ROOT_FS.getsyspath("")
