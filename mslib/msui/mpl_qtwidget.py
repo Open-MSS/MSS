@@ -100,14 +100,17 @@ mpl_logger = configure_mpl_logger()
 
 
 class ViewPlotter:
-    def __init__(self, fig=None, ax=None, settings_tag=None, settings=None):
+    def __init__(self, fig=None, ax=None, settings_tag=None, settings=None, layout=None):
         # setup Matplotlib Figure and Axis
         self.fig, self.ax = fig, ax
         self.settings = settings
         self.settings_tag = settings_tag
         if self.fig is None:
             assert ax is None
-            self.fig = figure.Figure(facecolor="w")  # 0.75
+            if layout is not None:
+                self.fig = figure.Figure(facecolor="w", figsize=(layout[0] / 100, layout[1] / 100))  # 0.75
+            else:
+                self.fig = figure.Figure(facecolor="w")
         if self.ax is None:
             self.ax = self.fig.add_subplot(111, zorder=99)
 
@@ -179,7 +182,8 @@ class ViewPlotter:
 
 class TopViewPlotter(ViewPlotter):
     def __init__(self, fig=None, ax=None, settings=None):
-        super().__init__(fig, ax, settings_tag="topview", settings=_DEFAULT_SETTINGS_TOPVIEW)
+        super().__init__(fig, ax, settings_tag="topview", settings=_DEFAULT_SETTINGS_TOPVIEW,
+                         layout=config_loader(dataset="layout")["topview"])
         self.map = None
         self.legimg = None
         self.legax = None
@@ -397,7 +401,8 @@ class SideViewPlotter(ViewPlotter):
             numlabels = config_loader(dataset='num_labels')
         if num_interpolation_points is None:
             num_interpolation_points = config_loader(dataset='num_interpolation_points')
-        super().__init__(fig, ax, settings_tag="sideview", settings=_DEFAULT_SETTINGS_SIDEVIEW)
+        super().__init__(fig, ax, settings_tag="sideview", settings=_DEFAULT_SETTINGS_SIDEVIEW,
+                         layout=config_loader(dataset="layout")["sideview"])
         self.load_settings()
         self.set_settings(settings)
 
@@ -667,7 +672,8 @@ class LinearViewPlotter(ViewPlotter):
         """
         if numlabels is None:
             numlabels = config_loader(dataset='num_labels')
-        super().__init__(settings_tag="linearview", settings=_DEFAULT_SETTINGS_LINEARVIEW)
+        super().__init__(settings_tag="linearview", settings=_DEFAULT_SETTINGS_LINEARVIEW,
+                         layout=config_loader(dataset="layout")["linearview"])
         self.load_settings()
 
         # Sets the default values of plot sizes from MissionSupportDefaultConfig.

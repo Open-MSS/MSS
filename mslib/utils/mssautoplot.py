@@ -226,6 +226,11 @@ class Plotting:
                 raise SystemExit("Invalid SECTION and/or CRS")
             self.params["basemap"].update(self.config["predefined_map_sections"][section]["map"])
             self.bbox_units = self.params["bbox"]
+            self.layout = self.config["layout"]["topview"]
+        if self.__class__.__name__ == "SideViewPlotting":
+            self.layout = self.config["layout"]["sideview"]
+        if self.__class__.__name__ == "LinearViewPlotting":
+            self.layout = self.config["layout"]["linearview"]
         if filename != "" and filename == flight:
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif filename != "":
