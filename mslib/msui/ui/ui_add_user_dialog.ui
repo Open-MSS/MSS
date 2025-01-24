@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>375</width>
-    <height>232</height>
+    <height>293</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,11 +25,18 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="horizontalSpacing">
-        <number>-1</number>
+        <number>7</number>
        </property>
        <property name="verticalSpacing">
         <number>14</number>
        </property>
+       <item row="1" column="0">
+        <widget class="QLabel" name="usernameLabel">
+         <property name="text">
+          <string>Username:</string>
+         </property>
+        </widget>
+       </item>
        <item row="1" column="1">
         <widget class="QLineEdit" name="username">
          <property name="placeholderText">
@@ -37,21 +44,45 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0">
+        <widget class="QLabel" name="fullnamelabel">
+         <property name="text">
+          <string>Fullname:</string>
+         </property>
+        </widget>
+       </item>
        <item row="2" column="1">
+        <widget class="QLineEdit" name="fullname">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="placeholderText">
+          <string>John Michael Doe</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="emailIDLabel">
+         <property name="text">
+          <string>Email:</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
         <widget class="QLineEdit" name="emailid">
          <property name="placeholderText">
           <string>johndoe@gmail.com</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QLabel" name="passwordLabel">
          <property name="text">
           <string>Password:</string>
          </property>
         </widget>
        </item>
-       <item row="3" column="1">
+       <item row="4" column="1">
         <widget class="QLineEdit" name="password">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
@@ -61,14 +92,14 @@
          </property>
         </widget>
        </item>
-       <item row="4" column="0">
+       <item row="5" column="0">
         <widget class="QLabel" name="confirmPasswordLabel">
          <property name="text">
           <string>Confirm Password:</string>
          </property>
         </widget>
        </item>
-       <item row="4" column="1">
+       <item row="5" column="1">
         <widget class="QLineEdit" name="rePassword">
          <property name="echoMode">
           <enum>QLineEdit::Password</enum>
@@ -78,19 +109,8 @@
          </property>
         </widget>
        </item>
-       <item row="2" column="0">
-        <widget class="QLabel" name="emailIDLabel">
-         <property name="text">
-          <string>Email:</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QLabel" name="usernameLabel">
-         <property name="text">
-          <string>Username:</string>
-         </property>
-        </widget>
+       <item row="6" column="1">
+        <layout class="QVBoxLayout" name="verticalLayout_2"/>
        </item>
       </layout>
      </item>

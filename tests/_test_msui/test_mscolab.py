@@ -239,7 +239,7 @@ class Test_Mscolab_connect_window:
             assert self.main_window.mscolab.connect_window is None
         qtbot.wait_until(assert_)
 
-    def _create_user(self, username, email, password):
+    def _create_user(self, username, email, password, fullname=""):
         QtTest.QTest.mouseClick(self.window.addUserBtn, QtCore.Qt.LeftButton)
         self.window.newUsernameLe.setText(str(username))
         self.window.newEmailLe.setText(str(email))

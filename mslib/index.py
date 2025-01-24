@@ -81,7 +81,6 @@ def create_app(name="", imprint=None, gdpr=None):
 
     @APP.route('/xstatic/<name>/<path:filename>')
     def files(name, filename):
-
         base_path = _xstatic(name)
         if base_path is None:
             abort(404)

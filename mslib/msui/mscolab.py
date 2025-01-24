@@ -445,6 +445,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         password = self.newPasswordLe.text()
         re_password = self.newConfirmPasswordLe.text()
         username = self.newUsernameLe.text()
+        fullname = self.newFullnameLe.text()
         if password != re_password:
             self.set_status("Error", 'Your passwords don\'t match.')
             return
@@ -452,7 +453,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         data = {
             "email": emailid,
             "password": password,
-            "username": username
+            "username": username,
+            "fullname": fullname
         }
         session = requests.Session()
         session.auth = self.auth
@@ -870,6 +872,7 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.setupUi(self.prof_diag)
         self.profile_dialog.buttonBox.accepted.connect(lambda: self.prof_diag.close())
         self.profile_dialog.usernameLabel_2.setText(self.user['username'])
+        self.profile_dialog.fullNameLabel_2.setText(self.user['fullname'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
         self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
@@ -931,9 +934,11 @@ class MSUIMscolab(QtCore.QObject):
     def delete_account(self, _=None):
         # ToDo rename to delete_own_account
         reply = QMessageBox.question(
-            self.ui, self.tr('Continue?'),
+            self.ui,
+            self.tr('Continue?'),
             self.tr("You're about to delete your account. You cannot undo this operation!"),
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            QMessageBox.Yes | QMessageBox.No,
+            QMessageBox.No)
         if reply == QMessageBox.No:
             return
         try:
