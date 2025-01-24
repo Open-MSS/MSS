@@ -279,11 +279,11 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         """
         med_lon = np.median(lon_lin)
         lon_lin = normalize_longitude(lon_lin, med_lon - 180, med_lon + 180)
-        lins = list(zip(lon_lin[0:-1], lon_lin[1:], lat_lin[0:-1], lat_lin[1:]))
-        lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
-                for x0, x1, y0, y1 in lins]
+        lines = list(zip(lon_lin[0:-1], lon_lin[1:], lat_lin[0:-1], lat_lin[1:]))
+        lines = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
+                for x0, x1, y0, y1 in lines]
 
-        direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
+        direction = [(x1 - x0, y1 - y0) for x0, x1, y0, y1 in lines]
         direction = [(_x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
                      for _x, _y in direction]
         los = [rotate_point(point, -self.dsbObsAngleAzimuth.value()) for point in direction]
@@ -299,7 +299,7 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         tp_dir = (np.array(los).T * dist).T
 
         tps = [(x0 + tp_x, y0 + tp_y, y0) for
-               ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lins, tp_dir)]
+               ((x0, x1, y0, y1), (tp_x, tp_y)) in zip(lines, tp_dir)]
         tps = [(x0 / np.cos(np.deg2rad(yp)), y0) for (x0, y0, yp) in tps]
         return tps
 
@@ -316,17 +316,17 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
         Returns: List of tuples of longitude/latitude coordinates
 
         """
-        lins = [(_line[0][mid], _line[0][mid + 1], _line[1][mid], _line[1][mid + 1])
+        lines = [(_line[0][mid], _line[0][mid + 1], _line[1][mid], _line[1][mid + 1])
                 for _line, mid in zip(gc_lines, [len(_line[0]) // 2 for _line in gc_lines])
                 if len(_line[0]) > 2]
         lens = [np.hypot(_line[0][0] - _line[0][-1], _line[0][0] - _line[0][-1]) * 110.
                 for _line in gc_lines
                 if len(_line[0]) > 2]
-        lins = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
-                for x0, x1, y0, y1 in lins]
-        lins = [_x for _x, _l in zip(lins, lens) if _l > 10]
+        lines = [(x0 * np.cos(np.deg2rad(np.mean([y0, y1]))), x1 * np.cos(np.deg2rad(np.mean([y0, y1]))), y0, y1)
+                for x0, x1, y0, y1 in lines]
+        lines = [_x for _x, _l in zip(lines, lens) if _l > 10]
 
-        direction = [(0.5 * (x0 + x1), 0.5 * (y0 + y1), x1 - x0, y1 - y0) for x0, x1, y0, y1 in lins]
+        direction = [(0.5 * (x0 + x1), 0.5 * (y0 + y1), x1 - x0, y1 - y0) for x0, x1, y0, y1 in lines]
         direction = [(_u, _v, _x / np.hypot(_x, _y), _y / np.hypot(_x, _y))
                      for _u, _v, _x, _y in direction]
         los = [rotate_point(point[2:], -self.dsbObsAngleAzimuth.value()) for point in direction]
