@@ -79,7 +79,7 @@ class User(db.Model):
         self.authentication_backend = str(authentication_backend)
 
     def __repr__(self):
-        return f'<User {self.username}, fullname={self.fullname}>'
+        return f'<User {self.username}>'
 
     def hash_password(self, password):
         self.password = pwd_context.hash(password)
