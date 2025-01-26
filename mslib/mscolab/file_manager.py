@@ -236,6 +236,7 @@ class FileManager:
                 db.session.delete(user)
                 db.session.commit()
             user_query = User.query.filter_by(id=user.id).first()
+            # on delete we return successful deleted
             if user_query is None:
                 return True
         elif action == "update_idp_user":

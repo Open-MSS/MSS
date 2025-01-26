@@ -70,8 +70,8 @@ class Ui_addUserDialog(object):
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(addUserDialog)
-        self.buttonBox.accepted.connect(addUserDialog.accept) # type: ignore
-        self.buttonBox.rejected.connect(addUserDialog.reject) # type: ignore
+        self.buttonBox.accepted.connect(addUserDialog.accept)
+        self.buttonBox.rejected.connect(addUserDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(addUserDialog)
 
     def retranslateUi(self, addUserDialog):

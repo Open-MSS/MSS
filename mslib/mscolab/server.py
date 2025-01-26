@@ -617,15 +617,6 @@ def set_version_name():
     return jsonify({"success": True, "message": "Successfully set version name"})
 
 
-@APP.route("/edit_user_info", methods=["POST"])
-@verify_user
-def edit_user_info():
-    user = g.user
-    fullname = request.form.get("fullname")
-    result = fm.modify_user(user, attribute="fullname", value=fullname)
-    return jsonify({"success": result}), 200
-
-
 @APP.route('/authorized_users', methods=['GET'])
 @verify_user
 def authorized_users():
