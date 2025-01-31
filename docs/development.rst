@@ -226,7 +226,7 @@ This can be used to run tests on an invisible virtual display by prepending the 
   $ xvfb-run pytest ...
 
 We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
-in a /tmp/mss* folder. If you have installed gitpython a postfix of the revision head is added.
+in a /tmp/mss* folder.
 
 
 Setup MSWMS server

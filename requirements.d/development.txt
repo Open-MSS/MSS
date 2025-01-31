@@ -12,7 +12,6 @@ pytest-cov
 sphinx
 sphinx_rtd_theme
 sphinxcontrib-video
-gitpython
 pynco
 conda-verify
 pytest-reverse
