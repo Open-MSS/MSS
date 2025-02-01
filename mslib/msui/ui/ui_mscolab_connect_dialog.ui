@@ -260,7 +260,7 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="newFullnameLabel">
+        <widget class="QLabel" name="newFullnameLable">
          <property name="minimumSize">
           <size>
            <width>107</width>
