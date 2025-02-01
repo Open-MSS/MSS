@@ -70,8 +70,8 @@ class Ui_addUserDialog(object):
         self.gridLayout.addLayout(self.verticalLayout, 0, 0, 1, 1)
 
         self.retranslateUi(addUserDialog)
-        self.buttonBox.accepted.connect(addUserDialog.accept)
-        self.buttonBox.rejected.connect(addUserDialog.reject)
+        self.buttonBox.accepted.connect(addUserDialog.accept) # type: ignore
+        self.buttonBox.rejected.connect(addUserDialog.reject) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(addUserDialog)
 
     def retranslateUi(self, addUserDialog):
@@ -79,7 +79,7 @@ class Ui_addUserDialog(object):
         addUserDialog.setWindowTitle(_translate("addUserDialog", "Add user"))
         self.usernameLabel.setText(_translate("addUserDialog", "Username:"))
         self.username.setPlaceholderText(_translate("addUserDialog", "John Doe"))
-        self.fullnamelabel.setText(_translate("addUserDialog", "Fullname:"))
+        self.fullnameLabel.setText(_translate("addUserDialog", "Fullname:"))
         self.fullname.setPlaceholderText(_translate("addUserDialog", "John Michael Doe"))
         self.emailIDLabel.setText(_translate("addUserDialog", "Email:"))
         self.emailid.setPlaceholderText(_translate("addUserDialog", "johndoe@gmail.com"))
@@ -87,3 +87,13 @@ class Ui_addUserDialog(object):
         self.password.setPlaceholderText(_translate("addUserDialog", "Your password"))
         self.confirmPasswordLabel.setText(_translate("addUserDialog", "Confirm Password:"))
         self.rePassword.setPlaceholderText(_translate("addUserDialog", "Confirm your password"))
+
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    addUserDialog = QtWidgets.QDialog()
+    ui = Ui_addUserDialog()
+    ui.setupUi(addUserDialog)
+    addUserDialog.show()
+    sys.exit(app.exec_())

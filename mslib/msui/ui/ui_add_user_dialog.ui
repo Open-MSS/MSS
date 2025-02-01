@@ -45,7 +45,7 @@
         </widget>
        </item>
        <item row="2" column="0">
-        <widget class="QLabel" name="fullnamelabel">
+        <widget class="QLabel" name="fullnameLabel">
          <property name="text">
           <string>Fullname:</string>
          </property>
