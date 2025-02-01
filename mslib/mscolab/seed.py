@@ -107,7 +107,7 @@ def delete_user(email):
         return False
 
 
-def add_user(email, username, password, fullname=""):
+def add_user(email, username, password, fullname):
     """
     on db level we add a user
     """
