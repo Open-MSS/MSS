@@ -221,7 +221,7 @@ class Test_Mscolab_connect_window:
                                                           username="anand@something.org") == "anand_pass"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
-        assert self.main_window.fullnameLabel.text() == "Anand User" 
+        assert self.main_window.fullnameLabel.text() == "Anand User"
 
     def _connect_to_mscolab(self, qtbot, password=""):
         self.window.urlCb.setEditText(self.url)
