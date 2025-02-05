@@ -319,9 +319,3 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
                                  "NETCDF3_64BIT and NETCDF4_CLASSIC "
                                  "formatted files, not NETCDF4")
             self._file_format.append(dset.file_format)
-
-    def getOriginFile(self, varname):
-        """Returns filename and NetCDF4.Dataset-instance of the file that
-           contains <varname>.
-        """
-        return self._cdfOrigin[varname]

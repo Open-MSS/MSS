@@ -31,7 +31,6 @@ import datetime
 from mslib.msui.icons import icons
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
-from mslib.mscolab.sockets_manager import SocketsManager
 from mslib.mscolab.models import Permission, User, Message, MessageType
 
 
@@ -85,27 +84,6 @@ class Test_Socket_Manager:
         assert perms.op_id == operation.id
         assert perms.u_id == self.user.id
         assert perms.access_level == "creator"
-
-    def test_join_collaborator_to_operation(self):
-        self._connect()
-        operation = self._new_operation('new_operation', "example description")
-        sm = SocketsManager(self.cm, self.fm)
-        sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
-        perms = Permission(self.anotheruser.id, operation.id, "collaborator")
-        assert perms.op_id == operation.id
-        assert perms.u_id == self.anotheruser.id
-        assert perms.access_level == "collaborator"
-
-    def test_remove_collaborator_from_operation(self):
-        pytest.skip("get_session_id has None result")
-        operation = self._new_operation('new_operation', "example description")
-        sm = SocketsManager(self.cm, self.fm)
-        sm.join_collaborator_to_operation(self.anotheruser.id, operation.id)
-        perms = Permission(self.anotheruser.id, operation.id, "collaborator")
-        assert perms is not None
-        sm.remove_collaborator_from_operation(self.anotheruser.id, operation.id)
-        perms = Permission(self.anotheruser.id, operation.id, "collaborator")
-        assert perms is None
 
     def test_active_user_tracking_and_emissions_on_operation_selection(self):
         """

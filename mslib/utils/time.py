@@ -70,10 +70,5 @@ def jsec_to_datetime(jsecs):
     return JSEC_START + datetime.timedelta(seconds=jsecs)
 
 
-def compute_hour_of_day(jsecs):
-    date = JSEC_START + datetime.timedelta(seconds=jsecs)
-    return date.hour + (date.minute / 60.) + (date.second / 3600.)
-
-
 def utc_to_local_datetime(utc_datetime):
     return utc_datetime.replace(tzinfo=datetime.timezone.utc).astimezone(tz=None)

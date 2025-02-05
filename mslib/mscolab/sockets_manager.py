@@ -102,21 +102,6 @@ class SocketsManager:
         op_id = json_config['op_id']
         join_room(str(op_id))
 
-    def join_collaborator_to_operation(self, u_id, op_id):
-        """
-        json has:
-            - u_id: user id(collaborator's id)
-            - op_id: operation id
-        """
-        s_id = get_session_id(self.sockets, u_id)
-        if s_id is not None:
-            join_room(str(op_id), sid=s_id)
-
-    def remove_collaborator_from_operation(self, u_id, op_id):
-        s_id = get_session_id(self.sockets, u_id)
-        if s_id is not None:
-            leave_room(str(op_id), sid=s_id)
-
     def handle_start_event(self, json_config):
         """
         json is a dictionary version of data sent to backend
