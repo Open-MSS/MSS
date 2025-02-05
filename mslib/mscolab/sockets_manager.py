@@ -27,13 +27,13 @@
 import json
 import logging
 from flask import request
-from flask_socketio import SocketIO, join_room, leave_room
+from flask_socketio import SocketIO, join_room
 
 from mslib.mscolab.chat_manager import ChatManager
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
-from mslib.mscolab.utils import get_session_id, get_user_id
+from mslib.mscolab.utils import get_user_id
 from mslib.mscolab.conf import mscolab_settings
 
 socketio = SocketIO(logger=mscolab_settings.SOCKETIO_LOGGER, engineio_logger=mscolab_settings.ENGINEIO_LOGGER,

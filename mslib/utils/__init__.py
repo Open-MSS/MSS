@@ -27,8 +27,6 @@
 """
 
 import logging
-import os
-import subprocess
 
 
 class FatalUserError(Exception):
