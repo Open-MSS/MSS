@@ -423,7 +423,7 @@ def user_register_handler():
     email = request.form['email']
     password = request.form['password']
     username = request.form['username']
-    fullname = request.form.get('fullname', "")
+    fullname = request.form['fullname']
     result = register_user(email, password, username, fullname)
     status_code = 200
     try:

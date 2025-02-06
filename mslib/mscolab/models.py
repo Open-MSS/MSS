@@ -66,7 +66,7 @@ class User(db.Model):
     authentication_backend = db.Column(db.String(255), nullable=False, default='local')
     fullname = db.Column(db.String(255), nullable=False)
 
-    def __init__(self, emailid, username, password, fullname="", profile_image_path=None, confirmed=False,
+    def __init__(self, emailid, username, password, fullname, profile_image_path=None, confirmed=False,
                  confirmed_on=None, authentication_backend='local'):
         self.username = str(username)
         self.emailid = str(emailid)

@@ -110,19 +110,20 @@ def callback_307_html(status, response_headers):
     assert response_headers[0] == ('Content-Type', 'text/html; charset=utf-8')
 
 
-def mscolab_register_user(app, msc_url, email, password, username):
+def mscolab_register_user(app, msc_url, email, password, username, fullname):
     # Duplicate of imported register_user
     data = {
         'email': email,
         'password': password,
-        'username': username
+        'username': username,
+        'fullname': fullname
     }
     url = urljoin(msc_url, 'register')
     response = app.test_client().post(url, data=data)
     return response
 
 
-def mscolab_register_and_login(app, msc_url, email, password, username, fullname=""):
+def mscolab_register_and_login(app, msc_url, email, password, username, fullname):
     register_user(email, password, username, fullname)
     data = {
         'email': email,

@@ -51,7 +51,7 @@ class Test_Mscolab_Merge_Waypoints:
         self.window.mscolab.logout()
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
-            mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha')
+            mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha', 'Alpha')
             mscolab_delete_user(self.app, self.url, self.emailid, 'abcdef')
         with fs.open_fs(ROOT_DIR) as mss_dir:
             if mss_dir.exists('local_mscolab_data'):
@@ -65,7 +65,7 @@ class Test_Mscolab_Merge_Waypoints:
     def _create_user_data(self, qtbot, emailid='merge@alpha.org'):
         with self.app.app_context():
             self._connect_to_mscolab(qtbot)
-            response = mscolab_register_and_login(self.app, self.url, emailid, 'abcdef', 'alpha')
+            response = mscolab_register_and_login(self.app, self.url, emailid, 'abcdef', 'alpha', 'Alpha')
 
             assert response.status == '200 OK'
             data, response = mscolab_create_operation(self.app, self.url, response,
