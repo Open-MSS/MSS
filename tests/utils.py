@@ -180,7 +180,7 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
     return response
 
 
-def mscolab_delete_all_operations(app, msc_url, email, password, username, fullname=""):
+def mscolab_delete_all_operations(app, msc_url, email, password, username, fullname):
     response = mscolab_register_and_login(app, msc_url, email, password, username, fullname)
     data = json.loads(response.get_data(as_text=True))
     url = urljoin(msc_url, 'operations')

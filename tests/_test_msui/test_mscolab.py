@@ -214,7 +214,7 @@ class Test_Mscolab_connect_window:
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         self._connect_to_mscolab(qtbot)
         assert self.window.mscolab_server_url is not None
-        self._create_user("anand", "anand@something.org", "anand_pass", fullname="Anand User")
+        self._create_user("anand", "anand@something.org", "anand_pass", "Anand User")
         # check changed settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "anand@something.org"
         assert mslib.utils.auth.get_password_from_keyring(service_name=self.url,

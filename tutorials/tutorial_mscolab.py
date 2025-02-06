@@ -34,6 +34,7 @@ from tutorials.utils.picture import picture
 CTRL, ENTER, WIN, ALT = platform_keys()
 
 USERNAME = 'John Doe'
+FULLNAME = 'John Doe'
 EMAIL = 'johndoe@gmail.com'
 PASSWORD = 'johndoe'
 OPERATION_NAME = 'operation_of_john_doe'
@@ -529,7 +530,7 @@ def _create_user():
     find_and_click_picture('mscolabconnectdialog-add-user.png', 'Add User Button not found')
     pag.sleep(4)
     # Entering details of new user
-    new_user_input = [USERNAME, EMAIL, PASSWORD, PASSWORD]
+    new_user_input = [USERNAME, FULLNAME, EMAIL, PASSWORD, PASSWORD]
     for value in new_user_input:
         type_and_key(value, key='tab')
     pag.press('tab')

@@ -129,11 +129,13 @@ class Test_Server:
         with self.app.test_client() as test_client:
             response = test_client.post('/register', data={"email": self.userdata[0],
                                                            "password": self.userdata[2],
-                                                           "username": self.userdata[1]})
+                                                           "username": self.userdata[1],
+                                                           "fullname": self.userdata[3]})
             assert response.status_code == 201
             response = test_client.post('/register', data={"email": self.userdata[0],
                                                            "pass": "dsss",
-                                                           "username": self.userdata[1]})
+                                                           "username": self.userdata[1],
+                                                           "fullname": self.userdata[3]})
             assert response.status_code == 400
 
     def test_get_user(self):
