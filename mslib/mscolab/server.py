@@ -248,9 +248,27 @@ def check_login(emailid, password):
     return False
 
 
-def register_user(email, password, username, fullname=""):
-    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
-        return {"success": False, "message": "Your username or email cannot be empty"}
+def is_valid_fullname(fullname):
+    """Check if fullname contains only letters, spaces, hyphens, or apostrophes, and starts with a capital letter."""
+
+    # Ensure the first character is an uppercase letter
+    if not fullname[0].isupper():
+        return {"success": False, "message": "Full name must start with a capital letter!"}
+
+    # Check each character in fullname
+    for char in fullname:
+        if not (char.isalpha() or char in [" ", "-", "'"]):  # Allow letters, space, hyphen, and apostrophe
+            return {"success": False, "message": "Full name must contain only letters (no numbers or symbols)."}
+
+    return {"success": True}  # If everything is valid
+
+
+def register_user(email, password, username, fullname):
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0 or len(str(fullname.strip())) == 0:
+        return {"success": False, "message": "Your username or email or fullname cannot be empty"}
+    fullname_validation = is_valid_fullname(fullname)
+    if not fullname_validation["success"]:
+        return fullname_validation
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:

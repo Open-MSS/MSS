@@ -133,6 +133,6 @@ def test_upgrade_from(revision, iterations, mscolab_app, tmp_path):
 
             # Try to add a new user after the migration
             flask_migrate.upgrade(directory=migrations_path)
-            assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456')
+            assert mslib.mscolab.seed.add_user('test123@test456', 'test123', 'test456', 'User test789')
     finally:
         mscolab_settings.SQLALCHEMY_DB_URI_TO_MIGRATE_FROM = None

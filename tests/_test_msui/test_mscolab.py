@@ -52,9 +52,9 @@ class Test_Mscolab_connect_window:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server):
         self.url = mscolab_server
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
@@ -242,7 +242,7 @@ class Test_Mscolab_connect_window:
             assert self.main_window.mscolab.connect_window is None
         qtbot.wait_until(assert_)
 
-    def _create_user(self, username, email, password, fullname=""):
+    def _create_user(self, username, email, password, fullname):
         QtTest.QTest.mouseClick(self.window.addUserBtn, QtCore.Qt.LeftButton)
         self.window.newUsernameLe.setText(str(username))
         self.window.newEmailLe.setText(str(email))
@@ -268,21 +268,21 @@ class Test_Mscolab:
     def setup(self, qtbot, mscolab_app, mscolab_server):
         self.app = mscolab_app
         self.url = mscolab_server
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
 
-        self.userdata2 = 'sree@sree.org', 'sree', 'sree'
+        self.userdata2 = 'sree@sree.org', 'sree', 'sree', 'Sree'
         self.operation_name3 = "kerala"
-        assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2])
+        assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2], self.userdata2[3])
         assert add_operation(self.operation_name3, "test kerala")
         assert add_user_to_operation(path=self.operation_name3, emailid=self.userdata2[0])
 
-        self.userdata3 = 'anand@anand.org', 'anand', 'anand'
-        assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2])
+        self.userdata3 = 'anand@anand.org', 'anand', 'anand', 'Anand Kumar'
+        assert add_user(self.userdata3[0], self.userdata3[1], self.userdata3[2], self.userdata3[3])
         assert add_user_to_operation(path=self.operation_name3, access_level="collaborator", emailid=self.userdata3[0])
 
         self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
