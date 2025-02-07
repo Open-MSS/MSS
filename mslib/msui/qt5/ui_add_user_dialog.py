@@ -87,13 +87,3 @@ class Ui_addUserDialog(object):
         self.password.setPlaceholderText(_translate("addUserDialog", "Your password"))
         self.confirmPasswordLabel.setText(_translate("addUserDialog", "Confirm Password:"))
         self.rePassword.setPlaceholderText(_translate("addUserDialog", "Confirm your password"))
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    addUserDialog = QtWidgets.QDialog()
-    ui = Ui_addUserDialog()
-    ui.setupUi(addUserDialog)
-    addUserDialog.show()
-    sys.exit(app.exec_())

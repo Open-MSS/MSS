@@ -264,11 +264,10 @@ def is_valid_fullname(fullname):
 
 
 def register_user(email, password, username, fullname):
-    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0 or len(str(fullname.strip())) == 0:
-        return {"success": False, "message": "Your username or email or fullname cannot be empty"}
-    fullname_validation = is_valid_fullname(fullname)
-    if not fullname_validation["success"]:
-        return fullname_validation
+    if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
+        return {"success": False, "message": "Your username or email cannot be empty"}
+    if fullname and not is_valid_fullname(fullname):    
+        return {"success": False, "message": "Invalid full name format!"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
@@ -388,7 +387,7 @@ def get_auth_token():
                 token = user.generate_auth_token()
                 return json.dumps({
                     'token': token,
-                    'user': {'username': user.username, 'id': user.id}, 'fullname': user.fulllname})
+                    'user': {'username': user.username, 'id': user.id}, 'fullname': user.fullname})
             else:
                 return "False"
         else:
