@@ -266,7 +266,7 @@ def is_valid_fullname(fullname):
 def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
-    if fullname and not is_valid_fullname(fullname):    
+    if fullname and not is_valid_fullname(fullname):
         return {"success": False, "message": "Invalid full name format!"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
