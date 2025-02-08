@@ -485,6 +485,3 @@ def main():
                 if confirmation is True:
                     handle_sso_metadata_init(repo_exists)
 
-
-if __name__ == '__main__':
-    main()
