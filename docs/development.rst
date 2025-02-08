@@ -17,6 +17,15 @@ When it is ready the developer version becomes the next stable.
 
 The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhub.net/p/mss>`_
 
+
+Contributing
+------------
+
+Please read our `contributing <https://open-mss.github.io/contributing/>`_ guidelines and
+`setup instructions <https://open-mss.github.io/develop/Setup-Instructions>`_ to get
+started with MSS development.
+
+
 Using our Issue Tracker on github
 ---------------------------------
 
@@ -35,9 +44,6 @@ First, please refer to the applicable `GitHub repository <https://github.com/Ope
 Then, please `create a new issue <https://github.com/Open-MSS/MSS/issues/new>`_ in the GitHub repository describing your enhancement.
 
 Be sure to include as much detail as possible including step-by-step descriptions, specific examples, screenshots or mockups, and reasoning for why the enhancement might be worthwhile.
-
-
-
 
 
 Forking the Repo
@@ -103,44 +109,6 @@ If you don't have a stable branch, create one first or change to that branch::
   git push
 
 
-Setting Up a Local Environment
-------------------------------
-
-In the description we added as example to setup access to the mslib an export of the PYTHONPATH in your environment ::
-
-    cd workspace/MSS
-    export PYTHONPATH=`pwd`
-
-When you don’t want to enter this you can add the PYTHONPATH to mslib to your .bashrc
-
-If you don’t want the PYTHONPATH by export changed you can start modules differently::
-
-    cd workspace/MSS
-    PYTHONPATH=. python mslib/msui/msui.py
-
-
-
-
-Requirements
-............
-
-1. System requirements
-
-  | Any system with basic configuration.
-  | Operating System : Any (Windows / Linux / Mac).
-
-2. Software requirement
-
-  | Python
-  | `Miniforge <https://github.com/conda-forge/miniforge#install>`_
-  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
-
-
-3. Skill set
-
-  | Knowledge of git & github
-  | Python
-
 
 Using predefined docker images instead of installing all requirements
 .....................................................................
@@ -191,6 +159,7 @@ After the image was configured you can use it like a self installed env ::
     cd workspace/MSS                    # go to your workspace MSS dir
     export PYTHONPATH=`pwd`             # add it to the PYTHONPATH
     pytest tests                        # run pytest
+
 
 
 
@@ -262,7 +231,6 @@ The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
 To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the MSColab server on port 8083.
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
 Now you can use the MSS desktop application to connect to it using the MSColab window of the application.
-
 
 
 Code Style
