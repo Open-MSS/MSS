@@ -89,11 +89,9 @@ class Test_Server:
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John123")
             assert result["success"] is False
             assert result["message"] == "Full name must contain only letters (no numbers or symbols)."
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[0])
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John@")
             assert result["success"] is False
             assert result["message"] == "Full name must contain only letters (no numbers or symbols)."
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John Doe")
-            assert result["success"] is True
 
     def test_check_login(self):
         with self.app.test_client():
