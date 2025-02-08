@@ -14,13 +14,10 @@
 import os
 import sys
 import setuptools
-import subprocess
 import requests
 import zipfile
 import shutil
 import pathlib
-
-from string import Template
 
 
 def get_tutorial_images():
