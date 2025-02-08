@@ -74,15 +74,6 @@ class Test_Server:
         with self.app.test_client():
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
             assert result["success"] is True
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-            assert result["success"] is False
-            assert result["message"] == "This email ID is already taken!"
-            result = register_user("UV", self.userdata[1], self.userdata[2], self.userdata[3])
-            assert result["success"] is False
-            assert result["message"] == "Your email ID is not valid!"
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[0], self.userdata[3])
-            assert result["success"] is False
-            assert result["message"] == "Your username cannot contain @ symbol!"
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "john doe")
             assert result["success"] is False
             assert result["message"] == "Full name must start with a capital letter!"
@@ -92,6 +83,16 @@ class Test_Server:
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John@")
             assert result["success"] is False
             assert result["message"] == "Full name must contain only letters (no numbers or symbols)."
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+            assert result["success"] is False
+            assert result["message"] == "This email ID is already taken!"
+            result = register_user("UV", self.userdata[1], self.userdata[2], self.userdata[3])
+            assert result["success"] is False
+            assert result["message"] == "Your email ID is not valid!"
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[0], self.userdata[3])
+            assert result["success"] is False
+            assert result["message"] == "Your username cannot contain @ symbol!"
+
 
     def test_check_login(self):
         with self.app.test_client():
