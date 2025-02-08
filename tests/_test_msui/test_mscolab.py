@@ -202,7 +202,7 @@ class Test_Mscolab_connect_window:
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
-        assert self.main_window.fullnameLabel.text() == "Anand User"
+        assert self.main_window.fullnameLabel.text() == ""
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage, qtbot):
@@ -221,7 +221,7 @@ class Test_Mscolab_connect_window:
                                                           username="anand@something.org") == "anand_pass"
         # check user is logged in
         assert self.main_window.usernameLabel.text() == "anand"
-        assert self.main_window.fullnameLabel.text() == "Anand User"
+        assert self.main_window.fullnameLabel.text() == ""
 
     def _connect_to_mscolab(self, qtbot, password=""):
         self.window.urlCb.setEditText(self.url)

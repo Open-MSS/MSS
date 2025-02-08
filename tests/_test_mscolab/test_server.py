@@ -93,7 +93,6 @@ class Test_Server:
             assert result["success"] is False
             assert result["message"] == "Your username cannot contain @ symbol!"
 
-
     def test_check_login(self):
         with self.app.test_client():
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
