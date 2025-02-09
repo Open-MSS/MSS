@@ -255,8 +255,9 @@ def is_valid_fullname(fullname):
 
     # Check each character in fullname
     for char in fullname:
-        if not (char.isalpha() or char in [" ", "-", "'"]):  # Allow letters, space, hyphen, and apostrophe
-            return {"success": False, "message": "Full name must contain only letters, spaces, hyphens, or apostrophes."}, 400
+        if not (char.isalpha() or char in [" ", "-", "'"]):
+            return {"success": False, "message":
+                    "Full name must contain only letters, spaces, hyphens, or apostrophes."}, 400
 
     return {"success": True}, 201
 
@@ -264,11 +265,11 @@ def is_valid_fullname(fullname):
 def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
-    
+
     if fullname:
         fullname_check = is_valid_fullname(fullname)
         if not fullname_check[0]["success"]:
-            return fullname_check   
+            return fullname_check
     if "@" in username:
         return {"success": False, "message": "Username cannot contain @ symbol."}, 400
     if not validate_email(email):
@@ -284,7 +285,7 @@ def register_user(email, password, username, fullname):
 
     if not result:
         return {"success": False, "message": "Failed to create user."}, 500
-    
+
     return {"success": True, "message": "User registered successfully."}, 201
 
 

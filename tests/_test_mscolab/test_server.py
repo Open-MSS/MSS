@@ -104,7 +104,6 @@ class Test_Server:
             assert status_code == 201
             assert result["success"] is True
 
-
     def test_check_login(self):
         with self.app.test_client():
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])

@@ -107,7 +107,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         assert that a message box informs about server troubles
         """
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
-            self.query_server(qtbot, f"{self.scheme}://{self.host}:{self.port-1}")
+            self.query_server(qtbot, f"{self.scheme}://{self.host}:{self.port - 1}")
             mock_critical.assert_called_once()
 
     def test_no_schema(self, qtbot):
