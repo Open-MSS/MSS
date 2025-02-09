@@ -85,7 +85,7 @@ class Test_Server:
             assert result["message"] == "Your username cannot contain @ symbol!"
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "john doe")
             assert result["success"] is False
-            assert result["message"] == "Full name must start with a capital letter!"
+            assert result["message"] == "Full name must start with a capital letter"
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John123")
             assert result["success"] is False
             assert result["message"] == "Full name must contain only letters (no numbers or symbols)."

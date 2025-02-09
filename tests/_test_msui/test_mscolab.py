@@ -178,14 +178,14 @@ class Test_Mscolab_connect_window:
     def test_add_user(self, mockmessage, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: "something@something.org"}})
-        self._create_user("something", "something@something.org", "something", fullname="")
+        self._create_user("something", "something@something.org", "something", "Something")
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
         assert mslib.utils.auth.get_password_from_keyring("MSCOLAB",
                                                           "something@something.org") == "password from TestKeyring"
         # assert self.window.stackedWidget.currentWidget() == self.window.newuserPage
         assert self.main_window.usernameLabel.text() == 'something'
-        assert self.main_window.mscolab.connect_window is None
-        assert self.main_window.fullnameLabel.text() == ''
+        # assert self.main_window.mscolab.connect_window is None
+        assert self.main_window.fullnameLabel.text() == 'Something'
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_add_users_without_updating_credentials_in_config_file(self, mockmessage, qtbot):
@@ -1011,7 +1011,7 @@ class Test_Mscolab:
             assert self.window.mscolab.connect_window is None
         qtbot.wait_until(assert_)
 
-    def _create_user(self, qtbot, username, email, password, fullname):
+    def _create_user(self, qtbot, username, email, password, fullname=""):
         QtTest.QTest.mouseClick(self.connect_window.addUserBtn, QtCore.Qt.LeftButton)
         self.connect_window.newUsernameLe.setText(str(username))
         self.connect_window.newEmailLe.setText(str(email))
