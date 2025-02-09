@@ -251,42 +251,37 @@ def check_login(emailid, password):
 def is_valid_fullname(fullname):
     # Ensure the first character is an uppercase letter
     if not fullname[0].isupper():
-        return {"success": False, "message": "Full name must start with a capital letter!"}, 400
+        return {"success": False, "message": "Full name must start with a capital letter!"}
 
     # Check each character in fullname
     for char in fullname:
         if not (char.isalpha() or char in [" ", "-", "'"]):
             return {"success": False, "message":
-                    "Full name must contain only letters, spaces, hyphens, or apostrophes."}, 400
+                    "Full name must contain only letters, spaces, hyphens, or apostrophes."}
 
-    return {"success": True}, 201
+    return {"success": True}
 
 
 def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
-
-    if fullname:
-        fullname_check = is_valid_fullname(fullname)
-        if not fullname_check[0]["success"]:
-            return fullname_check
-    if "@" in username:
-        return {"success": False, "message": "Username cannot contain @ symbol."}, 400
-    if not validate_email(email):
-        return {"success": False, "message": "Invalid email address."}, 400
-
-    if User.query.filter_by(emailid=email).first():
-        return {"success": False, "message": "This email ID is already taken."}, 400
-    if User.query.filter_by(username=username).first():
-        return {"success": False, "message": "This username is already registered."}, 400
-
+    if fullname and not is_valid_fullname(fullname):
+        return {"success": False, "message": "Invalid full name format!"}
+    is_valid_username = True if username.find("@") == -1 else False
+    is_valid_email = validate_email(email)
+    if not is_valid_email:
+        return {"success": False, "message": "Your email ID is not valid!"}
+    if not is_valid_username:
+        return {"success": False, "message": "Your username cannot contain @ symbol!"}
+    user_exists = User.query.filter_by(emailid=str(email)).first()
+    if user_exists:
+        return {"success": False, "message": "This email ID is already taken!"}
+    user_exists = User.query.filter_by(username=str(username)).first()
+    if user_exists:
+        return {"success": False, "message": "This username is already registered"}
     user = User(email, username, password, fullname)
     result = fm.modify_user(user, action="create")
-
-    if not result:
-        return {"success": False, "message": "Failed to create user."}, 500
-
-    return {"success": True, "message": "User registered successfully."}, 201
+    return {"success": result}
 
 
 def verify_user(func):

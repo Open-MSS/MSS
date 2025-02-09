@@ -72,33 +72,26 @@ class Test_Server:
 
     def test_register_user(self):
         with self.app.test_client():
-            result, status_code = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-            assert status_code == 201
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
             assert result["success"] is True
-            result, status_code = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "john doe")
-            assert status_code == 400
-            assert result["success"] is False
-            assert result["message"] == "Full name must start with a capital letter!"
-            result, status_code = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John123")
-            assert status_code == 400
-            assert result["success"] is False
-            assert result["message"] == "Full name must contain only letters, spaces, hyphens, or apostrophes."
-            result, status_code = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John@")
-            assert status_code == 400
-            assert result["success"] is False
-            assert result["message"] == "Full name must contain only letters, spaces, hyphens, or apostrophes."
-            result, status_code = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
-            assert status_code == 400
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
             assert result["success"] is False
             assert result["message"] == "This email ID is already taken!"
-            result, status_code = register_user("UV", self.userdata[1], self.userdata[2], self.userdata[3])
-            assert status_code == 400
+            result = register_user("UV", self.userdata[1], self.userdata[2], self.userdata[3])
             assert result["success"] is False
-            assert result["message"] == "Invalid email address."
-            result, status_code = register_user(self.userdata[0], self.userdata[1], self.userdata[0], self.userdata[3])
-            assert status_code == 400
+            assert result["message"] == "Your email ID is not valid!"
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[0], self.userdata[3])
             assert result["success"] is False
-            assert result["message"] == "Username cannot contain @ symbol."
+            assert result["message"] == "Your username cannot contain @ symbol!"
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "john doe")
+            assert result["success"] is False
+            assert result["message"] == "Full name must start with a capital letter!"
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John123")
+            assert result["success"] is False
+            assert result["message"] == "Full name must contain only letters (no numbers or symbols)."
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John@")
+            assert result["success"] is False
+            assert result["message"] == "Full name must contain only letters (no numbers or symbols)."
 
             result, status_code = register_user("test@test.io", "test", "pwdtest", "Usertest")
             assert status_code == 201
