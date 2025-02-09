@@ -249,10 +249,6 @@ def check_login(emailid, password):
 
 
 def is_valid_fullname(fullname):
-    # Ensure the first character is an uppercase letter
-    if not fullname[0].isupper():
-        return {"success": False, "message": "Full name must start with a capital letter!"}
-
     # Check each character in fullname
     for char in fullname:
         if not (char.isalpha() or char in [" ", "-", "'"]):
@@ -267,6 +263,8 @@ def register_user(email, password, username, fullname):
         return {"success": False, "message": "Your username or email cannot be empty"}
     if fullname and not is_valid_fullname(fullname):
         return {"success": False, "message": "Invalid full name format!"}
+    if not fullname[0].isupper():
+        return {"success": False, "message": "Full name must start with a capital letter"}
     is_valid_username = True if username.find("@") == -1 else False
     is_valid_email = validate_email(email)
     if not is_valid_email:
