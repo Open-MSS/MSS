@@ -259,7 +259,8 @@ class RemoteSensingControlWidget(QtWidgets.QWidget, ui.Ui_RemoteSensingDockWidge
             points[i][0][0], points[i][0][1] = bmap(points[i][0][0], points[i][0][1])
         points = np.concatenate([points[:-1], points[1:]], axis=1)
         # plot
-        solar_lines = LineCollection(points, cmap=self.solar_cmap, norm=self.solar_norm,
+        norm = BoundaryNorm(np.arange(0, 180,5), 256)
+        solar_lines = LineCollection(points, cmap="turbo", norm=norm,
                                      zorder=2, linewidths=3, animated=True)
         solar_lines.set_array(np.array(vals))
         return solar_lines
