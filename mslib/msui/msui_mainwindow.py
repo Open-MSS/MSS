@@ -671,14 +671,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.last_save_directory,
             f"Flight Track (*.{extension});;All files (*.*)",
             pickertype=pickertype)
-        if filenames is not None:
-            if self.local_active:
-                activate = True
-                if len(filenames) > 1:
-                    activate = False
-                for name in filenames:
-                    self.create_new_flight_track(filename=name, function=function, activate=activate)
-                self.last_save_directory = fs.path.dirname(name)
+        if filenames is None:
+            return
+        if self.local_active:
+            activate = True
+            if len(filenames) > 1:
+                activate = False
+            for name in filenames:
+                self.create_new_flight_track(filename=name, function=function, activate=activate)
+            self.last_save_directory = fs.path.dirname(name)
         else:
             for name in filenames:
                 self.mscolab.handle_import_msc(name, extension, function, pickertype)
