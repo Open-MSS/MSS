@@ -598,7 +598,7 @@ class Test_Mscolab:
 
     def test_none_import_file(self, qtbot):
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None):
-            with pytest.raises(TypeError, match="'NoneType' object is not iterable"):
+            with pytest.raises(TypeError, match="'NoneType' object is not iterable'"):
                 self.window.handle_import_local("txt", "load_from_txt", None)
 
     def test_work_locally_toggle(self, qtbot):

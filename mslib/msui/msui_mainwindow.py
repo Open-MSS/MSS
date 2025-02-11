@@ -671,6 +671,8 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.last_save_directory,
             f"Flight Track (*.{extension});;All files (*.*)",
             pickertype=pickertype)
+        if filenames is None:
+            raise TypeError("'NoneType' object is not iterable")
         if self.local_active:
             if filenames is not None:
                 activate = True
