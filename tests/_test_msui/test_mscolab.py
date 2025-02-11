@@ -598,6 +598,7 @@ class Test_Mscolab:
 
     def test_none_import_file(self, qtbot):
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None) as mockopen:
+            self.main_window = msui.MSUIMainWindow(mscolab_data_dir=mscolab_settings.MSCOLAB_DATA_DIR)
             self.main_window.create_new_flight_track()
             self.main_window.show()
             try:
