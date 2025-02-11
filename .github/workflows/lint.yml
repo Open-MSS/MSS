@@ -67,7 +67,7 @@ jobs:
       # conflict marker.
       run: |
         issues="$(
-          git diff --check $(git hash-object -t tree /dev/null) HEAD :^tests/data/example.txt :^docs/samples/flight-tracks/example.txt :^mslib/msui/ui/ui_mscolab_help_section.ui |
+          git diff --check $(git hash-object -t tree /dev/null) HEAD :^tests/data/example.txt :^docs/samples/flight-tracks/example.txt |
             { grep -v '^.*\.rst:.*leftover conflict marker$' || true; }
         )"
         echo "$issues"
