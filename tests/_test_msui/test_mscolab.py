@@ -597,9 +597,9 @@ class Test_Mscolab:
             assert len(imported_wp.waypoints) == name[2]
 
     def test_none_import_file(self, qtbot):
-        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None) as mockopen:
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None):
             try:
-                self.window.handle_import_local()
+                self.window.handle_import_local("txt", "load_from_txt", None)
             except TypeError as e:
                 pytest.fail(f"TypeError encountered: {e}")
 
