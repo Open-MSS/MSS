@@ -597,20 +597,20 @@ class Test_Mscolab:
             assert len(imported_wp.waypoints) == name[2]
 
     def test_none_import_file(self, qtbot):
-            with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None) as mockopen:
-                self._connect_to_mscolab(qtbot)
-                modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
-                self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
-                self._activate_operation_at_index(0)
-                wp = self.window.mscolab.waypoints_model
-                assert len(wp.waypoints) == 2
-                for action in self.window.menuImportFlightTrack.actions():
-                    if action.objectName() == "actionImportFlightTrackFTML":
-                        action.trigger()
-                        break
-                assert mockopen.call_count == 1
-                imported_wp = self.window.mscolab.waypoints_model
-                assert len(imported_wp.waypoints) == 2
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None) as mockopen:
+            self._connect_to_mscolab(qtbot)
+            modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+            self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+            self._activate_operation_at_index(0)
+            wp = self.window.mscolab.waypoints_model
+            assert len(wp.waypoints) == 2
+            for action in self.window.menuImportFlightTrack.actions():
+                if action.objectName() == "actionImportFlightTrackFTML":
+                    action.trigger()
+                    break
+            assert mockopen.call_count == 1
+            imported_wp = self.window.mscolab.waypoints_model
+            assert len(imported_wp.waypoints) == 2
 
     def test_work_locally_toggle(self, qtbot):
         self._connect_to_mscolab(qtbot)
