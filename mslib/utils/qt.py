@@ -108,7 +108,7 @@ def get_open_filenames(parent, title, dirname, filt, pickertype=None):
         raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
     logging.debug("Selected '%s'", filename)
     if filename == []:
-        filename = []
+        filename = None
     return filename
 
 

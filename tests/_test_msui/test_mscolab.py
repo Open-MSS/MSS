@@ -596,6 +596,15 @@ class Test_Mscolab:
             imported_wp = self.window.mscolab.waypoints_model
             assert len(imported_wp.waypoints) == name[2]
 
+    def test_none_import_file(self, qtbot):
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None) as mockopen:
+            self.main_window.create_new_flight_track()
+            self.main_window.show()
+            try:
+                self.main_window.handle_import_local()
+            except TypeError as e:
+                pytest.fail(f"TypeError encountered: {e}")
+
     def test_work_locally_toggle(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})

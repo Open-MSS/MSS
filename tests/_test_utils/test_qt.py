@@ -142,7 +142,7 @@ def test_get_open_filenames():
         assert type(exc_info.value.__cause__) is FatalUserError
     with mock.patch("mslib.utils.qt.get_open_filenames_qt", return_value=[]):
         filenames = mqt.get_open_filenames(None, "", "", "csv", pickertype="qt")
-        assert filenames == []
+        assert filenames == None
 
 
 def test_save_filename():
