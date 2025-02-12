@@ -261,6 +261,13 @@ def is_valid_fullname(fullname):
 def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
+    user_exists = User.query.filter_by(emailid=str(email)).first()
+    if user_exists:
+        return {"success": False, "message": "This email ID is already taken!"}
+    user_exists = User.query.filter_by(username=str(username)).first()
+    if user_exists:
+        return {"success": False, "message": "This username is already registered"}
+    user = User(email, username, password, fullname)
     if fullname and not is_valid_fullname(fullname):
         return {"success": False, "message": "Invalid full name format!"}
     if not fullname[0].isupper():
@@ -271,13 +278,6 @@ def register_user(email, password, username, fullname):
         return {"success": False, "message": "Your email ID is not valid!"}
     if not is_valid_username:
         return {"success": False, "message": "Your username cannot contain @ symbol!"}
-    user_exists = User.query.filter_by(emailid=str(email)).first()
-    if user_exists:
-        return {"success": False, "message": "This email ID is already taken!"}
-    user_exists = User.query.filter_by(username=str(username)).first()
-    if user_exists:
-        return {"success": False, "message": "This username is already registered"}
-    user = User(email, username, password, fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
 
