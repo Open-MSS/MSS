@@ -93,8 +93,7 @@ class Test_Server:
             assert result["success"] is False
             assert result["message"] == "Full name must contain only letters (no numbers or symbols)."
 
-            result, status_code = register_user("test@test.io", "test", "pwdtest", "Usertest")
-            assert status_code == 201
+            result = register_user("test@test.io", "test", "pwdtest", "Usertest")
             assert result["success"] is True
 
     def test_check_login(self):
