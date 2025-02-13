@@ -15,10 +15,38 @@ We recommend since version 10.0.0 of MSS to use `pixi <https://pixi.sh/latest/>`
 Get **pixi** from https://pixi.sh/latest/ for your operation system.
 
 
-You can now decide if you want to install **mss** as a project or global.
+You can now decide if you want to install **mss** as global or a project.
 Further details what we provide in the mss package you can read
 in the :ref:`components` section.
 For the configuratation of the msui client see :ref:`msui-configuration`
+
+
+Global installation
+-------------------
+
+You can install **mss** global without defining a project first.
+This method is practical when you are interested in starting the client
+and don't need server configurations.::
+
+    pixi global install mss
+
+
+Usage
+.....
+
+::
+
+    msui
+    mswms -h
+    mscolab -h
+    mssautoplot -h
+
+Updating
+........
+
+::
+
+    pixi global update mss
 
 
 Project installation
@@ -62,34 +90,6 @@ Updating
     cd MSS
     pixi shell
     (MSS) pixi update mss
-
-Global installation
--------------------
-
-You can install **mss** global without defining a project first.
-This method is practical when you are interested in starting the client
-and don't need server configurations.::
-
-    pixi global install mss
-
-
-
-Usage
-.....
-
-::
-
-    msui
-    mswms -h
-    mscolab -h
-    mssautoplot -h
-
-Updating
-........
-
-::
-
-    pixi global update mss
 
 
 Server based installation example
@@ -183,4 +183,3 @@ You can start server and client by loading the image ::
   $ Singularity > mswms_demodata --seed  # creates in your $HOME a mss/ folder with testdata
   $ Singularity > export PYTHONPATH=$HOME/mss; mswms # starts the development server
   $ Singularity > mscolab db --init; mscolab start # starts the mscolab development server
-

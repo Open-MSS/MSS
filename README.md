@@ -24,7 +24,26 @@ and [development](https://mss.readthedocs.io/en/stable/development.html) guideli
 
 Get **pixi** from https://pixi.sh/latest/ for your operation system.
 
-You can now decide if you want to install **mss** as a project or global.
+You can now decide if you want to install **mss** as global or a project.
+
+#### Global installation
+You can install **mss** global without defining a project first.
+This method is practical when you are interested in starting the client
+and don't need server configurations.
+
+    pixi global install mss
+
+#### Usage
+
+    msui
+    mswms -h
+    mscolab -h
+    mssautoplot -h
+
+
+##### Updating
+
+    pixi global update mss
 
 #### Project installation
 Initialize a new project and navigate to the project directory.
@@ -33,7 +52,7 @@ Initialize a new project and navigate to the project directory.
     cd MSS
 
 Use the shell command to activate the environment and start a new shell in there.
- 
+
     pixi shell
 
 Add the **mss** dependencies from conda-forge.
@@ -58,25 +77,6 @@ On the very first start of **msui** it takes a bit longer because it setups font
     cd MSS
     pixi shell
     (MSS) pixi update mss
-
-#### Global installation
-You can install **mss** global without defining a project first.
-This method is practical when you are interested in starting the client
-and don't need server configurations.
-
-    pixi global install mss
-
-#### Usage
-
-    msui
-    mswms -h
-    mscolab -h
-    mssautoplot -h
-
-
-##### Updating
-
-    pixi global update mss
 
 
 Current release info
