@@ -109,6 +109,45 @@ If you don't have a stable branch, create one first or change to that branch::
   git push
 
 
+Setting Up a Local Environment
+------------------------------
+
+In the description we added as example to setup access to the mslib an export of the PYTHONPATH in your environment ::
+
+    cd workspace/MSS
+    export PYTHONPATH=`pwd`
+
+When you don’t want to enter this you can add the PYTHONPATH to mslib to your .bashrc
+
+If you don’t want the PYTHONPATH by export changed you can start modules differently::
+
+    cd workspace/MSS
+    PYTHONPATH=. python mslib/msui/msui.py
+
+
+
+
+Requirements
+............
+
+1. System requirements
+
+  | Any system with basic configuration.
+  | Operating System : Any (Windows / Linux / Mac).
+
+2. Software requirement
+
+  | Python
+  | `Miniforge <https://github.com/conda-forge/miniforge#install>`_
+  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
+
+
+3. Skill set
+
+  | Knowledge of git & github
+  | Python
+
+
 
 Using predefined docker images instead of installing all requirements
 .....................................................................
