@@ -148,7 +148,6 @@ Requirements
   | Python
 
 
-
 Using predefined docker images instead of installing all requirements
 .....................................................................
 
@@ -198,7 +197,6 @@ After the image was configured you can use it like a self installed env ::
     cd workspace/MSS                    # go to your workspace MSS dir
     export PYTHONPATH=`pwd`             # add it to the PYTHONPATH
     pytest tests                        # run pytest
-
 
 
 
