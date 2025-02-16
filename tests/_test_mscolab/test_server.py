@@ -34,7 +34,7 @@ from PIL import Image
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.server import check_login, register_user
+from mslib.mscolab.server import check_login, register_user, is_valid_fullname
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
@@ -83,12 +83,45 @@ class Test_Server:
             result = register_user(self.userdata[0], self.userdata[1], self.userdata[0], "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your username cannot contain @ symbol!"
-            result = register_user("newmail@example.com", self.userdata[1], "newuser1", "john Doe")
-            assert result["success"] is False
-            assert result["message"] == "Fullname must start with a capital letter!"
             result = register_user("newmail2@example.com", self.userdata[1], "newuser2", "John123")
             assert result["success"] is False
-            assert result["message"] == "Fullname can only contain alphabets and spaces!"
+            assert result["message"] == "Fullname is invalid after processing."
+            result = register_user("newmail3@example.com", self.userdata[1], "newuser3", "Jean-Luc Picard")
+            assert result["success"] is True
+            result = register_user("newmail3@example.com", self.userdata[1], "newuser3", "Jean-Luc Picard")
+            assert result["success"] is True
+            result = register_user("newmail4@example.com", self.userdata[1], "newuser4", "###@@@")
+            assert result["success"] is False
+            assert result["message"] == "Fullname is invalid after processing."
+
+    def test_is_valid_fullname(self):
+        result = is_valid_fullname("Jean-Luc Picard")
+        assert result["success"] is True
+        assert result["processed_name"] == "jean-luc-picard"
+
+        result = is_valid_fullname("John Doe")
+        assert result["success"] is True
+        assert result["processed_name"] == "john doe"
+
+        result = is_valid_fullname("Anu")
+        assert result["success"] is True
+        assert result["processed_name"] == "anu"
+
+        result = is_valid_fullname("")
+        assert result["success"] is True
+        assert result["processed_name"] == ""
+
+        result = is_valid_fullname("@@@###")
+        assert result["success"] is False
+        assert result["message"] == "Fullname is invalid after processing."
+
+        result = is_valid_fullname("John   Doe")
+        assert result["success"] is True
+        assert result["processed_name"] == "john doe"
+
+        result = is_valid_fullname("Jean--Luc Picard")
+        assert result["success"] is True
+        assert result["processed_name"] == "jean--luc picard"
 
     def test_check_login(self):
         with self.app.test_client():

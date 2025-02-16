@@ -55,6 +55,7 @@ from mslib.utils import conditional_decorator
 from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 from mslib.mscolab import migrations
+from slugify import slugify
 
 
 def _handle_db_upgrade():
@@ -249,13 +250,28 @@ def check_login(emailid, password):
 
 
 def is_valid_fullname(fullname):
-    # Check each character in fullname
-    for char in fullname:
-        if not (char.isalpha() or char in [" ", "-", "'"]):
-            return {"success": False, "message":
-                    "Full name must contain only letters, spaces, hyphens, or apostrophes."}
+    fullname = fullname.strip()
 
-    return {"success": True}
+    if not fullname:
+        return {"success": True, "processed_name": ""}
+
+    parts = fullname.split(" ")
+
+    processed_parts = []
+    for part in parts:
+        if "-" in part:
+            subparts = part.split("-")
+            processed_subparts = [slugify(subpart) for subpart in subparts]
+            processed_parts.append("-".join(processed_subparts))
+        else:
+            processed_parts.append(slugify(part))
+
+    final_name = " ".join(processed_parts)
+
+    if not any(processed_parts):
+        return {"success": False, "message": "Fullname is invalid after processing."}
+
+    return {"success": True, "processed_name": final_name}
 
 
 def register_user(email, password, username, fullname):
@@ -273,14 +289,12 @@ def register_user(email, password, username, fullname):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    if fullname.strip():
-        if not fullname[0].isupper():
-            return {"success": False, "message": "Fullname must start with a capital letter!"}
+    fullname_validation = is_valid_fullname(fullname)
+    if not fullname_validation["success"]:
+        return {"success": False, "message": fullname_validation["message"]}
 
-        for char in fullname:
-            if not (char.isalpha() or char.isspace()):
-                return {"success": False, "message": "Fullname can only contain alphabets and spaces!"}
-    user = User(email, username, password, fullname)
+    processed_fullname = fullname_validation["processed_name"]
+    user = User(email, username, password, processed_fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
 
@@ -368,6 +382,8 @@ def hello():
             'direct_login': mscolab_settings.DIRECT_LOGIN
         })
     else:
+        if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
+            return json.dumps({'error': 'Authentication required'}), 401
         return json.dumps({
             'message': "Mscolab server",
             'use_saml2': mscolab_settings.USE_SAML2,
@@ -1038,10 +1054,3 @@ def start_server(app, sockio, cm, fm, port=8083):
 
 def main():
     start_server(_app, sockio, cm, fm)
-
-
-# for wsgi
-application = socketio.WSGIApp(sockio)
-
-if __name__ == '__main__':
-    main()
