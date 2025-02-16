@@ -34,7 +34,7 @@ from PIL import Image
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.server import check_login, register_user, is_valid_fullname
+from mslib.mscolab.server import check_login, register_user, process_fullname
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
@@ -72,52 +72,52 @@ class Test_Server:
 
     def test_register_user(self):
         with self.app.test_client():
-            result = register_user("newmail1@example.com", "password", "user1", "John Doe")
+            result = register_user("newmail1@example.com", "password", "newuser1", "John Doe")
             assert result["success"] is True
-            result = register_user("newmail1@example.com", "password", "user1", "John Doe")
+            result = register_user("newmail1@example.com", "password", "newuser2", "John Doe")
             assert result["success"] is False
             assert result["message"] == "This email ID is already taken!"
-            result = register_user("UV", self.userdata[1], self.userdata[2], "John Doe")
+            result = register_user("UV", "password", "newuser3", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your email ID is not valid!"
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[0], "John Doe")
+            result = register_user("newmail2@example.com", "password", "newuser@4", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your username cannot contain @ symbol!"
-            result = register_user("newmail2@example.com", self.userdata[1], "newuser2", "John123")
+            result = register_user("newmail3@example.com", "password", "newuser5", "John123")
             assert result["success"] is False
             assert result["message"] == "Fullname is invalid after processing."
-            result = register_user("newmail3@example.com", self.userdata[1], "newuser3", "Jean-Luc Picard")
+            result = register_user("newmail4@example.com", "password", "newuser6", "Jean-Luc Picard")
             assert result["success"] is True
-            result = register_user("newmail4@example.com", self.userdata[1], "newuser4", "###@@@")
+            result = register_user("newmail5@example.com", "password", "newuser7", "###@@@")
             assert result["success"] is False
             assert result["message"] == "Fullname is invalid after processing."
 
-    def test_is_valid_fullname(self):
-        result = is_valid_fullname("Jean-Luc Picard")
+    def test_process_fullname(self):
+        result = process_fullname("Jean-Luc Picard")
         assert result["success"] is True
         assert result["processed_name"] == "jean-luc picard"
 
-        result = is_valid_fullname("John Doe")
+        result = process_fullname("John Doe")
         assert result["success"] is True
         assert result["processed_name"] == "john doe"
 
-        result = is_valid_fullname("Anu")
+        result = process_fullname("Anu")
         assert result["success"] is True
         assert result["processed_name"] == "anu"
 
-        result = is_valid_fullname("")
+        result = process_fullname("")
         assert result["success"] is True
         assert result["processed_name"] == ""
 
-        result = is_valid_fullname("@@@###")
+        result = process_fullname("@@@###")
         assert result["success"] is False
         assert result["message"] == "Fullname is invalid after processing."
 
-        result = is_valid_fullname("John   Doe")
+        result = process_fullname("John   Doe")
         assert result["success"] is True
         assert result["processed_name"] == "john doe"
 
-        result = is_valid_fullname("Jean--Luc Picard")
+        result = process_fullname("Jean--Luc Picard")
         assert result["success"] is True
         assert result["processed_name"] == "jean--luc picard"
 

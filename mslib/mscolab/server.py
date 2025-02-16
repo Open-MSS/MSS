@@ -249,28 +249,29 @@ def check_login(emailid, password):
     return False
 
 
-def is_valid_fullname(fullname):
+def process_fullname(fullname):
     fullname = fullname.strip()
 
     if not fullname:
         return {"success": True, "processed_name": ""}
 
-    parts = fullname.split(" ")
+    parts = fullname.split()
 
     processed_parts = []
     for part in parts:
         if "-" in part:
             subparts = part.split("-")
             processed_subparts = [slugify(subpart) for subpart in subparts]
+            if not all(processed_subparts):
+                return {"success": False, "message": "Fullname contains invalid part after processing."}
             processed_parts.append("-".join(processed_subparts))
         else:
-            processed_parts.append(slugify(part))
+            processed_part = slugify(part)
+            if not processed_part:
+                return {"success": False, "message": "Fullname contains invalid part after processing."}
+            processed_parts.append(processed_part)
 
     final_name = " ".join(processed_parts)
-
-    if not any(processed_parts):
-        return {"success": False, "message": "Fullname is invalid after processing."}
-
     return {"success": True, "processed_name": final_name}
 
 
@@ -289,11 +290,11 @@ def register_user(email, password, username, fullname):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    fullname_validation = is_valid_fullname(fullname)
-    if not fullname_validation["success"]:
-        return {"success": False, "message": fullname_validation["message"]}
+    checking_fullname = process_fullname(fullname)
+    if not checking_fullname["success"]:
+        return {"success": False, "message": checking_fullname["message"]}
 
-    processed_fullname = fullname_validation["processed_name"]
+    processed_fullname = checking_fullname["processed_name"]
     user = User(email, username, password, processed_fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
@@ -382,8 +383,6 @@ def hello():
             'direct_login': mscolab_settings.DIRECT_LOGIN
         })
     else:
-        if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
-            return json.dumps({'error': 'Authentication required'}), 401
         return json.dumps({
             'message': "Mscolab server",
             'use_saml2': mscolab_settings.USE_SAML2,
@@ -1054,3 +1053,10 @@ def start_server(app, sockio, cm, fm, port=8083):
 
 def main():
     start_server(_app, sockio, cm, fm)
+
+
+# for wsgi
+application = socketio.WSGIApp(sockio)
+
+if __name__ == '__main__':
+    main()
