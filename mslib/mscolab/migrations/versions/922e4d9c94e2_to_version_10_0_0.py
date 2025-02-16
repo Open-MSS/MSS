@@ -1,4 +1,4 @@
-"""To version <10_0_0>
+"""To version 10.0.0
 
 Revision ID: 3b4e20f78d34
 Revises: 89cbaa26ae78

@@ -266,6 +266,8 @@ def process_fullname(fullname):
                 return {"success": False, "message": "Fullname contains invalid part after processing."}
             processed_parts.append("-".join(processed_subparts))
         else:
+            if any(char.isdigit() for char in part):
+                return {"success": False, "message": "Fullname contains invalid part after processing."}
             processed_part = slugify(part)
             if not processed_part:
                 return {"success": False, "message": "Fullname contains invalid part after processing."}
