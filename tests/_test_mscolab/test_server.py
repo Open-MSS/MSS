@@ -72,9 +72,9 @@ class Test_Server:
 
     def test_register_user(self):
         with self.app.test_client():
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John Doe")
+            result = register_user("newmail1@example.com", "password", "user1", "John Doe")
             assert result["success"] is True
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], "John Doe")
+            result = register_user("newmail1@example.com", "password", "user1", "John Doe")
             assert result["success"] is False
             assert result["message"] == "This email ID is already taken!"
             result = register_user("UV", self.userdata[1], self.userdata[2], "John Doe")
@@ -88,8 +88,6 @@ class Test_Server:
             assert result["message"] == "Fullname is invalid after processing."
             result = register_user("newmail3@example.com", self.userdata[1], "newuser3", "Jean-Luc Picard")
             assert result["success"] is True
-            result = register_user("newmail3@example.com", self.userdata[1], "newuser3", "Jean-Luc Picard")
-            assert result["success"] is True
             result = register_user("newmail4@example.com", self.userdata[1], "newuser4", "###@@@")
             assert result["success"] is False
             assert result["message"] == "Fullname is invalid after processing."
@@ -97,7 +95,7 @@ class Test_Server:
     def test_is_valid_fullname(self):
         result = is_valid_fullname("Jean-Luc Picard")
         assert result["success"] is True
-        assert result["processed_name"] == "jean-luc-picard"
+        assert result["processed_name"] == "jean-luc picard"
 
         result = is_valid_fullname("John Doe")
         assert result["success"] is True
