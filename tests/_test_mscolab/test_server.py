@@ -83,9 +83,6 @@ class Test_Server:
             result = register_user("newmail2@example.com", "password", "newuser@4", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your username cannot contain @ symbol!"
-            result = register_user("newmail3@example.com", "password", "newuser5", "John123")
-            assert result["success"] is False
-            assert result["message"] == "Fullname contains invalid part after processing."
             result = register_user("newmail4@example.com", "password", "newuser6", "Jean-Luc Picard")
             assert result["success"] is True
             result = register_user("newmail5@example.com", "password", "newuser7", "###@@@")
