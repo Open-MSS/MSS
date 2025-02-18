@@ -236,11 +236,13 @@ def create_or_update_idp_user(email, username, token, authentication_backend):
 
 
 @APP.route('/')
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def home():
     return render_template("/index.html")
 
 
 @APP.route("/status")
+@conditional_decorator(auth.login_required, mscolab_settings.__dict__.get('enable_basic_http_authentication', False))
 def hello():
     if request.authorization is not None:
         if mscolab_settings.__dict__.get('enable_basic_http_authentication', False):
