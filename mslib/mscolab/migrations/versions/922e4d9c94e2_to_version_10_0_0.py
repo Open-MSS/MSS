@@ -23,12 +23,6 @@ def upgrade():
         batch_op.add_column(sa.Column('profile_image_path', sa.String(length=255), nullable=True))
         batch_op.add_column(sa.Column('fullname',
             sa.String(length=255), nullable=True))
-        batch_op.alter_column('fullname',
-               existing_type=sa.VARCHAR(length=255),
-               nullable=True)
-
-    op.execute("UPDATE changes SET version_name = NULL WHERE version_name = 'None';")
-    op.execute("UPDATE changes SET comment = NULL WHERE comment = 'None';")
 
     # ### end Alembic commands ###
 
@@ -39,10 +33,4 @@ def downgrade():
         batch_op.drop_column('profile_image_path')
         batch_op.drop_column('fullname')
 
-    # ### end Alembic commands ###
-    op.execute("UPDATE changes SET version_name = 'None' WHERE version_name IS NULL;")
-    op.execute("UPDATE changes SET comment = 'None' WHERE comment IS NULL;")
-    # ### end Alembic commands ###
-
     # ### end Alembic commands ###
-
