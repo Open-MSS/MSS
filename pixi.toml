@@ -76,9 +76,11 @@ dbus-python = "*"
 libxmlsec1 = "*"
 
 [target.osx-64.dependencies]
+dbus-python = "*"
 libxmlsec1 = "*"
 
 [target.osx-arm64.dependencies]
+dbus-python = "*"
 libxmlsec1 = "*"
 
 [feature.addons.dependencies]
