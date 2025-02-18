@@ -250,34 +250,27 @@ def check_login(emailid, password):
 
 
 def process_fullname(fullname):
-    print(f"Original fullname: '{fullname}'")
     fullname = fullname.strip()
-    print(f"Stripped fullname: '{fullname}'")
-
     if not fullname:
         return {"success": True, "processed_name": ""}
 
     parts = fullname.split()
-    print(f"Name parts: {parts}")
 
     processed_parts = []
     for part in parts:
         if "-" in part:
             subparts = part.split("-")
             processed_subparts = [slugify(subpart) for subpart in subparts]
-            print(f"Subparts: {subparts}, Processed subparts: {processed_subparts}")
             if not all(processed_subparts):
                 return {"success": False, "message": "Fullname contains invalid part after processing."}
             processed_parts.append("-".join(processed_subparts))
         else:
             processed_part = slugify(part)
-            print(f"Processed part: '{processed_part}'")
             if not processed_part:
                 return {"success": False, "message": "Fullname contains invalid part after processing."}
             processed_parts.append(processed_part)
 
     final_name = " ".join(processed_parts)
-    print(f"Final processed name: '{final_name}'")
     return {"success": True, "processed_name": final_name}
 
 
