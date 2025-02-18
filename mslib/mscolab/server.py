@@ -259,7 +259,7 @@ def process_fullname(fullname):
     processed_parts = []
     for part in parts:
         if "-" in part:
-            processed_part = slugify(part)
+            processed_part = part.lower()
             if not processed_part:
                 return {"success": False, "message": "Fullname contains invalid part after processing."}
             processed_parts.append(processed_part)

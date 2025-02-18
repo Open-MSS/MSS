@@ -1,8 +1,8 @@
 """To version 10.0.0
 
-Revision ID: 3b4e20f78d34
-Revises: 89cbaa26ae78
-Create Date: 2025-02-06 17:37:12.666326
+Revision ID: 922e4d9c94e2
+Revises: c171019fe3ee
+Create Date: 2024-07-24 15:28:42.009581
 
 """
 from alembic import op
@@ -24,6 +24,9 @@ def upgrade():
         batch_op.add_column(sa.Column('fullname',
             sa.String(length=255), nullable=True))
 
+    op.execute("UPDATE changes SET version_name = NULL WHERE version_name = 'None';")
+    op.execute("UPDATE changes SET comment = NULL WHERE comment = 'None';")
+
     # ### end Alembic commands ###
 
 
@@ -32,5 +35,8 @@ def downgrade():
     with op.batch_alter_table('users', schema=None) as batch_op:
         batch_op.drop_column('profile_image_path')
         batch_op.drop_column('fullname')
+
+    op.execute("UPDATE changes SET version_name = 'None' WHERE version_name IS NULL;")
+    op.execute("UPDATE changes SET comment = 'None' WHERE comment IS NULL;")
 
     # ### end Alembic commands ###
