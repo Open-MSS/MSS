@@ -149,13 +149,12 @@ MSS repository needs a different folder, e.g. workspace/MSS. Avoid to mix data a
 
 :ref:`demodata <demodata>` is provided by executing::
 
-   $(mssdev) python mslib/mswms/demodata.py --seed
+   mswms_demodata --seed
 
 To use this data add the mswms_settings.py in your python path::
 
-   $(mssdev) cd $HOME/workspace/MSS
-   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
-   $(mssdev) python mslib/mswms/mswms.py
+   export PYTHONPATH=~/mss
+   mswms
 
 
 Setup MSColab server
@@ -166,12 +165,12 @@ You can view the default configuration of MSColab in the file `mslib/mscolab/con
 If you want to change any values of the configuration, please take a look at the "Configuring Your MSColab Server"
 section in :ref:`mscolab`
 
-When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab.py db --init`
+When using for the first time you need to initialise your database. Use the command :code:`mscolab db --init`
 to initialise it. The default database is a sqlite3 database.
-You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
+You can add some dummy data to your database by using the command :code:`mscolab db --seed`.
 The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
 
-To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the MSColab server on port 8083.
+To start your server use the command :code:`mscolab start`. This would start the MSColab server on port 8083.
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
 Now you can use the MSS desktop application to connect to it using the MSColab window of the application.
 
