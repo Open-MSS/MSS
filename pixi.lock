@@ -5365,8 +5365,6 @@ packages:
   depends:
   - expat >=2.4.2,<3.0a0
   - libglib >=2.70.2,<3.0a0
-  arch: x86_64
-  platform: osx
   license: GPL-2.0-or-later
   license_family: GPL
   purls: []
@@ -5378,8 +5376,6 @@ packages:
   depends:
   - expat >=2.4.2,<3.0a0
   - libglib >=2.70.2,<3.0a0
-  arch: arm64
-  platform: osx
   license: GPL-2.0-or-later
   license_family: GPL
   purls: []
@@ -5425,8 +5421,6 @@ packages:
   - libglib >=2.80.3,<3.0a0
   - python >=3.11,<3.12.0a0
   - python_abi 3.11.* *_cp311
-  arch: x86_64
-  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -5443,8 +5437,6 @@ packages:
   - python >=3.11,<3.12.0a0
   - python >=3.11,<3.12.0a0 *_cpython
   - python_abi 3.11.* *_cp311
-  arch: arm64
-  platform: osx
   license: MIT
   license_family: MIT
   purls:
@@ -5700,8 +5692,6 @@ packages:
   depends:
   - __osx >=10.13
   - libexpat 2.6.4 h240833e_0
-  arch: x86_64
-  platform: osx
   license: MIT
   license_family: MIT
   purls: []
@@ -5713,8 +5703,6 @@ packages:
   depends:
   - __osx >=11.0
   - libexpat 2.6.4 h286801f_0
-  arch: arm64
-  platform: osx
   license: MIT
   license_family: MIT
   purls: []
@@ -11386,11 +11374,6 @@ packages:
   purls: []
   size: 491140
   timestamp: 1730581373280
-- pypi: .
-  name: mslib
-  version: 9.3.0
-  sha256: ca72d1fefb04336799c341aef9dc01ec064f5676b23a2ba7d47b8c1d797bc1ec
-  editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/multidict-6.1.0-py311h2dc5d0c_2.conda
   sha256: afaab7a028281d8b5336db2b994fd3f9694862b6ca372c079dc4e84ad768c20a
   md5: bb8ca118919836624d920b4c44383a15
@@ -11991,6 +11974,11 @@ packages:
   - pkg:pypi/numpy?source=hash-mapping
   size: 7104093
   timestamp: 1707226459646
+- pypi: .
+  name: open-mss
+  version: 9.3.0
+  sha256: 60cb74c7ba21a0f29054520883482664a2c8abbffab532aa6b4a0a55d1317723
+  editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/opencv-4.7.0-py311h38be061_6.conda
   sha256: 045d7df932b7c798410c7a0870c2a7eea2e091d6d4729fa3a4d42b91c01666a9
   md5: a0ae5a05f9d3e93c7f2f64b06e50854e

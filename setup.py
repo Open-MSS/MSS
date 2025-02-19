@@ -44,7 +44,7 @@ if os.name != 'nt':
     console_scripts.append('msidp = mslib.msidp.idp:main')
 
 setup(
-    name="mslib",
+    name="open-mss",
     version=__version__,  # noqa
     description="MSS - Mission Support System",
     long_description=long_description,
