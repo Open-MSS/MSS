@@ -11,7 +11,7 @@ import mslib.mscolab.custom_migration_types as cu
 
 
 # revision identifiers, used by Alembic.
-revision = '3b4e20f78d34'
+revision = '922e4d9c94e2'
 down_revision = 'c171019fe3ee'
 branch_labels = None
 depends_on = None
