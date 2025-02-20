@@ -107,7 +107,7 @@ class Test_Server:
         assert result["success"] is False
         assert result["message"] == "Invalid characters detected in fullname."
 
-        result = process_fullname("John   Doe")
+        result = process_fullname(" John   Doe")
         assert result["success"] is True
         assert result["processed_name"] == "john doe"
 
@@ -119,7 +119,7 @@ class Test_Server:
         assert result["success"] is True
         assert result["processed_name"] == "john smith-doe"
 
-        result = process_fullname("john123")
+        result = process_fullname("John123")
         assert result["success"] is False
         assert result["message"] == "Invalid characters detected in fullname."
 

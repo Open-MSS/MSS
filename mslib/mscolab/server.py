@@ -250,10 +250,10 @@ def check_login(emailid, password):
 
 
 def process_fullname(fullname):
-    fullname = fullname.strip()
+    fullname = " ".join(fullname.split())
     if not fullname:
         return {"success": True, "processed_name": ""}
-    
+
     result_with_regex = slugify(fullname, regex_pattern=r"[^a-zA-Z\s\-]")
     if fullname.lower() != result_with_regex:
         return {"success": False, "message": "Invalid characters detected in fullname."}
