@@ -42,8 +42,8 @@ class Test_Socket_Manager:
         self.sockio, self.cm, self.fm = mscolab_managers
         self.sm = self.sockio.sm
         self.sockets = []
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User10'
-        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User20'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         assert add_operation(self.operation_name, "test europe")

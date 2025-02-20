@@ -50,7 +50,7 @@ class Test_MscolabOperation:
     def setup(self, qtbot, mscolab_app, mscolab_server):
         self.app = mscolab_app
         self.url = mscolab_server
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.operation_name = "europe"
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         assert add_operation(self.operation_name, "test europe")

@@ -40,8 +40,8 @@ class Test_FileManager:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         _, _, self.fm = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
-        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'UserUV20'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
 
         assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         self.user = get_user(self.userdata[0])

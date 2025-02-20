@@ -38,9 +38,9 @@ class Test_Seed:
         _, _, self.fm = mscolab_managers
         self.operation_name = "XYZ"
         self.description = "Template"
-        self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0', 'UserUV0'
-        self.userdata_1 = "UV1@uv1", "UV1", "UV1", "UserUV1"
-        self.userdata_2 = "UV2@v2", "V2", "v2", "UserUV2"
+        self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0', 'Usera UV'
+        self.userdata_1 = "UV1@uv1", "UV1", "UV1", "Userb UV"
+        self.userdata_2 = "UV2@v2", "V2", "v2", "Userc UV"
 
         assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2], self.userdata_0[3])
         assert add_operation(self.operation_name, self.description)

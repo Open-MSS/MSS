@@ -45,7 +45,7 @@ class Test_Server:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         self.sockio, _, self.fm = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'UserUV10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         with self.app.app_context():
             yield
 
