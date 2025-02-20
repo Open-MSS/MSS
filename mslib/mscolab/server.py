@@ -253,6 +253,10 @@ def process_fullname(fullname):
     fullname = fullname.strip()
     if not fullname:
         return {"success": True, "processed_name": ""}
+    
+    result_with_regex = slugify(fullname, regex_pattern=r"[^a-zA-Z\s\-]")
+    if fullname.lower() != result_with_regex:
+        return {"success": False, "message": "Invalid characters detected in fullname."}
 
     parts = fullname.split()
 

@@ -85,9 +85,6 @@ class Test_Server:
             assert result["message"] == "Your username cannot contain @ symbol!"
             result = register_user("newmail4@example.com", "password", "newuser6", "Jean-Luc Picard")
             assert result["success"] is True
-            result = register_user("newmail5@example.com", "password", "newuser7", "###@@@")
-            assert result["success"] is False
-            assert result["message"] == "Fullname contains invalid part after processing."
 
     def test_process_fullname(self):
         result = process_fullname("Jean-Luc Picard")
@@ -108,7 +105,7 @@ class Test_Server:
 
         result = process_fullname("@@@###")
         assert result["success"] is False
-        assert result["message"] == "Fullname contains invalid part after processing."
+        assert result["message"] == "Invalid characters detected in fullname."
 
         result = process_fullname("John   Doe")
         assert result["success"] is True
@@ -117,6 +114,14 @@ class Test_Server:
         result = process_fullname("Jean--Luc Picard")
         assert result["success"] is True
         assert result["processed_name"] == "jean--luc picard"
+
+        result = process_fullname("John Smith-Doe")
+        assert result["success"] is True
+        assert result["processed_name"] == "john smith-doe"
+
+        result = process_fullname("john123")
+        assert result["success"] is False
+        assert result["message"] == "Invalid characters detected in fullname."
 
     def test_check_login(self):
         with self.app.test_client():

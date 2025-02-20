@@ -184,7 +184,7 @@ class Test_Mscolab_connect_window:
                                                           "something@something.org") == "password from TestKeyring"
         # assert self.window.stackedWidget.currentWidget() == self.window.newuserPage
         assert self.main_window.usernameLabel.text() == 'something'
-        # assert self.main_window.mscolab.connect_window is None
+        assert self.main_window.mscolab.connect_window is None
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_add_users_without_updating_credentials_in_config_file(self, mockmessage, qtbot):
