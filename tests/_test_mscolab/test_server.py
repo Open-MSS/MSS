@@ -87,41 +87,24 @@ class Test_Server:
             assert result["success"] is True
 
     def test_process_fullname(self):
-        result = process_fullname("Jean-Luc Picard")
-        assert result["success"] is True
-        assert result["processed_name"] == "jean-luc picard"
-
         result = process_fullname("John Doe")
         assert result["success"] is True
-        assert result["processed_name"] == "john doe"
-
-        result = process_fullname("Anu")
-        assert result["success"] is True
-        assert result["processed_name"] == "anu"
-
+        assert result["processed_name"] == "John Doe"
         result = process_fullname("")
         assert result["success"] is True
         assert result["processed_name"] == ""
-
-        result = process_fullname("@@@###")
-        assert result["success"] is False
-        assert result["message"] == "Invalid characters detected in fullname."
-
-        result = process_fullname(" John   Doe")
-        assert result["success"] is True
-        assert result["processed_name"] == "john doe"
-
-        result = process_fullname("Jean--Luc Picard")
-        assert result["success"] is True
-        assert result["processed_name"] == "jean--luc picard"
-
-        result = process_fullname("John Smith-Doe")
-        assert result["success"] is True
-        assert result["processed_name"] == "john smith-doe"
-
         result = process_fullname("John123")
         assert result["success"] is False
-        assert result["message"] == "Invalid characters detected in fullname."
+        assert result["message"] == "Invalid chars detected"
+        result = process_fullname("John_Doe")
+        assert result["success"] is False
+        assert result["message"] == "Invalid chars detected"
+        result = process_fullname("@#")
+        assert result["success"] is False
+        assert result["message"] == "Invalid chars detected"
+        result = process_fullname("Anne-Marie")
+        assert result["success"] is True
+        assert result["processed_name"] == "Anne-Marie"
 
     def test_check_login(self):
         with self.app.test_client():

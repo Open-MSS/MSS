@@ -251,30 +251,11 @@ def check_login(emailid, password):
 
 def process_fullname(fullname):
     fullname = " ".join(fullname.split())
-    if not fullname:
-        return {"success": True, "processed_name": ""}
-
     result_with_regex = slugify(fullname, regex_pattern=r"[^a-zA-Z\s\-]")
-    if fullname.lower() != result_with_regex:
-        return {"success": False, "message": "Invalid characters detected in fullname."}
-
-    parts = fullname.split()
-
-    processed_parts = []
-    for part in parts:
-        if "-" in part:
-            processed_part = part.lower()
-            if not processed_part:
-                return {"success": False, "message": "Fullname contains invalid part after processing."}
-            processed_parts.append(processed_part)
-        else:
-            processed_part = slugify(part)
-            if not processed_part:
-                return {"success": False, "message": "Fullname contains invalid part after processing."}
-            processed_parts.append(processed_part)
-
-    final_name = " ".join(processed_parts)
-    return {"success": True, "processed_name": final_name}
+    if fullname.lower() == result_with_regex:
+        return {"success": True, "processed_name": fullname}
+    else:
+        return {"success": False, "message": "Invalid chars detected"}
 
 
 def register_user(email, password, username, fullname):
