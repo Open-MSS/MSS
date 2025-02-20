@@ -872,7 +872,7 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.usernameLabel_2.setText(self.user['username'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
-        self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
+        self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_own_account)
         self.profile_dialog.uploadImageBtn.clicked.connect(self.upload_image)
 
         # add context menu for right click on image
@@ -928,9 +928,8 @@ class MSUIMscolab(QtCore.QObject):
                                      f'Cannot identify image file. Please check the file format. Error: {e}')
 
     @verify_user_token
-    def delete_account(self, _=None):
-        # ToDo rename to delete_own_account
-        reply = QMessageBox.question(
+    def delete_own_account(self, _=None):
+         reply = QMessageBox.question(
             self.ui, self.tr('Continue?'),
             self.tr("You're about to delete your account. You cannot undo this operation!"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)

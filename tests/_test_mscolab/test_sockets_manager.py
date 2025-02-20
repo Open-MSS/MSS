@@ -165,19 +165,14 @@ class Test_Socket_Manager:
         sio = self._connect()
         sio.emit('start', {'token': self.token})
 
-        # ToDo same message gets twice emitted, why? (use a helper function)
-        sio.emit("chat-message", {
-            "op_id": self.operation.id,
-            "token": self.token,
-            "message_text": "message from 1",
-            "reply_id": -1
-        })
-        sio.emit("chat-message", {
-            "op_id": self.operation.id,
-            "token": self.token,
-            "message_text": "message from 1",
-            "reply_id": -1
-        })
+        for _ in range(2):
+            sio.emit("chat-message", {
+                "op_id": self.operation.id,
+                "token": self.token,
+                "message_text": "message from 1",
+                "reply_id": -1
+            })
+
         with self.app.app_context():
             messages = self.cm.get_messages(1)
             assert messages[0]["text"] == "message from 1"
@@ -195,19 +190,13 @@ class Test_Socket_Manager:
     def test_get_messages_api(self):
         sio = self._connect()
         sio.emit('start', {'token': self.token})
-        # ToDo same message gets twice emitted, why?
-        sio.emit("chat-message", {
-            "op_id": self.operation.id,
-            "token": self.token,
-            "message_text": "message from 1",
-            "reply_id": -1
-        })
-        sio.emit("chat-message", {
-            "op_id": self.operation.id,
-            "token": self.token,
-            "message_text": "message from 1",
-            "reply_id": -1
-        })
+        for _ in range(2):
+            sio.emit("chat-message", {
+                "op_id": self.operation.id,
+                "token": self.token,
+                "message_text": "message from 1",
+                "reply_id": -1
+            })
 
         token = self.token
         data = {
