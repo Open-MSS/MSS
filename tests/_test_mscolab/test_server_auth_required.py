@@ -30,7 +30,7 @@ from mslib.mscolab.conf import mscolab_settings
 
 mscolab_settings.enable_basic_http_authentication = True
 try:
-    from mslib.mscolab.server import authfunc, verify_pw, initialize_managers, get_auth_token
+    from mslib.mscolab.server import authfunc, verify_pw, initialize_managers, get_auth_token, register_user
 except ImportError:
     pytest.skip("this test runs only by an explicit call "
                 "e.g. pytest tests/_test_mscolab/test_server_auth_required.py", allow_module_level=True)
@@ -59,6 +59,10 @@ class Test_Server_Auth_Not_Valid:
         assert verify_pw("user", "testvaluepassword")
         assert verify_pw("unknown", "unknown") is False
         assert verify_pw("user", "wrong") is False
+
+    def test_register_user(self):
+        r = register_user("test@test.io", "test", "pwdtest", "UserPWD")
+        assert r.status_code == 401
 
     def test_get_auth_token(self):
         r = get_auth_token()

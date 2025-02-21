@@ -250,7 +250,7 @@ def check_login(emailid, password):
 
 
 def process_fullname(fullname):
-    fullname = " ".join(fullname.split())
+    fullname = " ".join(fullname.split()) # Removes extra spaces from fullname
     result_with_regex = slugify(fullname, regex_pattern=r"[^a-zA-Z\s\-]")
     if fullname.lower() == result_with_regex:
         return {"success": True, "processed_name": fullname}
