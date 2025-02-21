@@ -929,7 +929,7 @@ class MSUIMscolab(QtCore.QObject):
 
     @verify_user_token
     def delete_own_account(self, _=None):
-         reply = QMessageBox.question(
+        reply = QMessageBox.question(
             self.ui, self.tr('Continue?'),
             self.tr("You're about to delete your account. You cannot undo this operation!"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
