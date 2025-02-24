@@ -600,6 +600,22 @@ class Test_Mscolab:
             imported_wp = self.window.mscolab.waypoints_model
             assert len(imported_wp.waypoints) == name[2]
 
+    def test_none_import_file(self, qtbot):
+        with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=None) as mockopen:
+            self._connect_to_mscolab(qtbot)
+            modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
+            self._login(qtbot, emailid=self.userdata[0], password=self.userdata[2])
+            self._activate_operation_at_index(0)
+            wp = self.window.mscolab.waypoints_model
+            assert len(wp.waypoints) == 2
+            for action in self.window.menuImportFlightTrack.actions():
+                if action.objectName() == "actionImportFlightTrackFTML":
+                    action.trigger()
+                    break
+            assert mockopen.call_count == 1
+            imported_wp = self.window.mscolab.waypoints_model
+            assert len(imported_wp.waypoints) == 2
+
     def test_work_locally_toggle(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
@@ -877,10 +893,20 @@ class Test_Mscolab:
         self._create_user(qtbot, "something", "something@something.org", "something", "Test User")
         u_id = self.window.mscolab.user['id']
         self.window.mscolab.open_profile_window()
+        # Uses 'TestKeyring' from conftest.py for verification.
+        assert self.url + "something@something.org" in mslib.utils.auth.keyring.get_keyring().passwords
+        assert "MSCOLAB_AUTH_" + self.url, "something@something.org" in mslib.utils.auth.keyring.get_keyring().passwords
         QtTest.QTest.mouseClick(self.window.mscolab.profile_dialog.deleteAccountBtn, QtCore.Qt.LeftButton)
         assert self.window.listOperationsMSC.model().rowCount() == 0
         assert self.window.usernameLabel.isVisible() is False
         assert self.window.connectBtn.isVisible() is True
+        assert (
+            self.url + "something@something.org"
+            not in mslib.utils.auth.keyring.get_keyring().passwords
+        )
+        assert "MSCOLAB_AUTH_" + self.url, "something@something.org" not in (
+            mslib.utils.auth.keyring.get_keyring().passwords
+        )
         with self.app.app_context():
             assert User.query.filter_by(emailid='something').count() == 0
             assert Permission.query.filter_by(u_id=u_id).count() == 0

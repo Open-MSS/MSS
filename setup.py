@@ -2,7 +2,7 @@
 """
 
     mslib.setup
-    ~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~
 
     setuptools script
 
@@ -44,7 +44,7 @@ if os.name != 'nt':
     console_scripts.append('msidp = mslib.msidp.idp:main')
 
 setup(
-    name="mss",
+    name="open-mss",
     version=__version__,  # noqa
     description="MSS - Mission Support System",
     long_description=long_description,
@@ -61,7 +61,7 @@ setup(
     namespace_packages=[],
     include_package_data=True,
     zip_safe=False,
-    install_requires=[],  # we use conda build recipe
+    install_requires=[],  # we use pixi
     entry_points=dict(
         console_scripts=console_scripts,
     ),

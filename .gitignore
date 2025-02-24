@@ -15,6 +15,8 @@ docs/gallery/code
 docs/gallery/plots.html
 docs/videos/
 build/
-mss.egg-info/
+open_mss.egg-info/
 tutorials/recordings
 tutorials/cursor_image.png
+# pixi environments
+.pixi

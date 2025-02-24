@@ -27,13 +27,13 @@
 import json
 import logging
 from flask import request
-from flask_socketio import SocketIO, join_room, leave_room
+from flask_socketio import SocketIO, join_room
 
 from mslib.mscolab.chat_manager import ChatManager
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.models import MessageType, Permission, User
 from mslib.mscolab.utils import get_message_dict
-from mslib.mscolab.utils import get_session_id, get_user_id
+from mslib.mscolab.utils import get_user_id
 from mslib.mscolab.conf import mscolab_settings
 
 socketio = SocketIO(logger=mscolab_settings.SOCKETIO_LOGGER, engineio_logger=mscolab_settings.ENGINEIO_LOGGER,
@@ -101,21 +101,6 @@ class SocketsManager:
             return
         op_id = json_config['op_id']
         join_room(str(op_id))
-
-    def join_collaborator_to_operation(self, u_id, op_id):
-        """
-        json has:
-            - u_id: user id(collaborator's id)
-            - op_id: operation id
-        """
-        s_id = get_session_id(self.sockets, u_id)
-        if s_id is not None:
-            join_room(str(op_id), sid=s_id)
-
-    def remove_collaborator_from_operation(self, u_id, op_id):
-        s_id = get_session_id(self.sockets, u_id)
-        if s_id is not None:
-            leave_room(str(op_id), sid=s_id)
 
     def handle_start_event(self, json_config):
         """
@@ -275,13 +260,14 @@ class SocketsManager:
         op_id = json_req['op_id']
         content = json_req['content']
         comment = json_req.get('comment', "")
+        version_name = json_req.get('version_name', None)
         messageText = json_req.get('messageText')
         user = User.verify_auth_token(json_req['token'])
         if user is not None:
             # when the socket connection is expired this in None and also on wrong tokens
             perm = self.permission_check_emit(user.id, int(op_id))
             # if permission is correct and file saved properly
-            if perm and self.fm.save_file(int(op_id), content, user, comment):
+            if perm and self.fm.save_file(int(op_id), content, user, version_name=version_name, comment=comment):
                 # send service message
                 message_ = f"[service message] **{user.username}** saved changes. {messageText}"
                 new_message = self.cm.add_message(user, message_, str(op_id), message_type=MessageType.SYSTEM_MESSAGE)

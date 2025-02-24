@@ -629,6 +629,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 logging.error("Error on import: %s: %s", type(ex), ex)
                 QtWidgets.QMessageBox.critical(
                     self.tr(f"ERROR: Configuration\n\n{plugins, }\n\nthrows {type(ex)} error:\n{ex}"))
+                    self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
             try:
                 self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Import")
@@ -657,6 +658,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 QtWidgets.QMessageBox.critical(
                     self, self.tr("file io plugin error export plugins"),
                     self.tr(f"ERROR: Configuration\n\n{plugins, }\n\nthrows {type(ex)} error:\n{ex}"))
+                    self.tr(f"ERROR: Configuration\n\n{plugins}\n\nthrows {type(ex)} error:\n{ex}"))
                 continue
             try:
                 self.add_plugin_submenu(name, extension, imported_function, picker_type, plugin_type="Export")
@@ -694,14 +696,15 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             self.last_save_directory,
             f"Flight Track (*.{extension});;All files (*.*)",
             pickertype=pickertype)
+        if filenames is None:
+            return
         if self.local_active:
-            if filenames is not None:
-                activate = True
-                if len(filenames) > 1:
-                    activate = False
-                for name in filenames:
-                    self.create_new_flight_track(filename=name, function=function, activate=activate)
-                self.last_save_directory = fs.path.dirname(name)
+            activate = True
+            if len(filenames) > 1:
+                activate = False
+            for name in filenames:
+                self.create_new_flight_track(filename=name, function=function, activate=activate)
+            self.last_save_directory = fs.path.dirname(name)
         else:
             for name in filenames:
                 self.mscolab.handle_import_msc(name, extension, function, pickertype)

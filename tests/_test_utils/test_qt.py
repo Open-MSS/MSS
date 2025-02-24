@@ -159,29 +159,3 @@ def test_save_filename():
     with mock.patch("mslib.utils.qt.get_save_filename_qt", return_value=""):
         _filename = mqt.get_save_filename(None, "", "", "", pickertype="qt")
         assert _filename is None
-
-
-def test_get_existing_directory():
-    dirname = "example"
-    with mock.patch("mslib.utils.qt.getExistingDirectory", return_value=[dirname]):
-        _dirname = mqt.get_existing_directory(None, "", "~/", pickertype="fs")
-        assert _dirname == dirname
-    with mock.patch("mslib.utils.qt.get_existing_directory_qt", return_value=dirname):
-        _dirname = mqt.get_existing_directory(None, "", "~/", pickertype="qt")
-        assert _dirname == dirname
-    with mock.patch("mslib.utils.qt.get_existing_directory_qt", return_value=""):
-        _dirname = mqt.get_existing_directory(None, "", "~/", pickertype="qt")
-        assert _dirname is None
-    with pytest.raises(FatalUserError) as exc_info:
-        _dirname = mqt.get_existing_directory(None, "", "~/", pickertype="unknown")
-        assert type(exc_info.value.__cause__) is FatalUserError
-
-
-def test_get_existing_directory_qt():
-    dirname = "example"
-    with mock.patch("mslib.utils.qt.QtWidgets.QFileDialog.getExistingDirectory", return_value=(dirname, )):
-        _dirname = mqt.get_existing_directory_qt()
-        assert _dirname == dirname
-    with mock.patch("mslib.utils.qt.QtWidgets.QFileDialog.getExistingDirectory", return_value=dirname):
-        _dirname = mqt.get_existing_directory_qt()
-        assert _dirname == dirname

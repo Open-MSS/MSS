@@ -1,88 +1,106 @@
 Installation
 ============
 
-The Mission Support System (MSS) including a Web Map Service, a Collaboration Server  and a Graphical User Interface is available as
+The Mission Support System (MSS) including a Web Map Service (MSWMS), a Collaboration Server (MSColab) and a Graphical User Interface (MSUI) is available as
 `conda-forge <https://anaconda.org/conda-forge/mss>`_ package.
 
-This channel conda-forge has builds for osx-64, linux-64, win-64
+This channel conda-forge has builds for linux-64, osx-64, win-64, osx-arm64
 
 The conda-forge `github organization <https://conda-forge.github.io/>`_ uses various automated continuous integration
 build processes.
 
-We provide an automatic installation and a manual installation.
-
-We recommend to use Mamba for an installation.
-
-Automatic
----------
-
-* For **Windows**, use `Windows.bat <https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1>`_
-
-  #. Right click on the webpage and select "Save as..." to download the file
-
-  #. Double click the downloaded file and follow further instructions
-
-    * For fully automatic installation, open cmd and execute it with :code:`/Path/To/Windows.bat -a`
-
-* For **Linux/Mac**, use `LinuxMac.sh <https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1>`_
-
-  #. Right click on the webpage and select "Save as..." to download the file
-
-  #. Make it executable via :code:`chmod +x LinuxMac.sh`
-
-  #. Execute it and follow further instructions :code:`./LinuxMac.sh`
-
-    * For fully automatic installation, run it with the -a parameter :code:`./LinuxMac.sh -a`
+In 2024, the workflow that has packages co-installed from Anaconda's channel and conda-forge is `no longer supported
+<https://conda-forge.org/docs/user/transitioning_from_defaults/#a-historical-note>`_
+We recommend since version 10.0.0 of MSS to use `pixi <https://pixi.sh/latest/>`_ for an installation.
+Get **pixi** from https://pixi.sh/latest/ for your operation system.
 
 
-Manual
-------
-
-Mamba based installation
-........................
-
+You can now decide if you want to install **mss** as global or a project.
+Further details what we provide in the mss package you can read
+in the :ref:`components` section.
+For the configuratation of the msui client see :ref:`msui-configuration`
 
 
-We strongly recommend to start from `Miniforge3 <https://github.com/conda-forge/miniforge#install>`_,
-a community project of the conda-forge community.
+Global installation
+-------------------
 
-As **Beginner** start with an installation of Miniforge3
-- Get `Miniforge3 <https://github.com/conda-forge/miniforge#download>`__ for your Operation System
+You can install **mss** global without defining a project first.
+This method is practical when you are interested in starting the client
+and don't need server configurations.::
 
-If you use already Mambaforge please read the `FAQ <https://github.com/conda-forge/miniforge#faq>`__
-
-
-
-Install MSS
-~~~~~~~~~~~
-
-You must install mss into a new environment to ensure the most recent
-versions for dependencies. ::
-
-    $ mamba create -n mssenv
-    $ mamba activate mssenv
-    (mssenv) $ mamba install mss=$mss_version python
-    (mssenv) $ msui
+    pixi global install mss
 
 
-Mamba Server based installation example
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Usage
+.....
 
-For a wms server setup or mscolab setup you may want to have a dedicated user for the apache2 wsgi script.
+::
+
+    msui
+    mswms -h
+    mscolab -h
+    mssautoplot -h
+
+Updating
+........
+
+::
+
+    pixi global update mss
+
+
+Project installation
+--------------------
+
+Initialize a new project and navigate to the project directory::
+
+    pixi init MSS
+    cd MSS
+
+Use the shell command to activate the environment and start a new shell in there.::
+
+    pixi shell
+
+Add the **mss** dependencies from conda-forge.::
+
+    (MSS) pixi add mss
+
+Usage
+.....
+
+Always when you want to start **mss** programs you have after its installation
+to activate the environment by pixi shell in the project dir.
+On the very first start of **msui** it takes a bit longer because it setups fonts.::
+
+    cd MSS
+    pixi shell
+
+::
+
+    (MSS) msui
+    (MSS) mswms -h
+    (MSS) mscolab -h
+    (MSS) mssautoplot -h
+
+Updating
+........
+
+::
+
+    cd MSS
+    pixi shell
+    (MSS) pixi update mss
+
+
+Server based installation example
+---------------------------------
+
+For a WMS server setup or MSColab setup you may want to have a dedicated user for the apache2 wsgi script.
 We suggest to create a mss user.
 
 * create a mss user on your system
 * login as mss user
-* create a *src* directory in /home/mss
-* cd src
-* get `Miniforge3 <https://github.com/conda-forge/miniforge#download>`__
-* set execute bit on install script
-* execute script, enable environment in .bashrc
-* login again
-* mamba create -n mssenv
-* mamba activate mssenv
-* mamba install mss=$mss_version python
-
+* do a pixi project installation of **mss**
 For a simple test you could start the builtin standalone *mswms* and *mscolab* server::
 
    $ mswms &
@@ -93,75 +111,6 @@ Point a browser for the verification of both servers installed on
   - `http://127.0.0.1:8083/status <http://127.0.0.1:8083/status>`_
   - `http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1 <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
 
-Further details in the components section on `<http://mss.rtfd.io>`_
-
-
-
-
-Conda based installation
-........................
-
-`Anaconda <https://www.anaconda.com/>`_ provides an enterprise-ready data analytics
-platform that empowers companies to adopt a modern open data science analytics architecture.
-
-Please add the channel conda-forge to your defaults::
-
-  $ conda config --add channels conda-forge
-
-The conda-forge channel must be on top of the list before the anaconda default channel.
-
-From September 2023 libmamba is the `default installer in anaconda <https://conda.org/blog/2023-07-05-conda-libmamba-solver-rollout/>`__.
-
-Install MSS
-~~~~~~~~~~~
-
-You must install mss into a new environment to ensure the most recent
-versions for dependencies. ::
-
-    $ conda create -n mssenv
-    $ conda activate mssenv
-    (mssenv) $ conda install mss=$mss_version python --solver=libmamba
-    (mssenv) $ msui
-
-
-Update Methods
-..............
-
-For updating an existing MSS installation to the current version, it is best to install
-it into a new environment. If your current version is not far behind the new version
-you could try the `mamba update mss` as described.
-
-
-.. Important::
-  mamba is under development. All dependencies of MSS and MSS itself are under development.
-  Sometimes this update feature of mamba can't resolve from existing to new dependencies.
-
-search for MSS what you can get ::
-
-   (mssenv) $ mamba search mss
-   ...
-   $mss_search
-
-
-compare what you have installed ::
-
-   (mssenv) $ mamba list mss
-
-     mss                            7.0.2     py310hff52083_0    conda-forge
-
-
-We have reports that often an update succeeds by using the install option and the new version number,
-in this example $mss_version and python as second option ::
-
-   (mssenv) $ mamba install mss=$mss_version python
-
-All attemmpts show what you get if you continue. **Continue only if you get what you want.**
-
-The alternative is to use a new environment and install mss.
-
-
-
-For further details of configuring mss :ref:`msui-configuration`
 
 
 Docker Instance

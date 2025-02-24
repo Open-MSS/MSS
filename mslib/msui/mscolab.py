@@ -61,7 +61,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QDialog, QFileDialog, QMessageBox
 from PyQt5.QtGui import QPixmap
 
-from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring
+from mslib.utils.auth import get_password_from_keyring, save_password_to_keyring, del_password_from_keyring
 from mslib.utils.verify_user_token import verify_user_token as _verify_user_token
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
@@ -875,7 +875,7 @@ class MSUIMscolab(QtCore.QObject):
         self.profile_dialog.fullNameLabel_2.setText(self.user['fullname'])
         self.profile_dialog.mscolabURLLabel_2.setText(self.mscolab_server_url)
         self.profile_dialog.emailLabel_2.setText(self.email)
-        self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_account)
+        self.profile_dialog.deleteAccountBtn.clicked.connect(self.delete_own_account)
         self.profile_dialog.uploadImageBtn.clicked.connect(self.upload_image)
 
         # add context menu for right click on image
@@ -931,8 +931,7 @@ class MSUIMscolab(QtCore.QObject):
                                      f'Cannot identify image file. Please check the file format. Error: {e}')
 
     @verify_user_token
-    def delete_account(self, _=None):
-        # ToDo rename to delete_own_account
+    def delete_own_account(self, _=None):
         reply = QMessageBox.question(
             self.ui,
             self.tr('Continue?'),
@@ -942,6 +941,9 @@ class MSUIMscolab(QtCore.QObject):
         if reply == QMessageBox.No:
             return
         try:
+            auth_name = config_loader(dataset="MSCOLAB_auth_user_name")
+            del_password_from_keyring(self.mscolab_server_url, self.email)
+            del_password_from_keyring(f"MSCOLAB_AUTH_{self.mscolab_server_url}", auth_name)
             response = self.conn.request_post("delete_own_account")
         except requests.exceptions.RequestException as ex:
             raise MSColabConnectionError(f"Some error occurred ({ex})! Please reconnect.")
@@ -1910,14 +1912,13 @@ class MSUIMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     @verify_user_token
-    def handle_waypoints_changed(self, _1=None, _2=None, _3=None):
+    def handle_waypoints_changed(self, _1=None, _2=None, _3=None, version_name=None):
         logging.debug("handle_waypoints_changed")
         if self.ui.workLocallyCheckbox.isChecked():
             self.waypoints_model.save_to_ftml(self.local_ftml_file)
         else:
             xml_content = self.waypoints_model.get_xml_content()
-            self.conn.save_file(self.token, self.active_op_id, xml_content, comment=None,
-                                messageText=self.lastChangeMessage)
+            self.conn.save_file(self.token, self.active_op_id, xml_content, version_name=version_name, comment=None)
             # Reset the last change message to make sure that it is used only once
             self.lastChangeMessage = ""
 
@@ -1969,7 +1970,7 @@ class MSUIMscolab(QtCore.QObject):
         self.waypoints_model.dataChanged.disconnect(self.handle_waypoints_changed)
         self.waypoints_model = model
         self.waypoints_model.changeMessageSignal.connect(self.handle_change_message)
-        self.handle_waypoints_changed()
+        self.handle_waypoints_changed(version_name=file_name)
         self.waypoints_model.dataChanged.connect(self.handle_waypoints_changed)
         self.reload_view_windows()
         show_popup(self.ui, "Import Success", f"The file - {file_name}, was imported successfully!", 1)

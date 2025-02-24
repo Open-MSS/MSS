@@ -452,7 +452,7 @@ Installing
 ~~~~~~~~~~
 It is easy to configure and runs on CPython on Unix and Windows. ::
 
-   mamba install waitress
+   pixi global install waitress
 
 wms.wsgi
 ~~~~~~~~
@@ -496,7 +496,9 @@ package apache2-dev on your server.
 At current state we have to use pip to install mod_wsgi into the INSTANCE environment::
 
   # Install `mod_wsgi`
-  $ pip install mod_wsgi
+  $ cd MSS
+  $ pixi shell
+  $ pixi add mod_wsgi --pypi
 
   # Find the full path to installed `mod_wsgi`
   $ which mod_wsgi-express
@@ -507,19 +509,20 @@ At current state we have to use pip to install mod_wsgi into the INSTANCE enviro
 
 This command outputs two lines::
 
-  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so"
-  WSGIPythonHome "/home/mss-demo/miniforge/envs/mssenv"
+  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py3X-x86_64-linux-gnu.so"
+  WSGIPythonHome "/home/user/MSS/.pixi/envs/default/bin"
+
 
 You have to add the lines into your wsgi_express.conf and wsgi_express.load
 
 Setup a /etc/apache2/mods-available/wsgi_express.conf::
 
-  WSGIPythonHome "/home/mss-demo/miniforge/envs/mssenv/"
+  WSGIPythonHome "/home/user/MSS/.pixi/envs/default"
 
 
 Setup a /etc/apache2/mods-available/wsgi_express.load::
 
-  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-py310.cpython-310-x86_64-linux-gnu.so"
+  LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-pyX-x86_64-linux-gnu.so"
 
 Enable the new module by a2enmod and reload the apache2 server
 
@@ -529,11 +532,12 @@ Configuration of apache mod_wsgi.conf
 One possibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternatively you
 could add it also to wms.wsgi.
 
-  WSGIPythonPath /home/mss/INSTANCE/config:/home/mss/miniforge/envs/mssenv/lib/python3.X/site-packages
+  WSGIPythonPath /home/mss/INSTANCE/config:/home/user/MSS/.pixi/envs/default/lib/python3.X/site-packages
+
 
 
 By this setting you override the PYTHONPATH environment variable. So you have also to add
-the site-packes directory of your miniforge installation besides the config file path.
+the site-packes directory of your pixi installation besides the config file path.
 
 If your server hosts different instances by different users you want to setup this path in mswms_setting.py.
 
@@ -555,34 +559,12 @@ INSTANCE is a placeholder for your service name::
  │   └── wsgi
  │       ├── auth.wsgi
  │       └── wms.wsgi
- ├── miniforge
- │   ├── bin
- │   ├── cmake
- │   ├── compiler_compat
- │   ├── _conda
- │   ├── condabin
- │   ├── conda-bld
- │   ├── conda_build_config.yaml
- │   ├── conda-meta
- │   ├── envs
- │   │    └── mssenv
- │   ├── etc
- │   ├── include
- │   ├── lib
- │   ├── libexec
- │   ├── LICENSE.txt
- │   ├── locks
- │   ├── man
- │   ├── pkgs
- │   ├── sbin
- │   ├── share
- │   ├── shell
- │   ├── ssl
- │   ├── x86_64-conda_cos6-linux-gnu
- │   └── x86_64-conda-linux-gnu
-
-
-
+ ├── .pixi
+ │    ├── .gitignore
+ │    └── envs
+ │        └── default
+ ├── pixi.lock
+ └── pixi.toml
 
 
 Configuration of wsgi for wms
