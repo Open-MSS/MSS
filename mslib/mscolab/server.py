@@ -250,12 +250,12 @@ def check_login(emailid, password):
 
 
 def process_fullname(fullname):
-    fullname = " ".join(fullname.split())    # Removes extra spaces from fullname
-    result_with_regex = slugify(fullname, regex_pattern=r"[^a-zA-Z\s\-]")
-    if fullname.lower() == result_with_regex:
+    if fullname == "":
+        return {"success": True, "processed_name": fullname}
+    if any(char.isalpha() for char in fullname):
         return {"success": True, "processed_name": fullname}
     else:
-        return {"success": False, "message": "Invalid chars detected"}
+        return {"success": False, "message": "Full name must contain at least one letter"}
 
 
 def register_user(email, password, username, fullname):
@@ -385,7 +385,7 @@ def get_auth_token():
                 token = user.generate_auth_token()
                 return json.dumps({
                     'token': token,
-                    'user': {'username': user.username, 'id': user.id}, 'fullname': user.fullname})
+                    'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
             else:
                 return "False"
         else:

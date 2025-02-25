@@ -94,17 +94,14 @@ class Test_Server:
         assert result["success"] is True
         assert result["processed_name"] == ""
         result = process_fullname("John123")
-        assert result["success"] is False
-        assert result["message"] == "Invalid chars detected"
-        result = process_fullname("John_Doe")
-        assert result["success"] is False
-        assert result["message"] == "Invalid chars detected"
+        assert result["success"] is True
+        assert result["processed_name"] == "John123"
         result = process_fullname("@#")
         assert result["success"] is False
-        assert result["message"] == "Invalid chars detected"
-        result = process_fullname("Anne-Marie")
-        assert result["success"] is True
-        assert result["processed_name"] == "Anne-Marie"
+        assert result["message"] == "Full name must contain at least one letter"
+        result = process_fullname("12345")
+        assert result["success"] is False
+        assert result["message"] == "Full name must contain at least one letter"
 
     def test_check_login(self):
         with self.app.test_client():
