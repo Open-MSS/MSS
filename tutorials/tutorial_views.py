@@ -140,7 +140,7 @@ def automate_views():
     find_and_click_picture('topviewwindow-00-global-cyl.png',
                            'Projection 00-global-cyl not found',
                            region=topview["os_screen_region"])
-    select_listelement(2)
+    select_listelement(7)
 
     # Zooming into the map
     zoom_in('topviewwindow-zoom.png', 'Zoom button not found',

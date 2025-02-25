@@ -47,7 +47,7 @@ def automate_kml():
 
 def _switch_to_europe_map():
     find_and_click_picture('topviewwindow-00-global-cyl.png', "Map change dropdown could not be located on the screen.")
-    select_listelement(2)
+    select_listelement(7)
     pag.sleep(1)
     create_tutorial_images()
 

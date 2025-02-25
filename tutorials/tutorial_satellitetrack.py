@@ -54,7 +54,7 @@ def automate_rs():
     # Changing map to Global
     find_and_click_picture('topviewwindow-00-global-cyl.png',
                            "Map change dropdown could not be located on the screen")
-    select_listelement(2)
+    select_listelement(7)
 
     # update images
     create_tutorial_images()
