@@ -1,6 +1,65 @@
 Changelog
 =========
 
+Version 10.0.0
+~~~~~~~~~~~~~~
+Aryan Gupta has implemented during GSoC2024 several enhancements to improve communication efficiency within MSColab.
+Users can now personalize their MSColab experience by adding a profile image.
+The chat system has been enhanced with separate channels dedicated to service messages,
+which provide more granular details on collaborator actions, such as
+"waypoint {num} moved" or "created hexagon." Visual indicators show which users are currently
+active in the chat, displayed beneath their profile images. Additionally,
+the MSUI now displays the number of users actively working on a selected operation.
+These enhancements aim to provide a more intuitive and efficient communication experience for all MSColab users.
+
+Preetam Sundar Das enhanced during GSoC2024 the mssautoplot CLI Script by integrating an Autoplot Docking Widget,
+significantly extending its functionality. This new addition offers a comprehensive Graphical User Interface (GUI),
+providing users with additional features and flexibility to manage and customize their
+plot downloads effortlessly. The widget is seamlessly accessible across all
+three views (Top View, Side View, and Linear View) ensuring that users can configure
+their plots from any perspective that best suits their workflow.
+This enhancement not only simplifies the plotting process but also enhances usability
+by allowing users to interact with their plot settings in a visual, user-friendly manner.
+
+Rohit Prasad significantly improved during GSoC2024 the Multiple Flightpath Docking Widget with several key features:
+He added Select/Deselect All checkboxes for managing multiple tracks quickly,
+along with controls to adjust line thickness, style, and transparency of flight track lines.
+Additionally, he implemented an automatic distinct color selection feature.
+This ensures each new flight track is easily distinguishable by assigning unique colors from
+a predefined list, eliminating confusion caused by overlapping or similar-colored flight paths.
+Prasad also introduced customization options for flight track lines in both the
+Side View and Top View Option Widgets. Users can now adjust line thickness, style, and transparency,
+with their preferences saved for future use.
+Furthermore, he enhanced user experience by introducing a new custom color palette that provides visually
+distinct colors. This makes it easier to differentiate between multiple flight paths,
+improving both functionality and aesthetics of the application.
+
+Matthias Riße implemented a new database migration setup for MSColab,
+transitioning from versions 8 or 9 to the latest versions (v10 onwards).
+He also enhanced both the Continuous Integration (CI) setup and developer installation process.
+These improvements have resulted in a more efficient and reproducible CI environment
+while simplifying developer installations.
+By adopting pixi (prefix-dev), the project can now manage dependencies more effectively,
+ensuring that both local development environments and the CI environment are consistent.
+This alignment leads to fewer errors, faster updates, and an overall smoother workflow.
+
+Jörn Ungermann reorganized the archive of operations and enhanced the request processes for MSColab Operations.
+
+Reimar Bauer made several improvements to the handling of operations in both MSUI and MSColab.
+
+HINT:
+~~~~~
+The MSColab database migration process has been updated.
+Please follow the steps outlined in our documentation.
+Additionally, we have modified the installation process by introducing pixi (prefix-dev).
+Pixi packages can coexist with both Anaconda default and Miniforge3 conda-forge packages.
+However, it is important to note that Anaconda's default channel is incompatible with conda-forge.
+The MSColab Server model has been updated, and it now requires an MSUI of the same version to function correctly.
+However, the compatibility with the MSWMS Server remains unchanged.
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/103?closed=1
+
 
 Version 9.3.1
 ~~~~~~~~~~~~~
