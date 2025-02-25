@@ -105,6 +105,8 @@ def main(tutorial_mode=False):
     application.setApplicationDisplayName("MSUI")
     application.setAttribute(QtCore.Qt.AA_DisableWindowContextHelpButton)
     mainwindow = MSUIMainWindow(tutorial_mode=tutorial_mode)
+    if tutorial_mode:
+        mainwindow.showFullScreen()
     if version.parse(__version__) >= version.parse('9.0.0') and version.parse(__version__) < version.parse('10.0.0'):
         from mslib.utils.migration.config_before_nine import read_config_file as read_config_file_before_nine
         from mslib.utils.migration.config_before_nine import config_loader as config_loader_before_nine

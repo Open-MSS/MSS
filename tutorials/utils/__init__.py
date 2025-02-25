@@ -515,8 +515,6 @@ def msui_full_screen_and_open_first_view(view_cmd='h'):
 
     :return: None
     """
-    hotkey = WIN, 'pageup'
-    pag.hotkey(*hotkey)
     pag.sleep(1)
     if view_cmd is not None:
         pag.hotkey(CTRL, view_cmd)

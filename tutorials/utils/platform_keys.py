@@ -54,5 +54,7 @@ def platform_keys():
         alt = 'alt'
     elif sys.platform == 'darwin':
         enter = 'return'
-        ctrl = 'command'
+        ctrl = 'control'
+        alt = 'option'
+        win = 'command'
     return ctrl, enter, win, alt
