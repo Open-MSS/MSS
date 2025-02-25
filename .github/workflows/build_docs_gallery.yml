@@ -1,20 +1,20 @@
 name: Build Gallery
 
 on:
-   pull_request:
+  pull_request:
 
 jobs:
   Test-MSS-docs:
     runs-on: ubuntu-latest
-
-    container:
-      image: openmss/testing-develop
-
     steps:
     - uses: actions/checkout@v4
-
+    - uses: prefix-dev/setup-pixi@v0.8.1
+      with:
+        pixi-version: latest
+        cache: true
+        environments: dev
     - name: Create gallery
       timeout-minutes: 5
       run: |
         cd docs
-        mamba run --no-capture-output -n mssenv python conf.py
+        pixi run -e dev python conf.py

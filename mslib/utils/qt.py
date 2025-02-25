@@ -32,7 +32,7 @@ import platform
 import sys
 import traceback
 
-from fslib.fs_filepicker import getSaveFileName, getOpenFileName, getExistingDirectory
+from fslib.fs_filepicker import getSaveFileName, getOpenFileName
 from PyQt5 import QtCore, QtWidgets, QtGui  # noqa
 
 from mslib.utils.config import config_loader
@@ -62,11 +62,6 @@ def get_save_filename_qt(*args):
             filename = f'{filename}{extension}'
         return filename
     return _filename
-
-
-def get_existing_directory_qt(*args):
-    dirname = QtWidgets.QFileDialog.getExistingDirectory(*args)
-    return dirname[0] if isinstance(dirname, tuple) else str(dirname)
 
 
 def get_pickertype(pickertype=None):
@@ -125,20 +120,6 @@ def get_save_filename(parent, title, filename, filt, pickertype=None):
     if filename == "":
         filename = None
     return filename
-
-
-def get_existing_directory(parent, title, defaultdir, pickertype=None):
-    pickertype = get_pickertype(pickertype)
-    if pickertype == "fs":
-        dirname = getExistingDirectory(parent, title=title, fs_url=defaultdir)[0]
-    elif pickertype in ["qt", "default"]:
-        dirname = get_existing_directory_qt(parent, title, defaultdir)
-    else:
-        raise FatalUserError(f"Unknown file picker type '{pickertype}'.")
-    logging.debug("Selected '%s'", dirname)
-    if dirname == "":
-        dirname = None
-    return dirname
 
 
 def variant_to_string(variant):

@@ -1,9 +1,0 @@
-# This file may be used to create an environment using:
-# $ conda create --name <env> --file <this file>
-# platform: linux-64
-mouseinfo=0.1.3
-opencv=4.7.0
-# playsound=1.3.0=pypi_0  # not yet on conda-forge
-pyautogui=0.9.54
-pyscreeze=0.1.29
-python-mss=9.0.1

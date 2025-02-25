@@ -17,6 +17,15 @@ When it is ready the developer version becomes the next stable.
 
 The stable version of MSS is tracked on `BLACK DUCK Open Hub <https://www.openhub.net/p/mss>`_
 
+
+Contributing
+------------
+
+Please read our `contributing <https://open-mss.github.io/contributing/>`_ guidelines and
+`setup instructions <https://open-mss.github.io/develop/Setup-Instructions>`_ to get
+started with MSS development.
+
+
 Using our Issue Tracker on github
 ---------------------------------
 
@@ -35,9 +44,6 @@ First, please refer to the applicable `GitHub repository <https://github.com/Ope
 Then, please `create a new issue <https://github.com/Open-MSS/MSS/issues/new>`_ in the GitHub repository describing your enhancement.
 
 Be sure to include as much detail as possible including step-by-step descriptions, specific examples, screenshots or mockups, and reasoning for why the enhancement might be worthwhile.
-
-
-
 
 
 Forking the Repo
@@ -65,8 +71,6 @@ Cloning the Repo
 6. Wait for few seconds till the project gets copied
 
   or simply head over here for `cloning a repository <https://docs.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository-from-github/cloning-a-repository>`_
-
-7. Add the path of your local cloned mss directory to $PYTHONPATH.
 
 Setting up a git remote
 .......................
@@ -106,21 +110,6 @@ If you don't have a stable branch, create one first or change to that branch::
 Setting Up a Local Environment
 ------------------------------
 
-In the description we added as example to setup access to the mslib an export of the PYTHONPATH in your environment ::
-
-    cd workspace/MSS
-    export PYTHONPATH=`pwd`
-
-When you don’t want to enter this you can add the PYTHONPATH to mslib to your .bashrc
-
-If you don’t want the PYTHONPATH by export changed you can start modules differently::
-
-    cd workspace/MSS
-    PYTHONPATH=. python mslib/msui/msui.py
-
-
-
-
 Requirements
 ............
 
@@ -131,10 +120,7 @@ Requirements
 
 2. Software requirement
 
-  | Python
-  | `Miniforge <https://github.com/conda-forge/miniforge#install>`_
-  | `Additional Requirements <https://github.com/Open-MSS/MSS/blob/develop/requirements.d/development.txt>`_
-
+  | `Pixi <https://pixi.sh/>`_
 
 3. Skill set
 
@@ -142,91 +128,23 @@ Requirements
   | Python
 
 
-Using predefined docker images instead of installing all requirements
-.....................................................................
+Software environment for development
+....................................
 
-You can easily use our testing docker images which have all libraries pre installed. These are based on miniforge.
-We provide two images. In openmss/testing-stable we have mss-stable-env and in openmss/testing-develop we have mss-develop-env defined.
-In the further course of the documentation we speak of the environment mssdev, this corresponds to one of these environments.
+The dependencies necessary to get a working development environment for MSS are specified in pixi.toml and pixi.lock.
+This means you can get a shell with all required packages installed using::
 
-You can either mount your MSS workdir in the container or use the environment from the container as environment on your machine.
+    pixi shell -e dev
 
+Afterwards, a call to e.g.::
 
-Running pytest inside the docker container
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    msui
 
-We mount the MSS workdir into the docker container and use an env var to access the directory for running pytest on that dir. ::
+will run the development version of msui.
 
-    ~/workspace/MSS$ docker pull openmss/testing-stable  # get recent version
-    ~/workspace/MSS$ docker run -it --mount src=`pwd`,target=`pwd`,type=bind -e MSSDIR=`pwd` openmss/testing-stable  # mount dir into container, create env var MSSDIR with dir
-    (base) root@78f42ac9ded7:/# cd $MSSDIR  # change directory to the mounted dir
-    (base) root@78f42ac9ded7:/# conda activate mss-stable-env  # activate env
-    (mss-stable-env) root@78f42ac9ded7:/# pytest tests  # run pytest
+You can also use pixi's "run" subcommand to directly run a command in the development environment, like so::
 
-
-
-Use the docker env on your computer, initial setup
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-This example shows by using mss-stable-env how to set it up for testing and development of stable branch. The images gets updates
-when we have to add new dependencies or have do pinning of existing modules. On an updated image you need to redo these steps ::
-
-    rm -rf $HOME/miniforge/envs/mss-stable-env # cleanup the existing env
-    mkdir $HOME/miniforge/envs/mss-stable-env  # create the dir to bind to
-    xhost +local:docker                         # may be needed
-    docker run -it --rm --mount type=volume,dst=/opt/conda/envs/mss-stable-env,volume-driver=local,volume-opt=type=none,volume-opt=o=bind,volume-opt=device=$HOME/miniforge/envs/mss-stable-env --network host openmss/testing-stable # do the volume bind
-    exit                                        # we are in the container, escape :)
-    sudo ln -s $HOME/miniforge/envs/mss-stable-env /opt/conda/envs/mss-stable-env # we need the origin location linked because hashbangs interpreters are with that path. (only once needed)
-    conda activate mss-stable-env               # activate env
-    cd workspace/MSS                            # go to your workspace MSS dir
-    export PYTHONPATH=`pwd`                     # add it to the PYTHONPATH
-    python mslib/msui/msui.py                   # test if the UI starts
-    pytest tests                                # run pytest
-
-
-After the image was configured you can use it like a self installed env ::
-
-    xhost +local:docker                 # may be needed
-    conda activate mss-stable-env       # activate env
-    cd workspace/MSS                    # go to your workspace MSS dir
-    export PYTHONPATH=`pwd`             # add it to the PYTHONPATH
-    pytest tests                        # run pytest
-
-
-
-Manual Installing dependencies
-..............................
-
-MSS is based on the software of the conda-forge channel located. The channel is predefined in Miniforge.
-
-Create an environment and install the dependencies needed for the mss package::
-
-  $ mamba create -n mssdev
-  $ mamba activate mssdev
-  $ mamba install mss=$mss_version --only-deps
-
-Compare versions used in the meta.yaml between stable and develop branch and apply needed changes.::
-
-  $ git diff stable develop -- localbuild/meta.yaml
-
-
-Install requirements for  local testing
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-With sending a Pull Request our defined CIs do run all tests on github.
-You can do run tests own system too.
-
-For developers we provide additional packages for running tests, activate your env and run::
-
-  $ mamba install --file requirements.d/development.txt
-
-On linux install `xvfb` from your linux package manager.
-This can be used to run tests on an invisible virtual display by prepending the pytest call with `xvfb-run`, e.g.::
-
-  $ xvfb-run pytest ...
-
-We have implemented demodata as data base for testing. On first call of pytest a set of demodata becomes stored
-in a /tmp/mss* folder.
+    pixi run -e dev msui
 
 
 Setup MSWMS server
@@ -237,13 +155,12 @@ MSS repository needs a different folder, e.g. workspace/MSS. Avoid to mix data a
 
 :ref:`demodata <demodata>` is provided by executing::
 
-   $(mssdev) python mslib/mswms/demodata.py --seed
+   mswms_demodata --seed
 
 To use this data add the mswms_settings.py in your python path::
 
-   $(mssdev) cd $HOME/workspace/MSS
-   $(mssdev) export PYTHONPATH="`pwd`:$HOME/mss"
-   $(mssdev) python mslib/mswms/mswms.py
+   export PYTHONPATH=~/mss
+   mswms
 
 
 Setup MSColab server
@@ -254,15 +171,14 @@ You can view the default configuration of MSColab in the file `mslib/mscolab/con
 If you want to change any values of the configuration, please take a look at the "Configuring Your MSColab Server"
 section in :ref:`mscolab`
 
-When using for the first time you need to initialise your database. Use the command :code:`python mslib/mscolab/mscolab.py db --init`
+When using for the first time you need to initialise your database. Use the command :code:`mscolab db --init`
 to initialise it. The default database is a sqlite3 database.
-You can add some dummy data to your database by using the command :code:`python mslib/mscolab/mscolab.py db --seed`.
+You can add some dummy data to your database by using the command :code:`mscolab db --seed`.
 The content of the dummy data can be found in the file `mslib/mscolab/seed.py`.
 
-To start your server use the command :code:`python mslib/mscolab/mscolab.py start`. This would start the MSColab server on port 8083.
+To start your server use the command :code:`mscolab start`. This would start the MSColab server on port 8083.
 Going to http://localhost:8083/status should now show "MSColab server". This means your server has started successfully.
 Now you can use the MSS desktop application to connect to it using the MSColab window of the application.
-
 
 
 Code Style
@@ -314,21 +230,23 @@ For heading hierarchy we use ::
 Run Tests
 ---------
 
-After you installed the dependencies for testing you could invoke the tests by `pytest` with various options.
+Considering that the software environment is set up using pixi, you can run the test suite using::
 
-Our tests are using the pytest framework. You could run tests serial and parallel
+    pixi run -e dev pytest -n logical
 
-::
+To avoid getting a lot of opened windows from the test run you can either prepend :code:`QT_QPA_PLATFORM=offscreen` like so::
 
-   $ pytest tests
+    QT_QPA_PLATFORM=offscreen pixi run -e dev pytest -n logical
 
-or parallel
+or install xvfb from your distributions package manager and use :code:`xvfb-run` like so::
 
-::
+    xvfb-run pixi run -e dev pytest -n logical
 
-  $ pytest -n auto --dist loadscope --max-worker-restart 0 tests
+Other options for pytest are possible to use,
+you can e.g. set a higher verbosity using :code:`-v`,
+leave out the :code:`-n` option to run the tests sequentially instead of in parallel,
+or select a specific subset of tests to run using the :code:`-k` option.
 
-Use the -v option to get a verbose result. By the -k option you could select one test to execute only.
 
 Verify Code Style
 .................
@@ -398,6 +316,99 @@ Common resources that a test might need,
 like e.g. a running MSColab server or a QApplication instance for GUI tests,
 are collected in :mod:`tests.fixtures` in the form of pytest fixtures that can be requested as needed in tests.
 
+Keyring Features
+-----------------
+
+This document outlines step-by-step instructions for using the keyring features using the command line.
+
+Prerequisites
+..............
+
+1. **Confirm the Default Keyring Backend**
+
+   Use the following command to list available keyring backends and check which one is currently in use:
+
+   .. code-block:: bash
+
+       keyring --list-backends
+
+Command-Line Commands for Keyring
+..................................
+
+1. **Set a Password**
+
+   Store a password for a specific service and user:
+
+   .. code-block:: bash
+
+       keyring set SERVICE_NAME USERNAME
+
+   **Example:**
+
+  - Case 1: Standard Service Name
+   .. code-block:: bash
+
+       keyring set http://localhost:8083 myname@mydomain
+
+  - Case 2: Custom Authentication Service
+   .. code-block:: bash
+
+       keyring set MSCOLAB_AUTH_http://localhost:8083 mscolab
+
+  - The command will securely prompt you to input a password (e.g., `example_password`).
+
+2. **Get a Password**
+
+   Retrieve the stored password for a service and user:
+
+   .. code-block:: bash
+
+       keyring get SERVICE_NAME USERNAME
+
+   **Example:**
+
+   - Case 1: Standard Service Name
+   .. code-block:: bash
+
+       keyring get http://localhost:8083 myname@mydomain
+
+   - Case 2: Custom Authentication Service
+   .. code-block:: bash
+
+       keyring get MSCOLAB_AUTH_http://localhost:8083 mscolab
+
+   **Output:**
+
+   .. code-block::
+
+       example_password
+
+3. **Delete a Password**
+
+   Remove the stored password for a service and user:
+
+   .. code-block:: bash
+
+       keyring del SERVICE_NAME USERNAME
+
+   **Example:**
+
+  - Case 1: Standard Service Name
+   .. code-block:: bash
+
+       keyring del http://localhost:8083 myname@mydomain
+
+  - Case 2: Custom Authentication Service
+   .. code-block:: bash
+
+       keyring del MSCOLAB_AUTH_http://localhost:8083 mscolab
+
+   To confirm the deletion, attempt to retrieve the password:
+
+   .. code-block:: bash
+
+       keyring get MSCOLAB_AUTH_http://localhost:8083 mscolab
+
 
 Changing the database model
 ---------------------------
@@ -465,43 +476,13 @@ for the develop branch and one needs to ensure that the merge request is accepte
 regular merge with merge commit. Remove the merge_stable_to_develop branch if still present.
 
 
-Testing local build
--------------------
-
-We provide in the dir localbuild the setup which will be used as a base on conda-forge to build mss.
-As developer you should copy this directory and adjust the source path, build number.
-
-using a local meta.yaml recipe::
-
-  $ cd yourlocalbuild
-  $ mamba build .
-  $ mamba create -n mssbuildtest
-  $ mamba activate mssbuildtest
-  $ mamba install -c local mss
-
-
-Take care on removing alpha builds, or increase the build number for a new version.
-
-
-Alternative local build by boa
-------------------------------
-
-`boa <https://boa-build.readthedocs.io/en/latest/>`_ is a new faster option to build conda packages.
-We need first to convert the existing description to a recipe.yaml::
-
-  $ cd yourlocalbuild
-  $ boa convert meta.yaml > recipe.yaml
-  $ boa build .
-  $ mamba install -c local mss
-
-
 Creating a new release
 ----------------------
 
 * make sure all issues for this milestone are closed or moved to the next milestone
 * update CHANGES.rst, based on git log
 * check version number of upcoming release in CHANGES.rst
-* verify that version.py, meta.yaml, MANIFEST.in and setup.py are complete
+* verify that version.py, MANIFEST.in and setup.py are complete
 * for a new stable release merge from develop to stable
 * tag the release::
 

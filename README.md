@@ -12,65 +12,71 @@ into the right direction in order to get the software working on your
 computer.
 
 
-Installing MSS
-==============
+## Installing MSS
 
-Automatically
--------------
+We distinguish between Developer and User installations.
 
-- For **Windows**, go [here](https://github.com/Open-MSS/mss-install/blob/main/Windows.bat?raw=1)
-    - Right click on the webpage and select "Save as..." to download the file
-    - Double click the downloaded file and follow further instructions
-        - For fully automatic installation, open cmd and execute it with `/Path/To/Windows.bat -a`
-- For **Linux/Mac**, go [here](https://github.com/Open-MSS/mss-install/blob/main/LinuxMac.sh?raw=1)
-    - Right click on the webpage and select "Save as..." to download the file
-    - Make it executable via `chmod +x LinuxMac.sh`
-    - Execute it and follow further instructions `./LinuxMac.sh`
-        - For fully automatic installation, run it with the -a parameter `./LinuxMac.sh -a`
+### Developer Installation
+Please read our [contributing](https://open-mss.github.io/contributing/) pages.
+and [development](https://mss.readthedocs.io/en/stable/development.html) guidelines
 
-Manually
---------
+### User Installation
 
-As **Beginner** start with an installation of Miniforge
-Get [miniforge](https://github.com/conda-forge/miniforge#download) for your Operation System
+Get **pixi** from https://pixi.sh/latest/ for your operation system.
 
+You can now decide if you want to install **mss** as global or a project.
 
-You must install mss into a new environment to ensure the most recent
-versions for dependencies (On the Anaconda Prompt on Windows, you have
-to leave out the 'source' here and below).
+#### Global installation
+You can install **mss** global without defining a project first.
+This method is practical when you are interested in starting the client
+and don't need server configurations.
 
-```
-  $ mamba create -n mssenv
-  $ mamba activate mssenv
-  (mssenv) $ mamba install mss python
-```
-For updating an existing MSS installation to the current version, it is
-best to install it into a new environment. If an existing environment
-shall be updated, it is important to update all packages in this
-environment.
+    pixi global install mss
 
-```
-  $ mamba activate mssenv
-  (mssenv) $ msui --update
-```
+#### Usage
 
-It is possible to list all versions of `mss` available on your platform with:
-
-```
-    $ mamba search mss --channel conda-forge
-```
-
-For a simple test you can setup a demodata wms server and start a msolab server with default settings
-
-```
-  (mssenv) $ mswms_demodata --seed
-  (mssenv) $ export PYTHONPATH=~/mss
-  (mssenv) $ mswms &
-  (mssenv) $ mscolab start &
-  (mssenv) $ msui
-```
+    msui
+    mswms -h
+    mscolab -h
+    mssautoplot -h
 
 
+##### Updating
+
+    pixi global update mss
+
+#### Project installation
+Initialize a new project and navigate to the project directory.
+
+    pixi init MSS
+    cd MSS
+
+Use the shell command to activate the environment and start a new shell in there.
+
+    pixi shell
+
+Add the **mss** dependencies from conda-forge.
+
+    (MSS) pixi add mss
+
+##### Usage
+Always when you want to start **mss** programs you have after its installation
+to activate the environment by pixi shell in the project dir.
+On the very first start of **msui** it takes a bit longer because it setups fonts.
+
+    cd MSS
+    pixi shell
+
+    (MSS) msui
+    (MSS) mswms -h
+    (MSS) mscolab -h
+    (MSS) mssautoplot -h
+
+##### Updating
+
+    cd MSS
+    pixi shell
+    (MSS) pixi update mss
 
 
 Current release info

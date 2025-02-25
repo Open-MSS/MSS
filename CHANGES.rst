@@ -1,6 +1,14 @@
 Changelog
 =========
 
+
+Version 9.3.1
+~~~~~~~~~~~~~
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/110?closed=1
+
 Version 9.3.0
 ~~~~~~~~~~~~~
 Bug fix release and minor enhancements:

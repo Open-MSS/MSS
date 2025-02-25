@@ -27,21 +27,6 @@
 """
 
 import logging
-import os
-import subprocess
-
-
-def subprocess_startupinfo():
-    """
-    config options to hide windows terminals on subprocess call
-    """
-    startupinfo = None
-    if os.name == 'nt':
-        # thx to https://gist.github.com/nitely/3862493
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | subprocess.STARTF_USESHOWWINDOW
-        startupinfo.wShowWindow = subprocess.SW_HIDE
-    return startupinfo
 
 
 class FatalUserError(Exception):

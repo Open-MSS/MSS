@@ -1,0 +1,125 @@
+[project]
+name = "MSS"
+channels = ["conda-forge"]
+platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
+
+[tasks]
+
+[pypi-dependencies]
+open-mss = { path = ".", editable = true }
+
+[dependencies]
+basemap = ">=1.3.3"
+cftime = ">=1.0.1"
+chameleon = "*"
+defusedxml = "*"
+email_validator = "*"
+execnet = "*"
+fastkml = ">=0.11"
+flask = ">=2.3.2"
+flask-cors = "*"
+flask-httpauth = "*"
+flask-login = "*"
+flask-mail = "*"
+flask-migrate = "*"
+flask-socketio = ">=5.1.0"
+flask-sqlalchemy = ">=3.0.0"
+flask-wtf = "*"
+fs_filepicker = "*"
+git = "*"
+gitpython = "*"
+gpxpy = ">=1.4.2"
+hdf4 = "*"
+isodate = "*"
+itsdangerous = "*"
+keyring = "*"
+libtiff = "*"
+lxml = "*"
+markdown = "*"
+matplotlib = ">=3.5.3"
+metpy = "*"
+multidict = "*"
+netcdf4 = "*"
+numpy = ">=2"
+owslib = ">=0.24"
+passlib = "*"
+pillow = "*"
+pint = "*"
+psycopg2 = "*"
+pycountry = "*"
+pygeoif = "<1.0.0"
+pyjwt = "*"
+pymysql = ">=0.9.3"
+pyqt = ">=5.15.0"
+pysaml2 = "*"
+python = "<3.12"
+python-engineio = ">=4"
+python-slugify = "*"
+python-socketio = ">=5"
+qt = ">=5.15.0"
+requests = ">=2.31.0"
+scipy = "*"
+shapely = ">=2.0.0"
+skyfield = ">=1.12"
+skyfield-data = ">=6"
+tk = "*"
+unicodecsv = "*"
+validate_email = "*"
+websocket-client = "*"
+werkzeug = ">=2.2.3, <3.0.0"
+xstatic = "*"
+xstatic-bootstrap = "*"
+xstatic-jquery = "*"
+
+[target.linux-64.dependencies]
+dbus-python = "*"
+libxmlsec1 = "*"
+
+[target.osx-64.dependencies]
+dbus-python = "*"
+libxmlsec1 = "*"
+
+[target.osx-arm64.dependencies]
+dbus-python = "*"
+libxmlsec1 = "*"
+
+[feature.addons.dependencies]
+geographiclib = "*"
+geomag = "*"
+geopy = "*"
+
+[feature.dev.dependencies]
+codespell = "*"
+coveralls = "*"
+dnspython = ">=2.0.0, <2.3.0"
+eventlet = ">0.30.2"
+flake8 = "*"
+flake8-builtins = "*"
+gitpython = "*"
+gsl = "==2.7.0"
+mock = "*"
+py = "*"
+pynco = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-qt = "*"
+pytest-randomly = "*"
+pytest-xdist = "*"
+sphinx = "*"
+sphinx_rtd_theme = "*"
+sphinxcontrib-video = "*"
+
+[feature.tutorials]
+platforms = ["linux-64"]
+
+[feature.tutorials.dependencies]
+mouseinfo = "*"
+opencv = "*"
+pyautogui = "*"
+pyscreeze = "*"
+python-mss = "*"
+
+[environments]
+addons = ["addons"]
+dev = ["dev"]
+tutorials = ["tutorials"]

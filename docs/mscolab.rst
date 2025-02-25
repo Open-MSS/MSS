@@ -112,18 +112,17 @@ address and using the token that the system sent along with the email.
 Instructions to use mscolab wsgi
 ................................
 
-make a file called :code:`server.py`
-and install ::
-
-   mamba install eventlet\>0.30.2 dnspython\<2.3.0 gunicorn
-
-**server.py**::
+Create a file called :code:`server.py` having this line::
 
   from mslib.mscolab.server import _app as app
 
-Then run the following commands. ::
+Then install gunicorn by pixi::
 
-  $ mamba install gunicorn eventlet\>0.30.2 dnspython\<2.3.0
+  $ pixi global install gunicorn
+
+
+and start the server by::
+
   $ gunicorn -b 0.0.0.0:8087 server:app
 
 For further options read `<https://flask.palletsoperations.com/en/1.1.x/deploying/wsgi-standalone/#gunicorn>`_

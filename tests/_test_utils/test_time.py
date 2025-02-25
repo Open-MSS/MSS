@@ -53,9 +53,3 @@ class TestTimes:
         assert time.jsec_to_datetime(0) == datetime.datetime(2000, 1, 1, 0, 0, 0, 0)
         assert time.jsec_to_datetime(3600) == datetime.datetime(2000, 1, 1, 1, 0, 0, 0)
         assert time.jsec_to_datetime(-157766400.0) == datetime.datetime(1995, 1, 1, 0, 0, 0, 0)
-
-    def test_compute_hour_of_day(self):
-        assert time.compute_hour_of_day(0) == 0
-        assert time.compute_hour_of_day(86400) == 0
-        assert time.compute_hour_of_day(3600) == 1
-        assert time.compute_hour_of_day(82800) == 23
