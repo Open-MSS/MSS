@@ -289,6 +289,7 @@ def find_and_click_picture(pic_name, exception_message=None, duration=2, xoffset
 
     :returns: A tuple containing the x and y coordinates of the clicked position.
     """
+    pag.sleep(2)
     x, y = (0, 0)
     message = exception_message if exception_message is not None else f"{pic_name} not found"
     try:
