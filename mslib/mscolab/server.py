@@ -55,7 +55,6 @@ from mslib.utils import conditional_decorator
 from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 from mslib.mscolab import migrations
-from slugify import slugify
 
 
 def _handle_db_upgrade():
