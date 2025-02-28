@@ -74,7 +74,7 @@ class Test_Server:
         with self.app.test_client():
             result = register_user("newmail1@example.com", "password", "newuser1", "John Doe")
             assert result["success"] is True
-            result = register_user("newmail2@example.com", "password", "newuser2", "John Doe")
+            result = register_user("newmail1@example.com", "password", "newuser2", "John Doe")
             assert result["success"] is False
             assert result["message"] == "This email ID is already taken!"
             result = register_user("UV", "password", "newuser3", "John Doe")
