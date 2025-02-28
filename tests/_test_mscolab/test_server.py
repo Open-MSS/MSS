@@ -34,7 +34,7 @@ from PIL import Image
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, Operation
-from mslib.mscolab.server import check_login, register_user, process_fullname
+from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
@@ -83,13 +83,13 @@ class Test_Server:
             result = register_user("newmail3@example.com", "password", "newuser@4", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your username cannot contain @ symbol!"
-            result = register_user("newmail4@example.com", "password", "newuser6", "Jean-Luc Picard")
+            result = register_user("newmail4@example.com", "password", "newuser5", "Jean-Luc Picard")
             assert result["success"] is True
-            result = register_user("newemail5@example.com", "password", "newuser7", "John Doe")
+            result = register_user("newemail5@example.com", "password", "newuser6", "John Doe")
             assert result["success"] is True
-            result = register_user("newemail6@example.com", "password", "newuser8", "")
+            result = register_user("newemail6@example.com", "password", "newuser7", "")
             assert result["success"] is True
-            result = register_user("newemail5@example.com", "password", "newuser7", "John123")
+            result = register_user("newemail7@example.com", "password", "newuser8", "John123")
             assert result["success"] is True
 
     def test_check_login(self):
