@@ -88,20 +88,13 @@ class Test_Server:
 
     def test_process_fullname(self):
         result = process_fullname("John Doe")
-        assert result["success"] is True
-        assert result["processed_name"] == "John Doe"
+        assert result == "John Doe"
+
         result = process_fullname("")
-        assert result["success"] is True
-        assert result["processed_name"] == ""
+        assert result == ""
+
         result = process_fullname("John123")
-        assert result["success"] is True
-        assert result["processed_name"] == "John123"
-        result = process_fullname("@#")
-        assert result["success"] is False
-        assert result["message"] == "Full name must contain at least one letter"
-        result = process_fullname("12345")
-        assert result["success"] is False
-        assert result["message"] == "Full name must contain at least one letter"
+        assert result == "John123"
 
     def test_check_login(self):
         with self.app.test_client():

@@ -249,12 +249,7 @@ def check_login(emailid, password):
 
 
 def process_fullname(fullname):
-    if fullname == "":
-        return {"success": True, "processed_name": fullname}
-    if any(char.isalpha() for char in fullname):
-        return {"success": True, "processed_name": fullname}
-    else:
-        return {"success": False, "message": "Full name must contain at least one letter"}
+    return fullname
 
 
 def register_user(email, password, username, fullname):
@@ -272,12 +267,7 @@ def register_user(email, password, username, fullname):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    checking_fullname = process_fullname(fullname)
-    if not checking_fullname["success"]:
-        return {"success": False, "message": checking_fullname["message"]}
-
-    processed_fullname = checking_fullname["processed_name"]
-    user = User(email, username, password, processed_fullname)
+    user = User(email, username, password, process_fullname(fullname))
     result = fm.modify_user(user, action="create")
     return {"success": result}
 
