@@ -248,10 +248,6 @@ def check_login(emailid, password):
     return False
 
 
-def process_fullname(fullname):
-    return fullname
-
-
 def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
@@ -267,7 +263,7 @@ def register_user(email, password, username, fullname):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    user = User(email, username, password, process_fullname(fullname))
+    user = User(email, username, password, fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
 

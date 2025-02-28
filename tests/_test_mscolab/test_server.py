@@ -74,27 +74,23 @@ class Test_Server:
         with self.app.test_client():
             result = register_user("newmail1@example.com", "password", "newuser1", "John Doe")
             assert result["success"] is True
-            result = register_user("newmail1@example.com", "password", "newuser2", "John Doe")
+            result = register_user("newmail2@example.com", "password", "newuser2", "John Doe")
             assert result["success"] is False
             assert result["message"] == "This email ID is already taken!"
             result = register_user("UV", "password", "newuser3", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your email ID is not valid!"
-            result = register_user("newmail2@example.com", "password", "newuser@4", "John Doe")
+            result = register_user("newmail3@example.com", "password", "newuser@4", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your username cannot contain @ symbol!"
             result = register_user("newmail4@example.com", "password", "newuser6", "Jean-Luc Picard")
             assert result["success"] is True
-
-    def test_process_fullname(self):
-        result = process_fullname("John Doe")
-        assert result == "John Doe"
-
-        result = process_fullname("")
-        assert result == ""
-
-        result = process_fullname("John123")
-        assert result == "John123"
+            result = register_user("newemail5@example.com", "password", "newuser7", "John Doe")
+            assert result["success"] is True
+            result = register_user("newemail6@example.com", "password", "newuser8", "")
+            assert result["success"] is True
+            result = register_user("newemail5@example.com", "password", "newuser7", "John123")
+            assert result["success"] is True
 
     def test_check_login(self):
         with self.app.test_client():
