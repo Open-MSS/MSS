@@ -45,6 +45,7 @@ and don't need server configurations.
 
     pixi global update mss
 
+
 #### Project installation
 Initialize a new project and navigate to the project directory.
 

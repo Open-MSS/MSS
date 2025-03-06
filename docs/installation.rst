@@ -180,6 +180,6 @@ You can start server and client by loading the image ::
   $ singularity build -f mss.sif Singularity.def
   $ singularity shell mss.sif
   $ Singularity > msui # starts the ui
-  $ Singularity > mswms_demodata --seed  # creates in your $HOME a mss/ folder with testdata
+  $ Singularity > mswms --seed  # creates in your $HOME a mss/ folder with testdata
   $ Singularity > export PYTHONPATH=$HOME/mss; mswms # starts the development server
   $ Singularity > mscolab db --init; mscolab start # starts the mscolab development server

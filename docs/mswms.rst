@@ -27,7 +27,7 @@ Simulated Data and its configuration
 ------------------------------------
 
 
-We provide demodata by executing the :code:`mswms_demodata --seed` program. This creates in your home directory
+We provide demodata by executing the :code:`mswms --seed` program. This creates in your home directory
 data files and also the needed server configuration files. The program creates 70MB of examples.
 This script does not overwrite an existing mswms_settings.py.
 
