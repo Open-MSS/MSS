@@ -1346,7 +1346,7 @@ class MplSideViewCanvas(MplCanvas):
 
         if self.waypoints_interactor is not None:
             wpi_plotter = self.waypoints_interactor.plotter
-            wpi_plotter.line.set_marker("o" if settings["draw_marker"] else None)
+            wpi_plotter.line.set_marker("o" if settings["draw_marker"] else "")
             wpi_plotter.set_vertices_visible(settings["draw_flighttrack"])
             wpi_plotter.set_path_color(
                 line_color=settings["colour_ft_vertices"],
