@@ -55,8 +55,7 @@ def main(tutorial_mode=False):
 
         @param tutorial_mode: Specifies whether the program should run in tutorial mode or not.
 
-      """
-
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
