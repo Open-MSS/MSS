@@ -219,16 +219,17 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
-            msg = "⚠ " + msg
+            _msg = f"⚠ {msg}"
             self.statusLabel.setOpenExternalLinks(True)
             self.statusLabel.setStyleSheet("color: red;")
         elif _type == "Success":
             self.statusLabel.setStyleSheet("color: green;")
-            msg = "✓ " + msg
+            _msg = f"✓ {msg}"
         else:
             self.statusLabel.setStyleSheet("")
-            msg = "ⓘ  " + msg
-        self.statusLabel.setText(msg)
+            _msg = f"ⓘ {msg}"
+        self.statusLabel.setText(_msg)
+        # windows can have a cp1252 encoding, don't use special chars
         logging.debug("set_status: %s", msg)
         QtWidgets.QApplication.processEvents()
 
