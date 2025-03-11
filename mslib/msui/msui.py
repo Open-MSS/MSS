@@ -46,8 +46,6 @@ from mslib.utils.config import read_config_file
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 
-# force utf-8 encoding
-sys.setdefaultencoding('utf-8')
 # Add config path to PYTHONPATH so plugins located there may be found
 sys.path.append(constants.MSUI_CONFIG_PATH)
 

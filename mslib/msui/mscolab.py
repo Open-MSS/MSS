@@ -229,7 +229,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             self.statusLabel.setStyleSheet("")
             msg = f"ⓘ  {msg}"
         self.statusLabel.setText(msg)
-        logging.debug("set_status: %s", msg)
+        # windows terminals can have a different encoding
+        logging.debug("set_status: %s".encode("utf-8"), msg)
         QtWidgets.QApplication.processEvents()
 
     def add_mscolab_urls(self):
