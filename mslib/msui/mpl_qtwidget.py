@@ -291,7 +291,7 @@ class TopViewPlotter(ViewPlotter):
             self.map.set_graticule_visible(False)
             self.map._draw_auto_graticule(self.tov_als)
         else:
-            self.plotter.map.set_graticule_visible(self.settings["draw_graticule"])
+            self.map.set_graticule_visible(self.settings["draw_graticule"])
         self.ax.figure.canvas.draw()  # this one is required to trigger a
         # drawevent to update the background
 
