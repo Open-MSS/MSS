@@ -31,8 +31,8 @@ and don't need server configurations.::
     pixi global install mss
 
 
-Usage
-.....
+Global Usage
+............
 
 ::
 
@@ -41,8 +41,11 @@ Usage
     mscolab -h
     mssautoplot -h
 
-Updating
-........
+Global Updating
+...............
+
+Updates environments in the global environment.
+This makes a release upgrade.
 
 ::
 
@@ -65,8 +68,8 @@ Add the **mss** dependencies from conda-forge.::
 
     (MSS) pixi add mss
 
-Usage
-.....
+Project Usage
+.............
 
 Always when you want to start **mss** programs you have after its installation
 to activate the environment by pixi shell in the project dir.
@@ -82,14 +85,29 @@ On the very first start of **msui** it takes a bit longer because it setups font
     (MSS) mscolab -h
     (MSS) mssautoplot -h
 
-Updating
-........
+Project Updating
+................
+Update dependencies as recorded in the local lock file.
+
 
 ::
 
     cd MSS
     pixi shell
     (MSS) pixi update mss
+
+
+Project Upgrading
+..................
+Update the version of packages to the latest possible version, disregarding the manifest version constraints
+This makes a release upgrade.
+
+
+::
+
+    cd MSS
+    pixi shell
+    (MSS) pixi upgrade mss
 
 
 Server based installation example
