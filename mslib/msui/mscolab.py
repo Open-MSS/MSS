@@ -219,18 +219,19 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
-            msg = f"⚠  {msg}"
+            _msg = f"⚠  {msg}"
             self.statusLabel.setOpenExternalLinks(True)
             self.statusLabel.setStyleSheet("color: red;")
         elif _type == "Success":
             self.statusLabel.setStyleSheet("color: green;")
-            msg = f"✓  {msg}"
+            _msg = f"✓  {msg}"
         else:
             self.statusLabel.setStyleSheet("")
-            msg = f"ⓘ  {msg}"
-        self.statusLabel.setText(msg)
+            _msg = f"ⓘ  {msg}"
+        self.statusLabel.setText(_msg)
         # windows terminals can have a different encoding
-        logging.debug("set_status: %s".encode("utf-8"), msg)
+        # windows can have cp1252 encoding
+        logging.debug("set_status: %s", msg)
         QtWidgets.QApplication.processEvents()
 
     def add_mscolab_urls(self):
