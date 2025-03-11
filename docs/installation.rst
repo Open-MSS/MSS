@@ -110,4 +110,3 @@ Point a browser for the verification of both servers installed on
 
   - `http://127.0.0.1:8083/status <http://127.0.0.1:8083/status>`_
   - `http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1 <http://localhost:8081/?service=WMS&request=GetCapabilities&version=1.1.1>`_
-
