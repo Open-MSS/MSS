@@ -56,6 +56,12 @@ def main(tutorial_mode=False):
         @param tutorial_mode: Specifies whether the program should run in tutorial mode or not.
 
       """
+
+    if os.name == 'nt':
+        import ctypes
+        kernel32 = ctypes.windll.kernel32
+        kernel32.SetConsoleOutputCP(65001)  # Set code page to UTF-8
+
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
