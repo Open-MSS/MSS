@@ -219,15 +219,15 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
-            msg = "⚠ " + msg
+            msg = f"⚠  {msg}"
             self.statusLabel.setOpenExternalLinks(True)
             self.statusLabel.setStyleSheet("color: red;")
         elif _type == "Success":
             self.statusLabel.setStyleSheet("color: green;")
-            msg = "✓ " + msg
+            msg = f"✓  {msg}"
         else:
             self.statusLabel.setStyleSheet("")
-            msg = "ⓘ  " + msg
+            msg = f"ⓘ  {msg}"
         self.statusLabel.setText(msg)
         logging.debug("set_status: %s", msg)
         QtWidgets.QApplication.processEvents()
