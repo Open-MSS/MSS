@@ -3901,8 +3901,6 @@ packages:
   depends:
   - libgcc-ng >=12
   - libstdcxx-ng >=12
-  arch: x86_64
-  platform: linux
   license: BSD-2-Clause
   license_family: BSD
   purls: []
@@ -5545,8 +5543,6 @@ packages:
   - xz >=5.2.6,<6.0a0
   constrains:
   - __cuda  >=12.4
-  arch: x86_64
-  platform: linux
   license: GPL-2.0-or-later
   license_family: GPL
   purls: []
@@ -5875,8 +5871,6 @@ packages:
   - xorg-libxext >=1.3.4,<2.0a0
   - xorg-libxfixes
   - xorg-libxi
-  arch: x86_64
-  platform: linux
   license: MIT
   license_family: MIT
   purls: []
@@ -6016,8 +6010,6 @@ packages:
   - libjpeg-turbo >=3.0.0,<4.0a0
   - libpng >=1.6.43,<1.7.0a0
   - libtiff >=4.6.0,<4.8.0a0
-  arch: x86_64
-  platform: linux
   license: LGPL-2.1-or-later
   license_family: LGPL
   purls: []
@@ -6182,8 +6174,6 @@ packages:
   - openssl >=3.4.1,<4.0a0
   - pcre2 >=10.44,<10.45.0a0
   - perl 5.*
-  arch: x86_64
-  platform: linux
   license: GPL-2.0-or-later and LGPL-2.1-or-later
   purls: []
   size: 10134048
@@ -6925,8 +6915,6 @@ packages:
   - libgcc >=13
   - libstdcxx >=13
   - libzlib >=1.3.1,<2.0a0
-  arch: x86_64
-  platform: linux
   license: BSD-3-Clause
   license_family: BSD
   purls: []
@@ -7054,8 +7042,6 @@ packages:
   - libgcc-ng >=12
   - libglu >=9.0.0,<10.0a0
   - libjpeg-turbo >=3.0.0,<4.0a0
-  arch: x86_64
-  platform: linux
   license: JasPer-2.0
   purls: []
   size: 675951
@@ -7398,8 +7384,6 @@ packages:
   constrains:
   - libabseil-static =20240722.0=cxx17*
   - abseil-cpp =20240722.0
-  arch: x86_64
-  platform: linux
   license: Apache-2.0
   license_family: Apache
   purls: []
@@ -7483,8 +7467,6 @@ packages:
   - libexpat >=2.6.2,<3.0a0
   - libgcc-ng >=12
   - libzlib >=1.3.1,<2.0a0
-  arch: x86_64
-  platform: linux
   license: ISC
   license_family: OTHER
   purls: []
@@ -7905,8 +7887,6 @@ packages:
   - libzlib >=1.3.1,<2.0a0
   - openssl >=3.4.1,<4.0a0
   - zstd >=1.5.6,<1.6.0a0
-  arch: x86_64
-  platform: linux
   license: curl
   license_family: MIT
   purls: []
@@ -8475,8 +8455,6 @@ packages:
   - xorg-libxdamage >=1.1.6,<2.0a0
   - xorg-libxext >=1.3.6,<2.0a0
   - xorg-libxxf86vm >=1.1.5,<2.0a0
-  arch: x86_64
-  platform: linux
   license: SGI-2
   purls: []
   size: 325361
@@ -8567,8 +8545,6 @@ packages:
   - libgcc >=13
   - libstdcxx >=13
   - libxml2 >=2.13.4,<3.0a0
-  arch: x86_64
-  platform: linux
   license: BSD-3-Clause
   license_family: BSD
   purls: []
@@ -8603,8 +8579,6 @@ packages:
   depends:
   - __glibc >=2.17,<3.0.a0
   - libgcc >=13
-  arch: x86_64
-  platform: linux
   license: LGPL-2.1-only
   purls: []
   size: 713084
@@ -9261,8 +9235,6 @@ packages:
   - numpy >=1.19,<3
   - openexr >=3.3.1,<3.4.0a0
   - qt-main >=5.15.8,<5.16.0a0
-  arch: x86_64
-  platform: linux
   license: Apache-2.0
   license_family: Apache
   purls:
@@ -9279,8 +9251,6 @@ packages:
   - libstdcxx >=13
   - pugixml >=1.14,<1.15.0a0
   - tbb >=2021.13.0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 5362131
   timestamp: 1729594675874
@@ -9293,8 +9263,6 @@ packages:
   - libopenvino 2024.4.0 hac27bb2_2
   - libstdcxx >=13
   - tbb >=2021.13.0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 111701
   timestamp: 1729594696807
@@ -9307,8 +9275,6 @@ packages:
   - libopenvino 2024.4.0 hac27bb2_2
   - libstdcxx >=13
   - tbb >=2021.13.0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 237694
   timestamp: 1729594707449
@@ -9321,8 +9287,6 @@ packages:
   - libopenvino 2024.4.0 hac27bb2_2
   - libstdcxx >=13
   - pugixml >=1.14,<1.15.0a0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 197567
   timestamp: 1729594718187
@@ -9336,8 +9300,6 @@ packages:
   - libstdcxx >=13
   - pugixml >=1.14,<1.15.0a0
   - tbb >=2021.13.0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 12101994
   timestamp: 1729594729554
@@ -9352,8 +9314,6 @@ packages:
   - ocl-icd >=2.3.2,<3.0a0
   - pugixml >=1.14,<1.15.0a0
   - tbb >=2021.13.0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 8885078
   timestamp: 1729594772427
@@ -9367,8 +9327,6 @@ packages:
   - libstdcxx >=13
   - pugixml >=1.14,<1.15.0a0
   - tbb >=2021.13.0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 799335
   timestamp: 1729594804720
@@ -9381,8 +9339,6 @@ packages:
   - libopenvino 2024.4.0 hac27bb2_2
   - libstdcxx >=13
   - pugixml >=1.14,<1.15.0a0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 204163
   timestamp: 1729594816408
@@ -9397,8 +9353,6 @@ packages:
   - libopenvino 2024.4.0 hac27bb2_2
   - libprotobuf >=5.28.2,<5.28.3.0a0
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   purls: []
   size: 1559399
   timestamp: 1729594827815
@@ -9413,8 +9367,6 @@ packages:
   - libopenvino 2024.4.0 hac27bb2_2
   - libprotobuf >=5.28.2,<5.28.3.0a0
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   purls: []
   size: 653105
   timestamp: 1729594841297
@@ -9426,8 +9378,6 @@ packages:
   - libgcc >=13
   - libopenvino 2024.4.0 hac27bb2_2
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   purls: []
   size: 1075090
   timestamp: 1729594854413
@@ -9443,8 +9393,6 @@ packages:
   - libprotobuf >=5.28.2,<5.28.3.0a0
   - libstdcxx >=13
   - snappy >=1.2.1,<1.3.0a0
-  arch: x86_64
-  platform: linux
   purls: []
   size: 1282840
   timestamp: 1729594867098
@@ -9456,8 +9404,6 @@ packages:
   - libgcc >=13
   - libopenvino 2024.4.0 hac27bb2_2
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   purls: []
   size: 466563
   timestamp: 1729594879557
@@ -9560,8 +9506,6 @@ packages:
   - krb5 >=1.21.3,<1.22.0a0
   - libgcc >=13
   - openssl >=3.4.1,<4.0a0
-  arch: x86_64
-  platform: linux
   license: PostgreSQL
   purls: []
   size: 2547179
@@ -9612,8 +9556,6 @@ packages:
   - libgcc >=13
   - libstdcxx >=13
   - libzlib >=1.3.1,<2.0a0
-  arch: x86_64
-  platform: linux
   license: BSD-3-Clause
   license_family: BSD
   purls: []
@@ -9635,8 +9577,6 @@ packages:
   - pango >=1.54.0,<2.0a0
   constrains:
   - __glibc >=2.17
-  arch: x86_64
-  platform: linux
   license: LGPL-2.1-or-later
   purls: []
   size: 6390511
@@ -9997,8 +9937,6 @@ packages:
   - xorg-libx11 >=1.8.9,<2.0a0
   - xorg-libxext >=1.3.4,<2.0a0
   - xorg-libxfixes
-  arch: x86_64
-  platform: linux
   license: MIT
   license_family: MIT
   purls: []
@@ -10056,8 +9994,6 @@ packages:
   depends:
   - libgcc-ng >=12
   - libstdcxx-ng >=12
-  arch: x86_64
-  platform: linux
   license: BSD-3-Clause
   license_family: BSD
   purls: []
@@ -10294,8 +10230,6 @@ packages:
   - libiconv >=1.18,<2.0a0
   - liblzma >=5.6.4,<6.0a0
   - libzlib >=1.3.1,<2.0a0
-  arch: x86_64
-  platform: linux
   license: MIT
   license_family: MIT
   purls: []
@@ -10384,8 +10318,6 @@ packages:
   - openssl >=3.4.1,<4.0a0
   - xz
   - zlib >=1.3.1,<2.0a0
-  arch: x86_64
-  platform: linux
   license: MIT and MPL-1.1
   license_family: MIT
   purls: []
@@ -11638,8 +11570,6 @@ packages:
   - __glibc >=2.17,<3.0.a0
   - libgcc >=13
   - opencl-headers >=2024.10.24
-  arch: x86_64
-  platform: linux
   license: BSD-2-Clause
   license_family: BSD
   purls: []
@@ -11647,8 +11577,8 @@ packages:
   timestamp: 1732915114536
 - pypi: .
   name: open-mss
-  version: 9.3.1
-  sha256: 1637f6eb8f19c8a0c14a246c545bb6cab7446313ad2ef9b75ae8eb4d25f59ff7
+  version: 10.0.1
+  sha256: 36086eea334100f664a90ba86189116c5ff46883da1a2bdb0b409adfc41be8fb
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/opencl-headers-2024.10.24-h5888daf_0.conda
   sha256: 7e1d3ad55d4ad3ddf826e205d4603b9ed40c5e655a9dfd66b56f459d7ba14db3
@@ -11657,8 +11587,6 @@ packages:
   - __glibc >=2.17,<3.0.a0
   - libgcc >=13
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   license: Apache-2.0
   license_family: APACHE
   purls: []
@@ -11672,8 +11600,6 @@ packages:
   - libprotobuf >=5.28.2,<5.28.3.0a0
   - py-opencv 4.10.0 qt5_py311hff48228_510
   - python_abi 3.11.* *_cp311
-  arch: x86_64
-  platform: linux
   license: Apache-2.0
   license_family: Apache
   purls: []
@@ -11689,8 +11615,6 @@ packages:
   - libgcc >=13
   - libstdcxx >=13
   - libzlib >=1.3.1,<2.0a0
-  arch: x86_64
-  platform: linux
   license: BSD-3-Clause
   license_family: BSD
   purls: []
@@ -11703,8 +11627,6 @@ packages:
   - __glibc >=2.17,<3.0.a0
   - libgcc >=13
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   license: BSD-2-Clause
   license_family: BSD
   purls: []
@@ -11787,8 +11709,6 @@ packages:
   - __glibc >=2.17,<3.0.a0
   - ca-certificates
   - libgcc >=13
-  arch: x86_64
-  platform: linux
   license: Apache-2.0
   license_family: Apache
   purls: []
@@ -11949,8 +11869,6 @@ packages:
   - libgcc >=13
   - libglib >=2.82.2,<3.0a0
   - libpng >=1.6.44,<1.7.0a0
-  arch: x86_64
-  platform: linux
   license: LGPL-2.1-or-later
   purls: []
   size: 447446
@@ -12237,8 +12155,6 @@ packages:
   - sqlite
   constrains:
   - proj4 ==999999999999
-  arch: x86_64
-  platform: linux
   license: MIT
   license_family: MIT
   purls: []
@@ -12438,8 +12354,6 @@ packages:
   depends:
   - libgcc-ng >=12
   - libstdcxx-ng >=12
-  arch: x86_64
-  platform: linux
   license: MIT
   license_family: MIT
   purls: []
@@ -12483,8 +12397,6 @@ packages:
   - numpy >=1.19,<3
   - python >=3.11,<3.12.0a0
   - python_abi 3.11.* *_cp311
-  arch: x86_64
-  platform: linux
   license: Apache-2.0
   license_family: Apache
   purls: []
@@ -14562,8 +14474,6 @@ packages:
   - __glibc >=2.17,<3.0.a0
   - libgcc >=13
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   license: BSD-2-Clause
   license_family: BSD
   purls: []
@@ -14577,8 +14487,6 @@ packages:
   - libgcc >=13
   - libhwloc >=2.11.2,<2.11.3.0a0
   - libstdcxx >=13
-  arch: x86_64
-  platform: linux
   license: Apache-2.0
   license_family: APACHE
   purls: []
@@ -14960,8 +14868,6 @@ packages:
   - libffi >=3.4,<4.0a0
   - libgcc-ng >=13
   - libstdcxx-ng >=13
-  arch: x86_64
-  platform: linux
   license: MIT
   license_family: MIT
   purls: []
@@ -15435,8 +15341,6 @@ packages:
   - xorg-libx11 >=1.8.10,<2.0a0
   - xorg-libxext >=1.3.4,<2.0a0
   - xorg-libxfixes >=6.0.0,<7.0a0
-  arch: x86_64
-  platform: linux
   license: MIT
   license_family: MIT
   purls: []
