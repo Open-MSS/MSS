@@ -14,7 +14,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2019- Shivashis Padhi
-    :copyright: Copyright 2019-2024 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2019-2025 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -219,16 +219,17 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
     def set_status(self, _type="Error", msg=""):
         if _type == "Error":
-            msg = "⚠ " + msg
+            _msg = f"⚠ {msg}"
             self.statusLabel.setOpenExternalLinks(True)
             self.statusLabel.setStyleSheet("color: red;")
         elif _type == "Success":
             self.statusLabel.setStyleSheet("color: green;")
-            msg = "✓ " + msg
+            _msg = f"✓ {msg}"
         else:
             self.statusLabel.setStyleSheet("")
-            msg = "ⓘ  " + msg
-        self.statusLabel.setText(msg)
+            _msg = f"ⓘ {msg}"
+        self.statusLabel.setText(_msg)
+        # windows can have a cp1252 encoding, don't use special chars
         logging.debug("set_status: %s", msg)
         QtWidgets.QApplication.processEvents()
 

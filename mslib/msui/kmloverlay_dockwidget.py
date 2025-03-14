@@ -9,7 +9,7 @@
     This file is part of MSS.
 
     :copyright: Copyright 2017 Joern Ungermann
-    :copyright: Copyright 2017-2024 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2017-2025 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -567,7 +567,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                                                  self.dict_files[self.listWidget.item(index).text()]["linewidth"])
                             self.dict_files[self.listWidget.item(index).text()]["patch"] = patch
 
-                except (AttributeError, IOError, TypeError, et.XMLSyntaxError, et.XMLSchemaError,
+                except (AttributeError, IOError, TypeError, ValueError, et.XMLSyntaxError, et.XMLSchemaError,
                         et.XMLSchemaParseError, et.XMLSchemaValidateError) as ex:  # catches KML Syntax Errors
                     logging.error("KML Overlay - %s: %s", type(ex), ex)
                     self.labelStatusBar.setText(str(self.listWidget.item(index).text()) +

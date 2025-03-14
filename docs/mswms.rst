@@ -486,11 +486,11 @@ Further documentations:
 Apache server setup
 ...................
 
-Install mod_wsgi
-~~~~~~~~~~~~~~~~
+Optional install mod_wsgi by mod_wsgi_express
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 On some distributions an old mod_wsgi is shipped and have to become replaced by
-a version compatible to the conda environment. This procedure may need the
+a version compatible to the pixi default environment. This procedure may need the
 package apache2-dev on your server.
 
 At current state we have to use pip to install mod_wsgi into the INSTANCE environment::
@@ -525,21 +525,6 @@ Setup a /etc/apache2/mods-available/wsgi_express.load::
   LoadModule wsgi_module "/usr/lib/apache2/modules/mod_wsgi-pyX-x86_64-linux-gnu.so"
 
 Enable the new module by a2enmod and reload the apache2 server
-
-Configuration of apache mod_wsgi.conf
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-One possibility to setup the PYTHONPATH environment variable is by adding it to your mod_wsgi.conf. Alternatively you
-could add it also to wms.wsgi.
-
-  WSGIPythonPath /home/mss/INSTANCE/config:/home/user/MSS/.pixi/envs/default/lib/python3.X/site-packages
-
-
-
-By this setting you override the PYTHONPATH environment variable. So you have also to add
-the site-packes directory of your pixi installation besides the config file path.
-
-If your server hosts different instances by different users you want to setup this path in mswms_setting.py.
 
 
 

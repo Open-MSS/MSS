@@ -1,6 +1,14 @@
 Changelog
 =========
 
+Version 10.0.1
+~~~~~~~~~~~~~~
+Bug fix release:
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/112?closed=1
+
+
 Version 10.0.0
 ~~~~~~~~~~~~~~
 Aryan Gupta has implemented during GSoC2024 several enhancements to improve communication efficiency within MSColab.
