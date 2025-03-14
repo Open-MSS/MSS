@@ -26,9 +26,9 @@
 """
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import APP
 
-mscolab_settings.enable_basic_http_authentication = True
+APP.config['enable_basic_http_authentication'] = True
 try:
     from mslib.mscolab.server import authfunc, verify_pw, initialize_managers, get_auth_token, register_user
 except ImportError:
@@ -45,13 +45,13 @@ class Test_Server_Auth_Not_Valid:
     def test_initialize_managers(self):
         app, sockio, cm, fm = initialize_managers(self.app)
 
-        assert app.config['OPERATIONS_DATA'] == mscolab_settings.OPERATIONS_DATA
+        assert app.config['OPERATIONS_DATA'] == APP.config['OPERATIONS_DATA']
         assert 'Create a Flask-SocketIO server.' in sockio.__doc__
         assert 'Class with handler functions for chat related functionalities' in cm.__doc__
         assert 'Class with handler functions for file related functionalities' in fm.__doc__
 
     def test_authfunc(self):
-        mscolab_settings.enable_basic_http_authentication = True
+        APP.config['enable_basic_http_authentication'] = True
         assert authfunc("user", "testvaluepassword")
         assert authfunc("user", "wrong") is False
 

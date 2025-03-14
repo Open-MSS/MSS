@@ -29,7 +29,7 @@ import pytest
 import datetime
 
 from mslib.msui.icons import icons
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import APP
 from mslib.mscolab.seed import add_user, get_user, add_operation, add_user_to_operation, get_operation
 from mslib.mscolab.models import Permission, User, Message, MessageType
 
@@ -276,7 +276,7 @@ class Test_Socket_Manager:
         }
         with self.app.test_client() as c:
             c.post("message_attachment", data=data, content_type="multipart/form-data")
-        upload_dir = os.path.join(mscolab_settings.UPLOAD_FOLDER, str(self.user.id))
+        upload_dir = os.path.join(APP.config['UPLOAD_FOLDER'], str(self.user.id))
         assert os.path.exists(upload_dir)
         file = os.listdir(upload_dir)[0]
         assert 'mss-logo' in file

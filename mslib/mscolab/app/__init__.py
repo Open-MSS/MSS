@@ -33,7 +33,6 @@ from flask_migrate import Migrate
 import mslib
 
 from flask import Flask, url_for
-from mslib.mscolab.conf import mscolab_settings
 from flask_sqlalchemy import SQLAlchemy
 from mslib.utils import prefix_route, release_info
 
@@ -49,24 +48,8 @@ SCRIPT_NAME = os.environ.get('SCRIPT_NAME', '/')
 # in memory database for testing
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///'
 APP = Flask(__name__, template_folder=os.path.join(DOCS_SERVER_PATH, 'static', 'templates'))
-APP.config.from_object(__name__)
+APP.config.from_object('mslib.mscolab.conf.MscolabConfig')
 APP.route = prefix_route(APP.route, SCRIPT_NAME)
-
-APP.config['OPERATIONS_DATA'] = mscolab_settings.OPERATIONS_DATA
-APP.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-APP.config['SQLALCHEMY_ECHO'] = mscolab_settings.SQLALCHEMY_ECHO
-APP.config['UPLOAD_FOLDER'] = mscolab_settings.UPLOAD_FOLDER
-APP.config['MAX_CONTENT_LENGTH'] = mscolab_settings.MAX_UPLOAD_SIZE
-APP.config['SECRET_KEY'] = mscolab_settings.SECRET_KEY
-APP.config['SECURITY_PASSWORD_SALT'] = getattr(mscolab_settings, "SECURITY_PASSWORD_SALT", None)
-APP.config['MAIL_DEFAULT_SENDER'] = getattr(mscolab_settings, "MAIL_DEFAULT_SENDER", None)
-APP.config['MAIL_SERVER'] = getattr(mscolab_settings, "MAIL_SERVER", None)
-APP.config['MAIL_PORT'] = getattr(mscolab_settings, "MAIL_PORT", None)
-APP.config['MAIL_USERNAME'] = getattr(mscolab_settings, "MAIL_USERNAME", None)
-APP.config['MAIL_PASSWORD'] = getattr(mscolab_settings, "MAIL_PASSWORD", None)
-APP.config['MAIL_USE_TLS'] = getattr(mscolab_settings, "MAIL_USE_TLS", None)
-APP.config['MAIL_USE_SSL'] = getattr(mscolab_settings, "MAIL_USE_SSL", None)
 
 db = SQLAlchemy(
     metadata=sqlalchemy.MetaData(

@@ -67,17 +67,16 @@ def file_exists(filepath=None):
 
 
 def create_app(name="", imprint=None, gdpr=None):
-    imprint_file = imprint
-    gdpr_file = gdpr
-
     if "mscolab.server" in name:
         from mslib.mscolab.app import APP, get_topmenu
+        APP.jinja_env.globals["imprint"] = APP.config['IMPRINT']
+        APP.jinja_env.globals["gdpr"] = APP.config['GDPR']
     else:
         from mslib.mswms.app import APP, get_topmenu
+        APP.jinja_env.globals["imprint"] = imprint
+        APP.jinja_env.globals["gdpr"] = gdpr
 
     APP.jinja_env.globals.update(file_exists=file_exists)
-    APP.jinja_env.globals["imprint"] = imprint_file
-    APP.jinja_env.globals["gdpr"] = gdpr_file
 
     @APP.route('/xstatic/<name>/<path:filename>')
     def files(name, filename):

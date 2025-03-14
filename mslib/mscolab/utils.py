@@ -27,7 +27,7 @@ import fs
 import os
 import logging
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.app import APP
 
 
 def get_recent_op_id(fm, user):
@@ -82,6 +82,6 @@ def os_fs_create_dir(directory_path):
 
 
 def create_files():
-    os_fs_create_dir(mscolab_settings.OPERATIONS_DATA)
-    os_fs_create_dir(mscolab_settings.UPLOAD_FOLDER)
-    os_fs_create_dir(mscolab_settings.SSO_DIR)
+    os_fs_create_dir(APP.config['OPERATIONS_DATA'])
+    os_fs_create_dir(APP.config['UPLOAD_FOLDER'])
+    os_fs_create_dir(APP.config['SSO_DIR'])

@@ -28,18 +28,17 @@ import logging
 import fs
 import git
 from sqlalchemy.exc import IntegrityError
+from flask import current_app
 
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, db, Permission, Operation
-from mslib.mscolab.server import APP as app
+from mslib.mscolab.app import APP
 
 
 # Todo: refactor move to mscolab.utils
 def add_all_users_to_all_operations(access_level='collaborator'):
     """ on db level we add all users as collaborator to all operations """
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         all_operations = Operation.query.all()
         all_path = [operation.path for operation in all_operations]
         db.session.close()
@@ -51,21 +50,20 @@ def add_all_users_to_all_operations(access_level='collaborator'):
 
 def add_all_users_default_operation(path='TEMPLATE', description="Operation to keep all users", access_level='admin'):
     """ on db level we add all users to the operation TEMPLATE for user handling"""
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    with app.app_context():
+    with current_app.app_context():
         operation_available = Operation.query.filter_by(path=path).first()
         if not operation_available:
             operation = Operation(path, description)
             db.session.add(operation)
             db.session.commit()
-            with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
+            with fs.open_fs(APP.config['OPERATIONS_DATA']) as file_dir:
                 if not file_dir.exists(path):
                     file_dir.makedir(path)
-                    file_dir.writetext(f'{path}/main.ftml', mscolab_settings.STUB_CODE)
+                    file_dir.writetext(f'{path}/main.ftml', APP.config['STUB_CODE'])
                     # initiate git
-                    r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', path))
+                    r = git.Repo.init(fs.path.join(APP.config['DATA_DIR'], 'filedata', path))
                     r.git.clear_cache()
                     r.index.add(['main.ftml'])
                     r.index.commit("initial commit")
@@ -93,9 +91,8 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
 
 
 def delete_user(email):
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         user = User.query.filter_by(emailid=str(email)).first()
         if user:
             logging.info("User: %s deleted from db", email)
@@ -111,10 +108,9 @@ def add_user(email, username, password):
     """
     on db level we add a user
     """
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    with app.app_context():
+    with APP.app_context():
         user_email_exists = User.query.filter_by(emailid=str(email)).first()
         user_name_exists = User.query.filter_by(username=str(username)).first()
         if not user_email_exists and not user_name_exists:
@@ -130,30 +126,29 @@ def add_user(email, username, password):
 
 
 def get_user(email):
-    with app.app_context():
+    with APP.app_context():
         return User.query.filter_by(emailid=str(email)).first()
 
 
 def get_operation(operation_name):
-    with app.app_context():
+    with APP.app_context():
         return Operation.query.filter_by(path=operation_name).first()
 
 
 def add_operation(operation_name, description):
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation_available = Operation.query.filter_by(path=operation_name).first()
         if not operation_available:
             operation = Operation(operation_name, description)
             db.session.add(operation)
             db.session.commit()
-            with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
+            with fs.open_fs(APP.config['OPERATIONS_DATA']) as file_dir:
                 if not file_dir.exists(operation_name):
                     file_dir.makedir(operation_name)
-                    file_dir.writetext(f'{operation_name}/main.ftml', mscolab_settings.STUB_CODE)
+                    file_dir.writetext(f'{operation_name}/main.ftml', APP.config['STUB_CODE'])
                     # initiate git
-                    r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', operation_name))
+                    r = git.Repo.init(fs.path.join(APP.config['DATA_DIR'], 'filedata', operation_name))
                     r.git.clear_cache()
                     r.index.add(['main.ftml'])
                     r.index.commit("initial commit")
@@ -163,9 +158,8 @@ def add_operation(operation_name, description):
 
 
 def delete_operation(operation_name):
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation = Operation.query.filter_by(path=operation_name).first()
         if operation:
             db.session.delete(operation)
@@ -180,9 +174,8 @@ def add_user_to_operation(path=None, access_level='admin', emailid=None):
     """ on db level we add all users to the operation TEMPLATE for user handling"""
     if None in (path, emailid):
         return False
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation = Operation.query.filter_by(path=path).first()
         if operation:
             user = User.query.filter_by(emailid=emailid).first()
@@ -203,9 +196,8 @@ def archive_operation(path=None, emailid=None):
     """ this archives an existing operation """
     if None in (path, emailid):
         return False
-    app.config['SQLALCHEMY_DATABASE_URI'] = mscolab_settings.SQLALCHEMY_DB_URI
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    with app.app_context():
+    APP.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    with APP.app_context():
         operation = Operation.query.filter_by(path=path).first()
         if operation:
             user = User.query.filter_by(emailid=emailid).first()
@@ -390,13 +382,13 @@ def seed_data():
     db.session.commit()
     db.session.close()
 
-    with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
+    with fs.open_fs(APP.config['OPERATIONS_DATA']) as file_dir:
         file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
         for file_path in file_paths:
             file_dir.makedir(file_path)
-            file_dir.writetext(f'{file_path}/main.ftml', mscolab_settings.STUB_CODE)
+            file_dir.writetext(f'{file_path}/main.ftml', APP.config['STUB_CODE'])
             # initiate git
-            r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', file_path))
+            r = git.Repo.init(fs.path.join(APP.config['DATA_DIR'], 'filedata', file_path))
             r.git.clear_cache()
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")

@@ -28,7 +28,7 @@
 import os
 import pytest
 
-from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.server import APP
 from mslib.mscolab.models import User, Operation, Permission, Change, Message
 from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import get_recent_op_id
@@ -64,7 +64,7 @@ class Test_Files:
             # test for '/' in path
             assert self.fm.create_operation('test/path', 'sth', self.user) is False
             # check file existence
-            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'test_path')) is True
+            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'test_path')) is True
             # check creation in db
             p = Operation.query.filter_by(path="test_path").first()
             assert p is not None
@@ -130,7 +130,7 @@ class Test_Files:
             flight_path, operation = self._create_operation(flight_path="operationstub")
             content = self.fm.get_file(operation.id, self.user)
             assert flight_path == "operationstub"
-            assert content == mscolab_settings.STUB_CODE
+            assert content == APP.config['STUB_CODE']
 
     def test_undo(self):
         with self.app.test_client():
@@ -166,7 +166,7 @@ class Test_Files:
             assert self.fm.update_operation(op_id, 'path', 'dummy wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy/wrong', self.user) is False
             assert self.fm.update_operation(op_id, 'path', 'dummy', self.user) is True
-            assert os.path.exists(os.path.join(mscolab_settings.OPERATIONS_DATA, 'dummy'))
+            assert os.path.exists(os.path.join(APP.config['OPERATIONS_DATA'], 'dummy'))
             assert self.fm.update_operation(op_id, 'description', 'dummy', self.user) is True
 
     def test_delete_operation(self):

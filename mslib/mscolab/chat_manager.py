@@ -27,9 +27,9 @@
 import datetime
 import fs
 
-from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import db, Message, MessageType
 from mslib.mscolab.utils import get_message_dict
+from mslib.mscolab.app import APP
 
 
 class ChatManager:
@@ -88,7 +88,7 @@ class ChatManager:
         message = Message.query.filter(Message.id == message_id).first()
         if message.message_type == MessageType.IMAGE or message.message_type == MessageType.DOCUMENT:
             file_name = fs.path.basename(message.text)
-            with fs.open_fs(mscolab_settings.UPLOAD_FOLDER) as upload_dir:
+            with fs.open_fs(APP.config['UPLOAD_FOLDER']) as upload_dir:
                 upload_dir.remove(fs.path.join(str(message.op_id), file_name))
         db.session.delete(message)
         db.session.commit()
