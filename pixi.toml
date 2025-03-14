@@ -110,7 +110,7 @@ sphinx_rtd_theme = "*"
 sphinxcontrib-video = "*"
 
 [feature.tutorials]
-platforms = ["linux-64"]
+platforms = ["win-64", "linux-64", "osx-64"]
 
 [feature.tutorials.dependencies]
 mouseinfo = "*"
