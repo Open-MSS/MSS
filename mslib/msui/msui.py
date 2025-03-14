@@ -13,7 +13,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -55,7 +55,7 @@ def main(tutorial_mode=False):
 
         @param tutorial_mode: Specifies whether the program should run in tutorial mode or not.
 
-      """
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)

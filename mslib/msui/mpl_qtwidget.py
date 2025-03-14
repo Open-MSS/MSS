@@ -10,7 +10,7 @@
 
     :copyright: Copyright 2008-2014 Deutsches Zentrum fuer Luft- und Raumfahrt e.V.
     :copyright: Copyright 2011-2014 Marc Rautenhaus (mr)
-    :copyright: Copyright 2016-2024 by the MSS team, see AUTHORS.
+    :copyright: Copyright 2016-2025 by the MSS team, see AUTHORS.
     :license: APACHE-2.0, see LICENSE for details.
 
     Licensed under the Apache License, Version 2.0 (the "License");
@@ -291,7 +291,7 @@ class TopViewPlotter(ViewPlotter):
             self.map.set_graticule_visible(False)
             self.map._draw_auto_graticule(self.tov_als)
         else:
-            self.plotter.map.set_graticule_visible(self.settings["draw_graticule"])
+            self.map.set_graticule_visible(self.settings["draw_graticule"])
         self.ax.figure.canvas.draw()  # this one is required to trigger a
         # drawevent to update the background
 
@@ -1346,7 +1346,7 @@ class MplSideViewCanvas(MplCanvas):
 
         if self.waypoints_interactor is not None:
             wpi_plotter = self.waypoints_interactor.plotter
-            wpi_plotter.line.set_marker("o" if settings["draw_marker"] else None)
+            wpi_plotter.line.set_marker("o" if settings["draw_marker"] else "")
             wpi_plotter.set_vertices_visible(settings["draw_flighttrack"])
             wpi_plotter.set_path_color(
                 line_color=settings["colour_ft_vertices"],
