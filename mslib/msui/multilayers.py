@@ -796,6 +796,10 @@ class Layer(QtWidgets.QTreeWidgetItem):
         """
         Persistently saves the currently selected style of the layer, if it is not the first one
         """
+        if not self.styles:
+            self.style = None
+            return
+
         if self.style != self.styles[0]:
             self.parent.settings["saved_styles"][str(self)] = self.style
         else:
