@@ -87,7 +87,7 @@ class Test_MSS_AboutDialog:
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
             text = f.read()
-        pattern = f'value="is:closed milestone:{__version__[:-1]}"'
+        pattern = f'value="is:closed milestone:{__version__}"'
         assert pattern in text.decode('utf-8')
 
 
