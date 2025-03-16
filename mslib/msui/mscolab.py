@@ -297,7 +297,9 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if ret == QMessageBox.Yes:
                         url_list = [self.mscolab_server_url] + url_list
-                        modify_config_file({"default_MSCOLAB": url_list})
+                        modify_config_file({"default_MSCOLAB": url_list,
+                                            "mscolab_server_url": self.mscolab_server_url})
+
 
                 # Fill Email and Password fields from config
                 self.loginEmailLe.setText(
