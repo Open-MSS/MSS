@@ -300,7 +300,6 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                         modify_config_file({"default_MSCOLAB": url_list,
                                             "mscolab_server_url": self.mscolab_server_url})
 
-
                 # Fill Email and Password fields from config
                 self.loginEmailLe.setText(
                     config_loader(dataset="MSS_auth").get(self.mscolab_server_url))
