@@ -925,7 +925,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         """
         edit = editor.ConfigurationEditorWindow(self)
         # ToDo This does not include changes by modify_config_file
-        # We call it late but this needs solved better
+        # We call it late but this needs a better solution
         self.config_for_gui = edit.last_saved
         # automated_plotting_* parameters must be stored or loaded by the mssautoplot.json file
         self.config_for_gui["automated_plotting_flights"].clear()
