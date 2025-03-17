@@ -39,7 +39,7 @@ from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
-
+import re
 
 def test_main():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
@@ -86,10 +86,10 @@ class Test_MSS_AboutDialog:
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
-            text = f.read()
-        pattern = f'value="is:closed milestone:{__version__}"'
-        assert pattern in text.decode('utf-8')
-
+            text = f.read().decode("utf-8")
+        expected_version = __version__
+        pattern = rf'value="is:closed milestone:{re.escape(expected_version)}"'
+        assert re.search(pattern,text), f"Expected milestone format not found: {expected_version}"
 
 class Test_MSS_ShortcutDialog:
     @pytest.fixture(autouse=True)
