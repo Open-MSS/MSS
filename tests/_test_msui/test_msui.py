@@ -41,6 +41,7 @@ from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 import re
 
+
 def test_main():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
@@ -89,7 +90,8 @@ class Test_MSS_AboutDialog:
             text = f.read().decode("utf-8")
         expected_version = __version__
         pattern = rf'value="is:closed milestone:{re.escape(expected_version)}"'
-        assert re.search(pattern,text), f"Expected milestone format not found: {expected_version}"
+        assert re.search(pattern, text), f"Expected milestone format not found: {expected_version}"
+
 
 class Test_MSS_ShortcutDialog:
     @pytest.fixture(autouse=True)
