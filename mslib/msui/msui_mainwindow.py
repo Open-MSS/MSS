@@ -930,7 +930,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         # update some vars which can have changed
         self.config_for_gui["mscolab_server_url"] = config_loader(dataset="mscolab_server_url")
         self.config_for_gui["default_MSCOLAB"] = config_loader(dataset="default_MSCOLAB")
-        self.config_for_gui["default_MSCOLAB"] = config_loader(dataset="default_MSCOLAB")
         self.config_for_gui["MSS_auth"] = config_loader(dataset="MSS_auth")
         # automated_plotting_* parameters must be stored or loaded by the mssautoplot.json file
         self.config_for_gui["automated_plotting_flights"].clear()
