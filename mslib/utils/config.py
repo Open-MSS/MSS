@@ -587,6 +587,28 @@ def load_settings_qsettings(tag, default_settings=None):
     return default_settings
 
 
+def validate_data_dir(path):
+    """
+    Validates that the data_dir path starts with a tilde (~) or a filesystem URL.
+    
+    Args:
+        path: The data_dir path to validate
+        
+    Returns:
+        bool: True if valid, False otherwise
+    """
+    # Check if path starts with ~ (tilde)
+    if path.startswith('~'):
+        return True
+    
+    # Check if path is a valid filesystem URL (e.g., file://, s3://, etc.)
+    # Using fs.path.isurl method to check for valid FS URLs
+    if fs.path.isurl(path):
+        return True
+        
+    return False
+
+
 def merge_dict(existing_dict, new_dict):
     """
     Merge two dictionaries by comparing all the options from
@@ -641,6 +663,11 @@ def merge_dict(existing_dict, new_dict):
             data, match = compare_data(existing_dict[key], new_dict[key])
             if match:
                 existing_dict[key] = data
+                
+                # Add special validation for data_dir
+                if key == "data_dir" and not validate_data_dir(data):
+                    logging.warning(f"Invalid data_dir format: {data}. Must start with '~' or a filesystem URL.")
+                    existing_dict[key] = existing_dict.get("data_dir", "~/mssdata")
 
     # add filepicker default to import and export plugins if missing
     for plugin_type in ["import_plugins", "export_plugins"]:
