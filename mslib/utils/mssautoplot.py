@@ -621,10 +621,19 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
         pdlg.setValue(1)
 
     msc_url = config["mscolab_server_url"]
-    msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
-                                                                   username="mscolab")
-    msc_username = config["MSS_auth"][msc_url]
-    msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
+    try:
+        msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
+                                                                       username="mscolab")
+    except KeyError:
+        msc_auth_password = None
+
+    try:
+        msc_username = config["MSS_auth"][msc_url]
+    except KeyError:
+        msc_username = None
+        msc_password = None
+    if msc_username is not None:
+        msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
 
     # Choose view (top or side)
     if view == "top":
