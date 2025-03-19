@@ -450,14 +450,6 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.config_editor = None
         self.local_active = True
         self.new_flight_track_counter = 0
-        edit = editor.ConfigurationEditorWindow(self)
-        # ToDo review if this can replace of other config_loader() calls
-        self.config_for_gui = edit.last_saved
-        # automated_plotting_* parameters must be stored or loaded by the mssautoplot.json file
-        self.config_for_gui["automated_plotting_flights"].clear()
-        self.config_for_gui["automated_plotting_hsecs"].clear()
-        self.config_for_gui["automated_plotting_vsecs"].clear()
-        self.config_for_gui["automated_plotting_lsecs"].clear()
 
         # Reference to the flight track that is currently displayed in the views.
         self.active_flight_track = None
@@ -931,6 +923,20 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
            a new instance of the view and adds a QActiveViewsListWidgetItem to
            the list of open views (self.listViews).
         """
+        edit = editor.ConfigurationEditorWindow(self)
+        # ToDo This does not include changes by modify_config_file
+        # We call it late but this needs a better solution
+        self.config_for_gui = edit.last_saved
+        # update some vars which can have changed
+        self.config_for_gui["mscolab_server_url"] = config_loader(dataset="mscolab_server_url")
+        self.config_for_gui["default_MSCOLAB"] = config_loader(dataset="default_MSCOLAB")
+        self.config_for_gui["MSS_auth"] = config_loader(dataset="MSS_auth")
+        # automated_plotting_* parameters must be stored or loaded by the mssautoplot.json file
+        self.config_for_gui["automated_plotting_flights"].clear()
+        self.config_for_gui["automated_plotting_hsecs"].clear()
+        self.config_for_gui["automated_plotting_vsecs"].clear()
+        self.config_for_gui["automated_plotting_lsecs"].clear()
+
         layout = config_loader(dataset="layout")
         view_window = None
         if _type == "topview":
