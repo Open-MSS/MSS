@@ -447,8 +447,18 @@ Double click a operation to activate and view its description.</string>
      <addaction name="actionNewFlightTrack"/>
      <addaction name="actionAddOperation"/>
     </widget>
+    <widget class="QMenu" name="menuCopyIntoNew">
+     <property name="title">
+      <string>Copy Into New</string>
+     </property>
+     <addaction name="actionCopyIntoNewLocalFlightTrack"/>
+     <addaction name="actionCopyIntoNewMSColabOperation"/>
+    </widget>
     <addaction name="menuNew"/>
     <addaction name="menuImportFlightTrack"/>
+    <addaction name="separator"/>
+    <addaction name="menuCopyIntoNew"/>
+    <addaction name="actionCopyFromSelected"/>
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
@@ -682,6 +692,31 @@ Double click a operation to activate and view its description.</string>
   <action name="actionChangeCategory">
    <property name="text">
     <string>Change Category</string>
+   </property>
+  </action>
+  <action name="actionCopyFromSelected">
+   <property name="text">
+    <string>Copy From Selected</string>
+   </property>
+  </action>
+  <action name="actionCopyIntoLocalFlightTrack">
+   <property name="text">
+    <string>Local Flight Track</string>
+   </property>
+  </action>
+  <action name="actionCopyIntoMSColabOperation">
+   <property name="text">
+    <string>MSColab Operation</string>
+   </property>
+  </action>
+  <action name="actionCopyIntoNewLocalFlightTrack">
+   <property name="text">
+    <string>Local Flight Track</string>
+   </property>
+  </action>
+  <action name="actionCopyIntoNewMSColabOperation">
+   <property name="text">
+    <string>MSColab Operation</string>
    </property>
   </action>
  </widget>
