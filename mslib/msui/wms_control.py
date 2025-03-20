@@ -600,7 +600,8 @@ class WMSControlWidget(QtWidgets.QWidget, ui.Ui_WMSDockWidget):
                     self.multilayers.cbWMS_URL.setCurrentIndex(index)
 
             self.multilayers.threads -= 1
-            styles_name = str(styles).strip().split()[0].strip()
+            styles_name = str(styles).strip()
+            styles_name = styles_name.split()[0].strip() if styles_name else "default"
 
             def style_changed(layer):
                 for style in self.current_sel_layer.styles:
