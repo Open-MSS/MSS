@@ -112,9 +112,9 @@ def test_change_creation():
 class Test_User:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         with mscolab_app.app_context():
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
             assert result["success"] is True
             yield
 

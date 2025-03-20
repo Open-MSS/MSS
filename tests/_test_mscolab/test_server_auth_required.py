@@ -40,7 +40,7 @@ class Test_Server_Auth_Not_Valid:
     @pytest.fixture(autouse=True)
     def setup(self, mscolab_app):
         self.app = mscolab_app
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
 
     def test_initialize_managers(self):
         app, sockio, cm, fm = initialize_managers(self.app)
@@ -61,7 +61,7 @@ class Test_Server_Auth_Not_Valid:
         assert verify_pw("user", "wrong") is False
 
     def test_register_user(self):
-        r = register_user("test@test.io", "test", "pwdtest")
+        r = register_user("test@test.io", "test", "pwdtest", "UserPWD")
         assert r.status_code == 401
 
     def test_get_auth_token(self):

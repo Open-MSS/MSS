@@ -39,19 +39,19 @@ class Test_MscolabAdminWindow:
     @pytest.fixture(autouse=True)
     def setup(self, qtbot, mscolab_server):
         self.url = mscolab_server
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0], access_level="creator")
         self.user = get_user(self.userdata[0])
-        assert add_user("collaborator@example.de", "example", "example")
+        assert add_user("collaborator@example.de", "example", "example", "Example")
         assert add_user_to_operation(path=self.operation_name,
                                      emailid="collaborator@example.de", access_level="collaborator")
-        assert add_user("viewer@example.de", "viewer", "viewer")
+        assert add_user("viewer@example.de", "viewer", "viewer", "Viewer")
         assert add_user_to_operation(path=self.operation_name, emailid="viewer@example.de", access_level="viewer")
-        assert add_user("name1@example.de", "name1", "name1")
-        assert add_user("name2@example.de", "name2", "name2")
+        assert add_user("name1@example.de", "name1", "name1", "Name1")
+        assert add_user("name2@example.de", "name2", "name2", "Name2")
         assert add_operation("paris", "test paris")
         assert add_user_to_operation(path="paris", emailid=self.userdata[0], access_level="creator")
         assert add_user_to_operation(path="paris", emailid="name1@example.de")

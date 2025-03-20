@@ -41,14 +41,15 @@ class Test_Socket_Manager:
         self.sockio, self.cm, self.fm = mscolab_managers
         self.sm = self.sockio.sm
         self.sockets = []
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
-        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
+        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2],
+                        self.anotheruserdata[3])
         self.anotheruser = get_user(self.anotheruserdata[0])
         self.token = self.user.generate_auth_token()
         self.operation = get_operation(self.operation_name)

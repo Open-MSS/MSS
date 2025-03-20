@@ -38,11 +38,11 @@ class Test_Seed:
         _, _, self.fm = mscolab_managers
         self.operation_name = "XYZ"
         self.description = "Template"
-        self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0'
-        self.userdata_1 = "UV1@uv1", "UV1", "UV1"
-        self.userdata_2 = "UV2@v2", "V2", "v2"
+        self.userdata_0 = 'UV0@uv0', 'UV0', 'uv0', 'Usera UV'
+        self.userdata_1 = "UV1@uv1", "UV1", "UV1", "Userb UV"
+        self.userdata_2 = "UV2@v2", "V2", "v2", "Userc UV"
 
-        assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
+        assert add_user(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2], self.userdata_0[3])
         assert add_operation(self.operation_name, self.description)
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata_0[0])
         self.user = User(self.userdata_0[0], self.userdata_0[1], self.userdata_0[2])
@@ -66,7 +66,7 @@ class Test_Seed:
 
     def test_add_all_users_default_operation_viewer(self):
         with self.app.test_client():
-            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2], self.userdata_1[3])
             # viewer
             add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
                                             access_level='viewer')
@@ -82,7 +82,7 @@ class Test_Seed:
     def test_add_all_users_default_operation_collaborator(self):
         with self.app.test_client():
             # collaborator
-            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2], self.userdata_1[3])
             add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
                                             access_level='collaborator')
             expected_result = [{'access_level': 'collaborator', 'active': True, 'category': 'default',
@@ -96,7 +96,7 @@ class Test_Seed:
 
     def test_add_all_users_default_operation_creator(self):
         with self.app.test_client():
-            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2], self.userdata_1[3])
             # creator
             add_all_users_default_operation(path='XYZ', description="Operation to keep all users",
                                             access_level='creator')
@@ -110,7 +110,7 @@ class Test_Seed:
 
     def test_add_all_users_default_operation_creator_unknown_operation(self):
         with self.app.test_client():
-            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2])
+            assert add_user(self.userdata_1[0], self.userdata_1[1], self.userdata_1[2], self.userdata_1[3])
             # creator added to new operation
             add_all_users_default_operation(path='UVXYZ', description="Operation to keep all users",
                                             access_level='creator')
@@ -125,25 +125,25 @@ class Test_Seed:
 
     def test_add_user(self):
         with self.app.test_client():
-            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
-            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2]) is False
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2], self.userdata_2[3])
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2], self.userdata_2[3]) is False
 
     def test_get_user(self):
         with self.app.test_client():
-            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2], self.userdata_2[3])
             user = get_user(self.userdata_2[0])
             assert user.id is not None
             assert user.emailid == self.userdata_2[0]
 
     def test_add_user_to_operation(self):
         with self.app.test_client():
-            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2], self.userdata_2[3])
             assert add_operation("operation2", "description")
             assert add_user_to_operation(path="operation2", access_level='admin', emailid=self.userdata_2[0])
 
     def test_delete_user(self,):
         with self.app.test_client():
-            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2])
+            assert add_user(self.userdata_2[0], self.userdata_2[1], self.userdata_2[2], self.userdata_2[3])
             user = User.query.filter_by(emailid=self.userdata_2[0]).first()
             assert user is not None
             assert delete_user(self.userdata_2[0])

@@ -41,11 +41,11 @@ class Test_Files:
         self.app = mscolab_app
         _, _, self.fm = mscolab_managers
 
-        self.userdata = 'UV11@uv11', 'UV11', 'uv11'
-        self.userdata2 = 'UV12@uv12', 'UV12', 'uv12'
+        self.userdata = 'UV11@uv11', 'UV11', 'uv11', 'User UV'
+        self.userdata2 = 'UV12@uv12', 'UV12', 'uv12', 'User UVs'
 
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        assert add_user(self.userdata2[0], self.userdata2[1], self.userdata2[2], self.userdata2[3])
 
         self.user = get_user(self.userdata[0])
         self.user2 = get_user(self.userdata2[0])

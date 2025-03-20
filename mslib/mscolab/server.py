@@ -248,7 +248,7 @@ def check_login(emailid, password):
     return False
 
 
-def register_user(email, password, username):
+def register_user(email, password, username, fullname):
     if len(str(email.strip())) == 0 or len(str(username.strip())) == 0:
         return {"success": False, "message": "Your username or email cannot be empty"}
     is_valid_username = True if username.find("@") == -1 else False
@@ -263,7 +263,7 @@ def register_user(email, password, username):
     user_exists = User.query.filter_by(username=str(username)).first()
     if user_exists:
         return {"success": False, "message": "This username is already registered"}
-    user = User(email, username, password)
+    user = User(email, username, password, fullname)
     result = fm.modify_user(user, action="create")
     return {"success": result}
 
@@ -372,14 +372,14 @@ def get_auth_token():
                 token = user.generate_auth_token()
                 return json.dumps({
                     'token': token,
-                    'user': {'username': user.username, 'id': user.id}})
+                    'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
             else:
                 return "False"
         else:
             token = user.generate_auth_token()
             return json.dumps({
                 'token': token,
-                'user': {'username': user.username, 'id': user.id}})
+                'user': {'username': user.username, 'id': user.id, 'fullname': user.fullname}})
     else:
         logging.debug("Unauthorized user: %s", emailid)
         return "False"
@@ -407,7 +407,8 @@ def user_register_handler():
     email = request.form['email']
     password = request.form['password']
     username = request.form['username']
-    result = register_user(email, password, username)
+    fullname = request.form['fullname']
+    result = register_user(email, password, username, fullname)
     status_code = 200
     try:
         if result["success"]:
@@ -445,7 +446,7 @@ def confirm_email(token):
 @APP.route('/user', methods=["GET"])
 @verify_user
 def get_user():
-    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username}})
+    return json.dumps({'user': {'id': g.user.id, 'username': g.user.username, 'fullname': g.user.fullname}})
 
 
 @APP.route('/upload_profile_image', methods=["POST"])

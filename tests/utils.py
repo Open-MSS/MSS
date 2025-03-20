@@ -110,20 +110,21 @@ def callback_307_html(status, response_headers):
     assert response_headers[0] == ('Content-Type', 'text/html; charset=utf-8')
 
 
-def mscolab_register_user(app, msc_url, email, password, username):
+def mscolab_register_user(app, msc_url, email, password, username, fullname):
     # Duplicate of imported register_user
     data = {
         'email': email,
         'password': password,
-        'username': username
+        'username': username,
+        'fullname': fullname
     }
     url = urljoin(msc_url, 'register')
     response = app.test_client().post(url, data=data)
     return response
 
 
-def mscolab_register_and_login(app, msc_url, email, password, username):
-    register_user(email, password, username)
+def mscolab_register_and_login(app, msc_url, email, password, username, fullname):
+    register_user(email, password, username, fullname)
     data = {
         'email': email,
         'password': password
@@ -179,8 +180,8 @@ def mscolab_create_content(app, msc_url, data, path_name='example', content=None
     return response
 
 
-def mscolab_delete_all_operations(app, msc_url, email, password, username):
-    response = mscolab_register_and_login(app, msc_url, email, password, username)
+def mscolab_delete_all_operations(app, msc_url, email, password, username, fullname):
+    response = mscolab_register_and_login(app, msc_url, email, password, username, fullname)
     data = json.loads(response.get_data(as_text=True))
     url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)
@@ -200,8 +201,8 @@ def mscolab_create_operation(app, msc_url, response, path='f', description='desc
     return data, response
 
 
-def mscolab_get_operation_id(app, msc_url, email, password, username, path):
-    response = mscolab_register_and_login(app, msc_url, email, password, username)
+def mscolab_get_operation_id(app, msc_url, email, password, username, fullname, path):
+    response = mscolab_register_and_login(app, msc_url, email, password, username, fullname)
     data = json.loads(response.get_data(as_text=True))
     url = urljoin(msc_url, 'operations')
     response = app.test_client().get(url, data=data)

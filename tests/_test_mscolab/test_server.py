@@ -45,7 +45,7 @@ class Test_Server:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         self.sockio, _, self.fm = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
         with self.app.app_context():
             yield
 
@@ -72,21 +72,29 @@ class Test_Server:
 
     def test_register_user(self):
         with self.app.test_client():
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            result = register_user("newmail1@example.com", "password", "newuser1", "John Doe")
             assert result["success"] is True
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            result = register_user("newmail1@example.com", "password", "newuser2", "John Doe")
             assert result["success"] is False
             assert result["message"] == "This email ID is already taken!"
-            result = register_user("UV", self.userdata[1], self.userdata[2])
+            result = register_user("UV", "password", "newuser3", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your email ID is not valid!"
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[0])
+            result = register_user("newmail3@example.com", "password", "newuser@4", "John Doe")
             assert result["success"] is False
             assert result["message"] == "Your username cannot contain @ symbol!"
+            result = register_user("newmail4@example.com", "password", "newuser5", "Jean-Luc Picard")
+            assert result["success"] is True
+            result = register_user("newemail5@example.com", "password", "newuser6", "John Doe")
+            assert result["success"] is True
+            result = register_user("newemail6@example.com", "password", "newuser7", "")
+            assert result["success"] is True
+            result = register_user("newemail7@example.com", "password", "newuser8", "John123")
+            assert result["success"] is True
 
     def test_check_login(self):
         with self.app.test_client():
-            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            result = register_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
             assert result["success"] is True
             result = check_login(self.userdata[0], self.userdata[1])
             user = User.query.filter_by(emailid=str(self.userdata[0])).first()
@@ -96,7 +104,7 @@ class Test_Server:
             assert result is False
 
     def test_get_auth_token(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             token = self._get_token(test_client, self.userdata)
             assert User.verify_auth_token(token)
@@ -105,7 +113,7 @@ class Test_Server:
             assert response.data.decode('utf-8') == "False"
 
     def test_authorized(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             token = self._get_token(test_client, self.userdata)
             response = test_client.get('/test_authorized', data={"token": token})
@@ -118,15 +126,17 @@ class Test_Server:
         with self.app.test_client() as test_client:
             response = test_client.post('/register', data={"email": self.userdata[0],
                                                            "password": self.userdata[2],
-                                                           "username": self.userdata[1]})
+                                                           "username": self.userdata[1],
+                                                           "fullname": self.userdata[3]})
             assert response.status_code == 201
             response = test_client.post('/register', data={"email": self.userdata[0],
                                                            "pass": "dsss",
-                                                           "username": self.userdata[1]})
+                                                           "username": self.userdata[1],
+                                                           "fullname": self.userdata[3]})
             assert response.status_code == 400
 
     def test_get_user(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             token = self._get_token(test_client, self.userdata)
             response = test_client.get('/user', data={"token": token})
@@ -134,7 +144,7 @@ class Test_Server:
             assert data["user"]["username"] == self.userdata[1]
 
     def test_delete_user(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             # Case 1 : The user has no profile image set
             token = self._get_token(test_client, self.userdata)
@@ -145,7 +155,7 @@ class Test_Server:
             # assert verify_user_token(config_loader(dataset="mscolab_server_url"), token) is False
 
             # Case 2 : The user has a custom profile image set
-            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+            assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
             token = self._get_token(test_client, self.userdata)
             response = self._upload_profile_image(test_client, token, self.userdata[0])
             assert response.status_code == 200  # this will ensure image was uploaded
@@ -164,9 +174,9 @@ class Test_Server:
     # Currently, flask is unable to raise exception for an oversized file.
 
     def test_unauthorized_profile_image_upload(self):
-        other_user_data = 'other@ex.com', 'other', 'other'
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_user(other_user_data[0], other_user_data[1], other_user_data[2])
+        other_user_data = 'other@ex.com', 'other', 'other', 'Other'
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        assert add_user(other_user_data[0], other_user_data[1], other_user_data[2], other_user_data[3])
         with self.app.test_client() as test_client:
             # Case 1: Unauthenticated upload attempt
             user = get_user(self.userdata[0])
@@ -182,7 +192,7 @@ class Test_Server:
             assert user.profile_image_path is None  # User should not be able to upload an image for another user
 
     def test_messages(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.get('/messages', data={"token": token,
@@ -192,7 +202,7 @@ class Test_Server:
             assert data["messages"] == []
 
     def test_message_attachment(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             attachment = io.BytesIO(b"this is a test")
@@ -207,7 +217,7 @@ class Test_Server:
             assert "uploads" in pfn
 
     def test_uploads(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             text = b"this is a test"
@@ -224,7 +234,7 @@ class Test_Server:
             assert response.data == text
 
     def test_create_operation(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             assert operation is not None
@@ -242,13 +252,13 @@ class Test_Server:
     </ListOfWaypoints>
   </FlightTrack>
 """
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata, content=content)
             assert operation is None
 
     def test_get_operation_by_id(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.get('/get_operation_by_id', data={"token": token,
@@ -257,7 +267,7 @@ class Test_Server:
             assert "<ListOfWaypoints>" in response.data.decode('utf-8')
 
     def test_get_operations(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             self._create_operation(test_client, self.userdata, path="firstflightpath1")
             operation, token = self._create_operation(test_client, self.userdata, path="firstflightpath2")
@@ -269,7 +279,7 @@ class Test_Server:
             assert data["operations"][1]["path"] == "firstflightpath2"
 
     def test_get_operations_skip_archived(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             self._create_operation(test_client, self.userdata, path="firstflightpath1")
             operation, token = self._create_operation(test_client, self.userdata, path="firstflightpath2", active=False)
@@ -282,7 +292,7 @@ class Test_Server:
             assert "firstflightpath2" not in data["operations"]
 
     def test_get_all_changes(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             self._save_content(operation, self.userdata)
@@ -307,7 +317,7 @@ class Test_Server:
             assert all_changes[0]["created_at"] > all_changes[1]["created_at"]
 
     def test_get_change_content(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             user = self._save_content(operation, self.userdata)
@@ -327,7 +337,7 @@ class Test_Server:
             assert data == {'content': XML_CONTENT1}
 
     def test_set_version_name(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             user = self._save_content(operation, self.userdata)
@@ -350,7 +360,7 @@ class Test_Server:
             assert data["success"] is True
 
     def test_authorized_users(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.get('/authorized_users', data={"token": token,
@@ -360,7 +370,7 @@ class Test_Server:
             assert data["users"] == [{'access_level': 'creator', 'username': self.userdata[1], 'id': 1}]
 
     def test_delete_operation(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.post('/delete_operation', data={"token": token,
@@ -370,7 +380,7 @@ class Test_Server:
             assert data["success"] is True
 
     def test_update_operation(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.post('/update_operation', data={"token": token,
@@ -389,7 +399,7 @@ class Test_Server:
             assert data == "True"
 
     def test_get_operation_details(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             path = "flp1"
             operation, token = self._create_operation(test_client, self.userdata, path=path)
@@ -400,7 +410,7 @@ class Test_Server:
             assert data["path"] == path
 
     def test_set_last_used(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             old = operation.last_used
@@ -421,7 +431,7 @@ class Test_Server:
             assert datetime.timedelta(days=11) > old - new > datetime.timedelta(days=9)
 
     def test_set_active(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             assert operation.active is True
@@ -450,9 +460,9 @@ class Test_Server:
             assert operation.active is False
 
     def test_get_users_without_permission(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        unprevileged_user = 'UV20@uv20', 'UV20', 'uv20'
-        assert add_user(unprevileged_user[0], unprevileged_user[1], unprevileged_user[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        unprevileged_user = 'UV20@uv20', 'UV20', 'uv20', 'User 20'
+        assert add_user(unprevileged_user[0], unprevileged_user[1], unprevileged_user[2], unprevileged_user[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.get('/users_without_permission', data={"token": token,
@@ -463,9 +473,9 @@ class Test_Server:
             assert data["users"][-1][0] == unprevileged_user[1]
 
     def test_get_users_with_permission(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        another_user = 'UV20@uv20', 'UV20', 'uv20'
-        assert add_user(another_user[0], another_user[1], another_user[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        another_user = 'UV20@uv20', 'UV20', 'uv20', 'User20'
+        assert add_user(another_user[0], another_user[1], another_user[2], another_user[3])
         with self.app.test_client() as test_client:
             operation, token = self._create_operation(test_client, self.userdata)
             response = test_client.get('/users_with_permission', data={"token": token,
@@ -476,9 +486,9 @@ class Test_Server:
             assert data["users"] == []
 
     def test_import_permissions(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        another_user = 'UV20@uv20', 'UV20', 'uv20'
-        assert add_user(another_user[0], another_user[1], another_user[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        another_user = 'UV20@uv20', 'UV20', 'uv20', 'User20'
+        assert add_user(another_user[0], another_user[1], another_user[2], another_user[3])
         with self.app.test_client() as test_client:
             import_operation, token = self._create_operation(test_client, self.userdata, path="import")
             user = get_user(self.userdata[0])

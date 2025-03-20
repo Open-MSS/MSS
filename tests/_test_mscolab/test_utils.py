@@ -42,14 +42,15 @@ class Test_Utils:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         _, _, self.fm = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
         with self.app.app_context():
             yield
 
     def test_get_recent_oid(self):
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
-        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
+        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2],
+                        self.anotheruserdata[3])
         with self.app.test_client() as test_client:
             user = get_user(self.userdata[0])
             anotheruser = get_user(self.anotheruserdata[0])
