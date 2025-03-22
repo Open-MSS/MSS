@@ -82,7 +82,7 @@ def verify_user_token(func):
     @functools.wraps(func)
     def wrapper(self, *args, **vargs):
         if self.mscolab_server_url is None:
-            # in case of a forecd logout some QT events may still trigger MSCOLAB functions
+            # in case of a forced logout some QT events may still trigger MSCOLAB functions
             return
         verify_user_token.depth += 1
         try:
