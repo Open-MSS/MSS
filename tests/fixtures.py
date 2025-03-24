@@ -28,7 +28,7 @@ import mock
 import multiprocessing
 import time
 import socketio
-import mslib.mswms.mswms
+import mslib.mswms.wms
 import eventlet
 import eventlet.wsgi
 
@@ -172,7 +172,7 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
 @pytest.fixture(scope="session")
 def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
-    return mslib.mswms.mswms.application
+    return mslib.mswms.wms.app
 
 
 @pytest.fixture(scope="session")
@@ -197,10 +197,10 @@ def _running_eventlet_server(app):
     if "fork" not in multiprocessing.get_all_start_methods():
         pytest.skip("requires the multiprocessing start_method 'fork', which is unavailable on this system")
     ctx = multiprocessing.get_context("fork")
-    process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app), daemon=True)
+    process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app))
     try:
         process.start()
-        timeout = 30
+        timeout = 10
         start_time = time.time()
         while not is_url_response_ok(url):
             if time.time() - start_time > timeout:
