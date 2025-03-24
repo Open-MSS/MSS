@@ -469,7 +469,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_as_handler)
         self.actionCopyIntoNewLocalFlightTrack.triggered.connect(self.copy_into_new_flight_track)
         self.actionCopyIntoNewMSColabOperation.triggered.connect(self.copy_into_new_operation)
-        self.actionCopyFromSelected.triggered.connect(self.copy_from_selected)
+        self.actionImportFromSelected.triggered.connect(self.import_from_selected)
         self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
 
         # Views menu.
@@ -767,17 +767,16 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             xml = self.mscolab.waypoints_model.get_xml_doc()
             name = self.mscolab.active_operation_name + "-copy"
         xml = xml.toprettyxml(indent="  ", newl="\n")
-        self.mscolab.add_operation_dialogue(
-            name=name, xml=xml)
+        self.mscolab.add_operation_dialog(name=name, xml=xml)
 
-    def copy_from_selected(self):
+    def import_from_selected(self):
         item = self.listFlightTracks.currentItem()
         if self.local_active:
             if item is not None:
                 if self.active_flight_track == item.flighttrack_model:
                     QtWidgets.QMessageBox.critical(
-                        self, self.tr("copy from selected"),
-                        self.tr("ERROR: cannot copy into oneself"))
+                        self, self.tr("import from selected"),
+                        self.tr("ERROR: cannot import from oneself"))
                     return
                 self.active_flight_track.replace_waypoints(item.flighttrack_model.all_waypoint_data())
                 return

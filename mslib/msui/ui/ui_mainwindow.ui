@@ -434,6 +434,7 @@ Double click a operation to activate and view its description.</string>
      <property name="title">
       <string>Import Flight Track</string>
      </property>
+     <addaction name="actionImportFromSelected"/>
     </widget>
     <widget class="QMenu" name="menuExportActiveFlightTrack">
      <property name="title">
@@ -456,9 +457,8 @@ Double click a operation to activate and view its description.</string>
     </widget>
     <addaction name="menuNew"/>
     <addaction name="menuImportFlightTrack"/>
-    <addaction name="separator"/>
     <addaction name="menuCopyIntoNew"/>
-    <addaction name="actionCopyFromSelected"/>
+    <addaction name="separator"/>
     <addaction name="separator"/>
     <addaction name="actionSaveActiveFlightTrack"/>
     <addaction name="actionSaveActiveFlightTrackAs"/>
@@ -694,9 +694,9 @@ Double click a operation to activate and view its description.</string>
     <string>Change Category</string>
    </property>
   </action>
-  <action name="actionCopyFromSelected">
+  <action name="actionImportFromSelected">
    <property name="text">
-    <string>Copy From Selected</string>
+    <string>From Selected</string>
    </property>
   </action>
   <action name="actionCopyIntoLocalFlightTrack">

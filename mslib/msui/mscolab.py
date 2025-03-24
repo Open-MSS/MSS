@@ -951,10 +951,10 @@ class MSUIMscolab(QtCore.QObject):
                 self.logout()
 
     def add_operation_handler(self, _=None):
-        self.add_operation_dialogue()
+        self.add_operation_dialog()
 
     @verify_user_token
-    def add_operation_dialogue(self, name=None, description=None, xml=None):
+    def add_operation_dialog(self, name=None, description=None, xml=None):
         def check_and_enable_operation_accept():
             if (self.add_proj_dialog.path.text() != "" and
                     self.add_proj_dialog.description.toPlainText() != "" and
@@ -989,7 +989,7 @@ class MSUIMscolab(QtCore.QObject):
         self.add_proj_dialog = msc_add_operation_ui.Ui_addOperationDialog()
         self.add_proj_dialog.setupUi(self.proj_diag)
         self.add_proj_dialog.f_content = None
-        self.add_proj_dialog.buttonBox.accepted.connect(self.add_operation_from_new_dialogue)
+        self.add_proj_dialog.buttonBox.accepted.connect(self.add_operation_from_new_dialog)
         self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         self.add_proj_dialog.path.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.description.textChanged.connect(check_and_enable_operation_accept)
@@ -1010,8 +1010,8 @@ class MSUIMscolab(QtCore.QObject):
             self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
         self.proj_diag.show()
 
-    def add_operation_from_new_dialogue(self):
-        logging.debug("add_operation_from_dialogue")
+    def add_operation_from_new_dialog(self):
+        logging.debug("add_operation_from_dialog")
         self.add_operation(
             self.add_proj_dialog.path.text(),
             self.add_proj_dialog.description.toPlainText(),
@@ -1045,7 +1045,6 @@ class MSUIMscolab(QtCore.QObject):
                 "category": category}
         if f_content is not None:
             data["content"] = f_content
-        print(data)
         try:
             response = self.conn.request_post("create_operation", data)
         except requests.exceptions.RequestException as ex:
@@ -1998,7 +1997,7 @@ class MSUIMscolab(QtCore.QObject):
         if self.active_op_id is None:
             return
 
-        # Setting default filename path for filedialogue
+        # Setting default filename path for filedialog
         default_filename = f'{self.active_operation_name}.{extension}'
         file_name = get_save_filename(
             self.ui, "Export From Server",
