@@ -996,18 +996,20 @@ class MSUIMscolab(QtCore.QObject):
         self.add_proj_dialog.category.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.browse.clicked.connect(browse)
         self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
-        self.add_proj_dialog.optFileBox.setHidden(True)
         if name is not None:
             self.add_proj_dialog.path.setText(name)
         if description is not None:
             self.add_proj_dialog.description.setText(name)
         if xml is not None:
             self.add_proj_dialog.f_content = xml
+            self.add_proj_dialog.optFileBox.setHidden(True)
 
         # sets types from defined import menu
         import_menu = self.ui.menuImportFlightTrack
         for im_action in import_menu.actions():
-            self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
+            if im_action.text() != "From Selected":
+                print(im_action.text())
+                self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
         self.proj_diag.show()
 
     def add_operation_from_new_dialog(self):
