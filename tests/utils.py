@@ -25,6 +25,8 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import logging
+
 import requests
 
 from urllib.parse import urljoin
@@ -221,7 +223,14 @@ def is_url_response_ok(url):
     try:
         response = requests.get(url, timeout=2)
         return response.status_code == 200
-    except:  # noqa: E722
+    except requests.ConnectionError:
+        logging.error(f"ConnectionError while checking URL {url}.")
+        return False
+    except requests.Timeout:
+        logging.error(f"Timeout while checking URL {url}.")
+        return False
+    except requests.RequestException as e:  # General exception for requests
+        logging.error(f"Error while checking URL {url}: {e}")
         return False
 
 

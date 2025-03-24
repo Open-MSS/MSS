@@ -27,7 +27,6 @@ import pytest
 import mock
 import multiprocessing
 import time
-import urllib
 import socketio
 import mslib.mswms.mswms
 import eventlet
@@ -201,7 +200,11 @@ def _running_eventlet_server(app):
     process = ctx.Process(target=eventlet.wsgi.server, args=(socket, app), daemon=True)
     try:
         process.start()
-        while not is_url_response_ok(urllib.parse.urljoin(url, "index")):
+        timeout = 30
+        start_time = time.time()
+        while not is_url_response_ok(url):
+            if time.time() - start_time > timeout:
+                pytest.fail('Server: "%s" did not become ready in time' % app.name)
             time.sleep(0.5)
         yield url
     finally:
