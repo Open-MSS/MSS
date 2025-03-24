@@ -40,6 +40,9 @@ from mslib.msui.qt5 import ui_mscolab_operation_window as ui
 from mslib.utils.config import config_loader
 
 
+MSCOLAB_TIMEOUT = tuple(config_loader(dataset="MSCOLAB_timeout"))
+
+
 # We need to override the KeyPressEvent in QTextEdit to disable the default behaviour of enter key.
 class MessageTextEdit(QtWidgets.QTextEdit):
     def keyPressEvent(self, event):
@@ -278,7 +281,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
             }
             url = urljoin(self.mscolab_server_url, 'message_attachment')
             try:
-                requests.post(url, data=data, files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+                requests.post(url, data=data, files=files, timeout=MSCOLAB_TIMEOUT)
             except requests.exceptions.ConnectionError:
                 show_popup(self, "Error", "File size too large")
         self.send_message_state()
@@ -337,9 +340,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         active_users_url = urljoin(self.mscolab_server_url, 'active_users')
 
         # Fetch both authorized and active users
-        users_response = requests.get(users_url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        active_response = requests.get(active_users_url, data=data,
-                                       timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        users_response = requests.get(users_url, data=data, timeout=MSCOLAB_TIMEOUT)
+        active_response = requests.get(active_users_url, data=data, timeout=MSCOLAB_TIMEOUT)
 
         if users_response != "False":
             self.collaboratorsList.clear()
@@ -355,7 +357,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                     "user_id": str(user["id"]),
                     "token": self.token
                 }
-                response = requests.get(url, data=data)
+                response = requests.get(url, data=data, timeout=MSCOLAB_TIMEOUT)
                 pixmap = QtGui.QPixmap()
                 if response.status_code == 200:
                     # pixmap = QtGui.QPixmap()
@@ -401,7 +403,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
         # returns an array of messages
         url = urljoin(self.mscolab_server_url, "messages")
 
-        res = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        res = requests.get(url, data=data, timeout=MSCOLAB_TIMEOUT)
         if res.text != "False":
             res = res.json()
             messages = res["messages"]
@@ -532,7 +534,7 @@ class MessageItem(QtWidgets.QWidget):
                               self.attachment_path.replace('\\', '/').split('colabdata')[1])
         else:
             img_url = urljoin(self.chat_window.mscolab_server_url, self.attachment_path)
-        data = requests.get(img_url, timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
+        data = requests.get(img_url, timeout=MSCOLAB_TIMEOUT).content
         image = QtGui.QImage()
         image.loadFromData(data)
         self.message_image = image
@@ -712,7 +714,7 @@ class MessageItem(QtWidgets.QWidget):
             file_path = get_save_filename(self, "Save Document", default_filename, f"Document (*{file_ext})")
             if file_path is not None:
                 file_content = requests.get(urljoin(self.chat_window.mscolab_server_url, self.attachment_path),
-                                            timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))).content
+                                            timeout=MSCOLAB_TIMEOUT).content
                 with open(file_path, "wb") as f:
                     f.write(file_content)
         else:

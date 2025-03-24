@@ -218,7 +218,7 @@ def create_msui_settings_file(content):
 
 def is_url_response_ok(url):
     try:
-        response = requests.get(url)
+        response = requests.get(url, timeout=2)
         return response.status_code == 200
     except:  # noqa: E722
         return False

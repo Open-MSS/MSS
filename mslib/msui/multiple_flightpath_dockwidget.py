@@ -38,6 +38,9 @@ from urllib.parse import urljoin
 from mslib.utils.colordialog import CustomColorDialog
 
 
+MSCOLAB_TIMEOUT = tuple(config_loader(dataset="MSCOLAB_timeout"))
+
+
 class QMscolabOperationsListWidgetItem(QtWidgets.QListWidgetItem):
     """
     """
@@ -803,7 +806,7 @@ class MultipleFlightpathOperations:
             "skip_archived": skip_archived
         }
         url = urljoin(self.mscolab_server_url, "operations")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, data=data, timeout=MSCOLAB_TIMEOUT)
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
@@ -819,7 +822,7 @@ class MultipleFlightpathOperations:
                 "op_id": op_id
             }
             url = urljoin(self.mscolab_server_url, "get_operation_by_id")
-            r = requests.get(url, data=data, timeout=(2, 10))
+            r = requests.get(url, data=data, timeout=MSCOLAB_TIMEOUT)
             if r.text != "False":
                 xml_content = json.loads(r.text)["content"]
                 return xml_content

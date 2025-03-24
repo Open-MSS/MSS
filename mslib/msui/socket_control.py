@@ -38,6 +38,9 @@ from mslib.utils.verify_user_token import verify_user_token
 from mslib.utils.config import config_loader
 
 
+MSCOLAB_TIMEOUT = tuple(config_loader(dataset="MSCOLAB_timeout"))
+
+
 class ConnectionManager(QtCore.QObject):
 
     signal_reload = QtCore.pyqtSignal(int, name="reload_wps")
@@ -245,14 +248,14 @@ class ConnectionManager(QtCore.QObject):
         response = requests.post(
             urljoin(self.mscolab_server_url, api),
             data=((data if data is not None else {}) | {"token": self.token}),
-            files=files, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            files=files, timeout=MSCOLAB_TIMEOUT)
         return response
 
     def request_get(self, api, data=None):
         response = requests.get(
             urljoin(self.mscolab_server_url, api),
             data=((data if data is not None else {}) | {"token": self.token}),
-            timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            timeout=MSCOLAB_TIMEOUT)
         if response.status_code != 200:
             raise MSColabConnectionError
         return response

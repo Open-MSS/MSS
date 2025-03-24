@@ -75,6 +75,9 @@ from mslib.msui import constants
 from mslib.utils.config import config_loader, modify_config_file
 
 
+MSCOLAB_TIMEOUT = tuple(config_loader(dataset="MSCOLAB_timeout"))
+
+
 def verify_user_token(func):
     if not hasattr(verify_user_token, "depth"):
         verify_user_token.depth = 0
@@ -131,7 +134,7 @@ class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowse
                     "update_operation",
                     {"op_id": self.archived_op_id,
                      "attribute": "active",
-                     "value": "True"})
+                     "value": "True"}, timeout=MSCOLAB_TIMEOUT)
             except requests.exceptions.RequestException as e:
                 logging.debug(e)
                 show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
@@ -250,7 +253,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             session.auth = auth
             session.headers.update({'x-test': 'true'})
             response = session.get(
-                urljoin(url, 'status'), timeout=tuple(tuple(config_loader(dataset="MSCOLAB_timeout"))))
+                urljoin(url, 'status'), timeout=MSCOLAB_TIMEOUT)
             if response.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif response.status_code == 200:
@@ -361,7 +364,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         url = urljoin(self.mscolab_server_url, "token")
         url_recover_password = urljoin(self.mscolab_server_url, "reset_request")
         try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = session.post(url, data=data, timeout=MSCOLAB_TIMEOUT)
             response.raise_for_status()
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
@@ -393,7 +396,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         try:
             data = {'token': user_token}
-            response = requests.post(url_idp_login_auth, json=data, timeout=(2, 10))
+            response = requests.post(url_idp_login_auth, json=data, timeout=MSCOLAB_TIMEOUT)
             if response.status_code == 401:
                 self.set_status("Error", 'Invalid token or token expired. Please try again')
                 self.stackedWidget.setCurrentWidget(self.loginPage)
@@ -413,7 +416,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 session.headers.update({'x-test': 'true'})
                 url = urljoin(self.mscolab_server_url, "token")
 
-                response = session.post(url, data=data, timeout=(2, 10))
+                response = session.post(url, data=data, timeout=MSCOLAB_TIMEOUT)
                 response.raise_for_status()
                 if response.text == "False":
                     # show status indicating about wrong credentials
@@ -461,7 +464,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
         session.headers.update({'x-test': 'true'})
         url = urljoin(self.mscolab_server_url, "register")
         try:
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = session.post(url, data=data, timeout=MSCOLAB_TIMEOUT)
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
             self.set_status(

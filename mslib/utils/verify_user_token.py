@@ -31,6 +31,9 @@ from mslib.utils.config import config_loader
 from urllib.parse import urljoin
 
 
+MSCOLAB_TIMEOUT = tuple(config_loader(dataset="MSCOLAB_timeout"))
+
+
 def verify_user_token(mscolab_server_url, token):
 
     if config_loader(dataset="mscolab_skip_verify_user_token"):
@@ -41,7 +44,7 @@ def verify_user_token(mscolab_server_url, token):
     }
     try:
         url = urljoin(mscolab_server_url, "test_authorized")
-        r = requests.get(url, data=data, timeout=(2, 10))
+        r = requests.get(url, data=data, timeout=MSCOLAB_TIMEOUT)
     except requests.exceptions.SSLError:
         logging.debug("Certificate Verification Failed")
         return False
