@@ -1,6 +1,18 @@
 Changelog
 =========
 
+
+Version 10.1.0
+~~~~~~~~~~~~~~
+
+Bug fix release and minor enhancements:
+We added a simpler way of moving flight tracks between local flighttrack / operation.
+See the new menu entries below File - Import and File - Copy Into New
+
+All changes:
+https://github.com/Open-MSS/MSS/milestone/114?closed=1
+
+
 Version 10.0.1
 ~~~~~~~~~~~~~~
 Bug fix release:
