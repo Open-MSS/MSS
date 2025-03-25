@@ -467,6 +467,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         self.actionNewFlightTrack.triggered.connect(functools.partial(self.create_new_flight_track, None, None))
         self.actionSaveActiveFlightTrack.triggered.connect(self.save_handler)
         self.actionSaveActiveFlightTrackAs.triggered.connect(self.save_as_handler)
+        self.actionCopyIntoNewLocalFlightTrack.triggered.connect(self.copy_into_new_flight_track)
+        self.actionCopyIntoNewMSColabOperation.triggered.connect(self.copy_into_new_operation)
+        self.actionImportFromSelected.triggered.connect(self.import_from_selected)
         self.actionCloseSelectedFlightTrack.triggered.connect(self.close_selected_flight_track)
 
         # Views menu.
@@ -727,6 +730,84 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         else:
             self.mscolab.handle_export_msc(extension, function, pickertype)
 
+    def copy_into_new_flight_track(self):
+        if self.local_active:
+            name = self.active_flight_track.name
+            template_copy = copy.deepcopy(self.active_flight_track.all_waypoint_data())
+        else:
+            name = self.mscolab.active_operation_name
+            template_copy = copy.deepcopy(self.mscolab.waypoints_model.all_waypoint_data())
+
+        # Create a new flight track from the waypoints' template.
+        self.new_flight_track_counter += 1
+        waypoints_model = ft.WaypointsTableModel(
+            name=name + f" (copy {self.new_flight_track_counter:d})")
+        # Make a copy of the template. Otherwise, all new flight tracks would
+        # use the same data structure in memory.
+        waypoints_model.insertRows(0, rows=len(template_copy), waypoints=template_copy)
+
+        # Create a new list entry for the flight track. Make the item name editable.
+        listitem = QFlightTrackListWidgetItem(waypoints_model, self.listFlightTracks)
+        listitem.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+
+        # Activate new item
+        self.activate_flight_track(listitem)
+
+    def copy_into_new_operation(self):
+        if self.mscolab.token is None:
+            QtWidgets.QMessageBox.critical(
+                self, self.tr("copy into new operation"),
+                self.tr("ERROR: No connection to MSColab server"))
+            return
+        if self.local_active:
+            xml = self.active_flight_track.get_xml_doc()
+            name = self.active_flight_track.name.replace(" ", "").replace("(", "").replace(")", "") + \
+                f"-copy{self.new_flight_track_counter:d}"
+        else:
+            xml = self.mscolab.waypoints_model.get_xml_doc()
+            name = self.mscolab.active_operation_name + "-copy"
+        xml = xml.toprettyxml(indent="  ", newl="\n")
+        self.mscolab.add_operation_dialog(name=name, xml=xml)
+
+    def import_from_selected(self):
+        item = self.listFlightTracks.currentItem()
+        if self.local_active:
+            if item is not None:
+                if self.active_flight_track == item.flighttrack_model:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("import from selected"),
+                        self.tr("ERROR: cannot import from oneself"))
+                    return
+                self.active_flight_track.replace_waypoints(item.flighttrack_model.all_waypoint_data())
+                return
+            if self.mscolab.token is not None:
+                item = self.mscolab.ui.listOperationsMSC.currentItem()
+                if item is not None:
+                    xml_content = self.mscolab.request_wps_from_server(item.op_id)
+                    waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                    self.active_flight_track.replace_waypoints(waypoints_model.all_waypoint_data())
+                    return
+
+        else:
+            if item is not None:
+                self.mscolab.waypoints_model.replace_waypoints(item.flighttrack_model.all_waypoint_data())
+                return
+            item = self.mscolab.ui.listOperationsMSC.currentItem()
+            if item is not None:
+                if item.op_id == self.mscolab.active_op_id:
+                    QtWidgets.QMessageBox.critical(
+                        self, self.tr("copy from selected"),
+                        self.tr("ERROR: cannot copy into oneself"))
+                    return
+                xml_content = self.mscolab.request_wps_from_server(item.op_id)
+                waypoints_model = ft.WaypointsTableModel(xml_content=xml_content)
+                self.mscolab.waypoints_model.replace_waypoints(waypoints_model.all_waypoint_data())
+                return
+
+        QtWidgets.QMessageBox.critical(
+            self, self.tr("copy from selected"),
+            self.tr("ERROR: select a flight track or an operation first"))
+
     def create_new_flight_track(self, template=None, filename=None, function=None, activate=True):
         """Creates a new flight track model from a template. Adds a new entry to
            the list of flight tracks. Called when the user selects the 'new/open
@@ -894,7 +975,11 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                                               self.tr("At least one flight track has to be open."))
             return
         item = self.listFlightTracks.currentItem()
-        if item.flighttrack_model == self.active_flight_track and self.local_active:
+        if item is None:
+            QtWidgets.QMessageBox.information(self, self.tr("Flight Track Management"),
+                                              self.tr("Please select a local flight track first"))
+            return
+        if self.local_active and item.flighttrack_model == self.active_flight_track:
             QtWidgets.QMessageBox.information(self, self.tr("Flight Track Management"),
                                               self.tr("Cannot close currently active flight track."))
             return
