@@ -73,6 +73,8 @@ def main(tutorial_mode=False):
         sys.exit()
 
     setup_logging(args)
+    # Log the file location
+    logging.info("Log file location: %s", os.path.join(os.path.expanduser("~"), ".config/msui/msui.log"))
 
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
