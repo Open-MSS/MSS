@@ -31,9 +31,13 @@ import os
 import fs
 import argparse
 import pytest
+
 from urllib.request import urlopen
-from PyQt5 import QtWidgets, QtTest
+from PyQt5 import QtWidgets, QtTest, QtCore
+from saml2.samlp import assertion_id_request_type__from_string
+
 from mslib import __version__
+from mslib.msui.constants import MSUI_SETTINGS
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH
 from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
@@ -129,6 +133,102 @@ class Test_MSS_ShortcutDialog:
         assert self.shortcuts.treeWidget.topLevelItemCount() == 2
 
     # ToDo we need a test for reset_highlight when e.g. Transparent was selected and afterwards topview was destroyed
+
+class Test_Config_Edit:
+    @pytest.fixture(autouse=True)
+    def setup(self, qtbot):
+        self.window = msui_mw.MSUIMainWindow()
+        self.window.create_new_flight_track()
+        self.window.show()
+        self.window.actionConfiguration.trigger()
+        self.all_config_items = [self.window.config_editor.optCb.itemText(i)
+                                 for i in range(self.window.config_editor.optCb.count())]
+        yield
+        self.window.hide()
+
+    def test_open_config_editor(self):
+        assert self.window.config_editor.isVisible()
+        assert self.window.config_editor.windowTitle() == "MSUI Configuration Editor"
+        assert self.window.config_editor.path == MSUI_SETTINGS
+
+    def test_values_use_filter(self):
+        config = self.window.config_editor.last_saved
+        assert config["MSCOLAB_timeout"] == [2, 10]
+        assert self.window.config_editor.optCb.currentText() == "All"
+        index = self.all_config_items.index("MSCOLAB_timeout")
+        self.window.config_editor.optCb.setCurrentIndex(index)
+        assert self.window.config_editor.optCb.currentText() == "MSCOLAB_timeout"
+        self.window.config_editor.set_option_filter(0)
+
+    def test_edit_values(self):
+        index = self.all_config_items.index("MSCOLAB_timeout")
+
+        self.window.config_editor.optCb.setCurrentIndex(index)
+        assert self.window.config_editor.optCb.currentText() == "MSCOLAB_timeout"
+        self.window.config_editor.set_option_filter(0)
+
+        value_index = self.window.config_editor.proxy_model.index(0, 0, QtCore.QModelIndex())
+        assert value_index.data() == "MSCOLAB_timeout"
+        # Wähle die Zeile aus
+        selection_model = self.window.config_editor.view.selectionModel()
+        selection_model.select(value_index, QtCore.QItemSelectionModel.Select | QtCore.QItemSelectionModel.Rows)
+
+        # Überprüfe, ob die Auswahl erfolgreich war
+        selected_rows = selection_model.selectedRows()
+        assert len(selected_rows) == 1
+        assert selected_rows[0] == value_index
+
+
+        json_model = self.window.config_editor.json_model
+        proxy_model = self.window.config_editor.proxy_model
+
+
+        row, column = _find_in_json_model(json_model, "MSCOLAB_timeout")
+        assert row is not None
+
+        index = json_model.index(row, column)
+        assert index.isValid()
+
+        value = json_model.data(index)
+        assert value == "MSCOLAB_timeout"
+
+        editable_values = json_model.editable_values
+        assert editable_values["MSCOLAB_timeout"] == [2, 10]
+
+
+
+        if index.isValid():
+            json_model.setData(index, "data", role=QtCore.Qt.EditRole)
+
+        assert json_model is None
+
+        import time
+        time.sleep(10)
+        #self.window.config_editor.save_config()
+
+
+
+def _find_in_json_model(json_model, name):
+    row_count = json_model.rowCount()
+    column_count = json_model.columnCount()
+
+    for row in range(row_count):
+        for column in range(column_count):
+            index = json_model.index(row, column)
+
+            if not index.isValid():
+                continue
+
+            value = json_model.data(index)
+
+            if value == name:
+                return row, column
+
+    return None, None
+
+
+
+
 
 
 class Test_MSSSideViewWindow:
