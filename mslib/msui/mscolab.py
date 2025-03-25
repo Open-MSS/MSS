@@ -393,7 +393,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         try:
             data = {'token': user_token}
-            response = requests.post(url_idp_login_auth, json=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+            response = requests.post(url_idp_login_auth, json=data,
+                                     timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if response.status_code == 401:
                 self.set_status("Error", 'Invalid token or token expired. Please try again')
                 self.stackedWidget.setCurrentWidget(self.loginPage)

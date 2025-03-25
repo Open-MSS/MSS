@@ -338,7 +338,8 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
 
         # Fetch both authorized and active users
         users_response = requests.get(users_url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
-        active_response = requests.get(active_users_url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
+        active_response = requests.get(active_users_url, data=data,
+                                       timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
 
         if users_response != "False":
             self.collaboratorsList.clear()
