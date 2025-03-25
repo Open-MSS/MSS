@@ -64,9 +64,6 @@ from mslib.utils.loggerdef import configure_mpl_logger
 from mslib.utils.verify_user_token import verify_user_token
 
 
-MSCOLAB_TIMEOUT = tuple(config_loader(dataset="MSCOLAB_timeout"))
-
-
 TEXT_CONFIG = {
     "bbox": dict(boxstyle="round", facecolor="white", alpha=0.5, edgecolor="none"), "fontweight": "bold",
     "zorder": 4, "fontsize": 6, "clip_on": True}
@@ -112,7 +109,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
     session.auth = msc_auth
     session.headers.update({'x-test': 'true'})
     # ToDp fix config_loader it gets a list of two times the entry
-    response = session.get(urljoin(msc_url, 'status'), timeout=MSCOLAB_TIMEOUT[0])
+    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))[0])
     session.close()
     if response.status_code == 401:
         logging.error("Error", 'Server authentication data were incorrect.')
@@ -123,7 +120,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
         url = urljoin(msc_url, "token")
         try:
             # ToDp fix config_loader it gets a list of two times the entry
-            response = session.post(url, data=data, timeout=MSCOLAB_TIMEOUT[0])
+            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))[0])
             response.raise_for_status()
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
@@ -161,7 +158,7 @@ def get_xml_data(msc_url, token, op_id):
             "op_id": op_id
         }
         url = urljoin(msc_url, "get_operation_by_id")
-        r = requests.get(url, data=data, timeout=MSCOLAB_TIMEOUT)
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             xml_content = json.loads(r.text)["content"]
             return xml_content
@@ -190,7 +187,7 @@ def get_op_id(msc_url, token, op_name):
             "skip_archived": skip_archived
         }
         url = urljoin(msc_url, "operations")
-        r = requests.get(url, data=data, timeout=MSCOLAB_TIMEOUT)
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
