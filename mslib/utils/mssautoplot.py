@@ -108,8 +108,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
     msc_auth = ("mscolab", msc_auth_password)
     session.auth = msc_auth
     session.headers.update({'x-test': 'true'})
-    # ToDp fix config_loader it gets a list of two times the entry
-    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))[0])
+    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
     session.close()
     if response.status_code == 401:
         logging.error("Error", 'Server authentication data were incorrect.')
@@ -119,8 +118,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
         session.headers.update({'x-test': 'true'})
         url = urljoin(msc_url, "token")
         try:
-            # ToDp fix config_loader it gets a list of two times the entry
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout"))[0])
+            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             response.raise_for_status()
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
