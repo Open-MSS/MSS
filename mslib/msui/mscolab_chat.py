@@ -355,7 +355,7 @@ class MSColabChatWindow(QtWidgets.QMainWindow, ui.Ui_MscolabOperation):
                     "user_id": str(user["id"]),
                     "token": self.token
                 }
-                response = requests.get(url, data=data)
+                response = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 pixmap = QtGui.QPixmap()
                 if response.status_code == 200:
                     # pixmap = QtGui.QPixmap()
