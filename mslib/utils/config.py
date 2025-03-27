@@ -483,15 +483,18 @@ def modify_config_file(data, path=constants.MSUI_SETTINGS):
     path = path.replace("\\", "/")
     dir_name, file_name = fs.path.split(path)
     json_file_data = {}
+    print(f"DEBUG: Modifying config file at {path}")
     with fs.open_fs(dir_name) as _fs:
         if _fs.exists(file_name):
             try:
                 file_content = _fs.readtext(file_name)
+                print(f"DEBUG: Original file content: {file_content}")
                 json_file_data = json.loads(file_content, object_pairs_hook=dict_raise_on_duplicates_empty)
                 json_file_data_copy = copy.deepcopy(json_file_data)
                 for key in data:
                     if key not in json_file_data:
                         json_file_data_copy[key] = config_loader(dataset=key, default=True)
+                print(f"DEBUG: Before merging: {json_file_data_copy}")
                 modified_data = merge_dict(json_file_data_copy, data)
                 logging.debug("Merged default and user settings")
                 _fs.writetext(file_name, json.dumps(modified_data, indent=4))
@@ -669,7 +672,7 @@ def compare_data(default, user_data):
             user_data = float(default)
         if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
             return user_data, True
-        if isinstance(match_type(default), type(match_type(user_data))):
+        if isinstance(match_type(default), (StrType, fs.base.FS)) and isinstance(match_type(user_data), (StrType,fs.base.FS)):
             return user_data, True
         else:
             return default, False
