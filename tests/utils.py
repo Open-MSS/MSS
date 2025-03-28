@@ -221,7 +221,7 @@ def create_msui_settings_file(content):
 
 
 def is_url_response_ok(url):
-    time.sleep(0)  # it seems we need a delay?
+    time.sleep(1)  # it seems we need a delay?
     try:
         response = requests.get(url, timeout=2)
         return response.status_code == 200
@@ -234,6 +234,8 @@ def is_url_response_ok(url):
     except requests.RequestException as e:  # General exception for requests
         logging.error(f"Error while checking URL {url}: {e}")
         return False
+    except Exception as e:
+        logging.error(f"Unknown error while checking URL {url}: {e}")
 
 
 class ExceptionMock:
