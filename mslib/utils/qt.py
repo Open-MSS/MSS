@@ -155,7 +155,7 @@ def excepthook(type_, value, traceback_):
     logging.critical("Platform: %s (%s)", platform.platform(), platform.architecture())
     logging.critical("Fatal error: %s", tb)
 
-    if type_ is mslib.utils.FatalUserError:
+    if issubclass(type_, mslib.utils.FatalUserError):
         QtWidgets.QMessageBox.critical(
             None, "fatal error",
             f"Fatal user error in MSS {mslib.__version__} on {platform.platform()}\n"
