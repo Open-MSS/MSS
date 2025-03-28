@@ -192,7 +192,6 @@ class Test_Mscolab_connect_window:
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
-
         assert self.window.mscolab_server_url is not None
         self._create_user("anand", "anand@something.org", "anand_pass", "Anand User")
         # check changed settings
@@ -204,13 +203,13 @@ class Test_Mscolab_connect_window:
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.Yes)
     def test_add_users_with_updating_credentials_in_config_file(self, mockmessage, qtbot):
+        self._connect_to_mscolab(qtbot)
         create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
         mslib.utils.auth.save_password_to_keyring(service_name=self.url,
                                                   username="something@something.org", password="something")
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
-        self._connect_to_mscolab(qtbot)
         assert self.window.mscolab_server_url is not None
         self._create_user("anand", "anand@something.org", "anand_pass", "Anand User")
         # check changed settings
