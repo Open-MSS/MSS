@@ -30,7 +30,6 @@ import mock
 import shutil
 import tempfile
 import pytest
-import pytestqt
 import hashlib
 import urllib
 import eventlet
