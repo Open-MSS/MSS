@@ -28,7 +28,7 @@ import mock
 import multiprocessing
 import time
 import socketio
-import mslib.mswms.wms
+import mslib.mswms.mswms
 import eventlet
 import eventlet.wsgi
 
@@ -172,7 +172,7 @@ def mscolab_server(mscolab_session_server, reset_mscolab):
 @pytest.fixture(scope="session")
 def mswms_app():
     """Fixture that provides the MSWMS WSGI app instance."""
-    return mslib.mswms.wms.app
+    return mslib.mswms.mswms.application
 
 
 @pytest.fixture(scope="session")
