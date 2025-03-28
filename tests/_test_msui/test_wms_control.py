@@ -30,6 +30,7 @@ import mock
 import shutil
 import tempfile
 import pytest
+import pytestqt
 import hashlib
 import urllib
 import eventlet
@@ -110,6 +111,7 @@ class Test_HSecWMSControlWidget(WMSControlWidgetSetup):
         host = "127.0.0.1"
         socket = eventlet.listen((host, 0))
         port = socket.getsockname()[1]
+        socket.close()
         with mock.patch("PyQt5.QtWidgets.QMessageBox.critical") as mock_critical:
             self.query_server(qtbot, f"{self.scheme}://{self.host}:{port}")
             mock_critical.assert_called_once()
