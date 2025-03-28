@@ -187,11 +187,12 @@ class Test_Mscolab_connect_window:
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.question", return_value=QtWidgets.QMessageBox.No)
     def test_add_users_without_updating_credentials_in_config_file(self, mockmessage, qtbot):
+        self._connect_to_mscolab(qtbot)
         create_msui_settings_file('{"MSS_auth": {"' + self.url + '": "something@something.org"}}')
         read_config_file()
         # check current settings
         assert config_loader(dataset="MSS_auth").get(self.url) == "something@something.org"
-        self._connect_to_mscolab(qtbot)
+
         assert self.window.mscolab_server_url is not None
         self._create_user("anand", "anand@something.org", "anand_pass", "Anand User")
         # check changed settings
