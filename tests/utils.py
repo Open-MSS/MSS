@@ -221,7 +221,6 @@ def create_msui_settings_file(content):
 
 
 def is_url_response_ok(url):
-    time.sleep(0.5)  # it seems we need a delay?
     try:
         response = requests.get(url, timeout=2)
         return response.status_code == 200
