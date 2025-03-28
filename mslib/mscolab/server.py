@@ -56,6 +56,8 @@ from mslib.index import create_app
 from mslib.mscolab.forms import ResetRequestForm, ResetPasswordForm
 from mslib.mscolab import migrations
 
+_client_default_content = None
+
 
 def _handle_db_upgrade():
     from mslib.mscolab.models import db
@@ -555,20 +557,28 @@ def error413(error):
 @APP.route('/create_operation', methods=["POST"])
 @verify_user
 def create_operation():
+    global _client_default_content
     path = request.form['path']
-    content = request.form.get('content', None)
+    content = request.form.get('content')
+    default_content = request.form.get('default_content')
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
     active = (request.form.get('active', "True") == "True")
     last_used = datetime.datetime.now(tz=datetime.timezone.utc)
     user = g.user
+    if default_content is not None:
+        _client_default_content = default_content
     r = str(fm.create_operation(path, description, user, last_used,
-                                content=content, category=category, active=active))
+                                content=content, category=category, active=active, default_content=default_content))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
     return r
+
+
+def get_client_default_content():
+    return _client_default_content
 
 
 @APP.route('/get_operation_by_id', methods=['GET'])

@@ -32,6 +32,7 @@ from sqlalchemy.exc import IntegrityError
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import User, db, Permission, Operation
 from mslib.mscolab.server import APP as app
+from mslib.mscolab.server import get_client_default_content
 
 
 # Todo: refactor move to mscolab.utils
@@ -63,7 +64,7 @@ def add_all_users_default_operation(path='TEMPLATE', description="Operation to k
             with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
                 if not file_dir.exists(path):
                     file_dir.makedir(path)
-                    file_dir.writetext(f'{path}/main.ftml', mscolab_settings.STUB_CODE)
+                    file_dir.writetext(f'{path}/main.ftml', get_client_default_content)
                     # initiate git
                     r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', path))
                     r.git.clear_cache()
@@ -151,7 +152,7 @@ def add_operation(operation_name, description):
             with fs.open_fs(mscolab_settings.OPERATIONS_DATA) as file_dir:
                 if not file_dir.exists(operation_name):
                     file_dir.makedir(operation_name)
-                    file_dir.writetext(f'{operation_name}/main.ftml', mscolab_settings.STUB_CODE)
+                    file_dir.writetext(f'{operation_name}/main.ftml', get_client_default_content)
                     # initiate git
                     r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', operation_name))
                     r.git.clear_cache()
@@ -404,7 +405,7 @@ def seed_data():
         file_paths = ['one', 'two', 'three', 'four', 'Admin_Test', 'test_mscolab']
         for file_path in file_paths:
             file_dir.makedir(file_path)
-            file_dir.writetext(f'{file_path}/main.ftml', mscolab_settings.STUB_CODE)
+            file_dir.writetext(f'{file_path}/main.ftml', get_client_default_content)
             # initiate git
             r = git.Repo.init(fs.path.join(mscolab_settings.DATA_DIR, 'filedata', file_path))
             r.git.clear_cache()

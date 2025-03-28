@@ -57,7 +57,8 @@ class FileManager:
                 self.operation_locks[op_id] = threading.Lock()
                 return self.operation_locks[op_id]
 
-    def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
+    def create_operation(self, path, description, user, default_content, last_used=None,
+                         content=None, category="default", active=True):
         """
         Creates a new operation in the mscolab system.
 
@@ -103,7 +104,7 @@ class FileManager:
             if content is not None:
                 operation_file.write(content)
             else:
-                operation_file.write(mscolab_settings.STUB_CODE)
+                operation_file.write(default_content)
             operation_path = fs.path.combine(self.data_dir, operation.path)
             r = git.Repo.init(operation_path)
             r.git.clear_cache()

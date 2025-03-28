@@ -72,7 +72,7 @@ from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
-from mslib.utils.config import config_loader, modify_config_file
+from mslib.utils.config import config_loader, modify_config_file, MSUIDefaultConfig
 
 
 def verify_user_token(func):
@@ -1027,9 +1027,16 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
 
+        user_template = MSUIDefaultConfig.new_flighttrack_template
+        xml_waypoints = "".join(
+            f"<Waypoint location='{wp}' lat='0.0' lon='0.0' flightlevel='300'><Comments>Default</Comments></Waypoint>"
+            for wp in user_template
+        )
+        default_content = f"<FlightTrack>{xml_waypoints}</FlightTrack>"
         data = {"path": path,
                 "description": description,
-                "category": category}
+                "category": category,
+                "default_content": default_content}
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
         try:
