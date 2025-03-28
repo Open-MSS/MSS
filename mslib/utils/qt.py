@@ -422,4 +422,4 @@ class NonQtCallback:
                 pass
 
 
-# sys.excepthook = excepthook
+sys.excepthook = excepthook
