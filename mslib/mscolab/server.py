@@ -568,8 +568,8 @@ def create_operation():
     user = g.user
     if default_content is not None:
         _client_default_content = default_content
-    r = str(fm.create_operation(path, description, user, last_used,
-                                content=content, category=category, active=active, default_content=default_content))
+    r = str(fm.create_operation(path, description, user, default_content, last_used,
+                                content=content, category=category, active=active))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
