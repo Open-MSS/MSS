@@ -557,26 +557,31 @@ class Test_FileManager:
       </ListOfWaypoints>
   </FlightTrack>"""
 
-    def _create_operation(self, flight_path="firstflight", user=None, content=None, category="default"):
+    def _create_operation(self, flight_path="firstflight", user=None, content=None,
+                          category="default", default_content=""):
         if user is None:
             user = self.user
-        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content, category=category)
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user,
+                                 default_content=default_content, content=content, category=category)
         operation = Operation.query.filter_by(path=flight_path).first()
         return flight_path, operation
 
-    def _create_operation_with_users(self, flight_path="firstflight", user=None, content=None):
+    def _create_operation_with_users(self, flight_path="firstflight", user=None, content=None, default_content=""):
         if user is None:
             user = self.user
-        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user,
+                                 default_content=default_content, content=content)
         operation = Operation.query.filter_by(path=flight_path).first()
         self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "viewer")
         self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
         return flight_path, operation
 
-    def _create_operation_with_opposite_permissions(self, flight_path="firstflight", user=None, content=None):
+    def _create_operation_with_opposite_permissions(self, flight_path="firstflight", user=None,
+                                                    content=None, default_content=""):
         if user is None:
             user = self.user
-        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user,
+                                 default_content=default_content, content=content)
         operation = Operation.query.filter_by(path=flight_path).first()
         self.fm.add_bulk_permission(operation.id, self.user, [self.vieweruser.id], "collaborator")
         self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "viewer")

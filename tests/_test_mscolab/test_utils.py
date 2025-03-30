@@ -87,7 +87,8 @@ class Test_Utils:
         assert os.path.exists(mscolab_settings.OPERATIONS_DATA)
         assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test"):
+    def _create_operation(self, test_client, userdata=None, path="firstflight",
+                          description="simple test", default_content=""):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
@@ -95,7 +96,8 @@ class Test_Utils:
         token = data["token"]
         response = test_client.post('/create_operation', data={"token": token,
                                                                "path": path,
-                                                               "description": description})
+                                                               "description": description,
+                                                               "default_content": default_content})
         assert response.status_code == 200
         assert response.data.decode('utf-8') == "True"
         operation = Operation.query.filter_by(path=path).first()
