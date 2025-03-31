@@ -31,6 +31,7 @@ import datetime
 import io
 import os
 import xml
+import logging
 import defusedxml.minidom
 import requests
 from fs import open_fs
@@ -55,6 +56,15 @@ TEXT_CONFIG = {
 
 def load_from_ftml(filename):
     """Load a flight track from an XML file at <filename>.
+    
+    Args:
+        filename (str): Path to the FTML file
+        
+    Returns:
+        list: List of waypoints as tuples (lat, lon, flightlevel, location, comments)
+        
+    Raises:
+        SyntaxError: If the XML file cannot be parsed
     """
     _dirname, _name = os.path.split(filename)
     _fs = open_fs(_dirname)
@@ -62,7 +72,9 @@ def load_from_ftml(filename):
     try:
         doc = defusedxml.minidom.parse(datasource)
     except xml.parsers.expat.ExpatError as ex:
-        raise SyntaxError(str(ex))
+        raise SyntaxError(f"Error parsing FTML file: {str(ex)}")
+    finally:
+        datasource.close()
 
     ft_el = doc.getElementsByTagName("FlightTrack")[0]
 
@@ -82,6 +94,41 @@ def load_from_ftml(filename):
 
         waypoints_list.append((lat, lon, flightlevel, location, comments))
     return waypoints_list
+
+
+def get_wms_image(url, auth, params):
+    """Request WMS image with error handling
+    
+    Args:
+        url (str): WMS server URL
+        auth (tuple): Authentication credentials (username, password)
+        params (dict): WMS request parameters
+        
+    Returns:
+        PIL.Image: The retrieved image
+        
+    Raises:
+        SystemExit: If the WMS returns an error
+    """
+    logger = logging.getLogger(__name__)
+    logger.debug(f"Requesting WMS from {url}")
+    
+    try:
+        req = requests.get(url, auth=auth, params=params, timeout=30)
+        
+        if req.headers['Content-Type'] == "text/xml":
+            logger.error(f"WMS Error from {url}:")
+            logger.error(req.text)
+            print(f"WMS Error from {url}:")
+            print(req.text)
+            sys.exit(1)
+            
+        image_io = io.BytesIO(req.content)
+        return PIL.Image.open(image_io)
+    except requests.RequestException as e:
+        logger.error(f"Request error: {str(e)}")
+        print(f"Request error: {str(e)}")
+        sys.exit(1)
 
 
 def main():
@@ -121,6 +168,7 @@ def main():
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="Specify logfile location. Set to empty string to disable.", action="store",
                         default=os.path.join(mslib.msui.constants.MSUI_CONFIG_PATH, "msui.log"))
+    parser.add_argument("--output-dir", help="Directory for output images", default=".")
     args = parser.parse_args()
 
     if args.version:
@@ -132,8 +180,19 @@ def main():
         sys.exit()
 
     mslib.utils.setup_logging(args)
+    logger = logging.getLogger(__name__)
+    
+    # Create output directory if it doesn't exist
+    os.makedirs(args.output_dir, exist_ok=True)
+    
     read_config_file(path=mslib.msui.constants.MSUI_SETTINGS)
     config = config_loader()
+    
+    if "automated_plotting" not in config:
+        logger.error("No 'automated_plotting' section found in configuration")
+        print("Error: No 'automated_plotting' section found in configuration")
+        sys.exit(1)
+        
     num_interpolation_points = config["num_interpolation_points"]
     num_labels = config["num_labels"]
     tick_index_step = num_interpolation_points // num_labels
@@ -141,138 +200,155 @@ def main():
     fig = plt.figure()
     for flight, section, vertical, filename, init_time, time in \
             config["automated_plotting"]["flights"]:
-        params = get_projection_params(config["predefined_map_sections"][section]["CRS"].lower())
-        params["basemap"].update(config["predefined_map_sections"][section]["map"])
-        wps = load_from_ftml(filename)
-        wp_lats, wp_lons, wp_locs = [[x[i] for x in wps] for i in [0, 1, 3]]
-        wp_presss = [thermolib.flightlevel2pressure(wp[2] * units.hft).magnitude for wp in wps]
-        for url, layer, style, elevation in config["automated_plotting"]["hsecs"]:
-            fig.clear()
-            ax = fig.add_subplot(111, zorder=99)
-            bm = mslib.msui.mpl_map.MapCanvas(ax=ax, **(params["basemap"]))
+        logger.info(f"Processing flight {flight} from {filename}")
+        
+        try:
+            params = get_projection_params(config["predefined_map_sections"][section]["CRS"].lower())
+            params["basemap"].update(config["predefined_map_sections"][section]["map"])
+            wps = load_from_ftml(filename)
+            wp_lats, wp_lons, wp_locs = [[x[i] for x in wps] for i in [0, 1, 3]]
+            wp_presss = [thermolib.flightlevel2pressure(wp[2] * units.hft).magnitude for wp in wps]
+            
+            # Process horizontal sections
+            for url, layer, style, elevation in config["automated_plotting"]["hsecs"]:
+                logger.info(f"Creating horizontal section for {flight}, layer {layer}")
+                fig.clear()
+                ax = fig.add_subplot(111, zorder=99)
+                bm = mslib.msui.mpl_map.MapCanvas(ax=ax, **(params["basemap"]))
 
-            # plot path and labels
-            bm.plot(wp_lons, wp_lats,
-                    color="blue", marker="o", linewidth=2, markerfacecolor="red",
-                    latlon=True, markersize=4, zorder=100)
-            for i, (lon, lat, loc) in enumerate(zip(wp_lons, wp_lats, wp_locs)):
-                textlabel = f"{loc if loc else str(i)}   "
-                x, y = bm(lon, lat)
-                plt.text(x, y, textlabel, **TEXT_CONFIG)
-            plt.tight_layout()
+                # plot path and labels
+                bm.plot(wp_lons, wp_lats,
+                        color="blue", marker="o", linewidth=2, markerfacecolor="red",
+                        latlon=True, markersize=4, zorder=100)
+                for i, (lon, lat, loc) in enumerate(zip(wp_lons, wp_lats, wp_locs)):
+                    textlabel = f"{loc if loc else str(i)}   "
+                    x, y = bm(lon, lat)
+                    plt.text(x, y, textlabel, **TEXT_CONFIG)
+                plt.tight_layout()
 
-            # retrieve and draw WMS image
-            ax_bounds = plt.gca().bbox.bounds
-            width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
-            bbox = params['basemap']
-            req = requests.get(
-                url, auth=tuple(config["MSS_auth"][url]),
-                params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
-                        "exceptions": "XML",
-                        "crs": config["predefined_map_sections"][section]["CRS"],
-                        "layers": layer, "styles": style, "elevation": elevation,
-                        "dim_init_time": init_time, "time": time,
-                        "width": width, "height": height,
-                        "bbox": f"{bbox['llcrnrlat']},{bbox['llcrnrlon']},{bbox['urcrnrlat']},{bbox['urcrnrlon']}"})
-            if req.headers['Content-Type'] == "text/xml":
-                print(flight, section, vertical, filename, init_time, time)
-                print(url, layer, style, elevation)
-                print("WMS Error:")
-                print(req.text)
-                exit(1)
-            image_io = io.BytesIO(req.content)
-            img = PIL.Image.open(image_io)
-            bm.imshow(img, interpolation="nearest", origin="upper")
-            bm.drawcoastlines()
-            bm.drawcountries()
+                # retrieve and draw WMS image
+                ax_bounds = plt.gca().bbox.bounds
+                width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
+                bbox = params['basemap']
+                wms_params = {
+                    "version": "1.3.0", 
+                    "request": "GetMap", 
+                    "format": "image/png",
+                    "exceptions": "XML",
+                    "crs": config["predefined_map_sections"][section]["CRS"],
+                    "layers": layer, 
+                    "styles": style, 
+                    "elevation": elevation,
+                    "dim_init_time": init_time, 
+                    "time": time,
+                    "width": width, 
+                    "height": height,
+                    "bbox": f"{bbox['llcrnrlat']},{bbox['llcrnrlon']},{bbox['urcrnrlat']},{bbox['urcrnrlon']}"
+                }
+                
+                img = get_wms_image(url, tuple(config["MSS_auth"][url]), wms_params)
+                bm.imshow(img, interpolation="nearest", origin="upper")
+                bm.drawcoastlines()
+                bm.drawcountries()
 
-            fig.savefig(f"{flight}_{layer}.png")
+                output_path = os.path.join(args.output_dir, f"{flight}_{layer}.png")
+                fig.savefig(output_path, dpi=150)
+                logger.info(f"Saved horizontal section to {output_path}")
 
-        # prepare vsec plots
-        path = [(wp[0], wp[1], datetime.datetime.now()) for wp in wps]
-        lats, lons = mslib.utils.coordinate.path_points(
-            [_x[0] for _x in path],
-            [_x[1] for _x in path], numpoints=num_interpolation_points + 1, connection="greatcircle")
-        intermediate_indexes = []
-        ipoint = 0
-        for i, (lat, lon) in enumerate(zip(lats, lons)):
-            if abs(lat - wps[ipoint][0]) < 1E-10 and abs(lon - wps[ipoint][1]) < 1E-10:
-                intermediate_indexes.append(i)
-                ipoint += 1
-            if ipoint >= len(wps):
-                break
+            # Process vertical sections
+            path = [(wp[0], wp[1], datetime.datetime.now()) for wp in wps]
+            lats, lons = mslib.utils.coordinate.path_points(
+                [_x[0] for _x in path],
+                [_x[1] for _x in path], numpoints=num_interpolation_points + 1, connection="greatcircle")
+            intermediate_indexes = []
+            ipoint = 0
+            for i, (lat, lon) in enumerate(zip(lats, lons)):
+                if abs(lat - wps[ipoint][0]) < 1E-10 and abs(lon - wps[ipoint][1]) < 1E-10:
+                    intermediate_indexes.append(i)
+                    ipoint += 1
+                if ipoint >= len(wps):
+                    break
 
-        for url, layer, style in config["automated_plotting"]["vsecs"]:
-            fig.clear()
+            for url, layer, style in config["automated_plotting"]["vsecs"]:
+                logger.info(f"Creating vertical section for {flight}, layer {layer}")
+                fig.clear()
 
-            # setup ticks and labels
-            ax = fig.add_subplot(111, zorder=99)
-            ax.set_yscale("log")
-            p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
-            bbox = ",".join(str(x) for x in (num_interpolation_points, p_bot / 100, num_labels, p_top / 100))
-            ax.grid(visible=True)
-            ax.patch.set_facecolor("None")
-            pres_maj = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_maj
-            pres_min = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_min
-            major_ticks = pres_maj[(pres_maj <= p_bot) & (pres_maj >= p_top)]
-            minor_ticks = pres_min[(pres_min <= p_bot) & (pres_min >= p_top)]
-            labels = [f"{int(_mt / 100)}"
-                      if (_mt / 100.) - int(_mt / 100.) == 0 else f"{float(_mt / 100)}" for _mt in major_ticks]
-            if len(labels) > 20:
-                labels = ["" if _x.split(".")[-1][0] in "975" else _x for _x in labels]
-            elif len(labels) > 10:
-                labels = ["" if _x.split(".")[-1][0] in "9" else _x for _x in labels]
-            ax.set_ylabel("pressure (hPa)")
-            ax.set_yticks(minor_ticks, minor=True)
-            ax.set_yticks(major_ticks, minor=False)
-            ax.set_yticklabels([], minor=True, fontsize=10)
-            ax.set_yticklabels(labels, minor=False, fontsize=10)
-            ax.set_ylim(p_bot, p_top)
-            ax.set_xlim(0, num_interpolation_points)
-            ax.set_xticks(range(0, num_interpolation_points, tick_index_step))
-            ax.set_xticklabels(
-                [f"{x[0]:2.1f}, {x[1]:2.1f}"
-                 for x in zip(lats[::tick_index_step], lons[::tick_index_step])],
-                rotation=25, fontsize=10, horizontalalignment="right")
-            ax.set_xlabel("lat/lon")
+                # setup ticks and labels
+                ax = fig.add_subplot(111, zorder=99)
+                ax.set_yscale("log")
+                p_bot, p_top = [float(x) * 100 for x in vertical.split(",")]
+                bbox = ",".join(str(x) for x in (num_interpolation_points, p_bot / 100, num_labels, p_top / 100))
+                ax.grid(visible=True)
+                ax.patch.set_facecolor("None")
+                pres_maj = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_maj
+                pres_min = mslib.msui.mpl_qtwidget.MplSideViewCanvas._pres_min
+                major_ticks = pres_maj[(pres_maj <= p_bot) & (pres_maj >= p_top)]
+                minor_ticks = pres_min[(pres_min <= p_bot) & (pres_min >= p_top)]
+                labels = [f"{int(_mt / 100)}"
+                          if (_mt / 100.) - int(_mt / 100.) == 0 else f"{float(_mt / 100)}" for _mt in major_ticks]
+                if len(labels) > 20:
+                    labels = ["" if _x.split(".")[-1][0] in "975" else _x for _x in labels]
+                elif len(labels) > 10:
+                    labels = ["" if _x.split(".")[-1][0] in "9" else _x for _x in labels]
+                ax.set_ylabel("pressure (hPa)")
+                ax.set_yticks(minor_ticks, minor=True)
+                ax.set_yticks(major_ticks, minor=False)
+                ax.set_yticklabels([], minor=True, fontsize=10)
+                ax.set_yticklabels(labels, minor=False, fontsize=10)
+                ax.set_ylim(p_bot, p_top)
+                ax.set_xlim(0, num_interpolation_points)
+                ax.set_xticks(range(0, num_interpolation_points, tick_index_step))
+                ax.set_xticklabels(
+                    [f"{x[0]:2.1f}, {x[1]:2.1f}"
+                     for x in zip(lats[::tick_index_step], lons[::tick_index_step])],
+                    rotation=25, fontsize=10, horizontalalignment="right")
+                ax.set_xlabel("lat/lon")
 
-            # plot path and waypoint labels
-            ax.plot(intermediate_indexes, wp_presss,
-                    color="blue", marker="o", linewidth=2, markerfacecolor="red",
-                    markersize=4)
-            for i, (idx, press, loc) in enumerate(zip(intermediate_indexes, wp_presss, wp_locs)):
-                textlabel = f"{loc if loc else str(i)} "
-                plt.text(idx + 1, press, textlabel, rotation=90, **TEXT_CONFIG)
-            plt.tight_layout()
+                # plot path and waypoint labels
+                ax.plot(intermediate_indexes, wp_presss,
+                        color="blue", marker="o", linewidth=2, markerfacecolor="red",
+                        markersize=4)
+                for i, (idx, press, loc) in enumerate(zip(intermediate_indexes, wp_presss, wp_locs)):
+                    textlabel = f"{loc if loc else str(i)} "
+                    plt.text(idx + 1, press, textlabel, rotation=90, **TEXT_CONFIG)
+                plt.tight_layout()
 
-            # retrieve and draw WMS image
-            ax_bounds = plt.gca().bbox.bounds
-            width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
-            req = requests.get(
-                url, auth=tuple(config["MSS_auth"][url]),
-                params={"version": "1.3.0", "request": "GetMap", "format": "image/png",
-                        "exceptions": "XML",
-                        "crs": "VERT:LOGP", "layers": layer, "styles": style,
-                        "dim_init_time": init_time, "time": time,
-                        "width": width, "height": height,
-                        "path": ",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),
-                        "bbox": bbox})
+                # retrieve and draw WMS image
+                ax_bounds = plt.gca().bbox.bounds
+                width, height = int(round(ax_bounds[2])), int(round(ax_bounds[3]))
+                wms_params = {
+                    "version": "1.3.0", 
+                    "request": "GetMap", 
+                    "format": "image/png",
+                    "exceptions": "XML",
+                    "crs": "VERT:LOGP", 
+                    "layers": layer, 
+                    "styles": style,
+                    "dim_init_time": init_time, 
+                    "time": time,
+                    "width": width, 
+                    "height": height,
+                    "path": ",".join(f"{wp[0]:.2f},{wp[1]:.2f}" for wp in wps),
+                    "bbox": bbox
+                }
+                
+                img = get_wms_image(url, tuple(config["MSS_auth"][url]), wms_params)
+                imgax = fig.add_axes(ax.get_position(), frameon=True,
+                                     xticks=[], yticks=[], label="ax2", zorder=0)
+                imgax.imshow(img, interpolation="nearest", aspect="auto", origin="upper")
+                imgax.set_xlim(0, img.size[0] - 1)
+                imgax.set_ylim(img.size[1] - 1, 0)
 
-            if req.headers['Content-Type'] == "text/xml":
-                print(flight, section, vertical, filename, init_time, time)
-                print(url, layer, style)
-                print("WMS Error:")
-                print(req.text)
-                exit(1)
-            image_io = io.BytesIO(req.content)
-            img = PIL.Image.open(image_io)
-            imgax = fig.add_axes(ax.get_position(), frameon=True,
-                                 xticks=[], yticks=[], label="ax2", zorder=0)
-            imgax.imshow(img, interpolation="nearest", aspect="auto", origin="upper")
-            imgax.set_xlim(0, img.size[0] - 1)
-            imgax.set_ylim(img.size[1] - 1, 0)
+                output_path = os.path.join(args.output_dir, f"{flight}_{layer}.png") 
+                plt.savefig(output_path, dpi=150)
+                logger.info(f"Saved vertical section to {output_path}")
+                
+        except Exception as e:
+            logger.error(f"Error processing flight {flight}: {str(e)}")
+            print(f"Error processing flight {flight}: {str(e)}")
+            continue
 
-            plt.savefig(f"{flight}_{layer}.png")
+    logger.info("Processing complete")
 
 
 if __name__ == "__main__":
