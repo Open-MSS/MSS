@@ -1647,7 +1647,7 @@ class MSUIMscolab(QtCore.QObject):
             operations = response["operations"]
             self.ui.filterCategoryCb.currentIndexChanged.disconnect(self.operation_category_handler)
             self.ui.filterCategoryCb.clear()
-            categories = set(["*ANY*"])
+            categories = {"*ANY*"}
             for operation in operations:
                 categories.add(operation["category"])
             categories.remove("*ANY*")

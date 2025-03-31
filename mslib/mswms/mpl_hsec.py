@@ -116,12 +116,12 @@ class MPLBasemapHorizontalSectionStyle(AbstractHorizontalSectionStyle):
         Returns a list of the coordinate reference systems supported by
         this style.
         """
-        crs_list = set([
+        crs_list = {
             "EPSG:3031",  # WGS 84 / Antarctic Polar Stereographic
             "EPSG:3995",  # WGS 84 / Arctic Polar Stereographic
             "EPSG:3857",  # WGS 84 / Spherical Mercator
             "EPSG:4326",  # WGS 84 / cylindric
-            "MSS:stere"])
+            "MSS:stere"}
         for code in self.supported_epsg_codes():
             crs_list.add(f"EPSG:{code:d}")
         return sorted(crs_list)

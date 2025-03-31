@@ -88,7 +88,7 @@ class MSColabAdminWindow(QtWidgets.QMainWindow, ui.Ui_MscolabAdminWindow):
         self.load_import_operations()
         self.load_users_without_permission()
         self.load_users_with_permission()
-        categories = set(["ANY"])
+        categories = {"ANY"}
         for operation in self.operations:
             categories.add(operation["category"])
         categories.remove("ANY")
