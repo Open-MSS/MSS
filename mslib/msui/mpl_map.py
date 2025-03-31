@@ -351,11 +351,11 @@ class MapCanvas(basemap.Basemap):
             self.ax.figure.canvas.draw()
 
     def set_draw_airports(self, value, port_type=None, reload=True):
-        if port_type is None:
-            port_type = ["small_airport"]
         """
         Sets airports to visible or not visible
         """
+        if port_type is None:
+            port_type = ["small_airport"]
         if (reload or not value or len(port_type) == 0) and self.airports:
             self.update_info_text(ourairports="")
             self.airports.remove()
@@ -367,11 +367,11 @@ class MapCanvas(basemap.Basemap):
             self.draw_airports(port_type)
 
     def set_draw_airspaces(self, value, airspaces=None, range_km=None, reload=True):
-        if airspaces is None:
-            airspaces = []
         """
         Sets airspaces to visible or not visible
         """
+        if airspaces is None:
+            airspaces = []
         if (reload or not value or len(airspaces) == 0) and self.airspaces:
             self.update_info_text(openaip="")
             self.airspaces.remove()
@@ -384,11 +384,11 @@ class MapCanvas(basemap.Basemap):
             self.draw_airspaces(country_codes, range_km)
 
     def draw_airspaces(self, countries=None, range_km=None):
-        if countries is None:
-            countries = []
         """
         Load and draw airspace data
         """
+        if countries is None:
+            countries = []
         if not self.airspaces:
             airspaces = copy.deepcopy(get_airspaces(countries))
             if not airspaces:
