@@ -980,7 +980,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         if os.path.exists(myname):
             return QtGui.QIcon(myname)
         else:
-            return super()._icon(name, *args)
+            return super()._icon(name)
 
     def _zoom_pan_handler(self, event):
         """
