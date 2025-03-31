@@ -504,8 +504,8 @@ class Test_Server:
             # creator is not listed
             assert data["success"] is True
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", active=True,
-                          default_content="", content=None):
+    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test",
+                          active=True, content):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
@@ -514,7 +514,6 @@ class Test_Server:
         response = test_client.post('/create_operation', data={"token": token,
                                                                "path": path,
                                                                "description": description,
-                                                               "default_content": default_content,
                                                                "content": content,
                                                                "active": str(active)})
         assert response.status_code == 200

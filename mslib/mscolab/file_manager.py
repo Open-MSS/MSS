@@ -57,7 +57,7 @@ class FileManager:
                 self.operation_locks[op_id] = threading.Lock()
                 return self.operation_locks[op_id]
 
-    def create_operation(self, path, description, user, default_content, last_used=None,
+    def create_operation(self, path, description, user, last_used=None,
                          content=None, category="default", active=True):
         """
         Creates a new operation in the mscolab system.
@@ -101,10 +101,7 @@ class FileManager:
             data = fs.open_fs(self.data_dir)
             data.makedir(operation.path)
             operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
-            if content is not None:
-                operation_file.write(content)
-            else:
-                operation_file.write(default_content)
+            operation_file.write(content)
             operation_path = fs.path.combine(self.data_dir, operation.path)
             r = git.Repo.init(operation_path)
             r.git.clear_cache()

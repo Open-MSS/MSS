@@ -203,11 +203,9 @@ class Test_Files:
             version_name = all_changes[-1]["version_name"]
             assert version_name == "berlin"
 
-    def _create_operation(self, flight_path="firstflight", description="example", user=None,
-                          content=None, default_content=""):
+    def _create_operation(self, flight_path="firstflight", description="example", user=None, content):
         if user is None:
             user = self.user
-        self.fm.create_operation(flight_path, description, user,
-                                 default_content=default_content, content=content)
+        self.fm.create_operation(flight_path, description, user, content=content)
         operation = Operation.query.filter_by(path=flight_path).first()
         return flight_path, operation
