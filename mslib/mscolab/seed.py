@@ -107,7 +107,7 @@ def delete_user(email):
         return False
 
 
-def add_user(email, username, password):
+def add_user(email, username, password, fullname):
     """
     on db level we add a user
     """
@@ -118,11 +118,11 @@ def add_user(email, username, password):
         user_email_exists = User.query.filter_by(emailid=str(email)).first()
         user_name_exists = User.query.filter_by(username=str(username)).first()
         if not user_email_exists and not user_name_exists:
-            db_user = User(email, username, password)
+            db_user = User(email, username, password, fullname)
             db.session.add(db_user)
             db.session.commit()
             db.session.close()
-            logging.info("Userdata: %s %s %s", email, username, password)
+            logging.info("Userdata: %s %s %s %s", email, username, password, fullname)
             return True
         else:
             logging.info("%s already in db", user_name_exists)
@@ -225,55 +225,65 @@ def seed_data():
         'username': 'a',
         'id': 8,
         'password': 'a',
-        'emailid': 'a@notexisting.org'
+        'emailid': 'a@notexisting.org',
+        'fullname': 'A User'
     }, {
         'username': 'b',
         'id': 9,
         'password': 'b',
-        'emailid': 'b@notexisting.org'
+        'emailid': 'b@notexisting.org',
+        'fullname': 'B User'
     }, {
         'username': 'c',
         'id': 10,
         'password': 'c',
-        'emailid': 'c@notexisting.org'
+        'emailid': 'c@notexisting.org',
+        'fullname': 'C User'
     }, {
         'username': 'd',
         'id': 11,
         'password': 'd',
-        'emailid': 'd@notexisting.org'
+        'emailid': 'd@notexisting.org',
+        'fullname': 'D User'
     }, {
         'username': 'test1',
         'id': 12,
         'password': 'test1',
-        'emailid': 'test1@notexisting.org'
+        'emailid': 'test1@notexisting.org',
+        'fullname': 'Test User one'
     }, {
         'username': 'test2',
         'id': 13,
         'password': 'test2',
-        'emailid': 'test2@notexisting.org'
+        'emailid': 'test2@notexisting.org',
+        'fullname': 'Test User two'
     }, {
         'username': 'test3',
         'id': 14,
         'password': 'test3',
-        'emailid': 'test3@notexisting.org'
+        'emailid': 'test3@notexisting.org',
+        'fullname': 'Test User three'
     }, {
         'username': 'test4',
         'id': 15,
         'password': 'test4',
-        'emailid': 'test4@notexisting.org'
+        'emailid': 'test4@notexisting.org',
+        'fullname': 'Test User four'
     }, {
         'username': 'mscolab_user',
         'id': 16,
         'password': 'password',
-        'emailid': 'mscolab_user@notexisting.org'
+        'emailid': 'mscolab_user@notexisting.org',
+        'fullname': 'mscolab user'
     }, {
         'username': 'merge_waypoints_user',
         'id': 17,
         'password': 'password',
-        'emailid': 'merge_waypoints_user@notexisting.org'
+        'emailid': 'merge_waypoints_user@notexisting.org',
+        'fullname': 'merge waypoints user'
     }]
     for user in users:
-        db_user = User(user['emailid'], user['username'], user['password'])
+        db_user = User(user['emailid'], user['username'], user['password'], user['fullname'])
         db_user.id = user['id']
         db.session.add(db_user)
 

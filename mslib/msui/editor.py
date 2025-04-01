@@ -430,7 +430,7 @@ class ConfigurationEditorWindow(QtWidgets.QMainWindow, ui_conf.Ui_ConfigurationE
                     if root in removable_indexes:
                         removable_indexes[root].add(index.row())
                     else:
-                        removable_indexes[root] = set([index.row()])
+                        removable_indexes[root] = {index.row()}
                 else:
                     non_removable.append(index)
 

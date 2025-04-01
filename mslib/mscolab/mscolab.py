@@ -429,9 +429,10 @@ def main():
                 for line in args.users_by_file.readlines():
                     info = line.split()
                     username = info[0]
+                    fullname = info[1]
                     emailid = info[-1][1:-1]
                     password = secrets.token_hex(8)
-                    add_user(emailid, username, password)
+                    add_user(emailid, username, password, fullname)
         elif args.default_operation:
             confirmation = confirm_action(
                 "Are you sure you want to add users to the default TEMPLATE operation? (y/[n]):")

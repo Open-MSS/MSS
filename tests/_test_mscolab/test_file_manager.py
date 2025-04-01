@@ -40,25 +40,26 @@ class Test_FileManager:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         _, _, self.fm = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
 
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         self.user = get_user(self.userdata[0])
         assert self.user is not None
-        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2])
+        assert add_user(self.anotheruserdata[0], self.anotheruserdata[1], self.anotheruserdata[2],
+                        self.anotheruserdata[3])
         self.anotheruser = get_user(self.anotheruserdata[0])
-        assert add_user('UV30@uv30', 'UV30', 'uv30')
+        assert add_user('UV30@uv30', 'UV30', 'uv30', 'User 30')
         self.vieweruser = get_user('UV30@uv30')
-        assert add_user('UV40@uv40', 'UV40', 'uv40')
+        assert add_user('UV40@uv40', 'UV40', 'uv40', 'User 40')
         self.collaboratoruser = get_user('UV40@uv40')
-        assert add_user('UV50@uv50', 'UV50', 'uv50')
+        assert add_user('UV50@uv50', 'UV50', 'uv50', 'User 50')
         self.op2user = get_user('UV50@uv50')
-        assert add_user('UV60@uv60', 'UV60', 'uv60')
+        assert add_user('UV60@uv60', 'UV60', 'uv60', 'User 60')
         self.op2vieweruser = get_user('UV60@uv60')
-        assert add_user('UV70@uv70', 'UV70', 'uv70')
+        assert add_user('UV70@uv70', 'UV70', 'uv70', 'User 70')
         self.user1 = get_user('UV70@uv70')
-        assert add_user('UV80@uv80', 'UV80', 'uv80')
+        assert add_user('UV80@uv80', 'UV80', 'uv80', 'User 80')
         self.adminuser = get_user('UV80@uv80')
         self._example_data()
         with self.app.app_context():

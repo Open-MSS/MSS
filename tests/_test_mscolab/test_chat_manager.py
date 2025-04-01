@@ -35,10 +35,10 @@ class Test_Chat_Manager:
     def setup(self, mscolab_app, mscolab_managers):
         self.app = mscolab_app
         _, self.cm, _ = mscolab_managers
-        self.userdata = 'UV10@uv10', 'UV10', 'uv10'
-        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20'
+        self.userdata = 'UV10@uv10', 'UV10', 'uv10', 'User UV'
+        self.anotheruserdata = 'UV20@uv20', 'UV20', 'uv20', 'User UVs'
         self.operation_name = "europe"
-        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2])
+        assert add_user(self.userdata[0], self.userdata[1], self.userdata[2], self.userdata[3])
         assert add_operation(self.operation_name, "test europe")
         assert add_user_to_operation(path=self.operation_name, emailid=self.userdata[0])
         self.user = get_user(self.userdata[0])
