@@ -219,7 +219,7 @@ class WebMapService(wms111.WebMapService_1_1_1):
         self._buildMetadata(parse_remote_metadata)
 
     def _buildMetadata(self, parse_remote_metadata=False):
-        ''' set up capabilities metadata objects '''
+        """ set up capabilities metadata objects """
 
         # serviceIdentification metadata
         serviceelem = self._capabilities.find(f'{self.WMS_NAMESPACE}Service')
