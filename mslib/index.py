@@ -102,7 +102,7 @@ def create_app(name="", imprint=None, gdpr=None):
 
     @APP.route("/mss/about")
     @APP.route("/mss")
-    def about():
+    def mss_about():
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'about.md')
         img_url = url_for('overview')
         md_overrides = ('![image](/mss/overview.png)', f'![image]({img_url})')
@@ -119,7 +119,7 @@ def create_app(name="", imprint=None, gdpr=None):
         return render_template("/content.html", act="install", content=content)
 
     @APP.route("/mss/help")
-    def help():  # noqa: A001
+    def mss_help():  # noqa: A001
         _file = os.path.join(DOCS_SERVER_PATH, 'static', 'docs', 'help.md')
         html_overrides = ('<img alt="Waypoint Tutorial" '
                           'src="https://mss.readthedocs.io/en/stable/_images/tutorial_waypoints.gif" />',
