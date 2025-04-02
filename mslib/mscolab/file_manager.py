@@ -57,8 +57,7 @@ class FileManager:
                 self.operation_locks[op_id] = threading.Lock()
                 return self.operation_locks[op_id]
 
-    def create_operation(self, path, description, user, last_used=None,
-                         content=None, category="default", active=True):
+    def create_operation(self, path, description, user, last_used=None, content=None, category="default", active=True):
         """
         Creates a new operation in the mscolab system.
 

@@ -72,6 +72,7 @@ from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
+from mslib.msui import flighttrack as ft
 from mslib.utils.config import config_loader, modify_config_file, MSUIDefaultConfig
 
 
@@ -1026,13 +1027,12 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
-
-        user_template = MSUIDefaultConfig.new_flighttrack_template
-        xml_waypoints = "".join(
-            f"<Waypoint location='{wp}' lat='0.0' lon='0.0' flightlevel='300'><Comments>Default</Comments></Waypoint>"
-            for wp in user_template
-        )
-        default_content = f"<FlightTrack>{xml_waypoints}</FlightTrack>"
+        waypoints = config_loader(dataset="new_flighttrack_template")
+        waypoints_model = ft.WaypointsTableModel(waypoints=[
+            ft.Waypoint(location=loc, lat=0.0, lon=0.0) 
+            for loc in waypoints
+        ])
+        default_content = waypoints_model.get_xml_content()
         data = {"path": path,
                 "description": description,
                 "category": category,

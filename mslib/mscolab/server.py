@@ -557,8 +557,8 @@ def error413(error):
 @verify_user
 def create_operation():
     path = request.form['path']
-    content = request.form.get('content', request.form.get('default_content'))
-    session['get_content'] = content
+    content = request.form.get('default_content')
+    session['content'] = content
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
     active = (request.form.get('active', "True") == "True")
@@ -572,8 +572,8 @@ def create_operation():
     return r
 
 
-def get_content():
-    return session.get('get_content')
+def content():
+    return session.get('content')
 
 
 @APP.route('/get_operation_by_id', methods=['GET'])
