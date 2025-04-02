@@ -200,7 +200,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
     def __init__(self, files, exclude=None, skip_dim_check=None,
                  require_dim_num=False):
-        super().__init__(files, exclude=exclude, require_dim_num=require_dim_num)
+        super().__init__(files)
         """
         Open a Dataset spanning multiple files sharing common dimensions but
         containing different record variables, making it look as if it was a
@@ -250,13 +250,12 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # calling methods of the CDFMF subclass when querying the master file.
         cdfm = netCDF4.Dataset(master)
 
-        if_unlimited_dim = False
         if_unlimited_dim = any(dim.isunlimited() for dim in cdfm.dimensions.values())
         if not if_unlimited_dim:
             self.cdf = [cdfm]
         else:
-            super().__init__(files, exclude=exclude, require_dim_num=require_dim_num)
-            
+            super().__init__(files)
+
         # copy attributes from master.
         self.__dict__.update(cdfm.__dict__)
 
