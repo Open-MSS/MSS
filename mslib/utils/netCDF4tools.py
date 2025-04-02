@@ -251,7 +251,9 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         cdfm = netCDF4.Dataset(master)
         if_unlimited_dim = any(dim.isunlimited() for dim in cdfm.dimensions.values())
         if not if_unlimited_dim:
-            self.cdf = [cdfm]
+            super().__init__()
+            self._cdf = [cdfm]
+            self._isopen = True
         else:
             super().__init__(files)
         # copy attributes from master.
