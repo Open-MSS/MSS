@@ -200,8 +200,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
 
     def __init__(self, files, exclude=None, skip_dim_check=None,
                  require_dim_num=False):
-        super().__init__(files, exclude=exclude or [],
-                         require_dim_num=require_dim_num)
+        super().__init__(files, exclude=exclude)
         """
         Open a Dataset spanning multiple files sharing common dimensions but
         containing different record variables, making it look as if it was a
