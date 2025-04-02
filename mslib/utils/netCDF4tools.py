@@ -238,7 +238,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # Open the master file in the base class, so that the CDFMF instance
         # can be used like a CDF instance.
 
-        super.__init__(files)
+        super().__init__(files)
         exclude = exclude or []
         skip_dim_check = skip_dim_check or []
         if isinstance(files, str):
