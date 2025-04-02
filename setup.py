@@ -27,6 +27,10 @@
 
 # The README.txt file should be written in reST so that PyPI can use
 # it to generate your project's PyPI page.
+# The 'classifiers' field provides metadata about the package.
+# It helps tools like PyPI categorize and display the package correctly.
+# Added Python 3.12 classifier to indicate compatibility.
+
 import os
 from past.builtins import execfile
 from setuptools import setup, find_namespace_packages
@@ -48,7 +52,10 @@ setup(
     version=__version__,  # noqa
     description="MSS - Mission Support System",
     long_description=long_description,
-    classifiers="Development Status :: 5 - Production/Stable",
+    classifiers=[
+    "Development Status :: 5 - Production/Stable",
+    "Programming Language :: Python :: 3.12",
+    ],
     keywords="mslib",
     maintainer="Reimar Bauer",
     maintainer_email="rb.proj@gmail.com",
