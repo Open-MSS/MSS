@@ -238,7 +238,6 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # Open the master file in the base class, so that the CDFMF instance
         # can be used like a CDF instance.
 
-        super().__init__(files)
         exclude = exclude or []
         skip_dim_check = skip_dim_check or []
         if isinstance(files, str):
@@ -249,6 +248,14 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # Open the master again, this time as a classic CDF instance. This will avoid
         # calling methods of the CDFMF subclass when querying the master file.
         cdfm = netCDF4.Dataset(master)
+
+        has_unlimited = any(dim.isunlimited() for dim in cdfm.dimensions.values())
+
+        if has_unlimited:
+            super().init(files)
+        else:
+            self.cdf = [cdfm]
+
         # copy attributes from master.
         self.__dict__.update(cdfm.__dict__)
 
