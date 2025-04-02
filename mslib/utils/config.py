@@ -669,7 +669,7 @@ def compare_data(default, user_data):
             user_data = float(default)
         if isinstance(match_type(default), UrlType) and isinstance(match_type(user_data), StrType):
             return user_data, True
-        if isinstance(match_type(default), type(match_type(user_data))):
+        if isinstance(match_type(default), (StrType, fs.base.FS)) and isinstance(match_type(user_data), (StrType,fs.base.FS)):
             return user_data, True
         else:
             return default, False
