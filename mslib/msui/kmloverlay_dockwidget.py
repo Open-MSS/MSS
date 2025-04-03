@@ -553,7 +553,7 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 _dirname, _name = os.path.split(self.listWidget.item(index).text())
                 _fs = fs.open_fs(_dirname)
                 try:
-                    with _fs.open(_name, 'r') as kmlf:
+                    with _fs.open(_name, 'r', encoding='utf-8') as kmlf:
                         self.kml = kml.KML.from_string(kmlf.read(), {})
                         if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
                             if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
