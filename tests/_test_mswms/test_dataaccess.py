@@ -90,6 +90,22 @@ class Test_DefaultDataAccess:
                     datetime(2012, 10, 18, 12, 0),
                     datetime(2012, 10, 19, 0, 0)])
 
+    def test_determine_filename_reload(self):
+        variable = "air_pressure"
+        vartype = "ml"
+        init_time = datetime(2012, 10, 17, 12, 0)
+        valid_time = datetime(2012, 10, 17, 18, 0)
+
+        self.dut._filetree = {vartype: {init_time: {variable: {}}}}
+
+        def fake_setup():
+            self.dut._filetree[vartype][init_time][variable][valid_time] = "expected_filename.nc"
+
+        self.dut.setup = mock.MagicMock(side_effect=fake_setup)
+
+        filename = self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=True)
+        assert filename == "expected_filename.nc"
+
 
 class Test_CachedDataAccess(Test_DefaultDataAccess):
     """
