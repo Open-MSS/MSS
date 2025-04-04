@@ -31,7 +31,7 @@ jobs:
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.PAT }}
-          branch: automation/update-pixi-lockfile
+          branch: automation/update-pixi-lockfile/${{ matrix.base_branch }}
           delete-branch: true
           add-paths: pixi.lock
           commit-message: Update pixi lockfile
