@@ -69,7 +69,8 @@ class NWPDataAccess(metaclass=ABCMeta):
         """
         pass
 
-    def have_data(self, variable, vartype, init_time, valid_time):
+    def have_data(self, variable, vartype, init_time, valid_time, reload=False):
+
         """
         Checks whether a file with data for the specified variable,
         type and times is known. This does not trigger a search for

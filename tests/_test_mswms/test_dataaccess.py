@@ -89,6 +89,14 @@ class Test_DefaultDataAccess:
                     datetime(2012, 10, 17, 18, 0),
                     datetime(2012, 10, 18, 12, 0),
                     datetime(2012, 10, 19, 0, 0)])
+    def test_have_data_with_reload(self):
+        result = self.dut.have_data(
+            "air_pressure", "ml",
+            datetime(2012, 10, 17, 12, 0),
+            datetime(2012, 10, 17, 18, 0),
+            reload=False
+        )
+        assert isinstance(result, bool)
 
 
 class Test_CachedDataAccess(Test_DefaultDataAccess):
