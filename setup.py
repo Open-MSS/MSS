@@ -29,7 +29,8 @@
 # it to generate your project's PyPI page.
 import os
 from past.builtins import execfile
-from setuptools import setup, find_namespace_packages
+from setuptools import setup
+
 long_description = open('README.md').read()
 execfile('mslib/version.py')
 
