@@ -44,25 +44,8 @@ if os.name != 'nt':
     console_scripts.append('msidp = mslib.msidp.idp:main')
 
 setup(
-    name="open-mss",
     version=__version__,  # noqa
-    description="MSS - Mission Support System",
-    long_description=long_description,
-    classifiers="Development Status :: 5 - Production/Stable",
-    keywords="mslib",
-    maintainer="Reimar Bauer",
-    maintainer_email="rb.proj@gmail.com",
-    author="Marc Rautenhaus",
-    author_email="wxmetvis@posteo.de",
-    license="Apache-2.0",
-    url="https://github.com/Open-MSS/MSS",
-    platforms="any",
-    packages=find_namespace_packages(include=["mslib", "mslib.*"]),
-    namespace_packages=[],
-    include_package_data=True,
-    zip_safe=False,
-    install_requires=[],  # we use pixi
-    entry_points=dict(
-        console_scripts=console_scripts,
-    ),
+    entry_points={
+        "console_scripts": console_scripts,
+    },
 )

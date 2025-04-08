@@ -1,0 +1,24 @@
+2025-03-29 09:59:47 DEBUG QjEg8NVEStbjNvKXAAAB
+2025-03-29 09:59:47 DEBUG Handling disconnect.
+2025-03-29 09:59:47 DEBUG Disconnected: QjEg8NVEStbjNvKXAAAB
+2025-03-29 09:59:48 DEBUG No user settings found, using default settings
+2025-03-29 09:59:48 DEBUG Merged default and user settings
+2025-03-29 09:59:48 WARNING Requested dataset 'None' not found in defaults! Returning None.
+2025-03-29 10:00:36 DEBUG No user settings found, using default settings
+2025-03-29 10:00:37 DEBUG No user settings found, using default settings
+2025-03-29 10:00:37 DEBUG Before modification: {'num_labels': 10}
+2025-03-29 10:00:37 DEBUG Merged default and user settings
+2025-03-29 10:00:37 DEBUG No user settings found, using default settings
+2025-03-29 10:00:37 DEBUG Merged default and user settings
+2025-03-29 10:00:38 DEBUG No user settings found, using default settings
+2025-03-29 10:00:38 DEBUG Before modification: {'num_labels': 10}
+2025-03-29 10:00:38 DEBUG Merged default and user settings
+2025-03-29 10:00:38 DEBUG No user settings found, using default settings
+2025-03-29 10:00:38 WARNING Skipping unknown config key: new_param
+2025-03-29 10:00:38 DEBUG Merged default and user settings
+2025-03-29 10:00:38 DEBUG No user settings found, using default settings
+2025-03-29 10:00:38 DEBUG Before modification: {}
+2025-03-29 10:00:38 DEBUG Merged default and user settings
+2025-03-29 10:00:38 ERROR Error while loading json file empty key found
+2025-03-29 10:00:38 DEBUG Invalid keys detected in config
+empty key found
