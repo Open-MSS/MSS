@@ -6,6 +6,9 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 [tasks]
 
 [pypi-dependencies]
+build = "*"
+twine = "*"
+pytest = "*"
 open-mss = { path = ".", editable = true }
 
 [dependencies]
