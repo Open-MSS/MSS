@@ -5,7 +5,7 @@ platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tasks]
 some_other_task = "pytest"
-lint = "flake8 --exclude build ."
+lint = "flake8 ."
 
 [pypi-dependencies]
 build = "*"
