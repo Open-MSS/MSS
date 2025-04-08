@@ -10,6 +10,8 @@ build = "*"
 twine = "*"
 pytest = "*"
 open-mss = { path = ".", editable = true }
+mock = "*"
+nco = "*"
 
 [dependencies]
 basemap = ">=1.3.3"
@@ -54,7 +56,7 @@ pyjwt = "*"
 pymysql = ">=0.9.3"
 pyqt = ">=5.15.0"
 pysaml2 = "*"
-python = "<3.12"
+python = "<=3.12"
 python-engineio = ">=4"
 python-slugify = "*"
 python-socketio = ">=5"
@@ -72,6 +74,9 @@ werkzeug = ">=2.2.3, <3.0.0"
 xstatic = "*"
 xstatic-bootstrap = "*"
 xstatic-jquery = "*"
+mock = ">=5.2.0,<6"
+eventlet = ">=0.39.1,<0.40"
+nco = "*"
 
 [target.linux-64.dependencies]
 dbus-python = "*"
@@ -110,6 +115,7 @@ pytest-xdist = "*"
 sphinx = "*"
 sphinx_rtd_theme = "*"
 sphinxcontrib-video = "*"
+nco = ">=5.3.3,<6"
 
 [feature.tutorials]
 platforms = ["win-64", "linux-64", "osx-64"]
