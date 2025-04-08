@@ -4,6 +4,8 @@ channels = ["conda-forge"]
 platforms = ["linux-64", "osx-64", "osx-arm64", "win-64"]
 
 [tasks]
+some_other_task = "pytest"
+lint = "flake8 --exclude build ."
 
 [pypi-dependencies]
 build = "*"
@@ -77,6 +79,7 @@ xstatic-jquery = "*"
 mock = ">=5.2.0,<6"
 eventlet = ">=0.39.1,<0.40"
 nco = "*"
+flake8 = "*"
 
 [target.linux-64.dependencies]
 dbus-python = "*"
