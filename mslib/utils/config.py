@@ -211,7 +211,7 @@ class MSUIDefaultConfig:
     MSCOLAB_category = "default"
 
     # timeout for MSColab in seconds. First value is for connection, second for reply
-    MSCOLAB_timeout = [2, 10]
+    MSCOLAB_timeout = (2, 10)
 
     # don't query for archived operations
     MSCOLAB_skip_archived_operations = False
@@ -366,7 +366,7 @@ class MSUIDefaultConfig:
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
-        "MSCOLAB_timeout": [[2, 10]],
+        "MSCOLAB_timeout": ([2, 10]),
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],

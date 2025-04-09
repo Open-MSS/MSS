@@ -1,0 +1,141 @@
+2025-04-09 19:09:01 DEBUG Failed to pyproj from mpl_toolkits.basemap
+2025-04-09 19:09:02 DEBUG eR_5iHLkMUVq4BJfAAAB
+2025-04-09 19:09:02 DEBUG Handling disconnect.
+2025-04-09 19:09:02 DEBUG Disconnected: eR_5iHLkMUVq4BJfAAAB
+2025-04-09 19:09:03 DEBUG No user settings found, using default settings
+2025-04-09 19:09:03 DEBUG No user settings found, using default settings
+2025-04-09 19:09:03 DEBUG No user settings found, using default settings
+2025-04-09 19:09:03 DEBUG No user settings found, using default settings
+2025-04-09 19:09:04 DEBUG No user settings found, using default settings
+2025-04-09 19:09:04 DEBUG No user settings found, using default settings
+2025-04-09 19:09:04 DEBUG No user settings found, using default settings
+2025-04-09 19:09:05 DEBUG No user settings found, using default settings
+2025-04-09 19:09:09 DEBUG No user settings found, using default settings
+2025-04-09 19:09:13 DEBUG No user settings found, using default settings
+2025-04-09 19:09:13 DEBUG No user settings found, using default settings
+2025-04-09 19:09:17 DEBUG No user settings found, using default settings
+2025-04-09 19:09:20 DEBUG No user settings found, using default settings
+2025-04-09 19:09:20 DEBUG No user settings found, using default settings
+2025-04-09 19:09:20 INFO Downloading to /tmp/tmp_t8a94ibmsui/downloads/aip/airdata. This might take a while.
+2025-04-09 19:09:21 INFO 0KB Downloaded
+2025-04-09 19:09:21 DEBUG No user settings found, using default settings
+2025-04-09 19:09:26 DEBUG No user settings found, using default settings
+2025-04-09 19:09:26 DEBUG No user settings found, using default settings
+2025-04-09 19:09:27 DEBUG No user settings found, using default settings
+2025-04-09 19:09:27 DEBUG No user settings found, using default settings
+2025-04-09 19:09:27 DEBUG No user settings found, using default settings
+2025-04-09 19:09:27 DEBUG No user settings found, using default settings
+2025-04-09 19:09:28 DEBUG No user settings found, using default settings
+2025-04-09 19:09:28 DEBUG Selected 'example.csv'
+2025-04-09 19:09:28 DEBUG Selected 'example.csv'
+2025-04-09 19:09:28 DEBUG Unknown file picker type 'undefined'.
+2025-04-09 19:09:28 DEBUG Selected ''
+2025-04-09 19:09:28 DEBUG No user settings found, using default settings
+2025-04-09 19:09:28 DEBUG No user settings found, using default settings
+2025-04-09 19:09:28 DEBUG No user settings found, using default settings
+2025-04-09 19:09:29 DEBUG No user settings found, using default settings
+2025-04-09 19:09:29 DEBUG Unknown file picker type 'undefined'.
+2025-04-09 19:09:29 DEBUG No user settings found, using default settings
+2025-04-09 19:09:29 DEBUG No user settings found, using default settings
+2025-04-09 19:09:29 DEBUG No user settings found, using default settings
+2025-04-09 19:09:29 DEBUG Selected '['example1.csv', 'example2.csv']'
+2025-04-09 19:09:29 DEBUG Unknown file picker type 'undefined'.
+2025-04-09 19:09:29 DEBUG Selected '[]'
+2025-04-09 19:09:30 DEBUG No user settings found, using default settings
+2025-04-09 19:09:30 DEBUG Selected 'example.csv'
+2025-04-09 19:09:30 DEBUG Selected 'example.csv'
+2025-04-09 19:09:30 DEBUG Selected ''
+2025-04-09 19:09:30 DEBUG Unknown file picker type 'undefined'.
+2025-04-09 19:09:30 DEBUG No user settings found, using default settings
+2025-04-09 19:09:30 DEBUG No user settings found, using default settings
+2025-04-09 19:09:31 DEBUG No user settings found, using default settings
+2025-04-09 19:09:31 DEBUG No user settings found, using default settings
+2025-04-09 19:09:31 DEBUG No user settings found, using default settings
+2025-04-09 19:09:32 DEBUG No user settings found, using default settings
+2025-04-09 19:09:32 DEBUG No user settings found, using default settings
+2025-04-09 19:09:32 DEBUG No user settings found, using default settings
+2025-04-09 19:09:32 DEBUG Merged default and user settings
+2025-04-09 19:09:32 DEBUG Merged default and user settings
+2025-04-09 19:09:32 DEBUG No user settings found, using default settings
+2025-04-09 19:09:32 DEBUG storing settings for test_automated to /tmp/tmp_t8a94ibmsui/msui-core.conf
+2025-04-09 19:09:32 DEBUG loading settings for test_automated from /tmp/tmp_t8a94ibmsui/msui-core.conf
+2025-04-09 19:09:33 DEBUG No user settings found, using default settings
+2025-04-09 19:09:33 DEBUG storing settings for test_automated to /tmp/tmp_t8a94ibmsui/msui-core.conf
+2025-04-09 19:09:33 DEBUG No user settings found, using default settings
+2025-04-09 19:09:33 DEBUG No user settings found, using default settings
+2025-04-09 19:09:33 DEBUG No user settings found, using default settings
+2025-04-09 19:09:33 DEBUG No user settings found, using default settings
+2025-04-09 19:09:33 DEBUG No user settings found, using default settings
+2025-04-09 19:09:33 DEBUG Merged default and user settings
+2025-04-09 19:09:33 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG Merged default and user settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG Merged default and user settings
+2025-04-09 19:09:34 DEBUG Merged default and user settings
+2025-04-09 19:09:34 DEBUG Merged default and user settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:34 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG Merged default and user settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 ERROR Error while loading json file duplicate key found: num_interpolation_points
+2025-04-09 19:09:35 DEBUG Invalid keys detected in config
+duplicate key found: num_interpolation_points
+2025-04-09 19:09:35 ERROR Error while loading json file empty key found
+2025-04-09 19:09:35 DEBUG Invalid keys detected in config
+empty key found
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:35 DEBUG No user settings found, using default settings
+2025-04-09 19:09:36 DEBUG No user settings found, using default settings
+2025-04-09 19:09:36 DEBUG Merged default and user settings
+2025-04-09 19:09:36 DEBUG Merged default and user settings
+2025-04-09 19:09:36 DEBUG Merged default and user settings
+2025-04-09 19:09:36 DEBUG No user settings found, using default settings
+2025-04-09 19:09:36 DEBUG No user settings found, using default settings
+2025-04-09 19:09:36 DEBUG No user settings found, using default settings
+2025-04-09 19:09:36 DEBUG No user settings found, using default settings
+2025-04-09 19:09:37 DEBUG No user settings found, using default settings
+2025-04-09 19:09:37 DEBUG No user settings found, using default settings
+2025-04-09 19:09:37 DEBUG No user settings found, using default settings
+2025-04-09 19:09:37 DEBUG No user settings found, using default settings
+2025-04-09 19:09:37 WARNING Error in unit conversion (dimensionality) 'm'/'m**2s**-2'
+2025-04-09 19:09:37 WARNING Error in unit conversion (dimensionality) 'm'/'m**2s**-2'
+2025-04-09 19:09:37 WARNING Error in unit conversion (dimensionality) 'm'/'m**2s**-2'
+2025-04-09 19:09:37 WARNING Error in unit conversion (dimensionality) ''/'Pa'
+2025-04-09 19:09:37 WARNING Error in unit conversion (dimensionality) 'Pa'/''
+2025-04-09 19:09:37 WARNING Error in unit conversion (undefined) 'whattheheck'/'Pa'
+2025-04-09 19:09:37 WARNING Error in unit conversion (undefined) 'hPa'/'whattheheck'
+2025-04-09 19:09:37 WARNING Error in unit conversion (undefined) 'whattheheck'/'whatthehock'
+2025-04-09 19:09:38 DEBUG No user settings found, using default settings
+2025-04-09 19:09:38 DEBUG No user settings found, using default settings
+2025-04-09 19:09:38 DEBUG No user settings found, using default settings
+2025-04-09 19:09:38 DEBUG No user settings found, using default settings
+2025-04-09 19:09:39 DEBUG No user settings found, using default settings
+2025-04-09 19:09:39 DEBUG No user settings found, using default settings
+2025-04-09 19:09:39 DEBUG Identified CRS 'epsg:4839' as '{'basemap': {'epsg': '4839'}, 'bbox': 'meter(10.5,51)'}'
+2025-04-09 19:09:39 DEBUG No user settings found, using default settings
+2025-04-09 19:09:39 DEBUG No user settings found, using default settings
+2025-04-09 19:09:40 DEBUG No user settings found, using default settings
+2025-04-09 19:09:40 DEBUG No user settings found, using default settings
+2025-04-09 19:09:40 DEBUG No user settings found, using default settings
+2025-04-09 19:09:40 DEBUG No user settings found, using default settings
+2025-04-09 19:09:41 DEBUG No user settings found, using default settings
+2025-04-09 19:09:41 DEBUG No user settings found, using default settings
+2025-04-09 19:09:41 DEBUG No user settings found, using default settings
+2025-04-09 19:09:41 DEBUG No user settings found, using default settings
+2025-04-09 19:09:42 DEBUG No user settings found, using default settings
+2025-04-09 19:09:42 DEBUG No user settings found, using default settings
+2025-04-09 19:09:42 DEBUG No user settings found, using default settings
+2025-04-09 19:09:42 DEBUG No user settings found, using default settings
+2025-04-09 19:09:43 DEBUG No user settings found, using default settings
+2025-04-09 19:09:43 DEBUG No user settings found, using default settings
