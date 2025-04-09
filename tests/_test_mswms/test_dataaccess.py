@@ -105,6 +105,16 @@ class Test_DefaultDataAccess:
 
         filename = self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=True)
         assert filename == "expected_filename.nc"
+        self.dut.setup.assert_called_once()
+
+        self.dut._filetree = {vartype: {init_time: {variable: {}}}}
+        exception_was_raised = False
+        try:
+            self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=False)
+        except ValueError:
+            exception_was_raised = True
+
+        assert exception_was_raised, "Expected ValueError was not raised when reload=False"
 
 
 class Test_CachedDataAccess(Test_DefaultDataAccess):
