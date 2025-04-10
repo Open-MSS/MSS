@@ -607,7 +607,6 @@ def merge_dict(existing_dict, new_dict):
        if timeout[0] > timeout[1]:
            raise ValueError("Timeout values must be in the form (connection, reply)")
        new_dict["MSCOLAB_timeout"] = tuple(timeout)
-
        existing_dict.update(new_dict)
        return existing_dict
 
