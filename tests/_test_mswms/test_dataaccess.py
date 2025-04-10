@@ -30,6 +30,7 @@ import os
 from datetime import datetime
 
 import mock
+import pytest
 
 from mslib.mswms.dataaccess import DefaultDataAccess, CachedDataAccess
 from tests.constants import DATA_DIR
@@ -108,13 +109,8 @@ class Test_DefaultDataAccess:
         self.dut.setup.assert_called_once()
 
         self.dut._filetree = {vartype: {init_time: {variable: {}}}}
-        exception_was_raised = False
-        try:
+        with pytest.raises(ValueError):
             self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=False)
-        except ValueError:
-            exception_was_raised = True
-
-        assert exception_was_raised, "Expected ValueError was not raised when reload=False"
 
 
 class Test_CachedDataAccess(Test_DefaultDataAccess):
