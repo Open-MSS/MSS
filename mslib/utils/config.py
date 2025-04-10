@@ -596,6 +596,21 @@ def merge_dict(existing_dict, new_dict):
     existing_dict -- Dict to merge new_dict into
     new_dict -- Dict with new values
     """
+    if "MSCOLAB_timeout" in new_dict:
+       timeout = new_dict["MSCOLAB_timeout"]
+       if not isinstance(timeout, (tuple, list)) or len(timeout) != 2:
+           raise ValueError("Timeout value must be a tuple or list of 2 integers")
+       if not all(isinstance(i, int) for i in timeout):
+           raise ValueError("Timeout value must be a tuple or list of 2 integers")
+       if timeout[0] < 0 or timeout[1] < 0:
+           raise ValueError("Timeout values must be non-negative integers")
+       if timeout[0] > timeout[1]:
+           raise ValueError("Timeout values must be in the form (connection, reply)")
+       new_dict["MSCOLAB_timeout"] = tuple(timeout)
+
+       existing_dict.update(new_dict)
+       return existing_dict
+
     # Check if dictionary options with fixed key/value pairs match data types from default
     for key in MSUIDefaultConfig.fixed_dict_options:
         if key in new_dict:
