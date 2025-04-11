@@ -2,7 +2,6 @@ import pytest
 from mslib.utils.config import (
     MSUIDefaultConfig,
     config_loader,
-    modify_config_file,
     merge_dict,
     default_options
 )
@@ -26,14 +25,14 @@ class Test_mscolab_timeout_part:
         assert isinstance(config, dict)
         assert "MSCOLAB_timeout" in config
         assert config["MSCOLAB_timeout"] == (2, 10)
-        
-    # def test_merge_dict(self):
-    #     current ={"MSCOLAB_timeout": (2,10)}
-    #     new = {"MSCOLAB_timeout": [5,15]}
-    #     merged = merge_dict(current, new)
-    #     assert isinstance(merged["MSCOLAB_timeout"], tuple)
-    #     assert len(merged["MSCOLAB_timeout"]) == 2
-    #     assert merged["MSCOLAB_timeout"] == (5,15)
+
+    def test_merge_dict(self):
+        current = {"MSCOLAB_timeout": (2, 10)}
+        new = {"MSCOLAB_timeout": [5, 15]}
+        merged = merge_dict(current, new)
+        assert isinstance(merged["MSCOLAB_timeout"], tuple)
+        assert len(merged["MSCOLAB_timeout"]) == 2
+        assert merged["MSCOLAB_timeout"] == (5, 15)
 
     def test_merge_dict_overwrite(self):
         result = merge_dict({"MSCOLAB_timeout": (1, 2)}, {"MSCOLAB_timeout": (3, 4)})
@@ -76,7 +75,7 @@ class Test_mscolab_timeout_part:
             assert tuple(merged["MSCOLAB_timeout"]) == (1, 5)
 
     def test_merge_dict_float_tuple(self):
-        current ={}
+        current = {}
         new = {"MSCOLAB_timeout": (8.5, 12.5)}
         result = merge_dict(current, new)
         assert tuple(result["MSCOLAB_timeout"]) == (8, 12)
