@@ -496,8 +496,12 @@ class TestWMSControlWidgetSetupSimple:
 
     @pytest.fixture(autouse=True)
     def setup(self, qtbot):
+        wc.WMS_SERVICE_CACHE = {}
         self.view = HSecViewMockup()
-        self.window = wc.HSecWMSControlWidget(view=self.view)
+        self.tempdir = tempfile.mkdtemp()
+        if not os.path.exists(self.tempdir):
+            os.mkdir(self.tempdir)
+        self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         self.window.show()
 
         # Remove all previous cached URLs
@@ -507,6 +511,10 @@ class TestWMSControlWidgetSetupSimple:
 
         yield
         self.window.hide()
+
+    def test_wms_cache_tmp(self):
+        assert self.window.wms_cache is not None
+        assert "tmp" in self.window.wms_cache
 
     def test_xml(self):
         testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
