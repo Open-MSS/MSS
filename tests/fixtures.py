@@ -202,7 +202,7 @@ def _running_eventlet_server(app):
         process.start()
         timeout = 10
         start_time = time.time()
-        while not is_url_response_ok(url):
+        while not is_url_response_ok(f"{url}/mss"):
             if time.time() - start_time > timeout:
                 pytest.fail('Server: "%s" did not become ready in time' % app.name)
             time.sleep(0.5)

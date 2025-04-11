@@ -222,6 +222,7 @@ def create_msui_settings_file(content):
 def is_url_response_ok(url):
     try:
         response = requests.get(url, timeout=2)
+        logging.debug(f"Response status code for URL {url}: {response.status_code}")
         return response.status_code == 200
     except requests.ConnectionError:
         logging.error(f"ConnectionError while checking URL {url}.")
@@ -234,6 +235,7 @@ def is_url_response_ok(url):
         return False
     except Exception as e:
         logging.error(f"Unknown error while checking URL {url}: {e}")
+        return False
 
 
 class ExceptionMock:
