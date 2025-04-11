@@ -2151,8 +2151,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/elementpath-4.7.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email-validator-2.2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email_validator-2.2.0-hd8ed1ab_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/esmf-8.8.1-nompi_hc4cf7a7_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.38.0-pyh29332c3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/esmf-8.7.0-nompi_h6063b07_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.39.1-pyh29332c3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/expat-2.7.0-h5888daf_0.conda
@@ -2500,8 +2500,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/elementpath-4.7.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email-validator-2.2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email_validator-2.2.0-hd8ed1ab_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/esmf-8.8.1-nompi_h47b5f09_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.38.0-pyh29332c3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/esmf-8.7.0-nompi_h1438e41_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.39.1-pyh29332c3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/expat-2.7.0-h240833e_0.conda
@@ -2790,8 +2790,8 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/elementpath-4.7.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email-validator-2.2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email_validator-2.2.0-hd8ed1ab_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/esmf-8.8.1-nompi_h51c9b8f_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.38.0-pyh29332c3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-arm64/esmf-8.7.0-nompi_hab24014_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.39.1-pyh29332c3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-arm64/expat-2.7.0-h286801f_0.conda
@@ -3078,7 +3078,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/elementpath-4.7.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email-validator-2.2.0-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/email_validator-2.2.0-hd8ed1ab_1.conda
-      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.38.0-pyh29332c3_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.39.1-pyh29332c3_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.2-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/execnet-2.1.1-pyhd8ed1ab_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/fastkml-1.1.0-pyhd8ed1ab_0.conda
@@ -6070,22 +6070,23 @@ packages:
   - netcdf-fortran >=4.6.1,<4.7.0a0
   license: NCSA
   purls: []
-  size: 22725078
-  timestamp: 1745626899536
-- conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.38.0-pyh29332c3_0.conda
-  sha256: 1c62e1c19bd246f82ab6a860903bd9d8cfeb3f1a4db109f7fb7889bf28cd32b3
-  md5: b015758dd80a70e9eb447981f4fa4d95
+  size: 22640695
+  timestamp: 1733334968937
+- conda: https://conda.anaconda.org/conda-forge/noarch/eventlet-0.39.1-pyh29332c3_0.conda
+  sha256: 8b096eb639e64b506493de9a53e4ef69cff269479bd297744b88c16b53066202
+  md5: c2c9060dc0c2b5af0f5d99e30dbc6305
   depends:
-  - python >=3.7
+  - python >=3.8
   - greenlet >=1.0
   - dnspython >=1.15.0
   - pyopenssl
+  - python
   license: MIT
   license_family: MIT
   purls:
   - pkg:pypi/eventlet?source=hash-mapping
-  size: 323602
-  timestamp: 1732036755278
+  size: 324663
+  timestamp: 1741332716577
 - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.2-pyhd8ed1ab_1.conda
   sha256: cbde2c64ec317118fc06b223c5fd87c8a680255e7348dd60e7b292d2e103e701
   md5: a16662747cdeb9abbac74d0057cc976e
@@ -13837,6 +13838,11 @@ packages:
   name: open-mss
   version: 10.1.0
   sha256: d7ff5d5a51189a74942690522ebe24dba7358eb2ce3ed774a107434befaeb058
+  editable: true
+- pypi: .
+  name: open-mss
+  version: 10.1.0
+  sha256: 4924815185aeaeb6892a2df38a6cdcfcd00da1a22fe0c67412382ecd77266882
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/opencl-headers-2024.10.24-h5888daf_0.conda
   sha256: 7e1d3ad55d4ad3ddf826e205d4603b9ed40c5e655a9dfd66b56f459d7ba14db3
