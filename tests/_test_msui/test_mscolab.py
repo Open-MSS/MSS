@@ -298,6 +298,14 @@ class Test_Mscolab:
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
 
+    def test_modify_mscolab_timeout(self, qtbot):
+        pytest.xfail("https://github.com/Open-MSS/MSS/issues/2716")
+        data = {"MSCOLAB_timeout": [5, 10]}
+        modify_config_file(data)
+        self.window.open_config_editor()
+        # the assert fails because last_used returns [[2, 10], [2, 10]]
+        assert self.window.config_editor.last_saved["MSCOLAB_timeout"] == data["MSCOLAB_timeout"]
+
     def test_activate_operation(self, qtbot):
         self._connect_to_mscolab(qtbot)
         modify_config_file({"MSS_auth": {self.url: self.userdata[0]}})
