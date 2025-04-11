@@ -512,7 +512,8 @@ class TestWMSControlWidgetSetupSimple:
 
     def test_wms_cache_tmp(self):
         assert self.window.wms_cache is not None
-        assert "TMP_WMS" in self.window.wms_cache
+        # wms_cache has an ending path separator
+        assert str(self.tempdir) == self.window.wms_cache[:-1]
 
     def test_xml(self):
         testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
