@@ -303,7 +303,7 @@ class Test_Mscolab:
         data = {"MSCOLAB_timeout": [5, 10]}
         modify_config_file(data)
         self.window.open_config_editor()
-        # the assert fails because last_used returns [[2, 10], [2, 10]]
+        # the assert fails because last_saved returns [[2, 10], [2, 10]]
         assert self.window.config_editor.last_saved["MSCOLAB_timeout"] == data["MSCOLAB_timeout"]
 
     def test_activate_operation(self, qtbot):
