@@ -27,7 +27,7 @@ def get_tutorial_images():
         os.makedirs(TUTORIAL_DIR)
     TUTORIAL_ARCHIVE = 'videos/mp4/tutorials.zip'
     if not os.path.exists(TUTORIAL_ARCHIVE):
-        response = requests.get(TUTORIAL_URL)
+        response = requests.get(TUTORIAL_URL, timeout=(2, 600))
         open(TUTORIAL_ARCHIVE, "wb").write(response.content)
         with zipfile.ZipFile(TUTORIAL_ARCHIVE) as zip_file:
             for item in zip_file.namelist():

@@ -260,9 +260,9 @@ class FileManager:
         return True
 
     def delete_user_profile_image(self, image_to_be_deleted):
-        '''
+        """
         This function is called when deleting account or updating the profile picture
-        '''
+        """
         upload_folder = mscolab_settings.UPLOAD_FOLDER
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
