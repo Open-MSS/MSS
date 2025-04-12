@@ -314,8 +314,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # A local __setattr__() method is required for them.
         self._files = files  # list of cdf file names in the set
         self._dims = cdfm.dimensions
-        self._vars = {k:v for k,v in cdfm.variables.items() if k not in exclude}
-        self._cdfOrigin = {k:(master,cdfm) for k in self._vars}
+        self._vars = {k: v for k, v in cdfm.variables.items() if k not in exclude}
+        self._cdfOrigin = {k: (master,cdfm) for k in self._vars}
 
         self._file_format = []
         for dset in self._cdf:
