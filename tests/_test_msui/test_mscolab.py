@@ -298,8 +298,8 @@ class Test_Mscolab:
         # close all hanging operation option windows
         self.window.mscolab.close_external_windows()
 
+    @pytest.mark.xfail(reason="https://github.com/Open-MSS/MSS/issues/2716", strict=True)
     def test_modify_mscolab_timeout(self, qtbot):
-        pytest.xfail("https://github.com/Open-MSS/MSS/issues/2716")
         data = {"MSCOLAB_timeout": [5, 10]}
         modify_config_file(data)
         self.window.open_config_editor()
