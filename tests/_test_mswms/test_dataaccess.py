@@ -97,20 +97,35 @@ class Test_DefaultDataAccess:
         init_time = datetime(2012, 10, 17, 12, 0)
         valid_time = datetime(2012, 10, 17, 18, 0)
 
-        self.dut._filetree = {vartype: {init_time: {variable: {}}}}
-
-        def fake_setup():
-            self.dut._filetree[vartype][init_time][variable][valid_time] = "expected_filename.nc"
-
-        self.dut.setup = mock.MagicMock(side_effect=fake_setup)
-
-        filename = self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=True)
-        assert filename == "expected_filename.nc"
-        self.dut.setup.assert_called_once()
-
-        self.dut._filetree = {vartype: {init_time: {variable: {}}}}
+        # call with reload=False, expect an error
+        self.dut._filetree = {}
         with pytest.raises(ValueError):
             self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=False)
+
+        # with reload=True test data being loaded
+        filename = self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=True)
+        file_path = os.path.join(DATA_DIR, filename)
+        assert os.path.exists(file_path), f"Expected file {file_path} to exist"
+
+        # remove a file, with reload =False, it is still returned
+        backup_path = file_path + ".bak"
+        os.rename(file_path, backup_path)
+        old_filename = self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=False)
+        assert old_filename == filename
+
+        # with reload=True, removed file not returned
+        with pytest.raises(ValueError):
+            self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=True)
+
+        # add file, with reload=False file is not returned
+        os.rename(backup_path, file_path)
+
+        updated_filename = self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=False)
+        assert updated_filename == filename
+
+        # with reload=True, added file is returned
+        restored_filename = self.dut._determine_filename(variable, vartype, init_time, valid_time, reload=True)
+        assert restored_filename == filename
 
 
 class Test_CachedDataAccess(Test_DefaultDataAccess):
