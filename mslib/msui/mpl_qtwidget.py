@@ -389,9 +389,6 @@ class SideViewPlotter(ViewPlotter):
     _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
     _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
 
-    _pres_maj = np.concatenate([np.arange(top * 10, top, -top) for top in (10000, 1000, 100, 10)] + [[10]])
-    _pres_min = np.concatenate([np.arange(top * 10, top, -top // 10) for top in (10000, 1000, 100, 10)] + [[10]])
-
     def __init__(self, fig=None, ax=None, settings=None, numlabels=None, num_interpolation_points=None):
         """
         Arguments:
@@ -980,7 +977,7 @@ class NavigationToolbar(NavigationToolbar2QT):
         if os.path.exists(myname):
             return QtGui.QIcon(myname)
         else:
-            return super()._icon(name, *args)
+            return super()._icon(name)
 
     def _zoom_pan_handler(self, event):
         """

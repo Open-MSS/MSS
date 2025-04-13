@@ -66,7 +66,7 @@ from mslib.utils.verify_user_token import verify_user_token as _verify_user_toke
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
 from mslib.utils.qt import get_open_filename, get_save_filename, dropEvent, dragEnterEvent, show_popup
 from mslib.msui.qt5 import ui_mscolab_help_dialog as msc_help_dialog
-from mslib.msui.qt5 import ui_add_operation_dialog as add_operation_ui
+from mslib.msui.qt5 import ui_mscolab_add_operation_dialog as msc_add_operation_ui
 from mslib.msui.qt5 import ui_mscolab_merge_waypoints_dialog as merge_wp_ui
 from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
@@ -82,7 +82,7 @@ def verify_user_token(func):
     @functools.wraps(func)
     def wrapper(self, *args, **vargs):
         if self.mscolab_server_url is None:
-            # in case of a forecd logout some QT events may still trigger MSCOLAB functions
+            # in case of a forced logout some QT events may still trigger MSCOLAB functions
             return
         verify_user_token.depth += 1
         try:
@@ -131,7 +131,7 @@ class MSColab_OperationArchiveBrowser(QDialog, ui_opar.Ui_OperationArchiveBrowse
                     "update_operation",
                     {"op_id": self.archived_op_id,
                      "attribute": "active",
-                     "value": "True"})
+                     "value": "True"}, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             except requests.exceptions.RequestException as e:
                 logging.debug(e)
                 show_popup(self.parent, "Error", "Some error occurred! Could not unarchive operation.")
@@ -250,7 +250,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
             session.auth = auth
             session.headers.update({'x-test': 'true'})
             response = session.get(
-                urljoin(url, 'status'), timeout=tuple(tuple(config_loader(dataset="MSCOLAB_timeout"))))
+                urljoin(url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if response.status_code == 401:
                 self.set_status("Error", 'Server authentication data were incorrect.')
             elif response.status_code == 200:
@@ -297,7 +297,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
                     if ret == QMessageBox.Yes:
                         url_list = [self.mscolab_server_url] + url_list
-                        modify_config_file({"default_MSCOLAB": url_list})
+                        modify_config_file({"default_MSCOLAB": url_list,
+                                            "mscolab_server_url": self.mscolab_server_url})
 
                 # Fill Email and Password fields from config
                 self.loginEmailLe.setText(
@@ -392,7 +393,8 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
 
         try:
             data = {'token': user_token}
-            response = requests.post(url_idp_login_auth, json=data, timeout=(2, 10))
+            response = requests.post(url_idp_login_auth, json=data,
+                                     timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             if response.status_code == 401:
                 self.set_status("Error", 'Invalid token or token expired. Please try again')
                 self.stackedWidget.setCurrentWidget(self.loginPage)
@@ -412,7 +414,7 @@ class MSColab_ConnectDialog(QDialog, ui_conn.Ui_MSColabConnectDialog):
                 session.headers.update({'x-test': 'true'})
                 url = urljoin(self.mscolab_server_url, "token")
 
-                response = session.post(url, data=data, timeout=(2, 10))
+                response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
                 response.raise_for_status()
                 if response.text == "False":
                     # show status indicating about wrong credentials
@@ -524,6 +526,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.usernameLabel.hide()
         self.ui.userOptionsTb.hide()
         self.ui.actionAddOperation.setEnabled(False)
+        self.ui.actionCopyIntoNewMSColabOperation.setEnabled(False)
         self.ui.activeOperationDesc.setHidden(True)
         self.hide_operation_options()
 
@@ -732,6 +735,7 @@ class MSUIMscolab(QtCore.QObject):
             self.fetch_profile_image()
             # enable add operation menu action
             self.ui.actionAddOperation.setEnabled(True)
+            self.ui.actionCopyIntoNewMSColabOperation.setEnabled(True)
 
             # Populate open operations list
             ops = self.add_operations_to_ui()
@@ -952,8 +956,11 @@ class MSUIMscolab(QtCore.QObject):
             if response.status_code == 200 and response.json()["success"] is True:
                 self.logout()
 
-    @verify_user_token
     def add_operation_handler(self, _=None):
+        self.add_operation_dialog()
+
+    @verify_user_token
+    def add_operation_dialog(self, name=None, description=None, xml=None):
         def check_and_enable_operation_accept():
             if (self.add_proj_dialog.path.text() != "" and
                     self.add_proj_dialog.description.toPlainText() != "" and
@@ -985,29 +992,43 @@ class MSUIMscolab(QtCore.QObject):
                 self.add_proj_dialog.selectedFile.setText(file_name)
 
         self.proj_diag = QDialog()
-        self.add_proj_dialog = add_operation_ui.Ui_addOperationDialog()
+        self.add_proj_dialog = msc_add_operation_ui.Ui_addOperationDialog()
         self.add_proj_dialog.setupUi(self.proj_diag)
         self.add_proj_dialog.f_content = None
-        self.add_proj_dialog.buttonBox.accepted.connect(self.add_operation)
+        self.add_proj_dialog.buttonBox.accepted.connect(self.add_operation_from_new_dialog)
         self.add_proj_dialog.buttonBox.button(QtWidgets.QDialogButtonBox.Ok).setEnabled(False)
         self.add_proj_dialog.path.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.description.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.category.textChanged.connect(check_and_enable_operation_accept)
         self.add_proj_dialog.browse.clicked.connect(browse)
         self.add_proj_dialog.category.setText(config_loader(dataset="MSCOLAB_category"))
+        if name is not None:
+            self.add_proj_dialog.path.setText(name)
+        if description is not None:
+            self.add_proj_dialog.description.setText(name)
+        if xml is not None:
+            self.add_proj_dialog.f_content = xml
+            self.add_proj_dialog.optFileBox.setHidden(True)
 
         # sets types from defined import menu
         import_menu = self.ui.menuImportFlightTrack
         for im_action in import_menu.actions():
-            self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
+            if im_action.text() != "From Selected":
+                print(im_action.text())
+                self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
         self.proj_diag.show()
 
+    def add_operation_from_new_dialog(self):
+        logging.debug("add_operation_from_dialog")
+        self.add_operation(
+            self.add_proj_dialog.path.text(),
+            self.add_proj_dialog.description.toPlainText(),
+            self.add_proj_dialog.category.text(),
+            self.add_proj_dialog.f_content)
+
     @verify_user_token
-    def add_operation(self):
+    def add_operation(self, path, description, category, f_content):
         logging.debug("add_operation")
-        path = self.add_proj_dialog.path.text()
-        description = self.add_proj_dialog.description.toPlainText()
-        category = self.add_proj_dialog.category.text()
         if not path:
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t be empty')
@@ -1040,6 +1061,9 @@ class MSUIMscolab(QtCore.QObject):
             data["content"] = self.add_proj_dialog.f_content
         else:
             data["content"] = default_content
+                "category": category}
+        if f_content is not None:
+            data["content"] = f_content
         try:
             response = self.conn.request_post("create_operation", data)
         except requests.exceptions.RequestException as ex:
@@ -1655,7 +1679,7 @@ class MSUIMscolab(QtCore.QObject):
             operations = response["operations"]
             self.ui.filterCategoryCb.currentIndexChanged.disconnect(self.operation_category_handler)
             self.ui.filterCategoryCb.clear()
-            categories = set(["*ANY*"])
+            categories = {"*ANY*"}
             for operation in operations:
                 categories.add(operation["category"])
             categories.remove("*ANY*")
@@ -1886,9 +1910,11 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.workingStatusLabel.setText(self.ui.tr("\n\nNo Operation Selected"))
 
     @verify_user_token
-    def request_wps_from_server(self):
+    def request_wps_from_server(self, op_id=None):
+        if op_id is None:
+            op_id = self.active_op_id
         response = self.conn.request_get(
-            "get_operation_by_id", {"op_id": self.active_op_id})
+            "get_operation_by_id", {"op_id": op_id})
         if response.text != "False":
             xml_content = response.json()["content"]
             return xml_content
@@ -1990,7 +2016,7 @@ class MSUIMscolab(QtCore.QObject):
         if self.active_op_id is None:
             return
 
-        # Setting default filename path for filedialogue
+        # Setting default filename path for filedialog
         default_filename = f'{self.active_operation_name}.{extension}'
         file_name = get_save_filename(
             self.ui, "Export From Server",
@@ -2052,6 +2078,7 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.connectBtn.setFocus()
         self.ui.openOperationsGb.hide()
         self.ui.actionAddOperation.setEnabled(False)
+        self.ui.actionCopyIntoNewMSColabOperation.setEnabled(False)
         # hide operation description
         self.ui.activeOperationDesc.setHidden(True)
         # reset description label text

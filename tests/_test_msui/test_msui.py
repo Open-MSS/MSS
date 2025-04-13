@@ -39,6 +39,7 @@ from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
+import re
 
 
 def test_main():
@@ -86,9 +87,10 @@ class Test_MSS_AboutDialog:
 
     def test_milestone_url(self):
         with urlopen(self.window.milestone_url) as f:
-            text = f.read()
-        pattern = f'value="is:closed milestone:{__version__[:-1]}"'
-        assert pattern in text.decode('utf-8')
+            text = f.read().decode("utf-8")
+        expected_version = __version__
+        pattern = rf'value="is:closed milestone:{re.escape(expected_version)}"'
+        assert re.search(pattern, text), f"Expected milestone format not found: {expected_version}"
 
 
 class Test_MSS_ShortcutDialog:
@@ -268,7 +270,7 @@ class Test_MSSSideViewWindow:
 
     @mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=export_plugins)
     def test_add_plugins(self, mockopen):
-        assert len(self.window.menuImportFlightTrack.actions()) == 2
+        assert len(self.window.menuImportFlightTrack.actions()) == 3
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
         assert len(self.window.import_plugins) == 0
         assert len(self.window.export_plugins) == 0
@@ -278,7 +280,7 @@ class Test_MSSSideViewWindow:
         self.window.add_export_plugins("qt")
         assert len(self.window.import_plugins) == 1
         assert len(self.window.export_plugins) == 1
-        assert len(self.window.menuImportFlightTrack.actions()) == 3
+        assert len(self.window.menuImportFlightTrack.actions()) == 4
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 3
 
         self.window.remove_plugins()
@@ -300,7 +302,7 @@ class Test_MSSSideViewWindow:
         self.window.remove_plugins()
         assert len(self.window.import_plugins) == 0
         assert len(self.window.export_plugins) == 0
-        assert len(self.window.menuImportFlightTrack.actions()) == 2
+        assert len(self.window.menuImportFlightTrack.actions()) == 3
         assert len(self.window.menuExportActiveFlightTrack.actions()) == 2
 
     @mock.patch("PyQt5.QtWidgets.QMessageBox.warning", return_value=QtWidgets.QMessageBox.Yes)
