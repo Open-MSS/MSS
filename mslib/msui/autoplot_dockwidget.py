@@ -164,6 +164,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 "Cannot download empty treewidget"
             )
             return
+        if self.intv == "":
+            if self.stime and self.etime:
+                QMessageBox.information(
+                    self,
+                    "ERROR",
+                    "Please provide a valid time step value"
+                )
+                return
+
         view = "top"
         intv = 0
         if self.intv != "":

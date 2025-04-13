@@ -108,8 +108,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
     msc_auth = ("mscolab", msc_auth_password)
     session.auth = msc_auth
     session.headers.update({'x-test': 'true'})
-    # ToDp fix config_loader it gets a list of two times the entry
-    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
     session.close()
     if response.status_code == 401:
         logging.error("Error", 'Server authentication data were incorrect.')
@@ -119,8 +118,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
         session.headers.update({'x-test': 'true'})
         url = urljoin(msc_url, "token")
         try:
-            # ToDp fix config_loader it gets a list of two times the entry
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             response.raise_for_status()
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
@@ -158,7 +156,7 @@ def get_xml_data(msc_url, token, op_id):
             "op_id": op_id
         }
         url = urljoin(msc_url, "get_operation_by_id")
-        r = requests.get(url, data=data)
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             xml_content = json.loads(r.text)["content"]
             return xml_content
@@ -187,7 +185,7 @@ def get_op_id(msc_url, token, op_name):
             "skip_archived": skip_archived
         }
         url = urljoin(msc_url, "operations")
-        r = requests.get(url, data=data)
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
@@ -621,10 +619,19 @@ def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
         pdlg.setValue(1)
 
     msc_url = config["mscolab_server_url"]
-    msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
-                                                                   username="mscolab")
-    msc_username = config["MSS_auth"][msc_url]
-    msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
+    try:
+        msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
+                                                                       username="mscolab")
+    except KeyError:
+        msc_auth_password = None
+
+    try:
+        msc_username = config["MSS_auth"][msc_url]
+    except KeyError:
+        msc_username = None
+        msc_password = None
+    if msc_username is not None:
+        msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
 
     # Choose view (top or side)
     if view == "top":
