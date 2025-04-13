@@ -155,7 +155,7 @@ MSS repository needs a different folder, e.g. workspace/MSS. Avoid to mix data a
 
 :ref:`demodata <demodata>` is provided by executing::
 
-   mswms_demodata --seed
+   mswms --seed
 
 To use this data add the mswms_settings.py in your python path::
 

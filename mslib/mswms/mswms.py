@@ -32,6 +32,8 @@ import sys
 from mslib import __version__
 from mslib.utils import setup_logging
 from mslib.mswms.wms import app as application
+from mslib.mswms.wms import DataFiles
+import fs
 
 
 def main():
@@ -44,7 +46,7 @@ def main():
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="If set to a name log output goes to that file", dest="logfile",
                         default=None)
-
+    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server", action="store_true", default=False)                
     subparsers = parser.add_subparsers(help='Available actions', dest='action')
     gallery = subparsers.add_parser("gallery", help="Subcommands surrounding the gallery")
     gallery.add_argument("--create", action="store_true", default=False,
@@ -86,6 +88,16 @@ def main():
         sys.exit()
 
     setup_logging(args)
+    if args.seed:
+        root_fs = fs.open_fs("~/")
+        if not root_fs.exists("mss/testdata"):
+            root_fs.makedirs("mss/testdata")
+
+        examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
+                             server_config_fs=fs.open_fs("~/mss"))
+        examples.create_server_config(detailed_information=True)
+        examples.create_data()
+        print("\nTo use this setup you need the mswms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
 
     # keep the import after the version check. This creates all layers.
     from mslib.mswms.wms import mswms_settings, server
