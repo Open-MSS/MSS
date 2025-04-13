@@ -72,8 +72,7 @@ from mslib.msui.qt5 import ui_mscolab_connect_dialog as ui_conn
 from mslib.msui.qt5 import ui_mscolab_profile_dialog as ui_profile
 from mslib.msui.qt5 import ui_operation_archive as ui_opar
 from mslib.msui import constants
-from mslib.msui import flighttrack as ft
-from mslib.utils.config import config_loader, modify_config_file, MSUIDefaultConfig
+from mslib.utils.config import config_loader, modify_config_file
 
 
 def verify_user_token(func):
@@ -1029,7 +1028,7 @@ class MSUIMscolab(QtCore.QObject):
             return
         waypoints = config_loader(dataset="new_flighttrack_template", default=False)
         waypoints_model = ft.WaypointsTableModel(waypoints=[
-            ft.Waypoint(location=loc, lat=0.0, lon=0.0) 
+            ft.Waypoint(location=loc, lat=0.0, lon=0.0)
             for loc in waypoints
         ])
         default_content = waypoints_model.get_xml_content()

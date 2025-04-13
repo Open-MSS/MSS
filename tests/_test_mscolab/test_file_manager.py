@@ -557,7 +557,7 @@ class Test_FileManager:
       </ListOfWaypoints>
   </FlightTrack>"""
 
-    def _create_operation(self, flight_path="firstflight", user=None, content, category="default"):
+    def _create_operation(self, flight_path="firstflight", user=None, content=None, category="default"):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user,
@@ -565,7 +565,7 @@ class Test_FileManager:
         operation = Operation.query.filter_by(path=flight_path).first()
         return flight_path, operation
 
-    def _create_operation_with_users(self, flight_path="firstflight", user=None, content):
+    def _create_operation_with_users(self, flight_path="firstflight", user=None, content=None):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
