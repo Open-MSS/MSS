@@ -505,7 +505,7 @@ class Test_Server:
             assert data["success"] is True
 
     def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test",
-                          active=True, content):
+                          active=True, content=None):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})

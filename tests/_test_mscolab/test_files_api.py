@@ -203,7 +203,7 @@ class Test_Files:
             version_name = all_changes[-1]["version_name"]
             assert version_name == "berlin"
 
-    def _create_operation(self, flight_path="firstflight", description="example", user=None, content):
+    def _create_operation(self, flight_path="firstflight", description="example", user=None, content=None):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, description, user, content=content)

@@ -100,7 +100,10 @@ class FileManager:
             data = fs.open_fs(self.data_dir)
             data.makedir(operation.path)
             operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
-            operation_file.write(content)
+            if content is not None:
+                operation_file.write(content)
+            else:
+                operation_file.write(mscolab_settings.STUB_CODE)
             operation_path = fs.path.combine(self.data_dir, operation.path)
             r = git.Repo.init(operation_path)
             r.git.clear_cache()

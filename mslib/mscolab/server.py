@@ -557,8 +557,7 @@ def error413(error):
 @verify_user
 def create_operation():
     path = request.form['path']
-    content = request.form.get('default_content')
-    session['content'] = content
+    content = request.form.get('content', None)
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
     active = (request.form.get('active', "True") == "True")
@@ -570,10 +569,6 @@ def create_operation():
         json_config = {"token": token}
         sockio.sm.update_operation_list(json_config)
     return r
-
-
-def content():
-    return session.get('content')
 
 
 @APP.route('/get_operation_by_id', methods=['GET'])

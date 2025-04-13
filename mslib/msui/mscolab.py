@@ -1027,7 +1027,7 @@ class MSUIMscolab(QtCore.QObject):
             self.error_dialog = QtWidgets.QErrorMessage()
             self.error_dialog.showMessage('Path can\'t contain spaces or special characters')
             return
-        waypoints = config_loader(dataset="new_flighttrack_template")
+        waypoints = config_loader(dataset="new_flighttrack_template", default=False)
         waypoints_model = ft.WaypointsTableModel(waypoints=[
             ft.Waypoint(location=loc, lat=0.0, lon=0.0) 
             for loc in waypoints
@@ -1035,10 +1035,12 @@ class MSUIMscolab(QtCore.QObject):
         default_content = waypoints_model.get_xml_content()
         data = {"path": path,
                 "description": description,
-                "category": category,
-                "default_content": default_content}
+                "category": category
+                }
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
+        else:
+            data["content"] = default_content
         try:
             response = self.conn.request_post("create_operation", data)
         except requests.exceptions.RequestException as ex:

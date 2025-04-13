@@ -220,7 +220,7 @@ class Test_Files:
           </ListOfWaypoints>
       </FlightTrack>"""
 
-    def _create_operation(self, flight_path="firstflight", user=None, content):
+    def _create_operation(self, flight_path="firstflight", user=None, content=None):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
