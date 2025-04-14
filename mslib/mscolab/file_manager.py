@@ -103,7 +103,7 @@ class FileManager:
             if content is not None:
                 operation_file.write(content)
             else:
-                operation_file.write(mscolab_settings.STUB_CODE)
+                operation_file.write(mscolab_settings.XML_CONTENT_INIT)
             operation_path = fs.path.combine(self.data_dir, operation.path)
             r = git.Repo.init(operation_path)
             r.git.clear_cache()

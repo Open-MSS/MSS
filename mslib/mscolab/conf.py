@@ -103,6 +103,19 @@ class default_mscolab_settings:
     </FlightTrack>
     """
 
+    XML_CONTENT_INIT = """<?xml version="1.0" encoding="utf-8"?>
+    <FlightTrack version="1.7.6">
+    <ListOfWaypoints>
+        <Waypoint flightlevel="250" lat="21.1458" location="Nagpur" lon="79.0882">
+        <Comments></Comments>
+        </Waypoint>
+        <Waypoint flightlevel="280" lat="28.6139" location="Delhi" lon="77.2090">
+        <Comments></Comments>
+        </Waypoint>
+    </ListOfWaypoints>
+    </FlightTrack>
+    """
+
     # looks for a given category forn a operation ending with GROUP_POSTFIX
     # e.g. category = Tex will look for TexGroup
     # all users in that Group are set to the operations of that category
