@@ -1057,11 +1057,9 @@ class MSUIMscolab(QtCore.QObject):
                 "description": description,
                 "category": category
                 }
+        data["content"] = default_content
         if self.add_proj_dialog.f_content is not None:
             data["content"] = self.add_proj_dialog.f_content
-        else:
-            data["content"] = default_content
-                "category": category}
         if f_content is not None:
             data["content"] = f_content
         try:
