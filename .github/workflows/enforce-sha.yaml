@@ -19,4 +19,4 @@ jobs:
         with:
           allowlist: |
             Open-MSS/
-          dry_run: 'true'
+          dry_run: 'false'
