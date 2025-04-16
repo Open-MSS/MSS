@@ -70,6 +70,8 @@ class FileManager:
         :param active: The activity status of the operation. Default is True.
         :return: True if the operation is created successfully, False otherwise.
         """
+        if content is None:
+            return False
         if content is not None and not verify_waypoint_data(content):
             return False
         # set codes on these later
@@ -100,10 +102,7 @@ class FileManager:
             data = fs.open_fs(self.data_dir)
             data.makedir(operation.path)
             operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
-            if content is not None:
-                operation_file.write(content)
-            else:
-                operation_file.write(mscolab_settings.XML_CONTENT_INIT)
+            operation_file.write(content)
             operation_path = fs.path.combine(self.data_dir, operation.path)
             r = git.Repo.init(operation_path)
             r.git.clear_cache()

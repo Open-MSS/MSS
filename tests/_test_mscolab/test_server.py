@@ -38,6 +38,7 @@ from mslib.mscolab.server import check_login, register_user
 from mslib.mscolab.file_manager import FileManager
 from mslib.mscolab.seed import add_user, get_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 class Test_Server:
@@ -505,7 +506,7 @@ class Test_Server:
             assert data["success"] is True
 
     def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test",
-                          active=True, content=None):
+                          active=True, content=XML_CONTENT_INIT):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})

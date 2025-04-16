@@ -30,6 +30,7 @@ import pytest
 from mslib.mscolab.models import Operation
 from mslib.mscolab.seed import add_user, get_user
 from tests.utils import XML_CONTENT1, XML_CONTENT2, XML_CONTENT3
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 class Test_Files:
@@ -51,7 +52,7 @@ class Test_Files:
             flight_path = "f3"
             operation = Operation.query.filter_by(path=flight_path).first()
             assert operation is None
-            assert self.fm.create_operation(flight_path, "f3 test example", self.user)
+            assert self.fm.create_operation(flight_path, "f3 test example", self.user, content=XML_CONTENT_INIT)
             operation = Operation.query.filter_by(path=flight_path).first()
             assert operation.id is not None
             assert operation.path == "f3"
@@ -60,7 +61,7 @@ class Test_Files:
         with self.app.test_client():
             operations = ["alpha", "beta", "gamma"]
             for fp in operations:
-                assert self.fm.create_operation(fp, f"{fp} test example", self.user)
+                assert self.fm.create_operation(fp, f"{fp} test example", self.user, content=XML_CONTENT_INIT)
             assert len(self.fm.list_operations(self.user)) == 3
             assert len(self.fm.list_operations(self.user_2)) == 0
             fps = self.fm.list_operations(self.user)
@@ -203,9 +204,9 @@ class Test_Files:
             version_name = all_changes[-1]["version_name"]
             assert version_name == "berlin"
 
-    def _create_operation(self, flight_path="firstflight", description="example", user=None, content=None):
+    def _create_operation(self, flight_path="firstflight", description="example", user=None, content=XML_CONTENT_INIT):
         if user is None:
             user = self.user
-        self.fm.create_operation(flight_path, description, user, content=content)
+        self.fm.create_operation(flight_path, description, user, content=XML_CONTENT_INIT)
         operation = Operation.query.filter_by(path=flight_path).first()
         return flight_path, operation

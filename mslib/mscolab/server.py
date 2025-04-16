@@ -556,7 +556,7 @@ def error413(error):
 @verify_user
 def create_operation():
     path = request.form['path']
-    content = request.form.get('content', None)
+    content = request.form.get('content')
     description = request.form.get('description', None)
     category = request.form.get('category', "default")
     active = (request.form.get('active', "True") == "True")
