@@ -21,7 +21,6 @@ jobs:
             Open-MSS/
           dry_run: 'false'
 
-jobs:
   frizbee_check:
     runs-on: ubuntu-latest
     steps:
