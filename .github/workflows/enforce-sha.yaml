@@ -20,25 +20,3 @@ jobs:
           allowlist: |
             Open-MSS/
           dry_run: 'false'
-
-  frizbee_check:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-      - uses: stacklok/frizbee-action@a0f3391cbe93a54e2a68cfaca2283f8cf3fd72ea # v0.0.2
-        with:
-          actions: .github/workflows
-          open_pr: true
-          fail_on_unpinned: true
-          token: ${{ secrets.PAT }}
-          branch: automation/update-sha
-          add-paths:
-            - build_docs_gallery.yml
-            - lint.yml
-            - testing-all-oses.yml
-            - update-pixi-lockfile.yml
-          delete-branch: true
-          commit-message: Update sha of actions
-          title: Update sha of actions
-          body-path: diff.md
