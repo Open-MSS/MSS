@@ -77,7 +77,10 @@ def main(tutorial_mode=False):
     logging.info("MSS Version: %s", __version__)
     logging.info("Python Version: %s", sys.version)
     logging.info("Platform: %s (%s)", platform.platform(), platform.architecture())
-
+    logging.info("Log file location: %s", args.logfile)
+    logging.info("Started from : %s", os.getcwd())
+    logging.info("Executable location: %s", os.path.abspath(sys.argv[0]))
+    logging.info("Command line arguments: %s", sys.argv)
     try:
         read_config_file()
     except (FileNotFoundError, fs.errors.CreateFailed, fs.errors.FileExpected) as ex:
