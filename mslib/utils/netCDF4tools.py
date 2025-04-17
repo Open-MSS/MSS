@@ -266,6 +266,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # Create the following:
         #   cdf       list of Dataset instances
         #   cdfVar    dictionary indexed by the variable names
+        cdf = []
         cdfVar = {}
         cdfOrigin = {}
         for vName, v in cdfm.variables.items():
