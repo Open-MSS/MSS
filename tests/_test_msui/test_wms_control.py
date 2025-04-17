@@ -495,10 +495,10 @@ class TestWMSControlWidgetSetupSimple:
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     @pytest.fixture(autouse=True)
-    def setup(self, tmp_path_factory, qtbot):
+    def setup(self, tmp_path, qtbot):
         wc.WMS_SERVICE_CACHE = {}
         self.view = HSecViewMockup()
-        self.tempdir = tmp_path_factory.mktemp("TMP_WMS")
+        self.tempdir = tmp_path
         self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         self.window.show()
 
