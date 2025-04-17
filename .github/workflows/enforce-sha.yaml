@@ -6,7 +6,7 @@ on:
     - 'GSOC**'
   pull_request:
 
-name: Security
+name: lint with ensure-sha-pinned-actions
 
 jobs:
   ensure-pinned-actions:
