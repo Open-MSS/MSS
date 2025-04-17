@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
     - uses: prefix-dev/setup-pixi@5044b250243a57e8c78f7c38acd73f6d7954a3cf # v0.8.7
       with:
         pixi-version: latest
