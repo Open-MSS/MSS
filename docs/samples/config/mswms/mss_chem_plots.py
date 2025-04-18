@@ -93,9 +93,10 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
-                plt.setp(cs_pv.collections, path_effects=[patheffects.withStroke(linewidth=cont_lw + 2,
-                                                                                 foreground="w")])
-                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
+                for i in cs_pv.collections:
+                    i.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                for label in cs_pv_lab:
+                    label.set_path_effects([patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
         if self.crs.lower() == "epsg:77774020":
