@@ -241,7 +241,7 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         skip_dim_check = skip_dim_check or []
         if isinstance(files, str):
             files = sorted(glob.glob(files))
-
+        super().__init__(files)
         master = files[0]
 
         # Open the master again, this time as a classic CDF instance. This will avoid
@@ -266,7 +266,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # Create the following:
         #   cdf       list of Dataset instances
         #   cdfVar    dictionary indexed by the variable names
-        cdf = []
+        cdf = [cdfm]
+        self._cdf = cdf  # Store this now, because dim() method needs it
         cdfVar = {}
         cdfOrigin = {}
         for vName, v in cdfm.variables.items():
@@ -276,7 +277,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
             cdfOrigin[vName] = (master, cdfm)
         if len(cdfVar) == 0:
             raise IOError(f"master dataset '{master}' does not have any variable")
-
+        self._cdf =[cdfm]
+        self._isopen = True
         # Open each remaining file in read-only mode.
         # Make sure each file defines the same record variables as the master
         # and that the variables are defined in the same way (name, shape and type)
@@ -313,8 +315,8 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # A local __setattr__() method is required for them.
         self._files = files  # list of cdf file names in the set
         self._dims = cdfm.dimensions
-        self._vars = {k: v for k, v in cdfm.variables.items() if k not in exclude}
-        self._cdfOrigin = {k: (master, cdfm) for k in self._vars}
+        self._vars = cdfVar
+        self._cdfOrigin = cdfOrigin
 
         self._file_format = []
         for dset in self._cdf:
