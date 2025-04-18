@@ -78,4 +78,3 @@ jobs:
         with:
           allowlist: |
             Open-MSS/
-          dry_run: 'false'
