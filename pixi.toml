@@ -51,7 +51,7 @@ pyjwt = "*"
 pymysql = ">=0.9.3"
 pyqt = ">=5.15.0"
 pysaml2 = "*"
-python = "<3.12"
+python = ">=3.8"
 python-engineio = ">=4"
 python-slugify = "*"
 python-socketio = ">=5"
@@ -118,7 +118,11 @@ pyautogui = "*"
 pyscreeze = "*"
 python-mss = "*"
 
+[feature.py312.dependencies]
+python = "3.12.*"
+
 [environments]
 addons = ["addons"]
 dev = ["dev"]
 tutorials = ["tutorials"]
+py312 = ["py312"]
