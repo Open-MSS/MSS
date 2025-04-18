@@ -580,8 +580,8 @@ def load_settings_qsettings(tag, default_settings=None):
     try:
         settings = q_settings.value(tag)
     except Exception as ex:
-        logging.error("Problems reloading stored %s settings (%s: %s). Switching to default",
-                      tag, type(ex), ex)
+        logging.warning("Problems reloading stored %s settings (%s: %s). Switching to default",
+                        tag, type(ex), ex)
     if isinstance(settings, dict):
         default_settings.update(settings)
     return default_settings

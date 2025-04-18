@@ -666,7 +666,7 @@ class SLO(Service):
                 IdpServerSettings_.IDP.session_db.remove_authn_statements(msg.name_id)
             except KeyError as exc:
                 logger.error("Unknown session: %s", exc)
-                resp = ServiceError("Unknown session: %s", exc)
+                resp = ServiceError(f"Unknown session: {exc}")
                 return resp(self.environ, self.start_response)
 
         resp = IdpServerSettings_.IDP.create_logout_response(msg, [binding])

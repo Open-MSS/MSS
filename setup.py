@@ -47,7 +47,7 @@ setup(
     version=__version__,  # noqa
     description="MSS - Mission Support System",
     long_description=long_description,
-    classifiers="Development Status :: 5 - Production/Stable",
+    classifiers=["Development Status :: 5 - Production/Stable",],
     keywords="mslib",
     maintainer="Reimar Bauer",
     maintainer_email="rb.proj@gmail.com",
