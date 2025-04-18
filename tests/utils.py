@@ -32,6 +32,7 @@ from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
 from tests.constants import MSUI_CONFIG_PATH
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 XML_CONTENT1 = """<?xml version="1.0" encoding="utf-8"?>
@@ -192,10 +193,11 @@ def mscolab_delete_all_operations(app, msc_url, email, password, username, fulln
         response = app.test_client().post(url, data=data)
 
 
-def mscolab_create_operation(app, msc_url, response, path='f', description='description'):
+def mscolab_create_operation(app, msc_url, response, path='f', description='description', content=None):
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
+    data['content'] = XML_CONTENT_INIT
     url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return data, response

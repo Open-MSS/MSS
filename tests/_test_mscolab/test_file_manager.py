@@ -560,11 +560,11 @@ class Test_FileManager:
   </FlightTrack>"""
 
     def _create_operation(self, flight_path="firstflight", user=None, content=None, category="default"):
-        content = content or XML_CONTENT_INIT
+        if content is None:
+            content = XML_CONTENT_INIT
         if user is None:
             user = self.user
-        self.fm.create_operation(flight_path, f"info about {flight_path}", user,
-                                 content=content, category=category)
+        self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content, category=category)
         operation = Operation.query.filter_by(path=flight_path).first()
         return flight_path, operation
 

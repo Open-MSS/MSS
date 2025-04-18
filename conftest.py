@@ -161,7 +161,6 @@ SQLALCHEMY_ECHO = False
 UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
-# text to be written in new mscolab based ftml files.
 enable_basic_http_authentication = False
 
 # enable login by identity provider
