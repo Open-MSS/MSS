@@ -88,7 +88,8 @@ class Test_Utils:
         assert os.path.exists(mscolab_settings.OPERATIONS_DATA)
         assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test", content=None):
+    def _create_operation(self, test_client, userdata=None, path="firstflight",
+                          description="simple test", content=None):
         if userdata is None:
             userdata = self.userdata
         if content is None:
