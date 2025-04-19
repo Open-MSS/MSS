@@ -194,10 +194,12 @@ def mscolab_delete_all_operations(app, msc_url, email, password, username, fulln
 
 
 def mscolab_create_operation(app, msc_url, response, path='f', description='description', content=None):
+    if content is None:
+      content = XML_CONTENT_INIT
     data = json.loads(response.get_data(as_text=True))
     data["path"] = path
     data['description'] = description
-    data['content'] = XML_CONTENT_INIT
+    data['content'] = content
     url = urljoin(msc_url, 'create_operation')
     response = app.test_client().post(url, data=data)
     return data, response
