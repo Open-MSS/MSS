@@ -46,7 +46,8 @@ def main():
     parser.add_argument("--debug", help="show debugging log messages on console", action="store_true", default=False)
     parser.add_argument("--logfile", help="If set to a name log output goes to that file", dest="logfile",
                         default=None)
-    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server", action="store_true", default=False)
+    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server",
+                         action="store_true", default=False)
     subparsers = parser.add_subparsers(help='Available actions', dest='action')
     gallery = subparsers.add_parser("gallery", help="Subcommands surrounding the gallery")
     gallery.add_argument("--create", action="store_true", default=False,
