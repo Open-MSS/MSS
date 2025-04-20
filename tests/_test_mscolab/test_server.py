@@ -506,11 +506,9 @@ class Test_Server:
             assert data["success"] is True
 
     def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test",
-                          content=None, active=True):
+                          content=XML_CONTENT_INIT, active=True):
         if userdata is None:
             userdata = self.userdata
-        if content is None:
-            content = XML_CONTENT_INIT
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
         data = json.loads(response.data.decode('utf-8'))
         token = data["token"]
