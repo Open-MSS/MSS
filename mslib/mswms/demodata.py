@@ -33,8 +33,6 @@ import netCDF4 as nc
 import numpy as np
 
 
-
-
 _SURFACE_TEXT = """\
 surface_geopotential
 m^2.s^-2
