@@ -90,19 +90,6 @@ class default_mscolab_settings:
     # used to generate the password token
     SECURITY_PASSWORD_SALT = secrets.token_urlsafe(16)
 
-    STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-    <FlightTrack version="1.7.6">
-      <ListOfWaypoints>
-        <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-          <Comments></Comments>
-        </Waypoint>
-        <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-          <Comments></Comments>
-        </Waypoint>
-      </ListOfWaypoints>
-    </FlightTrack>
-    """
-
     # looks for a given category forn a operation ending with GROUP_POSTFIX
     # e.g. category = Tex will look for TexGroup
     # all users in that Group are set to the operations of that category

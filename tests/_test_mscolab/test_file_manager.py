@@ -33,6 +33,7 @@ from werkzeug.datastructures import FileStorage
 from mslib.mscolab.models import Operation, User
 from mslib.mscolab.seed import add_user, get_user, add_operation
 from mslib.mscolab.conf import mscolab_settings
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 class Test_FileManager:
@@ -119,7 +120,8 @@ class Test_FileManager:
         with self.app.test_client():
             flight_path, operation = self._create_operation(flight_path="famous")
             assert operation.path == flight_path
-            assert self.fm.create_operation(flight_path, "something to know", self.user) is False
+            assert self.fm.create_operation(flight_path, "something to know", self.user,
+                                            content=XML_CONTENT_INIT) is False
             flight_path, operation = self._create_operation(flight_path="example_flight_path", content=self.content1)
             assert operation.path == flight_path
 
@@ -133,8 +135,8 @@ class Test_FileManager:
 
     def test_list_operations(self):
         with self.app.test_client():
-            self.fm.create_operation("first", "info about first", self.user)
-            self.fm.create_operation("second", "info about second", self.user)
+            self.fm.create_operation("first", "info about first", self.user, content=XML_CONTENT_INIT)
+            self.fm.create_operation("second", "info about second", self.user, content=XML_CONTENT_INIT)
             expected_result = [{'access_level': 'creator',
                                 "active": True,
                                 'category': 'default',
@@ -151,8 +153,8 @@ class Test_FileManager:
 
     def test_list_operations_skip_archived(self):
         with self.app.test_client():
-            self.fm.create_operation("first", "info about first", self.user, active=False)
-            self.fm.create_operation("second", "info about second", self.user)
+            self.fm.create_operation("first", "info about first", self.user, content=XML_CONTENT_INIT, active=False)
+            self.fm.create_operation("second", "info about second", self.user, content=XML_CONTENT_INIT)
             expected_result_all = [{'access_level': 'creator',
                                     'active': False,
                                     'category': 'default',
@@ -557,14 +559,14 @@ class Test_FileManager:
       </ListOfWaypoints>
   </FlightTrack>"""
 
-    def _create_operation(self, flight_path="firstflight", user=None, content=None, category="default"):
+    def _create_operation(self, flight_path="firstflight", user=None, content=XML_CONTENT_INIT, category="default"):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content, category=category)
         operation = Operation.query.filter_by(path=flight_path).first()
         return flight_path, operation
 
-    def _create_operation_with_users(self, flight_path="firstflight", user=None, content=None):
+    def _create_operation_with_users(self, flight_path="firstflight", user=None, content=XML_CONTENT_INIT):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)
@@ -573,7 +575,8 @@ class Test_FileManager:
         self.fm.add_bulk_permission(operation.id, self.user, [self.collaboratoruser.id], "collaborator")
         return flight_path, operation
 
-    def _create_operation_with_opposite_permissions(self, flight_path="firstflight", user=None, content=None):
+    def _create_operation_with_opposite_permissions(self, flight_path="firstflight",
+                                                    user=None, content=XML_CONTENT_INIT):
         if user is None:
             user = self.user
         self.fm.create_operation(flight_path, f"info about {flight_path}", user, content=content)

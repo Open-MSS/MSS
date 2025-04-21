@@ -37,6 +37,7 @@ from tests.utils import (mscolab_register_and_login, mscolab_create_operation,
 from mslib.msui import mscolab
 from mslib.msui import msui
 from mslib.utils.config import modify_config_file
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 class Test_Mscolab_Merge_Waypoints:
@@ -68,8 +69,8 @@ class Test_Mscolab_Merge_Waypoints:
             response = mscolab_register_and_login(self.app, self.url, emailid, 'abcdef', 'alpha', 'Alpha')
 
             assert response.status == '200 OK'
-            data, response = mscolab_create_operation(self.app, self.url, response,
-                                                      path='f3', description='f3 test example')
+            data, response = mscolab_create_operation(self.app, self.url, response, path='f3',
+                                                      description='f3 test example', content=XML_CONTENT_INIT)
             assert response.status == '200 OK'
             self._login(emailid, 'abcdef')
             self._activate_operation_at_index(0)

@@ -35,6 +35,7 @@ from mslib.mscolab.seed import add_user, get_user
 from mslib.mscolab.utils import (get_recent_op_id, get_session_id,
                                  get_message_dict, create_files,
                                  os_fs_create_dir, get_user_id)
+from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
 class Test_Utils:
@@ -87,7 +88,8 @@ class Test_Utils:
         assert os.path.exists(mscolab_settings.OPERATIONS_DATA)
         assert os.path.exists(mscolab_settings.UPLOAD_FOLDER)
 
-    def _create_operation(self, test_client, userdata=None, path="firstflight", description="simple test"):
+    def _create_operation(self, test_client, userdata=None, path="firstflight",
+                          description="simple test", content=XML_CONTENT_INIT):
         if userdata is None:
             userdata = self.userdata
         response = test_client.post('/token', data={"email": userdata[0], "password": userdata[2]})
@@ -95,7 +97,8 @@ class Test_Utils:
         token = data["token"]
         response = test_client.post('/create_operation', data={"token": token,
                                                                "path": path,
-                                                               "description": description})
+                                                               "description": description,
+                                                               "content": content})
         assert response.status_code == 200
         assert response.data.decode('utf-8') == "True"
         operation = Operation.query.filter_by(path=path).first()

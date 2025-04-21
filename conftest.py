@@ -161,19 +161,6 @@ SQLALCHEMY_ECHO = False
 UPLOAD_FOLDER = fs.path.join(DATA_DIR, 'uploads')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
-# text to be written in new mscolab based ftml files.
-STUB_CODE = """<?xml version="1.0" encoding="utf-8"?>
-<FlightTrack version="1.7.6">
-  <ListOfWaypoints>
-    <Waypoint flightlevel="250" lat="67.821" location="Kiruna" lon="20.336">
-      <Comments></Comments>
-    </Waypoint>
-    <Waypoint flightlevel="250" lat="78.928" location="Ny-Alesund" lon="11.986">
-      <Comments></Comments>
-    </Waypoint>
-  </ListOfWaypoints>
-</FlightTrack>
-"""
 enable_basic_http_authentication = False
 
 # enable login by identity provider

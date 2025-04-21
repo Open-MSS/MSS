@@ -562,8 +562,7 @@ def create_operation():
     active = (request.form.get('active', "True") == "True")
     last_used = datetime.datetime.now(tz=datetime.timezone.utc)
     user = g.user
-    r = str(fm.create_operation(path, description, user, last_used,
-                                content=content, category=category, active=active))
+    r = str(fm.create_operation(path, description, user, last_used, content=content, category=category, active=active))
     if r == "True":
         token = request.args.get('token', request.form.get('token', False))
         json_config = {"token": token}
