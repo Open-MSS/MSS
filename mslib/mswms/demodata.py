@@ -1225,4 +1225,4 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             ["vertically_integrated_probability_of_wcb_occurrence"])
         self.generate_file(
             None, "SEA", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), ["solar_elevation_angle"])
-        
+
