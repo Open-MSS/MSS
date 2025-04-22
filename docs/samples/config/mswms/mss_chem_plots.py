@@ -93,8 +93,7 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
-                for i in cs_pv.collections:
-                    i.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                cs_pv.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 for label in cs_pv_lab:
                     label.set_path_effects([patheffects.withStroke(linewidth=1, foreground="w")])
 
