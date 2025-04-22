@@ -32,7 +32,7 @@ import sys
 from mslib import __version__
 from mslib.utils import setup_logging
 from mslib.mswms.wms import app as application
-from mslib.mswms.wms import DataFiles
+from mslib.mswms.demodata import DataFiles
 import fs
 
 
