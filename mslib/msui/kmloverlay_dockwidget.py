@@ -50,6 +50,7 @@ class KMLPatch:
         self.patches = []
         self.color = color
         self.linewidth = linewidth
+        self.ns = '{http://www.opengis.net/kml/2.2}'
         self.draw()
 
     def compute_xy(self, geometry_data):
@@ -554,7 +555,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                 _fs = fs.open_fs(_dirname)
                 try:
                     with _fs.open(_name, 'r') as kmlf:
-                        self.kml = kml.KML.from_string(kmlf.read().encode('utf-8'))
+                        parser = et.XMLParser(resolve_entities=False, no_network=True)
+                        tree = et.parse(kmlf, parser=parser)
+                        root = tree.getroot()
+                        self.kml = kml.KML.from_string(et.tostring(root, encoding='utf-8'))
                         if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
                             if self.dict_files[self.listWidget.item(index).text()]["patch"] is not None:  # added before
                                 patch = KMLPatch(self.view.map, self.kml,
