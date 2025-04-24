@@ -94,8 +94,7 @@ class HS_MSSChemStyle(MPLBasemapHorizontalSectionStyle):
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%i')
             if pe:
                 cs_pv.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
-                for label in cs_pv_lab:
-                    label.set_path_effects([patheffects.withStroke(linewidth=1, foreground="w")])
+                plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks
         if self.crs.lower() == "epsg:77774020":
@@ -256,8 +255,7 @@ class VS_MSSChemStyle(AbstractVerticalSectionStyle):
                 cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%i')
                 if pe:
                     cs_pv.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
-                    for label in cs_pv_lab:
-                        label.set_path_effects([patheffects.withStroke(linewidth=1, foreground="w")])
+                    plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
