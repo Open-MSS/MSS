@@ -248,16 +248,11 @@ class MFDatasetCommonDims(netCDF4.MFDataset):
         # calling methods of the CDFMF subclass when querying the master file.
         cdfm = netCDF4.Dataset(master)
         if_unlimited_dim = any(dim.isunlimited() for dim in cdfm.dimensions.values())
-        if not if_unlimited_dim:
-            self._cdf = [cdfm]
-            self._isopen = True
-        else:
-            super().__init__(files)
+        if not if_unlimited_dim: 
         # copy attributes from master.
-        self.__dict__.update(cdfm.__dict__)
-
+            self.__dict__.update(cdfm.__dict__)
         # Get names of master dimensions.
-        masterDims = list(cdfm.dimensions.keys())
+            masterDims = list(cdfm.dimensions.keys())
         # Check that each dimension has a coordinate dimension
         for dimName in masterDims:
             if dimName not in cdfm.variables and dimName not in skip_dim_check:
