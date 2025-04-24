@@ -35,7 +35,7 @@ import pytest
 import fs
 import shutil
 import keyring
-from mslib.mswms.demodata import DataFiles
+from mslib.mswms.seed import DataFiles
 import tests.constants as constants
 from mslib.utils.loggerdef import configure_mpl_logger
 

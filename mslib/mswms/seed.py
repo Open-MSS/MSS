@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms.demodata
+    mslib.mswms.seed
     ~~~~~~~~~~~~~~~~~~~~
 
     creates netCDF test data files and also a mswms_settings for accessing this data
@@ -1069,7 +1069,7 @@ if mpl_lsec_styles is not None:
             simple_server_config = '''"""
 simple server config for demodata
 """
-from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
+from mslib.mswms.seed import (data, epsg_to_mpl_basemap_table,
                                   register_horizontal_layers, register_vertical_layers, register_linear_layers)
 '''
 

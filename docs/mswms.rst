@@ -70,7 +70,7 @@ e.g.
 
 Detailed server configuration *mswms_settings.py* for this demodata
 
- .. literalinclude:: samples/config/mswms/mswms_settings.py.demodata
+ .. literalinclude:: samples/config/mswms/mswms_settings.py.seed
 
 For setting authentication see *mswms_auth.py*
 
