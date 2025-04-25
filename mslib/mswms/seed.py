@@ -3,7 +3,7 @@
 """
 
     mslib.mswms.seed
-    ~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~
 
     creates netCDF test data files and also a mswms_settings for accessing this data
 

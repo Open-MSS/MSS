@@ -2,7 +2,7 @@
 """
 
     tests._test_mswms.test_seed
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     This module provides pytest functions to tests mswms.seed
 
