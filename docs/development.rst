@@ -155,7 +155,7 @@ MSS repository needs a different folder, e.g. workspace/MSS. Avoid to mix data a
 
 :ref:`demodata <demodata>` is provided by executing::
 
-   mswms_demodata --seed
+   mswms --seed
 
 To use this data add the mswms_settings.py in your python path::
 
@@ -277,7 +277,7 @@ Profiling
 
 Profiling can be done by e.g.::
 
-   $ python -m cProfile  -s time ./mslib/mswms/demodata.py --seed > profile.txt
+   $ python -m cProfile  -s time ./mslib/mswms/seed.py --seed > profile.txt
 
 example::
 
@@ -294,8 +294,8 @@ example::
    Ordered by: internal time
 
    ncalls  tottime  percall  cumtime  percall filename:lineno(function)
-       23    0.177    0.008    0.607    0.026 demodata.py:1089(generate_file)
-      631    0.113    0.000    0.230    0.000 demodata.py:769(_generate_3d_data)
+       23    0.177    0.008    0.607    0.026 seed.py:1089(generate_file)
+      631    0.113    0.000    0.230    0.000 seed.py:769(_generate_3d_data)
       179    0.077    0.000    0.081    0.000 {method 'createVariable' of 'netCDF4._netCDF4.Dataset' objects}
 
 

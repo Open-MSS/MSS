@@ -63,7 +63,7 @@ if os.environ.get("GALLERY", "True") != "False":
     # Generate plot gallery
     import fs
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
-    from mslib.mswms.demodata import DataFiles
+    from mslib.mswms.seed import DataFiles
 
     root_fs = fs.open_fs("~/")
     if not root_fs.exists("mss/testdata"):

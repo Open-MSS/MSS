@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 
-    mslib.mswms.demodata
-    ~~~~~~~~~~~~~~~~~~~~
+    mslib.mswms.seed
+    ~~~~~~~~~~~~~~~~
 
     creates netCDF test data files and also a mswms_settings for accessing this data
 
@@ -26,13 +26,11 @@
     limitations under the License.
 """
 
-import argparse
+
 import os
-import sys
+
 import netCDF4 as nc
 import numpy as np
-import fs
-from mslib import __version__
 
 
 _SURFACE_TEXT = """\
@@ -1071,7 +1069,7 @@ if mpl_lsec_styles is not None:
             simple_server_config = '''"""
 simple server config for demodata
 """
-from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
+from mslib.mswms.seed import (data, epsg_to_mpl_basemap_table,
                                   register_horizontal_layers, register_vertical_layers, register_linear_layers)
 '''
 
@@ -1227,35 +1225,3 @@ from mslib.mswms.demodata import (data, epsg_to_mpl_basemap_table,
             ["vertically_integrated_probability_of_wcb_occurrence"])
         self.generate_file(
             None, "SEA", "sfc", (("time", times), ("latitude", lats), ("longitude", lons)), ["solar_elevation_angle"])
-
-
-def main():
-    """
-    creates various test data files and also the server configuration
-    """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--version", help="show version", action="store_true", default=False)
-    parser.add_argument("-s", "--seed", help="creates demodata for the mswms server",
-                        action="store_true", default=False)
-    args = parser.parse_args()
-    if args.version:
-        print("***********************************************************************")
-        print("\n            Mission Support System (MSS) \n")
-        print("***********************************************************************")
-        print("Documentation: http://mss.rtfd.io")
-        print("Version:", __version__)
-        sys.exit()
-    if args.seed:
-        root_fs = fs.open_fs("~/")
-        if not root_fs.exists("mss/testdata"):
-            root_fs.makedirs("mss/testdata")
-
-        examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
-                             server_config_fs=fs.open_fs("~/mss"))
-        examples.create_server_config(detailed_information=True)
-        examples.create_data()
-        print("\nTo use this setup you need the mswms_settings.py in your python path e.g. \nexport PYTHONPATH=~/mss")
-
-
-if __name__ == '__main__':
-    main()
