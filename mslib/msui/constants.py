@@ -67,6 +67,7 @@ else:
 
 # ToDo refactor to a function
 MSS_AUTOPLOT = os.getenv('MSS_AUTOPLOT', os.path.join(MSUI_CONFIG_PATH, "mssautoplot.json"))
+DEFAULT_FTML_PATH = os.getenv('MSS_FTML_PATH', os.path.join(MSUI_CONFIG_PATH, "example_flight.ftml"))
 
 # We try to create an empty MSUI_SETTINGS file if not existing
 # but there can be a permission problem
