@@ -495,9 +495,11 @@ class TestWMSControlWidgetSetupSimple:
         <Extent name="ELEVATION" default="900.0"> 500.0,600.0,700.0,900.0 </Extent>"""
 
     @pytest.fixture(autouse=True)
-    def setup(self, qtbot):
+    def setup(self, tmp_path, qtbot):
+        wc.WMS_SERVICE_CACHE = {}
         self.view = HSecViewMockup()
-        self.window = wc.HSecWMSControlWidget(view=self.view)
+        self.tempdir = tmp_path
+        self.window = wc.HSecWMSControlWidget(view=self.view, wms_cache=self.tempdir)
         self.window.show()
 
         # Remove all previous cached URLs
@@ -507,6 +509,11 @@ class TestWMSControlWidgetSetupSimple:
 
         yield
         self.window.hide()
+
+    def test_wms_cache_tmp(self):
+        assert self.window.wms_cache is not None
+        # wms_cache has an ending path separator
+        assert str(self.tempdir) == self.window.wms_cache[:-1]
 
     def test_xml(self):
         testxml = self.xml.format("", self.srs_base, self.dimext_time + self.dimext_inittime + self.dimext_elevation)
