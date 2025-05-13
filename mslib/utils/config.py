@@ -309,6 +309,8 @@ class MSUIDefaultConfig:
 
     # Dictionary options with fixed key/value pairs
     fixed_dict_options = ["layout", "wms_prefetch", "topview", "sideview", "linearview"]
+    # List options with fixed length
+    fixed_list_options = ["MSCOLAB_timeout", ]
 
     # Fixed key/value pair options
     key_value_options = [
@@ -366,7 +368,7 @@ class MSUIDefaultConfig:
         "new_flighttrack_template": ["new-location"],
         "gravatar_ids": ["example@email.com"],
         "WMS_preload": ["https://wms-preload-url.com"],
-        "MSCOLAB_timeout": [int(), int()],
+        "MSCOLAB_timeout": [0, 0],
         "automated_plotting_flights": [["", "", "", "", "", ""]],
         "automated_plotting_hsecs": [["http://www.your-wms-server.de", "", "", ""]],
         "automated_plotting_vsecs": [["http://www.your-wms-server.de", "", "", ""]],
@@ -418,6 +420,7 @@ for key in [
     "__dict__",
     "__weakref__",
     "fixed_dict_options",
+    "fixed_list_options",
     "dict_option_structure",
     "list_option_structure",
     "key_value_options",
