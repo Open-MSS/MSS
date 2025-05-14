@@ -600,7 +600,7 @@ def merge_dict(existing_dict, new_dict):
     new_dict -- Dict with new values
     """
     # Check if dictionary options with fixed key/value pairs match data types from default
-    for key in MSUIDefaultConfig.fixed_dict_options:
+    for key in MSUIDefaultConfig.fixed_dict_options + MSUIDefaultConfig.fixed_list_options:
         if key in new_dict:
             existing_dict[key] = compare_data(
                 existing_dict[key], new_dict[key]
@@ -618,6 +618,8 @@ def merge_dict(existing_dict, new_dict):
             for option_key in new_dict[key]:
                 for dos_key_key in dos[key]:
                     data, match = compare_data(dos[key][dos_key_key], new_dict[key][option_key])
+                    if key in MSUIDefaultConfig.fixed_list_options:
+                        match = len(dos[key][dos_key_key]) == len(new_dict[key][option_key])
                     if match:
                         temp_data[option_key] = new_dict[key][option_key]
                         break
@@ -629,14 +631,15 @@ def merge_dict(existing_dict, new_dict):
     for key in los:
         if key in new_dict:
             temp_data = []
-            for i in range(len(new_dict[key])):
-                for los_key_item in los[key]:
-                    data, match = compare_data(los_key_item, new_dict[key][i])
-                    if match:
-                        temp_data.append(data)
-                        break
-            if temp_data != []:
-                existing_dict[key] = temp_data
+            if key not in MSUIDefaultConfig.fixed_list_options:
+                for i in range(len(new_dict[key])):
+                    for los_key_item in los[key]:
+                        data, match = compare_data(los_key_item, new_dict[key][i])
+                        if match:
+                            temp_data.append(data)
+                            break
+                if temp_data != []:
+                    existing_dict[key] = temp_data
 
     # Check if options with fixed key/value pair structure match data types from default
     for key in MSUIDefaultConfig.key_value_options:
