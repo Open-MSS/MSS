@@ -26,16 +26,14 @@
 """
 
 
-import mock
 import sys
-import argparse
 import pytest
 from mslib.mswms import mswms
 
 
 def test_main_version(monkeypatch, capsys):
     """Test if --version flag outputs the correct version and exits"""
-    monkeypatch.setattr(sys, "argv",  ["mswms", "--version"])
+    monkeypatch.setattr(sys, "argv", ["mswms", "--version"])
     with pytest.raises(SystemExit):
         mswms.main()
     captured = capsys.readouterr()
@@ -87,4 +85,3 @@ def test_main_gallery_create(monkeypatch, capsys):
         mswms.main()
     captured = capsys.readouterr()
     assert "Gallery generation done" in captured.out
-

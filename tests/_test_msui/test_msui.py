@@ -44,7 +44,7 @@ from mslib.utils.config import read_config_file
 
 def test_main_version_flag(qtbot, monkeypatch, capsys):
     """Test the --version flag for the main function."""
-    monkeypatch.setattr(sys, "argv",  ["msui", "--version"])
+    monkeypatch.setattr(sys, "argv", ["msui", "--version"])
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
     with pytest.raises(SystemExit):
         with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
@@ -57,7 +57,7 @@ def test_main_version_flag(qtbot, monkeypatch, capsys):
 
 def test_main_debug_mode(qtbot, monkeypatch, capsys):
     """Test that the main function initializes in debug mode."""
-    monkeypatch.setattr(sys, "argv",  ["msui", "--debug"]
+    monkeypatch.setattr(sys, "argv", ["msui", "--debug"])
     app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 
     with pytest.raises(SystemExit):
