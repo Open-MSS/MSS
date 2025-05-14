@@ -43,20 +43,20 @@ def test_main_version(monkeypatch, capsys):
 
 def test_main_host_argument(monkeypatch, capsys):
     """Test if --host argument parses correctly"""
-    monkeypatch.setattr(sys, "argv", ["mswms", "--host", "127.0.0.2"])
+    monkeypatch.setattr(sys, "argv", ["mswms", "--host", "127.0.0.1"])
     with pytest.raises(SystemExit):
         mswms.main()
     captured = capsys.readouterr()
-    assert "Running on http://127.0.0.2" in captured.out
+    assert "Running on http://127.0.0.1" in captured.out
 
 
 def test_main_port_argument(monkeypatch, capsys):
     """Test if --port argument parses correctly"""
-    monkeypatch.setattr(sys, "argv", ["mswms", "--port", "80001"])
+    monkeypatch.setattr(sys, "argv", ["mswms", "--port", "4041"])
     with pytest.raises(SystemExit):
         mswms.main()
     captured = capsys.readouterr()
-    assert ":80001" in captured.out
+    assert ":4041" in captured.out
 
 
 def test_main_debug_option(monkeypatch, capsys):
