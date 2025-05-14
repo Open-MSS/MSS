@@ -78,10 +78,9 @@ def test_main_invalid_argument(monkeypatch, capsys):
     assert "unrecognized arguments: --invalid" in captured.err
 
 
-def test_main_gallery_create(monkeypatch, capsys):
+def test_main_gallery_create(monkeypatch, caplog):
     """Test gallery subcommand with create option"""
     monkeypatch.setattr(sys, "argv", ["mswms", "gallery", "--create", "--plot_types", "Top"])
     with pytest.raises(SystemExit):
         mswms.main()
-    captured = capsys.readouterr()
-    assert "Gallery generation done" in captured.out
+    assert "Gallery generation done" in caplog.text
