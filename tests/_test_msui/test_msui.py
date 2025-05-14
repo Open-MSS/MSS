@@ -28,6 +28,7 @@
 
 import mock
 import os
+import re
 import sys
 import fs
 import pytest
@@ -39,44 +40,32 @@ from mslib.msui import msui
 from mslib.msui import msui_mainwindow as msui_mw
 from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
-import re
 
 
-def test_main_version_flag(qtbot, capsys):
+def test_main_version_flag(qtbot, monkeypatch, capsys):
     """Test the --version flag for the main function."""
-    original_sys_argv = sys.argv
-    try:
-        test_argv = ["msui", "--version"]
-        app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
-        with pytest.raises(SystemExit):
-            with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
-                sys.argv = test_argv
-                msui.main()
+    monkeypatch.setattr(sys, "argv",  ["msui", "--version"])
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+    with pytest.raises(SystemExit):
+        with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
+            msui.main()
 
-        captured = capsys.readouterr()
-        assert "Mission Support System (MSS)" in captured.out
-        assert "Version:" in captured.out
-    finally:
-        sys.argv = original_sys_argv
+    captured = capsys.readouterr()
+    assert "Mission Support System (MSS)" in captured.out
+    assert "Version:" in captured.out
 
 
-def test_main_debug_mode(qtbot, capsys):
+def test_main_debug_mode(qtbot, monkeypatch, capsys):
     """Test that the main function initializes in debug mode."""
-    original_sys_argv = sys.argv
-    try:
-        test_argv = ["msui", "--debug"]
-        app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
-        sys.argv = test_argv
+    monkeypatch.setattr(sys, "argv",  ["msui", "--debug"]
+    app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
 
-        with pytest.raises(SystemExit):
-            with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
-                msui.main()
-        captured = capsys.readouterr()
-        assert "DEBUG: Merged default and user settings" in captured.out
-        assert "DEBUG: switch_to_local" in captured.out
-
-    finally:
-        sys.argv = original_sys_argv
+    with pytest.raises(SystemExit):
+        with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
+            msui.main()
+    captured = capsys.readouterr()
+    assert "DEBUG: Merged default and user settings" in captured.out
+    assert "DEBUG: switch_to_local" in captured.out
 
 
 def test_main_normal_mode(qtbot):
