@@ -26,8 +26,6 @@
 """
 import os
 import pytest
-import mock
-import argparse
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, User, Permission
@@ -35,29 +33,44 @@ from mslib.mscolab.mscolab import handle_db_reset, handle_db_seed, confirm_actio
 from mslib.mscolab.seed import add_operation
 
 
-def test_confirm_action():
-    with mock.patch("mslib.mscolab.mscolab.input", return_value="n"):
-        assert confirm_action("") is False
-    with mock.patch("mslib.mscolab.mscolab.input", return_value=""):
-        assert confirm_action("") is False
-    with mock.patch("mslib.mscolab.mscolab.input", return_value="y"):
-        assert confirm_action("") is True
-
-
-def test_main():
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        with mock.patch("mslib.mscolab.mscolab.argparse.ArgumentParser.parse_args",
-                        return_value=argparse.Namespace(version=True)):
-            main()
-        assert pytest_wrapped_e.typename == "SystemExit"
-
-    with mock.patch("mslib.mscolab.mscolab.argparse.ArgumentParser.parse_args",
-                    return_value=argparse.Namespace(version=False, update=False, action="db",
-                                                    reset=False, seed=False, users_by_file=None,
-                                                    default_operation=False, add_all_to_all_operation=False,
-                                                    delete_users_by_file=False)):
+def test_version_argument(monkeypatch, capsys):
+    monkeypatch.setattr("sys.argv", ["mscolab.py", "--version"])
+    with pytest.raises(SystemExit):
         main()
-        # currently only checking precedence of all args
+    captured = capsys.readouterr()
+    assert "Version:" in captured.out
+
+
+def test_start_argument(monkeypatch, caplog):
+    mock_setup_logging_called = []
+    mock_start_server_called = []
+
+    def mock_setup_logging(args):
+        mock_setup_logging_called.append(args)
+
+    def mock_start_server(app, sockio, cm, fm):
+        mock_start_server_called.append((app, sockio, cm, fm))
+
+    monkeypatch.setattr("mslib.mscolab.mscolab.setup_logging", mock_setup_logging)
+    monkeypatch.setattr("mslib.mscolab.server.start_server", mock_start_server)
+    monkeypatch.setattr("sys.argv", ["mscolab.py", "start"])
+
+    main()
+    assert len(mock_setup_logging_called) == 1
+    assert len(mock_start_server_called) == 1
+    assert "Launching MSColab Server" in caplog.text
+
+
+@pytest.mark.parametrize("confirmation_input, expected_result", [
+    (["y"], True),
+    (["n"], False),
+    (["invalid", "y"], True),
+])
+def test_confirm_action(monkeypatch, confirmation_input, expected_result):
+    input_generator = iter(confirmation_input)
+    monkeypatch.setattr("builtins.input", lambda _: next(input_generator))
+    result = confirm_action("Are you sure?")
+    assert result == expected_result
 
 
 class Test_Mscolab:
