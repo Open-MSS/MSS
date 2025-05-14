@@ -27,29 +27,64 @@
 
 
 import mock
+import sys
 import argparse
 import pytest
 from mslib.mswms import mswms
 
 
-class _Application:
-    """ dummy to skip starting the wms server"""
-    @staticmethod
-    def run(host, port):
-        pass
-
-
-@mock.patch("mslib.mswms.mswms.application", _Application)
-def test_main():
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        with mock.patch("mslib.mswms.mswms.argparse.ArgumentParser.parse_args",
-                        return_value=argparse.Namespace(plot_types=None, version=True)):
-            mswms.main()
-        assert pytest_wrapped_e.typename == "SystemExit"
-
-    with mock.patch("mslib.mswms.mswms.argparse.ArgumentParser.parse_args",
-                    return_value=argparse.Namespace(plot_types=None, version=False, update=False, gallery=False,
-                                                    debug=False, logfile=None, action=None,
-                                                    host=None, port=None)):
+def test_main_version(monkeypatch, capsys):
+    """Test if --version flag outputs the correct version and exits"""
+    monkeypatch.setattr(sys, "argv",  ["mswms", "--version"])
+    with pytest.raises(SystemExit):
         mswms.main()
-    assert pytest_wrapped_e.typename == "SystemExit"
+    captured = capsys.readouterr()
+    assert "Mission Support System" in captured.out
+    assert "Version:" in captured.out
+
+
+def test_main_host_argument(monkeypatch, capsys):
+    """Test if --host argument parses correctly"""
+    monkeypatch.setattr(sys, "argv", ["mswms", "--host", "127.0.0.2"])
+    with pytest.raises(SystemExit):
+        mswms.main()
+    captured = capsys.readouterr()
+    assert "Running on http://127.0.0.2" in captured.out
+
+
+def test_main_port_argument(monkeypatch, capsys):
+    """Test if --port argument parses correctly"""
+    monkeypatch.setattr(sys, "argv", ["mswms", "--port", "80001"])
+    with pytest.raises(SystemExit):
+        mswms.main()
+    captured = capsys.readouterr()
+    assert ":80001" in captured.out
+
+
+def test_main_debug_option(monkeypatch, capsys):
+    """Test if --debug flag activates the debug mode"""
+    monkeypatch.setattr(sys, "argv", ["mswms", "--debug"])
+    with pytest.raises(SystemExit):
+        mswms.main()
+    captured = capsys.readouterr()
+    assert "Debug mode: on" in captured.out
+    assert "_internal._log" in captured.out
+
+
+def test_main_invalid_argument(monkeypatch, capsys):
+    """Test invalid command-line argument handling"""
+    monkeypatch.setattr(sys, "argv", ["mswms", "--invalid"])
+    with pytest.raises(SystemExit):
+        mswms.main()
+    captured = capsys.readouterr()
+    assert "unrecognized arguments: --invalid" in captured.err
+
+
+def test_main_gallery_create(monkeypatch, capsys):
+    """Test gallery subcommand with create option"""
+    monkeypatch.setattr(sys, "argv", ["mswms", "gallery", "--create", "--plot_types", "Top"])
+    with pytest.raises(SystemExit):
+        mswms.main()
+    captured = capsys.readouterr()
+    assert "Gallery generation done" in captured.out
+
