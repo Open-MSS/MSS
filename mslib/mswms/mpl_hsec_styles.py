@@ -110,8 +110,7 @@ class HS_GenericStyle(MPLBasemapHorizontalSectionStyle):
                                colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
             cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fmt='%.0f')
             if pe:
-                plt.setp(cs_pv.collections, path_effects=[
-                    patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                cs_pv.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                 plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
 
         # define position of the colorbar and the orientation of the ticks

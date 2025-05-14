@@ -88,10 +88,8 @@ class VS_GenericStyle(AbstractVerticalSectionStyle):
                                    colors=cont_colour, linestyles=cont_style, linewidths=cont_lw)
                 cs_pv_lab = ax.clabel(cs_pv, colors=cont_label_colour, fontsize=8, fmt='%.0f')
                 if pe:
-                    plt.setp(cs_pv.collections,
-                             path_effects=[patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
+                    cs_pv.set_path_effects([patheffects.withStroke(linewidth=cont_lw + 2, foreground="w")])
                     plt.setp(cs_pv_lab, path_effects=[patheffects.withStroke(linewidth=1, foreground="w")])
-
         # Pressure decreases with index, i.e. orography is stored at the
         # zero-p-index (data field is flipped in mss_plot_driver.py if
         # pressure increases with index).
