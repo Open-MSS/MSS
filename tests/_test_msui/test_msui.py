@@ -28,11 +28,11 @@
 
 import mock
 import os
+import sys
 import fs
-import argparse
 import pytest
 from urllib.request import urlopen
-from PyQt5 import QtWidgets, QtTest
+from PyQt5 import QtWidgets, QtTest, QtCore
 from mslib import __version__
 from tests.constants import ROOT_DIR, MSUI_CONFIG_PATH
 from mslib.msui import msui
@@ -42,12 +42,76 @@ from mslib.utils.config import read_config_file
 import re
 
 
-def test_main():
-    with pytest.raises(SystemExit) as pytest_wrapped_e:
-        with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",
-                        return_value=argparse.Namespace(version=True)):
+def test_main_version_flag(qtbot, capsys):
+    """Test the --version flag for the main function."""
+    original_sys_argv = sys.argv
+    try:
+        test_argv = ["msui", "--version"]
+        app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+        with pytest.raises(SystemExit):
+            with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
+                sys.argv = test_argv
+                msui.main()
+
+        captured = capsys.readouterr()
+        assert "Mission Support System (MSS)" in captured.out
+        assert "Version:" in captured.out
+    finally:
+        sys.argv = original_sys_argv
+
+
+def test_main_debug_mode(qtbot, capsys):
+    """Test that the main function initializes in debug mode."""
+    original_sys_argv = sys.argv
+    try:
+        test_argv = ["msui", "--debug"]
+        app = QtWidgets.QApplication.instance() or QtWidgets.QApplication(sys.argv)
+        sys.argv = test_argv
+
+        with pytest.raises(SystemExit):
+            with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
+                msui.main()
+        captured = capsys.readouterr()
+        assert "DEBUG: Merged default and user settings" in captured.out
+        assert "DEBUG: switch_to_local" in captured.out
+
+    finally:
+        sys.argv = original_sys_argv
+
+
+def test_main_normal_mode(qtbot):
+    """Test the main function without any command-line arguments."""
+    app = QtWidgets.QApplication.instance()
+    found_mainwindow = None
+    with pytest.raises(SystemExit):
+        with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
             msui.main()
-        assert pytest_wrapped_e.typename == "SystemExit"
+        for widget in QtWidgets.QApplication.topLevelWidgets():
+            if widget.__class__.__name__ == "MSUIMainWindow":
+                found_mainwindow = widget
+                break
+
+        assert found_mainwindow is not None, "MSUIMainWindow-Instance not found"
+        is_not_fullscreen = bool(found_mainwindow.windowState() & QtCore.Qt.WindowFullScreen) is False
+        assert is_not_fullscreen, "MSUIMainWindow-Instance is in fullscreen mode"
+
+
+def test_main_tutorial_mode(qtbot):
+    """Test the main function initializes in tutorial mode."""
+    app = QtWidgets.QApplication.instance()
+
+    found_mainwindow = None
+    with pytest.raises(SystemExit):
+        with qtbot.waitSignal(app.aboutToQuit, timeout=1000):
+            msui.main(tutorial_mode=True)
+        for widget in QtWidgets.QApplication.topLevelWidgets():
+            if widget.__class__.__name__ == "MSUIMainWindow":
+                found_mainwindow = widget
+                break
+
+        assert found_mainwindow is not None, "MSUIMainWindow-Instance not found"
+        is_fullscreen = bool(found_mainwindow.windowState() & QtCore.Qt.WindowFullScreen)
+        assert is_fullscreen, "MSUIMainWindow-Instance is not in fullscreen mode"
 
 
 class Test_MSS_TutorialMode:
