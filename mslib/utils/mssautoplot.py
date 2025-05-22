@@ -62,7 +62,6 @@ from mslib.utils.get_projection_params import get_projection_params
 from mslib.utils.auth import get_auth_from_url_and_name
 from mslib.utils.loggerdef import configure_mpl_logger
 from mslib.utils.verify_user_token import verify_user_token
-from mslib.msui.constants import DEFAULT_FTML_PATH
 
 
 TEXT_CONFIG = {
@@ -235,14 +234,19 @@ class Plotting:
         if filename != "" and filename == flight:
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif filename != "":
-            file_path = DEFAULT_FTML_PATH
+            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
+            if not os.path.isabs(filename):
+                file_path = os.path.join(default_dir, filename)
+            else:
+                file_path = filename
             exists = os.path.exists(file_path)
             if not exists:
                 print("Filename {} doesn't exist".format(filename))
                 if self.pdlg:
                     self.pdlg.close()
                 raise SystemExit("Filename {} doesn't exist".format(filename))
-            self.read_ftml(DEFAULT_FTML_PATH)
+            self.read_ftml(file_path)
+
 
     def setup(self):
         pass
@@ -260,7 +264,9 @@ class Plotting:
         """
         # plot path and label
         if filename != "":
-            self.read_ftml(DEFAULT_FTML_PATH)
+            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
+            file_path = os.path.join(default_dir, "example_flight.ftml")
+            self.read_ftml(file_path)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
@@ -276,7 +282,12 @@ class Plotting:
 
     def read_ftml(self, filename):
         if filename is None:
-            filename = DEFAULT_FTML_PATH
+            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
+            if os.path.isdir(default_dir):
+                filename = os.path.join(default_dir, "example_flight.ftml")
+            else:
+                filename = default_dir
+
         self.wps, self.wp_model_data = load_from_ftml(filename)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
@@ -412,8 +423,10 @@ class SideViewPlotting(Plotting):
         None
         """
         # plot path and label
-        if filename != "":
-            self.read_ftml(DEFAULT_FTML_PATH)
+        if filename is None or filename == "":
+            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
+            filename = os.path.join(default_dir, "example_flight.ftml")
+        self.read_ftml(filename)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         indices = list(zip(self.intermediate_indexes, self.wp_press))
@@ -510,9 +523,10 @@ class LinearViewPlotting(Plotting):
 
     def update_path(self, filename=None):
         self.setup()
-        if filename != "":
-            self.read_ftml(DEFAULT_FTML_PATH)
-
+        if filename is None or filename == "":
+            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
+            filename = os.path.join(default_dir, "example_flight.ftml")
+        self.read_ftml(filename)
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
