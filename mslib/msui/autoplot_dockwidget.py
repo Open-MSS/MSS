@@ -288,7 +288,7 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
             self.resize_treewidgets()
 
     def add_to_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
-                          itime, vtime, url, layer, styles, level):
+                      itime, vtime, url, layer, styles, level):
         if treewidget.objectName() == "autoplotTreeWidget":
             if self.autoplotSecsTreeWidget.topLevelItemCount() == 0:
                 QMessageBox.information(
@@ -302,7 +302,9 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
                 flight = ""
             else:
                 if filename != parent2.mscolab.active_operation_name:
-                    filename += ".ftml"
+                    filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
+                else:
+                    filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
             item = QTreeWidgetItem([flight, sections, vertical, filename, itime, vtime])
             self.autoplotTreeWidget.addTopLevelItem(item)
             self.autoplotTreeWidget.setCurrentItem(item)
@@ -330,13 +332,15 @@ class AutoplotDockWidget(QWidget, Ui_AutoplotDockWidget):
         self.resize_treewidgets()
 
     def update_treewidget(self, parent, parent2, config_settings, treewidget, flight, sections, vertical, filename,
-                          itime, vtime, url, layer, styles, level):
+                        itime, vtime, url, layer, styles, level):
         if flight.startswith("new flight track"):
             filename = ""
             flight = ""
         else:
             if filename != parent2.mscolab.active_operation_name:
-                filename += ".ftml"
+                filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
+            else:
+                filename = os.path.join(const.MSUI_CONFIG_PATH, filename + ".ftml")
         if treewidget.objectName() == "autoplotTreeWidget":
             selected_item = self.autoplotTreeWidget.currentItem()
             selected_item.setText(0, flight)

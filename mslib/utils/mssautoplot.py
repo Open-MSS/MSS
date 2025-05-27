@@ -108,8 +108,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
     msc_auth = ("mscolab", msc_auth_password)
     session.auth = msc_auth
     session.headers.update({'x-test': 'true'})
-    # ToDp fix config_loader it gets a list of two times the entry
-    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+    response = session.get(urljoin(msc_url, 'status'), timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
     session.close()
     if response.status_code == 401:
         logging.error("Error", 'Server authentication data were incorrect.')
@@ -119,8 +118,7 @@ def load_from_operation(op_name, msc_url, msc_auth_password, username, password)
         session.headers.update({'x-test': 'true'})
         url = urljoin(msc_url, "token")
         try:
-            # ToDp fix config_loader it gets a list of two times the entry
-            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")[0]))
+            response = session.post(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
             response.raise_for_status()
         except requests.exceptions.RequestException as ex:
             logging.error("unexpected error: %s %s %s", type(ex), url, ex)
@@ -158,7 +156,7 @@ def get_xml_data(msc_url, token, op_id):
             "op_id": op_id
         }
         url = urljoin(msc_url, "get_operation_by_id")
-        r = requests.get(url, data=data)
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             xml_content = json.loads(r.text)["content"]
             return xml_content
@@ -187,7 +185,7 @@ def get_op_id(msc_url, token, op_name):
             "skip_archived": skip_archived
         }
         url = urljoin(msc_url, "operations")
-        r = requests.get(url, data=data)
+        r = requests.get(url, data=data, timeout=tuple(config_loader(dataset="MSCOLAB_timeout")))
         if r.text != "False":
             _json = json.loads(r.text)
             operations = _json["operations"]
@@ -218,6 +216,10 @@ class Plotting:
         flight = self.config["automated_plotting_flights"][0][0]
         section = self.config["automated_plotting_flights"][0][1]
         filename = self.config["automated_plotting_flights"][0][3]
+        config_dir = os.path.dirname(os.path.expanduser(cpath)) 
+        if filename and not os.path.isabs(filename):
+            filename = os.path.join(config_dir, filename)
+            logging.debug("Resolved filename: %s", filename)
         if self.__class__.__name__ == "TopViewPlotting":
             try:
                 self.params = get_projection_params(self.config["predefined_map_sections"][section]["CRS"].lower())
@@ -234,19 +236,13 @@ class Plotting:
         if filename != "" and filename == flight:
             self.read_operation(flight, msc_url, msc_auth_password, username, password)
         elif filename != "":
-            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
-            if not os.path.isabs(filename):
-                file_path = os.path.join(default_dir, filename)
-            else:
-                file_path = filename
-            exists = os.path.exists(file_path)
-            if not exists:
-                print("Filename {} doesn't exist".format(filename))
+            if not os.path.exists(filename):
+                print(f"FTML file {filename} does not exist")
                 if self.pdlg:
                     self.pdlg.close()
-                raise SystemExit("Filename {} doesn't exist".format(filename))
-            self.read_ftml(file_path)
-
+                raise SystemExit(f"FTML file {filename} does not exist")
+            self.read_ftml(filename)
+        print(filename)
 
     def setup(self):
         pass
@@ -264,9 +260,7 @@ class Plotting:
         """
         # plot path and label
         if filename != "":
-            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
-            file_path = os.path.join(default_dir, "example_flight.ftml")
-            self.read_ftml(file_path)
+            self.read_ftml(filename)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
@@ -281,13 +275,6 @@ class Plotting:
         self.plotter.redraw_path(waypoints_model_data=self.wp_model_data)
 
     def read_ftml(self, filename):
-        if filename is None:
-            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
-            if os.path.isdir(default_dir):
-                filename = os.path.join(default_dir, "example_flight.ftml")
-            else:
-                filename = default_dir
-
         self.wps, self.wp_model_data = load_from_ftml(filename)
         self.wp_lats, self.wp_lons, self.wp_locs = [[x[i] for x in self.wps] for i in [0, 1, 3]]
         self.wp_press = [mslib.utils.thermolib.flightlevel2pressure(wp[2] * units.hft).to("Pa").m for wp in self.wps]
@@ -423,10 +410,8 @@ class SideViewPlotting(Plotting):
         None
         """
         # plot path and label
-        if filename is None or filename == "":
-            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
-            filename = os.path.join(default_dir, "example_flight.ftml")
-        self.read_ftml(filename)
+        if filename != "":
+            self.read_ftml(filename)
         self.fig.canvas.draw()
         self.plotter.update_from_waypoints(self.wp_model_data)
         indices = list(zip(self.intermediate_indexes, self.wp_press))
@@ -523,10 +508,9 @@ class LinearViewPlotting(Plotting):
 
     def update_path(self, filename=None):
         self.setup()
-        if filename is None or filename == "":
-            default_dir = os.path.join(os.path.expanduser("~"), ".config", "msui")
-            filename = os.path.join(default_dir, "example_flight.ftml")
-        self.read_ftml(filename)
+        if filename != "":
+            self.read_ftml(filename)
+
         highlight = [[wp[0], wp[1]] for wp in self.wps]
         self.myfig.draw_vertical_lines(highlight, self.lats, self.lons)
 
@@ -598,49 +582,62 @@ class LinearViewPlotting(Plotting):
 @click.command()
 @click.option('--cpath', default=constants.MSS_AUTOPLOT, help='Path of the configuration file.')
 @click.option('--view', default="top", help='View of the plot (top/side/linear).')
-@click.option('--ftrack', type=click.Path(exists=True), help='Path to the .ftml file')
+@click.option('--ftrack', default="", help='Flight track.')
 @click.option('--itime', default="", help='Initial time.')
 @click.option('--vtime', default="", help='Valid time.')
 @click.option('--intv', default=0, help='Time interval.')
 @click.option('--stime', default="", help='Starting time for downloading multiple plots with a fixed interval.')
 @click.option('--etime', default="", help='Ending time for downloading multiple plots with a fixed interval.')
 @click.option('--raw', default=False, help='Saves the raw image with its projection in topview')
+@click.option('--ftml-path', default="", help='Override the FTML file path from the configuration.')
 @click.pass_context
-def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw):
+def main(ctx, cpath, view, ftrack, itime, vtime, intv, stime, etime, raw, ftml_path):
     pdlg = None
 
     def close_process_dialog(pdlg):
         pdlg.close()
 
     if ctx.obj is not None:
-        # ToDo find a simpler solution, on a split of the package, QT is expensive for such a progressbar
         pdlg = QProgressDialog("Downloading images", "Cancel", 0, 10, parent=ctx.obj)
         pdlg.setMinimumDuration(0)
         pdlg.repaint()
         pdlg.canceled.connect(lambda: close_process_dialog(pdlg))
         pdlg.setWindowModality(Qt.WindowModal)
-        pdlg.setAutoReset(True)     # Close dialog automatically when reaching max value
-        pdlg.setAutoClose(True)     # Automatically close when value reaches maximum
-        pdlg.setValue(0)            # Initial progress value
-
-        # Set window flags to ensure visibility and modality
+        pdlg.setAutoReset(True)
+        pdlg.setAutoClose(True)
+        pdlg.setValue(0)
         pdlg.setWindowFlags(pdlg.windowFlags() | Qt.CustomizeWindowHint | Qt.WindowTitleHint)
-
         pdlg.setValue(0)
 
     conf.read_config_file(path=cpath)
     config = conf.config_loader()
 
-    # flight_name = config["automated_plotting_flights"][0][0]
-    # file = config["automated_plotting_flights"][0][3]
+    if ftml_path:
+        # Override the FTML file path in the configuration
+        if not os.path.exists(ftml_path):
+            print(f"Provided FTML file path {ftml_path} does not exist")
+            if ctx.obj is not None:
+                pdlg.close()
+            raise SystemExit(f"Provided FTML file path {ftml_path} does not exist")
+        config["automated_plotting_flights"][0][3] = ftml_path
+
     if ctx.obj is not None:
         pdlg.setValue(1)
 
     msc_url = config["mscolab_server_url"]
-    msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
-                                                                   username="mscolab")
-    msc_username = config["MSS_auth"][msc_url]
-    msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
+    try:
+        msc_auth_password = mslib.utils.auth.get_password_from_keyring(service_name=f"MSCOLAB_AUTH_{msc_url}",
+                                                                       username="mscolab")
+    except KeyError:
+        msc_auth_password = None
+
+    try:
+        msc_username = config["MSS_auth"][msc_url]
+    except KeyError:
+        msc_username = None
+        msc_password = None
+    if msc_username is not None:
+        msc_password = mslib.utils.auth.get_password_from_keyring(service_name=msc_url, username=msc_username)
 
     # Choose view (top or side)
     if view == "top":
