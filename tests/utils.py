@@ -215,8 +215,7 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, fullname, 
 
 
 def create_msui_settings_file(content):
-    with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-        file_dir.writetext("msui_settings.json", content)
+    MSUI_CONFIG_PATH.write_text(content)
 
 
 def is_url_response_ok(url):

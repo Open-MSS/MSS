@@ -61,16 +61,16 @@ if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
 
 if os.environ.get("GALLERY", "True") != "False":
     # Generate plot gallery
-    import fs
+    from pathlib import Path
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     from mslib.mswms.seed import DataFiles
 
-    root_fs = fs.open_fs("~/")
-    if not root_fs.exists("mss/testdata"):
-        root_fs.makedirs("mss/testdata")
+    root_fs = Path("~/mss/testdata")
+    if not root_fs.exists():
+        root_fs.makedirs(parents=True)
 
-    examples = DataFiles(data_fs=fs.open_fs("~/mss/testdata"),
-                         server_config_fs=fs.open_fs("~/mss"))
+    examples = DataFiles(mswms_data_dir=root_fs,
+                         mswms_server_config_dir=Path("~/mss"))
     examples.create_server_config(detailed_information=True)
     examples.create_data()
 
