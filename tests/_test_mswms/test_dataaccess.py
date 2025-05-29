@@ -32,12 +32,12 @@ from datetime import datetime
 import mock
 
 from mslib.mswms.dataaccess import DefaultDataAccess, CachedDataAccess
-from tests.constants import DATA_DIR
+from tests.constants import MSWMS_DATA_DIR
 
 
 class Test_DefaultDataAccess:
     def setup_method(self):
-        self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015")
+        self.dut = DefaultDataAccess(MSWMS_DATA_DIR, "EUR_LL015")
         self.dut.setup()
 
     def test_get_filename(self):
@@ -50,14 +50,14 @@ class Test_DefaultDataAccess:
                                          datetime(2012, 10, 17, 12, 0),
                                          datetime(2012, 10, 17, 18, 0),
                                          fullpath=True)
-        assert filename == os.path.join(DATA_DIR, filename)
+        assert filename == os.path.join(MSWMS_DATA_DIR, filename)
 
     def test_get_datapath(self):
-        assert self.dut.get_datapath() == DATA_DIR
+        assert self.dut.get_datapath() == MSWMS_DATA_DIR
 
     def test_get_all_datafiles(self):
         all_files = self.dut.get_all_datafiles()
-        assert sorted(all_files) == sorted(os.listdir(DATA_DIR))
+        assert sorted(all_files) == sorted(os.listdir(MSWMS_DATA_DIR))
 
     def test_get_init_times(self):
         all_init_times = self.dut.get_init_times()
@@ -66,7 +66,7 @@ class Test_DefaultDataAccess:
     def test_mfDatasetArgs(self):
         mfDatasetArgs = self.dut.mfDatasetArgs()
         assert mfDatasetArgs == {'skip_dim_check': []}
-        mfDatasetArgs2 = DefaultDataAccess(DATA_DIR, "EUR_LL015", skip_dim_check=["time1"]).mfDatasetArgs()
+        mfDatasetArgs2 = DefaultDataAccess(MSWMS_DATA_DIR, "EUR_LL015", skip_dim_check=["time1"]).mfDatasetArgs()
         assert mfDatasetArgs2 == {'skip_dim_check': ['time1']}
 
     def test_get_valid_times(self):
@@ -97,7 +97,7 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
     """
 
     def setup_method(self):
-        self.dut = CachedDataAccess(DATA_DIR, "EUR_LL015")
+        self.dut = CachedDataAccess(MSWMS_DATA_DIR, "EUR_LL015")
         self.dut.setup()
 
     def test_cache_full(self):
@@ -136,7 +136,7 @@ class Test_CachedDataAccess(Test_DefaultDataAccess):
 
 class Test_DefaultDataAccessNoInit:
     def setup_method(self):
-        self.dut = DefaultDataAccess(DATA_DIR, "EUR_LL015", uses_init_time=False)
+        self.dut = DefaultDataAccess(MSWMS_DATA_DIR, "EUR_LL015", uses_init_time=False)
         self.dut.setup()
 
     def test_get_init_times(self):
