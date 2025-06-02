@@ -107,6 +107,8 @@ from urllib.parse import urljoin
 ROOT_DIR = "{constants.ROOT_DIR}"
 # directory where mss output files are stored
 MSCOLAB_DATA_DIR = "{constants.MSCOLAB_DATA_DIR}"
+# this will be removed
+OPERATIONS_DATA = Path(MSCOLAB_DATA_DIR)
 BASE_DIR = ROOT_DIR
 # mscolab data directory for operation git repositories
 SSO_DIR = os.path.join(ROOT_DIR, 'datasso')

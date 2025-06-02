@@ -25,7 +25,7 @@
     limitations under the License.
 """
 import pytest
-
+from tests import constants
 from mslib.mscolab.models import User, Operation
 from mslib.mscolab.seed import (add_user, get_user, add_operation, add_user_to_operation,
                                 delete_user, delete_operation, add_all_users_default_operation)
@@ -119,6 +119,9 @@ class Test_Seed:
                                 'op_id': 7, 'path': 'UVXYZ'}]
             user = User.query.filter_by(emailid=self.userdata_1[0]).first()
             result = self.fm.list_operations(user)
+            # Check if result is not empty before accessing index
+            assert len(result) > 0, f"Expected at least one operation for user {self.userdata_1[0]}, but got empty list"
+
             # we don't care here for op_id
             expected_result[0]['op_id'] = result[0]['op_id']
             assert result == expected_result

@@ -24,16 +24,17 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
+import shutil
 import sys
 import secrets
 import time
 import datetime
-import fs
 import difflib
 import logging
 import git
 import threading
 import mimetypes
+from pathlib import Path
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from mslib.utils.verify_waypoint_data import verify_waypoint_data
@@ -99,12 +100,15 @@ class FileManager:
                 import_op = Operation.query.filter_by(path=f"{category}{mscolab_settings.GROUP_POSTFIX}").first()
                 if import_op is not None:
                     self.import_permissions(import_op.id, operation_id, user.id)
-            data = fs.open_fs(self.data_dir)
-            data.makedir(operation.path)
-            operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'w')
-            operation_file.write(content)
-            operation_path = fs.path.combine(self.data_dir, operation.path)
-            r = git.Repo.init(operation_path)
+            data_dir = Path(self.data_dir)
+            operation_dir = data_dir / operation.path
+            operation_dir.mkdir(parents=True, exist_ok=True)
+
+            operation_file_path = operation_dir / 'main.ftml'
+            operation_file_path.write_text(content, encoding='utf-8')
+
+            # Initialize git repository
+            r = git.Repo.init(str(operation_dir))
             r.git.clear_cache()
             r.index.add(['main.ftml'])
             r.index.commit("initial commit")
@@ -266,9 +270,9 @@ class FileManager:
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
 
-        with fs.open_fs(upload_folder) as profile_fs:
-            if profile_fs.exists(image_to_be_deleted):
-                profile_fs.remove(image_to_be_deleted)
+        with Path(upload_folder).open('w') as _profile:
+            if _profile.exists(image_to_be_deleted):
+                _profile.remove(image_to_be_deleted)
                 logging.debug(f"Successfully deleted image: {image_to_be_deleted}")
 
     def upload_file(self, file, subfolder=None, identifier=None, include_prefix=False):
@@ -280,35 +284,36 @@ class FileManager:
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
 
-        subfolder_path = fs.path.join(upload_folder, str(subfolder) if subfolder else "")
-        with fs.open_fs(subfolder_path, create=True) as _fs:
-            # Creating unique and secure filename
-            file_name, _ = file.filename.rsplit('.', 1)
-            mime_type, _ = mimetypes.guess_type(file.filename)
-            file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
-            token = secrets.token_urlsafe()
-            timestamp = time.strftime("%Y%m%dT%H%M%S")
+        subfolder_path = Path(upload_folder) / (str(subfolder) if subfolder else "")
+        subfolder_path.mkdir(parents=True, exist_ok=True)
 
-            if identifier:
-                file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
-            else:
-                file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
-            file_name = secure_filename(file_name)
+        # Creating unique and secure filename
+        file_name, _ = file.filename.rsplit('.', 1)
+        mime_type, _ = mimetypes.guess_type(file.filename)
+        file_ext = mimetypes.guess_extension(mime_type) if mime_type else '.unknown'
+        token = secrets.token_urlsafe()
+        timestamp = time.strftime("%Y%m%dT%H%M%S")
 
-            # Saving the file
-            with _fs.open(file_name, mode="wb") as f:
-                file.save(f)
+        if identifier:
+            file_name = f'{identifier}-{timestamp}-{token}{file_ext}'
+        else:
+            file_name = f'{file_name}-{timestamp}-{token}{file_ext}'
+        file_name = secure_filename(file_name)
 
-            # Relative File path
-            if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
-                static_dir = fs.path.basename(upload_folder)
-                static_file_path = fs.path.join(static_dir, str(subfolder), file_name)
-            else:
-                static_file_path = fs.path.relativefrom(upload_folder, fs.path.join(subfolder_path, file_name))
+        # Saving the file
+        file_path = subfolder_path / file_name
+        with file_path.open(mode="wb") as f:
+            file.save(f)
 
-            logging.debug(f'Relative Path: {static_file_path}')
-            return static_file_path
+        # Relative File path
+        if include_prefix:  # ToDo: add a namespace for the chat attachments, similar as for profile images
+            static_dir = Path(upload_folder).name
+            static_file_path = str(Path(static_dir) / str(subfolder) / file_name)
+        else:
+            static_file_path = str(Path(file_path).relative_to(Path(upload_folder)))
 
+        logging.debug(f'Relative Path: {static_file_path}')
+        return static_file_path
     def save_user_profile_image(self, user_id, image_file):
         """
         Save the user's profile image path to the database.
@@ -339,14 +344,21 @@ class FileManager:
             if value.find("/") != -1 or value.find("\\") != -1 or (" " in value):
                 logging.debug("malicious request: %s", user)
                 return False
-            with fs.open_fs(self.data_dir) as data:
-                if data.exists(value):
-                    return False
-                # will be move when operations are introduced
-                # make a directory, else movedir
-                data.makedir(value)
-                data.movedir(operation.path, value)
-                # when renamed to a Group operation
+
+            data_dir = Path(self.data_dir)
+            new_path = data_dir / value
+            old_path = data_dir / operation.path
+
+            if new_path.exists():
+                return False
+
+            new_path.mkdir(parents=True, exist_ok=True)
+
+            try:
+                old_path.rename(new_path)
+            except OSError:
+                shutil.move(str(old_path), str(new_path))
+
             if value.endswith(mscolab_settings.GROUP_POSTFIX):
                 # getting the category
                 category = value.split(mscolab_settings.GROUP_POSTFIX)[0]
@@ -374,12 +386,12 @@ class FileManager:
         Change.query.filter_by(op_id=op_id).delete()
         Message.query.filter_by(op_id=op_id).delete()
         operation = Operation.query.filter_by(id=op_id).first()
-        with fs.open_fs(self.data_dir) as operation_dir:
-            operation_dir.removetree(operation.path)
+        data_dir = Path(self.data_dir)
+        operation_dir = data_dir / operation.path
+        shutil.rmtree(operation_dir)
         db.session.delete(operation)
         db.session.commit()
         return True
-
     def get_authorized_users(self, op_id):
         """
         op_id: operation-id
@@ -407,21 +419,29 @@ class FileManager:
 
         op_lock = self._get_operation_lock(operation.id)
         with op_lock:
-            with fs.open_fs(self.data_dir) as data:
-                """
-                old file is read, the diff between old and new is calculated and stored
-                as 'Change' in changes table. comment for each change is optional
-                """
-                old_data = data.readtext(fs.path.combine(operation.path, 'main.ftml'))
-                old_data_lines = old_data.splitlines()
-                content_lines = content.splitlines()
-                diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
-                diff_content = '\n'.join(list(diff))
-                data.writetext(fs.path.combine(operation.path, 'main.ftml'), content)
+            data_dir = Path(self.data_dir)
+            operation_file_path = data_dir / operation.path / 'main.ftml'
+            operation_file_path.parent.mkdir(parents=True, exist_ok=True)
+
+            """
+            old file is read, the diff between old and new is calculated and stored
+            as 'Change' in changes table. comment for each change is optional
+            """
+            try:
+                old_data = operation_file_path.read_text(encoding='utf-8')
+            except FileNotFoundError:
+                old_data = ""
+
+            old_data_lines = old_data.splitlines()
+            content_lines = content.splitlines()
+            diff = difflib.unified_diff(old_data_lines, content_lines, lineterm='')
+            diff_content = '\n'.join(list(diff))
+            operation_file_path.write_text(content, encoding='utf-8')
+
             # commit changes if comment is not None
             if diff_content != "":
                 # commit to git repository
-                operation_path = fs.path.combine(self.data_dir, operation.path)
+                operation_path = Path(self.data_dir) / operation.path
                 repo = git.Repo(operation_path)
                 repo.git.clear_cache()
                 repo.index.add(['main.ftml'])
@@ -446,9 +466,9 @@ class FileManager:
             return False
         op_lock = self._get_operation_lock(op_id)
         with op_lock:
-            with fs.open_fs(self.data_dir) as data:
-                operation_file = data.open(fs.path.combine(operation.path, 'main.ftml'), 'r')
-                operation_data = operation_file.read()
+            operation_path = Path(self.data_dir) / operation.path / 'main.ftml'
+            with operation_path.open() as data:
+                operation_data = data.read()
             return operation_data
 
     def get_all_changes(self, op_id, user, named_version=False):
@@ -500,7 +520,7 @@ class FileManager:
         if not change:
             return False
         operation = Operation.query.filter_by(id=change.op_id).first()
-        operation_path = fs.path.combine(self.data_dir, operation.path)
+        operation_path = Path(self.data_dir) / operation.path
         repo = git.Repo(operation_path)
         change_content = repo.git.show(f'{change.commit_hash}:main.ftml')
         return change_content
@@ -535,13 +555,14 @@ class FileManager:
 
         op_lock = self._get_operation_lock(operation.id)
         with op_lock:
-            operation_path = fs.path.join(self.data_dir, operation.path)
-            repo = git.Repo(operation_path)
+            operation_path = Path(self.data_dir) / operation.path
+            repo = git.Repo(str(operation_path))
             repo.git.clear_cache()
             try:
                 file_content = repo.git.show(f'{ch.commit_hash}:main.ftml')
-                with fs.open_fs(operation_path) as proj_fs:
-                    proj_fs.writetext('main.ftml', file_content)
+                main_ftml_path = operation_path / 'main.ftml'
+                main_ftml_path.write_text(file_content, encoding='utf-8')
+
                 repo.index.add(['main.ftml'])
                 cm = repo.index.commit(f"checkout to {ch.commit_hash}")
                 change = Change(ch.op_id, user.id, cm.hexsha)

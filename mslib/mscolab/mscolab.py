@@ -35,7 +35,7 @@ import secrets
 import subprocess
 import git
 import flask_migrate
-import pathlib
+from pathlib import Path
 
 from mslib import __version__
 from mslib.mscolab import migrations
@@ -71,19 +71,26 @@ def confirm_action(confirmation_prompt):
 
 def handle_db_reset(verbose=True):
     if mscolab_settings.SQLALCHEMY_DB_URI.startswith("sqlite:///") and (
-        db_path := pathlib.Path(mscolab_settings.SQLALCHEMY_DB_URI.removeprefix("sqlite:///"))
+        db_path := Path(mscolab_settings.SQLALCHEMY_DB_URI.removeprefix("sqlite:///"))
     ).is_relative_to(mscolab_settings.DATA_DIR):
         # Don't remove the database file
         # This would be easier if the database wasn't stored in DATA_DIR...
-        p = pathlib.Path(mscolab_settings.DATA_DIR)
+        p = Path(mscolab_settings.DATA_DIR)
         for root, dirs, files in os.walk(p, topdown=False):
             for name in files:
-                full_file_path = pathlib.Path(root) / name
+                full_file_path = Path(root) / name
                 if full_file_path != db_path:
                     full_file_path.unlink()
             for name in dirs:
-                (pathlib.Path(root) / name).rmdir()
-    elif os.path.exists(mscolab_settings.DATA_DIR):
+                dir_path = Path(root) / name
+                try:
+
+                    dir_path.rmdir()
+                except (OSError, FileNotFoundError):
+
+                    # Directory might not be empty or already removed
+                    pass
+    elif Path(mscolab_settings.DATA_DIR).exists():
         shutil.rmtree(mscolab_settings.DATA_DIR)
     create_files()
     flask_migrate.downgrade(directory=migrations.__path__[0], revision="base")

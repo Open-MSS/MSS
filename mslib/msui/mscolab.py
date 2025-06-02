@@ -511,6 +511,7 @@ class MSUIMscolab(QtCore.QObject):
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
     def __init__(self, parent=None, local_operations_data=None):
+        print(local_operations_data)
         super().__init__(parent)
         self.ui = parent
 
@@ -650,22 +651,8 @@ class MSUIMscolab(QtCore.QObject):
         self.operation_archive_browser.show()
 
     def create_dir(self):
-        # ToDo this needs to be done earlier
-        if '://' in self.data_dir:
-            try:
-                _ = fs.open_fs(self.data_dir)
-            except fs.errors.CreateFailed:
-                logging.error('Make sure that the FS url "%s" exists', self.data_dir)
-                show_popup(self.ui, "Error", f'FS Url: "{self.data_dir}" does not exist!')
-                sys.exit()
-            except fs.opener.errors.UnsupportedProtocol:
-                logging.error('FS url "%s" not supported', self.data_dir)
-                show_popup(self.ui, "Error", f'FS Url: "{self.data_dir}" not supported!')
-                sys.exit()
-        else:
-            _dir = os.path.expanduser(self.data_dir)
-            if not os.path.exists(_dir):
-                os.makedirs(_dir)
+        if not self.data_dir.exists():
+            self.data_dir.mkdir(parents=True)
 
     def close_help_dialog(self):
         self.help_dialog = None

@@ -37,6 +37,7 @@ import pytest
 from PIL import Image
 
 from tests.constants import ROOT_DIR
+from tests import constants
 import mslib.utils.auth
 from mslib.mscolab.models import Permission, User
 from mslib.msui.flighttrack import WaypointsTableModel
@@ -563,7 +564,7 @@ class Test_Mscolab:
         # ToDo verify all operations disabled again without a visual check
 
     @mock.patch("PyQt5.QtWidgets.QFileDialog.getSaveFileName",
-                return_value=(fs.path.join(ROOT_DIR, 'test_export.ftml'),
+                return_value=(constants.MSCOLAB_DATA_DIR / 'test_export.ftml',
                               "Flight track (*.ftml)"))
     def test_handle_export(self, mockbox, qtbot):
         self._connect_to_mscolab(qtbot)

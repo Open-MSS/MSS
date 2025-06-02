@@ -28,6 +28,7 @@ import os
 import pytest
 import mock
 import argparse
+from pathlib import Path
 
 from mslib.mscolab.conf import mscolab_settings
 from mslib.mscolab.models import Operation, User, Permission
@@ -72,22 +73,22 @@ class Test_Mscolab:
         assert Permission.query.all() == []
 
     def test_handle_db_reset(self):
-        assert os.path.isdir(mscolab_settings.UPLOAD_FOLDER)
-        assert os.path.isdir(mscolab_settings.OPERATIONS_DATA)
+        assert Path(mscolab_settings.UPLOAD_FOLDER).exists()
+        assert Path(mscolab_settings.OPERATIONS_DATA).exists()
         all_operations = Operation.query.all()
         assert all_operations == []
         operation_name = "Example"
-        assert add_operation(operation_name, "Test Example")
-        assert os.path.isdir(os.path.join(mscolab_settings.OPERATIONS_DATA, operation_name))
+        assert add_operation(operation_name, "Test_Example")
+        assert (Path(mscolab_settings.OPERATIONS_DATA) / operation_name).exists()
         operation = Operation.query.filter_by(path=operation_name).first()
-        assert operation.description == "Test Example"
+        assert operation.description == "Test_Example"
         all_operations = Operation.query.all()
         assert len(all_operations) == 1
         handle_db_reset()
         # check operation dir name removed
-        assert os.path.isdir(os.path.join(mscolab_settings.OPERATIONS_DATA, operation_name)) is False
-        assert os.path.isdir(mscolab_settings.OPERATIONS_DATA)
-        assert os.path.isdir(mscolab_settings.UPLOAD_FOLDER)
+        assert (Path(mscolab_settings.OPERATIONS_DATA) / operation_name).exists() is False
+        assert Path(mscolab_settings.OPERATIONS_DATA).exists()
+        assert Path(mscolab_settings.UPLOAD_FOLDER).exists()
         # query db for operation_name
         operation = Operation.query.filter_by(path=operation_name).first()
         assert operation is None

@@ -27,14 +27,15 @@
 import logging
 import mslib.utils.config as config
 import os
-import fs
 import pytest
+from pathlib import Path
 
 from mslib import utils
 from mslib.utils.config import MSUIDefaultConfig as mss_default
 from mslib.utils.config import config_loader, read_config_file, modify_config_file
 from mslib.utils.config import merge_dict
 from tests.constants import MSUI_CONFIG_PATH
+from tests import constants
 from tests.utils import create_msui_settings_file
 
 LOGGER = logging.getLogger(__name__)
@@ -70,13 +71,11 @@ class TestConfigLoader:
             '../data')
 
     def teardown_method(self):
-        if fs.open_fs(MSUI_CONFIG_PATH).exists("msui_settings.json"):
-            fs.open_fs(MSUI_CONFIG_PATH).remove("msui_settings.json")
-        config_file = os.path.join(
-            self.sample_path,
-            'empty_msui_settings.json'
-        )
-        read_config_file(config_file)
+        if constants.MSUI_CONFIG_FILE_PATH.exists():
+            constants.MSUI_CONFIG_FILE_PATH.unlink()
+
+        config_file = constants.MSUI_CONFIG_FILE_PATH / 'empty_msui_settings.json'
+        read_config_file(config_file.name)
 
     def test_option_types(self):
         # check if all config options are added to the appropriate type of options
@@ -121,12 +120,10 @@ class TestConfigLoader:
         """
         on a user defined empty msui_settings_json this test should return the default value for num_labels
         """
-        with fs.open_fs(MSUI_CONFIG_PATH) as file_dir:
-            file_content = file_dir.readtext("msui_settings.json")
+        file_content = constants.MSUI_CONFIG_FILE_PATH.read_text()
         assert ":" not in file_content
         default_data = config_loader(default=True)
-        config_file = fs.path.combine(MSUI_CONFIG_PATH, "msui_settings.json")
-        read_config_file(path=config_file)
+        read_config_file(path=constants.MSUI_CONFIG_FILE_PATH.name)
         data = config_loader()
         assert data["num_labels"] == default_data["num_labels"]
         num_labels = config_loader(dataset="num_labels")

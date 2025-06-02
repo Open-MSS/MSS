@@ -53,6 +53,7 @@ if not MSCOLAB_DATA_DIR.exists():
 
 MSUI_CONFIG_PATH = ROOT_DIR / "msui"
 os.environ["MSUI_CONFIG_PATH"] = MSUI_CONFIG_PATH.name
+MSUI_CONFIG_FILE_PATH = MSUI_CONFIG_PATH / "msui_settings.json"
 
 _xdg_cache_home_temporary_directory = tempfile.TemporaryDirectory()
 os.environ["XDG_CACHE_HOME"] = _xdg_cache_home_temporary_directory.name
