@@ -270,10 +270,18 @@ class FileManager:
         if sys.platform.startswith('win'):
             upload_folder = upload_folder.replace('\\', '/')
 
-        with Path(upload_folder).open('w') as _profile:
-            if _profile.exists(image_to_be_deleted):
-                _profile.remove(image_to_be_deleted)
+        # Construct the full path to the image file
+        full_image_path = Path(upload_folder) / image_to_be_deleted
+
+        # Check if the file exists and delete it
+        if full_image_path.exists() and full_image_path.is_file():
+            try:
+                full_image_path.unlink()  # Delete the file
                 logging.debug(f"Successfully deleted image: {image_to_be_deleted}")
+            except OSError as e:
+                logging.error(f"Failed to delete image {image_to_be_deleted}: {e}")
+        else:
+            logging.debug(f"Image file not found or is not a file: {image_to_be_deleted}")
 
     def upload_file(self, file, subfolder=None, identifier=None, include_prefix=False):
         """
@@ -314,6 +322,7 @@ class FileManager:
 
         logging.debug(f'Relative Path: {static_file_path}')
         return static_file_path
+
     def save_user_profile_image(self, user_id, image_file):
         """
         Save the user's profile image path to the database.

@@ -98,7 +98,6 @@ def handle_db_reset(verbose=True):
     if verbose is True:
         print("Database has been reset successfully!")
 
-
 def handle_db_seed():
     handle_db_reset(verbose=False)
     seed_data()

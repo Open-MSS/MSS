@@ -106,9 +106,9 @@ from urllib.parse import urljoin
 
 ROOT_DIR = "{constants.ROOT_DIR}"
 # directory where mss output files are stored
-MSCOLAB_DATA_DIR = "{constants.MSCOLAB_DATA_DIR}"
+DATA_DIR = "{constants.MSCOLAB_DATA_DIR}"
 # this will be removed
-OPERATIONS_DATA = Path(MSCOLAB_DATA_DIR)
+OPERATIONS_DATA = Path(DATA_DIR)
 BASE_DIR = ROOT_DIR
 # mscolab data directory for operation git repositories
 SSO_DIR = os.path.join(ROOT_DIR, 'datasso')
@@ -150,13 +150,13 @@ MAIL_DEFAULT_SENDER = 'MSS@localhost'
 # enable verification by Mail
 MAIL_ENABLED = False
 
-SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(MSCOLAB_DATA_DIR, 'mscolab.db')
+SQLALCHEMY_DB_URI = 'sqlite:///' + urljoin(DATA_DIR, 'mscolab.db')
 
 # enable SQLALCHEMY_ECHO
 SQLALCHEMY_ECHO = False
 
 # mscolab file upload settings
-UPLOAD_FOLDER = os.path.join(MSCOLAB_DATA_DIR, 'uploads')
+UPLOAD_FOLDER = os.path.join(DATA_DIR, 'uploads')
 MAX_UPLOAD_SIZE = 2 * 1024 * 1024  # 2MB
 
 enable_basic_http_authentication = False
