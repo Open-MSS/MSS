@@ -27,7 +27,6 @@
 import pytest
 import mock
 import os
-import fs
 from PyQt5 import QtWidgets
 from mslib.msui import editor
 from tests import constants
