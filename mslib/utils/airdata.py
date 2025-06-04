@@ -29,9 +29,9 @@
 import csv
 import humanfriendly
 import os
-import fs
 import requests
 import re as regex
+from pathlib import Path
 from PyQt5 import QtWidgets
 import logging
 import time
@@ -39,10 +39,8 @@ import time
 import defusedxml.ElementTree as etree
 from mslib.msui.constants import MSUI_CONFIG_PATH
 
-OSDIR = fs.open_fs(MSUI_CONFIG_PATH).root_path
-if not os.path.exists(os.path.join(OSDIR, "downloads", "aip")):
-    os.makedirs(os.path.join(OSDIR, "downloads", "aip"))
-
+AIPDIR = Path(MSUI_CONFIG_PATH) / "downloads" / "aip"
+AIPDIR.mkdir(parents=True, exist_ok=True)
 
 class Airspace:
     """
@@ -104,15 +102,15 @@ def get_airports(force_download=False, url=None):
     if url is None:
         url = "https://davidmegginson.github.io/ourairports-data/airports.csv"
 
-    file_exists = os.path.exists(os.path.join(OSDIR, "downloads", "aip", "airports.csv"))
+    file_exists = (Path(AIPDIR) / "airports.csv").exists()
 
     if _airports and file_exists and \
-            os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv")) == _airports_mtime:
+            os.path.getmtime(str(AIPDIR / "airports.csv")) == _airports_mtime:
         return _airports
 
     time_outdated = 60 * 60 * 24 * 30  # 30 days
-    is_outdated = file_exists and (time.time() - os.path.getmtime(os.path.join(OSDIR, "downloads", "aip",
-                                                                               "airports.csv"))) > time_outdated
+    is_outdated = (file_exists and
+                   (time.time() - os.path.getmtime(str(Path(AIPDIR / "airports.csv")))) > time_outdated)
 
     if (force_download or is_outdated or not file_exists) \
             and QtWidgets.QMessageBox.question(None, "Allow download", f"You selected airports to be "
@@ -122,11 +120,11 @@ def get_airports(force_download=False, url=None):
                                                QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                                                QtWidgets.QMessageBox.Yes) \
             == QtWidgets.QMessageBox.Yes:
-        download_progress(os.path.join(OSDIR, "downloads", "aip", "airports.csv"), url)
+        download_progress(os.path.join(AIPDIR / "airports.csv"), url)
 
-    if os.path.exists(os.path.join(OSDIR, "downloads", "aip", "airports.csv")):
-        with open(os.path.join(OSDIR, "downloads", "aip", "airports.csv"), "r", encoding="utf8") as file:
-            _airports_mtime = os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", "airports.csv"))
+    if Path(AIPDIR / "airports.csv").exists():
+        with (AIPDIR / "airports.csv").open("r", encoding="utf8") as file:
+            _airports_mtime = (AIPDIR / "airports.csv").stat().st_mtime
             return list(csv.DictReader(file, delimiter=","))
 
     else:
@@ -157,7 +155,7 @@ def update_airspace(force_download=False, countries=None):
         countries = ["de"]
 
     for country in countries:
-        location = os.path.join(OSDIR, "downloads", "aip", f"{country}_asp.xml")
+        location = AIPDIR / f"{country}_asp.xml"
         url = Airspace.data_download_url.format(country)
         available = get_available_airspaces()
         try:
@@ -165,9 +163,9 @@ def update_airspace(force_download=False, countries=None):
         except IndexError:
             logging.info("countries: %s not exists", ' '.join(countries))
             continue
-        file_exists = os.path.exists(location)
+        file_exists = location.exists()
 
-        is_outdated = file_exists and (time.time() - os.path.getmtime(location)) > 60 * 60 * 24 * 30
+        is_outdated = file_exists and (time.time() - os.path.getmtime(str(location.resolve()))) > 60 * 60 * 24 * 30
 
         if (force_download or is_outdated or not file_exists) \
                 and QtWidgets.QMessageBox.question(
@@ -177,7 +175,7 @@ def update_airspace(force_download=False, countries=None):
                     QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No,
                     QtWidgets.QMessageBox.Yes) \
                 == QtWidgets.QMessageBox.Yes:
-            download_progress(location, url)
+            download_progress(str(location.resolve()), url)
 
 
 def get_airspaces(countries=None):
@@ -192,12 +190,12 @@ def get_airspaces(countries=None):
     reload = False
     files = [f"{country}_asp.xml" for country in countries]
     update_airspace(countries=countries)
-    files = [file for file in files if os.path.exists(os.path.join(OSDIR, "downloads", "aip", file))]
+    files = [file for file in files if (AIPDIR / file).exists()]
 
     if _airspaces and len(files) == len(_airspaces_mtime):
         for file in files:
             if file not in _airspaces_mtime or \
-                    os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", file)) != _airspaces_mtime[file]:
+                    os.path.getmtime(str(AIPDIR /file)) != _airspaces_mtime[file]:
                 reload = True
                 break
         if not reload:
@@ -206,7 +204,7 @@ def get_airspaces(countries=None):
     _airspaces_mtime = {}
     _airspaces = []
     for file in files:
-        fpath = os.path.join(OSDIR, "downloads", "aip", file)
+        fpath = str(AIPDIR / file)
         root = etree.parse(fpath).getroot()
         valid_file = len(set([elem.tag for elem in root.iter()])) == 12
         if valid_file:
@@ -251,7 +249,7 @@ def get_airspaces(countries=None):
                 airspace_data["polygon"] = [(float(data.split()[0]), float(data.split()[-1]))
                                             for data in airspace_data["polygon"].split(",")]
                 _airspaces.append(airspace_data)
-                _airspaces_mtime[file] = os.path.getmtime(os.path.join(OSDIR, "downloads", "aip", file))
+                _airspaces_mtime[file] = os.path.getmtime(os.path.join(AIPDIR, file))
         else:
             QtWidgets.QMessageBox.information(None, "No Airspaces data in file:", f"{file}")
 
