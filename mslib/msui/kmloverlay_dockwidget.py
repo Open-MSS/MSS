@@ -25,11 +25,11 @@
     limitations under the License.
 """
 import copy
-import fs
 import logging
 from fastkml import kml, geometry, styles
 from lxml import etree as et, objectify
 import os
+from pathlib import Path
 from matplotlib import patheffects
 
 from mslib.utils.qt import get_open_filenames, get_save_filename
@@ -550,10 +550,9 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
         for index in range(self.listWidget.count()):
             if hasattr(self.listWidget.item(index), "checkState") and (
                     self.listWidget.item(index).checkState() == QtCore.Qt.Checked):
-                _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                _fs = fs.open_fs(_dirname)
+                filepath = Path(self.listWidget.item(index).text())
                 try:
-                    with _fs.open(_name, 'r') as kmlf:
+                    with filepath.open('r') as kmlf:
                         self.kml = kml.KML()  # creates fastkml object
                         self.kml.from_string(kmlf.read().encode('utf-8'))
                         if self.listWidget.item(index).text() in self.dict_files:  # just a precautionary check
@@ -590,23 +589,22 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
             self.labelStatusBar.setText("Status: No KML File Found or Selected. Add or Select Files to Merge.")
             return
 
-        default_filename = fs.path.join(self.directory_location, "merged_file" + ".kml")
-        filename = get_save_filename(self, "Merge KML Files", default_filename, "KML Files (*.kml)")
+        default_filename = Path(self.directory_location) / "merged_file.kml"
+        filename = str(get_save_filename(self, "Merge KML Files", str(default_filename), "KML Files (*.kml)"))
         if filename:
-            _dir_name, file_name = fs.path.split(filename)
+            filepath = Path(filename)
             if filename.endswith('.kml'):
                 try:
                     element = []
                     count = 0  # used to count elements in order; see usage below
                     for index in checked_files:  # index is the indices of checked files
-                        _dirname, _name = os.path.split(self.listWidget.item(index).text())
-                        _fs = fs.open_fs(_dirname)
+                        source_path = Path(self.listWidget.item(index).text())
                         # Create a secure XML Parser
                         secure_parser = et.XMLParser(resolve_entities=False, no_network=True)
                         # resolve_entities False, prevents entity expansion
                         # no_network, prevents automatically loading remote documents
                         # https://gist.github.com/jack-om/f2c762f399e6ee652f05320921ece4c9
-                        with _fs.open(_name, 'r') as kmlf:
+                        with source_path.open('r') as kmlf:
                             tree = et.parse(kmlf, parser=secure_parser)  # nosec, parse using the secured parser
                             root = tree.getroot()  # get the root of the file
                             self.remove_ns(root)  # removes <kml> and </kml>
@@ -626,11 +624,10 @@ class KMLOverlayControlWidget(QtWidgets.QWidget, ui.Ui_KMLOverlayDockWidget):
                     newkml.attrib['xmlns'] = 'http://earth.google.com/kml/2.0'  # add xmlns attribute
                     newkml.insert(0, super_root)
                     logging.debug(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-                    _dirname, _name = os.path.split(filename)
-                    _fs = fs.open_fs(_dirname)
-                    with _fs.open(_name, 'w') as output:  # write file
+                    with filepath.open('w') as output:  # write file
                         output.write(et.tostring(newkml, encoding='utf-8').decode('UTF-8'))
-                    self.labelStatusBar.setText("Status: Merged File " + file_name + " stored at " + _dirname)
+                    self.labelStatusBar.setText(
+                        "Status: Merged File " + filepath.name + " stored at " + str(filepath.parent))
                 except (OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while merging KML Files:"),
