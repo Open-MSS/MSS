@@ -26,7 +26,7 @@
     limitations under the License.
 """
 
-import fs
+from pathlib import Path
 import json
 import copy
 
@@ -62,11 +62,9 @@ class JsonConversion:
                 "MSS_auth": mss_auth
             }
 
-            filename = MSUI_SETTINGS.replace('\\', '/')
-            dir_name, file_name = fs.path.split(filename)
-            # create the backup file
-            with fs.open_fs(dir_name) as _fs:
-                fs.copy.copy_file(_fs, file_name, _fs, f"{file_name}.bak")
+            file_name = Path(MSUI_SETTINGS)
+            backup = file_name.with_suffix(".bak")
+            backup.write_text(file_name.read_text())
             # add the modification
             modify_config_file(data_to_save_in_config_file)
             # read new file
@@ -84,8 +82,7 @@ class JsonConversion:
                     del save_data[key]
 
             # write new data
-            with fs.open_fs(dir_name) as _fs:
-                _fs.writetext(file_name, json.dumps(save_data, indent=4))
+            file_name.write_text(json.dumps(save_data, indent=4))
 
 
 if __name__ == "__main__":
