@@ -36,7 +36,7 @@ import logging
 import os
 import re
 import sys
-import fs
+from pathlib import Path
 
 from slugify import slugify
 from mslib import __version__
@@ -314,19 +314,9 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                                 "Search for interactive text in the UI", "Search for interactive text in the UI",
                                 "Ctrl+F", None))
 
-            if "://" in constants.MSUI_CONFIG_PATH:
-                # Todo remove all os.path dependencies, when needed use getsyspath
-                pix_dir = fs.path.combine(constants.MSUI_CONFIG_PATH, 'tutorial_images')
-                try:
-                    _fs = fs.open_fs(pix_dir)
-                except fs.errors.CreateFailed:
-                    dir_path, name = fs.path.split(pix_dir)
-                    _fs = fs.open_fs(dir_path)
-                    _fs.makedir(name)
-            else:
-                pix_dir = os.path.join(constants.MSUI_CONFIG_PATH, 'tutorial_images')
-                if not os.path.exists(pix_dir):
-                    os.makedirs(pix_dir)
+            pix_dir = constants.MSUI_CONFIG_PATH / 'tutorial_images'
+            pix_dir.mkdir(exist_ok=True)
+            
             for item in actions:
                 if len(item[2]) > 0:
                     # These are twice defined, but only one can be used for highlighting
@@ -349,9 +339,8 @@ class MSUI_ShortcutsDialog(QtWidgets.QDialog, ui_sh.Ui_ShortcutsDialog):
                             pix_name = slugify(f"{prefix}-{attr}")
                             if pix_name.startswith("Search") is False:
                                 pix_file = f"{pix_name}.png"
-                                _fs = fs.open_fs(pix_dir)
-                                pix_file = os.path.join(_fs.getsyspath("."), pix_file)
-                                pixmap.save(pix_file, 'png')
+                                pix_file = pix_dir / pix_file
+                                pixmap.save(str(pix_file.resolve()), 'png')
                         except AttributeError:
                             pass
         return shortcuts
@@ -697,28 +686,26 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
                 activate = False
             for name in filenames:
                 self.create_new_flight_track(filename=name, function=function, activate=activate)
-            self.last_save_directory = fs.path.dirname(name)
+            self.last_save_directory = str(Path(name).parent)
         else:
             for name in filenames:
                 self.mscolab.handle_import_msc(name, extension, function, pickertype)
 
     def handle_export_local(self, extension, function, pickertype):
         if self.local_active:
-            default_filename = f'{os.path.join(self.last_save_directory, self.active_flight_track.name)}.{extension}'
+            default_filename = f'{Path(self.last_save_directory) / self.active_flight_track.name}.{extension}'
             filename = get_save_filename(
                 self, "Export Flight Track",
-                default_filename, f"Flight Track (*.{extension})",
+                str(default_filename), f"Flight Track (*.{extension})",
                 pickertype=pickertype)
             if filename is not None:
-                self.last_save_directory = fs.path.dirname(filename)
+                self.last_save_directory = str(Path(filename).parent)
                 try:
                     if function is None:
                         doc = self.active_flight_track.get_xml_doc()
-                        dirname, name = fs.path.split(filename)
-                        file_dir = fs.open_fs(dirname)
-                        with file_dir.open(name, 'w') as file_object:
+                        path = Path(filename)
+                        with path.open('w') as file_object:
                             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
-                        file_dir.close()
                     else:
                         function(filename, self.active_flight_track.name, self.active_flight_track.waypoints)
                 # wildcard exception to be resilient against error introduced by user code
@@ -835,7 +822,7 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
             # function is none if ftml file is selected
             if function is None:
                 try:
-                    waypoints_model = ft.WaypointsTableModel(filename=filename)
+                    waypoints_model = ft.WaypointsTableModel(filename=str(filename))
                 except (SyntaxError, OSError, IOError) as ex:
                     QtWidgets.QMessageBox.critical(
                         self, self.tr("Problem while opening flight track FTML:"),
@@ -943,9 +930,9 @@ class MSUIMainWindow(QtWidgets.QMainWindow, ui.Ui_MSUIMainWindow):
         if filename:
             ext = "ftml"
             self.save_flight_track(filename)
-            self.last_save_directory = fs.path.dirname(filename)
+            self.last_save_directory = Path(filename).parent.resolve()
             self.active_flight_track.filename = filename
-            self.active_flight_track.name = fs.path.basename(filename.replace(f"{ext}", "").strip())
+            self.active_flight_track.name = Path(filename).stem
 
     def save_flight_track(self, file_name):
         ext = ".ftml"

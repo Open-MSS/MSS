@@ -27,64 +27,27 @@
     limitations under the License.
 """
 
-import fs
 import os
-import logging
 import platformdirs
+from pathlib import Path
 
-# ToDo refactor to generic functions, keep only constants
-HOME = os.path.expanduser(f"~{os.path.sep}")
-MSUI_CONFIG_PATH = os.getenv("MSUI_CONFIG_PATH", os.path.join(HOME, ".config", "msui"))
+# ToDo refactor to generic functions, keep only constants 
+HOME = Path.home()
+MSUI_CONFIG_PATH = Path(os.getenv("MSUI_CONFIG_PATH", HOME / ".config" / "msui"))
 # Make sure that MSUI_CONFIG_PATH exists
-_fs = fs.open_fs(MSUI_CONFIG_PATH, create=True)
-# MSUI does not actually support any PyFilesystem2 fs that is not available as a local path
-MSUI_CONFIG_SYSPATH = _fs.getsyspath("")
+MSUI_CONFIG_PATH.mkdir(parents=True, exist_ok=True)
+MSUI_CONFIG_SYSPATH = str(MSUI_CONFIG_PATH.resolve())
 
 MSUI_CACHE_PATH = platformdirs.user_cache_path("msui", "mss")
 
-GRAVATAR_DIR_PATH = fs.path.join(MSUI_CONFIG_PATH, "gravatars")
+GRAVATAR_DIR_PATH = MSUI_CONFIG_PATH / "gravatars"
 
-MSUI_SETTINGS = os.getenv('MSUI_SETTINGS', os.path.join(MSUI_CONFIG_PATH, "msui_settings.json"))
+MSUI_SETTINGS = Path(os.getenv('MSUI_SETTINGS', MSUI_CONFIG_PATH / "msui_settings.json"))
 
-# We try to create an empty MSUI_SETTINGS file if not existing
-# but there can be a permission problem
-if '://' in MSUI_SETTINGS:
-    dir_path, file_name = fs.path.split(MSUI_SETTINGS)
-    try:
-        _fs = fs.open_fs(dir_path)
-        if not _fs.exists(file_name):
-            with _fs.open(file_name, 'w') as fid:
-                fid.write("{}")
-    except fs.errors.CreateFailed:
-        logging.error('"%s" can''t be created', MSUI_SETTINGS)
-else:
-    if not os.path.exists(MSUI_SETTINGS):
-        try:
-            with open(MSUI_SETTINGS, 'w') as fid:
-                fid.write("{}")
-        except IOError:
-            logging.error('"%s" can''t be created', MSUI_SETTINGS)
+MSUI_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
+MSUI_SETTINGS.write_text("{}")
 
-# ToDo refactor to a function
-MSS_AUTOPLOT = os.getenv('MSS_AUTOPLOT', os.path.join(MSUI_CONFIG_PATH, "mssautoplot.json"))
-
-# We try to create an empty MSUI_SETTINGS file if not existing
-# but there can be a permission problem
-if '://' in MSS_AUTOPLOT:
-    dir_path, file_name = fs.path.split(MSS_AUTOPLOT)
-    try:
-        _fs = fs.open_fs(dir_path)
-        if not _fs.exists(file_name):
-            with _fs.open(file_name, 'w') as fid:
-                fid.write("{}")
-    except fs.errors.CreateFailed:
-        logging.error('"%s" can''t be created', MSS_AUTOPLOT)
-else:
-    if not os.path.exists(MSS_AUTOPLOT):
-        try:
-            with open(MSS_AUTOPLOT, 'w') as fid:
-                fid.write("{}")
-        except IOError:
-            logging.error('"%s" can''t be created', MSS_AUTOPLOT)
+MSS_AUTOPLOT = Path(os.getenv('MSS_AUTOPLOT', MSUI_CONFIG_PATH / "mssautoplot.json"))
+MSS_AUTOPLOT.write_text("{}")
 
 AUTH_LOGIN_CACHE = {}

@@ -28,9 +28,9 @@
 
 import mock
 import os
-import fs
 import argparse
 import pytest
+from pathlib import Path
 from urllib.request import urlopen
 from PyQt5 import QtWidgets, QtTest
 from mslib import __version__
@@ -60,22 +60,21 @@ class Test_MSS_TutorialMode:
         self.main_window.shortcuts_dlg = msui_mw.MSUI_ShortcutsDialog(
             tutorial_mode=True)
         self.main_window.show_shortcuts(search_mode=True)
-        self.tutorial_dir = fs.path.combine(MSUI_CONFIG_PATH, 'tutorial_images')
+        self.tutorial_dir = Path(MSUI_CONFIG_PATH) / 'tutorial_images'
         yield
         self.main_window.hide()
 
     def test_tutorial_dir(self):
-        dir_name, name = fs.path.split(self.tutorial_dir)
-        with fs.open_fs(dir_name) as _fs:
-            assert _fs.exists(name)
+        dir_path = Path(self.tutorial_dir)
+        assert dir_path.parent.exists()
+        assert dir_path.name in [x.name for x in dir_path.parent.iterdir()]
         # seems we don't have a window manager in the test environment on github
         # checking only for a few
-        with (fs.open_fs(self.tutorial_dir) as _fs):
-            common_images = _fs.listdir('/')
-            assert 'menufile-file.png' in common_images
-            assert 'msuimainwindow-operation-archive.png' in common_images
-            assert 'msuimainwindow-work-asynchronously.png' in common_images
-            assert 'msuimainwindow-connect.png' in common_images
+        common_images = [x.name for x in dir_path.iterdir()]
+        assert 'menufile-file.png' in common_images
+        assert 'msuimainwindow-operation-archive.png' in common_images
+        assert 'msuimainwindow-work-asynchronously.png' in common_images
+        assert 'msuimainwindow-connect.png' in common_images
 
 
 class Test_MSS_AboutDialog:
@@ -89,7 +88,7 @@ class Test_MSS_AboutDialog:
         with urlopen(self.window.milestone_url) as f:
             text = f.read().decode("utf-8")
         expected_version = __version__
-        pattern = rf'value="is:closed milestone:{re.escape(expected_version)}"'
+        pattern = rf'value="is:closed milestone:{re.escape(expected_version)} "'
         assert re.search(pattern, text), f"Expected milestone format not found: {expected_version}"
 
 
@@ -239,7 +238,7 @@ class Test_MSSSideViewWindow:
         with mock.patch("mslib.msui.msui_mainwindow.config_loader", return_value=self.import_plugins):
             self.window.add_import_plugins("qt")
         assert self.window.listFlightTracks.count() == 1
-        file_path = fs.path.join(self.sample_path, name[0])
+        file_path = str(Path(self.sample_path) / name[0])
         with mock.patch("mslib.msui.msui_mainwindow.get_open_filenames", return_value=[file_path]) as mockopen:
             for action in self.window.menuImportFlightTrack.actions():
                 if action.objectName() == name[1]:

@@ -26,12 +26,11 @@
     limitations under the License.
 """
 import requests
-import fs
 
 from urllib.parse import urljoin
 from mslib.mscolab.server import register_user
 from flask import json
-from tests.constants import MSUI_CONFIG_PATH
+from tests.constants import MSUI_CONFIG_FILE_PATH
 from mslib.mscolab.seed import XML_CONTENT_INIT
 
 
@@ -215,7 +214,7 @@ def mscolab_get_operation_id(app, msc_url, email, password, username, fullname, 
 
 
 def create_msui_settings_file(content):
-    MSUI_CONFIG_PATH.write_text(content)
+    MSUI_CONFIG_FILE_PATH.write_text(content)
 
 
 def is_url_response_ok(url):

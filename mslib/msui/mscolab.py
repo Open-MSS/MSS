@@ -31,7 +31,6 @@
 """
 import os
 import io
-import sys
 import json
 import hashlib
 import logging
@@ -44,6 +43,7 @@ import webbrowser
 import mimetypes
 import urllib.request
 from urllib.parse import urljoin
+from pathlib import Path
 
 from fs import open_fs
 from PIL import Image, UnidentifiedImageError
@@ -612,9 +612,9 @@ class MSUIMscolab(QtCore.QObject):
 
         # set data dir, uri
         if local_operations_data is None:
-            self.data_dir = config_loader(dataset="mss_dir")
+            self.data_dir = Path(config_loader(dataset="mss_dir"))
         else:
-            self.data_dir = local_operations_data
+            self.data_dir = Path(local_operations_data)
         self.create_dir()
 
     def _handle_font_bolding(self, item=None):
@@ -765,7 +765,7 @@ class MSUIMscolab(QtCore.QObject):
         # Display default gravatar if custom profile image is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
-        gravatar_img_path = fs.path.join(constants.GRAVATAR_DIR_PATH, f"{email_hash}.png")
+        gravatar_img_path = Path(constants.GRAVATAR_DIR_PATH) / f"{email_hash}.png"
         config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
 
         # refresh is used to fetch new gravatar associated with the email
