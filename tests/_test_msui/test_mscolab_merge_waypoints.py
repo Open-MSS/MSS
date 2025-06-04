@@ -24,9 +24,9 @@
     See the License for the specific language governing permissions and
     limitations under the License.
 """
-import fs
 import mock
 import pytest
+import shutil
 
 import mslib.utils.auth
 from tests.constants import ROOT_DIR
@@ -48,16 +48,16 @@ class Test_Mscolab_Merge_Waypoints:
         self.window = msui.MSUIMainWindow(local_operations_data=ROOT_DIR)
         self.window.create_new_flight_track()
         self.emailid = 'merge@alpha.org'
+        self.local_mscolab_data = ROOT_DIR / "local_mscolab_data"
         yield
         self.window.mscolab.logout()
         mslib.utils.auth.del_password_from_keyring("merge@alpha.org")
         with self.app.app_context():
             mscolab_delete_all_operations(self.app, self.url, self.emailid, 'abcdef', 'alpha', 'Alpha')
             mscolab_delete_user(self.app, self.url, self.emailid, 'abcdef')
-        with fs.open_fs(ROOT_DIR) as mss_dir:
-            if mss_dir.exists('local_mscolab_data'):
-                mss_dir.removetree('local_mscolab_data')
-            assert mss_dir.exists('local_mscolab_data') is False
+        if self.local_mscolab_data.exists():
+            shutil.rmtree(self.local_mscolab_data)
+            assert self.local_mscolab_data.exists() is False
         if self.window.mscolab.version_window:
             self.window.mscolab.version_window.close()
         if self.window.mscolab.conn:

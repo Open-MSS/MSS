@@ -36,9 +36,8 @@
 
 import datetime
 import logging
-import os
+from pathlib import Path
 
-import fs
 import xml.dom.minidom
 import defusedxml.minidom
 from defusedxml import DefusedXmlException
@@ -627,14 +626,11 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         if not filename:
             raise ValueError("filename to save flight track cannot be None or empty")
 
-        self.filename = filename
-        self.name = fs.path.basename(filename.replace(".ftml", "").strip())
+        self.filename = Path(filename)
         doc = self.get_xml_doc()
-        dirname, name = fs.path.split(self.filename)
-        file_dir = fs.open_fs(dirname)
-        with file_dir.open(name, 'w') as file_object:
+        with self.filename.open("w") as file_object:
             doc.writexml(file_object, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
-        file_dir.close()
+        self.name = self.filename.stem.replace(".ftml", "").strip()
 
     def get_xml_doc(self):
         doc = xml.dom.minidom.Document()  # nosec, we take care of writing correct XML
@@ -664,10 +660,8 @@ class WaypointsTableModel(QtCore.QAbstractTableModel):
         """
         Load a flight track from an XML file at <filename>.
         """
-        _dirname, _name = os.path.split(filename)
-        _fs = fs.open_fs(_dirname)
-        xml_content = _fs.readtext(_name)
-        name = os.path.basename(filename.replace(".ftml", "").strip())
+        xml_content = Path(filename).read_text()
+        name = Path(filename).stem.replace(".ftml", "").strip()
         self.load_from_xml_data(xml_content, name)
 
     def load_from_xml_data(self, xml_content, name="Flight track"):
