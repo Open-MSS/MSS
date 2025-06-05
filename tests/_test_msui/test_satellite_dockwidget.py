@@ -59,6 +59,6 @@ class Test_SatelliteDockWidget:
         assert self.window.cbSatelliteOverpasses.count() == 0
         mockbox.assert_called_once_with(
             self.window,
-            "Satellite Overpass Tool",
-            "ERROR:\n<class 'fs.errors.FileExpected'>\npath '' should be a file",
+            'Satellite Overpass Tool',
+            "ERROR:\n<class 'IsADirectoryError'>\n[Errno 21] Is a directory: '.'"
         )

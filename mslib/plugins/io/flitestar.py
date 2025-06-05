@@ -28,7 +28,7 @@
 
 import numpy as np
 import os
-from fs import open_fs
+from pathlib import Path
 
 import mslib.msui.flighttrack as ft
 from mslib.utils import thermolib
@@ -37,14 +37,12 @@ from mslib.utils.units import units
 
 def load_from_flitestar(filename):
     waypoints = []
-    _dirname, _name = os.path.split(filename)
-    _fs = open_fs(_dirname)
-    with _fs.open(_name, 'r') as f:
+    path = Path(filename)
+    with path.open('r') as f:
         firstline = f.readline()
         if not firstline.startswith("# FliteStar/FliteMap generated flight plan."):
             raise SyntaxError("The file does not seem to be a FliteStar file!")
         for line in f:
-
             if line.startswith('FWP'):
                 line = line.split()
                 if len(line) < 10:

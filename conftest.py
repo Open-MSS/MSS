@@ -198,9 +198,8 @@ from tests.utils import create_msui_settings_file
 def reset_config():
     """Reset the configuration directory used in the tests (tests.constants.ROOT_FS) after every test
     """
-    # Ideally this would just be constants.ROOT_FS.removetree("/"), but SQLAlchemy complains if the SQLite file is
-    # deleted.
-    # constants.ROOT_DIR.rmdir()
+    # Ideally this would just be shutil.rmtree(constants.MSCOLAB_SERVER_CONFIG_DIR),
+    # but SQLAlchemy complains if the SQLite file is deleted.
     for item_name in constants.MSCOLAB_SERVER_CONFIG_DIR.iterdir():
         if item_name.is_dir():
             shutil.rmtree(item_name)

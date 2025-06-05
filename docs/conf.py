@@ -17,7 +17,7 @@ import setuptools
 import requests
 import zipfile
 import shutil
-import pathlib
+from pathlib import Path
 
 
 def get_tutorial_images():
@@ -61,15 +61,14 @@ if os.getenv("PROJ_LIB") is None or os.getenv("PROJ_LIB") == "PROJ_LIB":
 
 if os.environ.get("GALLERY", "True") != "False":
     # Generate plot gallery
-    from pathlib import Path
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
     from mslib.mswms.seed import DataFiles
 
-    root_fs = Path("~/mss/testdata")
-    if not root_fs.exists():
-        root_fs.makedirs(parents=True)
+    mswms_data_dir = Path("~/mss/testdata")
+    if not mswms_data_dir.exists():
+        mswms_data_dir.makedirs(parents=True)
 
-    examples = DataFiles(mswms_data_dir=root_fs,
+    examples = DataFiles(mswms_data_dir=mswms_data_dir,
                          mswms_server_config_dir=Path("~/mss"))
     examples.create_server_config(detailed_information=True)
     examples.create_data()
@@ -96,7 +95,7 @@ if os.environ.get("GALLERY", "True") != "False":
                                             vtimes="2012-10-18T00:00:00,2012-10-19T00:00:00")
 
 version = {}
-exec(pathlib.Path("../mslib/version.py").read_text(), version)
+exec(Path("../mslib/version.py").read_text(), version)
 __version__ = version["__version__"]
 
 on_rtd = os.environ.get('READTHEDOCS') == 'True'
