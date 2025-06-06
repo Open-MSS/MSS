@@ -738,8 +738,6 @@ class MultipleFlightpathControlWidget(QtWidgets.QWidget, ui.Ui_MultipleViewWidge
             else:
                 self.cbLineStyle.setCurrentText("Solid")
 
-            print(wp_model != self.active_flight_track,
-                  self.list_flighttrack.currentItem().checkState() != QtCore.Qt.Checked)
             self.enable_disable_line_style_buttons(
                 wp_model != self.active_flight_track and self.list_flighttrack.currentItem().
                 checkState() == QtCore.Qt.Checked)

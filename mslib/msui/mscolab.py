@@ -509,7 +509,6 @@ class MSUIMscolab(QtCore.QObject):
     signal_render_new_permission = QtCore.pyqtSignal(int, str)
 
     def __init__(self, parent=None, local_operations_data=None):
-        print(local_operations_data)
         super().__init__(parent)
         self.ui = parent
 
@@ -986,7 +985,6 @@ class MSUIMscolab(QtCore.QObject):
         import_menu = self.ui.menuImportFlightTrack
         for im_action in import_menu.actions():
             if im_action.text() != "From Selected":
-                print(im_action.text())
                 self.add_proj_dialog.cb_ImportType.addItem(im_action.text())
         self.proj_diag.show()
 
