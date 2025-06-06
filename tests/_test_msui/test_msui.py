@@ -41,7 +41,6 @@ from tests.utils import ExceptionMock
 from mslib.utils.config import read_config_file
 import re
 
-
 def test_main():
     with pytest.raises(SystemExit) as pytest_wrapped_e:
         with mock.patch("mslib.msui.msui.argparse.ArgumentParser.parse_args",

@@ -35,7 +35,6 @@ import json
 import hashlib
 import logging
 import types
-import fs
 import functools
 import requests
 import re
@@ -45,7 +44,6 @@ import urllib.request
 from urllib.parse import urljoin
 from pathlib import Path
 
-from fs import open_fs
 from PIL import Image, UnidentifiedImageError
 from keyring.errors import NoKeyringError, PasswordSetError, InitError
 import socketio
@@ -765,34 +763,22 @@ class MSUIMscolab(QtCore.QObject):
         # Display default gravatar if custom profile image is not set
         email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
         email_in_config = self.email in config_loader(dataset="gravatar_ids")
-        gravatar_img_path = Path(constants.GRAVATAR_DIR_PATH) / f"{email_hash}.png"
-        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
+        constants.GRAVATAR_DIR_PATH.mkdir(parents=True, exist_ok=True)
+        gravatar_img_path = constants.GRAVATAR_DIR_PATH / f"{email_hash}.png"
 
         # refresh is used to fetch new gravatar associated with the email
         if refresh or email_in_config:
-            # create directory to store cached gravatar images
-            if not config_fs.exists("gravatars"):
-                try:
-                    config_fs.makedirs("gravatars")
-                except fs.errors.CreateFailed:
-                    logging.error('Creation of gravatar directory failed')
-                    return
-                except fs.opener.errors.UnsupportedProtocol:
-                    logging.error('FS url not supported')
-                    return
-
             # use cached image if refresh not requested
-            if not refresh and email_in_config and \
-                    config_fs.exists(fs.path.join("gravatars", f"{email_hash}.png")):
-                self.set_gravatar(gravatar_img_path)
+            if not refresh and email_in_config and gravatar_img_path.exists():
+                self.set_gravatar(str(gravatar_img_path))
                 return
 
             # fetch gravatar image
             gravatar_url = f"https://www.gravatar.com/avatar/{email_hash}.png?s=80&d=404"
             try:
-                urllib.request.urlretrieve(gravatar_url, gravatar_img_path)
-                img = Image.open(gravatar_img_path)
-                img.save(gravatar_img_path)
+                urllib.request.urlretrieve(gravatar_url, str(gravatar_img_path))
+                img = Image.open(str(gravatar_img_path))
+                img.save(str(gravatar_img_path))
             except urllib.error.HTTPError:
                 if refresh:
                     show_popup(self.prof_diag, "Error", "Gravatar not found")
@@ -839,20 +825,19 @@ class MSUIMscolab(QtCore.QObject):
     def remove_gravatar(self):
         if self.gravatar is None:
             return
+        email_hash = hashlib.md5(bytes(self.email.encode('utf-8')).lower()).hexdigest()
+        gravatar_img_path = constants.GRAVATAR_DIR_PATH / f"{email_hash}.png"
 
         # remove cached gravatar image if not found in config
-        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
-        if config_fs.exists("gravatars"):
-            if fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
-                fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
-                if self.email in config_loader(dataset="gravatar_ids"):
-                    show_popup(
-                        self.prof_diag,
-                        "Information",
-                        "Please remove your email from gravatar_ids section in your "
-                        "msui_settings.json to not fetch gravatar automatically",
-                        icon=1, )
-
+        if gravatar_img_path.exists():
+            gravatar_img_path.unlink()
+            if self.email in config_loader(dataset="gravatar_ids"):
+                show_popup(
+                    self.prof_diag,
+                    "Information",
+                    "Please remove your email from gravatar_ids section in your "
+                    "msui_settings.json to not fetch gravatar automatically",
+                    icon=1, )
         self.set_gravatar()
 
     def open_profile_window(self):
@@ -965,10 +950,10 @@ class MSUIMscolab(QtCore.QObject):
             file_path = get_open_filename(
                 self.ui, "Open Flighttrack file", "", ';;'.join(file_type))
             if file_path is not None:
-                file_name = fs.path.basename(file_path)
+                file_name = Path(file_path).name
                 if file_path.endswith('ftml'):
-                    with open_fs(fs.path.dirname(file_path)) as file_dir:
-                        file_content = file_dir.readtext(file_name)
+                    with open(Path(file_path).parent / file_name, 'r') as f:
+                        file_content = f.read()
                 else:
                     function = self.ui.import_plugins[import_type][0]
                     ft_name, waypoints = function(file_path)
@@ -1369,11 +1354,12 @@ class MSUIMscolab(QtCore.QObject):
             if self.version_window is not None:
                 self.version_window.close()
             self.create_local_operation_file()
-            self.local_ftml_file = fs.path.combine(
-                self.data_dir,
-                fs.path.join(
-                    "local_colabdata", self.user["username"],
-                    self.active_operation_name, "mscolab_operation.ftml"),
+            self.local_ftml_file = str(
+                Path(self.data_dir) /
+                "local_colabdata" /
+                self.user["username"] /
+                self.active_operation_name /
+                "mscolab_operation.ftml"
             )
             self.ui.workingStatusLabel.setText(
                 self.ui.tr(
@@ -1396,14 +1382,17 @@ class MSUIMscolab(QtCore.QObject):
         self.reload_view_windows()
 
     def create_local_operation_file(self):
-        with open_fs(self.data_dir) as mss_dir:
-            rel_file_path = fs.path.join('local_colabdata', self.user['username'],
-                                         self.active_operation_name, 'mscolab_operation.ftml')
-            if mss_dir.exists(rel_file_path) is True:
-                return
-            mss_dir.makedirs(fs.path.dirname(rel_file_path))
-            server_data = self.waypoints_model.get_xml_content()
-            mss_dir.writetext(rel_file_path, server_data)
+        local_data_dir = self.data_dir / "local_colabdata" / self.user['username'] / self.active_operation_name
+        ftml_file = local_data_dir / "mscolab_operation.ftml"
+
+        if ftml_file.exists():
+            return
+
+        local_data_dir.mkdir(parents=True, exist_ok=True)
+        server_data = self.waypoints_model.get_xml_content()
+
+        with open(ftml_file, "w") as f:
+            f.write(server_data)
 
     def reload_local_wp(self):
         self.waypoints_model = ft.WaypointsTableModel(filename=self.local_ftml_file, data_dir=self.data_dir)
@@ -1965,17 +1954,16 @@ class MSUIMscolab(QtCore.QObject):
             return
         if file_path is None:
             return
-        dir_path, file_name = fs.path.split(file_path)
-        file_name = fs.path.basename(file_path)
+        dir_path = Path(file_path).parent
+        file_name = Path(file_path).name
         if function is None:
-            with open_fs(dir_path) as file_dir:
-                xml_content = file_dir.readtext(file_name)
+            try:
+                xml_content = dir_path.joinpath(file_name).read_text()
                 if not verify_waypoint_data(xml_content):
                     show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                     return
-            try:
                 model = ft.WaypointsTableModel(xml_content=xml_content)
-            except SyntaxError:
+            except (SyntaxError, FileNotFoundError):
                 show_popup(self.ui, "Import Failed", f"The file - {file_name}, does not contain valid XML")
                 return
         else:
@@ -2011,14 +1999,13 @@ class MSUIMscolab(QtCore.QObject):
             return
         if function is None:
             xml_doc = self.waypoints_model.get_xml_doc()
-            dir_path, file_name = fs.path.split(file_name)
-            with open_fs(dir_path).open(file_name, 'w') as file:
-                xml_doc.writexml(file, indent="  ", addindent="  ", newl="\n", encoding="utf-8")
+            dir_path = Path(file_name).parent
+            file_name = Path(file_name).name
+            xml_doc.writexml(open(dir_path / file_name, 'w'), indent="  ", addindent="  ", newl="\n", encoding="utf-8")
         else:
-            name = fs.path.basename(file_name)
+            name = Path(file_name).name
             function(file_name, name, self.waypoints_model.waypoints)
             show_popup(self.ui, "Export Success", f"The file - {file_name}, was exported successfully!", 1)
-
     def listFlighttrack_itemDoubleClicked(self):
         logging.debug("listFlighttrack_itemDoubleClicked")
         self.ui.activeOperationDesc.setText("Select Operation to View Description.")
@@ -2076,11 +2063,13 @@ class MSUIMscolab(QtCore.QObject):
         self.ui.workLocallyCheckbox.blockSignals(False)
 
         # remove temporary gravatar image
-        config_fs = fs.open_fs(constants.MSUI_CONFIG_PATH)
-        if config_fs.exists("gravatars") and self.gravatar is not None:
-            if self.email not in config_loader(dataset="gravatar_ids") and \
-                    fs.open_fs(constants.GRAVATAR_DIR_PATH).exists(fs.path.basename(self.gravatar)):
-                fs.open_fs(constants.GRAVATAR_DIR_PATH).remove(fs.path.basename(self.gravatar))
+        config_path = Path(constants.MSUI_CONFIG_PATH)
+        gravatar_path = Path(constants.GRAVATAR_DIR_PATH)
+        # ToDo simplify
+        if (config_path / "gravatars").exists() and self.gravatar is not None:
+            if (self.email not in config_loader(dataset="gravatar_ids") and
+                    (gravatar_path / Path(self.gravatar).name).exists()):
+                (gravatar_path / Path(self.gravatar).name).unlink()
         # clear gravatar image path
         self.gravatar = None
         # clear user email
