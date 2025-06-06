@@ -74,10 +74,11 @@ class TestMigration:
             new_version = JsonConversion()
             # converting and storing
             new_version.change_parameters()
+            dir_name = Path(MSUI_SETTINGS).parent
             file_name = Path(MSUI_SETTINGS).name
             # check that we have a backup file
-            bak_file = f"{file_name}.bak"
-            assert Path(bak_file).exists()
+            bak_file = dir_name / f"{file_name}.bak"
+            assert bak_file.exists()
 
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader
@@ -139,10 +140,11 @@ class TestMigration:
             new_version = JsonConversion()
             # converting and storing
             new_version.change_parameters()
+            dir_name = Path(MSUI_SETTINGS).parent
             file_name = Path(MSUI_SETTINGS).name
             # check that we have a backup file
-            bak_file = f"{file_name}.bak"
-            assert Path(bak_file).exists()
+            bak_file = dir_name / f"{file_name}.bak"
+            assert bak_file.exists()
 
             # using current configuration
             from mslib.utils.config import read_config_file, config_loader
